@@ -27,8 +27,13 @@ class UserWalletBuilder(
                 cardTypesResolver.isStart2Coin() -> "Start2Coin"
                 else -> "Wallet"
             }
+            ProductType.Wallet2 -> "Wallet"
         }
 
+    /**
+     * DANGEROUS!!!
+     * [backupCardsIds] will be non-empty list if card is backed up on current device.
+     */
     fun backupCardsIds(backupCardsIds: Set<String>?) = this.apply {
         if (backupCardsIds != null) {
             this.backupCardsIds = backupCardsIds

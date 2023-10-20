@@ -12,18 +12,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.dp
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.learn2earn.presentation.ui.Learn2earnStoriesScreen
 import com.tangem.tap.features.home.compose.content.*
@@ -43,7 +38,6 @@ fun StoriesScreen(
     onShopButtonClick: () -> Unit,
     onSearchTokensClick: () -> Unit,
 ) {
-    val systemUiController = rememberSystemUiController()
     val state = homeState.value
 
     var currentStory by remember { mutableStateOf(state.firstStory) }
@@ -60,13 +54,6 @@ fun StoriesScreen(
                 state.firstStory
             }
         }
-    }
-
-    LaunchedEffect(key1 = currentStory.isDarkBackground) {
-        systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
-            darkIcons = !currentStory.isDarkBackground,
-        )
     }
 
     StoriesScreenContent(
@@ -90,13 +77,12 @@ fun StoriesScreen(
 @Composable
 private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: Modifier = Modifier) {
     var isPressed by remember { mutableStateOf(value = false) }
-    var hideContent by remember { mutableStateOf(value = true) }
 
     val isPaused = isPressed || config.isScanInProgress
     val currentStoryDuration = config.currentStory.duration
 
     Box(
-        modifier = modifier.background(Color(0xFF090E13)),
+        modifier = modifier.background(Color(0xFF010101)),
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -138,14 +124,6 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
                     },
             )
         }
-        if (!config.currentStory.isDarkBackground) {
-            Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.ic_overlay),
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-            )
-        }
 
         Column(
             modifier = Modifier
@@ -166,30 +144,23 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
                 contentDescription = null,
                 contentScale = ContentScale.FillHeight,
                 modifier = Modifier
-                    .padding(start = 16.dp, top = 10.dp)
-                    .height(17.dp)
-                    .alpha(if (hideContent) 0f else 1f)
+                    .padding(
+                        start = TangemTheme.dimens.spacing16,
+                        top = TangemTheme.dimens.spacing16,
+                    )
+                    .height(TangemTheme.dimens.size18)
                     .align(Alignment.Start),
-                colorFilter = if (config.currentStory.isDarkBackground) {
-                    null
-                } else {
-                    ColorFilter.tint(TangemColorPalette.Dark6)
-                },
             )
             when (config.currentStory) {
                 Stories.OneInchPromo -> Learn2earnStoriesScreen(config.onLearn2earnClick)
                 Stories.TangemIntro -> FirstStoriesContent(
                     isPaused = isPaused,
                     duration = currentStoryDuration,
-                    isNewWalletAvailable = config.currentStory.isNewWalletAvailable,
-                ) {
-                    hideContent = it
-                }
-                Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet(currentStoryDuration)
+                )
+                Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet()
                 is Stories.UltraSecureBackup -> StoriesUltraSecureBackup(
                     isPaused = isPaused,
                     stepDuration = currentStoryDuration,
-                    isNewWalletAvailable = config.currentStory.isNewWalletAvailable,
                 )
                 Stories.Currencies -> StoriesCurrencies(isPaused, currentStoryDuration)
                 Stories.Web3 -> StoriesWeb3(isPaused, currentStoryDuration)
@@ -223,7 +194,6 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
             ) {
                 HomeButtons(
                     modifier = Modifier.fillMaxWidth(),
-                    isDarkBackground = config.currentStory.isDarkBackground,
                     btnScanStateInProgress = config.isScanInProgress,
                     onScanButtonClick = config.onScanButtonClick,
                     onShopButtonClick = config.onShopButtonClick,

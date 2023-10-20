@@ -1,6 +1,5 @@
 package com.tangem.domain
 
-import com.tangem.common.module.FbConsumeException
 import com.tangem.common.module.ModuleError
 import com.tangem.common.module.ModuleErrorCode
 import com.tangem.common.module.ModuleMessage
@@ -36,32 +35,14 @@ sealed class AddCustomTokenError(
 ) {
 
     object FieldIsEmpty : AddCustomTokenError()
-    object FieldIsNotEmpty : AddCustomTokenError()
     object InvalidContractAddress : AddCustomTokenError()
     object NetworkIsNotSelected : AddCustomTokenError()
     object InvalidDecimalsCount : AddCustomTokenError()
     object InvalidDerivationPath : AddCustomTokenError()
-
-    sealed class Network : AddCustomTokenError() {
-        object CheckAddressRequestError : Network()
-    }
 
     sealed class Warning : AddCustomTokenError() {
         object PotentialScamToken : Warning()
         object TokenAlreadyAdded : Warning()
         object UnsupportedSolanaToken : Warning()
     }
-
-    data class SelectTokeNetworkError(val networkId: String) :
-        AddCustomTokenError(
-            message = "Unknown network [$networkId] should not be included in the network selection dialog.",
-        ),
-        FbConsumeException
-
-    data class UnAppropriateInitialization(
-        val of: String,
-        val info: String? = null,
-    ) : AddCustomTokenError(
-        message = "The [$of], must be properly initialized. Info [$info]",
-    )
 }

@@ -5,6 +5,9 @@ plugins {
 }
 
 dependencies {
+    /** Project - Common */
+    implementation(projects.common)
+
     /** Project - Domain */
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.appTheme.models)
@@ -15,6 +18,7 @@ dependencies {
     /** AndroidX libraries */
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.androidx.palette)
 
     /** Compose */
     implementation(deps.compose.constraintLayout)
@@ -29,4 +33,6 @@ dependencies {
     implementation(deps.material)
     implementation(deps.compose.shimmer)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.zxing.qrCore)
+    implementation(deps.jodatime)
 }

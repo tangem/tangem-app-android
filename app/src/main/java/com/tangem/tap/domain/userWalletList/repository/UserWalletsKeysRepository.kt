@@ -23,15 +23,13 @@ internal interface UserWalletsKeysRepository {
     /**
      * Delete encryption keys for user wallets. Biometric authentication not required
      * @param userWalletsIds List of [UserWalletId] whose encryption keys will be deleted
-     * @return [CompletionResult] of operation
      * */
-    suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit>
+    suspend fun delete(userWalletsIds: List<UserWalletId>)
 
     /**
      * Clear all encryption keys for user wallets. Biometric authentication not required
-     * @return [CompletionResult] of operation
      * */
-    suspend fun clear(): CompletionResult<Unit>
+    suspend fun clear()
 
     /**
      * Determine if the user has saved user wallets
