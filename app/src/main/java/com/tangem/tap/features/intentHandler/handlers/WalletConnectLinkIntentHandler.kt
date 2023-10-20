@@ -1,7 +1,7 @@
 package com.tangem.tap.features.intentHandler.handlers
 
 import android.content.Intent
-import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.removePrefixOrNull
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -15,7 +15,7 @@ import java.net.URLDecoder
  */
 class WalletConnectLinkIntentHandler : IntentHandler {
 
-    override suspend fun handleIntent(intent: Intent?): Boolean {
+    override fun handleIntent(intent: Intent?): Boolean {
         val intentData = intent?.data ?: return false
         val scheme = intent.scheme ?: return false
 
@@ -34,7 +34,7 @@ class WalletConnectLinkIntentHandler : IntentHandler {
                 Timber.e(e)
                 return false
             }
-            store.dispatchWithMain(WalletConnectAction.HandleDeepLink(decodedWcUri))
+            store.dispatchOnMain(WalletConnectAction.HandleDeepLink(decodedWcUri))
             true
         }
     }
