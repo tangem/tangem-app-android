@@ -3,12 +3,12 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
+import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.*
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -16,7 +16,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.exchangeServices.BuyExchangeService
@@ -26,8 +25,13 @@ import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import kotlinx.coroutines.flow.firstOrNull
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.walletCurrenciesManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -66,7 +70,13 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
         }
         is GlobalAction.RestoreAppCurrency -> {
-            if (store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles).isRedesignedScreenEnabled) {
+            val daggerGraphState = store.state.daggerGraphState
+            val walletFeatureToggles = daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+            val detailsFeatureToggles = daggerGraphState.get(DaggerGraphState::detailsFeatureToggles)
+
+            if (walletFeatureToggles.isRedesignedScreenEnabled ||
+                detailsFeatureToggles.isRedesignedAppCurrencySelectorEnabled
+            ) {
                 restoreAppCurrencyNew()
             } else {
                 restoreAppCurrencyLegacy()
@@ -75,10 +85,10 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         is GlobalAction.HideWarningMessage -> {
             store.state.globalState.warningManager?.let {
                 if (it.hideWarning(action.warning)) {
-                    if (WarningMessagesManager.isAlreadySignedHashesWarning(action.warning)) {
-                        // TODO: No appropriate warningMessage identification. Make it better later
-                        store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
-                    }
+                    // if (WarningMessagesManager.isAlreadySignedHashesWarning()) {
+                    //     // TODO: No appropriate warningMessage identification. Make it better later
+                    //     store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
+                    // }
 
                     store.dispatch(WalletAction.Warnings.Update)
                     store.dispatch(SendAction.Warnings.Update)
@@ -131,6 +141,8 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     sellService = makeSellExchangeService(config),
                     primaryRules = CardExchangeRules(cardProvider),
                 )
+                // TODO: for refactoring (after remove old design refactor CurrencyExchangeManager and use 1 instance)
+                store.state.daggerGraphState.get(DaggerGraphState::appStateHolder).exchangeService = exchangeManager
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
             }
@@ -142,28 +154,6 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                 return
             }
             scope.launch { exchangeManager.update() }
-        }
-        is GlobalAction.ScanCard -> {
-            scope.launch {
-                tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
-                val result = tangemSdkManager.scanProduct(
-                    userTokensRepository = userTokensRepository,
-                    additionalBlockchainsToDerive = action.additionalBlockchainsToDerive,
-                    messageRes = action.messageResId,
-                )
-                withMainContext {
-                    store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
-                    when (result) {
-                        is CompletionResult.Success -> {
-                            tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data)
-                            action.onSuccess?.invoke(result.data)
-                        }
-                        is CompletionResult.Failure -> {
-                            action.onFailure?.invoke(result.error)
-                        }
-                    }
-                }
-            }
         }
         is GlobalAction.FetchUserCountry -> {
             scope.launch {
@@ -185,6 +175,28 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         }
         is GlobalAction.SetTopUpController -> {
             walletCurrenciesManager.addListener(action.topUpController)
+        }
+        is GlobalAction.UpdateUserWalletsListManager -> {
+            /*
+             * If UserWalletsListManager's implementation is changed,
+             * then all selectedUserWallet's observers is became irrelevant
+             */
+            action.manager.selectedUserWallet
+                .distinctUntilChanged()
+                .onEach { userWallet ->
+                    Analytics.send(event = Basic.WalletOpened())
+
+                    store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
+                        infoHolder.setCardInfo(data = userWallet.scanResponse)
+
+                        store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
+                            .getAll(userWalletId = userWallet.walletId)
+                            .onEach(infoHolder::setWalletsInfo)
+                            .launchIn(scope)
+                    }
+                }
+                .flowOn(Dispatchers.IO)
+                .launchIn(scope)
         }
     }
 }
