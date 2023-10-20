@@ -7,6 +7,7 @@ import com.tangem.data.tokens.utils.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -162,9 +163,14 @@ internal class DefaultNetworksRepository(
 
             responseCurrenciesFactory.createCurrencies(response, userWallet.scanResponse).asSequence()
         } else {
-            val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+            if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+                cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+                    .asSequence()
+            } else {
+                val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
 
-            sequenceOf(currency)
+                sequenceOf(currency)
+            }
         }
 
         return currencies.filter { it.network == network }
