@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.paymentology.PaymentologyApi
 import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -8,7 +9,6 @@ import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.allowLogging
 import com.tangem.lib.auth.AuthProvider
-import com.tangem.lib.auth.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,6 +28,7 @@ class NetworkModule {
     fun provideTangemTechApi(@NetworkMoshi moshi: Moshi): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
             .baseUrl(PROD_TANGEM_TECH_BASE_URL)
             .client(
                 OkHttpClient.Builder()
@@ -76,7 +77,7 @@ class NetworkModule {
     private fun createBasePromotionRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): PromotionApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl(if (BuildConfig.DEBUG) DEV_TANGEM_TECH_BASE_URL else PROD_TANGEM_TECH_BASE_URL)
+            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
             .create(PromotionApi::class.java)
