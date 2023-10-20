@@ -28,6 +28,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "GNO" -> R.drawable.img_gnosis_22
         "ETH-Pow", "ETH-Pow/test" -> R.drawable.img_eth_pow_22
         "ETH-Fair" -> R.drawable.img_eth_fair_22
+        "NEAR", "NEAR/test" -> R.drawable.img_near_22
         "Polkadot", "Polkadot/test" -> R.drawable.img_polkadot_22
         "Kusama" -> R.drawable.img_kusama_22
         "OPTIMISM", "OPTIMISM/test" -> R.drawable.img_optimism_22
@@ -91,6 +92,7 @@ fun getActiveIconResByCoinId(coinId: String, networkId: String): Int {
         "telos" -> R.drawable.img_telos_22
         "octaspace" -> R.drawable.img_octaspace_22
         "chia" -> R.drawable.img_chia_22
+        "near" -> R.drawable.img_near_22
         else -> R.drawable.ic_alert_24
     }
 }
