@@ -23,6 +23,8 @@ data class ZendeskConfig(
 data class SprinklrConfig(
     @Json(name = "appID")
     val appId: String,
-    @Json(name = "baseURL")
-    val baseUrl: String,
+    @Json(name = "apiKey")
+    val apiKey: String,
+    @Json(name = "environment")
+    val environment: String,
 ) : ChatConfig
