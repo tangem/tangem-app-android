@@ -209,9 +209,7 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val isWallet2 = card.settings.isKeysImportAllowed || card.firmwareVersion >= FirmwareVersion.KeysImportAvailable
-
-        val productType = if (isWallet2) ProductType.Wallet2 else ProductType.Wallet
+        val productType = getWalletProductType(card)
         val config = CardConfig.createConfig(card)
         scope.launch {
             val scanResponse = ScanResponse(
@@ -236,6 +234,16 @@ private class ScanWalletProcessor(
                     is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
                 }
             }
+        }
+    }
+
+    private fun getWalletProductType(card: CardDTO): ProductType {
+        return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
+            card.settings.isKeysImportAllowed
+        ) {
+            ProductType.Wallet2
+        } else {
+            ProductType.Wallet
         }
     }
 
