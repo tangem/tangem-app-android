@@ -1,37 +1,36 @@
 package com.tangem.data.tokens.utils
 
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.model.PendingTransaction
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
-import java.math.BigDecimal
 
 internal class NetworkStatusFactory {
 
     fun createNetworkStatus(
-        networkId: Network.ID,
+        network: Network,
         result: UpdateWalletManagerResult,
         currencies: Set<CryptoCurrency>,
     ): NetworkStatus {
         return NetworkStatus(
-            networkId = networkId,
+            network = network,
             value = when (result) {
                 is UpdateWalletManagerResult.MissedDerivation -> NetworkStatus.MissedDerivation
                 is UpdateWalletManagerResult.Unreachable -> NetworkStatus.Unreachable
                 is UpdateWalletManagerResult.NoAccount -> NetworkStatus.NoAccount(
                     address = getNetworkAddress(result.defaultAddress, result.addresses),
                     amountToCreateAccount = result.amountToCreateAccount,
+                    errorMessage = result.errorMessage,
                 )
                 is UpdateWalletManagerResult.Verified -> NetworkStatus.Verified(
                     address = getNetworkAddress(result.defaultAddress, result.addresses),
                     amounts = formatAmounts(result.currenciesAmounts, currencies),
                     pendingTransactions = formatTransactions(
-                        networksAddresses = result.addresses,
                         transactions = result.currentTransactions,
                         currencies = currencies,
                     ),
@@ -43,34 +42,33 @@ internal class NetworkStatusFactory {
     private fun formatAmounts(
         amounts: Set<CryptoCurrencyAmount>,
         currencies: Set<CryptoCurrency>,
-    ): Map<CryptoCurrency.ID, BigDecimal> {
-        return amounts
-            .asSequence()
-            .mapNotNull { amount ->
-                val currency = when (amount) {
-                    is CryptoCurrencyAmount.Coin -> currencies.singleOrNull { it is CryptoCurrency.Coin }
-                    is CryptoCurrencyAmount.Token -> currencies.firstOrNull {
-                        it is CryptoCurrency.Token &&
-                            it.id.rawCurrencyId == amount.tokenId &&
-                            it.contractAddress == amount.tokenContractAddress
+    ): Map<CryptoCurrency.ID, NetworkStatus.AmountStatus> {
+        return currencies.associate { currency ->
+            val amount = when (currency) {
+                is CryptoCurrency.Coin -> {
+                    amounts.singleOrNull { it is CryptoCurrencyAmount.Coin }
+                }
+                is CryptoCurrency.Token -> {
+                    amounts.firstOrNull { amount ->
+                        amount is CryptoCurrencyAmount.Token &&
+                            currency.id.rawCurrencyId == amount.tokenId &&
+                            currency.contractAddress == amount.tokenContractAddress
                     }
                 }
-
-                if (currency == null) {
-                    Timber.e("Unable to find cryptocurrency for amount: $amount")
-                    null
-                } else {
-                    currency.id to amount.value
-                }
             }
-            .toMap()
+            if (amount == null) {
+                Timber.e("Unable to find amount for cryptoCurrency: $currency")
+                currency.id to NetworkStatus.UnreachableAmount
+            } else {
+                currency.id to NetworkStatus.LoadedAmount(amount.value)
+            }
+        }
     }
 
     private fun formatTransactions(
-        networksAddresses: Set<String>,
         transactions: Set<CryptoCurrencyTransaction>,
         currencies: Set<CryptoCurrency>,
-    ): Map<CryptoCurrency.ID, Set<PendingTransaction>> {
+    ): Map<CryptoCurrency.ID, Set<TxHistoryItem>> {
         if (transactions.isEmpty()) return emptyMap()
 
         return currencies
@@ -87,48 +85,13 @@ internal class NetworkStatusFactory {
                     }
                 }
 
-                currency.id to createCurrentTransactions(networksAddresses, currencyTransactions)
+                currency.id to createCurrentTransactions(currencyTransactions)
             }
             .toMap()
     }
 
-    private fun createCurrentTransactions(
-        networksAddresses: Set<String>,
-        transactions: Set<CryptoCurrencyTransaction>,
-    ): Set<PendingTransaction> {
-        return transactions.mapNotNullTo(hashSetOf()) { createCurrentTransaction(networksAddresses, it) }
-    }
-
-    private fun createCurrentTransaction(
-        networksAddresses: Set<String>,
-        transaction: CryptoCurrencyTransaction,
-    ): PendingTransaction? {
-        val direction = when {
-            transaction.toAddress in networksAddresses -> PendingTransaction.Direction.Incoming(
-                fromAddress = transaction.fromAddress,
-            )
-            transaction.fromAddress in networksAddresses -> PendingTransaction.Direction.Outgoing(
-                toAddress = transaction.toAddress,
-            )
-            else -> {
-                Timber.e(
-                    """
-                    Unable to find transaction direction
-                    |- To address: ${transaction.toAddress}
-                    |- From address: ${transaction.fromAddress}
-                    |- Network addresses: $networksAddresses
-                    """.trimIndent(),
-                )
-
-                return null
-            }
-        }
-
-        return PendingTransaction(
-            amount = transaction.amount,
-            direction = direction,
-            sentAt = transaction.sentAt,
-        )
+    private fun createCurrentTransactions(transactions: Set<CryptoCurrencyTransaction>): Set<TxHistoryItem> {
+        return transactions.mapTo(hashSetOf()) { it.txHistoryItem }
     }
 
     private fun getNetworkAddress(defaultAddress: String, availableAddresses: Set<String>): NetworkAddress {

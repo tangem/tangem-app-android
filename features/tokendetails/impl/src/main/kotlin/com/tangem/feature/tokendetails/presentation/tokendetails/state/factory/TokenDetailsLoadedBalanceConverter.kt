@@ -3,36 +3,54 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import arrow.core.Either
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import com.tangem.core.ui.components.marketprice.PriceChangeState
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryToTransactionStateConverter
+import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
 internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val symbol: String,
+    private val decimals: Int,
+    private val clickIntents: TokenDetailsClickIntents,
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
+
+    private val txHistoryItemConverter by lazy {
+        TokenDetailsTxHistoryToTransactionStateConverter(symbol, decimals, clickIntents)
+    }
 
     override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
         return value.fold(ifLeft = { convertError() }, ifRight = ::convert)
     }
 
     private fun convertError(): TokenDetailsState {
-        // TODO:  [REDACTED_JIRA]
-        return currentStateProvider()
+        val state = currentStateProvider()
+        return state.copy(
+            tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(state.tokenBalanceBlockState.actionButtons),
+            marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencySymbol),
+            notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachable),
+        )
     }
 
     private fun convert(status: CryptoCurrencyStatus): TokenDetailsState {
         val state = currentStateProvider()
-        val currencyName = state.marketPriceBlockState.currencyName
+        val currencyName = state.marketPriceBlockState.currencySymbol
         return state.copy(
             tokenBalanceBlockState = getBalanceState(state.tokenBalanceBlockState, status),
-            marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
+            marketPriceBlockState = getMarketPriceState(status = status.value, currencySymbol = currencyName),
+            pendingTxs = status.value.pendingTransactions.map(txHistoryItemConverter::convert).toPersistentList(),
         )
     }
 
@@ -43,56 +61,49 @@ internal class TokenDetailsLoadedBalanceConverter(
         return when (status.value) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
-            -> {
-                TokenDetailsBalanceBlockState.Content(
-                    actionButtons = currentState.actionButtons,
-                    fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
-                    cryptoBalance = formatCryptoAmount(status),
-                )
-            }
-            is CryptoCurrencyStatus.Loading -> {
-                TokenDetailsBalanceBlockState.Loading(currentState.actionButtons)
-            }
-            is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Custom,
-            // TODO:  [REDACTED_JIRA]
+            -> TokenDetailsBalanceBlockState.Content(
+                actionButtons = currentState.actionButtons,
+                fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
+                cryptoBalance = formatCryptoAmount(status),
+            )
+            is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(currentState.actionButtons)
+            is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
-            -> {
-                TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
-            }
+            is CryptoCurrencyStatus.NoAmount,
+            -> TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
         }
     }
 
-    private fun getMarketPriceState(status: CryptoCurrencyStatus.Status, currencyName: String): MarketPriceBlockState {
+    private fun getMarketPriceState(
+        status: CryptoCurrencyStatus.Status,
+        currencySymbol: String,
+    ): MarketPriceBlockState {
         return when (status) {
-            is CryptoCurrencyStatus.NoQuote,
+            is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencySymbol)
+            is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencySymbol)
             is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.MissedDerivation,
+            is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.NoAmount,
             -> MarketPriceBlockState.Content(
-                currencyName = currencyName,
+                currencySymbol = currencySymbol,
                 price = formatPrice(status, appCurrencyProvider()),
-                priceChangeConfig = PriceChangeConfig(
+                priceChangeConfig = PriceChangeState.Content(
                     valueInPercent = formatPriceChange(status),
                     type = getPriceChangeType(status),
                 ),
             )
-            is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
-            is CryptoCurrencyStatus.Custom,
-            is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
-            is CryptoCurrencyStatus.Unreachable,
-            -> MarketPriceBlockState.Error(currencyName)
         }
     }
 
-    private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeConfig.Type {
-        val priceChange = status.priceChange ?: return PriceChangeConfig.Type.DOWN
+    private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeType {
+        val priceChange = status.priceChange ?: return PriceChangeType.DOWN
 
-        return if (priceChange > BigDecimal.ZERO) {
-            PriceChangeConfig.Type.UP
-        } else {
-            PriceChangeConfig.Type.DOWN
-        }
+        return if (priceChange > BigDecimal.ZERO) PriceChangeType.UP else PriceChangeType.DOWN
     }
 
     private fun formatPriceChange(status: CryptoCurrencyStatus.Status): String {

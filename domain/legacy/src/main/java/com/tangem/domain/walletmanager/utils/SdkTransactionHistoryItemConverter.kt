@@ -1,6 +1,5 @@
 package com.tangem.domain.walletmanager.utils
 
-import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.utils.converter.Converter
@@ -13,11 +12,20 @@ internal class SdkTransactionHistoryItemConverter : Converter<SdkTransactionHist
         timestampInMillis = value.timestamp,
         direction = value.direction.toDomain(),
         status = when (value.status) {
-            TransactionStatus.Confirmed -> TxHistoryItem.TxStatus.Confirmed
-            TransactionStatus.Unconfirmed -> TxHistoryItem.TxStatus.Unconfirmed
+            TransactionHistoryItem.TransactionStatus.Confirmed -> TxHistoryItem.TransactionStatus.Confirmed
+            TransactionHistoryItem.TransactionStatus.Failed -> TxHistoryItem.TransactionStatus.Failed
+            TransactionHistoryItem.TransactionStatus.Unconfirmed -> TxHistoryItem.TransactionStatus.Unconfirmed
         },
-        type = when (value.type) {
+        type = when (val type = value.type) {
             TransactionHistoryItem.TransactionType.Transfer -> TxHistoryItem.TransactionType.Transfer
+            TransactionHistoryItem.TransactionType.Approve -> TxHistoryItem.TransactionType.Approve
+            is TransactionHistoryItem.TransactionType.Custom -> TxHistoryItem.TransactionType.Custom(type.id)
+            TransactionHistoryItem.TransactionType.Deposit -> TxHistoryItem.TransactionType.Deposit
+            TransactionHistoryItem.TransactionType.Submit -> TxHistoryItem.TransactionType.Submit
+            TransactionHistoryItem.TransactionType.Supply -> TxHistoryItem.TransactionType.Supply
+            TransactionHistoryItem.TransactionType.Swap -> TxHistoryItem.TransactionType.Swap
+            TransactionHistoryItem.TransactionType.Unoswap -> TxHistoryItem.TransactionType.Unoswap
+            TransactionHistoryItem.TransactionType.Withdraw -> TxHistoryItem.TransactionType.Withdraw
         },
         amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
     )
