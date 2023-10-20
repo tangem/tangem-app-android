@@ -92,6 +92,8 @@ include(":features:tokendetails:impl")
 
 include(":features:learn2earn:api")
 include(":features:learn2earn:impl")
+
+include(":features:send:api")
 // endregion Feature modules
 
 // region Domain modules
@@ -113,11 +115,15 @@ include(":domain:app-currency")
 include(":domain:app-currency:models")
 include(":domain:app-theme")
 include(":domain:app-theme:models")
+include(":domain:balance-hiding")
+include(":domain:balance-hiding:models")
+
 // endregion Domain modules
 
 // region Data modules
 include(":data:app-currency")
 include(":data:app-theme")
+include(":data:balance-hiding")
 include(":data:common")
 include(":data:card")
 include(":data:tokens")

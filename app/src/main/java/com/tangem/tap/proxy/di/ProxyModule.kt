@@ -2,13 +2,19 @@ package com.tangem.tap.proxy.di
 
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
+import com.tangem.tap.features.details.DarkThemeFeatureToggle
 import com.tangem.tap.proxy.*
 import dagger.Module
 import dagger.Provides
@@ -30,9 +36,15 @@ class ProxyModule {
 
     @Provides
     @Singleton
-    fun provideUserWalletManager(appStateHolder: AppStateHolder): UserWalletManager {
+    fun provideUserWalletManager(
+        appStateHolder: AppStateHolder,
+        walletManagersFacade: WalletManagersFacade,
+        walletFeatureToggles: WalletFeatureToggles,
+    ): UserWalletManager {
         return UserWalletManagerImpl(
             appStateHolder = appStateHolder,
+            walletManagersFacade = walletManagersFacade,
+            walletFeatureToggles = walletFeatureToggles,
         )
     }
 
@@ -42,20 +54,36 @@ class ProxyModule {
         appStateHolder: AppStateHolder,
         analytics: AnalyticsEventHandler,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        walletManagersFacade: WalletManagersFacade,
+        walletFeatureToggles: WalletFeatureToggles,
     ): TransactionManager {
         return TransactionManagerImpl(
             appStateHolder = appStateHolder,
             analytics = analytics,
             cardSdkConfigRepository = cardSdkConfigRepository,
+            walletManagersFacade = walletManagersFacade,
+            walletFeatureToggles = walletFeatureToggles,
         )
     }
 
     @Provides
     @Singleton
-    fun provideDerivationManager(appStateHolder: AppStateHolder): DerivationManager {
+    fun provideDerivationManager(
+        appStateHolder: AppStateHolder,
+        currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
+    ): DerivationManager {
         return DerivationManagerImpl(
             appStateHolder = appStateHolder,
+            currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideDarkThemeFeatureToggle(featureTogglesManager: FeatureTogglesManager): DarkThemeFeatureToggle {
+        return DarkThemeFeatureToggle(featureTogglesManager)
     }
 
     // regions FeatureConsumers
