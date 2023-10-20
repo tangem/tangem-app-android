@@ -1,11 +1,9 @@
 package com.tangem.tap.features.customtoken.impl.presentation.ui.components
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -25,7 +23,15 @@ import com.tangem.tap.features.details.ui.cardsettings.resolveReference
  */
 @Composable
 internal fun AddCustomTokenToolbar(title: TextReference, onBackButtonClick: () -> Unit) {
-    TopAppBar(backgroundColor = TangemTheme.colors.background.secondary) {
+    val toolbarElevation = if (isSystemInDarkTheme()) {
+        TangemTheme.dimens.elevation0
+    } else {
+        AppBarDefaults.TopAppBarElevation
+    }
+    TopAppBar(
+        backgroundColor = TangemTheme.colors.background.primary,
+        elevation = toolbarElevation,
+    ) {
         IconButton(onClick = onBackButtonClick) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_back_24),

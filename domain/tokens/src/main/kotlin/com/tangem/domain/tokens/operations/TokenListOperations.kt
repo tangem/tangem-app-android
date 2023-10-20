@@ -1,7 +1,9 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.*
-import arrow.core.raise.*
+import arrow.core.raise.Raise
+import arrow.core.raise.either
+import arrow.core.raise.withError
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
@@ -37,9 +39,19 @@ internal class TokenListOperations(
         }
     }
 
+    fun getTokenListForSingleCurrencyFlow(): Flow<Either<Error, TokenList>> {
+        return flow {
+            emit(
+                either {
+                    createTokenList()
+                },
+            )
+        }
+    }
+
     private fun Raise<Error>.createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
         val nonEmptyCurrencies = tokens.toNonEmptyListOrNull()
-            ?: return TokenList.NotInitialized
+            ?: return TokenList.Empty
 
         val isAnyTokenLoading = nonEmptyCurrencies.any { it.value is CryptoCurrencyStatus.Loading }
         val fiatBalanceOperations = TokenListFiatBalanceOperations(nonEmptyCurrencies, isAnyTokenLoading)
@@ -50,6 +62,22 @@ internal class TokenListOperations(
             isAnyTokenLoading = isAnyTokenLoading,
             isGrouped = isGrouped,
             isSortedByBalance = isSortedByBalance,
+        )
+    }
+
+    private fun Raise<Error>.createTokenList(): TokenList {
+        val nonEmptyCurrencies = tokens.toNonEmptyListOrNull()
+            ?: return TokenList.Empty
+
+        val isAnyTokenLoading = nonEmptyCurrencies.any { it.value is CryptoCurrencyStatus.Loading }
+        val fiatBalanceOperations = TokenListFiatBalanceOperations(nonEmptyCurrencies, isAnyTokenLoading)
+
+        return createTokenList(
+            currencies = nonEmptyCurrencies,
+            fiatBalance = fiatBalanceOperations.calculateFiatBalance(),
+            isAnyTokenLoading = isAnyTokenLoading,
+            isGrouped = false,
+            isSortedByBalance = false,
         )
     }
 
@@ -125,6 +153,7 @@ internal class TokenListOperations(
             .map<Boolean, Either<Error, Boolean>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(value = false.right()) }
+            .cancellable()
     }
 
     private fun getIsSortedByBalance(): Flow<Either<Error, Boolean>> {
@@ -132,6 +161,7 @@ internal class TokenListOperations(
             .map<Boolean, Either<Error, Boolean>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(value = false.right()) }
+            .cancellable()
     }
 
     sealed class Error {
