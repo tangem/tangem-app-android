@@ -79,6 +79,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
         cryptoCurrencyName: CryptoCurrencyName,
         fiatCurrencyName: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String {
         if (action == CurrencyExchangeManager.Action.Sell) throw UnsupportedOperationException()
 
@@ -92,6 +93,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
             .appendQueryParameter("signature", signature(walletAddress))
             .appendQueryParameter("fix_currency", "true")
             .appendQueryParameter("return_url", ExchangeUrlBuilder.SUCCESS_URL)
+        if (isDarkTheme) builder.appendQueryParameter("theme", "1inch")
 
         return builder.build().toString()
     }

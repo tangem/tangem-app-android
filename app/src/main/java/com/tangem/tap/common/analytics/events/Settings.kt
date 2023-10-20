@@ -22,6 +22,7 @@ sealed class Settings(
     class ButtonAppSettings : Settings(event = "Button - App Settings")
     class ButtonCreateBackup : Settings(event = "Button - Create Backup")
     class ButtonWalletConnect : Settings(event = "Button - Wallet Connect")
+    object ScanNewCard : Settings(event = "Button - Scan New Card")
 
     class ButtonSocialNetwork(network: SocialNetwork) : Settings(
         event = "Button - Social Network",
@@ -78,5 +79,10 @@ sealed class Settings(
         )
 
         object ButtonEnableBiometricAuthentication : AppSettings(event = "Button - Enable Biometric Authentication")
+
+        class MainCurrencyChanged(currencyType: String) : MainScreen(
+            event = "Main Currency Changed",
+            params = mapOf("Currency Type" to currencyType),
+        )
     }
 }
