@@ -50,6 +50,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -602,6 +603,11 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val state = uiState as? WalletState.ContentState ?: return
+
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrencyStatus.currency.symbol),
+        )
+
         val wallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
 
         reduxStateHolder.dispatch(
@@ -614,6 +620,10 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrencyStatus.currency.symbol),
+        )
+
         reduxStateHolder.dispatch(TradeCryptoAction.New.Swap(cryptoCurrencyStatus.currency))
     }
 
@@ -622,12 +632,14 @@ internal class WalletViewModel @Inject constructor(
 
         val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
         val coinStatus = if (userWallet.isMultiCurrency) cryptoCurrencyStatus else singleWalletCryptoCurrencyStatus
+        coinStatus ?: return
+
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonSend(coinStatus.currency.symbol),
+        )
 
         reduxStateHolder.dispatch(
-            action = TradeCryptoAction.New.SendCoin(
-                userWallet = userWallet,
-                coinStatus = coinStatus ?: return,
-            ),
+            action = TradeCryptoAction.New.SendCoin(userWallet = userWallet, coinStatus = coinStatus),
         )
     }
 
@@ -638,6 +650,10 @@ internal class WalletViewModel @Inject constructor(
         }
 
         val state = uiState as? WalletState.ContentState ?: return
+
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
+        )
 
         viewModelScope.launch(dispatchers.io) {
             val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
@@ -669,6 +685,10 @@ internal class WalletViewModel @Inject constructor(
     override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val state = uiState as? WalletState.ContentState ?: return
 
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrencyStatus.currency.symbol),
+        )
+
         viewModelScope.launch(dispatchers.io) {
             val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
 
@@ -676,6 +696,8 @@ internal class WalletViewModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrencyStatus.currency.network,
             )
+
+            analyticsEventsHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
 
             val currency = cryptoCurrencyStatus.currency
             uiState = stateFactory.getStateWithOpenWalletBottomSheet(
@@ -703,6 +725,10 @@ internal class WalletViewModel @Inject constructor(
     override fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val state = uiState as? WalletState.ContentState ?: return
 
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonCopyAddress(cryptoCurrencyStatus.currency.symbol),
+        )
+
         viewModelScope.launch(dispatchers.main) {
             val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
 
@@ -725,6 +751,10 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrencyStatus.currency.symbol),
+        )
+
         reduxStateHolder.dispatch(
             TradeCryptoAction.New.Sell(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -888,6 +918,10 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        analyticsEventsHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrencyStatus.currency.symbol),
+        )
+
         viewModelScope.launch(dispatchers.main) {
             val state = uiState as? WalletState.ContentState ?: return@launch
             val userWallet = getWallet(state.walletsListConfig.selectedWalletIndex)
