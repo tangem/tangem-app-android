@@ -525,7 +525,7 @@
             "networks":
             [
                 {
-                    "networkId": "near/test"
+                    "networkId": "near-protocol/test"
                 }
             ]
         }
