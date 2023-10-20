@@ -17,7 +17,7 @@ internal class TokenListToListStateConverter(
         return when (value) {
             is TokenList.GroupedByNetwork -> createListState(value)
             is TokenList.Ungrouped -> createListState(value)
-            is TokenList.NotInitialized -> createEmptyListState()
+            is TokenList.Empty -> createEmptyListState()
         }
     }
 

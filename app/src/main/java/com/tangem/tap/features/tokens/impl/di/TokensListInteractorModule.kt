@@ -2,10 +2,10 @@ package com.tangem.tap.features.tokens.impl.di
 
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.testnet.TestnetTokensStorage
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.features.tokens.impl.data.DefaultTokensListRepository
 import com.tangem.tap.features.tokens.impl.domain.DefaultTokensListInteractor
 import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -25,17 +25,16 @@ internal object TokensListInteractorModule {
     fun provideTokensListInteractor(
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
-        reduxStateHolder: AppStateHolder,
+        getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         testnetTokensStorage: TestnetTokensStorage,
     ): TokensListInteractor {
         return DefaultTokensListInteractor(
             repository = DefaultTokensListRepository(
                 tangemTechApi = tangemTechApi,
                 dispatchers = dispatchers,
-                reduxStateHolder = reduxStateHolder,
+                getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 testnetTokensStorage = testnetTokensStorage,
             ),
-            reduxStateHolder = reduxStateHolder,
         )
     }
 }

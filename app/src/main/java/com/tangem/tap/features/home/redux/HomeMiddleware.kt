@@ -1,6 +1,5 @@
 package com.tangem.tap.features.home.redux
 
-import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
@@ -63,7 +62,9 @@ private fun handleHomeAction(action: Action) {
             store.dispatch(GlobalAction.FetchUserCountry)
         }
         is HomeAction.ReadCard -> {
-            readCard(action.analyticsEvent, action.lifecycleCoroutineScope)
+            action.scope.launch {
+                readCard(action.analyticsEvent)
+            }
         }
         is HomeAction.GoToShop -> {
             Analytics.send(Shop.ScreenOpened())
@@ -78,34 +79,31 @@ private fun handleHomeAction(action: Action) {
     }
 }
 
-private fun readCard(analyticsEvent: AnalyticsEvent?, lifecycleCoroutineScope: LifecycleCoroutineScope) {
-    lifecycleCoroutineScope.launch {
-        delay(timeMillis = 200)
-        store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
-            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
-        )
+private suspend fun readCard(analyticsEvent: AnalyticsEvent?) {
+    store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+        isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
+    )
 
-        store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
-            analyticsEvent = analyticsEvent,
-            onProgressStateChange = { showProgress ->
-                if (showProgress) {
-                    changeButtonState(ButtonState.PROGRESS)
-                } else {
-                    changeButtonState(ButtonState.ENABLED)
-                }
-            },
-            onScanStateChange = { scanInProgress ->
-                store.dispatch(HomeAction.ScanInProgress(scanInProgress))
-            },
-            onFailure = {
-                Timber.e(it, "Unable to scan card")
+    store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
+        analyticsEvent = analyticsEvent,
+        onProgressStateChange = { showProgress ->
+            if (showProgress) {
+                changeButtonState(ButtonState.PROGRESS)
+            } else {
                 changeButtonState(ButtonState.ENABLED)
-            },
-            onSuccess = { scanResponse ->
-                proceedWithScanResponse(scanResponse)
-            },
-        )
-    }
+            }
+        },
+        onScanStateChange = { scanInProgress ->
+            store.dispatch(HomeAction.ScanInProgress(scanInProgress))
+        },
+        onFailure = {
+            Timber.e(it, "Unable to scan card")
+            changeButtonState(ButtonState.ENABLED)
+        },
+        onSuccess = { scanResponse ->
+            proceedWithScanResponse(scanResponse)
+        },
+    )
 }
 
 private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
