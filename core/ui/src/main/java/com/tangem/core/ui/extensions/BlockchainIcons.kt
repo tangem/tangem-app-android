@@ -51,19 +51,14 @@ fun getActiveIconRes(blockchainId: String): Int {
 
 @Suppress("ComplexMethod")
 @DrawableRes
-fun getActiveIconResByCoinId(coinId: String, networkId: String): Int {
+fun getActiveIconResByCoinId(coinId: String): Int {
     return when (coinId) {
         "binancecoin" -> R.drawable.img_bsc_22
         "bitcoin" -> R.drawable.img_btc_22
         "bitcoin-cash" -> R.drawable.img_btc_cash_22
-        "ethereum" -> {
-            when (networkId) {
-                "ethereum" -> R.drawable.img_eth_22
-                "arbitrum-one" -> R.drawable.img_arbitrum_22
-                "optimistic-ethereum" -> R.drawable.img_optimism_22
-                else -> R.drawable.ic_alert_24
-            }
-        }
+        "ethereum" -> R.drawable.img_eth_22
+        "arbitrum-one" -> R.drawable.img_arbitrum_22
+        "optimistic-ethereum" -> R.drawable.img_optimism_22
         "ethereum-classic" -> R.drawable.img_eth_classic_22
         "stellar" -> R.drawable.img_stellar_22
         "cardano" -> R.drawable.img_cardano_22
