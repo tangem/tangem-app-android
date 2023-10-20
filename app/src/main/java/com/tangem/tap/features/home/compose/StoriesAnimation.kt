@@ -96,6 +96,8 @@ fun StoriesTextAnimation(
 @Composable
 fun StoriesBottomImageAnimation(
     initialScale: Float = 2.5f,
+    secondStageScale: Float = SCALE_SWITCH_BARRIER,
+    targetScale: Float = 1.0f,
     firstStepDuration: Int,
     totalDuration: Int,
     content: @Composable (Modifier) -> Unit,
@@ -117,7 +119,7 @@ fun StoriesBottomImageAnimation(
             )
         },
         label = "Appearing scale",
-    ) { value -> if (value) SCALE_SWITCH_BARRIER else initialScale }
+    ) { value -> if (value) secondStageScale else initialScale }
 
     val secondTransition = updateTransition(
         targetState = isSecondStepLaunched.value,
@@ -131,14 +133,14 @@ fun StoriesBottomImageAnimation(
             )
         },
         label = "Outgoing scale",
-    ) { value -> if (value) 1f else SCALE_SWITCH_BARRIER }
+    ) { value -> if (value) targetScale else secondStageScale }
 
     val fadeIn = firstTransition.animateFloat(
         transitionSpec = { tween(durationMillis = 400) },
         label = "Fade in on start",
     ) { value -> if (value) 1f else 0f }
 
-    if (firstScaleStep.value == SCALE_SWITCH_BARRIER) {
+    if (firstScaleStep.value == secondStageScale) {
         isSecondStepLaunched.value = true
     }
 
