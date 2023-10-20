@@ -115,6 +115,32 @@ fun PrimaryButtonIconEnd(
 }
 
 /**
+ * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=68%3A20&mode=design&t=YXX8vqJcB9jn0wPp-1)
+ * */
+@Composable
+fun PrimaryButtonIconEndTwoLines(
+    text: String,
+    @DrawableRes iconResId: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    showProgress: Boolean = false,
+    enabled: Boolean = true,
+    additionalText: String? = null,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        icon = TangemButtonIconPosition.End(iconResId),
+        onClick = onClick,
+        colors = TangemButtonsDefaults.primaryButtonColors,
+        enabled = enabled,
+        showProgress = showProgress,
+        additionalText = additionalText,
+        size = TangemButtonSize.TwoLines,
+    )
+}
+
+/**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=233%3A258&t=TmfD6UBHPg9uYfev-4)
  * */
 @Composable
@@ -260,6 +286,13 @@ private fun PrimaryButtonSample() {
             iconResId = R.drawable.ic_tangem_24,
             enabled = false,
             onClick = { },
+        )
+        PrimaryButtonIconEndTwoLines(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Manage tokens",
+            iconResId = R.drawable.ic_tangem_24,
+            onClick = { },
+            additionalText = "Manage these tokens",
         )
         PrimaryButtonIconStart(
             modifier = Modifier.fillMaxWidth(),
