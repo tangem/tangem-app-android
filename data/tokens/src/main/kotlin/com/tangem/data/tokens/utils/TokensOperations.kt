@@ -36,7 +36,7 @@ internal fun getTokenId(network: Network, sdkToken: SdkToken): ID {
     val suffix = if (sdkTokenId == null) {
         CustomCurrencyIdSuffix(contractAddress = sdkToken.contractAddress)
     } else {
-        CurrencyIdSuffix(rawId = sdkTokenId)
+        CurrencyIdSuffix(rawId = sdkTokenId, contractAddress = sdkToken.contractAddress)
     }
 
     return ID(TOKEN_ID_PREFIX, getCurrencyIdBody(network), suffix)
