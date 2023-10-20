@@ -105,6 +105,9 @@ fun StoriesWalletForEveryone(stepDuration: Int) {
             SpacerH32()
             BoxWithGradient {
                 StoriesBottomImageAnimation(
+                    initialScale = 2.6f,
+                    secondStageScale = 1.2f,
+                    targetScale = 1.1f,
                     totalDuration = stepDuration,
                     firstStepDuration = 500,
                 ) { modifier ->
@@ -184,8 +187,8 @@ private fun StoriesImage(@DrawableRes drawableResId: Int, modifier: Modifier = M
     Image(
         painter = painterResource(id = drawableResId),
         contentDescription = null,
-        contentScale = ContentScale.FillWidth,
-        modifier = modifier.fillMaxWidth(),
+        contentScale = ContentScale.Inside,
+        modifier = modifier.fillMaxSize(),
     )
 }
 
