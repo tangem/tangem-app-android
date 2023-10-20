@@ -19,5 +19,6 @@ sealed class UpdateWalletManagerResult {
         val defaultAddress: String,
         val addresses: Set<String>,
         val amountToCreateAccount: BigDecimal,
+        val errorMessage: String,
     ) : UpdateWalletManagerResult()
 }

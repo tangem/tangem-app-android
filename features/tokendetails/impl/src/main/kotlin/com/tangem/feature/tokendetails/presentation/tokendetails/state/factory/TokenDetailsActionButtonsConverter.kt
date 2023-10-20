@@ -23,7 +23,7 @@ internal class TokenDetailsActionButtonsConverter(
 
     private fun List<TokenActionsState.ActionState>.mapToManageButtons(): ImmutableList<TokenDetailsActionButton> {
         return this
-            .map { action ->
+            .mapNotNull { action ->
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
                         TokenDetailsActionButton.Buy(enabled = action.enabled, onClick = clickIntents::onBuyClick)
@@ -39,6 +39,9 @@ internal class TokenDetailsActionButtonsConverter(
                     }
                     is TokenActionsState.ActionState.Swap -> {
                         TokenDetailsActionButton.Swap(enabled = action.enabled, onClick = clickIntents::onSwapClick)
+                    }
+                    else -> {
+                        null
                     }
                 }
             }

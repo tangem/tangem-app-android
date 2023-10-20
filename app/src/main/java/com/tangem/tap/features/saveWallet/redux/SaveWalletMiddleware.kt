@@ -107,7 +107,9 @@ internal class SaveWalletMiddleware {
                     store.dispatchWithMain(SaveWalletAction.Save.Error(error))
                 }
                 .doOnSuccess {
-                    preferencesStorage.shouldSaveUserWallets = true
+                    store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+                        .saveShouldSaveUserWallets(item = true)
+
                     // Enable saving access codes only if this is the first time user save the wallet
                     if (isFirstSavedWallet) {
                         preferencesStorage.shouldSaveAccessCodes = true
@@ -140,10 +142,7 @@ internal class SaveWalletMiddleware {
             store.dispatchWithMain(SaveWalletAction.Save.Error(TangemSdkError.ExceptionError(error)))
             return
         }
-        val manager = UserWalletsListManager.provideBiometricImplementation(
-            context = context,
-            tangemSdkManager = tangemSdkManager,
-        )
+        val manager = UserWalletsListManager.provideBiometricImplementation(context)
 
         store.dispatchWithMain(GlobalAction.UpdateUserWalletsListManager(manager))
     }
