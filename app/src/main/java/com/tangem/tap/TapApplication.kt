@@ -399,7 +399,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         val feedbackManager = FeedbackManager(
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
-            chatManager = ChatManager(preferencesStorage, foregroundActivityObserver, store),
+            chatManager = ChatManager(preferencesStorage, foregroundActivityObserver),
         )
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }
