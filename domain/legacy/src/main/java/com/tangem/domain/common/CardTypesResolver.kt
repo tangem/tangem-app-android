@@ -9,6 +9,8 @@ interface CardTypesResolver {
 
     fun isTangemWallet(): Boolean
 
+    fun isShibaWallet(): Boolean
+
     fun isWhiteWallet(): Boolean
 
     fun isWallet2(): Boolean
@@ -17,15 +19,15 @@ interface CardTypesResolver {
 
     fun isStart2Coin(): Boolean
 
-    fun isDev(): Boolean
+    fun isDevKit(): Boolean
+
+    fun isSingleWalletWithToken(): Boolean
 
     fun isMultiwalletAllowed(): Boolean
 
     fun getBlockchain(): Blockchain
 
     fun getPrimaryToken(): Token?
-
-    fun getBackupCardsCount(): Int
 
     fun isReleaseFirmwareType(): Boolean
 
@@ -38,8 +40,4 @@ interface CardTypesResolver {
     fun isAttestationFailed(): Boolean
 
     fun hasWalletSignedHashes(): Boolean
-
-    fun hasBackup(): Boolean
-
-    fun isBackupForbidden(): Boolean
 }
