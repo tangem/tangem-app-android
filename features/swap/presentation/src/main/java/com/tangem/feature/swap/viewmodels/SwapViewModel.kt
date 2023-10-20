@@ -461,7 +461,16 @@ internal class SwapViewModel @Inject constructor(
             },
             onGivePermissionClick = {
                 givePermissionsToSwap()
-                analyticsEventHandler.send(SwapEvents.ButtonPermissionApproveClicked)
+                val sendTokenSymbol = dataState.fromCurrency?.symbol
+                val receiveTokenSymbol = dataState.toCurrency?.symbol
+                if (sendTokenSymbol != null && receiveTokenSymbol != null) {
+                    analyticsEventHandler.send(
+                        SwapEvents.ButtonPermissionApproveClicked(
+                            sendToken = sendTokenSymbol,
+                            receiveToken = receiveTokenSymbol,
+                        ),
+                    )
+                }
             },
             onChangeCardsClicked = {
                 onChangeCardsClicked()
