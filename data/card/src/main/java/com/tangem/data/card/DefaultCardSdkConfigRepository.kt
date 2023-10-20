@@ -49,6 +49,7 @@ internal class DefaultCardSdkConfigRepository(
             ProductType.Twins -> CardIdDisplayFormat.LastLuhn(numbers = 4)
             ProductType.Note,
             ProductType.Wallet,
+            ProductType.Wallet2,
             ProductType.Start2Coin,
             ProductType.Wallet2,
             -> CardIdDisplayFormat.Full
