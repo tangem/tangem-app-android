@@ -30,12 +30,6 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
         configureTransitions()
     }
 
-    protected open fun configureTransitions() {
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mainView = super.onCreateView(inflater, container, savedInstanceState)!!
         return mainView
@@ -55,6 +49,16 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
     }
 
     protected open fun loadToolbarMenu(): MenuProvider? = null
+
+    protected open fun configureTransitions() {
+        configureDefaultTransactions()
+    }
+
+    protected fun configureDefaultTransactions() {
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(R.transition.fade)
+        exitTransition = inflater.inflateTransition(R.transition.fade)
+    }
 
     fun showRetrySnackbar(message: String, action: VoidCallback) {
         val snackbar = Snackbar.make(mainView, message, Snackbar.LENGTH_INDEFINITE)

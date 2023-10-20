@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
 import com.tangem.common.Provider
-import com.tangem.core.ui.event.consumed
-import com.tangem.core.ui.event.triggered
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.TokenListSortingError
@@ -16,15 +16,14 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.err
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.CryptoCurrencyToDraggableItemConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.NetworkGroupToDraggableItemsConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 internal class OrganizeTokensStateHolder(
     private val intents: OrganizeTokensIntents,
     private val dragAndDropIntents: DragAndDropIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val onSubscription: () -> Unit,
-    stateFlowScope: CoroutineScope,
 ) {
 
     private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())
@@ -39,9 +38,7 @@ internal class OrganizeTokensStateHolder(
         TokenListToStateConverter(Provider(stateFlowInternal::value), itemsConverter)
     }
 
-    private val inProgressStateConverter by lazy {
-        InProgressStateConverter()
-    }
+    private val inProgressStateConverter by lazy { InProgressStateConverter() }
 
     private val tokenListErrorConverter by lazy {
         TokenListErrorConverter(Provider(stateFlowInternal::value), inProgressStateConverter)
@@ -52,12 +49,6 @@ internal class OrganizeTokensStateHolder(
     }
 
     val stateFlow: StateFlow<OrganizeTokensState> = stateFlowInternal
-        .onSubscription { onSubscription() }
-        .stateIn(
-            scope = stateFlowScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = getInitialState(),
-        )
 
     fun updateStateWithTokenList(tokenList: TokenList) {
         updateState { tokenListConverter.convert(tokenList) }
@@ -66,7 +57,7 @@ internal class OrganizeTokensStateHolder(
     fun updateStateAfterTokenListSorting(tokenList: TokenList) {
         updateState {
             tokenListConverter.convert(tokenList).copy(
-                scrollListToTop = triggered(::consumeScrollListToTopEvent),
+                scrollListToTop = triggeredEvent(Unit, ::consumeScrollListToTopEvent),
             )
         }
     }
@@ -80,12 +71,15 @@ internal class OrganizeTokensStateHolder(
     }
 
     fun updateStateWithManualSorting(itemsState: OrganizeTokensListState) {
-        updateState {
-            copy(
-                header = header.copy(isSortedByBalance = false),
-                itemsState = itemsState,
-            )
-        }
+        updateState { copy(itemsState = itemsState) }
+    }
+
+    fun disableSortingByBalance() {
+        updateState { copy(header = header.copy(isSortedByBalance = false)) }
+    }
+
+    fun updateHiddenState(isBalanceHidden: Boolean) {
+        updateState { copy(isBalanceHidden = isBalanceHidden) }
     }
 
     fun updateStateWithError(error: TokenListError) {
@@ -110,19 +104,20 @@ internal class OrganizeTokensStateHolder(
             ),
             dndConfig = OrganizeTokensState.DragAndDropConfig(
                 onItemDragged = dragAndDropIntents::onItemDragged,
-                onDragStart = dragAndDropIntents::onItemDraggingStart,
+                onItemDragStart = dragAndDropIntents::onItemDraggingStart,
                 onItemDragEnd = dragAndDropIntents::onItemDraggingEnd,
                 canDragItemOver = dragAndDropIntents::canDragItemOver,
             ),
-            scrollListToTop = consumed,
+            scrollListToTop = consumedEvent(),
+            isBalanceHidden = true,
         )
     }
 
-    private fun updateState(block: OrganizeTokensState.() -> OrganizeTokensState) {
+    private inline fun updateState(block: OrganizeTokensState.() -> OrganizeTokensState) {
         stateFlowInternal.update(block)
     }
 
     private fun consumeScrollListToTopEvent() {
-        updateState { copy(scrollListToTop = consumed) }
+        updateState { copy(scrollListToTop = consumedEvent()) }
     }
 }
