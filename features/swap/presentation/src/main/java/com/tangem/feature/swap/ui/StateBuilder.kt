@@ -24,7 +24,11 @@ import kotlinx.collections.immutable.toImmutableList
 @Suppress("LargeClass")
 internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider: Provider<Boolean>) {
 
-    private val tokensDataConverter = TokensDataConverter(actions.onSearchEntered, actions.onTokenSelected)
+    private val tokensDataConverter = TokensDataConverter(
+        onSearchEntered = actions.onSearchEntered,
+        onTokenSelected = actions.onTokenSelected,
+        isBalanceHiddenProvider = isBalanceHiddenProvider,
+    )
 
     fun createInitialLoadingState(initialCurrency: Currency, networkInfo: NetworkInfo): SwapStateHolder {
         return SwapStateHolder(
@@ -269,9 +273,18 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
         val patchedReceiveCardData = uiState.receiveCardData.copy(
             isBalanceHidden = isBalanceHidden,
         )
+        val selectTokenState = uiState.selectTokenState?.copy(
+            addedTokens = uiState.selectTokenState.addedTokens.map {
+                it.copy(
+                    addedTokenBalanceData = it.addedTokenBalanceData?.copy(isBalanceHidden = isBalanceHidden),
+                )
+            },
+        )
+
         return uiState.copy(
             sendCardData = patchedSendCardData,
             receiveCardData = patchedReceiveCardData,
+            selectTokenState = selectTokenState,
         )
     }
 
