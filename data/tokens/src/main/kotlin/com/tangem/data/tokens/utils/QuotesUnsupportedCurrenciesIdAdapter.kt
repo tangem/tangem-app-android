@@ -5,7 +5,7 @@ import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 /**
  * Adapter to replace unsupported currencies for quotes request if it necessary
  */
-class QuotesUnsupportedCurrenciesIdAdapter {
+internal class QuotesUnsupportedCurrenciesIdAdapter {
 
     /**
      * Replaces unsupported currencies id to it replacements for request
@@ -14,10 +14,13 @@ class QuotesUnsupportedCurrenciesIdAdapter {
         val idsForRequest = mutableSetOf<String>()
         val idsFiltered = mutableSetOf<String>()
         currenciesIds.forEach { currencyId ->
-            unsupportedMapWithReplacement[currencyId]?.let {
+            val replacementId = UNSUPPORTED_IDS_WITH_REPLACEMENTS[currencyId]
+            if (replacementId != null) {
                 idsFiltered.add(currencyId)
-                idsForRequest.add(it)
-            } ?: idsForRequest.add(currencyId)
+                idsForRequest.add(replacementId)
+            } else {
+                idsForRequest.add(currencyId)
+            }
         }
         return ReplacementResult(idsForRequest = idsForRequest, idsFiltered = idsFiltered)
     }
@@ -28,9 +31,11 @@ class QuotesUnsupportedCurrenciesIdAdapter {
     fun getResponseWithUnsupportedCurrencies(response: QuotesResponse, filteredIds: Set<String>): QuotesResponse {
         val updatedQuotes = mutableMapOf<String, QuotesResponse.Quote>()
         filteredIds.forEach { filteredId ->
-            unsupportedMapWithReplacement[filteredId]?.let { baseId ->
-                response.quotes[baseId]?.let { quote ->
-                    updatedQuotes[filteredId] = quote
+            val replacementId = UNSUPPORTED_IDS_WITH_REPLACEMENTS[filteredId]
+            if (replacementId != null) {
+                val quoteReplacement = response.quotes[replacementId]
+                if (quoteReplacement != null) {
+                    updatedQuotes[filteredId] = quoteReplacement
                 }
             }
         }
@@ -43,7 +48,7 @@ class QuotesUnsupportedCurrenciesIdAdapter {
         /**
          * Map that contains unsupported currencies and their replacement for request
          */
-        private val unsupportedMapWithReplacement = mapOf(
+        private val UNSUPPORTED_IDS_WITH_REPLACEMENTS = mapOf(
             "optimistic-ethereum" to "ethereum",
             "arbitrum-one" to "ethereum",
         )
