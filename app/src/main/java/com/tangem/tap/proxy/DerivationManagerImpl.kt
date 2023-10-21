@@ -233,7 +233,7 @@ class DerivationManagerImpl(
         }
 
         scope.launch {
-            val selectedUserWallet = appStateHolder.userWalletsListManager?.selectedUserWalletSync
+            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
 
             val result = appStateHolder.tangemSdkManager?.derivePublicKeys(
                 cardId = null, // always ignore cardId in derive task
@@ -255,12 +255,10 @@ class DerivationManagerImpl(
                         derivedKeys = updatedDerivedKeys,
                     )
                     if (selectedUserWallet != null) {
-                        val userWallet = selectedUserWallet.copy(
-                            scanResponse = updatedScanResponse,
+                        userWalletsListManager.update(
+                            userWalletId = selectedUserWallet.walletId,
+                            update = { it.copy(scanResponse = updatedScanResponse) },
                         )
-
-                        appStateHolder.userWalletsListManager?.save(userWallet, canOverride = true)
-                        appStateHolder.walletStoresManager?.fetch(userWallet, true)
                     }
                     appStateHolder.mainStore?.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
                     delay(DELAY_SDK_DIALOG_CLOSE)
