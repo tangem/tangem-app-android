@@ -10,7 +10,6 @@ import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.UserWalletManager
@@ -90,11 +89,10 @@ class UserWalletManagerImpl(
     }
 
     override fun getWalletId(): String {
-        return appStateHolder.getActualCard()?.let {
-            UserWalletIdBuilder.card(it)
-                .build()
-                ?.stringValue
-        } ?: ""
+        val selectedUserWallet = requireNotNull(
+            userWalletsListManager.selectedUserWalletSync,
+        ) { "selectedUserWallet shouldn't be null" }
+        return selectedUserWallet.walletId.stringValue
     }
 
     override suspend fun isTokenAdded(currency: Currency, derivationPath: String?): Boolean {
@@ -227,7 +225,7 @@ class UserWalletManagerImpl(
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
         val walletManager = if (walletFeatureToggles.isRedesignedScreenEnabled) {
             val selectedUserWallet = requireNotNull(
-                appStateHolder.userWalletsListManager?.selectedUserWalletSync,
+                userWalletsListManager.selectedUserWalletSync,
             ) { "userWallet or userWalletsListManager is null" }
             walletManagersFacade.getOrCreateWalletManager(
                 selectedUserWallet.walletId,
