@@ -41,6 +41,7 @@ internal class DefaultCurrenciesRepository(
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(demoConfig)
     private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
     private val userTokensResponseFactory = UserTokensResponseFactory()
+    private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
@@ -323,12 +324,14 @@ internal class DefaultCurrenciesRepository(
             onError = { handleFetchTokensError(userWallet, it) },
         )
 
-        userTokensStore.store(userWallet.walletId, response)
-        fetchExchangeableUserMarketCoinsByIds(userWalletId, response)
+        val compatibleUserTokensResponse = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(response)
+        userTokensStore.store(userWallet.walletId, compatibleUserTokensResponse)
+        fetchExchangeableUserMarketCoinsByIds(userWalletId, compatibleUserTokensResponse)
     }
 
     private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
-        userTokensStore.store(userWalletId, response)
+        val compatibleUserTokensResponse = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(response)
+        userTokensStore.store(userWalletId, compatibleUserTokensResponse)
         try {
             tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
         } catch (e: Throwable) {
