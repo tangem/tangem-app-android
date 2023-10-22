@@ -61,7 +61,7 @@ class DefaultCustomTokenInteractor(
         val isNeedToDerive = isNeedToDerive(userWallet, currency)
         if (isNeedToDerive) {
             deriveMissingBlockchains(userWallet = userWallet, currencyList = listOf(currency)) {
-                submitAdd(userWallet = userWallet, currency = currency)
+                submitAdd(userWallet = userWallet.copy(scanResponse = it), currency = currency)
             }
         } else {
             submitAdd(userWallet, currency)
