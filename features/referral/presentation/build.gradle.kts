@@ -19,11 +19,10 @@ dependencies {
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.lifecycle.viewModel.ktx)
-    implementation(deps.material)
 
     /** Compose */
     implementation(deps.compose.foundation)
-    implementation(deps.compose.material)
+    implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
 
     /** Domain */
