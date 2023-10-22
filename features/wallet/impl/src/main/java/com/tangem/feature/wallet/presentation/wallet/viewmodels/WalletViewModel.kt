@@ -349,7 +349,7 @@ internal class WalletViewModel @Inject constructor(
         }.ifEmpty { return }
 
         viewModelScope.launch(dispatchers.io) {
-            derivePublicKeysUseCase(cardId = scanResponse.card.cardId, derivations = derivations)
+            derivePublicKeysUseCase(cardId = null, derivations = derivations)
                 .onRight {
                     val newDerivedKeys = it.entries
                     val oldDerivedKeys = scanResponse.derivedKeys

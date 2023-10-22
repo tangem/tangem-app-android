@@ -22,6 +22,7 @@ internal object WalletImageResolver {
     fun resolve(userWallet: UserWallet): Int? {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         return when {
+            cardTypesResolver.isDevKit() -> R.drawable.ill_dev_120_106
             cardTypesResolver.isTronWallet() -> userWallet.resolveTronWallet()
             cardTypesResolver.isKaspaWallet() -> userWallet.resolveKaspaWallet()
             cardTypesResolver.isBadWallet() -> userWallet.resolveBadWallet()
@@ -32,7 +33,6 @@ internal object WalletImageResolver {
             cardTypesResolver.isTangemTwins() -> R.drawable.ill_twins_120_106
             cardTypesResolver.isStart2Coin() -> R.drawable.ill_start2coin_120_106
             cardTypesResolver.isTangemNote() -> resolveNote(blockchain = cardTypesResolver.getBlockchain())
-            cardTypesResolver.isDevKit() -> R.drawable.ill_dev_120_106
             else -> null
         }
     }
