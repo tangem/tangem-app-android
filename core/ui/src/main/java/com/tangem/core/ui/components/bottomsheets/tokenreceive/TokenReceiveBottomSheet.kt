@@ -33,12 +33,8 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 fun TokenReceiveBottomSheet(config: TangemBottomSheetConfig) {
-    if (config.content is TokenReceiveBottomSheetConfig && config.isShow) {
-        TangemBottomSheet(config) { content ->
-            TokenReceiveBottomSheetContent(
-                content = content as TokenReceiveBottomSheetConfig,
-            )
-        }
+    TangemBottomSheet(config) { content: TokenReceiveBottomSheetConfig ->
+        TokenReceiveBottomSheetContent(content = content)
     }
 }
 
