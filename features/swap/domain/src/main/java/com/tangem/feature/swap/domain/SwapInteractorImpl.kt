@@ -47,6 +47,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     override suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState {
+        // TODO: refactor this function
         val networkId = initialCurrency.networkId
         val availableTokens = cache.getAvailableTokens(networkId)
         val allLoadedTokens = availableTokens.ifEmpty {
@@ -57,18 +58,18 @@ internal class SwapInteractorImpl @Inject constructor(
 
         // replace tokens in wallet tokens list with loaded same
         val loadedOnWalletsMap = mutableSetOf<String>()
-        val tokensInWallet =
-            userWalletManager.getUserTokens(
-                networkId = networkId,
-                derivationPath = derivationPath,
-                isExcludeCustom = true,
-            ).filter { it.symbol != initialCurrency.symbol }
-                .map { token ->
-                    allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
-                        loadedOnWalletsMap.add(it.symbol)
-                        it
-                    } ?: swapCurrencyConverter.convertBack(token)
-                }
+        val tokensInWallet = userWalletManager.getUserTokens(
+            networkId = networkId,
+            derivationPath = derivationPath,
+            isExcludeCustom = true,
+        )
+            .map { token ->
+                allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
+                    loadedOnWalletsMap.add(it.symbol)
+                    it
+                } ?: swapCurrencyConverter.convertBack(token)
+            }
+            .filter { it.symbol != initialCurrency.symbol && allLoadedTokens.contains(it) }
         val loadedTokens = allLoadedTokens
             .filter {
                 !loadedOnWalletsMap.contains(it.symbol)
