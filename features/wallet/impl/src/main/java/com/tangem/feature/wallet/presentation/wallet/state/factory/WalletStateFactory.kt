@@ -220,16 +220,9 @@ internal class WalletStateFactory(
     }
 
     fun getStateWithTokenActionBottomSheet(tokenActions: TokenActionsState): WalletState {
-        return when (val state = currentStateProvider() as WalletState.ContentState) {
-            is WalletMultiCurrencyState.Content -> state.copy(
-                tokenActionsBottomSheet = ActionsBottomSheetConfig(
-                    isShow = true,
-                    actions = tokenActionsProvider.provideActions(tokenActions),
-                    onDismissRequest = clickIntents::onDismissActionsBottomSheet,
-                ),
-            )
-            else -> state
-        }
+        return getStateWithOpenWalletBottomSheet(
+            content = ActionsBottomSheetConfig(actions = tokenActionsProvider.provideActions(tokenActions)),
+        )
     }
 
     fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): WalletState {
