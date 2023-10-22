@@ -96,6 +96,7 @@ class DerivationManagerImpl(
                     derivationPath = derivationPath,
                     derivationStyleProvider = derivationStyleProvider,
                 )
+                continuation.resumeWith(Result.success(derivationPath))
             }
         } else {
             val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
@@ -191,9 +192,11 @@ class DerivationManagerImpl(
             }
             is NonNativeToken -> {
                 val sdkToken = Token(
+                    name = currency.name,
                     symbol = currency.symbol,
                     contractAddress = currency.contractAddress,
                     decimals = currency.decimalCount,
+                    id = currency.id,
                 )
                 cryptoCurrencyFactory.createToken(
                     sdkToken = sdkToken,
