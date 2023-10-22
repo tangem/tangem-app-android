@@ -906,12 +906,8 @@ internal class WalletViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             removeCurrencyUseCase(userWallet.walletId, cryptoCurrencyStatus.currency)
                 .fold(
-                    ifLeft = {
-                        showSnackbar(resourceReference(R.string.common_error))
-                    },
-                    ifRight = {
-                        onDismissActionsBottomSheet()
-                    },
+                    ifLeft = { showToast(resourceReference(R.string.common_error)) },
+                    ifRight = { uiState = stateFactory.getStateWithClosedBottomSheet() },
                 )
         }
     }
@@ -934,16 +930,6 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onDismissBottomSheet() {
         uiState = stateFactory.getStateWithClosedBottomSheet()
-    }
-
-    override fun onDismissActionsBottomSheet() {
-        (uiState as? WalletMultiCurrencyState.Content)?.let { state ->
-            uiState = state.copy(
-                tokenActionsBottomSheet = state.tokenActionsBottomSheet?.copy(
-                    isShow = false,
-                ),
-            )
-        }
     }
 
     override fun onTransactionClick(txHash: String) {
@@ -1004,7 +990,7 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private fun showSnackbar(message: TextReference) {
+    private fun showToast(message: TextReference) {
         uiState = stateFactory.getStateAndTriggerEvent(
             state = uiState,
             event = WalletEvent.ShowToast(message),
