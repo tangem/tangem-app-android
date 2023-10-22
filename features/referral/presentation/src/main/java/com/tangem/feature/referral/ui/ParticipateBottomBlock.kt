@@ -7,16 +7,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -36,7 +35,6 @@ import com.tangem.feature.referral.domain.models.ExpectedAwards
 import com.tangem.feature.referral.presentation.R
 
 @Suppress("LongParameterList")
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun ParticipateBottomBlock(
     purchasedWalletCount: Int,
@@ -240,7 +238,6 @@ private fun ExtraItems(extraItems: List<ExpectedAward>) {
                 endTextColor = TangemTheme.colors.text.primary1,
                 endTextStyle = TangemTheme.typography.subtitle2,
                 cornersToRound = CornersToRound.ZERO,
-
             )
         }
     }
