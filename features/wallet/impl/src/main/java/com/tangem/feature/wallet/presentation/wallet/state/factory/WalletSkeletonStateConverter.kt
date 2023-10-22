@@ -56,7 +56,6 @@ internal class WalletSkeletonStateConverter(
             tokensListState = WalletTokensListState.Loading(),
             notifications = persistentListOf(),
             bottomSheetConfig = null,
-            tokenActionsBottomSheet = null,
             onManageTokensClick = clickIntents::onManageTokensClick,
             isBalanceHidden = isBalanceHiddenProvider(),
         )
