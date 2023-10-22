@@ -11,10 +11,14 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEach
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -29,6 +33,10 @@ import com.tangem.core.ui.components.transactions.Transaction
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
+import com.tangem.core.ui.event.EventEffect
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -46,8 +54,10 @@ import kotlinx.collections.immutable.PersistentList
 internal fun TokenDetailsScreen(state: TokenDetailsState) {
     BackHandler(onBack = state.topAppBarConfig.onBackClick)
 
+    val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
         val pullRefreshState = rememberPullRefreshState(
@@ -138,17 +148,17 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
         TokenDetailsDialogs(state = state)
 
         state.bottomSheetConfig?.let { config ->
-            if (config.isShow) {
-                when (config.content) {
-                    is TokenReceiveBottomSheetConfig -> {
-                        TokenReceiveBottomSheet(config = config)
-                    }
-                    is ChooseAddressBottomSheetConfig -> {
-                        ChooseAddressBottomSheet(config = config)
-                    }
+            when (config.content) {
+                is TokenReceiveBottomSheetConfig -> {
+                    TokenReceiveBottomSheet(config = config)
+                }
+                is ChooseAddressBottomSheetConfig -> {
+                    ChooseAddressBottomSheet(config = config)
                 }
             }
         }
+
+        TokenDetailsEventEffect(snackbarHostState = snackbarHostState, event = state.event)
     }
 }
 
@@ -167,6 +177,18 @@ private fun PendingTxsBlock(
     ) {
         pendingTxs.fastForEach { Transaction(state = it, isBalanceHidden = isBalanceHidden) }
     }
+}
+
+@Composable
+internal fun TokenDetailsEventEffect(snackbarHostState: SnackbarHostState, event: StateEvent<TextReference>) {
+    val resources = LocalContext.current.resources
+
+    EventEffect(
+        event = event,
+        onTrigger = { value ->
+            snackbarHostState.showSnackbar(message = value.resolveReference(resources))
+        },
+    )
 }
 
 @Preview
