@@ -159,9 +159,11 @@ internal class SwapRepositoryImpl @Inject constructor(
             }
             is Currency.NonNativeToken -> {
                 val sdkToken = SdkToken(
+                    name = currency.name,
                     symbol = currency.symbol,
                     contractAddress = currency.contractAddress,
                     decimals = currency.decimalCount,
+                    id = currency.id,
                 )
                 cryptoCurrencyFactory.createToken(
                     sdkToken = sdkToken,
