@@ -308,8 +308,6 @@ internal object WalletPreviewData {
     }
 
     val actionsBottomSheet = ActionsBottomSheetConfig(
-        isShow = true,
-        onDismissRequest = {},
         actions = listOf(
             TokenActionButtonConfig(
                 text = TextReference.Str("Send"),
@@ -386,7 +384,6 @@ internal object WalletPreviewData {
                 WalletNotification.Warning.NetworksUnreachable,
             ),
             bottomSheetConfig = bottomSheet,
-            tokenActionsBottomSheet = actionsBottomSheet,
             onManageTokensClick = {},
             event = consumedEvent(),
             isBalanceHidden = false,
