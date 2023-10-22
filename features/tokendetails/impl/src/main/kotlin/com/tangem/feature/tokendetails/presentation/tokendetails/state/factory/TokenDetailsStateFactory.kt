@@ -23,6 +23,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -188,12 +189,14 @@ internal class TokenDetailsStateFactory(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = ChooseAddressBottomSheetConfig(
-                    addressModels = addresses.map {
-                        AddressModel(
-                            value = it.value,
-                            type = AddressModel.Type.valueOf(it.type.name),
-                        )
-                    },
+                    addressModels = addresses
+                        .map { address ->
+                            AddressModel(
+                                value = address.value,
+                                type = AddressModel.Type.valueOf(address.type.name),
+                            )
+                        }
+                        .toImmutableList(),
                     onClick = clickIntents::onAddressTypeSelected,
                 ),
             ),
