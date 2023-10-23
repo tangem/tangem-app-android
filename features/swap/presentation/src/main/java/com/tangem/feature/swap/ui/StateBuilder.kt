@@ -2,6 +2,7 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.Provider
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
@@ -21,9 +22,13 @@ import kotlinx.collections.immutable.toImmutableList
  * State builder creates a specific states for SwapScreen
  */
 @Suppress("LargeClass")
-internal class StateBuilder(val actions: UiActions) {
+internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider: Provider<Boolean>) {
 
-    private val tokensDataConverter = TokensDataConverter(actions.onSearchEntered, actions.onTokenSelected)
+    private val tokensDataConverter = TokensDataConverter(
+        onSearchEntered = actions.onSearchEntered,
+        onTokenSelected = actions.onTokenSelected,
+        isBalanceHiddenProvider = isBalanceHiddenProvider,
+    )
 
     fun createInitialLoadingState(initialCurrency: Currency, networkInfo: NetworkInfo): SwapStateHolder {
         return SwapStateHolder(
@@ -39,6 +44,7 @@ internal class StateBuilder(val actions: UiActions) {
                 canSelectAnotherToken = false,
                 isNotNativeToken = initialCurrency.isNonNative(),
                 balance = "",
+                isBalanceHidden = true,
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
@@ -50,12 +56,12 @@ internal class StateBuilder(val actions: UiActions) {
                 balance = "",
                 isNotNativeToken = false,
                 coinId = null,
+                isBalanceHidden = true,
             ),
             fee = FeeState.Loading,
             networkCurrency = networkInfo.blockchainCurrency,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             onRefresh = {},
-            onSearchFocusChange = actions.onSearchFocusChange,
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
@@ -84,6 +90,7 @@ internal class StateBuilder(val actions: UiActions) {
                 isNotNativeToken = fromToken.isNonNative(),
                 canSelectAnotherToken = canSelectSendToken,
                 balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
+                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
@@ -95,6 +102,7 @@ internal class StateBuilder(val actions: UiActions) {
                 isNotNativeToken = toToken.isNonNative(),
                 canSelectAnotherToken = canSelectReceiveToken,
                 balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
+                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             fee = FeeState.Loading,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
@@ -144,6 +152,7 @@ internal class StateBuilder(val actions: UiActions) {
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 balance = quoteModel.fromTokenInfo.tokenWalletBalance,
+                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
@@ -155,6 +164,7 @@ internal class StateBuilder(val actions: UiActions) {
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 balance = quoteModel.toTokenInfo.tokenWalletBalance,
+                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             networkCurrency = quoteModel.networkCurrency,
             warnings = warnings,
@@ -192,6 +202,7 @@ internal class StateBuilder(val actions: UiActions) {
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 balance = emptyAmountState.fromTokenWalletBalance,
+                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
@@ -203,6 +214,7 @@ internal class StateBuilder(val actions: UiActions) {
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 balance = emptyAmountState.toTokenWalletBalance,
+                isBalanceHidden = isBalanceHiddenProvider(),
             ),
             warnings = emptyList(),
             fee = FeeState.Empty,
@@ -251,6 +263,28 @@ internal class StateBuilder(val actions: UiActions) {
                     selection = TextRange(amount.length),
                 ),
             ),
+        )
+    }
+
+    fun updateBalanceHiddenState(uiState: SwapStateHolder, isBalanceHidden: Boolean): SwapStateHolder {
+        val patchedSendCardData = uiState.sendCardData.copy(
+            isBalanceHidden = isBalanceHidden,
+        )
+        val patchedReceiveCardData = uiState.receiveCardData.copy(
+            isBalanceHidden = isBalanceHidden,
+        )
+        val selectTokenState = uiState.selectTokenState?.copy(
+            addedTokens = uiState.selectTokenState.addedTokens.map {
+                it.copy(
+                    addedTokenBalanceData = it.addedTokenBalanceData?.copy(isBalanceHidden = isBalanceHidden),
+                )
+            },
+        )
+
+        return uiState.copy(
+            sendCardData = patchedSendCardData,
+            receiveCardData = patchedReceiveCardData,
+            selectTokenState = selectTokenState,
         )
     }
 

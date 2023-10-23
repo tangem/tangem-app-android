@@ -28,6 +28,7 @@ interface ExchangeService : Feature, Exchanger, ExchangeUrlBuilder {
                 cryptoCurrencyName: String,
                 fiatCurrencyName: String,
                 walletAddress: String,
+                isDarkTheme: Boolean,
             ): String? = null
 
             override fun getSellCryptoReceiptUrl(
@@ -52,12 +53,14 @@ interface ExchangeRules : Feature, Exchanger {
 }
 
 interface ExchangeUrlBuilder {
+    @Suppress("LongParameterList")
     fun getUrl(
         action: CurrencyExchangeManager.Action,
         blockchain: Blockchain,
         cryptoCurrencyName: String,
         fiatCurrencyName: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String?
 
     fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String?

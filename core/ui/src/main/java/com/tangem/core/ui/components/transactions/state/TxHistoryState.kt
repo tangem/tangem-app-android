@@ -13,12 +13,8 @@ sealed interface TxHistoryState {
      */
     data class Content(val contentItems: MutableStateFlow<PagingData<TxHistoryItemState>>) : TxHistoryState
 
-    /**
-     * Empty state
-     *
-     * @property onBuyClick lambda be invoke when buy button was clicked
-     */
-    data class Empty(val onBuyClick: () -> Unit) : TxHistoryState
+    /** Empty state */
+    object Empty : TxHistoryState
 
     /**
      * Not supported tx history state
