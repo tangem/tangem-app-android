@@ -92,7 +92,9 @@ internal class WelcomeViewModel @Inject constructor(
                 isPermanent = error.isPermanent,
                 onDismiss = this::dismissWarning,
             )
-            is UserWalletsListError.EncryptionKeyInvalidated -> WarningModel.KeyInvalidatedWarning(
+            is UserWalletsListError.AllKeysInvalidated,
+            is UserWalletsListError.NoUserWalletSelected,
+            -> WarningModel.KeyInvalidatedWarning(
                 onDismiss = this::dismissWarning,
             )
             is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(
