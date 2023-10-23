@@ -11,7 +11,8 @@ internal data class OrganizeTokensState(
     val header: HeaderConfig,
     val actions: ActionsConfig,
     val dndConfig: DragAndDropConfig,
-    val scrollListToTop: StateEvent,
+    val scrollListToTop: StateEvent<Unit>,
+    val isBalanceHidden: Boolean,
 ) {
 
     data class HeaderConfig(
@@ -33,6 +34,6 @@ internal data class OrganizeTokensState(
         val onItemDragged: (ItemPosition, ItemPosition) -> Unit,
         val canDragItemOver: (ItemPosition, ItemPosition) -> Boolean,
         val onItemDragEnd: () -> Unit,
-        val onDragStart: (DraggableItem) -> Unit,
+        val onItemDragStart: (DraggableItem) -> Unit,
     )
 }
