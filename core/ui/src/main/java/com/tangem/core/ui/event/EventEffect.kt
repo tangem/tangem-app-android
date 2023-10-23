@@ -13,11 +13,12 @@ import androidx.compose.runtime.NonRestartableComposable
  */
 @Composable
 @NonRestartableComposable
-fun EventEffect(event: StateEvent, onTrigger: suspend () -> Unit) {
+@Suppress("UnnecessaryEventHandlerParameter")
+fun <A> EventEffect(event: StateEvent<A>, onTrigger: suspend (data: A) -> Unit) {
     LaunchedEffect(event) {
-        if (event is StateEvent.Triggered) {
-            onTrigger()
-            event.consume()
+        if (event is StateEvent.Triggered<A>) {
+            onTrigger(event.data)
+            event.onConsume()
         }
     }
 }
