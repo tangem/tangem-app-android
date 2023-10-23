@@ -114,6 +114,7 @@
     <string name="common_submit">Submit</string>
     <string name="common_success">Success</string>
     <string name="common_swap">Swap</string>
+    <string name="common_next">Next</string>
     <string name="common_terms_and_conditions">terms and conditions</string>
     <string name="common_transaction_failed">Transaction failed</string>
     <string name="common_transactions">Transactions</string>
