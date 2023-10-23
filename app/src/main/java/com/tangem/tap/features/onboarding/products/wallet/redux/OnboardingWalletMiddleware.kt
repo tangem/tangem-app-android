@@ -136,6 +136,7 @@ private fun handleWalletAction(action: Action) {
                     }
 
                     scope.launch {
+                        // TODO: Use new repo [REDACTED_JIRA]
                         userTokensRepository.saveUserTokens(
                             card = result.data.card,
                             tokens = blockchainNetworks.toCurrencies(),
@@ -152,7 +153,7 @@ private fun handleWalletAction(action: Action) {
 
             if (scanResponse == null) {
                 store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(HomeAction.ReadCard(lifecycleCoroutineScope = action.lifecycleCoroutineScope))
+                store.dispatch(HomeAction.ReadCard(scope = action.scope))
             } else {
                 val backupState = store.state.onboardingWalletState.backupState
                 val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
@@ -237,7 +238,12 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                             SeedPhraseSource.IMPORTED -> AnalyticsParam.WalletCreationType.SeedImport
                             SeedPhraseSource.GENERATED -> AnalyticsParam.WalletCreationType.NewSeed
                         }
-                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully(creationType))
+                        Analytics.send(
+                            event = Onboarding.CreateWallet.WalletCreatedSuccessfully(
+                                creationType = creationType,
+                                seedPhraseLength = action.mnemonicComponents.size,
+                            ),
+                        )
                         val response = CreateWalletResponse(
                             card = result.data.card,
                             derivedKeys = result.data.derivedKeys,
@@ -458,6 +464,23 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         is BackupAction.FinishBackup -> {
             if (action.withAnalytics) {
                 Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
+            }
+
+            userWalletsListManager.selectedUserWalletSync?.walletId?.let {
+                scope.launch {
+                    userWalletsListManager.update(
+                        userWalletId = it,
+                        update = { wallet ->
+                            wallet.copy(
+                                scanResponse = updateScanResponseAfterBackup(
+                                    scanResponse = wallet.scanResponse,
+                                    backupState = backupState,
+                                ),
+                            )
+                        },
+                    )
+                    store.dispatchOnMain(GlobalAction.UpdateUserWalletsListManager(userWalletsListManager))
+                }
             }
 
             val notActivatedCardIds = gatherCardIds(backupState, card)

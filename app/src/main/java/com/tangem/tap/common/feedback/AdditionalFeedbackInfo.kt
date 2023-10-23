@@ -7,8 +7,10 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import kotlinx.coroutines.flow.*
 
 class AdditionalFeedbackInfo {
+
     class EmailWalletInfo(
         var blockchain: Blockchain = Blockchain.Unknown,
         var derivationPath: String = "",
@@ -46,6 +48,7 @@ class AdditionalFeedbackInfo {
     private val Address.name: String
         get() = type.javaClass.simpleName
 
+    @Deprecated("Don't use it directly")
     fun setCardInfo(data: ScanResponse) {
         cardId = data.card.cardId
         cardBlockchain = data.walletData?.blockchain ?: ""
@@ -55,6 +58,7 @@ class AdditionalFeedbackInfo {
         userWalletId = UserWalletIdBuilder.scanResponse(data).build()?.stringValue ?: ""
     }
 
+    @Deprecated("Don't use it directly")
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
         walletsInfo.clear()
         tokens.clear()

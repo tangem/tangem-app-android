@@ -22,10 +22,11 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 internal fun LazyListScope.contentItems(
     state: WalletState.ContentState,
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
+    isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
     when (state) {
-        is WalletMultiCurrencyState -> tokensListItems(state.tokensListState, modifier)
-        is WalletSingleCurrencyState -> txHistoryItems(state.txHistoryState, txHistoryItems, modifier)
+        is WalletMultiCurrencyState -> tokensListItems(state.tokensListState, modifier, isBalanceHidden)
+        is WalletSingleCurrencyState -> txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
     }
 }

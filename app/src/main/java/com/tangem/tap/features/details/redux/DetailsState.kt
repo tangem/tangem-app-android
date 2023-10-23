@@ -1,20 +1,21 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.blockchain.common.Wallet
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
 import org.rekotlin.StateType
-import java.util.*
+import java.util.EnumSet
 
 data class DetailsState(
     val scanResponse: ScanResponse? = null,
-    val wallets: List<Wallet> = emptyList(),
     val cardSettingsState: CardSettingsState? = null,
     val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
-    val appCurrency: FiatCurrency = FiatCurrency.Default,
+    val isScanningInProgress: Boolean = false,
+    val error: TextReference? = null,
     val appSettingsState: AppSettingsState = AppSettingsState(),
 ) : StateType
 
@@ -40,7 +41,9 @@ data class CardSettingsState(
     val card: CardDTO,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
-    val resetConfirmed: Boolean = false,
+    val resetButtonEnabled: Boolean,
+    val condition1Checked: Boolean,
+    val condition2Checked: Boolean,
     val accessCodeRecovery: AccessCodeRecoveryState? = null,
 )
 
@@ -56,7 +59,11 @@ data class AppSettingsState(
     val saveAccessCodes: Boolean = false,
     val isBiometricsAvailable: Boolean = false,
     val needEnrollBiometrics: Boolean = false,
+    val isHidingEnabled: Boolean = false,
     val isInProgress: Boolean = false,
+    val selectedFiatCurrency: FiatCurrency = FiatCurrency.Default,
+    val selectedThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
+    val darkThemeSwitchEnabled: Boolean = false,
 )
 
 enum class SecurityOption { LongTap, PassCode, AccessCode }
