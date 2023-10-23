@@ -1,20 +1,19 @@
 package com.tangem.core.ui.components.buttons.common
 
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.requiredSizeIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerW
+import androidx.compose.ui.unit.sp
+import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.res.TangemTheme
 
 @Suppress("LongParameterList")
@@ -40,31 +39,35 @@ fun TangemButton(
         colors = colors,
         contentPadding = size.toContentPadding(icon = icon),
     ) {
+        val maxContentSize = getMaxButtonContentSize(buttonTextStyle = textStyle)
+
         ButtonContentContainer(
             buttonIcon = icon,
             iconPadding = size.toIconPadding(),
             showProgress = showProgress,
             progressIndicator = {
                 CircularProgressIndicator(
-                    modifier = Modifier.buttonContentSize(textStyle),
+                    modifier = Modifier.buttonContentSize(maxContentSize),
                     color = colors.contentColor(enabled = enabled).value,
-                    strokeWidth = TangemTheme.dimens.size4,
                 )
             },
             text = {
-                Text(
-                    modifier = Modifier.alignByBaseline(),
+                ResizableText(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .heightIn(MinButtonContentSize, maxContentSize),
                     text = text,
                     style = textStyle,
                     color = colors.contentColor(enabled = enabled).value,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    minFontSize = 12.sp,
                 )
             },
             icon = { iconResId ->
                 Icon(
-                    modifier = Modifier.buttonContentSize(textStyle),
+                    modifier = Modifier.buttonContentSize(maxContentSize),
                     painter = painterResource(id = iconResId),
                     tint = colors.contentColor(enabled = enabled).value,
                     contentDescription = null,
@@ -89,26 +92,36 @@ private inline fun RowScope.ButtonContentContainer(
     } else {
         if (buttonIcon is TangemButtonIconPosition.Start) {
             icon(buttonIcon.iconResId)
-            SpacerW(width = iconPadding)
+            Spacer(modifier = Modifier.requiredWidth(iconPadding))
         }
         text()
         if (buttonIcon is TangemButtonIconPosition.End) {
-            SpacerW(width = iconPadding)
+            Spacer(modifier = Modifier.requiredWidth(iconPadding))
             icon(buttonIcon.iconResId)
         }
     }
 }
 
-private fun Modifier.buttonContentSize(buttonTextStyle: TextStyle): Modifier = composed {
-    val minContentElementSize = TangemTheme.dimens.size20
-    val maxContentElementSize = remember(key1 = buttonTextStyle.lineHeight) {
-        buttonTextStyle.lineHeight.value.dp + 4.dp
+private val MinButtonContentSize: Dp
+    @Composable
+    @ReadOnlyComposable
+    get() = TangemTheme.dimens.size20
+
+@Composable
+@ReadOnlyComposable
+private fun getMaxButtonContentSize(buttonTextStyle: TextStyle): Dp {
+    val buttonLineHeight = with(LocalDensity.current) {
+        buttonTextStyle.lineHeight.toDp()
     }
 
+    return buttonLineHeight.coerceAtLeast(MinButtonContentSize)
+}
+
+private fun Modifier.buttonContentSize(maxSize: Dp): Modifier = composed {
     this.requiredSizeIn(
-        minWidth = minContentElementSize,
-        minHeight = minContentElementSize,
-        maxWidth = maxContentElementSize,
-        maxHeight = maxContentElementSize,
+        minWidth = MinButtonContentSize,
+        minHeight = MinButtonContentSize,
+        maxWidth = maxSize,
+        maxHeight = maxSize,
     )
 }

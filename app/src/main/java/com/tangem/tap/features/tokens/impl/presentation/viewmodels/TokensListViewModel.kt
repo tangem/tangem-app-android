@@ -1,15 +1,11 @@
 package com.tangem.tap.features.tokens.impl.presentation.viewmodels
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.paging.LoadState
-import androidx.paging.PagingData
-import androidx.paging.map
+import androidx.lifecycle.*
+import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.getActiveIconRes
@@ -19,6 +15,10 @@ import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.TokenWithBlockchain
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
@@ -26,49 +26,49 @@ import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.tap.features.tokens.impl.domain.models.Token.Network
 import com.tangem.tap.features.tokens.impl.presentation.models.SupportTokensState
-import com.tangem.tap.features.tokens.impl.presentation.models.TokensListArgs
 import com.tangem.tap.features.tokens.impl.presentation.router.TokensListRouter
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
-import com.tangem.tap.features.tokens.legacy.redux.TokenWithBlockchain
-import com.tangem.tap.features.tokens.legacy.redux.TokensAction
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.properties.Delegates
 import com.tangem.blockchain.common.Token as BlockchainToken
 
 /**
  * ViewModel for tokens list screen
  *
- * @property interactor         feature interactor
- * @property router             feature router
- * @property dispatchers        coroutine dispatchers provider
- * @property reduxStateHolder   redux state holder
- * @param analyticsEventHandler analytics event handler
+ * @property interactor                   feature interactor
+ * @property router                       feature router
+ * @property dispatchers                  coroutine dispatchers provider
+ * @property getSelectedWalletSyncUseCase use case that returns selected wallet
+ * @param analyticsEventHandler           analytics event handler
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class TokensListViewModel @Inject constructor(
     private val interactor: TokensListInteractor,
     private val router: TokensListRouter,
     private val dispatchers: AppCoroutineDispatcherProvider,
-    private val reduxStateHolder: AppStateHolder,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     analyticsEventHandler: AnalyticsEventHandler,
+    getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
-    private val args = TokensListArgs()
+    private val isManageAccess = store.state.tokensState.isManageAccess
     private val analyticsSender = TokensListAnalyticsSender(analyticsEventHandler)
     private val actionsHandler = ActionsHandler(router = router, debouncer = Debouncer())
 
@@ -76,15 +76,38 @@ internal class TokensListViewModel @Inject constructor(
     var uiState by mutableStateOf(value = getInitialUiState())
         private set
 
-    private val changedTokensList: MutableList<TokenWithBlockchain> = args.mainScreenTokenList.toMutableList()
-    private val changedBlockchainList: MutableList<Blockchain> = args.mainScreenBlockchainList.toMutableList()
+    private var currentTokensList: List<TokenWithBlockchain> by Delegates.notNull()
+    private var currentBlockchainList: List<Blockchain> by Delegates.notNull()
+
+    private var changedTokensList: MutableList<TokenWithBlockchain> = mutableListOf()
+    private var changedBlockchainList: MutableList<Blockchain> = mutableListOf()
+
+    private val tokensListMigration = TokensListMigration(
+        walletFeatureToggles = walletFeatureToggles,
+        getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+        getCurrenciesUseCase = getCurrenciesUseCase,
+    )
+
+    init {
+        viewModelScope.launch(dispatchers.main) {
+            val (currentCoins, currentTokens) = tokensListMigration.getCurrentCryptoCurrencies()
+
+            currentBlockchainList = currentCoins
+            currentTokensList = currentTokens
+
+            changedBlockchainList = currentCoins.toMutableList()
+            changedTokensList = currentTokens.toMutableList()
+
+            uiState = uiState.copySealed(tokens = getTokensListBySearchText(text = ""))
+        }
+    }
 
     override fun onCreate(owner: LifecycleOwner) {
-        if (args.isManageAccess) analyticsSender.sendWhenScreenOpened()
+        if (isManageAccess) analyticsSender.sendWhenScreenOpened()
     }
 
     private fun getInitialUiState(): TokensListStateHolder {
-        return if (args.isManageAccess) {
+        return if (isManageAccess) {
             TokensListStateHolder.ManageContent(
                 toolbarState = getInitialToolbarState(),
                 isLoading = true,
@@ -105,7 +128,7 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun getInitialToolbarState(): TokensListToolbarState {
-        return if (args.isManageAccess) {
+        return if (isManageAccess) {
             TokensListToolbarState.Title.Manage(
                 titleResId = R.string.add_tokens_title,
                 onBackButtonClick = actionsHandler::onBackButtonClick,
@@ -122,17 +145,19 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun isDifferentAddressesBlockVisible(): Boolean {
-        return reduxStateHolder.scanResponse?.card?.useOldStyleDerivation == true
+        return getSelectedWalletSyncUseCase().fold(
+            ifLeft = { false },
+            ifRight = { it.scanResponse.card.useOldStyleDerivation },
+        )
     }
 
-    private fun getInitialTokensList(searchText: String = ""): Flow<PagingData<TokenItemState>> {
-        if (searchText.isNotEmpty()) analyticsSender.sendWhenTokenSearched()
-
-        return interactor.getTokensList(searchText = searchText).map {
-            it.map { token ->
-                if (args.isManageAccess) createManageTokenContent(token) else createReadTokenContent(token)
-            }
-        }
+    private fun getInitialTokensList(): Flow<PagingData<TokenItemState>> {
+        return flowOf(
+            value = PagingData.empty(
+                sourceLoadStates = LoadStates(LoadState.Loading, LoadState.Loading, LoadState.Loading),
+                mediatorLoadStates = LoadStates(LoadState.Loading, LoadState.Loading, LoadState.Loading),
+            ),
+        )
     }
 
     private fun createManageTokenContent(token: Token): TokenItemState.ManageContent {
@@ -152,9 +177,7 @@ internal class TokensListViewModel @Inject constructor(
         return NetworkItemState.ManageContent(
             name = network.blockchain.fullNameWithoutTestnet.uppercase(),
             protocolName = getNetworkProtocolName(network),
-            iconResId = mutableStateOf(
-                getNetworkIconResId(network.address, network.blockchain),
-            ),
+            iconResId = mutableIntStateOf(value = getNetworkIconResId(network.address, network.blockchain)),
             isMainNetwork = isMainNetwork(network),
             isAdded = mutableStateOf(
                 isAdded(address = network.address, blockchain = network.blockchain),
@@ -183,7 +206,7 @@ internal class TokensListViewModel @Inject constructor(
         return NetworkItemState.ReadContent(
             name = network.blockchain.fullNameWithoutTestnet.uppercase(),
             protocolName = getNetworkProtocolName(network),
-            iconResId = mutableStateOf(getNetworkIconResId(network.address, network.blockchain)),
+            iconResId = mutableIntStateOf(value = getNetworkIconResId(network.address, network.blockchain)),
             isMainNetwork = isMainNetwork(network),
         )
     }
@@ -215,6 +238,20 @@ internal class TokensListViewModel @Inject constructor(
             }
         } else {
             changedBlockchainList.contains(blockchain)
+        }
+    }
+
+    private fun getTokensListBySearchText(text: String): Flow<PagingData<TokenItemState>> {
+        return interactor.getTokensList(searchText = text)
+            .mapToTokenItemState()
+            .cachedIn(viewModelScope)
+    }
+
+    private fun Flow<PagingData<Token>>.mapToTokenItemState(): Flow<PagingData<TokenItemState>> {
+        return map { pagingData ->
+            pagingData.map { token ->
+                if (isManageAccess) createManageTokenContent(token) else createReadTokenContent(token)
+            }
         }
     }
 
@@ -264,7 +301,12 @@ internal class TokensListViewModel @Inject constructor(
 
         fun onSaveButtonClick() {
             analyticsSender.sendWhenSaveButtonClicked()
-            store.dispatch(TokensAction.SaveChanges(changedTokensList, changedBlockchainList))
+            tokensListMigration.onSaveButtonClick(
+                currentTokensList = currentTokensList,
+                currentBlockchainList = currentBlockchainList,
+                changedTokensList = changedTokensList,
+                changedBlockchainList = changedBlockchainList,
+            )
         }
 
         private fun onSearchValueChange(newValue: String) {
@@ -272,8 +314,13 @@ internal class TokensListViewModel @Inject constructor(
             uiState = uiState.copySealed(toolbarState = state.copy(value = newValue))
 
             debouncer.debounce(waitMs = 800L, coroutineScope = viewModelScope + dispatchers.io) {
-                uiState = uiState.copySealed(tokens = getInitialTokensList(newValue))
+                uiState = uiState.copySealed(tokens = getSearchedTokensList(newValue))
             }
+        }
+
+        private fun getSearchedTokensList(searchText: String): Flow<PagingData<TokenItemState>> {
+            analyticsSender.sendWhenTokenSearched()
+            return getTokensListBySearchText(text = searchText)
         }
 
         private fun onCleanButtonClick() {
@@ -291,7 +338,7 @@ internal class TokensListViewModel @Inject constructor(
 
             if (isRemoveAction) {
                 val isTokenWithSameBlockchainFound = changedTokensList.any { it.blockchain == blockchain }
-                val isAddedOnMainScreen = args.mainScreenBlockchainList.contains(blockchain)
+                val isAddedOnMainScreen = currentBlockchainList.contains(blockchain)
 
                 if (isTokenWithSameBlockchainFound) {
                     router.openUnableHideMainTokenAlert(
@@ -341,7 +388,7 @@ internal class TokensListViewModel @Inject constructor(
             val isRemoveAction = changedTokensList.contains(token)
 
             if (isRemoveAction) {
-                val isAddedOnMainScreen = args.mainScreenTokenList.contains(token)
+                val isAddedOnMainScreen = currentTokensList.contains(token)
 
                 if (isAddedOnMainScreen) {
                     router.openRemoveWalletAlert(
@@ -373,32 +420,39 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun isUnsupportedToken(blockchain: Blockchain): SupportTokensState? {
-        val scanResponse = reduxStateHolder.scanResponse
-        val cardTypesResolver = scanResponse?.cardTypesResolver ?: return null
-        val supportedTokens = scanResponse.card.supportedTokens(cardTypesResolver)
+        return getSelectedWalletSyncUseCase().fold(
+            ifLeft = { null },
+            ifRight = {
+                val cardTypesResolver = it.scanResponse.cardTypesResolver
+                val supportedTokens = it.scanResponse.card.supportedTokens(cardTypesResolver)
 
-        // refactor this later by moving all this logic in card config
-        if (blockchain == Blockchain.Solana && !supportedTokens.contains(Blockchain.Solana)) {
-            return SupportTokensState.SolanaNetworkUnsupported
-        }
-        val canHandleToken = scanResponse.card.canHandleToken(
-            supportedTokens = supportedTokens,
-            blockchain = blockchain,
-            cardTypesResolver = cardTypesResolver,
+                // refactor this later by moving all this logic in card config
+                if (blockchain == Blockchain.Solana && !supportedTokens.contains(Blockchain.Solana)) {
+                    return SupportTokensState.SolanaNetworkUnsupported
+                }
+                val canHandleToken = it.scanResponse.card.canHandleToken(
+                    supportedTokens = supportedTokens,
+                    blockchain = blockchain,
+                    cardTypesResolver = cardTypesResolver,
+                )
+                if (!canHandleToken) {
+                    return SupportTokensState.UnsupportedCurve
+                }
+                return SupportTokensState.SupportedToken
+            },
         )
-        if (!canHandleToken) {
-            return SupportTokensState.UnsupportedCurve
-        }
-        return SupportTokensState.SupportedToken
     }
 
     private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
-        val scanResponse = reduxStateHolder.scanResponse
-        val canHandleToken = scanResponse?.card?.canHandleBlockchain(
-            blockchain = blockchain,
-            cardTypesResolver = scanResponse.cardTypesResolver,
-        ) ?: false
-        return !canHandleToken
+        return getSelectedWalletSyncUseCase().fold(
+            ifLeft = { false },
+            ifRight = {
+                !it.scanResponse.card.canHandleBlockchain(
+                    blockchain = blockchain,
+                    cardTypesResolver = it.scanResponse.cardTypesResolver,
+                )
+            },
+        )
     }
 
     private companion object {
