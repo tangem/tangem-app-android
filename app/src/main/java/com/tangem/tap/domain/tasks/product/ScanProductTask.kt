@@ -281,6 +281,9 @@ private class ScanWalletProcessor(
     }
 
     private fun getWalletProductType(card: CardDTO): ProductType {
+        if (card.batchId == CardDTO.RING_BATCH_ID) {
+            return ProductType.Ring
+        }
         return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available) {
             ProductType.Wallet2
         } else {
