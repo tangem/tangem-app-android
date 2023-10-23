@@ -1,11 +1,10 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
-import com.tangem.common.core.TangemError
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.models.ChatConfig
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.analytics.topup.TopUpController
@@ -47,13 +46,6 @@ sealed class GlobalAction : Action {
 
         object Stop : Onboarding()
     }
-
-    data class ScanCard(
-        val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
-        val onSuccess: ((ScanResponse) -> Unit)? = null,
-        val onFailure: ((TangemError) -> Unit)? = null,
-        val messageResId: Int? = null,
-    ) : GlobalAction()
 
     object ScanFailsCounter {
         data class ChooseBehavior(val result: CompletionResult<ScanResponse>) : GlobalAction()
@@ -103,4 +95,5 @@ sealed class GlobalAction : Action {
     }
 
     data class UpdateUserWalletsListManager(val manager: UserWalletsListManager) : GlobalAction()
+    data class ChangeAppThemeMode(val appThemeMode: AppThemeMode) : GlobalAction()
 }

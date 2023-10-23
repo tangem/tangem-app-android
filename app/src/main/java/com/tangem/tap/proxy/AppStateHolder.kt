@@ -9,11 +9,13 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.tap.common.entities.FiatCurrency
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.network.exchangeServices.ExchangeService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.rekotlin.Action
@@ -45,16 +47,21 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, ReduxNavControl
     var tangemSdkManager: TangemSdkManager? = null
     var walletStoresManager: WalletStoresManager? = null
     var appFiatCurrency: FiatCurrency = FiatCurrency.Default
+    var exchangeService: ExchangeService? = null
 
     fun getActualCard(): CardDTO? {
         return scanResponse?.card
     }
 
     override fun navigate(action: NavigationAction) {
-        mainStore?.dispatch(action)
+        mainStore?.dispatchOnMain(action)
     }
 
     override fun getBackStack(): List<AppScreen> = mainStore?.state?.navigationState?.backStack.orEmpty()
+
+    override fun popBackStack(screen: AppScreen?) {
+        mainStore?.dispatchOnMain(NavigationAction.PopBackTo(screen))
+    }
 
     override fun dispatch(action: Action) {
         mainStore?.dispatch(action)
