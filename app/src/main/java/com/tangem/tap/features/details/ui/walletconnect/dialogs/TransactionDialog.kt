@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.ui.walletconnect.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -26,7 +27,7 @@ object TransactionDialog {
             WcEthTransactionType.EthSignTransaction -> context.getText(R.string.common_sign)
             WcEthTransactionType.EthSendTransaction -> context.getText(R.string.common_sign_and_send)
         }
-        return AlertDialog.Builder(context).apply {
+        return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog).apply {
             setTitle(context.getString(R.string.wallet_connect_title))
             setMessage(message)
             setPositiveButton(positiveButtonTitle) { _, _ ->

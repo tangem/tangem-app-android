@@ -16,6 +16,18 @@ dependencies {
     /** Network */
     implementation(deps.retrofit)
 
+    /** Domain */
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    implementation(projects.domain.wallets.models)
+
+    /** Data */
+    implementation(projects.data.tokens)
+
+    /** Tangem SDKs */
+    implementation(deps.tangem.blockchain)
+
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)

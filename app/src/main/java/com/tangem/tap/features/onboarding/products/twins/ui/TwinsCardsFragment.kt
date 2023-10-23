@@ -5,10 +5,8 @@ import android.util.TypedValue
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import androidx.annotation.LayoutRes
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
-import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.Message
@@ -59,11 +57,11 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun configureTransitions() {
         when (store.state.twinCardsState.mode) {
-            CreateTwinWalletMode.CreateWallet -> super.configureTransitions()
+            CreateTwinWalletMode.CreateWallet -> {
+                super.configureTransitions()
+            }
             CreateTwinWalletMode.RecreateWallet -> {
-                val inflater = TransitionInflater.from(requireContext())
-                enterTransition = inflater.inflateTransition(R.transition.slide_right)
-                exitTransition = inflater.inflateTransition(R.transition.fade)
+                configureDefaultTransactions()
             }
         }
     }
@@ -105,7 +103,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun onStart() {
         super.onStart()
-        setStatusBarColor(R.color.backgroundWhite)
+        setStatusBarColor(R.color.background_primary)
     }
 
     private fun reconfigureLayoutForTwins(containerBinding: LayoutOnboardingContainerTopBinding) =
@@ -195,11 +193,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             )
 
             btnMainAction.setText(R.string.common_continue)
-            btnMainAction.icon = when (state.currentStep) {
-                is TwinCardsStep.WelcomeOnly -> null
-                is TwinCardsStep.Welcome -> AppCompatResources.getDrawable(requireContext(), R.drawable.ic_tangem_24)
-                else -> null
-            }
+            btnMainAction.icon = null
             btnMainAction.setOnClickListener { onMainButtonClick() }
         }
 
@@ -347,7 +341,6 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             btnMainAction.setOnClickListener {
                 store.dispatch(TwinCardsAction.TopUp)
             }
-
             btnAlternativeAction.isVisible = true
             btnAlternativeAction.setText(R.string.onboarding_top_up_button_show_wallet_address)
             btnAlternativeAction.setOnClickListener {
@@ -355,7 +348,6 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             }
         } else {
             btnMainAction.setText(R.string.onboarding_button_receive_crypto)
-            btnMainAction.icon = null
             btnMainAction.setOnClickListener {
                 store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
             }
@@ -365,6 +357,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         tvHeader.setText(R.string.onboarding_topup_title)
         tvBody.setText(R.string.onboarding_top_up_body)
+        btnMainAction.icon = null
 
         btnRefreshBalanceWidget.changeState(state.walletBalance.state)
         if (btnRefreshBalanceWidget.isShowing != true) {
@@ -375,6 +368,9 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
+        mainBinding.onboardingTopContainer.imvCardBackground.backgroundTintList =
+            requireContext().resources.getColorStateList(R.color.onboarding_card_background, null)
+
         updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet_twins)
     }
 
