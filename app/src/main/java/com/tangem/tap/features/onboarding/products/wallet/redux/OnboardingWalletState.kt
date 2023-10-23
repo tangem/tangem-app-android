@@ -14,6 +14,7 @@ data class OnboardingWalletState(
     val backupState: BackupState = BackupState(),
     val cardArtworkUri: Uri? = null,
     val showConfetti: Boolean = false,
+    val isRingOnboarding: Boolean = false,
 ) : StateType {
 
     @Suppress("MagicNumber")
