@@ -44,6 +44,10 @@ internal class TangemCardTypesResolver(
         return productType == ProductType.Wallet2
     }
 
+    override fun isRing(): Boolean {
+        return productType == ProductType.Ring
+    }
+
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins
 
     override fun isStart2Coin(): Boolean = card.isStart2Coin

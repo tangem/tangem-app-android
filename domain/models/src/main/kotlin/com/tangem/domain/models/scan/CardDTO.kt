@@ -324,4 +324,8 @@ data class CardDTO(
             }
         }
     }
+
+    companion object {
+        const val RING_BATCH_ID = "AC17"
+    }
 }
