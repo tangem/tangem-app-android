@@ -15,126 +15,49 @@ sealed interface TransactionState {
     /**
      * Content state
      *
-     * @property txHash    transaction hash
      * @property address   address
      * @property amount    amount
      * @property timestamp timestamp
+     * @property status    transaction status
+     * @property direction transaction direction
+     * @property onClick   Lambda be invoked when manage button is clicked
      */
-    sealed class Content(
-        override val txHash: String,
-        open val address: TextReference,
-        open val amount: String,
-        open val timestamp: String,
-    ) : TransactionState {
+    sealed class Content : TransactionState {
+
+        abstract val address: TextReference
+        abstract val amount: String
+        abstract val timestamp: String
+        abstract val status: Status
+        abstract val direction: Direction
+        abstract val onClick: () -> Unit
 
         fun copySealed(
             txHash: String = this.txHash,
             address: TextReference = this.address,
             amount: String = this.amount,
             timestamp: String = this.timestamp,
+            status: Status = this.status,
+            direction: Direction = this.direction,
         ): Content {
             return when (this) {
-                is Approved -> copy(txHash, address, amount, timestamp)
-                is Receive -> copy(txHash, address, amount, timestamp)
-                is Send -> copy(txHash, address, amount, timestamp)
-                is Swapped -> copy(txHash, address, amount, timestamp)
-                is Approving -> copy(txHash, address, amount, timestamp)
-                is Receiving -> copy(txHash, address, amount, timestamp)
-                is Sending -> copy(txHash, address, amount, timestamp)
-                is Swapping -> copy(txHash, address, amount, timestamp)
+                is Approve -> copy(txHash, address, amount, timestamp, status, direction)
+                is Transfer -> copy(txHash, address, amount, timestamp, status, direction)
+                is Swap -> copy(txHash, address, amount, timestamp, status, direction)
+                is Custom -> copy(txHash, address, amount, timestamp, status, direction)
             }
         }
+
+        sealed class Status {
+            object Failed : Status()
+            object Confirmed : Status()
+            object Unconfirmed : Status()
+        }
+
+        enum class Direction {
+            INCOMING,
+            OUTGOING,
+        }
     }
-
-    /**
-     * Content state for processed transaction
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     */
-    sealed class ProcessedTransactionContent(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-    ) : Content(txHash, address, amount, timestamp)
-
-    /**
-     * Content state for completed transaction
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     */
-    sealed class CompletedTransactionContent(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-    ) : Content(txHash, address, amount, timestamp)
-
-    /**
-     * Processed sending transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     */
-    data class Sending(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-    ) : ProcessedTransactionContent(txHash, address, amount, timestamp)
-
-    /**
-     * Processed receiving transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     */
-    data class Receiving(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-    ) : ProcessedTransactionContent(txHash, address, amount, timestamp)
-
-    /**
-     * Processed approving transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     */
-    data class Approving(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-    ) : ProcessedTransactionContent(txHash, address, amount, timestamp)
-
-    /**
-     * Processed swapping transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     */
-    data class Swapping(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-    ) : ProcessedTransactionContent(txHash, address, amount, timestamp)
 
     /**
      * Completed sending transaction state
@@ -143,28 +66,17 @@ sealed interface TransactionState {
      * @property address   address
      * @property amount    amount
      * @property timestamp timestamp
+     * @property direction transaction direction
      */
-    data class Send(
+    data class Transfer(
         override val txHash: String,
         override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
-    ) : CompletedTransactionContent(txHash, address, amount, timestamp)
-
-    /**
-     * Completed receiving transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     */
-    data class Receive(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-    ) : CompletedTransactionContent(txHash, address, amount, timestamp)
+        override val status: Status,
+        override val direction: Direction,
+        override val onClick: () -> Unit,
+    ) : Content()
 
     /**
      * Completed approving transaction state
@@ -173,13 +85,17 @@ sealed interface TransactionState {
      * @property address   address
      * @property amount    amount
      * @property timestamp timestamp
+     * @property direction transaction direction
      */
-    data class Approved(
+    data class Approve(
         override val txHash: String,
         override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
-    ) : CompletedTransactionContent(txHash, address, amount, timestamp)
+        override val status: Status,
+        override val direction: Direction,
+        override val onClick: () -> Unit,
+    ) : Content()
 
     /**
      * Completed swapping transaction state
@@ -188,13 +104,29 @@ sealed interface TransactionState {
      * @property address   address
      * @property amount    amount
      * @property timestamp timestamp
+     * @property direction transaction direction
      */
-    data class Swapped(
+    data class Swap(
         override val txHash: String,
         override val address: TextReference,
         override val amount: String,
         override val timestamp: String,
-    ) : CompletedTransactionContent(txHash, address, amount, timestamp)
+        override val status: Status,
+        override val direction: Direction,
+        override val onClick: () -> Unit,
+    ) : Content()
+
+    data class Custom(
+        override val txHash: String,
+        override val address: TextReference,
+        override val amount: String,
+        override val timestamp: String,
+        override val status: Status,
+        override val direction: Direction,
+        override val onClick: () -> Unit,
+        val title: TextReference,
+        val subtitle: TextReference,
+    ) : Content()
 
     /**
      * Loading state
