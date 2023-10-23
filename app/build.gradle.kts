@@ -83,6 +83,7 @@ dependencies {
     implementation(projects.features.send.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
+    implementation(projects.features.send.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
