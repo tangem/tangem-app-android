@@ -7,17 +7,23 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import kotlinx.coroutines.flow.*
 
 class AdditionalFeedbackInfo {
 
     class EmailWalletInfo(
-        var blockchain: Blockchain = Blockchain.Unknown,
-        var derivationPath: String = "",
-        var outputsCount: String? = null,
-        var host: String = "",
-        var addresses: String = "",
-        var explorerLink: String = "",
+        val blockchain: Blockchain = Blockchain.Unknown,
+        val derivationPath: String = "",
+        val outputsCount: String? = null,
+        val host: String = "",
+        val addresses: String = "",
+        val explorerLink: String = "",
+        val tokens: List<EmailTokenInfo> = emptyList(),
+    )
+
+    class EmailTokenInfo(
+        val id: String?,
+        val name: String,
+        val contractAddress: String,
     )
 
     var appVersion: String = ""
@@ -31,7 +37,6 @@ class AdditionalFeedbackInfo {
 
     // wallets
     internal val walletsInfo = mutableListOf<EmailWalletInfo>()
-    internal val tokens = mutableMapOf<Blockchain, Collection<Token>>()
     internal var onSendErrorWalletInfo: EmailWalletInfo? = null
     var signedHashesCount: String = ""
 
@@ -61,12 +66,8 @@ class AdditionalFeedbackInfo {
     @Deprecated("Don't use it directly")
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
         walletsInfo.clear()
-        tokens.clear()
         walletManagers.forEach { manager ->
             walletsInfo.add(createEmailWalletInfo(manager))
-            if (manager.cardTokens.isNotEmpty()) {
-                tokens[manager.wallet.blockchain] = manager.cardTokens
-            }
         }
     }
 
@@ -91,6 +92,9 @@ class AdditionalFeedbackInfo {
             host = walletManager.currentHost,
             addresses = formatAddresses(walletManager.wallet),
             explorerLink = formatExploreUrls(walletManager.wallet),
+            tokens = walletManager.cardTokens.map { token ->
+                EmailTokenInfo(token.id, token.name, token.contractAddress)
+            },
         )
     }
 
