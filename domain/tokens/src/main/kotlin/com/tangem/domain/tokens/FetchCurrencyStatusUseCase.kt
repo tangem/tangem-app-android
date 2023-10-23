@@ -5,8 +5,8 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
@@ -36,16 +36,18 @@ class FetchCurrencyStatusUseCase(
      *
      * @param userWalletId The ID of the user's wallet.
      * @param id The ID of the cryptocurrency.
+     * @param derivationPath currency derivation path.
      * @param refresh Indicates whether to force a refresh of the status data.
      * @return An [Either] representing success (Right) or an error (Left) in fetching the status.
      */
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
         refresh: Boolean = false,
     ): Either<CurrencyStatusError, Unit> {
         return either {
-            val currency = getCurrency(userWalletId, id)
+            val currency = getCurrency(userWalletId, id, derivationPath)
 
             fetchCurrencyStatus(userWalletId, currency, refresh)
         }
@@ -75,7 +77,7 @@ class FetchCurrencyStatusUseCase(
         refresh: Boolean,
     ) = coroutineScope {
         val fetchStatus = async {
-            fetchNetworkStatus(userWalletId, currency.network.id, refresh)
+            fetchNetworkStatus(userWalletId, currency.network, refresh)
         }
         val fetchQuote = async {
             fetchQuote(currency.id, refresh)
@@ -87,8 +89,9 @@ class FetchCurrencyStatusUseCase(
     private suspend fun Raise<CurrencyStatusError>.getCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
-        return catch({ currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, id) }) {
+        return catch({ currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, id, derivationPath) }) {
             raise(CurrencyStatusError.DataError(it))
         }
     }
@@ -101,11 +104,11 @@ class FetchCurrencyStatusUseCase(
 
     private suspend fun Raise<CurrencyStatusError>.fetchNetworkStatus(
         userWalletId: UserWalletId,
-        networkId: Network.ID,
+        network: Network,
         refresh: Boolean,
     ) {
         catch(
-            block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(networkId), refresh) },
+            block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(network), refresh) },
         ) {
             raise(CurrencyStatusError.DataError(it))
         }
