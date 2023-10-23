@@ -9,12 +9,17 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -24,21 +29,22 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
  * Default implementation of custom token interactor
  *
  * @property featureRepository feature repository
- * @property reduxStateHolder  redux state holder
  *
 [REDACTED_AUTHOR]
  */
 class DefaultCustomTokenInteractor(
     private val featureRepository: CustomTokenRepository,
-    private val reduxStateHolder: AppStateHolder,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) : CustomTokenInteractor {
 
     override suspend fun findToken(address: String, blockchain: Blockchain): FoundToken {
@@ -49,28 +55,30 @@ class DefaultCustomTokenInteractor(
     }
 
     override suspend fun saveToken(customCurrency: CustomCurrency) {
-        val scanResponse = reduxStateHolder.scanResponse ?: return
+        val userWallet = getSelectedWalletSyncUseCase().fold(ifLeft = { return }, ifRight = { it })
 
         val currency = Currency.fromCustomCurrency(customCurrency)
-        val isNeedToDerive = isNeedToDerive(scanResponse, currency)
+        val isNeedToDerive = isNeedToDerive(userWallet, currency)
         if (isNeedToDerive) {
-            deriveMissingBlockchains(scanResponse = scanResponse, currencyList = listOf(currency)) {
-                submitAdd(scanResponse = it, currency = currency)
+            deriveMissingBlockchains(userWallet = userWallet, currencyList = listOf(currency)) {
+                submitAdd(userWallet = userWallet.copy(scanResponse = it), currency = currency)
             }
         } else {
-            submitAdd(scanResponse, currency)
+            submitAdd(userWallet, currency)
         }
     }
 
-    private fun isNeedToDerive(scanResponse: ScanResponse, currency: Currency): Boolean {
+    private fun isNeedToDerive(userWallet: UserWallet, currency: Currency): Boolean {
+        val scanResponse = userWallet.scanResponse
         return currency.derivationPath?.let { !scanResponse.hasDerivation(currency.blockchain, it) } ?: false
     }
 
     private suspend fun deriveMissingBlockchains(
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
         currencyList: List<Currency>,
         onSuccess: suspend (ScanResponse) -> Unit,
     ) {
+        val scanResponse = userWallet.scanResponse
         val config = CardConfig.createConfig(scanResponse.card)
         val derivationDataList = currencyList.mapNotNull { currency ->
             val curve = config.primaryCurve(currency.blockchain)
@@ -153,7 +161,42 @@ class DefaultCustomTokenInteractor(
         return TokensMiddleware.DerivationData(derivations = mapKeyOfWalletPublicKey to toDerive)
     }
 
-    private suspend fun submitAdd(scanResponse: ScanResponse, currency: Currency) {
+    private suspend fun submitAdd(userWallet: UserWallet, currency: Currency) {
+        val scanResponse = userWallet.scanResponse
+        val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+
+        if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            val cryptoCurrencyFactory = CryptoCurrencyFactory()
+
+            submitNewAdd(
+                userWalletId = userWallet.walletId,
+                updatedScanResponse = scanResponse,
+                currencyList = listOfNotNull(
+                    when (currency) {
+                        is Currency.Blockchain -> {
+                            cryptoCurrencyFactory.createCoin(
+                                blockchain = currency.blockchain,
+                                extraDerivationPath = currency.derivationPath,
+                                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                            )
+                        }
+                        is Currency.Token -> {
+                            cryptoCurrencyFactory.createToken(
+                                sdkToken = currency.token,
+                                blockchain = currency.blockchain,
+                                extraDerivationPath = currency.derivationPath,
+                                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                            )
+                        }
+                    },
+                ),
+            )
+        } else {
+            submitLegacyAdd(scanResponse = scanResponse, currency = currency)
+        }
+    }
+
+    private suspend fun submitLegacyAdd(scanResponse: ScanResponse, currency: Currency) {
         val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
             Timber.e("Unable to add currencies, no user wallet selected")
             return
@@ -169,5 +212,28 @@ class DefaultCustomTokenInteractor(
                     currenciesToAdd = listOf(currency),
                 )
             }
+    }
+
+    private fun submitNewAdd(
+        userWalletId: UserWalletId,
+        updatedScanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+    ) {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
+        scope.launch {
+            userWalletsListManager.update(
+                userWalletId = userWalletId,
+                update = { it.copy(scanResponse = updatedScanResponse) },
+            )
+
+            currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
+            val networks = currencyList.map { it.network }.toSet()
+            networksRepository.getNetworkStatusesSync(
+                userWalletId = userWalletId,
+                networks = networks,
+                refresh = true,
+            )
+        }
     }
 }
