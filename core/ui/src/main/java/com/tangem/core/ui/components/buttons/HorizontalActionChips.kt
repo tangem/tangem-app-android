@@ -31,9 +31,9 @@ fun HorizontalActionChips(
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = contentPadding,
     ) {
+        // do not use key cause when change items order, list is scrolled
         items(
             items = buttons,
-            key = { config -> config.text.hashCode() },
             itemContent = { ActionButton(config = it) },
         )
     }

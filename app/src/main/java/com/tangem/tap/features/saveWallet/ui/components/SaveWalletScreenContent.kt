@@ -144,7 +144,7 @@ private fun Footer(showProgress: Boolean, onSaveWalletClick: () -> Unit) {
         Text(
             modifier = Modifier.fillMaxWidth(fraction = .7f),
             text = stringResource(R.string.save_user_wallet_agreement_notice),
-            style = TangemTheme.typography.caption,
+            style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )

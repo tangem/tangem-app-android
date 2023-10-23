@@ -40,7 +40,7 @@ fun StoriesCurrenciesContent(paused: Boolean, duration: Int) {
     val decreaseRate = remember { 1f / currencyDrawableList.size }
     val designItemHeight = remember { 82.dp }
 
-    LightenBox {
+    BoxWithGradient {
         Column(modifier = Modifier.graphicsLayer(clip = false)) {
             currencyDrawableList.forEachIndexed { index, drawableResId ->
                 val painter = painterResource(id = drawableResId)
@@ -72,7 +72,7 @@ fun StoriesCurrenciesContent(paused: Boolean, duration: Int) {
 fun StoriesWeb3Content(paused: Boolean, duration: Int) {
     val dappsItemList = remember {
         listOf(
-            R.drawable.dapps0,
+            R.drawable.dapps1,
             R.drawable.dapps1,
             R.drawable.dapps2,
             R.drawable.dapps3,
@@ -84,7 +84,7 @@ fun StoriesWeb3Content(paused: Boolean, duration: Int) {
     val decreaseRate = remember { 1f / dappsItemList.size }
     val designItemHeight = 75.dp
 
-    LightenBox {
+    BoxWithGradient {
         Column(modifier = Modifier.graphicsLayer(clip = false)) {
             dappsItemList.forEachIndexed { index, drawableResId ->
                 val painter = painterResource(id = drawableResId)
@@ -111,7 +111,7 @@ fun StoriesWeb3Content(paused: Boolean, duration: Int) {
 }
 
 @Composable
-private fun LightenBox(content: @Composable () -> Unit) {
+internal fun BoxWithGradient(content: @Composable () -> Unit) {
     val bottomInsetsPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -133,9 +133,9 @@ private fun scaleToDesignSize(itemSize: DpSize, designItemHeight: Dp): DpSize {
 
 private val BottomGradient: Brush = Brush.verticalGradient(
     colors = listOf(
-        TangemColorPalette.White.copy(alpha = 0f),
-        TangemColorPalette.White.copy(alpha = 0.75f),
-        TangemColorPalette.White.copy(alpha = 0.95f),
-        TangemColorPalette.White,
+        TangemColorPalette.Black.copy(alpha = 0f),
+        TangemColorPalette.Black.copy(alpha = 0.75f),
+        TangemColorPalette.Black.copy(alpha = 0.95f),
+        TangemColorPalette.Black,
     ),
 )
