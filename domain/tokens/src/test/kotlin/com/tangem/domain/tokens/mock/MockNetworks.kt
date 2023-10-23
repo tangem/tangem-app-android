@@ -2,9 +2,9 @@ package com.tangem.domain.tokens.mock
 
 import arrow.core.NonEmptySet
 import arrow.core.nonEmptySetOf
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.models.Network
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -17,6 +17,7 @@ internal object MockNetworks {
         name = "Network One",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        derivationPath = Network.DerivationPath.None,
     )
 
     val network2 = Network(
@@ -24,6 +25,7 @@ internal object MockNetworks {
         name = "Network Two",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        derivationPath = Network.DerivationPath.None,
     )
 
     val network3 = Network(
@@ -31,25 +33,25 @@ internal object MockNetworks {
         name = "Network Three",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        derivationPath = Network.DerivationPath.None,
     )
 
-    val networks = nonEmptySetOf(network1, network2, network3)
-
     val networkStatus1 = NetworkStatus(
-        networkId = network1.id,
+        network = network1,
         value = NetworkStatus.Unreachable,
     )
 
     val networkStatus2 = NetworkStatus(
-        networkId = network2.id,
+        network = network2,
         value = NetworkStatus.MissedDerivation,
     )
 
     val networkStatus3 = NetworkStatus(
-        networkId = network3.id,
+        network = network3,
         value = NetworkStatus.NoAccount(
             amountToCreateAccount = amountToCreateAccount,
             address = NetworkAddress.Single(defaultAddress = "mock"),
+            errorMessage = "",
         ),
     )
 
@@ -59,9 +61,9 @@ internal object MockNetworks {
         get() = networkStatus1.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
-                    MockTokens.token1.id to BigDecimal.TEN,
-                    MockTokens.token2.id to BigDecimal.TEN,
-                    MockTokens.token3.id to BigDecimal.TEN,
+                    MockTokens.token1.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
+                    MockTokens.token2.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
+                    MockTokens.token3.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(defaultAddress = "mock"),
@@ -72,9 +74,9 @@ internal object MockNetworks {
         get() = networkStatus2.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
-                    MockTokens.token4.id to BigDecimal.TEN,
-                    MockTokens.token5.id to BigDecimal.TEN,
-                    MockTokens.token6.id to BigDecimal.TEN,
+                    MockTokens.token4.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
+                    MockTokens.token5.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
+                    MockTokens.token6.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(defaultAddress = "mock"),
@@ -85,10 +87,10 @@ internal object MockNetworks {
         get() = networkStatus3.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
-                    MockTokens.token7.id to BigDecimal.TEN,
-                    MockTokens.token8.id to BigDecimal.TEN,
-                    MockTokens.token9.id to BigDecimal.TEN,
-                    MockTokens.token10.id to BigDecimal.TEN,
+                    MockTokens.token7.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
+                    MockTokens.token8.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
+                    MockTokens.token9.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
+                    MockTokens.token10.id to NetworkStatus.LoadedAmount(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
                 address = NetworkAddress.Single(defaultAddress = "mock"),

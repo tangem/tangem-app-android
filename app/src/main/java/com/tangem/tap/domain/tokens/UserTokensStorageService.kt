@@ -1,9 +1,11 @@
 package com.tangem.tap.domain.tokens
 
+import android.content.Context
 import com.squareup.moshi.JsonAdapter
 import com.tangem.Log
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.files.AndroidFileReader
 import com.tangem.datasource.files.FileReader
 import com.tangem.tap.features.wallet.models.Currency
 
@@ -30,5 +32,7 @@ class UserTokensStorageService(private val fileReader: FileReader) {
     companion object {
         private const val FILE_NAME_PREFIX_USER_TOKENS = "user_tokens"
         private fun getFileNameForUserTokens(userId: String): String = "${FILE_NAME_PREFIX_USER_TOKENS}_$userId"
+
+        fun init(context: Context) = UserTokensStorageService(AndroidFileReader(context))
     }
 }
