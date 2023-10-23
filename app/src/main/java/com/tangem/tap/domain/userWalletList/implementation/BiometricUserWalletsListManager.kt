@@ -16,6 +16,7 @@ import com.tangem.tap.domain.userWalletList.utils.toUserWallets
 import com.tangem.tap.domain.userWalletList.utils.updateWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class BiometricUserWalletsListManager(
@@ -217,9 +218,8 @@ internal class BiometricUserWalletsListManager(
             }
             .map {
                 selectedUserWalletSync.guard {
-                    throw UserWalletsListError.UnableToUnlockUserWallets(
-                        cause = IllegalStateException("No user wallet selected"),
-                    )
+                    Timber.e("Unable to find selected user wallet")
+                    throw UserWalletsListError.NoUserWalletSelected
                 }
             }
     }
