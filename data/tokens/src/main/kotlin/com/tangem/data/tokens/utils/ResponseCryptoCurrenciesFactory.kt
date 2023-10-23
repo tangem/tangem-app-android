@@ -4,17 +4,17 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
-internal class ResponseCryptoCurrenciesFactory(private val demoConfig: DemoConfig) {
+internal class ResponseCryptoCurrenciesFactory {
 
     fun createCurrency(
         currencyId: CryptoCurrency.ID,
@@ -54,7 +54,7 @@ internal class ResponseCryptoCurrenciesFactory(private val demoConfig: DemoConfi
         val cardDerivationStyleProvider = scanResponse.derivationStyleProvider
         val card = scanResponse.card
 
-        if (demoConfig.isDemoCardId(card.cardId)) {
+        if (card.isTestCard) {
             blockchain = blockchain.getTestnetVersion() ?: blockchain
         }
 
