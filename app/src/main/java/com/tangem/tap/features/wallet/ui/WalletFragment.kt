@@ -37,7 +37,6 @@ import com.tangem.tap.common.utils.SafeStoreSubscriber
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
-import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -73,7 +72,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
     private var walletView: WalletView = MultiWalletView()
 
-    // private val learn2earnViewModel by activityViewModels<Learn2earnViewModel>()
     private val viewModel by viewModels<WalletViewModel>()
 
     private val totalBalanceWatcher = modelWatcher {
@@ -101,9 +99,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
             },
         )
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        enterTransition = inflater.inflateTransition(R.transition.fade)
         exitTransition = inflater.inflateTransition(R.transition.fade)
-        // learn2earnViewModel.onMainScreenCreated()
     }
 
     override fun onStart() {
@@ -136,9 +133,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
 
         binding.toolbar.setNavigationOnClickListener(
             OneTouchClickListener {
-                lifecycleScope.launch {
-                    store.dispatch(WalletAction.ChangeWallet(lifecycleScope))
-                }
+                store.dispatch(WalletAction.ChangeWallet(scope = requireActivity().lifecycleScope))
             },
         )
         setupWarningsRecyclerView()
@@ -309,17 +304,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), SafeStoreSubscriber<W
         return when (item.itemId) {
             R.id.details_menu -> {
                 store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
-                store.state.globalState.scanResponse?.let { scanResponse ->
-                    store.dispatch(
-                        DetailsAction.PrepareScreen(
-                            scanResponse = scanResponse,
-                            wallets = store.state.walletState.walletManagers.map { it.wallet },
-                        ),
-                    )
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
-                    true
-                }
-                false
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
+
+                true
             }
             else -> super.onOptionsItemSelected(item)
         }

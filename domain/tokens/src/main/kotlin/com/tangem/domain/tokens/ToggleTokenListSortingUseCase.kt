@@ -19,14 +19,10 @@ class ToggleTokenListSortingUseCase(
     suspend operator fun invoke(tokenList: TokenList): Either<TokenListSortingError, TokenList> {
         return withContext(dispatchers.default) {
             either {
-                ensure(tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading) {
-                    TokenListSortingError.TokenListIsLoading
-                }
-
                 when (tokenList) {
                     is TokenList.GroupedByNetwork -> sortGroupedTokenList(tokenList)
                     is TokenList.Ungrouped -> sortUngroupedTokenList(tokenList)
-                    is TokenList.NotInitialized -> raise(TokenListSortingError.TokenListIsEmpty)
+                    is TokenList.Empty -> raise(TokenListSortingError.TokenListIsEmpty)
                 }
             }
         }
@@ -35,6 +31,10 @@ class ToggleTokenListSortingUseCase(
     private fun Raise<TokenListSortingError>.sortGroupedTokenList(
         tokenList: TokenList.GroupedByNetwork,
     ): TokenList.GroupedByNetwork {
+        ensure(tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading) {
+            TokenListSortingError.TokenListIsLoading
+        }
+
         val operations = getSortingOperations(tokenList)
 
         return tokenList.copy(
@@ -48,6 +48,10 @@ class ToggleTokenListSortingUseCase(
     private fun Raise<TokenListSortingError>.sortUngroupedTokenList(
         tokenList: TokenList.Ungrouped,
     ): TokenList.Ungrouped {
+        ensure(tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading) {
+            TokenListSortingError.TokenListIsLoading
+        }
+
         val operations = getSortingOperations(tokenList)
 
         return tokenList.copy(
