@@ -3,7 +3,6 @@ package com.tangem.core.ui.res
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
-import androidx.compose.material.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -16,7 +15,7 @@ internal const val IS_SYSTEM_IN_DARK_THEME: Boolean = false
 @Composable
 fun TangemTheme(
     isDark: Boolean = false,
-    typography: Typography = TangemTheme.typography,
+    typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
     content: @Composable () -> Unit,
 ) {
@@ -25,16 +24,15 @@ fun TangemTheme(
         .also { it.update(themeColors) }
 
     val shapes = remember { TangemShapes(dimens) }
-
     MaterialTheme(
         colors = materialThemeColors(colors = themeColors, isDark = isDark),
-        typography = typography,
     ) {
         CompositionLocalProvider(
             LocalTangemColors provides rememberedColors,
             LocalTangemTypography provides typography,
             LocalTangemDimens provides dimens,
             LocalTangemShapes provides shapes,
+            LocalIsInDarkTheme provides isDark,
         ) {
             ProvideTextStyle(
                 value = TangemTheme.typography.body1,
@@ -50,7 +48,7 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = LocalTangemColors.current
 
-    val typography: Typography
+    val typography: TangemTypography
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemTypography.current
@@ -87,6 +85,7 @@ private fun materialThemeColors(colors: TangemColors, isDark: Boolean): Colors {
 }
 
 @Composable
+@ReadOnlyComposable
 private fun lightThemeColors(): TangemColors {
     return TangemColors(
         text = TangemColors.Text(
@@ -95,6 +94,8 @@ private fun lightThemeColors(): TangemColors {
             secondary = TangemColorPalette.Dark2,
             tertiary = TangemColorPalette.Dark1,
             disabled = TangemColorPalette.Light4,
+            warning = TangemColorPalette.Amaranth,
+            attention = TangemColorPalette.Tangerine,
         ),
         icon = TangemColors.Icon(
             primary1 = TangemColorPalette.Black,
@@ -102,6 +103,8 @@ private fun lightThemeColors(): TangemColors {
             secondary = TangemColorPalette.Dark2,
             informative = TangemColorPalette.Light5,
             inactive = TangemColorPalette.Light4,
+            warning = TangemColorPalette.Amaranth,
+            attention = TangemColorPalette.Tangerine,
         ),
         button = TangemColors.Button(
             primary = TangemColorPalette.Dark6,
@@ -134,6 +137,7 @@ private fun lightThemeColors(): TangemColors {
 }
 
 @Composable
+@ReadOnlyComposable
 private fun darkThemeColors(): TangemColors {
     return TangemColors(
         text = TangemColors.Text(
@@ -142,6 +146,8 @@ private fun darkThemeColors(): TangemColors {
             secondary = TangemColorPalette.Light5,
             tertiary = TangemColorPalette.Dark1,
             disabled = TangemColorPalette.Dark3,
+            warning = TangemColorPalette.Flamingo,
+            attention = TangemColorPalette.Mustard,
         ),
         icon = TangemColors.Icon(
             primary1 = TangemColorPalette.White,
@@ -149,11 +155,13 @@ private fun darkThemeColors(): TangemColors {
             secondary = TangemColorPalette.Dark1,
             informative = TangemColorPalette.Dark2,
             inactive = TangemColorPalette.Dark4,
+            warning = TangemColorPalette.Flamingo,
+            attention = TangemColorPalette.Mustard,
         ),
         button = TangemColors.Button(
             primary = TangemColorPalette.Light1,
             secondary = TangemColorPalette.Dark5,
-            disabled = TangemColorPalette.Dark6,
+            disabled = TangemColorPalette.Dark5,
             positiveDisabled = TangemColorPalette.DarkGreen,
         ),
         background = TangemColors.Background(
@@ -185,7 +193,7 @@ private val LocalTangemColors = staticCompositionLocalOf<TangemColors> {
 }
 
 private val LocalTangemTypography = staticCompositionLocalOf {
-    TangemTypography
+    TangemTypography()
 }
 
 private val LocalTangemDimens = staticCompositionLocalOf {
@@ -195,3 +203,5 @@ private val LocalTangemDimens = staticCompositionLocalOf {
 private val LocalTangemShapes = staticCompositionLocalOf<TangemShapes> {
     error("No TangemShapes provided")
 }
+
+val LocalIsInDarkTheme = staticCompositionLocalOf { false }
