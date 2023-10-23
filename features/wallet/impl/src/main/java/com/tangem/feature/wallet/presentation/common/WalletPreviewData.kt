@@ -312,6 +312,7 @@ internal object WalletPreviewData {
             TokenActionButtonConfig(
                 text = TextReference.Str("Send"),
                 iconResId = R.drawable.ic_share_24,
+                isWarning = false,
                 onClick = {},
             ),
         ).toImmutableList(),
