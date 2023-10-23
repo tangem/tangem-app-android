@@ -7,13 +7,17 @@ import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.toCurrencies
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userTokensRepository
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -113,6 +117,7 @@ private fun handleOtherCardsAction(action: Action) {
                             }
 
                             scope.launch {
+                                // TODO: Use new repo [REDACTED_JIRA]
                                 userTokensRepository.saveUserTokens(
                                     card = result.data.card,
                                     tokens = blockchainNetworks.toCurrencies(),
