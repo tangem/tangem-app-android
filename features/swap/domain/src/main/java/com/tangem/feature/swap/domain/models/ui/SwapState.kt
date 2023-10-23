@@ -2,7 +2,6 @@ package com.tangem.feature.swap.domain.models.ui
 
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import java.math.BigDecimal
@@ -59,7 +58,7 @@ data class TokenSwapInfo(
 
 data class RequestApproveStateData(
     val fee: TxFeeState,
-    val approveModel: ApproveModel,
+    val approveData: String,
 )
 
 data class SwapStateData(
