@@ -192,7 +192,9 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                 isPermanent = error.isPermanent,
                 onDismiss = this::dismissWarningDialog,
             )
-            is UserWalletsListError.EncryptionKeyInvalidated -> WarningModel.KeyInvalidatedWarning(
+            is UserWalletsListError.AllKeysInvalidated,
+            is UserWalletsListError.NoUserWalletSelected,
+            -> WarningModel.KeyInvalidatedWarning(
                 onDismiss = this::dismissWarningDialog,
             )
             is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(
