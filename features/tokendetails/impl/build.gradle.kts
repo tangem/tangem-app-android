@@ -52,6 +52,7 @@ dependencies {
     /** Domain modules */
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
