@@ -30,36 +30,38 @@ private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
  *
 [REDACTED_AUTHOR]
  */
-internal fun LazyListScope.tokensListItems(state: WalletTokensListState, modifier: Modifier = Modifier) {
+internal fun LazyListScope.tokensListItems(
+    state: WalletTokensListState,
+    modifier: Modifier = Modifier,
+    isBalanceHidden: Boolean,
+) {
     when (state) {
-        is WalletTokensListState.ContentState -> contentItems(items = state.items, modifier = modifier)
+        is WalletTokensListState.ContentState -> contentItems(
+            items = state.items,
+            isBalanceHidden = isBalanceHidden,
+            modifier = modifier,
+        )
         WalletTokensListState.Empty -> nonContentItem(modifier = modifier)
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.contentItems(
     items: ImmutableList<WalletTokensListState.TokensListItemState>,
     modifier: Modifier = Modifier,
+    isBalanceHidden: Boolean,
 ) {
     itemsIndexed(
         items = items,
-        key = { _, item ->
-            when (item) {
-                is WalletTokensListState.TokensListItemState.NetworkGroupTitle -> item.value.hashCode()
-                is WalletTokensListState.TokensListItemState.Token -> item.state.id
-            }
-        },
+        key = { _, item -> item.id },
         contentType = { _, item -> item::class.java },
         itemContent = { index, item ->
             MultiCurrencyContentItem(
                 state = item,
-                modifier = modifier
-                    .animateItemPlacement()
-                    .roundedShapeItemDecoration(
-                        currentIndex = index,
-                        lastIndex = items.lastIndex,
-                    ),
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier.roundedShapeItemDecoration(
+                    currentIndex = index,
+                    lastIndex = items.lastIndex,
+                ),
             )
         },
     )
@@ -90,7 +92,7 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
                 color = TangemTheme.colors.text.tertiary,
                 textAlign = TextAlign.Center,
-                style = TangemTheme.typography.caption,
+                style = TangemTheme.typography.caption2,
             )
         }
     }
