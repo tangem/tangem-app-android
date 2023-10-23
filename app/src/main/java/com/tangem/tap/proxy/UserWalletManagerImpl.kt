@@ -10,7 +10,8 @@ import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.Currency.NativeToken
@@ -29,6 +30,8 @@ import com.tangem.tap.features.wallet.models.Currency as WalletCurrency
 
 class UserWalletManagerImpl(
     private val appStateHolder: AppStateHolder,
+    private val walletManagersFacade: WalletManagersFacade,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : UserWalletManager {
 
     override suspend fun getUserTokens(
@@ -86,12 +89,10 @@ class UserWalletManagerImpl(
     }
 
     override fun getWalletId(): String {
-        return appStateHolder.getActualCard()?.let {
-            UserWalletIdBuilder.card(it)
-                .build()
-                ?.stringValue
-        }
-            ?: ""
+        val selectedUserWallet = requireNotNull(
+            userWalletsListManager.selectedUserWalletSync,
+        ) { "selectedUserWallet shouldn't be null" }
+        return selectedUserWallet.walletId.stringValue
     }
 
     override suspend fun isTokenAdded(currency: Currency, derivationPath: String?): Boolean {
@@ -142,13 +143,13 @@ class UserWalletManagerImpl(
             }
     }
 
-    override fun getWalletAddress(networkId: String, derivationPath: String?): String {
+    override suspend fun getWalletAddress(networkId: String, derivationPath: String?): String {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         return walletManager.wallet.address
     }
 
-    override fun getLastTransactionHash(networkId: String, derivationPath: String?): String? {
+    override suspend fun getLastTransactionHash(networkId: String, derivationPath: String?): String? {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         return walletManager.wallet.recentTransactions
@@ -187,7 +188,7 @@ class UserWalletManagerImpl(
         return balances
     }
 
-    override fun getNativeTokenBalance(networkId: String, derivationPath: String?): ProxyAmount? {
+    override suspend fun getNativeTokenBalance(networkId: String, derivationPath: String?): ProxyAmount? {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         return walletManager.wallet.amounts.firstNotNullOfOrNull {
@@ -220,10 +221,24 @@ class UserWalletManagerImpl(
         appStateHolder.mainStore?.dispatchOnMain(WalletAction.LoadData.Refresh)
     }
 
-    @kotlin.jvm.Throws(IllegalArgumentException::class)
-    private fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
-        val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
-        return requireNotNull(appStateHolder.walletState?.getWalletManager(blockchainNetwork)) {
+    @Throws(IllegalArgumentException::class)
+    private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
+        val walletManager = if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            val selectedUserWallet = requireNotNull(
+                userWalletsListManager.selectedUserWalletSync,
+            ) { "userWallet or userWalletsListManager is null" }
+            walletManagersFacade.getOrCreateWalletManager(
+                selectedUserWallet.walletId,
+                blockchain,
+                derivationPath,
+            )
+        } else {
+            val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
+            return requireNotNull(appStateHolder.walletState?.getWalletManager(blockchainNetwork)) {
+                "No wallet manager found"
+            }
+        }
+        return requireNotNull(walletManager) {
             "No wallet manager found"
         }
     }
