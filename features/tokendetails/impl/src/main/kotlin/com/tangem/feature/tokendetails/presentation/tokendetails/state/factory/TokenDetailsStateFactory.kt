@@ -9,6 +9,9 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -224,5 +227,21 @@ internal class TokenDetailsStateFactory(
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.removeRentInfo(state))
+    }
+
+    fun getStateAndTriggerEvent(
+        state: TokenDetailsState,
+        errorMessage: TextReference,
+        setUiState: (TokenDetailsState) -> Unit,
+    ): TokenDetailsState {
+        return state.copy(
+            event = triggeredEvent(
+                data = errorMessage,
+                onConsume = {
+                    val currentState = currentStateProvider()
+                    setUiState(currentState.copy(event = consumedEvent()))
+                },
+            ),
+        )
     }
 }
