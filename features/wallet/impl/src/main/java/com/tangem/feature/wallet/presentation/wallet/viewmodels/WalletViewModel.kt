@@ -57,6 +57,7 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
@@ -842,13 +843,29 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onUnlockWalletClick() {
-        val state = uiState as? WalletState.ContentState ?: return
-
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.NoticeWalletLocked)
 
         viewModelScope.launch(dispatchers.main) {
-            unlockWalletsUseCase(
-                selectedWalletId = state.walletsListConfig.wallets[state.walletsListConfig.selectedWalletIndex].id,
+            unlockWalletsUseCase(throwIfNotAllWalletsUnlocked = true)
+                .onLeft(::handleUnlockWalletsError)
+        }
+    }
+
+    private fun handleUnlockWalletsError(error: UnlockWalletsError) {
+        val event = when (error) {
+            UnlockWalletsError.NoUserWalletListManagerProvided,
+            UnlockWalletsError.UnableToUnlockWallets,
+            -> null
+            UnlockWalletsError.NoUserWalletSelected,
+            UnlockWalletsError.NotAllUserWalletsUnlocked,
+            -> WalletEvent.ShowAlert(WalletAlertState.RescanWallets)
+        }
+
+        if (event != null) {
+            uiState = stateFactory.getStateAndTriggerEvent(
+                state = uiState,
+                event = WalletEvent.ShowAlert(WalletAlertState.RescanWallets),
+                setUiState = { uiState = it },
             )
         }
     }
