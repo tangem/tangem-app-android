@@ -46,6 +46,7 @@ class CardContextInterceptor(
             ProductType.Twins -> "Twin"
             ProductType.Wallet -> "Wallet"
             ProductType.Wallet2 -> "Wallet 2.0"
+            ProductType.Ring -> "Ring"
             ProductType.Start2Coin -> "Start2Coin"
             else -> if (DemoHelper.isDemoCard(scanResponse)) {
                 if (DemoHelper.isTestDemoCard(scanResponse)) {
