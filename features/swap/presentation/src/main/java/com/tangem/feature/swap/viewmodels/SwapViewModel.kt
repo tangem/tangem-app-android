@@ -490,7 +490,17 @@ internal class SwapViewModel @Inject constructor(
             },
             onSelectItemFee = { feeItem ->
                 dataState = dataState.copy(selectedFee = feeItem.data)
-                uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem)
+                val spendAmount = dataState.swapDataModel?.swapModel?.fromTokenAmount ?: return@UiActions
+                val fromToken = dataState.fromCurrency ?: return@UiActions
+                viewModelScope.launch(dispatchers.io) {
+                    val isFeeEnough = swapInteractor.checkFeeIsEnough(
+                        fee = feeItem.data.feeValue,
+                        spendAmount = spendAmount,
+                        networkId = dataState.networkId,
+                        fromToken = fromToken,
+                    )
+                    uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem, isFeeEnough)
+                }
             },
         )
     }
