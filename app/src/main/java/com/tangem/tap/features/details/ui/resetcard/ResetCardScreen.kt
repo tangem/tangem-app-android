@@ -1,7 +1,6 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -35,7 +34,6 @@ internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Uni
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Suppress("LongMethod", "MagicNumber")
 @Composable
 private fun ResetCardView(state: ResetCardScreenState) {
@@ -111,7 +109,6 @@ private fun ResetCardView(state: ResetCardScreenState) {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) -> Unit, description: TextReference) {
     Row(
