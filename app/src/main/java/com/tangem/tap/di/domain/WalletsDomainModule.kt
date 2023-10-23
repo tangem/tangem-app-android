@@ -22,6 +22,18 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun providesGetUserWalletUseCase(walletsStateHolder: WalletsStateHolder): GetUserWalletUseCase {
+        return GetUserWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesGetSelectedWalletSyncUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletSyncUseCase {
+        return GetSelectedWalletSyncUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
     fun providesGetSelectedWalletUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletUseCase {
         return GetSelectedWalletUseCase(walletsStateHolder = walletsStateHolder)
     }
@@ -60,6 +72,14 @@ internal object WalletsDomainModule {
     @ViewModelScoped
     fun providesDeleteWalletUseCase(walletsStateHolder: WalletsStateHolder): DeleteWalletUseCase {
         return DeleteWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesShouldSaveUserWalletsSyncUseCase(
+        walletsRepository: WalletsRepository,
+    ): ShouldSaveUserWalletsSyncUseCase {
+        return ShouldSaveUserWalletsSyncUseCase(walletsRepository = walletsRepository)
     }
 
     @Provides
