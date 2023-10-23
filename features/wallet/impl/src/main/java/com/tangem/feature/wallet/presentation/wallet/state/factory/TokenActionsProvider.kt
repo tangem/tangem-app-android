@@ -98,7 +98,7 @@ internal class TokenActionsProvider(
             }
             is TokenActionsState.ActionState.HideToken -> {
                 title = resourceReference(R.string.token_details_hide_token)
-                icon = R.drawable.ic_trash_24
+                icon = R.drawable.ic_hide_24
                 action = { clickIntents.onHideTokensClick(cryptoCurrencyStatus) }
             }
         }
@@ -106,6 +106,7 @@ internal class TokenActionsProvider(
             text = title,
             iconResId = icon,
             onClick = action,
+            isWarning = actionsState is TokenActionsState.ActionState.HideToken,
             enabled = actionsState.enabled,
         )
     }
