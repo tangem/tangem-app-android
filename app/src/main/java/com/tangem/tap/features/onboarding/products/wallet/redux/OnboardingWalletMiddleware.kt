@@ -33,6 +33,7 @@ import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -331,7 +332,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.ScanPrimaryCard -> {
-            backupService.readPrimaryCard(cardId = card?.cardId) { result ->
+            val iconScanRes = if (scanResponse?.cardTypesResolver?.isRing() == true) {
+                R.drawable.img_hand_scan_ring
+            } else {
+                null
+            }
+            backupService.readPrimaryCard(iconScanRes = iconScanRes, cardId = card?.cardId) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.StartAddingBackupCards)
@@ -398,7 +404,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.WritePrimaryCard -> {
-            backupService.proceedBackup { result ->
+            val iconScanRes = if (scanResponse?.cardTypesResolver?.isRing() == true) {
+                R.drawable.img_hand_scan_ring
+            } else {
+                null
+            }
+            backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.PrepareToWriteBackupCard(1))
