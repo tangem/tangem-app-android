@@ -35,7 +35,7 @@ internal class DefaultNetworksRepository(
 
     private val demoConfig by lazy { DemoConfig() }
     private val cardCurrenciesFactory by lazy { CardCryptoCurrenciesFactory(demoConfig) }
-    private val responseCurrenciesFactory by lazy { ResponseCryptoCurrenciesFactory(demoConfig) }
+    private val responseCurrenciesFactory by lazy { ResponseCryptoCurrenciesFactory() }
     private val networkStatusFactory by lazy { NetworkStatusFactory() }
 
     override fun getNetworkStatusesUpdates(
