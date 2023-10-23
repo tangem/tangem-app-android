@@ -134,7 +134,7 @@ private fun TotalBalanceCardContent(state: TotalBalanceCardState, modifier: Modi
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = stringResource(id = R.string.main_processing_full_amount),
-                    style = TangemTheme.typography.caption,
+                    style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.attention,
                 )
             }

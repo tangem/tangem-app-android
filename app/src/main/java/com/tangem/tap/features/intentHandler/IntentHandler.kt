@@ -6,5 +6,6 @@ import android.content.Intent
 [REDACTED_AUTHOR]
  */
 interface IntentHandler {
-    suspend fun handleIntent(intent: Intent?): Boolean
+
+    fun handleIntent(intent: Intent?): Boolean
 }
