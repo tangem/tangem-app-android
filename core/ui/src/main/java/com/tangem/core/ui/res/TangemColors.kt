@@ -39,9 +39,9 @@ class TangemColors internal constructor(
         secondary: Color,
         tertiary: Color,
         disabled: Color,
-        accent: Color = TangemColorPalette.Meadow,
-        warning: Color = TangemColorPalette.Amaranth,
-        attention: Color = TangemColorPalette.Tangerine,
+        warning: Color,
+        attention: Color,
+        accent: Color = TangemColorPalette.Azure,
         constantWhite: Color = TangemColorPalette.White,
     ) {
         var primary1 by mutableStateOf(primary1)
@@ -80,9 +80,9 @@ class TangemColors internal constructor(
         secondary: Color,
         informative: Color,
         inactive: Color,
-        accent: Color = TangemColorPalette.Meadow,
-        warning: Color = TangemColorPalette.Amaranth,
-        attention: Color = TangemColorPalette.Tangerine,
+        warning: Color,
+        attention: Color,
+        accent: Color = TangemColorPalette.Azure,
     ) {
         var primary1 by mutableStateOf(primary1)
             private set
