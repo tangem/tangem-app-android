@@ -1,33 +1,41 @@
 package com.tangem.tap.features.details.ui.common
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
 @Composable
-fun SettingsScreensScaffold(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-    background: @Composable (() -> Unit)? = null,
-    fab: @Composable (() -> Unit)? = null,
-    backgroundColor: Color = TangemTheme.colors.background.secondary,
-    titleRes: Int? = null,
+internal fun SettingsScreensScaffold(
     onBackClick: () -> Unit,
+    content: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    @StringRes titleRes: Int? = null,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    fab: @Composable () -> Unit = {},
 ) {
-    BackHandler(true, onBackClick)
+    val state = rememberScaffoldState(snackbarHostState = snackbarHostState)
+    val backgroundColor = TangemTheme.colors.background.secondary
+
+    BackHandler(onBack = onBackClick)
+    SystemBarsEffect {
+        setSystemBarsColor(backgroundColor)
+    }
 
     Scaffold(
+        scaffoldState = state,
         topBar = {
             EmptyTopBarWithNavigation(
                 onBackClick = onBackClick,
@@ -36,34 +44,32 @@ fun SettingsScreensScaffold(
         },
         modifier = modifier.systemBarsPadding(),
         backgroundColor = backgroundColor,
-        floatingActionButton = { fab?.invoke() },
-    ) {
-        if (titleRes != null) {
-            Box(modifier = modifier.fillMaxSize()) {
-                background?.invoke()
-
-                Column(modifier = modifier.fillMaxWidth()) {
+        floatingActionButton = fab,
+        content = { paddings ->
+            Column(
+                modifier = Modifier
+                    .padding(paddings)
+                    .fillMaxSize(),
+            ) {
+                if (titleRes != null) {
                     Text(
                         text = stringResource(id = titleRes),
-                        modifier = modifier.padding(
-                            start = TangemTheme.dimens.spacing20,
-                            end = TangemTheme.dimens.spacing20,
-                            bottom = TangemTheme.dimens.spacing54,
-                        ),
+                        modifier = Modifier
+                            .padding(horizontal = TangemTheme.dimens.spacing20)
+                            .padding(bottom = TangemTheme.dimens.spacing36),
                         style = TangemTheme.typography.h1,
                         color = TangemTheme.colors.text.primary1,
                     )
-                    content()
                 }
+
+                content()
             }
-        } else {
-            content()
-        }
-    }
+        },
+    )
 }
 
 @Composable
-fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
+internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
     Text(
         text = stringResource(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
@@ -73,7 +79,7 @@ fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EmptyTopBarWithNavigation(
+internal fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
     backgroundColor: Color = TangemTheme.colors.background.primary,
 ) {
@@ -95,7 +101,12 @@ fun EmptyTopBarWithNavigation(
 }
 
 @Composable
-fun DetailsMainButton(title: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+internal fun DetailsMainButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     PrimaryButtonIconEnd(
         text = title,
         enabled = enabled,
@@ -107,7 +118,7 @@ fun DetailsMainButton(title: String, onClick: () -> Unit, modifier: Modifier = M
 }
 
 @Composable
-fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
+internal fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -122,8 +133,8 @@ fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean
             onClick = null,
             modifier = Modifier.padding(end = 20.dp),
             colors = RadioButtonDefaults.colors(
-                unselectedColor = colorResource(id = R.color.icon_secondary),
-                selectedColor = colorResource(id = R.color.icon_accent),
+                unselectedColor = TangemTheme.colors.icon.secondary,
+                selectedColor = TangemTheme.colors.icon.accent,
             ),
         )
 
@@ -131,13 +142,13 @@ fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = colorResource(id = R.color.text_primary_1),
+                color = TangemTheme.colors.text.primary1,
             )
             Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = subtitle,
                 style = TangemTheme.typography.body2,
-                color = colorResource(id = R.color.text_secondary),
+                color = TangemTheme.colors.text.secondary,
             )
         }
     }
