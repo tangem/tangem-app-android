@@ -59,12 +59,8 @@ fun FragmentActivity.openFragment(
         }
     }
 
-    if (screen.isDialogFragment) {
-        val dialogFragment = requireNotNull(fragment as? DialogFragment) {
-            "If screen.isDialogFragment == true then fragment must be a DialogFragment"
-        }
-
-        dialogFragment.showAllowingStateLoss(
+    if (screen.isDialogFragment && fragment is DialogFragment) {
+        fragment.showAllowingStateLoss(
             fragmentManager = supportFragmentManager,
             baseTransaction = transaction,
             tag = screen.name,
@@ -125,7 +121,7 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
     return tag?.let { AppScreen.valueOf(tag) }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
         AppScreen.Home -> HomeFragment()
@@ -146,7 +142,18 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
                 WalletFragment()
             }
         }
-        AppScreen.Send -> SendFragment()
+        AppScreen.Send -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::sendFeatureToggles,
+            )
+            if (featureToggles.isRedesignedSendEnabled) {
+                store.state.daggerGraphState
+                    .get(getDependency = DaggerGraphState::sendRouter)
+                    .getEntryFragment()
+            } else {
+                SendFragment()
+            }
+        }
         AppScreen.Details -> DetailsFragment()
         AppScreen.DetailsSecurity -> SecurityModeFragment()
         AppScreen.CardSettings -> CardSettingsFragment()
