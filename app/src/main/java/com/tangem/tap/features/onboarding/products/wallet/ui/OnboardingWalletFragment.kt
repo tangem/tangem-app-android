@@ -179,13 +179,21 @@ class OnboardingWalletFragment :
                 seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
                 state.cardArtworkUri?.let {
                     seedPhraseViewModel.setCardArtworkUri(it.toString())
-                    loadImageIntoImageView(it, binding.imvFrontCard)
+                    if (state.isRingOnboarding) {
+                        binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
+                    } else {
+                        loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
+                    }
                     loadImageIntoImageView(it, binding.imvFirstBackupCard)
                     loadImageIntoImageView(it, binding.imvSecondBackupCard)
                 }
             }
             else -> {
-                loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
+                if (state.isRingOnboarding) {
+                    binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
+                } else {
+                    loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
+                }
                 loadImageIntoImageView(state.cardArtworkUri, binding.imvFirstBackupCard)
                 loadImageIntoImageView(state.cardArtworkUri, binding.imvSecondBackupCard)
                 handleOnboardingStep(state)
