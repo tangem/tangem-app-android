@@ -8,10 +8,7 @@ sealed class AnalyticsParam {
         class Currency(currency: com.tangem.tap.features.wallet.models.Currency) : CurrencyType(currency.currencySymbol)
         class Blockchain(blockchain: com.tangem.blockchain.common.Blockchain) : CurrencyType(blockchain.currency)
         class Token(token: com.tangem.blockchain.common.Token) : CurrencyType(token.symbol)
-        class FiatCurrency(
-            fiatCurrency: com.tangem.tap.common.entities.FiatCurrency,
-        ) : CurrencyType(fiatCurrency.code)
-
+        class FiatCurrency(fiatCurrency: com.tangem.tap.common.entities.FiatCurrency) : CurrencyType(fiatCurrency.code)
         class Amount(amount: com.tangem.blockchain.common.Amount) : CurrencyType(amount.currencySymbol)
     }
 
@@ -136,9 +133,9 @@ sealed class AnalyticsParam {
     }
 
     sealed class WalletCreationType(val value: String) {
-        object PrivateKey : WalletCreationType("Private key")
-        object NewSeed : WalletCreationType("New seed")
-        object SeedImport : WalletCreationType("Seed import")
+        object PrivateKey : WalletCreationType(value = "Private Key")
+        object NewSeed : WalletCreationType(value = "New Seed")
+        object SeedImport : WalletCreationType(value = "Seed Import")
     }
 
     companion object Key {
@@ -155,7 +152,8 @@ sealed class AnalyticsParam {
         const val ERROR_DESCRIPTION = "Error Description"
         const val ERROR_CODE = "Error Code"
         const val ERROR_KEY = "Error Key"
-        const val CREATION_TYPE = "Creation type"
+        const val CREATION_TYPE = "Creation Type"
+        const val SEED_PHRASE_LENGTH = "Seed Phrase Length"
         const val DAPP_NAME = "DApp Name"
         const val DAPP_URL = "DApp Url"
         const val METHOD_NAME = "Method Name"
