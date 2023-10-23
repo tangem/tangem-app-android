@@ -1,9 +1,9 @@
 package com.tangem.domain.tokens.operations
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Quote
+import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 
 internal class CurrencyStatusOperations(
@@ -18,15 +18,37 @@ internal class CurrencyStatusOperations(
     private fun createStatus(): CryptoCurrencyStatus.Status {
         return when (val status = networkStatus?.value) {
             null -> CryptoCurrencyStatus.Loading
-            is NetworkStatus.MissedDerivation -> CryptoCurrencyStatus.MissedDerivation
-            is NetworkStatus.Unreachable -> CryptoCurrencyStatus.Unreachable
-            is NetworkStatus.NoAccount -> CryptoCurrencyStatus.NoAccount
+            is NetworkStatus.MissedDerivation -> createMissedDerivationStatus()
+            is NetworkStatus.Unreachable -> createUnreachableStatus()
+            is NetworkStatus.NoAccount -> createNoAccountStatus(status.amountToCreateAccount)
             is NetworkStatus.Verified -> createStatus(status)
         }
     }
 
+    private fun createMissedDerivationStatus(): CryptoCurrencyStatus.MissedDerivation =
+        CryptoCurrencyStatus.MissedDerivation(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+
+    private fun createUnreachableStatus(): CryptoCurrencyStatus.Unreachable =
+        CryptoCurrencyStatus.Unreachable(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+
+    private fun createNoAccountStatus(amount: BigDecimal): CryptoCurrencyStatus.NoAccount =
+        CryptoCurrencyStatus.NoAccount(
+            amountToCreateAccount = amount,
+            priceChange = quote?.priceChange,
+            fiatRate = quote?.fiatRate,
+        )
+
     private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Status {
-        val amount = status.amounts[currency.id] ?: return CryptoCurrencyStatus.Unreachable
+        val amount = status.amounts[currency.id]?.let {
+            when (it) {
+                is NetworkStatus.UnreachableAmount -> {
+                    return CryptoCurrencyStatus.NoAmount(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+                }
+                is NetworkStatus.LoadedAmount -> {
+                    it.value
+                }
+            }
+        } ?: return CryptoCurrencyStatus.Loading
         val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
         val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
 
