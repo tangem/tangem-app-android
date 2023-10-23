@@ -1,119 +1,102 @@
 package com.tangem.feature.referral.ui
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.referral.domain.models.ExpectedAward
+import com.tangem.feature.referral.domain.models.ExpectedAwards
 import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.*
 import com.tangem.feature.referral.presentation.R
-import com.valentinilk.shimmer.shimmer
 import kotlinx.coroutines.launch
 
 /**
  * Referral program screen for participant and non-participant
  *
  * @param stateHolder state holder
+ * @param modifier    modifier
  */
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ReferralScreen(stateHolder: ReferralStateHolder, modifier: Modifier = Modifier) {
-    val coroutineScope = rememberCoroutineScope()
-    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed),
-    )
+    var isBottomSheetVisible by remember { mutableStateOf(value = false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    BottomSheetScaffold(
+    Scaffold(
         modifier = modifier,
-        sheetContent = {
-            AgreementBottomSheetContent(
-                url = when (val state = stateHolder.referralInfoState) {
-                    is ReferralInfoState.NonParticipantContent -> state.url
-                    is ReferralInfoState.ParticipantContent -> state.url
-                    is ReferralInfoState.Loading -> ""
-                },
+        topBar = {
+            AppBarWithBackButton(
+                text = stringResource(R.string.details_referral_title),
+                onBackClick = stateHolder.headerState.onBackClicked,
             )
         },
-        scaffoldState = bottomSheetScaffoldState,
-        sheetShape = RoundedCornerShape(
-            topStart = TangemTheme.dimens.radius16,
-            topEnd = TangemTheme.dimens.radius16,
-        ),
-        sheetElevation = TangemTheme.dimens.elevation24,
-        sheetPeekHeight = TangemTheme.dimens.size0,
-        content = {
-            ReferralContent(
-                stateHolder = stateHolder,
-                onAgreementClick = {
-                    stateHolder.analytics.onAgreementClicked.invoke()
-                    coroutineScope.launch {
-                        if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
-                            bottomSheetScaffoldState.bottomSheetState.expand()
-                        } else {
-                            bottomSheetScaffoldState.bottomSheetState.collapse()
-                        }
-                    }
-                },
-            )
-        },
+        containerColor = TangemTheme.colors.background.secondary,
+    ) {
+        ReferralContent(
+            stateHolder = stateHolder,
+            onAgreementClick = {
+                stateHolder.analytics.onAgreementClicked.invoke()
+                isBottomSheetVisible = true
+            },
+            modifier = Modifier.padding(it),
+        )
+    }
+
+    ReferralBottomSheet(
+        sheetState = sheetState,
+        isVisible = isBottomSheetVisible,
+        onDismissRequest = { isBottomSheetVisible = false },
+        config = stateHolder.referralInfoState,
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ReferralContent(stateHolder: ReferralStateHolder, onAgreementClick: () -> Unit) {
-    val isCopyButtonPressed = remember { mutableStateOf(false) }
+private fun ReferralContent(
+    stateHolder: ReferralStateHolder,
+    onAgreementClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isCopyButtonPressed = remember { mutableStateOf(value = false) }
 
-    Box {
-        CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
-            LazyColumn(
-                modifier = Modifier
-                    .background(color = TangemTheme.colors.background.secondary)
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                stickyHeader {
-                    AppBarWithBackButton(
-                        text = stringResource(R.string.details_referral_title),
-                        onBackClick = stateHolder.headerState.onBackClicked,
-                    )
-                }
-                item { Header() }
-                item {
-                    ReferralInfo(
-                        stateHolder = stateHolder,
-                        onAgreementClick = onAgreementClick,
-                        onShowCopySnackbar = { isCopyButtonPressed.value = true },
-                    )
-                }
+    Box(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            item { Header() }
+            item {
+                ReferralInfo(
+                    stateHolder = stateHolder,
+                    onAgreementClick = onAgreementClick,
+                    onShowCopySnackbar = { isCopyButtonPressed.value = true },
+                )
             }
         }
 
@@ -159,6 +142,7 @@ private fun ReferralInfo(
                 purchasedWalletCount = state.purchasedWalletCount,
                 code = state.code,
                 shareLink = state.shareLink,
+                expectedAwards = state.expectedAwards,
                 onAgreementClick = onAgreementClick,
                 onShowCopySnackbar = onShowCopySnackbar,
                 onCopyClick = stateHolder.analytics.onCopyClicked,
@@ -253,23 +237,45 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
 private fun InfoForYou(award: String, networkName: String, address: String? = null) {
     ConditionInfo(title = stringResource(id = R.string.referral_point_currencies_title)) {
         Text(
-            text = buildAnnotatedString {
-                append(stringResource(id = R.string.referral_point_currencies_description_prefix))
-                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
-                    append(" $award ")
-                }
-                append(
-                    String.format(
-                        stringResource(id = R.string.referral_point_currencies_description_suffix),
-                        networkName,
-                        if (!address.isNullOrBlank()) " $address" else "",
-                    ),
-                )
-            },
+            formatAwardConditionsString(
+                quantity = award,
+                network = networkName,
+                address = if (!address.isNullOrBlank()) " $address" else "",
+            ),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
         )
     }
+}
+
+@Composable
+private fun formatAwardConditionsString(quantity: String, network: String, address: String): AnnotatedString {
+    val rawString = stringResource(R.string.referral_point_currencies_description, quantity, network, address)
+
+    val pattern = Regex("\\^\\^(.*?)\\^\\^")
+    var startIndex = 0
+    val annotatedString = buildAnnotatedString {
+        pattern.findAll(rawString).forEach { matchResult ->
+            val index = matchResult.range.first
+            val matchedValue = matchResult.groups[1]?.value ?: ""
+
+            // appends unformatted part
+            append(rawString.substring(startIndex, index))
+
+            // applies style on ^^-wrapped parts
+            withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
+                append(matchedValue)
+            }
+
+            // goes to next part
+            startIndex = matchResult.range.last + 1
+        }
+
+        // appends remaining ending if exists
+        append(rawString.substring(startIndex))
+    }
+
+    return annotatedString
 }
 
 @Composable
@@ -312,24 +318,18 @@ private fun ShimmerInfo() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = TangemTheme.dimens.spacing4)
-            .shimmer(),
+            .padding(top = TangemTheme.dimens.spacing4),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing10),
     ) {
-        Box(
+        RectangleShimmer(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
                 .width(TangemTheme.dimens.size102)
-                .height(TangemTheme.dimens.size16)
-                .background(TangemColorPalette.White),
-            // .background(Color(0xFFF8F8F8)),
+                .height(TangemTheme.dimens.size16),
         )
-        Box(
+        RectangleShimmer(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
                 .width(TangemTheme.dimens.size40)
-                .height(TangemTheme.dimens.size12)
-                .background(TangemColorPalette.White),
+                .height(TangemTheme.dimens.size12),
         )
     }
 }
@@ -350,10 +350,9 @@ private fun BoxScope.ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
                     modifier = Modifier.fillMaxWidth(),
                     actionOnNewLine = true,
                     shape = RoundedCornerShape(size = TangemTheme.dimens.radius8),
-                    backgroundColor = TangemColorPalette.Black,
+                    containerColor = TangemColorPalette.Black,
                     contentColor = TangemTheme.colors.text.primary2,
                     actionColor = TangemTheme.colors.text.primary2,
-                    elevation = TangemTheme.dimens.elevation3,
                 )
             },
         )
@@ -382,7 +381,7 @@ private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>
         val snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
         val coroutineScope = rememberCoroutineScope()
 
-        var snackbarSize by remember { mutableStateOf(0) }
+        var snackbarSize by remember { mutableIntStateOf(value = 0) }
         val width = LocalConfiguration.current.screenWidthDp.dp
         val snackbarWidth = with(LocalDensity.current) { snackbarSize.toDp() }
 
@@ -396,10 +395,9 @@ private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>
                 Box(
                     modifier = Modifier
                         .onSizeChanged { snackbarSize = it.width }
-                        .background(TangemColorPalette.Black, RoundedCornerShape(size = TangemTheme.dimens.radius8))
-                        .shadow(
-                            TangemTheme.dimens.elevation3,
-                            RoundedCornerShape(size = TangemTheme.dimens.radius8),
+                        .background(
+                            color = TangemTheme.colors.icon.primary1,
+                            shape = RoundedCornerShape(size = TangemTheme.dimens.radius8),
                         )
                         .padding(
                             horizontal = TangemTheme.dimens.spacing16,
@@ -407,7 +405,7 @@ private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>
                         ),
                 ) {
                     Text(
-                        text = it.message,
+                        text = it.visuals.message,
                         color = TangemTheme.colors.text.primary2,
                         style = TangemTheme.typography.body2,
                     )
@@ -464,6 +462,7 @@ private fun Preview_ReferralScreen_Participant_InLightTheme() {
                     code = "x4JdK",
                     shareLink = "",
                     url = "",
+                    expectedAwards = null,
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(
@@ -492,6 +491,52 @@ private fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     code = "x4JdK",
                     shareLink = "",
                     url = "",
+                    expectedAwards = null,
+                ),
+                errorSnackbar = null,
+                analytics = Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+private fun Preview_ReferralScreen_Participant_With_Referrals_InLightTheme() {
+    TangemTheme(isDark = false) {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.ParticipantContent(
+                    award = "10 USDT",
+                    networkName = "Tron",
+                    address = "ma80...zk8q2",
+                    discount = "10%",
+                    purchasedWalletCount = 3,
+                    code = "x4JdK",
+                    shareLink = "",
+                    url = "",
+                    expectedAwards = ExpectedAwards(
+                        numberOfWallets = 5,
+                        expectedAwards = listOf(
+                            ExpectedAward(
+                                amount = "10 USDT",
+                                paymentDate = "Today",
+                            ),
+                            ExpectedAward(
+                                amount = "20 USDT",
+                                paymentDate = "6 Aug 2023",
+                            ),
+                            ExpectedAward(
+                                amount = "30 USDT",
+                                paymentDate = "10 Aug 2023",
+                            ),
+                        ),
+                    ),
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(
