@@ -9,10 +9,10 @@ import com.tangem.domain.tokens.mock.MockNetworks
 import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokenLists
 import com.tangem.domain.tokens.mock.MockTokens
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Quote
 import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
@@ -205,7 +205,7 @@ internal class GetTokenListUseCaseTest {
 
     @Test
     fun `when tokens is empty then not initialized token list should be received`() = runTest {
-        val expectedResult = MockTokenLists.notInitializedTokenList.right()
+        val expectedResult = MockTokenLists.emptyTokenList.right()
 
         val useCase = getUseCase(tokens = flowOf(emptyList<CryptoCurrency>().right()))
 
@@ -269,7 +269,7 @@ internal class GetTokenListUseCaseTest {
 
         val useCase = getUseCase(
             statuses = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
-            quotes = flowOf(),
+            quotes = flowOf(emptySet<Quote>().right()),
         )
 
         // When
@@ -314,6 +314,6 @@ internal class GetTokenListUseCaseTest {
             isSortedByBalance = isSortedByBalance,
         ),
         quotesRepository = MockQuotesRepository(quotes),
-        networksRepository = MockNetworksRepository(MockNetworks.networks.right(), statuses),
+        networksRepository = MockNetworksRepository(statuses),
     )
 }
