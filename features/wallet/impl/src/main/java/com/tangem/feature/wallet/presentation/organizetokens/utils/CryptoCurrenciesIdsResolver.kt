@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.models.CryptoCurrency
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 
@@ -11,12 +11,12 @@ internal class CryptoCurrenciesIdsResolver {
         val draggableTokens = when (listState) {
             is OrganizeTokensListState.Empty -> return emptyList()
             is OrganizeTokensListState.GroupedByNetwork -> listState.items.filterIsInstance<DraggableItem.Token>()
-            is OrganizeTokensListState.Ungrouped -> listState.items
+            is OrganizeTokensListState.Ungrouped -> listState.items.filterIsInstance<DraggableItem.Token>()
         }
         val currenciesStatuses = when (tokenList) {
             is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { it.currencies }
             is TokenList.Ungrouped -> tokenList.currencies
-            is TokenList.NotInitialized,
+            is TokenList.Empty,
             null,
             -> return emptyList()
         }
