@@ -300,7 +300,7 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
         }
     }
 
-    fun updateFeeSelectedItem(uiState: SwapStateHolder, item: Item<TxFee>): SwapStateHolder {
+    fun updateFeeSelectedItem(uiState: SwapStateHolder, item: Item<TxFee>, isFeeEnough: Boolean): SwapStateHolder {
         val newSelectedItem = item.copy(
             startText = TextReference.Res(R.string.send_network_fee_title),
         )
@@ -314,27 +314,69 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
         }
         return when (val fee = uiState.fee) {
             is FeeState.Loaded -> {
-                val newState = fee.state?.copy(
-                    selectedItem = newSelectedItem,
-                    items = selectNewItem(fee.state.items, item),
-                )
-                uiState.copy(
-                    fee = fee.copy(state = newState),
-                    permissionState = newPermissionState,
-                )
+                getUpdatedFeeStateForEnoughFee(uiState, fee, item, newSelectedItem, newPermissionState, isFeeEnough)
             }
             is FeeState.NotEnoughFundsWarning -> {
-                val newState = fee.state?.copy(
-                    selectedItem = newSelectedItem,
-                    items = selectNewItem(fee.state.items, item),
-                )
-                uiState.copy(
-                    fee = fee.copy(state = newState),
-                    permissionState = newPermissionState,
-                )
+                getUpdatedFeeStateForNotEnoughFee(uiState, fee, item, newSelectedItem, newPermissionState, isFeeEnough)
             }
             else -> uiState
         }
+    }
+
+    @Suppress("LongParameterList")
+    private fun getUpdatedFeeStateForEnoughFee(
+        uiState: SwapStateHolder,
+        fee: FeeState.Loaded,
+        itemToSelect: Item<TxFee>,
+        newSelectedItem: Item<TxFee>,
+        newPermissionState: SwapPermissionState,
+        isFeeEnough: Boolean,
+    ): SwapStateHolder {
+        val newState = fee.state?.copy(
+            selectedItem = newSelectedItem,
+            items = selectNewItem(fee.state.items, itemToSelect),
+        )
+        val newFeeState = if (isFeeEnough) {
+            fee.copy(state = newState)
+        } else {
+            FeeState.NotEnoughFundsWarning(
+                tangemFee = fee.tangemFee,
+                state = newState,
+                onSelectItem = fee.onSelectItem,
+            )
+        }
+        return uiState.copy(
+            fee = newFeeState,
+            permissionState = newPermissionState,
+        )
+    }
+
+    @Suppress("LongParameterList")
+    private fun getUpdatedFeeStateForNotEnoughFee(
+        uiState: SwapStateHolder,
+        fee: FeeState.NotEnoughFundsWarning,
+        itemToSelect: Item<TxFee>,
+        newSelectedItem: Item<TxFee>,
+        newPermissionState: SwapPermissionState,
+        isFeeEnough: Boolean,
+    ): SwapStateHolder {
+        val newState = fee.state?.copy(
+            selectedItem = newSelectedItem,
+            items = selectNewItem(fee.state.items, itemToSelect),
+        )
+        val newFeeState = if (isFeeEnough) {
+            FeeState.Loaded(
+                tangemFee = fee.tangemFee,
+                state = newState,
+                onSelectItem = fee.onSelectItem,
+            )
+        } else {
+            fee.copy(state = newState)
+        }
+        return uiState.copy(
+            fee = newFeeState,
+            permissionState = newPermissionState,
+        )
     }
 
     private fun createFeeState(
