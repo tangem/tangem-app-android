@@ -25,6 +25,15 @@ interface CacheRegistry {
     suspend fun invalidate(key: String)
 
     /**
+     * Invalidates cache keys in registry.
+     *
+     * If the key doesn't exist, or it's already invalidated, this method doesn't have any effect.
+     *
+     * @param keys cache keys.
+     */
+    suspend fun invalidate(keys: Collection<String>)
+
+    /**
      * Invalidates all cache keys in the registry.
      *
      * After the call, the registry doesn't contain any valid keys.
