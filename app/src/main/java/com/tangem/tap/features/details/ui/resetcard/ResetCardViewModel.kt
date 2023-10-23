@@ -7,7 +7,7 @@ import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
 import org.rekotlin.Store
 
-class ResetCardViewModel(private val store: Store<AppState>) {
+internal class ResetCardViewModel(private val store: Store<AppState>) {
 
     fun updateState(state: CardSettingsState?): ResetCardScreenState {
         val descriptionText = state?.cardInfo
@@ -15,9 +15,12 @@ class ResetCardViewModel(private val store: Store<AppState>) {
             ?: TextReference.Str(value = "")
 
         return ResetCardScreenState(
-            accepted = state?.resetConfirmed ?: false,
+            accepted = state?.resetButtonEnabled ?: false,
             descriptionText = descriptionText,
-            onAcceptWarningToggleClick = { store.dispatch(DetailsAction.ResetToFactory.Confirm(it)) },
+            acceptCondition1Checked = state?.condition1Checked ?: false,
+            acceptCondition2Checked = state?.condition2Checked ?: false,
+            onAcceptCondition1ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition1(it)) },
+            onAcceptCondition2ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition2(it)) },
             onResetButtonClick = { store.dispatch(DetailsAction.ResetToFactory.Proceed) },
         )
     }
