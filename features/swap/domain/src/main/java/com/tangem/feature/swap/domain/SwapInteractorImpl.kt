@@ -700,7 +700,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private suspend fun checkFeeIsEnough(
+    override suspend fun checkFeeIsEnough(
         fee: BigDecimal?,
         spendAmount: SwapAmount,
         networkId: String,
