@@ -38,7 +38,7 @@ internal class DefaultCurrenciesRepository(
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
-    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(demoConfig)
+    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory()
     private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
@@ -314,6 +314,18 @@ internal class DefaultCurrenciesRepository(
 
     private suspend fun fetchTokens(userWallet: UserWallet) {
         val userWalletId = userWallet.walletId
+
+        if (demoConfig.isDemoCardId(userWallet.cardId) && userTokensStore.getSyncOrNull(key = userWalletId) == null) {
+            userTokensStore.store(
+                key = userWalletId,
+                value = userTokensResponseFactory.createUserTokensResponse(
+                    currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
+                    isGroupedByNetwork = false,
+                    isSortedByBalance = false,
+                ),
+            )
+            return
+        }
 
         val response = safeApiCall(
             call = {
