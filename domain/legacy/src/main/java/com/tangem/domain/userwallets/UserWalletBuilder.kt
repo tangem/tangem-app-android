@@ -22,6 +22,7 @@ class UserWalletBuilder(
             ProductType.Start2Coin -> "Start2Coin"
             ProductType.Wallet,
             ProductType.Wallet2,
+            ProductType.Ring,
             -> when {
                 card.isBackupNotAllowed -> "Tangem card"
                 cardTypesResolver.isStart2Coin() -> "Start2Coin"
