@@ -5,6 +5,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.ui.*
+import java.math.BigDecimal
 
 interface SwapInteractor {
 
@@ -95,4 +96,11 @@ interface SwapInteractor {
     fun getTokenBalance(networkId: String, token: Currency): SwapAmount
 
     fun isAvailableToSwap(networkId: String): Boolean
+
+    suspend fun checkFeeIsEnough(
+        fee: BigDecimal?,
+        spendAmount: SwapAmount,
+        networkId: String,
+        fromToken: Currency,
+    ): Boolean
 }
