@@ -245,6 +245,14 @@ internal class TokenDetailsViewModel @Inject constructor(
         }
     }
 
+    override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) {
+        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrency.symbol))
+
+        showErrorIfDemoModeOrElse {
+            router.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
+        }
+    }
+
     override fun onReloadClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReload(cryptoCurrency.symbol))
         uiState = stateFactory.getLoadingTxHistoryState()
