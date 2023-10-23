@@ -7,6 +7,6 @@ internal fun TokenList.disableSortingByBalance(): TokenList {
     return when (this) {
         is TokenList.GroupedByNetwork -> this.copy(sortedBy = SortType.NONE)
         is TokenList.Ungrouped -> this.copy(sortedBy = SortType.NONE)
-        is TokenList.NotInitialized -> this
+        is TokenList.Empty -> this
     }
 }
