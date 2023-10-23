@@ -21,23 +21,24 @@
             android:id="@+id/tilAddress"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:boxBackgroundColor="@color/backgroundLightGray"
             app:errorIconDrawable="@null"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            style="@style/SecondaryTextInputLayout"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.tangem.tap.features.send.ui.EditTextCustomPaste
                 android:id="@+id/etAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/backgroundLightGray"
                 android:ellipsize="middle"
                 android:inputType="textNoSuggestions"
                 android:paddingStart="0dp"
                 android:paddingEnd="98dp"
                 android:singleLine="true"
                 android:textSize="16sp"
+                android:background="@color/background_secondary"
+                android:textColor="@color/text_primary_1"
                 tools:text="139mrsJgyWnJ **** y9BV" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -67,10 +68,10 @@
             android:id="@+id/flQrCode"
             android:layout_width="@dimen/btn_rounded_size"
             android:layout_height="@dimen/btn_rounded_size"
-            android:layout_marginTop="10dp"
             android:background="@drawable/shape_ellipse"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tilAddress">
+            android:layout_marginTop="4dp"
+            app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
                 android:id="@+id/imvQrCode"
@@ -108,14 +109,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/send_extras_hint_memo"
-                app:boxBackgroundColor="@color/backgroundLightGray"
+                style="@style/SecondaryTextInputLayout"
                 app:errorIconDrawable="@null">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etXlmMemo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/backgroundLightGray"
+                    android:background="@color/background_secondary"
+                    android:textColor="@color/text_primary_1"
                     android:ellipsize="middle"
                     android:inputType="text|textNoSuggestions"
                     android:paddingStart="0dp"
@@ -140,14 +142,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/send_extras_hint_memo"
-                app:boxBackgroundColor="@color/backgroundLightGray"
+                style="@style/SecondaryTextInputLayout"
                 app:errorIconDrawable="@null">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etBinanceMemo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/backgroundLightGray"
+                    android:background="@color/background_secondary"
+                    android:textColor="@color/text_primary_1"
                     android:ellipsize="end"
                     android:inputType="number"
                     android:paddingStart="0dp"
@@ -172,14 +175,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/send_extras_hint_destination_tag"
-                app:boxBackgroundColor="@color/backgroundLightGray"
+                style="@style/SecondaryTextInputLayout"
                 app:errorIconDrawable="@null">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etDestinationTag"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/backgroundLightGray"
+                    android:background="@color/background_secondary"
+                    android:textColor="@color/text_primary_1"
                     android:ellipsize="end"
                     android:inputType="number"
                     android:paddingStart="0dp"
@@ -204,14 +208,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/send_extras_hint_memo"
-                app:boxBackgroundColor="@color/backgroundLightGray"
+                style="@style/SecondaryTextInputLayout"
                 app:errorIconDrawable="@null">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etTonMemo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/backgroundLightGray"
+                    android:background="@color/background_secondary"
+                    android:textColor="@color/text_primary_1"
                     android:ellipsize="end"
                     android:paddingStart="0dp"
                     android:paddingEnd="0dp"
@@ -235,14 +240,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/send_extras_hint_memo"
-                app:boxBackgroundColor="@color/backgroundLightGray"
+                style="@style/SecondaryTextInputLayout"
                 app:errorIconDrawable="@null">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etCosmosMemo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/backgroundLightGray"
+                    android:background="@color/background_secondary"
+                    android:textColor="@color/text_primary_1"
                     android:ellipsize="end"
                     android:paddingStart="0dp"
                     android:paddingEnd="0dp"
