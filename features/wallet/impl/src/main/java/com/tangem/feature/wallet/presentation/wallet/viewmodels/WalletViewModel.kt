@@ -130,9 +130,9 @@ internal class WalletViewModel @Inject constructor(
     private val neverToSuggestRateAppUseCase: NeverToSuggestRateAppUseCase,
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
     wasCardScannedUseCase: WasCardScannedUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
-    isDemoCardUseCase: IsDemoCardUseCase,
     isNeedToBackupUseCase: IsNeedToBackupUseCase,
     getMissedAddressesCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
     // endregion Parameters
@@ -608,15 +608,15 @@ internal class WalletViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrencyStatus.currency.symbol),
         )
 
-        val wallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
-
-        reduxStateHolder.dispatch(
-            TradeCryptoAction.New.Buy(
-                userWallet = wallet,
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                appCurrencyCode = selectedAppCurrencyFlow.value.code,
-            ),
-        )
+        showErrorIfDemoModeOrElse {
+            reduxStateHolder.dispatch(
+                TradeCryptoAction.New.Buy(
+                    userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex),
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    appCurrencyCode = selectedAppCurrencyFlow.value.code,
+                ),
+            )
+        }
     }
 
     override fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
@@ -755,12 +755,14 @@ internal class WalletViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrencyStatus.currency.symbol),
         )
 
-        reduxStateHolder.dispatch(
-            TradeCryptoAction.New.Sell(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                appCurrencyCode = selectedAppCurrencyFlow.value.code,
-            ),
-        )
+        showErrorIfDemoModeOrElse {
+            reduxStateHolder.dispatch(
+                action = TradeCryptoAction.New.Sell(
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    appCurrencyCode = selectedAppCurrencyFlow.value.code,
+                ),
+            )
+        }
     }
 
     override fun onManageTokensClick() {
@@ -803,22 +805,39 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onExploreClick() {
-        viewModelScope.launch(dispatchers.io) {
-            val wallet = getWallet(
-                index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
-            )
-            val currencyStatus = getPrimaryCurrencyStatusUpdatesUseCase(wallet.walletId)
-                .firstOrNull()
-                ?.getOrNull()
+        showErrorIfDemoModeOrElse(action = ::openExplorer)
+    }
 
-            if (currencyStatus != null) {
-                router.openUrl(
-                    url = getExploreUrlUseCase(
-                        userWalletId = wallet.walletId,
-                        network = currencyStatus.currency.network,
-                    ),
-                )
-            }
+    private fun openExplorer() {
+        val state = uiState as? WalletState.ContentState ?: return
+
+        viewModelScope.launch(dispatchers.main) {
+            val currencyStatus = singleWalletCryptoCurrencyStatus ?: return@launch
+
+            router.openUrl(
+                url = getExploreUrlUseCase(
+                    userWalletId = getWallet(index = state.walletsListConfig.selectedWalletIndex).walletId,
+                    network = currencyStatus.currency.network,
+                ),
+            )
+        }
+    }
+
+    private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
+        val state = uiState as? WalletState.ContentState ?: return
+        val cardId = getWallet(index = state.walletsListConfig.selectedWalletIndex).cardId
+
+        if (isDemoCardUseCase(cardId = cardId)) {
+            uiState = stateFactory.getStateWithClosedBottomSheet()
+            uiState = stateFactory.getStateAndTriggerEvent(
+                state = uiState,
+                event = WalletEvent.ShowError(
+                    text = resourceReference(id = R.string.alert_demo_feature_disabled),
+                ),
+                setUiState = { uiState = it },
+            )
+        } else {
+            action()
         }
     }
 
@@ -934,22 +953,13 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onTransactionClick(txHash: String) {
-        viewModelScope.launch(dispatchers.io) {
-            val wallet = getWallet(
-                index = requireNotNull(uiState as? WalletState.ContentState).walletsListConfig.selectedWalletIndex,
+        singleWalletCryptoCurrencyStatus?.let { currencyStatus ->
+            router.openUrl(
+                url = getExplorerTransactionUrlUseCase(
+                    txHash = txHash,
+                    networkId = currencyStatus.currency.network.id,
+                ),
             )
-            val currencyStatus = getPrimaryCurrencyStatusUpdatesUseCase(wallet.walletId)
-                .firstOrNull()
-                ?.getOrNull()
-
-            if (currencyStatus != null) {
-                router.openUrl(
-                    url = getExplorerTransactionUrlUseCase(
-                        txHash = txHash,
-                        networkId = currencyStatus.currency.network.id,
-                    ),
-                )
-            }
         }
     }
 
