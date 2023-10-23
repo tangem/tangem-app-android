@@ -1,7 +1,7 @@
 package com.tangem.data.wallets.di
 
-import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.data.wallets.DefaultWalletsRepository
+import com.tangem.datasource.local.userwallet.ShouldSaveUserWalletStore
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -17,11 +17,11 @@ object WalletsDataModule {
     @Provides
     @Singleton
     fun providesWalletsRepository(
-        preferencesDataSource: PreferencesDataSource,
+        shouldSaveUserWalletStore: ShouldSaveUserWalletStore,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): WalletsRepository {
         return DefaultWalletsRepository(
-            preferencesDataSource = preferencesDataSource,
+            shouldSaveUserWalletStore = shouldSaveUserWalletStore,
             dispatchers = coroutineDispatcherProvider,
         )
     }
