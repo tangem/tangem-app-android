@@ -51,7 +51,7 @@ internal class DefaultCardSdkConfigRepository(
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Start2Coin,
-            ProductType.Wallet2,
+            ProductType.Ring,
             -> CardIdDisplayFormat.Full
         }
     }
