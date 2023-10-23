@@ -178,8 +178,8 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         }
         is GlobalAction.UpdateUserWalletsListManager -> {
             /*
-             * If UserWalletsListManager's implementation is changed,
-             * then all selectedUserWallet's observers is became irrelevant
+             * If implementation of the UserWalletsListManager is changed,
+             * then all observers of selectedUserWallet become irrelevant.
              */
             action.manager.selectedUserWallet
                 .distinctUntilChanged()
