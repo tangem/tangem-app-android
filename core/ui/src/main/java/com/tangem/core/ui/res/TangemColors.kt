@@ -170,6 +170,7 @@ class TangemColors internal constructor(
             plain = other.plain
             action = other.action
             fade = other.fade
+            tertiary = other.tertiary
         }
     }
 
