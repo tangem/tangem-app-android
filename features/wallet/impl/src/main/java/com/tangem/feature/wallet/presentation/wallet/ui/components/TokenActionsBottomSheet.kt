@@ -10,6 +10,8 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.SimpleSettingsRow
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.getDefaultRowColors
+import com.tangem.core.ui.components.getWarningRowColors
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -29,10 +31,16 @@ private fun ActionsBottomSheetContent(actions: ImmutableList<TokenActionButtonCo
     Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
         actions.forEach { action ->
             if (action.enabled) {
+                val rowColors = if (action.isWarning) {
+                    getWarningRowColors()
+                } else {
+                    getDefaultRowColors()
+                }
                 SimpleSettingsRow(
                     title = action.text.resolveReference(),
                     icon = action.iconResId,
                     enabled = action.enabled,
+                    rowColors = rowColors,
                     onItemsClick = action.onClick,
                 )
             }
