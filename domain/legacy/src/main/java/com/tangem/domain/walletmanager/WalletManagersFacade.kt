@@ -77,7 +77,8 @@ interface WalletManagersFacade {
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem>
-// [REDACTED_TODO_COMMENT]
+
+    @Deprecated("Will be removed in future")
     suspend fun getOrCreateWalletManager(
         userWalletId: UserWalletId,
         blockchain: Blockchain,
@@ -109,5 +110,6 @@ interface WalletManagersFacade {
      */
     suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
 
+    @Deprecated("Will be removed in future")
     fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>>
 }
