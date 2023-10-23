@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.badoo.mvicore.DiffStrategy
 import com.badoo.mvicore.ModelWatcher
@@ -63,7 +62,9 @@ import javax.inject.Inject
 /**
  * Wallet details fragment - use only for MultiWallet
  */
+// TODO: Delete with WalletFeatureToggles
 @Suppress("LargeClass", "MagicNumber")
+@Deprecated(message = "Used only in old wallet screen")
 @AndroidEntryPoint
 class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeStoreSubscriber<WalletState> {
 
@@ -152,9 +153,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 }
             },
         )
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -440,10 +438,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 lBalance.root.show()
                 lBalance.groupBalance.hide()
                 lBalance.tvError.show()
-                lBalance.tvError.setWarningStatus(
-                    R.string.wallet_balance_blockchain_unreachable,
-                    status.errorMessage,
-                )
+                // TODO: Delete with WalletFeatureToggles
+                // lBalance.tvError.setWarningStatus(
+                //     R.string.wallet_balance_blockchain_unreachable,
+                //     status.errorMessage,
+                // )
             }
             is WalletDataModel.NoAccount -> {
                 lBalance.root.hide()

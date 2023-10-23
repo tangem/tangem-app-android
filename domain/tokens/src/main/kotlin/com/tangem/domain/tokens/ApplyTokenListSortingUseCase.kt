@@ -8,11 +8,10 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
 import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.tokens.error.TokenListSortingError
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
 class ApplyTokenListSortingUseCase(
@@ -68,12 +67,12 @@ class ApplyTokenListSortingUseCase(
     private suspend fun Raise<TokenListSortingError>.getCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
         val tokens = catch(
             block = {
-                currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWalletId).firstOrNull()
+                currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId, refresh = false)
             },
             catch = { raise(TokenListSortingError.DataError(it)) },
         )
 
-        return ensureNotNull(tokens?.toNonEmptyListOrNull()) {
+        return ensureNotNull(tokens.toNonEmptyListOrNull()) {
             TokenListSortingError.TokenListIsEmpty
         }
     }
