@@ -30,15 +30,23 @@ import com.tangem.wallet.R
 internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
         modifier = modifier,
-        content = { ResetCardView(state = state) },
+        content = {
+            when (state) {
+                is ResetCardScreenState.ResetCardScreenContent -> {
+                    ResetCardView(state = state)
+                }
+                ResetCardScreenState.InitialState -> {
+                    // do nothing for now, just white screen
+                }
+            }
+        },
         onBackClick = onBackClick,
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Suppress("LongMethod", "MagicNumber")
 @Composable
-private fun ResetCardView(state: ResetCardScreenState) {
+private fun ResetCardView(state: ResetCardScreenState.ResetCardScreenContent) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -80,17 +88,24 @@ private fun ResetCardView(state: ResetCardScreenState) {
 
             Spacer(modifier = Modifier.size(28.dp))
 
-            ConditionCheckBox(
-                checkedState = state.acceptCondition1Checked,
-                onCheckedChange = state.onAcceptCondition1ToggleClick,
-                description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
-            )
-
-            ConditionCheckBox(
-                checkedState = state.acceptCondition2Checked,
-                onCheckedChange = state.onAcceptCondition2ToggleClick,
-                description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
-            )
+            state.warningsToShow.forEach {
+                when (it) {
+                    ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS -> {
+                        ConditionCheckBox(
+                            checkedState = state.acceptCondition1Checked,
+                            onCheckedChange = state.onAcceptCondition1ToggleClick,
+                            description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
+                        )
+                    }
+                    ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE -> {
+                        ConditionCheckBox(
+                            checkedState = state.acceptCondition2Checked,
+                            onCheckedChange = state.onAcceptCondition2ToggleClick,
+                            description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.size(16.dp))
             Box(
@@ -162,8 +177,9 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
             .background(TangemTheme.colors.background.secondary),
     ) {
         ResetCardScreen(
-            state = ResetCardScreenState(
+            state = ResetCardScreenState.ResetCardScreenContent(
                 accepted = true,
+                warningsToShow = listOf(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS),
                 descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
                 onAcceptCondition1ToggleClick = {},
                 onAcceptCondition2ToggleClick = {},
