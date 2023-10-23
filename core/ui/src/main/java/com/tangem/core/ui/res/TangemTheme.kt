@@ -3,12 +3,7 @@ package com.tangem.core.ui.res
 import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.*
 
 // TODO: use isSystemInDarkTheme() for automatic color detection
 internal const val IS_SYSTEM_IN_DARK_THEME: Boolean = false
