@@ -22,6 +22,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
+import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -244,6 +246,7 @@ private fun WalletBottomSheets(state: WalletState) {
             is WalletBottomSheetConfig -> WalletBottomSheet(config = bottomSheetConfig)
             is TokenReceiveBottomSheetConfig -> TokenReceiveBottomSheet(config = bottomSheetConfig)
             is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
+            is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
         }
     }
 }
