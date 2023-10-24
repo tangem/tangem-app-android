@@ -16,6 +16,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
@@ -28,7 +29,6 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -131,8 +131,14 @@ internal class TokenDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
-        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrencyStatus = currencyStatus)
+    private suspend fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrElse { return }
+        getCryptoCurrencyActionsUseCase(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencyStatus = currencyStatus,
+            isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+        )
+            .conflate()
             .distinctUntilChanged()
             .onEach { uiState = stateFactory.getManageButtonsState(actions = it.states) }
             .flowOn(dispatchers.io)
@@ -146,7 +152,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 derivationPath = cryptoCurrency.network.derivationPath,
-                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
+                isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach { uiState = stateFactory.getStateWithNotifications(it) }
@@ -162,7 +168,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
                 derivationPath = cryptoCurrency.network.derivationPath,
-                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
+                isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach { either ->
@@ -177,10 +183,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .launchIn(viewModelScope)
                 .saveIn(marketPriceJobHolder)
         }
-    }
-
-    private fun isSingleWalletWithTokens(userWallet: UserWallet): Boolean {
-        return userWallet.scanResponse.walletData?.token != null && !userWallet.isMultiCurrency
     }
 
     /**
@@ -283,7 +285,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 userWalletId = userWalletId,
                 networkId = status.currency.network.id,
                 derivationPath = status.currency.network.derivationPath,
-                isSingleWalletWithTokens = isSingleWalletWithTokens(wallet),
+                isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             ).firstOrNull()
 
             maybeCoinStatus?.onRight { coinStatus ->
