@@ -27,7 +27,7 @@ internal class TokenDetailsNotificationConverter(
         return when (warning) {
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFee(
                 feeInfo = warning,
-                onBuyClick = clickIntents::onBuyClick,
+                onBuyClick = { clickIntents.onBuyCoinClick(warning.coinCurrency) },
             )
             is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDeposit(
                 existentialInfo = warning,
