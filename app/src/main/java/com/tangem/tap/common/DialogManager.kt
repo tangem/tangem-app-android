@@ -2,6 +2,7 @@ package com.tangem.tap.common
 
 import android.app.Dialog
 import android.content.Context
+import com.tangem.core.navigation.StateDialog
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.SimpleAlertDialog
@@ -53,7 +54,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is AppDialog.SimpleOkDialogRes -> SimpleOkDialog.create(state.dialog, context)
             is AppDialog.SimpleOkErrorDialog -> SimpleOkDialog.create(state.dialog, context)
             is AppDialog.SimpleOkWarningDialog -> SimpleOkDialog.create(state.dialog, context)
-            is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
+            is StateDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
             is OnboardingDialog.TwinningProcessNotCompleted -> TwinningProcessNotCompletedDialog.create(context)
