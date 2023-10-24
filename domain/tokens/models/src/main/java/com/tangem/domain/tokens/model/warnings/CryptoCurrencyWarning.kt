@@ -11,9 +11,8 @@ sealed class CryptoCurrencyWarning {
     ) : CryptoCurrencyWarning()
 
     data class BalanceNotEnoughForFee(
-        val currency: CryptoCurrency,
-        val blockchainFullName: String,
-        val blockchainSymbol: String,
+        val tokenCurrency: CryptoCurrency,
+        val coinCurrency: CryptoCurrency,
     ) : CryptoCurrencyWarning()
 
     object SomeNetworksUnreachable : CryptoCurrencyWarning()
