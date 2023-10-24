@@ -1,7 +1,6 @@
 package com.tangem.tap.domain.userWalletList.implementation
 
 import com.tangem.common.*
-import com.tangem.common.extensions.guard
 import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
@@ -57,12 +56,29 @@ internal class BiometricUserWalletsListManager(
     override val walletsCount: Int
         get() = state.value.userWallets.size
 
-    override suspend fun unlock(): CompletionResult<UserWallet> {
-        return unlockWithBiometryInternal().mapUnlockResult()
-    }
+    override suspend fun unlock(throwIfNotAllWalletsUnlocked: Boolean): CompletionResult<UserWallet> {
+        return unlockWithBiometryInternal()
+            .mapFailure { error ->
+                if (error is UserWalletsListError) {
+                    error
+                } else {
+                    UserWalletsListError.UnableToUnlockUserWallets(error)
+                }
+            }
+            .map {
+                if (throwIfNotAllWalletsUnlocked && state.value.userWallets.any(UserWallet::isLocked)) {
+                    Timber.e("Not all user wallets have been unlocked")
+                    throw UserWalletsListError.NotAllUserWalletsUnlocked
+                }
 
-    override suspend fun unlockAndSelect(selectedWalletId: UserWalletId): CompletionResult<UserWallet> {
-        return unlockWithBiometryInternal(selectedWalletId = selectedWalletId).mapUnlockResult()
+                val selectedUserWallet = selectedUserWalletSync
+                if (selectedUserWallet == null || selectedUserWallet.isLocked) {
+                    Timber.e("Unable to find selected user wallet")
+                    throw UserWalletsListError.NoUserWalletSelected
+                } else {
+                    selectedUserWallet
+                }
+            }
     }
 
     override fun lock() {
@@ -189,7 +205,7 @@ internal class BiometricUserWalletsListManager(
             }
     }
 
-    private suspend fun unlockWithBiometryInternal(selectedWalletId: UserWalletId? = null): CompletionResult<Unit> {
+    private suspend fun unlockWithBiometryInternal(): CompletionResult<Unit> {
         return keysRepository.getAll()
             .map { keys ->
                 state.update { prevState ->
@@ -198,28 +214,11 @@ internal class BiometricUserWalletsListManager(
                     )
                 }
             }
-            .flatMap { loadModels(selectedWalletId = selectedWalletId) }
+            .flatMap { loadModels() }
             .map {
                 state.update { prevState ->
                     val hasLockedUserWallets = prevState.userWallets.any { it.isLocked }
                     prevState.copy(isLocked = hasLockedUserWallets)
-                }
-            }
-    }
-
-    private fun CompletionResult<Unit>.mapUnlockResult(): CompletionResult<UserWallet> {
-        return this
-            .mapFailure { error ->
-                if (error is UserWalletsListError) {
-                    error
-                } else {
-                    UserWalletsListError.UnableToUnlockUserWallets(cause = error)
-                }
-            }
-            .map {
-                selectedUserWalletSync.guard {
-                    Timber.e("Unable to find selected user wallet")
-                    throw UserWalletsListError.NoUserWalletSelected
                 }
             }
     }
@@ -245,7 +244,7 @@ internal class BiometricUserWalletsListManager(
         }
     }
 
-    private suspend fun loadModels(selectedWalletId: UserWalletId? = null): CompletionResult<Unit> {
+    private suspend fun loadModels(): CompletionResult<Unit> {
         return getSavedUserWallets()
             .map { userWallets ->
                 if (userWallets.isNotEmpty()) {
@@ -255,7 +254,7 @@ internal class BiometricUserWalletsListManager(
                         prevState.copy(
                             userWallets = wallets,
                             selectedUserWalletId = findOrSetSelectedUserWalletId(
-                                prevSelectedWalletId = selectedWalletId ?: prevState.selectedUserWalletId,
+                                prevSelectedWalletId = prevState.selectedUserWalletId,
                                 userWallets = wallets,
                             ),
                         )
@@ -316,7 +315,7 @@ internal class BiometricUserWalletsListManager(
 
     private fun findSelectedUserWallet(userWallets: List<UserWallet> = state.value.userWallets): UserWallet? {
         return userWallets.firstOrNull {
-            it.walletId == state.value.selectedUserWalletId && !it.isLocked
+            it.walletId == state.value.selectedUserWalletId
         }
     }
 
