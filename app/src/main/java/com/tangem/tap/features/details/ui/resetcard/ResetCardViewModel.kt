@@ -1,8 +1,5 @@
 package com.tangem.tap.features.details.ui.resetcard
 
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -12,10 +9,7 @@ import org.rekotlin.Store
 
 internal class ResetCardViewModel(private val store: Store<AppState>) {
 
-    fun updateState(
-        scanResponse: ScanResponse,
-        state: CardSettingsState?,
-    ): ResetCardScreenState.ResetCardScreenContent {
+    fun updateState(state: CardSettingsState?): ResetCardScreenState.ResetCardScreenContent {
         val descriptionText = state?.cardInfo
             ?.toResetCardDescriptionText()
             ?: TextReference.Str(value = "")
@@ -23,9 +17,7 @@ internal class ResetCardViewModel(private val store: Store<AppState>) {
         val warningsToShow = buildList {
             add(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS)
 
-            val cardTypesResolver = scanResponse.cardTypesResolver
-            val isTangemWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
-            if (isTangemWallet && state?.card?.backupStatus is CardDTO.BackupStatus.Active) {
+            if (state?.isShowPasswordResetRadioButton == true) {
                 add(ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE)
             }
         }
