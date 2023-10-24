@@ -93,6 +93,8 @@ private fun handlePrepareCardSettingsScreen(
     cardTypesResolver: CardTypesResolver,
     state: DetailsState,
 ): DetailsState {
+    val isTangemWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
+    val isShowPasswordResetRadioButton = isTangemWallet && card.backupStatus is CardDTO.BackupStatus.Active
     val cardSettingsState = CardSettingsState(
         cardInfo = card.toCardInfo(cardTypesResolver),
         manageSecurityState = prepareSecurityOptions(card, cardTypesResolver),
@@ -110,6 +112,7 @@ private fun handlePrepareCardSettingsScreen(
         } else {
             null
         },
+        isShowPasswordResetRadioButton = isShowPasswordResetRadioButton,
     )
     return state.copy(cardSettingsState = cardSettingsState)
 }
@@ -152,22 +155,28 @@ private fun isResetToFactoryAllowedByCard(card: CardDTO, cardTypesResolver: Card
 }
 
 private fun handleEraseWallet(action: DetailsAction.ResetToFactory, state: DetailsState): DetailsState {
+    val cardSettingsState = state.cardSettingsState
     return when (action) {
         is DetailsAction.ResetToFactory.AcceptCondition1 -> {
             val warning1Checked = action.accepted
+            val resetButtonEnabled = if (cardSettingsState?.isShowPasswordResetRadioButton == true) {
+                warning1Checked && cardSettingsState.condition2Checked
+            } else {
+                warning1Checked
+            }
             state.copy(
-                cardSettingsState = state.cardSettingsState?.copy(
+                cardSettingsState = cardSettingsState?.copy(
                     condition1Checked = action.accepted,
-                    resetButtonEnabled = warning1Checked && state.cardSettingsState.condition2Checked,
+                    resetButtonEnabled = resetButtonEnabled,
                 ),
             )
         }
         is DetailsAction.ResetToFactory.AcceptCondition2 -> {
             val warning2Checked = action.accepted
             state.copy(
-                cardSettingsState = state.cardSettingsState?.copy(
+                cardSettingsState = cardSettingsState?.copy(
                     condition2Checked = action.accepted,
-                    resetButtonEnabled = warning2Checked && state.cardSettingsState.condition1Checked,
+                    resetButtonEnabled = warning2Checked && cardSettingsState.condition1Checked,
                 ),
             )
         }
