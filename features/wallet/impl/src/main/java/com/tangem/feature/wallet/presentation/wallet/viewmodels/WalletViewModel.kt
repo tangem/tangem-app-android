@@ -57,6 +57,7 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
@@ -78,7 +79,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -511,10 +511,8 @@ internal class WalletViewModel @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) {
             val userWallet = state.walletsListConfig.wallets[index]
-            withContext(dispatchers.io) {
-                if (userWallet !is WalletCardState.LockedContent) {
-                    selectWalletUseCase(userWalletId = userWallet.id)
-                }
+            launch(dispatchers.io) {
+                selectWalletUseCase(userWallet.id)
             }
 
             val cacheState = WalletStateCache.getState(userWalletId = userWallet.id)
@@ -842,15 +840,29 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onUnlockWalletClick() {
-        val state = uiState as? WalletState.ContentState ?: return
-
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.NoticeWalletLocked)
 
         viewModelScope.launch(dispatchers.main) {
-            unlockWalletsUseCase(
-                selectedWalletId = state.walletsListConfig.wallets[state.walletsListConfig.selectedWalletIndex].id,
-            )
+            unlockWalletsUseCase(throwIfNotAllWalletsUnlocked = true)
+                .onLeft(::handleUnlockWalletsError)
         }
+    }
+
+    private fun handleUnlockWalletsError(error: UnlockWalletsError) {
+        val event = when (error) {
+            is UnlockWalletsError.DataError,
+            is UnlockWalletsError.UnableToUnlockWallets,
+            -> WalletEvent.ShowToast(resourceReference(R.string.user_wallet_list_error_unable_to_unlock))
+            is UnlockWalletsError.NoUserWalletSelected,
+            is UnlockWalletsError.NotAllUserWalletsUnlocked,
+            -> WalletEvent.ShowAlert(WalletAlertState.RescanWallets)
+        }
+
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = event,
+            setUiState = { uiState = it },
+        )
     }
 
     override fun onUnlockWalletNotificationClick() {
