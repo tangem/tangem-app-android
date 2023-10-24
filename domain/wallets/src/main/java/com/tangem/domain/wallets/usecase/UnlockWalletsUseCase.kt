@@ -24,7 +24,7 @@ class UnlockWalletsUseCase(private val walletsStateHolder: WalletsStateHolder) {
                 value = walletsStateHolder.userWalletsListManager?.asLockable(),
                 raise = {
                     UnlockWalletsError.DataError(
-                        cause = IllegalStateException("The lockable user wallets list manager could not be found")
+                        cause = IllegalStateException("The lockable user wallets list manager could not be found"),
                     )
                 },
             )
