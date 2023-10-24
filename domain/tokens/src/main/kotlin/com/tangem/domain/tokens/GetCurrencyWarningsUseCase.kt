@@ -94,9 +94,8 @@ class GetCurrencyWarningsUseCase(
                         if (!tokenStatus.value.amount.isZero() && coinStatus.value.amount.isZero()) {
                             add(
                                 CryptoCurrencyWarning.BalanceNotEnoughForFee(
-                                    currency = tokenStatus.currency,
-                                    blockchainFullName = coinStatus.currency.name,
-                                    blockchainSymbol = coinStatus.currency.symbol,
+                                    tokenCurrency = tokenStatus.currency,
+                                    coinCurrency = coinStatus.currency,
                                 ),
                             )
                         }
