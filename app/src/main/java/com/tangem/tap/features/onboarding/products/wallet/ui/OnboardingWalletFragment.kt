@@ -398,9 +398,9 @@ class OnboardingWalletFragment :
     }
 
     private fun showWriteBackupCard(state: BackupState) = with(binding) {
+        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         prepareViewForFinalizeStep()
 
-        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
         tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
