@@ -16,6 +16,7 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.navigation.AppScreen
+import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -43,10 +44,7 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkGroup
-import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -806,16 +804,59 @@ internal class WalletViewModel @Inject constructor(
 
     private fun openExplorer() {
         val state = uiState as? WalletState.ContentState ?: return
+        val currencyNetwork = singleWalletCryptoCurrencyStatus?.currency?.network ?: return
 
         viewModelScope.launch(dispatchers.main) {
-            val currencyStatus = singleWalletCryptoCurrencyStatus ?: return@launch
+            val userWalletId = getWallet(state.walletsListConfig.selectedWalletIndex).walletId
 
+            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currencyNetwork)
+
+            if (addresses.size == 1) {
+                router.openUrl(
+                    url = getExploreUrlUseCase(
+                        userWalletId = userWalletId,
+                        network = currencyNetwork,
+                        addressType = AddressType.Default,
+                    ),
+                )
+            } else {
+                uiState = stateFactory.getStateWithOpenWalletBottomSheet(
+                    ChooseAddressBottomSheetConfig(
+                        addressModels = addresses
+                            .map { address ->
+                                AddressModel(
+                                    value = address.value,
+                                    type = AddressModel.Type.valueOf(address.type.name),
+                                )
+                            }
+                            .toImmutableList(),
+                        onClick = {
+                            onAddressTypeSelected(
+                                userWalletId = userWalletId,
+                                currencyNetwork = currencyNetwork,
+                                addressModel = it,
+                            )
+                        },
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun onAddressTypeSelected(
+        userWalletId: UserWalletId,
+        currencyNetwork: Network,
+        addressModel: AddressModel,
+    ) {
+        viewModelScope.launch(dispatchers.main) {
             router.openUrl(
                 url = getExploreUrlUseCase(
-                    userWalletId = getWallet(index = state.walletsListConfig.selectedWalletIndex).walletId,
-                    network = currencyStatus.currency.network,
+                    userWalletId = userWalletId,
+                    network = currencyNetwork,
+                    addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
+            uiState = stateFactory.getStateWithClosedBottomSheet()
         }
     }
 
