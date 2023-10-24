@@ -49,7 +49,6 @@ internal class ResetCardFragment : ComposeFragment(), StoreSubscriber<DetailsSta
 
     override fun newState(state: DetailsState) {
         if (activity == null || view == null) return
-        val scanResponse = state.scanResponse ?: return
-        screenState.value = viewModel.updateState(scanResponse, state.cardSettingsState)
+        screenState.value = viewModel.updateState(state.cardSettingsState)
     }
 }
