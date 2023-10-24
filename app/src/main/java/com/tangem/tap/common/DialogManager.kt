@@ -106,7 +106,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     context.getString(R.string.wallet_connect_scanner_error_unsupported_network)
                 } else {
                     context.getString(R.string.wallet_connect_error_unsupported_blockchains) +
-                        state.dialog.networks
+                        state.dialog.networks.joinToString()
                 }
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect_title,
