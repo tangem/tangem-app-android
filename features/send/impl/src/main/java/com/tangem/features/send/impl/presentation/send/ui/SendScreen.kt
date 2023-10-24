@@ -9,17 +9,14 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.send.impl.presentation.send.state.SendUiState
 
 @Composable
 fun SendScreen() {
-    // todo will be removed
-    val config = remember { SendBottomSheetConfig(SendStates.Amount) }
-
     Column(
         modifier = Modifier
             .imePadding()
@@ -42,7 +39,7 @@ fun SendScreen() {
         ) {
             SendScreenContent()
         }
-        SendNavigationButtons(config.currentState)
+        SendNavigationButtons(uiState = SendUiState.Content.Initial())
     }
 }
 
