@@ -74,6 +74,7 @@ class TradeCryptoMiddleware {
         }
     }
 
+    @Deprecated("Use proceedNewBuyAction instead")
     private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
         val selectedWalletData = store.state.walletState.selectedWalletData ?: return
         val currency = chooseAppropriateCurrency(store.state.walletState) ?: return
