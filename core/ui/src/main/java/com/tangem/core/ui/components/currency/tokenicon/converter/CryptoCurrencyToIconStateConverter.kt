@@ -1,27 +1,27 @@
-package com.tangem.feature.wallet.presentation.common.utils
+package com.tangem.core.ui.components.currency.tokenicon.converter
 
+import com.tangem.common.Converter
+import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.utils.converter.Converter
 
-internal class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, TokenItemState.IconState> {
+/**
+ * Converts [CryptoCurrencyStatus] to [TokenIconState]
+ */
+class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, TokenIconState> {
 
-    override fun convert(value: CryptoCurrencyStatus): TokenItemState.IconState {
+    override fun convert(value: CryptoCurrencyStatus): TokenIconState {
         return when (val currency = value.currency) {
             is CryptoCurrency.Coin -> getIconStateForCoin(currency, value.value.isError)
             is CryptoCurrency.Token -> getIconStateForToken(currency, value.value.isError)
         }
     }
 
-    private fun getIconStateForCoin(
-        coin: CryptoCurrency.Coin,
-        isUnreachable: Boolean,
-    ): TokenItemState.IconState.CoinIcon {
-        return TokenItemState.IconState.CoinIcon(
+    private fun getIconStateForCoin(coin: CryptoCurrency.Coin, isUnreachable: Boolean): TokenIconState.CoinIcon {
+        return TokenIconState.CoinIcon(
             url = coin.iconUrl,
             fallbackResId = coin.networkIconResId,
             isGrayscale = coin.network.isTestnet || isUnreachable,
@@ -29,20 +29,20 @@ internal class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStat
         )
     }
 
-    private fun getIconStateForToken(token: CryptoCurrency.Token, isErrorStatus: Boolean): TokenItemState.IconState {
+    private fun getIconStateForToken(token: CryptoCurrency.Token, isErrorStatus: Boolean): TokenIconState {
         val isGrayscale = token.network.isTestnet || isErrorStatus
         val background = token.tryGetBackgroundForTokenIcon(isGrayscale)
         val tint = getTintForTokenIcon(background)
 
         return if (token.isCustom && token.iconUrl == null) {
-            TokenItemState.IconState.CustomTokenIcon(
+            TokenIconState.CustomTokenIcon(
                 tint = tint,
                 background = background,
                 networkBadgeIconResId = token.networkIconResId,
                 isGrayscale = isGrayscale,
             )
         } else {
-            TokenItemState.IconState.TokenIcon(
+            TokenIconState.TokenIcon(
                 url = token.iconUrl,
                 networkBadgeIconResId = token.networkIconResId,
                 isGrayscale = isGrayscale,
