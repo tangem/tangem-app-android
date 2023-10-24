@@ -881,10 +881,13 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        val state = uiState as? WalletState.ContentState ?: return
-        val userWallet = getWallet(state.walletsListConfig.selectedWalletIndex)
+        val userWallet = getSelectedWallet()
         viewModelScope.launch(dispatchers.io) {
-            getCryptoCurrencyActionsUseCase(userWallet.walletId, cryptoCurrencyStatus)
+            getCryptoCurrencyActionsUseCase(
+                userWalletId = userWallet.walletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+            )
                 .take(count = 1)
                 .collectLatest {
                     uiState = stateFactory.getStateWithTokenActionBottomSheet(it)
@@ -1261,8 +1264,13 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
-        getCryptoCurrencyActionsUseCase(userWalletId = userWalletId, cryptoCurrencyStatus = currencyStatus)
+    private suspend fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        val userWallet = getSelectedWallet()
+        getCryptoCurrencyActionsUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = currencyStatus,
+            isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+        )
             .conflate()
             .distinctUntilChanged()
             .onEach { uiState = stateFactory.getSingleCurrencyManageButtonsState(actionsState = it) }
