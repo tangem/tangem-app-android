@@ -75,9 +75,11 @@ class WalletConnectInteractor(
                     is WalletConnectEvents.SessionApprovalError -> {
                         val error = when (wcEvent.error) {
                             is WalletConnectError.ApprovalErrorMissingNetworks -> {
-                                val missingNetworks = wcEvent.error.missingChains
-                                    .map { blockchainHelper.chainIdToNetworkIdOrNull(it) }
-                                WalletConnectError.ApprovalErrorAddNetwork(missingNetworks.filterNotNull())
+                                val missingNetworks = wcEvent.error.missingChains.mapNotNull {
+                                    blockchainHelper.chainIdToMissingNetworkNameOrNull(it)
+                                }
+
+                                WalletConnectError.ApprovalErrorAddNetwork(missingNetworks)
                             }
                             else -> wcEvent.error
                         }
