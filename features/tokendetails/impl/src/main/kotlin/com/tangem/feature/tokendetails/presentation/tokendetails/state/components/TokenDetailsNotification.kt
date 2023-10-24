@@ -50,23 +50,23 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
     ) : Warning(
         title = TextReference.Res(
             id = R.string.warning_send_blocked_funds_for_fee_title,
-            formatArgs = wrappedList(feeInfo.blockchainFullName),
+            formatArgs = wrappedList(feeInfo.coinCurrency.name),
         ),
         subtitle = TextReference.Res(
             id = R.string.warning_send_blocked_funds_for_fee_message,
             formatArgs = wrappedList(
-                feeInfo.currency.name,
-                feeInfo.blockchainFullName,
-                feeInfo.currency.name,
-                feeInfo.blockchainFullName,
-                feeInfo.blockchainSymbol,
+                feeInfo.tokenCurrency.name,
+                feeInfo.coinCurrency.name,
+                feeInfo.tokenCurrency.name,
+                feeInfo.coinCurrency.name,
+                feeInfo.coinCurrency.symbol,
             ),
         ),
-        iconResId = feeInfo.currency.networkIconResId,
+        iconResId = feeInfo.tokenCurrency.networkIconResId,
         buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(
                 id = R.string.common_buy_currency,
-                formatArgs = wrappedList(feeInfo.blockchainSymbol),
+                formatArgs = wrappedList(feeInfo.coinCurrency.symbol),
             ),
             onClick = onBuyClick,
         ),
