@@ -8,10 +8,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.activityResultCaller
 import com.tangem.tap.common.CustomTabsManager
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.openFragment
-import com.tangem.tap.common.extensions.popBackTo
-import com.tangem.tap.common.extensions.shareText
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.store
 import org.rekotlin.Middleware
@@ -60,6 +57,7 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                         intent.data = action.url
                         navState?.activity?.get()?.startActivity(intent)
                     }
+                    is NavigationAction.OpenDialog -> store.dispatchDialogShow(action.stateDialog)
                     is NavigationAction.OpenBiometricsSettings -> {
                         val settingsAction = when {
                             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
