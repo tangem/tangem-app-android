@@ -2,7 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
 import android.net.Uri
-import com.tangem.tap.common.redux.StateDialog
+import com.tangem.core.navigation.StateDialog
 import org.rekotlin.StateType
 
 /**
