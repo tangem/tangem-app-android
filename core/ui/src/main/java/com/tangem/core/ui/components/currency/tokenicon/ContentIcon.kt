@@ -1,44 +1,36 @@
-package com.tangem.feature.wallet.presentation.common.component.token.icon
+package com.tangem.core.ui.components.currency.tokenicon
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
-import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import kotlinx.coroutines.launch
+import com.tangem.core.ui.R
+import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
 
 @Composable
 internal fun ContentIcon(
-    icon: TokenItemState.IconState,
+    icon: TokenIconState,
     alpha: Float,
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
 ) {
     when (icon) {
-        is TokenItemState.IconState.CoinIcon -> CoinIcon(
+        is TokenIconState.CoinIcon -> CoinIcon(
             modifier = modifier,
             url = icon.url,
             fallbackResId = icon.fallbackResId,
             alpha = alpha,
             colorFilter = colorFilter,
         )
-        is TokenItemState.IconState.TokenIcon -> TokenIcon(
+        is TokenIconState.TokenIcon -> TokenIcon(
             modifier = modifier,
             url = icon.url,
             alpha = alpha,
@@ -52,14 +44,14 @@ internal fun ContentIcon(
                 )
             },
         )
-        is TokenItemState.IconState.CustomTokenIcon -> CustomTokenIcon(
+        is TokenIconState.CustomTokenIcon -> CustomTokenIcon(
             modifier = modifier,
             tint = icon.tint,
             background = icon.background,
             alpha = alpha,
         )
-        TokenItemState.IconState.Loading,
-        TokenItemState.IconState.Locked,
+        TokenIconState.Loading,
+        TokenIconState.Locked,
         -> Unit
     }
 }
@@ -128,48 +120,4 @@ private fun CustomTokenIcon(tint: Color, background: Color, alpha: Float, modifi
             contentDescription = null,
         )
     }
-}
-
-@Composable
-private inline fun DefaultCurrencyIcon(
-    iconData: Any,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    crossinline errorIcon: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
-    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
-    val isDarkTheme = isSystemInDarkTheme()
-    val coroutineScope = rememberCoroutineScope()
-
-    SubcomposeAsyncImage(
-        modifier = modifier
-            .background(
-                color = iconBackgroundColor,
-                shape = TangemTheme.shapes.roundedCorners8,
-            ),
-        model = ImageRequest.Builder(context = LocalContext.current)
-            .data(iconData)
-            .crossfade(enable = true)
-            .allowHardware(false)
-            .listener(
-                onSuccess = { _, result ->
-                    if (isDarkTheme) {
-                        coroutineScope.launch {
-                            val color = ImageBackgroundContrastChecker(
-                                drawable = result.drawable,
-                                backgroundColor = itemBackgroundColor,
-                            ).getContrastColorIfNeeded(isDarkTheme)
-                            iconBackgroundColor = color
-                        }
-                    }
-                },
-            ).build(),
-        loading = { LoadingIcon() },
-        error = { errorIcon() },
-        alpha = alpha,
-        colorFilter = colorFilter,
-        contentDescription = null,
-    )
 }
