@@ -10,7 +10,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.isZero
 import com.tangem.common.extensions.toMapKey
@@ -30,7 +29,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.card.DerivePublicKeysUseCase
-import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.card.WasCardScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
@@ -54,7 +52,6 @@ import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UnlockWalletsError
@@ -65,6 +62,8 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
+import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletError
 import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.TokenListWithWallet
@@ -93,7 +92,6 @@ import kotlin.properties.Delegates
 internal class WalletViewModel @Inject constructor(
     // region Parameters
     private val getWalletsUseCase: GetWalletsUseCase,
-    private val saveWalletUseCase: SaveWalletUseCase,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
@@ -105,7 +103,6 @@ internal class WalletViewModel @Inject constructor(
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
-    private val scanCardProcessor: ScanCardProcessor,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
@@ -131,6 +128,7 @@ internal class WalletViewModel @Inject constructor(
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val scanCardToUnlockWalletUseCase: ScanCardToUnlockWalletClickHandler,
     wasCardScannedUseCase: WasCardScannedUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isNeedToBackupUseCase: IsNeedToBackupUseCase,
@@ -414,22 +412,22 @@ internal class WalletViewModel @Inject constructor(
 
         val lockedWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
 
-        viewModelScope.launch(dispatchers.io) {
-            scanCardProcessor.scan()
-                .doOnSuccess { scanResponse ->
-                    // If card's public key is null then user wallet will be null
-                    val scannedWallet = UserWalletBuilder(scanResponse = scanResponse).build()
+        viewModelScope.launch(dispatchers.main) {
+            scanCardToUnlockWalletUseCase(walletId = lockedWallet.walletId)
+                .onLeft { error ->
+                    when (error) {
+                        ScanCardToUnlockWalletError.WrongCardIsScanned -> {
+                            delay(timeMillis = DELAY_SDK_DIALOG_CLOSE)
 
-                    if (lockedWallet.walletId == scannedWallet?.walletId) {
-                        saveWalletUseCase(userWallet = scannedWallet, canOverride = true)
-                    } else {
-                        delay(timeMillis = DELAY_SDK_DIALOG_CLOSE)
-
-                        uiState = stateFactory.getStateAndTriggerEvent(
-                            state = uiState,
-                            event = WalletEvent.ShowAlert(state = WalletAlertState.WrongCardIsScanned),
-                            setUiState = { uiState = it },
-                        )
+                            uiState = stateFactory.getStateAndTriggerEvent(
+                                state = uiState,
+                                event = WalletEvent.ShowAlert(state = WalletAlertState.WrongCardIsScanned),
+                                setUiState = { uiState = it },
+                            )
+                        }
+                        ScanCardToUnlockWalletError.ManyScanFails -> {
+                            router.openScanFailedDialog()
+                        }
                     }
                 }
         }
