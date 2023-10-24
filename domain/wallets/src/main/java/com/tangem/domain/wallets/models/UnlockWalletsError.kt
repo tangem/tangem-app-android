@@ -8,5 +8,5 @@ sealed class UnlockWalletsError {
 
     object NotAllUserWalletsUnlocked : UnlockWalletsError()
 
-    object NoUserWalletListManagerProvided : UnlockWalletsError()
+    data class DataError(val cause: Throwable) : UnlockWalletsError()
 }

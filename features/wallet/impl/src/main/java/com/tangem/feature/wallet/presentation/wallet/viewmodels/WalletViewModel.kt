@@ -79,7 +79,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -512,10 +511,8 @@ internal class WalletViewModel @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) {
             val userWallet = state.walletsListConfig.wallets[index]
-            withContext(dispatchers.io) {
-                if (userWallet !is WalletCardState.LockedContent) {
-                    selectWalletUseCase(userWalletId = userWallet.id)
-                }
+            launch(dispatchers.io) {
+                selectWalletUseCase(userWallet.id)
             }
 
             val cacheState = WalletStateCache.getState(userWalletId = userWallet.id)
@@ -853,21 +850,19 @@ internal class WalletViewModel @Inject constructor(
 
     private fun handleUnlockWalletsError(error: UnlockWalletsError) {
         val event = when (error) {
-            UnlockWalletsError.NoUserWalletListManagerProvided,
-            UnlockWalletsError.UnableToUnlockWallets,
-            -> null
-            UnlockWalletsError.NoUserWalletSelected,
-            UnlockWalletsError.NotAllUserWalletsUnlocked,
+            is UnlockWalletsError.DataError,
+            is UnlockWalletsError.UnableToUnlockWallets,
+            -> WalletEvent.ShowToast(resourceReference(R.string.user_wallet_list_error_unable_to_unlock))
+            is UnlockWalletsError.NoUserWalletSelected,
+            is UnlockWalletsError.NotAllUserWalletsUnlocked,
             -> WalletEvent.ShowAlert(WalletAlertState.RescanWallets)
         }
 
-        if (event != null) {
-            uiState = stateFactory.getStateAndTriggerEvent(
-                state = uiState,
-                event = WalletEvent.ShowAlert(WalletAlertState.RescanWallets),
-                setUiState = { uiState = it },
-            )
-        }
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = event,
+            setUiState = { uiState = it },
+        )
     }
 
     override fun onUnlockWalletNotificationClick() {

@@ -22,7 +22,11 @@ class UnlockWalletsUseCase(private val walletsStateHolder: WalletsStateHolder) {
         either {
             val userWalletsListManager = ensureNotNull(
                 value = walletsStateHolder.userWalletsListManager?.asLockable(),
-                raise = { UnlockWalletsError.NoUserWalletListManagerProvided },
+                raise = {
+                    UnlockWalletsError.DataError(
+                        cause = IllegalStateException("The lockable user wallets list manager could not be found")
+                    )
+                },
             )
 
             userWalletsListManager.unlock(throwIfNotAllWalletsUnlocked)
