@@ -1,7 +1,6 @@
 package com.tangem.tap.domain.userWalletList.implementation
 
 import com.tangem.common.*
-import com.tangem.common.extensions.guard
 import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
@@ -68,12 +67,16 @@ internal class BiometricUserWalletsListManager(
             }
             .map {
                 if (throwIfNotAllWalletsUnlocked && state.value.userWallets.any(UserWallet::isLocked)) {
+                    Timber.e("Not all user wallets have been unlocked")
                     throw UserWalletsListError.NotAllUserWalletsUnlocked
                 }
 
-                selectedUserWalletSync.guard {
+                val selectedUserWallet = selectedUserWalletSync
+                if (selectedUserWallet == null || selectedUserWallet.isLocked) {
                     Timber.e("Unable to find selected user wallet")
                     throw UserWalletsListError.NoUserWalletSelected
+                } else {
+                    selectedUserWallet
                 }
             }
     }
@@ -312,7 +315,7 @@ internal class BiometricUserWalletsListManager(
 
     private fun findSelectedUserWallet(userWallets: List<UserWallet> = state.value.userWallets): UserWallet? {
         return userWallets.firstOrNull {
-            it.walletId == state.value.selectedUserWalletId && !it.isLocked
+            it.walletId == state.value.selectedUserWalletId
         }
     }
 
