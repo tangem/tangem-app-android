@@ -18,6 +18,7 @@ import androidx.navigation.navArgument
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.core.navigation.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.navigation.OnboardingRouter
@@ -134,6 +135,10 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
 
     override fun openManageTokensScreen() {
         reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.AddTokens))
+    }
+
+    override fun openScanFailedDialog() {
+        reduxNavController.navigate(action = NavigationAction.OpenDialog(StateDialog.ScanFailsDialog))
     }
 
     private companion object {
