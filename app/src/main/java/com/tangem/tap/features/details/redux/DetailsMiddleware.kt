@@ -559,15 +559,10 @@ class DetailsMiddleware {
 
         return userWalletsListManager.save(userWallet)
             .doOnSuccess {
+                store.onUserWalletSelected(userWallet)
+
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
                 store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-
-                val walletFeatureToggles = store.state.daggerGraphState
-                    .get(DaggerGraphState::walletFeatureToggles)
-
-                if (!walletFeatureToggles.isRedesignedScreenEnabled) {
-                    store.onUserWalletSelected(userWallet)
-                }
             }
     }
 
