@@ -18,17 +18,18 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.send.impl.presentation.send.state.SendUiState
 
 @Composable
-internal fun SendNavigationButtons(currentState: SendStates) {
+internal fun SendNavigationButtons(uiState: SendUiState.Content) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = TangemTheme.dimens.spacing12),
     ) {
-        SendSecondaryNavigationButton(currentState)
+        SendSecondaryNavigationButton(uiState)
         SendPrimaryNavigationButton(
-            currentState,
+            uiState = uiState,
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = TangemTheme.dimens.spacing16),
@@ -37,9 +38,9 @@ internal fun SendNavigationButtons(currentState: SendStates) {
 }
 
 @Composable
-private fun SendSecondaryNavigationButton(currentState: SendStates) {
+private fun SendSecondaryNavigationButton(uiState: SendUiState.Content) {
     AnimatedVisibility(
-        visible = currentState == SendStates.Recipient || currentState == SendStates.Fee,
+        visible = uiState is SendUiState.Content.RecipientState || uiState is SendUiState.Content.FeeState,
     ) {
         Icon(
             modifier = Modifier
@@ -57,40 +58,37 @@ private fun SendSecondaryNavigationButton(currentState: SendStates) {
 }
 
 @Composable
-private fun SendPrimaryNavigationButton(currentState: SendStates, modifier: Modifier = Modifier) {
-    val buttonTextId = when (currentState) {
-        SendStates.Amount,
-        SendStates.Recipient,
-        SendStates.Fee,
+private fun SendPrimaryNavigationButton(uiState: SendUiState.Content, modifier: Modifier = Modifier) {
+    val buttonTextId = when (uiState) {
+        is SendUiState.Content.AmountState,
+        is SendUiState.Content.RecipientState,
+        is SendUiState.Content.FeeState,
         -> R.string.common_next
-        SendStates.Filled -> R.string.common_send
-        SendStates.Done -> R.string.common_close
+        is SendUiState.Content.SendState -> R.string.common_send
+        else -> R.string.common_close
     }
     AnimatedContent(
         targetState = buttonTextId,
         label = "Update send screen state",
         modifier = modifier,
     ) { textId ->
-        when (currentState) {
-            SendStates.Amount,
-            SendStates.Recipient,
-            SendStates.Fee,
-            SendStates.Done,
-            -> PrimaryButton(
+        if (uiState is SendUiState.Content.SendState) {
+            PrimaryButtonIconEnd(
                 text = stringResource(textId),
+                iconResId = R.drawable.ic_tangem_24,
+                enabled = uiState.nextButtonEnabled,
                 onClick = {
                     // todo add next click
                 },
             )
-            SendStates.Filled -> {
-                PrimaryButtonIconEnd(
-                    text = stringResource(textId),
-                    iconResId = R.drawable.ic_tangem_24,
-                    onClick = {
-                        // todo add next click
-                    },
-                )
-            }
+        } else {
+            PrimaryButton(
+                text = stringResource(textId),
+                enabled = uiState.nextButtonEnabled,
+                onClick = {
+                    // todo add next click
+                },
+            )
         }
     }
 }
