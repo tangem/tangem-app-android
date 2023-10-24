@@ -5,6 +5,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.common.extensions.toHexString
+import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -18,6 +20,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.Artwork
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
+import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -93,7 +96,21 @@ private fun handleWalletAction(action: Action) {
         is OnboardingWalletAction.LoadArtwork -> {
             scope.launch {
                 val cardArtwork = when (onboardingManager) {
-                    null -> action.cardArtworkUriForUnfinishedBackup
+                    null -> {
+                        // onboardingManager is null when backup started from previously interrupted
+                        val primaryCardId = backupService.primaryCardId
+                        val cardPublicKey = backupService.primaryPublicKey
+                        if (primaryCardId != null && cardPublicKey != null) {
+                            // uses when no scanResponse and backup state restored
+                            loadArtworkForUnfinishedBackup(
+                                cardId = primaryCardId,
+                                cardPublicKey = cardPublicKey,
+                                defaultArtwork = action.cardArtworkUriForUnfinishedBackup,
+                            )
+                        } else {
+                            action.cardArtworkUriForUnfinishedBackup
+                        }
+                    }
                     else -> onboardingManager.loadArtworkUrl()
                         .takeIf { it != Artwork.DEFAULT_IMG_URL }
                         ?.let { Uri.parse(it) }
@@ -183,6 +200,24 @@ private fun handleWalletAction(action: Action) {
         }
         OnboardingWalletAction.OnBackPressed -> handleOnBackPressed(onboardingWalletState)
         else -> Unit
+    }
+}
+
+private suspend fun loadArtworkForUnfinishedBackup(
+    cardId: String,
+    cardPublicKey: ByteArray,
+    defaultArtwork: Uri?,
+): Uri {
+    return when (val cardInfo = OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)) {
+        is Result.Success -> {
+            val artworkId = cardInfo.data.artwork?.id
+            if (artworkId.isNullOrEmpty()) {
+                defaultArtwork ?: Uri.EMPTY
+            } else {
+                Uri.parse(OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId))
+            }
+        }
+        is Result.Failure -> defaultArtwork ?: Uri.EMPTY
     }
 }
 
