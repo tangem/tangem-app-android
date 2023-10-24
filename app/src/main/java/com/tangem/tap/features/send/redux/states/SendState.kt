@@ -4,10 +4,10 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
+import com.tangem.core.navigation.StateDialog
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -57,7 +57,7 @@ data class SendState(
         return if (!this.coinIsConvertible()) value else coinConverter!!.toCrypto(value)
     }
 
-    fun convertFiatToToken(value: BigDecimal): BigDecimal {
+    private fun convertFiatToToken(value: BigDecimal): BigDecimal {
         return if (!this.tokenIsConvertible()) value else tokenConverter!!.toCrypto(value)
     }
 
