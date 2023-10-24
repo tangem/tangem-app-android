@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
@@ -14,7 +15,6 @@ import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -34,7 +34,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
-import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 import java.util.Locale
 
@@ -45,14 +44,14 @@ object GlobalMiddleware {
 private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState ->
     { nextDispatch ->
         { action ->
-            handleAction(action, appState, dispatch)
+            handleAction(action, appState)
             nextDispatch(action)
         }
     }
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-private fun handleAction(action: Action, appState: () -> AppState?, dispatch: DispatchFunction) {
+private fun handleAction(action: Action, appState: () -> AppState?) {
     when (action) {
         is GlobalAction.ScanFailsCounter.ChooseBehavior -> {
             when (action.result) {
@@ -61,7 +60,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     if (action.result.error is TangemSdkError.UserCancelled) {
                         store.dispatch(GlobalAction.ScanFailsCounter.Increment)
                         if (store.state.globalState.scanCardFailsCounter >= 2) {
-                            store.dispatchDialogShow(AppDialog.ScanFailsDialog)
+                            store.dispatchDialogShow(StateDialog.ScanFailsDialog)
                         }
                     } else {
                         store.dispatch(GlobalAction.ScanFailsCounter.Reset)
