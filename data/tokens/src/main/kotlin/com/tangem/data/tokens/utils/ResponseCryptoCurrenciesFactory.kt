@@ -18,6 +18,7 @@ internal class ResponseCryptoCurrenciesFactory {
 
     fun createCurrency(
         currencyId: CryptoCurrency.ID,
+        contractAddress: String?,
         response: UserTokensResponse,
         scanResponse: ScanResponse,
         derivationPath: String?,
@@ -27,7 +28,10 @@ internal class ResponseCryptoCurrenciesFactory {
 
         val token = requireNotNull(
             value = response.tokens
-                .find { it.id == responseTokenId && it.networkId == networkId && it.derivationPath == derivationPath },
+                .find {
+                    it.id == responseTokenId && it.networkId == networkId && it.derivationPath == derivationPath &&
+                        it.contractAddress == contractAddress
+                },
             lazyMessage = { "Unable find a token with provided TokenID($responseTokenId) and NetworkID($networkId)" },
         )
 
