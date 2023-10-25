@@ -214,6 +214,7 @@ internal class DefaultCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        contractAddress: String?,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency = withContext(dispatchers.io) {
         val userWallet = getUserWallet(userWalletId)
@@ -223,7 +224,13 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse, derivationPath.value)
+        responseCurrenciesFactory.createCurrency(
+            currencyId = id,
+            contractAddress = contractAddress,
+            response = response,
+            scanResponse = userWallet.scanResponse,
+            derivationPath = derivationPath.value,
+        )
     }
 
     override suspend fun getNetworkCoin(
