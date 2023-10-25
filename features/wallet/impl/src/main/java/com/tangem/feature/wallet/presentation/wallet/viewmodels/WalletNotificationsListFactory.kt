@@ -1,29 +1,30 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
 import arrow.core.Either
-import com.tangem.domain.card.WasCardScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.GetMissedAddressesCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.error.GetCurrenciesError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
+import com.tangem.feature.wallet.presentation.wallet.domain.HasSingleWalletSignedHashesUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * Wallet notifications list factory
  *
  * @property isDemoCardUseCase           use case that checks if card is demo
  * @property isReadyToShowRateAppUseCase use case that checks if card is user already rate app
- * @property wasCardScannedUseCase       use case that checks if card was scanned
  * @property isNeedToBackupUseCase       use case that checks if wallet need backup cards
  * @property clickIntents                screen click intents
  *
@@ -32,35 +33,47 @@ import kotlinx.coroutines.flow.conflate
 internal class WalletNotificationsListFactory(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
-    private val wasCardScannedUseCase: WasCardScannedUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val getMissedAddressCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
+    private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
     private val clickIntents: WalletClickIntents,
 ) {
 
     private var readyForRateAppNotification = false
 
     fun create(
-        selectedWalletId: UserWalletId,
-        cardTypesResolver: CardTypesResolver,
+        selectedWallet: UserWallet,
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
     ): Flow<ImmutableList<WalletNotification>> {
+        val cardTypesResolver = selectedWallet.scanResponse.cardTypesResolver
         return combine(
-            flow = wasCardScannedUseCase(cardTypesResolver.getCardId()).conflate(),
+            flow = hasSingleWalletSignedHashesFlow(selectedWallet, cryptoCurrencyList),
             flow2 = isReadyToShowRateAppUseCase().conflate(),
-            flow3 = isNeedToBackupUseCase(selectedWalletId).conflate(),
-            flow4 = getMissedAddressCryptoCurrenciesUseCase(selectedWalletId).conflate(),
-        ) { wasCardScanned, isReadyToShowRating, isNeedToBackup, maybeMissedAddressCurrencies ->
+            flow3 = isNeedToBackupUseCase(selectedWallet.walletId).conflate(),
+            flow4 = getMissedAddressCryptoCurrenciesUseCase(selectedWallet.walletId).conflate(),
+        ) { hasSignedHashes, isReadyToShowRating, isNeedToBackup, maybeMissedAddressCurrencies ->
             readyForRateAppNotification = true
             buildList {
                 addCriticalNotifications(cardTypesResolver)
 
                 addInformationalNotifications(cardTypesResolver, maybeMissedAddressCurrencies)
 
-                addWarningNotifications(cardTypesResolver, cryptoCurrencyList, wasCardScanned, isNeedToBackup)
+                addWarningNotifications(cardTypesResolver, cryptoCurrencyList, hasSignedHashes, isNeedToBackup)
 
                 addRateTheAppNotification(isReadyToShowRating)
             }.toImmutableList()
+        }
+    }
+
+    private fun hasSingleWalletSignedHashesFlow(
+        selectedWallet: UserWallet,
+        cryptoCurrencyList: List<CryptoCurrencyStatus>,
+    ): Flow<Boolean> {
+        return if (selectedWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
+            flowOf(value = false)
+        } else {
+            val network = requireNotNull(cryptoCurrencyList.firstOrNull()?.currency?.network)
+            hasSingleWalletSignedHashesUseCase(userWallet = selectedWallet, network = network).conflate()
         }
     }
 
@@ -97,7 +110,7 @@ internal class WalletNotificationsListFactory(
     private fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver,
         cryptoCurrencyList: List<CryptoCurrencyStatus>,
-        wasCardScanned: Boolean,
+        hasSignedHashes: Boolean,
         isNeedToBackup: Boolean,
     ) {
         addIf(
@@ -112,7 +125,6 @@ internal class WalletNotificationsListFactory(
             condition = cardTypesResolver.isTestCard(),
         )
 
-        val isDemo = isDemoCardUseCase(cardId = cardTypesResolver.getCardId())
         if (cardTypesResolver.isMultiwalletAllowed()) {
             addIf(
                 element = WalletNotification.Warning.SomeNetworksUnreachable,
@@ -130,11 +142,7 @@ internal class WalletNotificationsListFactory(
                 element = WalletNotification.Warning.NumberOfSignedHashesIncorrect(
                     onCloseClick = clickIntents::onSignedHashesNotificationCloseClick,
                 ),
-                condition = checkSignedHashes(
-                    cardTypesResolver = cardTypesResolver,
-                    isDemo = isDemo,
-                    wasCardScanned = wasCardScanned,
-                ),
+                condition = hasSignedHashes,
             )
         }
     }
@@ -193,18 +201,6 @@ internal class WalletNotificationsListFactory(
                 ),
             )
         }
-    }
-
-    /**
-     * Warning is being shown for single wallet cards only
-     */
-    private fun checkSignedHashes(
-        cardTypesResolver: CardTypesResolver,
-        isDemo: Boolean,
-        wasCardScanned: Boolean,
-    ): Boolean {
-        return cardTypesResolver.isReleaseFirmwareType() && !cardTypesResolver.isTangemTwins() &&
-            cardTypesResolver.hasWalletSignedHashes() && !isDemo && !wasCardScanned
     }
 
     private companion object {
