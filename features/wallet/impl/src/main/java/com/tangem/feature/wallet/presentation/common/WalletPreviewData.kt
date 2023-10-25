@@ -9,6 +9,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
@@ -417,25 +418,31 @@ internal object WalletPreviewData {
                         listOf(
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Transfer(
+                                TransactionState.Content(
                                     txHash = UUID.randomUUID().toString(),
                                     address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Unconfirmed,
                                     direction = TransactionState.Content.Direction.OUTGOING,
+                                    iconRes = com.tangem.core.ui.R.drawable.ic_arrow_up_24,
+                                    title = resourceReference(com.tangem.core.ui.R.string.common_transfer),
+                                    subtitle = TextReference.Str("33BddS...ga2B"),
                                     onClick = {},
                                 ),
                             ),
                             TxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Transfer(
+                                TransactionState.Content(
                                     txHash = UUID.randomUUID().toString(),
                                     address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Confirmed,
                                     direction = TransactionState.Content.Direction.OUTGOING,
+                                    iconRes = com.tangem.core.ui.R.drawable.ic_arrow_up_24,
+                                    title = resourceReference(com.tangem.core.ui.R.string.common_transfer),
+                                    subtitle = TextReference.Str("33BddS...ga2B"),
                                     onClick = {},
                                 ),
                             ),
