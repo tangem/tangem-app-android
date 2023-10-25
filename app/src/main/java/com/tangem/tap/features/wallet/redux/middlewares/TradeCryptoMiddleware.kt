@@ -332,8 +332,7 @@ class TradeCryptoMiddleware {
     }
 
     private fun handleNewSendToken(action: TradeCryptoAction.New.SendToken) {
-        val cryptoStatus = action.tokenStatus
-        val currency = cryptoStatus.currency
+        val currency = action.tokenCurrency
         val blockchain = Blockchain.fromId(currency.network.id.value)
 
         scope.launch {
@@ -352,21 +351,21 @@ class TradeCryptoMiddleware {
                 return@launch
             }
 
-            val sendableAmounts = walletManager.wallet.amounts.values.filter { it.type is AmountType.Token }
-            when (currency) {
-                is CryptoCurrency.Coin -> error("Action.tokenStatus.currency is Coin")
-                is CryptoCurrency.Token -> {
-                    store.dispatchOnMain(
-                        action = PrepareSendScreen(
-                            walletManager = walletManager,
-                            coinAmount = walletManager.wallet.amounts[AmountType.Coin],
-                            coinRate = action.coinFiatRate,
-                            tokenAmount = sendableAmounts.first(),
-                            tokenRate = cryptoStatus.value.fiatRate,
-                        ),
-                    )
-                }
+            val sendableAmount = walletManager.wallet.amounts.values.firstOrNull {
+                val amountType = it.type
+                amountType is AmountType.Token && amountType.token.contractAddress == currency.contractAddress
             }
+
+            store.dispatchOnMain(
+                action = PrepareSendScreen(
+                    walletManager = walletManager,
+                    coinAmount = walletManager.wallet.amounts[AmountType.Coin],
+                    coinRate = action.coinFiatRate,
+                    tokenAmount = sendableAmount,
+                    tokenRate = action.tokenFiatRate,
+                ),
+            )
+
             val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
             store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
