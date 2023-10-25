@@ -20,8 +20,7 @@ class HasSingleWalletSignedHashesUseCase @Inject constructor(
     operator fun invoke(userWallet: UserWallet, network: Network): Flow<Boolean> {
         return cardRepository.wasCardScanned(cardId = userWallet.cardId)
             .map { wasCardScanned ->
-                if (wasCardScanned) return@map false
-                if (!userWallet.isCorrectCardType()) return@map false
+                if (wasCardScanned || !userWallet.isCorrectCardType()) return@map false
 
                 if (!userWallet.scanResponse.cardTypesResolver.hasWalletSignedHashes()) {
                     cardRepository.setCardWasScanned(cardId = userWallet.cardId)
