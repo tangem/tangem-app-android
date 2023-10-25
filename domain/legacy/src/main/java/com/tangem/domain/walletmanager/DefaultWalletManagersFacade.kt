@@ -60,6 +60,50 @@ class DefaultWalletManagersFacade(
         return getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)
     }
 
+    override suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>) {
+        if (networks.isEmpty()) return
+
+        val blockchainsToDerivationPaths = networks.map {
+            Blockchain.fromId(it.id.value) to it.derivationPath.value
+        }
+
+        walletManagersStore.remove(userWalletId) { walletManager ->
+            val wallet = walletManager.wallet
+            val blockchainToDerivationPath = wallet.blockchain to wallet.publicKey.derivationPath?.rawPath
+
+            blockchainToDerivationPath in blockchainsToDerivationPaths
+        }
+    }
+
+    override suspend fun removeTokens(userWalletId: UserWalletId, tokens: Set<CryptoCurrency.Token>) {
+        if (tokens.isEmpty()) return
+
+        tokens
+            .groupBy(CryptoCurrency.Token::network)
+            .forEach { (network, networkTokens) ->
+                removeTokens(userWalletId, network, networkTokens)
+            }
+    }
+
+    private suspend fun removeTokens(
+        userWalletId: UserWalletId,
+        network: Network,
+        networkTokens: List<CryptoCurrency.Token>,
+    ) {
+        val walletManager = walletManagersStore.getSyncOrNull(
+            userWalletId = userWalletId,
+            blockchain = Blockchain.fromId(network.id.value),
+            derivationPath = network.derivationPath.value,
+        ) ?: return
+        val tokensToRemove = sdkTokenConverter.convertList(networkTokens)
+
+        tokensToRemove.forEach { token ->
+            walletManager.removeToken(token)
+        }
+
+        walletManagersStore.store(userWalletId, walletManager)
+    }
+
     override suspend fun updatePendingTransactions(
         userWalletId: UserWalletId,
         network: Network,
