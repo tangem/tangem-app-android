@@ -1,15 +1,17 @@
 package com.tangem.domain.walletmanager
 
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
+import arrow.core.right
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -24,6 +26,7 @@ import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
+import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -316,6 +319,29 @@ class DefaultWalletManagersFacade(
 
     override fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>> {
         return walletManagersStore.getAll(userWalletId)
+    }
+
+    override suspend fun validateSignatureCount(
+        userWalletId: UserWalletId,
+        network: Network,
+        signedHashes: Int,
+    ): Either<Throwable, Unit> {
+        return either {
+            val walletManager = getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = Blockchain.fromId(network.id.value),
+                derivationPath = network.derivationPath.value,
+            )
+
+            val validator = ensureNotNull(walletManager as? SignatureCountValidator) {
+                raise(IllegalStateException("Wallet manager is not a SignatureCountValidator"))
+            }
+
+            when (val result = validator.validateSignatureCount(signedHashes)) {
+                is SimpleResult.Failure -> raise(result.error)
+                is SimpleResult.Success -> Unit.right()
+            }
+        }
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
