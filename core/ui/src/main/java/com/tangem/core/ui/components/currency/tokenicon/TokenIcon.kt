@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component.token.icon
+package com.tangem.core.ui.components.currency.tokenicon
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,14 +14,22 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.IconState as TokenIconState
 
 private const val GRAY_SCALE_SATURATION = 0f
 private const val GRAY_SCALE_ALPHA = 0.4f
 private const val NORMAL_ALPHA = 1f
 
+/**
+ * Cryptocurrency icon with network badge
+ *
+ * TODO [separate domain from ui]([REDACTED_JIRA])
+ *
+ * @param state cryptocurrency icon config
+ * @param modifier component modifier
+ * @param shouldDisplayNetwork specifies whether to display network badge
+ */
 @Composable
-internal fun TokenIcon(state: TokenIconState, modifier: Modifier = Modifier) {
+fun TokenIcon(state: TokenIconState, modifier: Modifier = Modifier, shouldDisplayNetwork: Boolean = true) {
     BaseContainer(modifier = modifier) {
         val iconModifier = Modifier
             .align(Alignment.Center)
@@ -34,7 +42,11 @@ internal fun TokenIcon(state: TokenIconState, modifier: Modifier = Modifier) {
             is TokenIconState.CustomTokenIcon,
             is TokenIconState.TokenIcon,
             -> {
-                ContentIconContainer(modifier = iconModifier, icon = state)
+                ContentIconContainer(
+                    icon = state,
+                    modifier = iconModifier,
+                    shouldDisplayNetwork = shouldDisplayNetwork,
+                )
             }
         }
     }
@@ -60,7 +72,11 @@ private fun LockedIcon(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun BoxScope.ContentIconContainer(icon: TokenIconState, modifier: Modifier = Modifier) {
+private fun BoxScope.ContentIconContainer(
+    icon: TokenIconState,
+    modifier: Modifier = Modifier,
+    shouldDisplayNetwork: Boolean = true,
+) {
     val networkBadgeOffset = TangemTheme.dimens.spacing4
     val (alpha, colorFilter) = remember(icon.isGrayscale) {
         if (icon.isGrayscale) {
@@ -77,7 +93,7 @@ private fun BoxScope.ContentIconContainer(icon: TokenIconState, modifier: Modifi
         colorFilter = colorFilter,
     )
 
-    if (icon.networkBadgeIconResId != null) {
+    if (icon.networkBadgeIconResId != null && shouldDisplayNetwork) {
         NetworkBadge(
             modifier = Modifier
                 .offset(x = networkBadgeOffset, y = -networkBadgeOffset)
