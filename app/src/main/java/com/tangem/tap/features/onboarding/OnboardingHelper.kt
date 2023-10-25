@@ -38,7 +38,7 @@ object OnboardingHelper {
                 }
             }
 
-            response.cardTypesResolver.isWallet2() -> {
+            response.cardTypesResolver.isWallet2() || response.cardTypesResolver.isShibaWallet() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
                 val activationInProgress = cardInfoStorage.isActivationInProgress(cardId)
                 val backupNotActive = response.card.backupStatus?.isActive != true
