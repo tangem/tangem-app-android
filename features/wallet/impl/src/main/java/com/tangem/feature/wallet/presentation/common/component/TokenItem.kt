@@ -14,11 +14,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.token.*
-import com.tangem.feature.wallet.presentation.common.component.token.icon.TokenIcon
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import kotlin.math.max
