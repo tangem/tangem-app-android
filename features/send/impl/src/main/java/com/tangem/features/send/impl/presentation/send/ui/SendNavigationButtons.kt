@@ -76,7 +76,7 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState.Content, modifier: 
             PrimaryButtonIconEnd(
                 text = stringResource(textId),
                 iconResId = R.drawable.ic_tangem_24,
-                enabled = uiState.nextButtonEnabled,
+                enabled = uiState.isPrimaryButtonEnabled,
                 onClick = {
                     // todo add next click
                 },
@@ -84,7 +84,7 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState.Content, modifier: 
         } else {
             PrimaryButton(
                 text = stringResource(textId),
-                enabled = uiState.nextButtonEnabled,
+                enabled = uiState.isPrimaryButtonEnabled,
                 onClick = {
                     // todo add next click
                 },
