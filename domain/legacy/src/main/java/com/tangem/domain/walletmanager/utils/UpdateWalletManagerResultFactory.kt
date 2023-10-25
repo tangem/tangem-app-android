@@ -118,18 +118,22 @@ internal class UpdateWalletManagerResultFactory {
     }
 
     private fun createTxHistoryItem(walletAddresses: Set<String>, data: TransactionData): TxHistoryItem? {
-        val direction = extractDirection(walletAddresses, data) ?: run {
-            Timber.w("Can not determine address for $data")
-            return null
-        }
         val hash = data.hash ?: return null
         val millis = data.date?.timeInMillis ?: return null
         val amount = getTransactionAmountValue(data.amount) ?: return null
+        val isOutgoing = data.sourceAddress in walletAddresses
 
         return TxHistoryItem(
             txHash = hash,
             timestampInMillis = TimeUnit.SECONDS.toMillis(millis),
-            direction = direction,
+            isOutgoing = isOutgoing,
+            destinationType = TxHistoryItem.DestinationType.Single(
+                TxHistoryItem.AddressType.User(data.destinationAddress),
+            ),
+            sourceType = TxHistoryItem.SourceType.Single(data.sourceAddress),
+            interactionAddressType = TxHistoryItem.InteractionAddressType.User(
+                if (isOutgoing) data.destinationAddress else data.sourceAddress,
+            ),
             status = when (data.status) {
                 TransactionStatus.Confirmed -> TxHistoryItem.TransactionStatus.Confirmed
                 TransactionStatus.Unconfirmed -> TxHistoryItem.TransactionStatus.Unconfirmed
@@ -137,35 +141,6 @@ internal class UpdateWalletManagerResultFactory {
             type = TxHistoryItem.TransactionType.Transfer,
             amount = amount,
         )
-    }
-
-    private fun extractDirection(
-        walletAddresses: Set<String>,
-        data: TransactionData,
-    ): TxHistoryItem.TransactionDirection? {
-        val fromAddress = data.sourceAddress
-        val toAddress = data.destinationAddress
-
-        return when {
-            toAddress in walletAddresses -> {
-                TxHistoryItem.TransactionDirection.Incoming(TxHistoryItem.Address.Single(fromAddress))
-            }
-            fromAddress in walletAddresses -> {
-                TxHistoryItem.TransactionDirection.Outgoing(TxHistoryItem.Address.Single(toAddress))
-            }
-            else -> {
-                Timber.w(
-                    """
-                    Unable to find transaction direction
-                    |- To address: ${data.destinationAddress}
-                    |- From address: ${data.sourceAddress}
-                    |- Network addresses: $walletAddresses
-                    """.trimIndent(),
-                )
-
-                return null
-            }
-        }
     }
 
     private fun getAvailableAddresses(addresses: Set<Address>): Set<String> {
