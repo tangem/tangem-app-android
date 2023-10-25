@@ -403,7 +403,19 @@ object TokensMiddleware {
     private suspend fun removeNewCurrenciesIfNeeded(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) return
         val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
 
         currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = currencies)
+
+        walletManagersFacade.remove(
+            userWalletId = userWalletId,
+            networks = currencies
+                .filterIsInstance<CryptoCurrency.Coin>()
+                .mapTo(hashSetOf(), CryptoCurrency::network),
+        )
+        walletManagersFacade.removeTokens(
+            userWalletId = userWalletId,
+            tokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
+        )
     }
 }
