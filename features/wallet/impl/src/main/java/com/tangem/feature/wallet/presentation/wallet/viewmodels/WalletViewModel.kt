@@ -638,36 +638,30 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onMultiCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        if (cryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
-            onSingleCurrencySendClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            return
-        }
-
         val state = uiState as? WalletState.ContentState ?: return
 
         analyticsEventsHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
         )
 
+        val currency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return
         viewModelScope.launch(dispatchers.io) {
             val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
-
-            val isSingleWalletWithTokens = !userWallet.isMultiCurrency &&
-                userWallet.scanResponse.walletData?.token != null
 
             getNetworkCoinStatusUseCase(
                 userWalletId = userWallet.walletId,
                 networkId = cryptoCurrencyStatus.currency.network.id,
                 derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
-                isSingleWalletWithTokens = isSingleWalletWithTokens,
+                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .take(count = 1)
                 .collectLatest {
                     it.onRight { coinStatus ->
                         reduxStateHolder.dispatch(
                             action = TradeCryptoAction.New.SendToken(
-                                userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex),
-                                tokenStatus = cryptoCurrencyStatus,
+                                userWallet = userWallet,
+                                tokenCurrency = currency,
+                                tokenFiatRate = cryptoCurrencyStatus.value.fiatRate,
                                 coinFiatRate = coinStatus.value.fiatRate,
                             ),
                         )
