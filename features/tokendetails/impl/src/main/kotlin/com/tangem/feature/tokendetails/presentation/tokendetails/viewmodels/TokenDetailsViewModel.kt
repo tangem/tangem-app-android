@@ -46,6 +46,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -264,7 +265,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         val cryptoCurrencyStatus = cryptoCurrencyStatus ?: return
 
         viewModelScope.launch(dispatchers.io) {
-            when (cryptoCurrencyStatus.currency) {
+            when (val currency = cryptoCurrencyStatus.currency) {
                 is CryptoCurrency.Coin -> {
                     reduxStateHolder.dispatch(
                         action = TradeCryptoAction.New.SendCoin(
@@ -273,26 +274,29 @@ internal class TokenDetailsViewModel @Inject constructor(
                         ),
                     )
                 }
-                is CryptoCurrency.Token -> sendToken(status = cryptoCurrencyStatus)
+                is CryptoCurrency.Token -> {
+                    sendToken(tokenCurrency = currency, tokenFiatRate = cryptoCurrencyStatus.value.fiatRate)
+                }
             }
         }
     }
 
-    private fun sendToken(status: CryptoCurrencyStatus) {
+    private fun sendToken(tokenCurrency: CryptoCurrency.Token, tokenFiatRate: BigDecimal?) {
         viewModelScope.launch(dispatchers.io) {
             val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             val maybeCoinStatus = getNetworkCoinStatusUseCase(
                 userWalletId = userWalletId,
-                networkId = status.currency.network.id,
-                derivationPath = status.currency.network.derivationPath,
+                networkId = tokenCurrency.network.id,
+                derivationPath = tokenCurrency.network.derivationPath,
                 isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             ).firstOrNull()
 
             maybeCoinStatus?.onRight { coinStatus ->
                 reduxStateHolder.dispatch(
                     action = TradeCryptoAction.New.SendToken(
-                        userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
-                        tokenStatus = status,
+                        userWallet = wallet,
+                        tokenCurrency = tokenCurrency,
+                        tokenFiatRate = tokenFiatRate,
                         coinFiatRate = coinStatus.value.fiatRate,
                     ),
                 )
