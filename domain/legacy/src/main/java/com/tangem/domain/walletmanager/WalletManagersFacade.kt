@@ -38,6 +38,16 @@ interface WalletManagersFacade {
     ): UpdateWalletManagerResult
 
     /**
+     * Removes the wallet managers associated with a user's wallet and networks.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param networks Set of networks
+     * */
+    suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>)
+
+    suspend fun removeTokens(userWalletId: UserWalletId, tokens: Set<CryptoCurrency.Token>)
+
+    /**
      * Returns [UpdateWalletManagerResult] with last pending transactions
      *
      * @param userWalletId The ID of the user's wallet.
