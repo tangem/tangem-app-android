@@ -176,6 +176,8 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             walletCurrenciesManager.addListener(action.topUpController)
         }
         is GlobalAction.UpdateUserWalletsListManager -> {
+            val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
+
             /*
              * If implementation of the UserWalletsListManager is changed,
              * then all observers of selectedUserWallet become irrelevant.
@@ -183,13 +185,13 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             action.manager.selectedUserWallet
                 .distinctUntilChanged()
                 .onEach { userWallet ->
-                    Analytics.send(event = Basic.WalletOpened())
+                    Analytics.send(Basic.WalletOpened())
 
                     store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
-                        infoHolder.setCardInfo(data = userWallet.scanResponse)
+                        infoHolder.setCardInfo(userWallet.scanResponse)
 
-                        store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
-                            .getAll(userWalletId = userWallet.walletId)
+                        walletManagersFacade
+                            .getAll(userWallet.walletId)
                             .onEach(infoHolder::setWalletsInfo)
                             .launchIn(scope)
                     }
