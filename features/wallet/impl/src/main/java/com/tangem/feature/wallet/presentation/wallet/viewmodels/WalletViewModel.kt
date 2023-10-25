@@ -919,9 +919,8 @@ internal class WalletViewModel @Inject constructor(
         val userWallet = getSelectedWallet()
         viewModelScope.launch(dispatchers.io) {
             getCryptoCurrencyActionsUseCase(
-                userWalletId = userWallet.walletId,
+                userWallet = userWallet,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
-                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .take(count = 1)
                 .collectLatest {
@@ -1301,9 +1300,8 @@ internal class WalletViewModel @Inject constructor(
 
     private suspend fun updateButtons(userWallet: UserWallet, currencyStatus: CryptoCurrencyStatus) {
         getCryptoCurrencyActionsUseCase(
-            userWalletId = userWallet.walletId,
+            userWallet = userWallet,
             cryptoCurrencyStatus = currencyStatus,
-            isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
         )
             .conflate()
             .distinctUntilChanged()
