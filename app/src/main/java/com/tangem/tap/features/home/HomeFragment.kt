@@ -1,24 +1,20 @@
 package com.tangem.tap.features.home
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.redux.AppState
@@ -28,9 +24,13 @@ import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
+class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
+
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
 
@@ -42,23 +42,18 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         store.dispatch(HomeAction.Init)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
         // sync adding story before screen creation
         // if (learn2earnViewModel.uiState.storyScreenState.isVisible) {
         //     store.dispatch(HomeAction.InsertStory(position = 0, Stories.OneInchPromo))
         //     homeState.value = store.state.homeState
         // }
-        return ComposeView(inflater.context).apply {
-            setContent {
-                TangemTheme {
-                    BackHandler(onBack = requireActivity()::finish)
-                    SystemBarsEffect {
-                        setSystemBarsColor(color = Color.Transparent, darkIcons = false)
-                    }
-                    ScreenContent()
-                }
-            }
+        BackHandler(onBack = requireActivity()::finish)
+        SystemBarsEffect {
+            setSystemBarsColor(color = Color.Transparent, darkIcons = false)
         }
+        ScreenContent()
     }
 
     override fun onStart() {
@@ -75,11 +70,6 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     override fun onStop() {
         super.onStop()
         store.unsubscribe(this)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        rollbackStatusBarIconsColor()
     }
 
     override fun newState(state: HomeState) {
@@ -108,18 +98,5 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
                 store.dispatch(TokensAction.SetArgs.ReadAccess)
             },
         )
-    }
-
-    /*
-     * !!! Workaround !!!
-     * Used to roll back the color of icons in the system bars after the stories screen
-     */
-    private fun rollbackStatusBarIconsColor() {
-        val windowInsetsController = WindowInsetsControllerCompat(
-            activity?.window ?: return,
-            view ?: return,
-        )
-        windowInsetsController.isAppearanceLightStatusBars = true
-        windowInsetsController.isAppearanceLightNavigationBars = true
     }
 }
