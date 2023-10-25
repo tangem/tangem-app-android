@@ -80,13 +80,17 @@ class AdditionalFeedbackInfo {
     fun updateOnSendError(
         walletManager: WalletManager,
         amountToSend: Amount,
-        feeAmount: Amount,
+        feeAmount: Amount?,
         destinationAddress: String,
     ) {
         onSendErrorWalletInfo = createEmailWalletInfo(walletManager)
         this.destinationAddress = destinationAddress
         amount = amountToSend.value?.stripZeroPlainString() ?: "0"
-        fee = feeAmount.value?.stripZeroPlainString() ?: "0"
+        fee = if (feeAmount != null) {
+            feeAmount.value?.stripZeroPlainString() ?: "0"
+        } else {
+            "Unable to receive"
+        }
         token = if (amountToSend.type is AmountType.Token) amountToSend.currencySymbol else ""
     }
 
