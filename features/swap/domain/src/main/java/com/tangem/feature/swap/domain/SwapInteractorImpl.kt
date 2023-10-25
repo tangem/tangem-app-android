@@ -610,6 +610,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 requestApproveData = RequestApproveStateData(
                     fee = feeState,
                     approveData = transactionData,
+                    fromTokenAmount = swapAmount,
                 ),
             ),
             preparedSwapConfigState = quotesLoadedState.preparedSwapConfigState.copy(
