@@ -256,6 +256,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         setDefaultNightMode(mode)
+        delegate.localNightMode = mode
     }
 
     private fun isDarkTheme(): Boolean {
