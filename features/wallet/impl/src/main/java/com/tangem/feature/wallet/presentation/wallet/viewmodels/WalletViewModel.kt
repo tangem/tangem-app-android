@@ -782,7 +782,7 @@ internal class WalletViewModel @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) {
             singleWalletCryptoCurrencyStatus?.let {
-                updateButtons(wallet.walletId, it)
+                updateButtons(userWallet = wallet, currencyStatus = it)
             }
             val result = fetchCurrencyStatusUseCase(wallet.walletId, refresh = true)
 
@@ -1183,7 +1183,7 @@ internal class WalletViewModel @Inject constructor(
                     }
 
                     updateNotifications(index)
-                    updateButtons(wallet.walletId, status)
+                    updateButtons(userWallet = wallet, currencyStatus = status)
                     updateTxHistory(wallet.walletId, status.currency, refresh = false)
                 }
             }
@@ -1265,10 +1265,9 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private suspend fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
-        val userWallet = getSelectedWallet()
+    private suspend fun updateButtons(userWallet: UserWallet, currencyStatus: CryptoCurrencyStatus) {
         getCryptoCurrencyActionsUseCase(
-            userWalletId = userWalletId,
+            userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = currencyStatus,
             isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
         )
