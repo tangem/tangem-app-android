@@ -1,7 +1,6 @@
 package com.tangem.core.ui.components.marketprice
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,7 +35,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
  */
 @Composable
 fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier) {
-    var rootWidth by remember { mutableStateOf(value = 0) }
+    var rootWidth by remember { mutableIntStateOf(value = 0) }
 
     Column(
         modifier = modifier
@@ -66,7 +65,6 @@ private fun Title(currencyName: String) {
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun Content(state: MarketPriceBlockState, rootWidth: Int) {
     AnimatedContent(targetState = state, label = "Update the content") { marketPriceBlockState ->
@@ -96,7 +94,6 @@ private fun PriceContent(state: MarketPriceBlockState, priceWidthDp: Dp) {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun PriceBlock(state: MarketPriceBlockState, priceWidthDp: Dp) {
     val priceModifier = Modifier.widthIn(max = priceWidthDp)
@@ -128,7 +125,6 @@ private fun Price(price: String, modifier: Modifier = Modifier) {
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun PriceChangeInPercent(config: PriceChangeState.Content) {
     AnimatedContent(targetState = config.type, label = "Update price change") { type ->
