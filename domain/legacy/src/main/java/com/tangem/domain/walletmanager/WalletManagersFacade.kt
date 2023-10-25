@@ -1,5 +1,6 @@
 package com.tangem.domain.walletmanager
 
+import arrow.core.Either
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
@@ -113,4 +114,10 @@ interface WalletManagersFacade {
 
     @Deprecated("Will be removed in future")
     fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>>
+
+    suspend fun validateSignatureCount(
+        userWalletId: UserWalletId,
+        network: Network,
+        signedHashes: Int,
+    ): Either<Throwable, Unit>
 }
