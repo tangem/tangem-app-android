@@ -56,7 +56,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
 
     private fun getMarketPriceState(status: CryptoCurrencyStatus.Status, currencyName: String): MarketPriceBlockState {
         return when (status) {
-            is CryptoCurrencyStatus.NoQuote,
+            is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencyName)
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.NoAmount,
             -> MarketPriceBlockState.Content(
