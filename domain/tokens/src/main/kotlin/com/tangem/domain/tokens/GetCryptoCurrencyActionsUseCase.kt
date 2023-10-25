@@ -99,7 +99,10 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // send
-        if (cryptoCurrencyStatus.value.amount.isNullOrZero() || coinStatus?.value?.amount.isNullOrZero()) {
+        if (cryptoCurrencyStatus.value.amount.isNullOrZero() ||
+            coinStatus?.value?.amount.isNullOrZero() ||
+            coinStatus?.value?.hasCurrentNetworkTransactions == true
+        ) {
             disabledList.add(TokenActionsState.ActionState.Send(false))
         } else {
             activeList.add(TokenActionsState.ActionState.Send(true))
