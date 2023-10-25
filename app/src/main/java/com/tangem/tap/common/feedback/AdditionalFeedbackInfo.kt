@@ -36,19 +36,28 @@ class AdditionalFeedbackInfo {
     var userWalletId: String = ""
 
     // wallets
-    internal val walletsInfo = mutableListOf<EmailWalletInfo>()
-    internal var onSendErrorWalletInfo: EmailWalletInfo? = null
+    var walletsInfo = emptyList<EmailWalletInfo>()
+        private set
+    var onSendErrorWalletInfo: EmailWalletInfo? = null
+        private set
     var signedHashesCount: String = ""
+        private set
 
     // device
     var phoneModel: String = Build.MODEL
+        private set
     var osVersion: String = Build.VERSION.SDK_INT.toString()
+        private set
 
     // send error
     var destinationAddress: String = ""
+        private set
     var amount: String = ""
+        private set
     var fee: String = ""
+        private set
     var token: String = ""
+        private set
 
     private val Address.name: String
         get() = type.javaClass.simpleName
@@ -65,10 +74,7 @@ class AdditionalFeedbackInfo {
 
     @Deprecated("Don't use it directly")
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
-        walletsInfo.clear()
-        walletManagers.forEach { manager ->
-            walletsInfo.add(createEmailWalletInfo(manager))
-        }
+        walletsInfo = walletManagers.map(::createEmailWalletInfo)
     }
 
     fun updateOnSendError(
