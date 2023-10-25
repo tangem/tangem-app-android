@@ -31,7 +31,6 @@ import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
-import com.tangem.domain.card.WasCardScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.cardTypesResolver
@@ -60,6 +59,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.feature.wallet.presentation.wallet.domain.HasSingleWalletSignedHashesUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletError
 import com.tangem.feature.wallet.presentation.wallet.state.*
@@ -127,7 +127,7 @@ internal class WalletViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val scanCardToUnlockWalletUseCase: ScanCardToUnlockWalletClickHandler,
-    wasCardScannedUseCase: WasCardScannedUseCase,
+    hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isNeedToBackupUseCase: IsNeedToBackupUseCase,
     getMissedAddressesCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
@@ -140,11 +140,11 @@ internal class WalletViewModel @Inject constructor(
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private val notificationsListFactory = WalletNotificationsListFactory(
-        wasCardScannedUseCase = wasCardScannedUseCase,
-        isReadyToShowRateAppUseCase = isReadyToShowRateAppUseCase,
         isDemoCardUseCase = isDemoCardUseCase,
+        isReadyToShowRateAppUseCase = isReadyToShowRateAppUseCase,
         isNeedToBackupUseCase = isNeedToBackupUseCase,
         getMissedAddressCryptoCurrenciesUseCase = getMissedAddressesCryptoCurrenciesUseCase,
+        hasSingleWalletSignedHashesUseCase = hasSingleWalletSignedHashesUseCase,
         clickIntents = this,
     )
 
@@ -1316,8 +1316,7 @@ internal class WalletViewModel @Inject constructor(
 
     private fun updateNotifications(index: Int, tokenList: TokenList? = null) {
         notificationsListFactory.create(
-            selectedWalletId = getWallet(index).walletId,
-            cardTypesResolver = getCardTypeResolver(index = index),
+            selectedWallet = getWallet(index),
             cryptoCurrencyList = if (tokenList != null) {
                 when (tokenList) {
                     is TokenList.GroupedByNetwork -> {
