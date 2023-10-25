@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.transactions.state
 
+import androidx.annotation.DrawableRes
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -22,30 +23,18 @@ sealed interface TransactionState {
      * @property direction transaction direction
      * @property onClick   Lambda be invoked when manage button is clicked
      */
-    sealed class Content : TransactionState {
-
-        abstract val address: TextReference
-        abstract val amount: String
-        abstract val timestamp: String
-        abstract val status: Status
-        abstract val direction: Direction
-        abstract val onClick: () -> Unit
-
-        fun copySealed(
-            txHash: String = this.txHash,
-            address: TextReference = this.address,
-            amount: String = this.amount,
-            timestamp: String = this.timestamp,
-            status: Status = this.status,
-            direction: Direction = this.direction,
-        ): Content {
-            return when (this) {
-                is Approve -> copy(txHash, address, amount, timestamp, status, direction)
-                is Transfer -> copy(txHash, address, amount, timestamp, status, direction)
-                is Swap -> copy(txHash, address, amount, timestamp, status, direction)
-                is Custom -> copy(txHash, address, amount, timestamp, status, direction)
-            }
-        }
+    data class Content(
+        override val txHash: String,
+        val address: TextReference,
+        val amount: String,
+        val timestamp: String,
+        val status: Status,
+        val direction: Direction,
+        val onClick: () -> Unit,
+        @DrawableRes val iconRes: Int,
+        val title: TextReference,
+        val subtitle: TextReference,
+    ) : TransactionState {
 
         sealed class Status {
             object Failed : Status()
@@ -58,75 +47,6 @@ sealed interface TransactionState {
             OUTGOING,
         }
     }
-
-    /**
-     * Completed sending transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     * @property direction transaction direction
-     */
-    data class Transfer(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-        override val status: Status,
-        override val direction: Direction,
-        override val onClick: () -> Unit,
-    ) : Content()
-
-    /**
-     * Completed approving transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     * @property direction transaction direction
-     */
-    data class Approve(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-        override val status: Status,
-        override val direction: Direction,
-        override val onClick: () -> Unit,
-    ) : Content()
-
-    /**
-     * Completed swapping transaction state
-     *
-     * @property txHash    transaction hash
-     * @property address   address
-     * @property amount    amount
-     * @property timestamp timestamp
-     * @property direction transaction direction
-     */
-    data class Swap(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-        override val status: Status,
-        override val direction: Direction,
-        override val onClick: () -> Unit,
-    ) : Content()
-
-    data class Custom(
-        override val txHash: String,
-        override val address: TextReference,
-        override val amount: String,
-        override val timestamp: String,
-        override val status: Status,
-        override val direction: Direction,
-        override val onClick: () -> Unit,
-        val title: TextReference,
-        val subtitle: TextReference,
-    ) : Content()
 
     /**
      * Loading state
