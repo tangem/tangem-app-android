@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens
 
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -9,6 +10,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
@@ -31,25 +33,26 @@ class GetCryptoCurrencyActionsUseCase(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend operator fun invoke(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        isSingleWalletWithTokens: Boolean,
     ): Flow<TokenActionsState> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
-            userWalletId = userWalletId,
+            userWalletId = userWallet.walletId,
         )
         val networkId = cryptoCurrencyStatus.currency.network.id
-        val networkFlow = if (isSingleWalletWithTokens) {
+        val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
             operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+        } else if (!userWallet.isMultiCurrency) {
+            operations.getPrimaryCurrencyStatusFlow()
         } else {
             operations.getNetworkCoinFlow(networkId, cryptoCurrencyStatus.currency.network.derivationPath)
         }
         return networkFlow.mapLatest { maybeCoinStatus ->
             createTokenActionsState(
-                userWalletId = userWalletId,
+                userWalletId = userWallet.walletId,
                 coinStatus = maybeCoinStatus.getOrNull(),
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
             )
