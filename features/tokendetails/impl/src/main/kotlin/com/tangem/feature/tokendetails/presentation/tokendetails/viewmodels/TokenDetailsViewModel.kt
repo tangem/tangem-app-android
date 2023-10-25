@@ -135,9 +135,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private suspend fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
         val userWallet = getUserWalletUseCase(userWalletId).getOrElse { return }
         getCryptoCurrencyActionsUseCase(
-            userWalletId = userWallet.walletId,
+            userWallet = userWallet,
             cryptoCurrencyStatus = currencyStatus,
-            isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
         )
             .conflate()
             .distinctUntilChanged()
