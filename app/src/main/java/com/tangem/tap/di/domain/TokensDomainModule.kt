@@ -63,9 +63,9 @@ internal object TokensDomainModule {
     @ViewModelScoped
     fun provideRemoveCurrencyUseCase(
         currenciesRepository: CurrenciesRepository,
-        dispatchers: CoroutineDispatcherProvider,
+        walletManagersFacade: WalletManagersFacade,
     ): RemoveCurrencyUseCase {
-        return RemoveCurrencyUseCase(currenciesRepository, dispatchers)
+        return RemoveCurrencyUseCase(currenciesRepository, walletManagersFacade)
     }
 
     @Provides
