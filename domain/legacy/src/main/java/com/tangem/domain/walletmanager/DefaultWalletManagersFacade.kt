@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
+import android.content.res.AssetManager
+import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
@@ -41,6 +43,8 @@ class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
     configManager: ConfigManager,
+    assetManager: AssetManager,
+    moshi: Moshi,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
@@ -48,7 +52,7 @@ class DefaultWalletManagersFacade(
     private val walletManagerFactory by lazy { WalletManagerFactory(configManager) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
-    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter() }
+    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetManager, moshi) }
 
     override suspend fun update(
         userWalletId: UserWalletId,

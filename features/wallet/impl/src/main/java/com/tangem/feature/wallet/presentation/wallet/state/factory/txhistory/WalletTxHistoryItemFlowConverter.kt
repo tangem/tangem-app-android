@@ -108,9 +108,7 @@ internal class WalletTxHistoryItemFlowConverter(
             ) {
                 val txContent = txHistoryItemState.state as TransactionState.Content
                 txHistoryItemState.copy(
-                    state = txContent.copySealed(
-                        timestamp = txContent.timestamp.toTimeFormat(),
-                    ),
+                    state = txContent.copy(timestamp = txContent.timestamp.toTimeFormat()),
                 )
             } else {
                 txHistoryItemState
