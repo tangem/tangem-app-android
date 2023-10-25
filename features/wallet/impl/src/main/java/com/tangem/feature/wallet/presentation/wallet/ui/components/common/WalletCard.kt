@@ -56,6 +56,7 @@ private const val HALF_OF_ITEM_WIDTH = 0.5
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongMethod")
 @Composable
 internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     @Suppress("DestructuringDeclarationWithTooManyEntries")
@@ -93,25 +94,29 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
                 },
         )
 
+        val additionalText by remember(state.additionalInfo, isBalanceHidden) {
+            mutableStateOf(
+                if (state.additionalInfo?.hideable == true && isBalanceHidden) {
+                    WalletCardState.HIDDEN_BALANCE_TEXT
+                } else {
+                    state.additionalInfo?.content
+                },
+            )
+        }
         AdditionalInfo(
-            text = if (state.additionalInfo?.hideable == true && isBalanceHidden) {
-                WalletCardState.HIDDEN_BALANCE_TEXT
-            } else {
-                state.additionalInfo?.content
-            },
+            text = additionalText,
             modifier = Modifier.constrainAs(additionalTextRef) {
                 start.linkTo(parent.start)
                 top.linkTo(balanceRef.bottom)
                 bottom.linkTo(anchor = parent.bottom, margin = contentVerticalMargin)
 
-                when (state) {
-                    is WalletCardState.Content,
-                    is WalletCardState.Error,
-                    -> {
+                if (additionalText != null) {
+                    width = if (state.imageResId != null) {
                         end.linkTo(imageRef.start)
-                        width = Dimension.fillToConstraints
+                        Dimension.fillToConstraints
+                    } else {
+                        Dimension.wrapContent
                     }
-                    else -> Unit
                 }
             },
         )
