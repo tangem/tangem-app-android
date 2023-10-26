@@ -12,42 +12,14 @@ import org.junit.Test
 internal class ToggleTokenListSortingUseCaseTest {
 
     @Test
-    fun `when grouped list is not initialized then error should be received`() = runTest {
-        // Given
-        val expectedResult = TokenListSortingError.TokenListIsLoading.left()
-
-        val useCase = getUseCase()
-
-        // When
-        val result = useCase(MockTokenLists.notInitializedTokenList)
-
-        // Then
-        assertEquals(expectedResult, result)
-    }
-
-    @Test
-    fun `when grouped list is empty then error should be received`() = runTest {
+    fun `when list is empty then error should be received`() = runTest {
         // Given
         val expectedResult = TokenListSortingError.TokenListIsEmpty.left()
 
         val useCase = getUseCase()
 
         // When
-        val result = useCase(MockTokenLists.emptyGroupedTokenList)
-
-        // Then
-        assertEquals(expectedResult, result)
-    }
-
-    @Test
-    fun `when ungrouped list is empty then error should be received`() = runTest {
-        // Given
-        val expectedResult = TokenListSortingError.TokenListIsEmpty.left()
-
-        val useCase = getUseCase()
-
-        // When
-        val result = useCase(MockTokenLists.emptyUngroupedTokenList)
+        val result = useCase(MockTokenLists.emptyTokenList)
 
         // Then
         assertEquals(expectedResult, result)

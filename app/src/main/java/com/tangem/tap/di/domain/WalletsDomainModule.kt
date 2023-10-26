@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -18,6 +19,18 @@ internal object WalletsDomainModule {
     @ViewModelScoped
     fun providesGetWalletsUseCase(walletsStateHolder: WalletsStateHolder): GetWalletsUseCase {
         return GetWalletsUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesGetUserWalletUseCase(walletsStateHolder: WalletsStateHolder): GetUserWalletUseCase {
+        return GetUserWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesGetSelectedWalletSyncUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletSyncUseCase {
+        return GetSelectedWalletSyncUseCase(walletsStateHolder = walletsStateHolder)
     }
 
     @Provides
@@ -46,8 +59,11 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun providesSelectWalletUseCase(walletsStateHolder: WalletsStateHolder): SelectWalletUseCase {
-        return SelectWalletUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesSelectWalletUseCase(
+        walletsStateHolder: WalletsStateHolder,
+        reduxStateHolder: ReduxStateHolder,
+    ): SelectWalletUseCase {
+        return SelectWalletUseCase(walletsStateHolder, reduxStateHolder)
     }
 
     @Provides
@@ -60,6 +76,14 @@ internal object WalletsDomainModule {
     @ViewModelScoped
     fun providesDeleteWalletUseCase(walletsStateHolder: WalletsStateHolder): DeleteWalletUseCase {
         return DeleteWalletUseCase(walletsStateHolder = walletsStateHolder)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesShouldSaveUserWalletsSyncUseCase(
+        walletsRepository: WalletsRepository,
+    ): ShouldSaveUserWalletsSyncUseCase {
+        return ShouldSaveUserWalletsSyncUseCase(walletsRepository = walletsRepository)
     }
 
     @Provides
