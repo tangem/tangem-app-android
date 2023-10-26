@@ -12,6 +12,7 @@ import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -50,6 +51,7 @@ class CurrencyExchangeManager(
         cryptoCurrencyName: CryptoCurrencyName,
         fiatCurrencyName: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String? {
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
@@ -60,6 +62,7 @@ class CurrencyExchangeManager(
             cryptoCurrencyName,
             fiatCurrencyName,
             walletAddress,
+            isDarkTheme,
         )
     }
 
@@ -87,7 +90,7 @@ class CurrencyExchangeManager(
 }
 
 suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, destinationAddress: String) {
-    walletManager.safeUpdate()
+    walletManager.safeUpdate(card.isDemoCard())
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
 

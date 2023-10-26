@@ -91,7 +91,7 @@ internal fun AddCustomTokenTestContent(state: AddCustomTokenStateHolder.TestCont
         floatingActionButtonPosition = FabPosition.Center,
         sheetBackgroundColor = TangemTheme.colors.background.secondary,
         sheetPeekHeight = TangemTheme.dimens.size0,
-        backgroundColor = TangemTheme.colors.background.secondary,
+        backgroundColor = TangemTheme.colors.background.primary,
     ) {
         Column(
             modifier = Modifier
