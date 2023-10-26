@@ -14,4 +14,6 @@ internal object MutableAppThemeModeHolder : AppThemeModeHolder {
             appThemeMode.value = value
         }
         get() = appThemeMode.value
+
+    var isDarkThemeActive: Boolean = false
 }
