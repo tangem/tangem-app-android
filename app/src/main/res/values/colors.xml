@@ -3,7 +3,7 @@
 
     <color name="colorPrimary">#0029FF</color>
     <color name="colorSecondary">#0022D4</color>
-    <color name="accent">#19C878</color>
+    <color name="accent">#0099FF</color>
 
     <color name="menu_accent_color">@color/accent</color>
 
@@ -11,7 +11,7 @@
 
     <color name="warning">#FFB71B</color>
 
-    <color name="toolbarColor">@color/backgroundLightGray</color>
+    <color name="toolbarColor">@color/background_secondary</color>
 
     <color name="white">#FFFFFF</color>
     <color name="lightGray0">#F3F3F3</color>
@@ -19,12 +19,10 @@
     <color name="lightGray5">#D1D1D6</color>
     <color name="darkGray1">#8E8E90</color>
     <color name="darkGray2">#666668</color>
-    <color name="darkGray3">#48484A</color>
+
     <color name="darkGray4">#3A3A3C</color>
     <color name="darkGray6">#1C1C1E</color>
 
-    <color name="backgroundWhite">#FFFFFF</color>
-    <color name="backgroundLightGray">#F9F9F9</color>
     <color name="buttonGray">#F4F5F6</color>
     <color name="textGray">#DE000000</color>
 
@@ -38,13 +36,19 @@
     <color name="blue">@color/colorSecondary</color>
     <color name="blue_pale">#E0E6FA</color>
 
+    <color name="onboarding_card_background">#F3F3F3</color>
+    <color name="onboarding_twin_wave_1">#DDDEE0</color>
+    <color name="onboarding_twin_wave_2">#DCDCDC</color>
+    <color name="onboarding_twin_wave_3">#D9D9D9</color>
+
+
     <color name="warning_info">#1C1C1E</color>
     <color name="warning_warning">#FFB71B</color>
     <color name="warning_critical">#CA0F03</color>
 
     <color name="all_colors_azure">#007AFF</color>
 
-    <color name="background_action">#000000</color>
+    <color name="background_action">#FFFFFF</color>
     <color name="background_primary">#FFFFFF</color>
     <color name="background_secondary">#F5F5F5</color>
 
@@ -61,9 +65,10 @@
     <color name="icon_attention">#FFB71B</color>
     <color name="icon_inactive">#C9C9C9</color>
     <color name="icon_informative">#B0B0B0</color>
+    <color name="icon_primary_1">#1E1E1E</color>
     <color name="icon_primary_2">#FFFFFF</color>
     <color name="icon_secondary">#656565</color>
-    <color name="icon_warning">#DE1010</color>
+    <color name="icon_warning">#FF3333</color>
 
 
     <color name="text_attention">#FFB71B</color>
@@ -74,6 +79,11 @@
     <color name="text_tertiary">#919191</color>
 
     <color name="background_splash">#000000</color>
+    <color name="transparent">#00000000</color>
+    d
+    <color name="card_background">#1B1D1C</color>
 
-
+    <color name="gradient_start_color">#FFFFFF</color>
+    <color name="gradient_center_color">#F0FFFF</color>
+    <color name="gradient_end_color">#19FFFFFF</color>
 </resources>
