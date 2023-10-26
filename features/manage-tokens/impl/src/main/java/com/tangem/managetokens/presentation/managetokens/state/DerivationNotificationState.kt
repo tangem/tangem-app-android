@@ -23,13 +23,11 @@ data class DerivationNotificationState(
             text = resourceReference(id = R.string.common_generate_addresses),
             iconResId = R.drawable.ic_tangem_24,
             onClick = onGenerateClick,
-            // TODO: enable when we find how to use this type of strings with plurals on Localise
-            // Task: [REDACTED_JIRA]
-            // additionalText = pluralReference(
-            //     id = R.plurals.manage_tokens_number_of_wallets,
-            //     count = totalNeeded,
-            //     formatArgs = wrappedList(missingAddressesCount, totalNeeded)
-            // )
+            additionalText = pluralReference(
+                id = R.plurals.manage_tokens_number_of_wallets_android,
+                count = totalNeeded,
+                formatArgs = wrappedList(missingAddressesCount, totalNeeded),
+            ),
         ),
     )
 }
