@@ -46,14 +46,8 @@ internal class TokenListFiatBalanceOperations(
     }
 
     private fun recalculateBalanceWithoutQuote(currentBalance: TokenList.FiatBalance): TokenList.FiatBalance {
-        return with(currentBalance) {
-            (this as? TokenList.FiatBalance.Loaded)?.copy(
-                isAllAmountsSummarized = false,
-            ) ?: TokenList.FiatBalance.Loaded(
-                amount = BigDecimal.ZERO,
-                isAllAmountsSummarized = false,
-            )
-        }
+        return (currentBalance as? TokenList.FiatBalance.Loaded)?.copy(isAllAmountsSummarized = false)
+            ?: TokenList.FiatBalance.Failed
     }
 
     private fun recalculateBalance(
