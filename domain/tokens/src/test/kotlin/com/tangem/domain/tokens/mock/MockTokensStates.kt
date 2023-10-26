@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
+import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkStatus
 import java.math.BigDecimal
@@ -110,7 +111,7 @@ internal object MockTokensStates {
             .first { it.network == status.currency.network }
         val amount = (
             (networkStatus.value as NetworkStatus.Verified).amounts[status.currency.id]!!
-                as? NetworkStatus.LoadedAmount
+                as? CryptoCurrencyAmountStatus.Loaded
             )?.value ?: BigDecimal.ZERO
         val quote = MockQuotes.quotes.first { it.rawCurrencyId == status.currency.id.rawCurrencyId }
         val fiatAmount = amount * quote.fiatRate
