@@ -16,6 +16,7 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -46,6 +47,14 @@ class DefaultCustomTokenInteractor(
     private val featureRepository: CustomTokenRepository,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) : CustomTokenInteractor {
+
+    // TODO: Move to DI
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
+
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     override suspend fun findToken(address: String, blockchain: Blockchain): FoundToken {
         return featureRepository.findToken(
@@ -219,21 +228,13 @@ class DefaultCustomTokenInteractor(
         updatedScanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
     ) {
-        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
-        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
         scope.launch {
             userWalletsListManager.update(
                 userWalletId = userWalletId,
                 update = { it.copy(scanResponse = updatedScanResponse) },
             )
 
-            currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
-            val networks = currencyList.map { it.network }.toSet()
-            networksRepository.getNetworkStatusesSync(
-                userWalletId = userWalletId,
-                networks = networks,
-                refresh = true,
-            )
+            addCryptoCurrenciesUseCase(userWalletId, currencyList)
         }
     }
 }
