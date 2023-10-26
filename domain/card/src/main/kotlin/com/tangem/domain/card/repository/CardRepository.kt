@@ -1,6 +1,10 @@
 package com.tangem.domain.card.repository
 
+import kotlinx.coroutines.flow.Flow
+
 interface CardRepository {
 
-    suspend fun wasCardScanned(cardId: String): Boolean
+    fun wasCardScanned(cardId: String): Flow<Boolean>
+
+    suspend fun setCardWasScanned(cardId: String)
 }

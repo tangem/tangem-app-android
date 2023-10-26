@@ -9,13 +9,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import com.tangem.core.ui.components.appbar.AppBarWithAdditionalButtons
-import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
@@ -28,11 +28,9 @@ import com.tangem.feature.referral.presentation.R
 internal fun AgreementBottomSheetContent(url: String) {
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth()
             .height(LocalConfiguration.current.screenHeightDp.dp - TangemTheme.dimens.spacing16),
     ) {
-        Hand()
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             AppBarWithAdditionalButtons(text = stringResource(id = R.string.details_referral_title))
             AgreementHtmlView(url = url)
@@ -43,13 +41,17 @@ internal fun AgreementBottomSheetContent(url: String) {
 @Composable
 private fun AgreementHtmlView(url: String) {
     val state = rememberWebViewState(url)
+    val isInPreviewMode = LocalInspectionMode.current
     WebView(
         state = state,
         modifier = Modifier.background(TangemTheme.colors.background.secondary),
+        captureBackPresses = false,
         onCreated = {
-            it.settings.apply {
-                javaScriptEnabled = false
-                allowFileAccess = false
+            if (!isInPreviewMode) {
+                it.settings.apply {
+                    javaScriptEnabled = false
+                    allowFileAccess = false
+                }
             }
         },
     )

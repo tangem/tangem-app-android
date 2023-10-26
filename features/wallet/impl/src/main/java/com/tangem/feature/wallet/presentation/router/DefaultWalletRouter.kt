@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -19,8 +18,10 @@ import androidx.navigation.navArgument
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.onboarding.navigation.OnboardingRouter
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
@@ -33,13 +34,13 @@ import kotlin.properties.Delegates
 internal class DefaultWalletRouter(private val reduxNavController: ReduxNavController) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
-    private var fragmentManager: FragmentManager by Delegates.notNull()
+    private var onFinish: () -> Unit = {}
 
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(fragmentManager: FragmentManager) {
-        this.fragmentManager = fragmentManager
+    override fun Initialize(onFinish: () -> Unit) {
+        this.onFinish = onFinish
 
         NavHost(
             navController = rememberNavController().apply { navController = this },
@@ -56,10 +57,10 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
                 WalletRoute.OrganizeTokens.route,
                 arguments = listOf(navArgument(WalletRoute.userWalletIdKey) { type = NavType.StringType }),
             ) {
-                val viewModel: OrganizeTokensViewModel = hiltViewModel<OrganizeTokensViewModel>()
-                    .apply {
-                        router = this@DefaultWalletRouter
-                    }
+                val viewModel = hiltViewModel<OrganizeTokensViewModel>().apply {
+                    router = this@DefaultWalletRouter
+                }
+                LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
 
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -78,11 +79,11 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
          * next element is wallet screen entry.
          * If backstack contains only NavGraph entry and wallet screen entry then we close the wallet fragment.
          */
-        if (navController.backQueue.size == BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN) {
+        if (navController.currentBackStack.value.size == BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN) {
             if (screen != null) {
                 reduxNavController.navigate(action = NavigationAction.PopBackTo(screen))
             } else {
-                fragmentManager.popBackStack()
+                onFinish.invoke()
             }
         } else {
             navController.popBackStack()
@@ -94,25 +95,30 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
     }
 
     override fun openDetailsScreen() {
-        // FIXME: Prepare details screen (e.g. dispatch action: `DetailsAction.PrepareScreen`)
-        // [REDACTED_JIRA]
         reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.Details))
     }
 
     override fun openOnboardingScreen() {
-        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+        reduxNavController.navigate(
+            action = NavigationAction.NavigateTo(
+                screen = AppScreen.OnboardingWallet,
+                bundle = bundleOf(OnboardingRouter.CAN_SKIP_BACKUP to false),
+            ),
+        )
     }
 
-    override fun openTxHistoryWebsite(url: String) {
+    override fun openUrl(url: String) {
         reduxNavController.navigate(action = NavigationAction.OpenUrl(url))
     }
 
-    override fun openTokenDetails(currency: CryptoCurrency) {
+    override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
         reduxNavController.navigate(
             action = NavigationAction.NavigateTo(
                 screen = AppScreen.WalletDetails,
-                // TODO: [REDACTED_JIRA]
-                bundle = bundleOf(TokenDetailsRouter.SELECTED_CURRENCY_KEY to currency),
+                bundle = bundleOf(
+                    TokenDetailsRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
+                    TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currency,
+                ),
             ),
         )
     }
@@ -129,6 +135,10 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
 
     override fun openManageTokensScreen() {
         reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.AddTokens))
+    }
+
+    override fun openScanFailedDialog() {
+        reduxNavController.navigate(action = NavigationAction.OpenDialog(StateDialog.ScanFailsDialog))
     }
 
     private companion object {

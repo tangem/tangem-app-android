@@ -16,6 +16,7 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.data.source.preferences.storage.UsedCardsPrefStorage
+import com.tangem.tap.features.demo.isDemoCard
 import timber.log.Timber
 import java.math.BigDecimal
 
@@ -38,7 +39,8 @@ class OnboardingManager(
     }
 
     suspend fun updateBalance(walletManager: WalletManager): OnboardingWalletBalance {
-        val balance = when (val result = walletManager.safeUpdate()) {
+        val isDemoCard = scanResponse.isDemoCard()
+        val balance = when (val result = walletManager.safeUpdate(isDemoCard)) {
             is Result.Success -> {
                 val wallet = walletManager.wallet
                 val valueOfAmount = wallet.amounts[AmountType.Coin]?.value
