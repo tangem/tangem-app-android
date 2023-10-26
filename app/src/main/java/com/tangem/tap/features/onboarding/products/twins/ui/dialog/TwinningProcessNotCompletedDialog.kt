@@ -12,7 +12,7 @@ import com.tangem.wallet.R
  */
 object TwinningProcessNotCompletedDialog {
     fun create(context: Context): AlertDialog {
-        return MaterialAlertDialogBuilder(context)
+        return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog)
             .setMessage(R.string.onboarding_twin_exit_warning)
             .setPositiveButton(R.string.warning_button_ok) { _, _ -> }
             .setOnDismissListener { store.dispatchDialogHide() }

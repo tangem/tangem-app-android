@@ -9,13 +9,21 @@ import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.common.extensions.stripZeroPlainString
 
 class AdditionalFeedbackInfo {
+
     class EmailWalletInfo(
-        var blockchain: Blockchain = Blockchain.Unknown,
-        var derivationPath: String = "",
-        var outputsCount: String? = null,
-        var host: String = "",
-        var addresses: String = "",
-        var explorerLink: String = "",
+        val blockchain: Blockchain = Blockchain.Unknown,
+        val derivationPath: String = "",
+        val outputsCount: String? = null,
+        val host: String = "",
+        val addresses: String = "",
+        val explorerLink: String = "",
+        val tokens: List<EmailTokenInfo> = emptyList(),
+    )
+
+    class EmailTokenInfo(
+        val id: String?,
+        val name: String,
+        val contractAddress: String,
     )
 
     var appVersion: String = ""
@@ -28,24 +36,33 @@ class AdditionalFeedbackInfo {
     var userWalletId: String = ""
 
     // wallets
-    internal val walletsInfo = mutableListOf<EmailWalletInfo>()
-    internal val tokens = mutableMapOf<Blockchain, Collection<Token>>()
-    internal var onSendErrorWalletInfo: EmailWalletInfo? = null
+    var walletsInfo = emptyList<EmailWalletInfo>()
+        private set
+    var onSendErrorWalletInfo: EmailWalletInfo? = null
+        private set
     var signedHashesCount: String = ""
+        private set
 
     // device
     var phoneModel: String = Build.MODEL
+        private set
     var osVersion: String = Build.VERSION.SDK_INT.toString()
+        private set
 
     // send error
     var destinationAddress: String = ""
+        private set
     var amount: String = ""
+        private set
     var fee: String = ""
+        private set
     var token: String = ""
+        private set
 
     private val Address.name: String
         get() = type.javaClass.simpleName
 
+    @Deprecated("Don't use it directly")
     fun setCardInfo(data: ScanResponse) {
         cardId = data.card.cardId
         cardBlockchain = data.walletData?.blockchain ?: ""
@@ -55,27 +72,25 @@ class AdditionalFeedbackInfo {
         userWalletId = UserWalletIdBuilder.scanResponse(data).build()?.stringValue ?: ""
     }
 
+    @Deprecated("Don't use it directly")
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
-        walletsInfo.clear()
-        tokens.clear()
-        walletManagers.forEach { manager ->
-            walletsInfo.add(createEmailWalletInfo(manager))
-            if (manager.cardTokens.isNotEmpty()) {
-                tokens[manager.wallet.blockchain] = manager.cardTokens
-            }
-        }
+        walletsInfo = walletManagers.map(::createEmailWalletInfo)
     }
 
     fun updateOnSendError(
         walletManager: WalletManager,
         amountToSend: Amount,
-        feeAmount: Amount,
+        feeAmount: Amount?,
         destinationAddress: String,
     ) {
         onSendErrorWalletInfo = createEmailWalletInfo(walletManager)
         this.destinationAddress = destinationAddress
         amount = amountToSend.value?.stripZeroPlainString() ?: "0"
-        fee = feeAmount.value?.stripZeroPlainString() ?: "0"
+        fee = if (feeAmount != null) {
+            feeAmount.value?.stripZeroPlainString() ?: "0"
+        } else {
+            "Unable to receive"
+        }
         token = if (amountToSend.type is AmountType.Token) amountToSend.currencySymbol else ""
     }
 
@@ -87,6 +102,9 @@ class AdditionalFeedbackInfo {
             host = walletManager.currentHost,
             addresses = formatAddresses(walletManager.wallet),
             explorerLink = formatExploreUrls(walletManager.wallet),
+            tokens = walletManager.cardTokens.map { token ->
+                EmailTokenInfo(token.id, token.name, token.contractAddress)
+            },
         )
     }
 
