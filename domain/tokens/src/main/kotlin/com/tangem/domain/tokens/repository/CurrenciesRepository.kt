@@ -116,7 +116,10 @@ interface CurrenciesRepository {
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    suspend fun getMultiCurrencyWalletCurrenciesSync(userWalletId: UserWalletId, refresh: Boolean): List<CryptoCurrency>
+    suspend fun getMultiCurrencyWalletCurrenciesSync(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): List<CryptoCurrency>
 
     /**
      * Retrieves the cryptocurrency for a specific multi-currency user wallet.
