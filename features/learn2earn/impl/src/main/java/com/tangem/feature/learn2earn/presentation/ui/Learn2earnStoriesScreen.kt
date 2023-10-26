@@ -17,7 +17,6 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 import com.tangem.feature.learn2earn.impl.R
 import com.tangem.feature.learn2earn.presentation.ui.component.GradientCircle
 
@@ -106,7 +105,7 @@ private fun StoryDescription(headerText: String, bodyText: String, modifier: Mod
         Text(
             text = bodyText,
             textAlign = TextAlign.Center,
-            style = TangemTypography.subtitle1,
+            style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.tertiary,
         )
     }
