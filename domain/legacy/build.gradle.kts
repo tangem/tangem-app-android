@@ -25,12 +25,13 @@ dependencies {
     }
 
     /** Other libraries */
-    implementation(deps.reKotlin)
+    implementation(deps.arrow.core)
+    implementation(deps.jodatime)
+    implementation(deps.kotlin.coroutines)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
+    implementation(deps.reKotlin)
     implementation(deps.timber)
-    implementation(deps.kotlin.coroutines)
-    implementation(deps.jodatime)
 
     /** Testing libraries */
     testImplementation(deps.test.junit)

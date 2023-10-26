@@ -5,18 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -24,11 +14,11 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,21 +28,16 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.FontSizeRange
-import com.tangem.core.ui.components.ResizableText
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.SpacerW16
-import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.TransactionCardType
-import com.valentinilk.shimmer.shimmer
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 @Composable
@@ -156,14 +141,11 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                     .padding(top = TangemTheme.dimens.spacing2),
             )
         } else {
-            Box(
+            RectangleShimmer(
                 modifier = Modifier
-                    .size(width = TangemTheme.dimens.size80, height = TangemTheme.dimens.size12)
-                    .shimmer()
-                    .background(
-                        color = TangemTheme.colors.button.secondary,
-                        shape = RoundedCornerShape(TangemTheme.dimens.radius3),
-                    ),
+                    .width(TangemTheme.dimens.size80)
+                    .height(TangemTheme.dimens.size12),
+                radius = TangemTheme.dimens.radius3,
             )
         }
     }
@@ -206,15 +188,11 @@ private fun Content(
                             modifier = sumTextModifier,
                         )
                     } else {
-                        Box(
+                        RectangleShimmer(
                             modifier = Modifier
                                 .padding(vertical = TangemTheme.dimens.spacing4)
-                                .size(width = TangemTheme.dimens.size102, height = TangemTheme.dimens.size24)
-                                .shimmer()
-                                .background(
-                                    color = TangemTheme.colors.button.secondary,
-                                    shape = RoundedCornerShape(TangemTheme.dimens.radius6),
-                                ),
+                                .width(TangemTheme.dimens.size102)
+                                .height(TangemTheme.dimens.size24),
                         )
                     }
                 }
@@ -260,15 +238,12 @@ private fun Content(
                     )
                 }
             } else {
-                Box(
+                RectangleShimmer(
                     modifier = Modifier
                         .padding(vertical = TangemTheme.dimens.spacing4)
-                        .size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12)
-                        .shimmer()
-                        .background(
-                            color = TangemTheme.colors.button.secondary,
-                            shape = RoundedCornerShape(TangemTheme.dimens.radius3),
-                        ),
+                        .width(TangemTheme.dimens.size40)
+                        .height(TangemTheme.dimens.size12),
+                    radius = TangemTheme.dimens.radius3,
                 )
             }
         }
@@ -292,48 +267,13 @@ fun Token(
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.End,
     ) {
-        Box(
-            modifier = Modifier
-                .padding(end = TangemTheme.dimens.spacing16)
-                .size(TangemTheme.dimens.size42),
-        ) {
-            val tokenImageModifier = Modifier
-                .align(Alignment.BottomStart)
-                .size(TangemTheme.dimens.size36)
-
-            val data = tokenIconUrl.ifEmpty {
-                iconPlaceholder
-            }
-            SubcomposeAsyncImage(
-                modifier = tokenImageModifier,
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(data)
-                    .crossfade(true)
-                    .build(),
-                loading = { TokenImageShimmer(modifier = tokenImageModifier) },
-                // error = { CurrencyPlaceholderIcon(modifier = tokenImageModifier, tokenCurrency) },
-                contentDescription = tokenCurrency,
-            )
-
-            if (networkIconRes != null) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(TangemTheme.dimens.size18)
-                        .background(color = Color.White, shape = CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        modifier = Modifier.padding(all = 0.5.dp),
-                        painter = painterResource(id = networkIconRes),
-                        contentDescription = null,
-                    )
-                }
-            }
-        }
-
+        TokenIcon(
+            tokenIconUrl = tokenIconUrl,
+            tokenCurrency = tokenCurrency,
+            iconPlaceholder = iconPlaceholder,
+            networkIconRes = networkIconRes,
+        )
         SpacerH4()
-
         Text(
             text = tokenCurrency,
             color = TangemTheme.colors.text.primary1,
@@ -342,6 +282,75 @@ fun Token(
             textAlign = TextAlign.Center,
             modifier = Modifier.defaultMinSize(minWidth = TangemTheme.dimens.size80),
         )
+    }
+}
+
+@Composable
+private fun TokenIcon(
+    tokenIconUrl: String,
+    tokenCurrency: String,
+    @DrawableRes iconPlaceholder: Int? = null,
+    @DrawableRes networkIconRes: Int? = null,
+) {
+    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
+    var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
+    val isDarkTheme = isSystemInDarkTheme()
+    val coroutineScope = rememberCoroutineScope()
+
+    Box(
+        modifier = Modifier
+            .padding(end = TangemTheme.dimens.spacing16)
+            .size(TangemTheme.dimens.size42),
+    ) {
+        val tokenImageModifier = Modifier
+            .align(Alignment.BottomStart)
+            .size(TangemTheme.dimens.size36)
+            .background(
+                color = iconBackgroundColor,
+                shape = TangemTheme.shapes.roundedCorners8,
+            )
+
+        val data = tokenIconUrl.ifEmpty {
+            iconPlaceholder
+        }
+        SubcomposeAsyncImage(
+            modifier = tokenImageModifier,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(data)
+                .crossfade(true)
+                .allowHardware(false)
+                .listener(
+                    onSuccess = { _, result ->
+                        if (isDarkTheme) {
+                            coroutineScope.launch {
+                                val color = ImageBackgroundContrastChecker(
+                                    drawable = result.drawable,
+                                    backgroundColor = itemBackgroundColor,
+                                ).getContrastColorIfNeeded(isDarkTheme)
+                                iconBackgroundColor = color
+                            }
+                        }
+                    },
+                ).build(),
+            loading = { CircleShimmer(modifier = tokenImageModifier) },
+            contentDescription = tokenCurrency,
+        )
+
+        if (networkIconRes != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(TangemTheme.dimens.size18)
+                    .background(color = TangemTheme.colors.background.primary, shape = CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    modifier = Modifier.padding(all = TangemTheme.dimens.spacing0_5),
+                    painter = painterResource(id = networkIconRes),
+                    contentDescription = null,
+                )
+            }
+        }
     }
 }
 
@@ -374,20 +383,6 @@ private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: In
             style = SpanStyle(color = TangemTheme.colors.text.attention),
             start = value.length,
             end = fullValue.length,
-        )
-    }
-}
-
-@Composable
-private fun TokenImageShimmer(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.shimmer()) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    color = TangemTheme.colors.button.secondary,
-                    shape = CircleShape,
-                ),
         )
     }
 }
