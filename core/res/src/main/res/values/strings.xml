@@ -222,10 +222,9 @@
     <string name="manage_tokens_network_selector_title">Choose networks</string>
     <string name="manage_tokens_network_selector_wallet">Wallet</string>
     <string name="manage_tokens_nothing_found">Couldn’t find this token, you can add it manually</string>
-    <string name="manage_tokens_number_of_wallets">%d of %#@total_wallets@</string>
-    <plurals name="manage_tokens_number_of_walletstotal_wallets">
-        <item quantity="one">%d wallet</item>
-        <item quantity="other">%d wallets</item>
+    <plurals name="manage_tokens_number_of_wallets_android">
+        <item quantity="one">%1$d of %2$d wallet</item>
+        <item quantity="other">%1$d of %2$d wallets</item>
     </plurals>
     <string name="manage_tokens_search_placeholder">e.g. BTC I trust, hodl I must</string>
     <string name="manage_tokens_title">Coin market cap</string>
