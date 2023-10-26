@@ -46,7 +46,7 @@ data class CardDTO(
         isAccessCodeSet = card.isAccessCodeSet,
         isPasscodeSet = card.isPasscodeSet,
         supportedCurves = card.supportedCurves,
-        wallets = card.wallets.map { Wallet(it) },
+        wallets = card.wallets.map(::Wallet),
         attestation = card.attestation,
         backupStatus = BackupStatus.fromSdkStatus(card.backupStatus),
     )
@@ -234,6 +234,7 @@ data class CardDTO(
         val hasBackup: Boolean,
         val derivedKeys: Map<DerivationPath, ExtendedPublicKey>,
         val extendedPublicKey: ExtendedPublicKey?,
+        val isImported: Boolean,
     ) {
         constructor(wallet: CardWallet) : this(
             publicKey = wallet.publicKey,
@@ -246,8 +247,10 @@ data class CardDTO(
             hasBackup = wallet.hasBackup,
             derivedKeys = wallet.derivedKeys,
             extendedPublicKey = wallet.extendedPublicKey,
+            isImported = wallet.isImported,
         )
 
+        @Suppress("CyclomaticComplexMethod")
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Wallet) return false
@@ -256,13 +259,16 @@ data class CardDTO(
             if (chainCode != null) {
                 if (other.chainCode == null) return false
                 if (!chainCode.contentEquals(other.chainCode)) return false
-            } else if (other.chainCode != null) return false
+            } else {
+                if (other.chainCode != null) return false
+            }
             if (curve != other.curve) return false
             if (settings != other.settings) return false
             if (totalSignedHashes != other.totalSignedHashes) return false
             if (remainingSignatures != other.remainingSignatures) return false
             if (index != other.index) return false
             if (hasBackup != other.hasBackup) return false
+            if (isImported != other.isImported) return false
 
             return true
         }
@@ -276,6 +282,7 @@ data class CardDTO(
             result = 31 * result + (remainingSignatures ?: 0)
             result = 31 * result + index
             result = 31 * result + hasBackup.hashCode()
+            result = 31 * result + isImported.hashCode()
             return result
         }
     }
