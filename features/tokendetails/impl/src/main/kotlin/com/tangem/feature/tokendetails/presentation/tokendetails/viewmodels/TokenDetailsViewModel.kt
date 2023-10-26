@@ -292,18 +292,22 @@ internal class TokenDetailsViewModel @Inject constructor(
                 networkId = tokenCurrency.network.id,
                 derivationPath = tokenCurrency.network.derivationPath,
                 isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-            ).firstOrNull()
+            )
+                .conflate()
+                .distinctUntilChanged()
+                .firstOrNull()
 
-            maybeCoinStatus?.onRight { coinStatus ->
-                reduxStateHolder.dispatch(
-                    action = TradeCryptoAction.New.SendToken(
-                        userWallet = wallet,
-                        tokenCurrency = tokenCurrency,
-                        tokenFiatRate = tokenFiatRate,
-                        coinFiatRate = coinStatus.value.fiatRate,
+            reduxStateHolder.dispatch(
+                action = TradeCryptoAction.New.SendToken(
+                    userWallet = wallet,
+                    tokenCurrency = tokenCurrency,
+                    tokenFiatRate = tokenFiatRate,
+                    coinFiatRate = maybeCoinStatus?.fold(
+                        ifLeft = { null },
+                        ifRight = { it.value.fiatRate },
                     ),
-                )
-            }
+                ),
+            )
         }
     }
 
