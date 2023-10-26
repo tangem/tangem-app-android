@@ -6,6 +6,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.NetworkServices
 import com.tangem.tap.common.redux.global.GlobalMiddleware
 import com.tangem.tap.common.redux.global.GlobalState
+import com.tangem.tap.common.redux.legacy.LegacyMiddleware
 import com.tangem.tap.common.redux.navigation.navigationMiddleware
 import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
@@ -68,7 +69,7 @@ data class AppState(
     val daggerGraphState: DaggerGraphState = DaggerGraphState(),
 ) : StateType {
 
-    val domainState: DomainState
+    private val domainState: DomainState
         get() = domainStore.state
 
     val domainNetworks: NetworkServices
@@ -107,6 +108,7 @@ data class AppState(
                 AccessCodeRequestPolicyMiddleware().middleware,
                 SignInMiddleware.middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,
+                LegacyMiddleware.legacyMiddleware,
             )
         }
     }
