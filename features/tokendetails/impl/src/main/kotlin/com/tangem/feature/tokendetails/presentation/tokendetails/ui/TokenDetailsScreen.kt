@@ -2,7 +2,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,10 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.util.fastForEach
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
@@ -29,8 +26,6 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.transactions.Transaction
-import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.event.EventEffect
@@ -45,7 +40,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
-import kotlinx.collections.immutable.PersistentList
 
 // TODO: Split to blocks [REDACTED_JIRA]
 @Suppress("LongMethod")
@@ -122,15 +116,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                         content = { MarketPriceBlock(modifier = itemModifier, state = state.marketPriceBlockState) },
                     )
                 }
-                if (state.txHistoryState is TxHistoryState.NotSupported && state.pendingTxs.isNotEmpty()) {
-                    item {
-                        PendingTxsBlock(
-                            pendingTxs = state.pendingTxs,
-                            isBalanceHidden = state.isBalanceHidden,
-                            modifier = itemModifier,
-                        )
-                    }
-                }
+
                 txHistoryItems(
                     state = state.txHistoryState,
                     isBalanceHidden = state.isBalanceHidden,
@@ -159,23 +145,6 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
         }
 
         TokenDetailsEventEffect(snackbarHostState = snackbarHostState, event = state.event)
-    }
-}
-
-@Composable
-private fun PendingTxsBlock(
-    pendingTxs: PersistentList<TransactionState>,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-            .background(color = TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
-        horizontalAlignment = Alignment.Start,
-    ) {
-        pendingTxs.fastForEach { Transaction(state = it, isBalanceHidden = isBalanceHidden) }
     }
 }
 
