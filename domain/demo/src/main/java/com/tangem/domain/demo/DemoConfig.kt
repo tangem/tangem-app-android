@@ -9,7 +9,7 @@ import java.math.BigDecimal
 @Suppress("LargeClass")
 class DemoConfig {
 
-    val demoBlockchains = listOf(
+    val demoBlockchains = setOf(
         Blockchain.Bitcoin,
         Blockchain.Ethereum,
         Blockchain.Dogecoin,

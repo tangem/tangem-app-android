@@ -1,28 +1,21 @@
 package com.tangem.datasource.local.datastore.core
 
-import kotlinx.coroutines.flow.Flow
-
 internal abstract class KeylessDataStoreDecorator<Value : Any>(
     wrappedDataStore: StringKeyDataStore<Value>,
-) : StringKeyDataStoreDecorator<Unit, Value>(wrappedDataStore) {
+    private val key: String = DEFAULT_STRING_KEY,
+) : StringKeyDataStoreDecorator<String, Value>(wrappedDataStore) {
 
-    override fun provideStringKey(key: Unit): String {
-        return STRING_KEY
-    }
+    override fun provideStringKey(key: String) = key
 
-    open fun get(): Flow<Value> {
-        return get(Unit)
-    }
+    open fun get() = get(key)
 
-    open suspend fun getSyncOrNull(): Value? {
-        return getSyncOrNull(Unit)
-    }
+    open suspend fun getSyncOrNull() = getSyncOrNull(key)
 
-    open suspend fun store(item: Value) {
-        store(Unit, item)
-    }
+    open suspend fun store(item: Value) = store(key, item)
+
+    override suspend fun isEmpty(): Boolean = getSyncOrNull() == null
 
     private companion object {
-        const val STRING_KEY = "key"
+        const val DEFAULT_STRING_KEY = "key"
     }
 }

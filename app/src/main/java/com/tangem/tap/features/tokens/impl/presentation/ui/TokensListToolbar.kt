@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -7,10 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -26,7 +24,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState.InputField
@@ -39,12 +36,20 @@ import kotlinx.coroutines.delay
  */
 @Composable
 internal fun TokensListToolbar(state: TokensListToolbarState) {
-    TopAppBar(backgroundColor = TangemTheme.colors.background.secondary) {
+    val toolbarElevation = if (isSystemInDarkTheme()) {
+        TangemTheme.dimens.elevation0
+    } else {
+        AppBarDefaults.TopAppBarElevation
+    }
+    TopAppBar(
+        backgroundColor = TangemTheme.colors.background.secondary,
+        elevation = toolbarElevation,
+    ) {
         IconButton(onClick = state.onBackButtonClick) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_back_24),
                 contentDescription = "Go back",
-                tint = TangemTheme.colors.icon.secondary,
+                tint = TangemTheme.colors.icon.primary1,
             )
         }
 
@@ -69,7 +74,7 @@ private fun TitleContent(state: Title, modifier: Modifier = Modifier) {
         Icon(
             painter = painterResource(id = R.drawable.ic_search_24),
             contentDescription = "Search",
-            tint = TangemTheme.colors.icon.secondary,
+            tint = TangemTheme.colors.icon.primary1,
         )
     }
 
@@ -78,7 +83,7 @@ private fun TitleContent(state: Title, modifier: Modifier = Modifier) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_plus_24),
                 contentDescription = "Add custom token",
-                tint = TangemTheme.colors.icon.secondary,
+                tint = TangemTheme.colors.icon.primary1,
             )
         }
     }
@@ -94,7 +99,10 @@ private fun InputContent(state: InputField, modifier: Modifier = Modifier) {
         value = state.value,
         onValueChange = state.onValueChange,
         modifier = modifier.focusRequester(focusRequester),
-        textStyle = TangemTheme.typography.subtitle1.copy(fontWeight = FontWeight.Normal),
+        textStyle = TangemTheme.typography.subtitle1.copy(
+            fontWeight = FontWeight.Normal,
+            color = TangemTheme.colors.text.primary1,
+        ),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
         singleLine = true,
@@ -146,7 +154,7 @@ private fun Hint(value: String) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_search_24),
                 contentDescription = null,
-                tint = TangemColorPalette.Dark1,
+                tint = TangemTheme.colors.icon.secondary,
             )
             Text(
                 text = stringResource(id = R.string.common_search),
