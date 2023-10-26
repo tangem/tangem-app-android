@@ -130,6 +130,9 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("com.google.mlkit:vision-common:17.3.0")
+    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0")
     kapt(deps.hilt.kapt)
 
     /** Other libraries */
@@ -142,7 +145,7 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
-    implementation(deps.zxing.qrBarcodeScanner)
+    // implementation(deps.zxing.qrBarcodeScanner)
     implementation(deps.otaliastudiosCameraView)
     implementation(deps.coil)
     implementation(deps.appsflyer)
@@ -179,4 +182,17 @@ dependencies {
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
+
+    // TODO move to dependencies.toml
+    implementation("androidx.camera:camera-camera2:1.4.0-alpha02")
+    implementation("androidx.camera:camera-lifecycle:1.4.0-alpha02")
+    implementation("androidx.camera:camera-view:1.4.0-alpha02")
+    implementation("com.google.guava:listenablefuture:1.0")
+
+    implementation("com.google.guava:guava:30.0-android") {
+        exclude(group="com.google.guava", module = "listenablefuture")
+    }
+
+    implementation("com.google.guava:listenablefuture:1.0")
+
 }

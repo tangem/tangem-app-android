@@ -11,41 +11,40 @@ import androidx.core.content.ContextCompat
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.Result
 import com.otaliastudios.cameraview.CameraView.PERMISSION_REQUEST_CODE
-import me.dm7.barcodescanner.zxing.ZXingScannerView
 
 /**
  * Created by Anton Zhilenkov on 03/09/2020.
  */
-class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
+class ScanQrCodeActivity : AppCompatActivity()  {
 
-    private lateinit var mScannerView: ZXingScannerView
+    // private lateinit var mScannerView: ZXingScannerView
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
 
-        mScannerView = ZXingScannerView(this).apply {
-            setFormats(listOf(BarcodeFormat.QR_CODE))
-        }
-        setContentView(mScannerView)
+        // mScannerView = ZXingScannerView(this).apply {
+        //     setFormats(listOf(BarcodeFormat.QR_CODE))
+        // }
+        // setContentView(mScannerView)
 
         if (!permissionIsGranted()) requestPermission()
     }
 
     override fun onResume() {
         super.onResume()
-        mScannerView.setResultHandler(this)
-        mScannerView.startCamera()
+        // mScannerView.setResultHandler(this)
+        // mScannerView.startCamera()
     }
 
     override fun onPause() {
         super.onPause()
-        mScannerView.stopCamera()
+        // mScannerView.stopCamera()
     }
 
-    override fun handleResult(result: Result) {
-        setResult(SCAN_QR_REQUEST_CODE, Intent().apply { putExtra(SCAN_RESULT, result.text) })
-        finish()
-    }
+    // override fun handleResult(result: Result) {
+    //     setResult(SCAN_QR_REQUEST_CODE, Intent().apply { putExtra(SCAN_RESULT, result.text) })
+    //     finish()
+    // }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode != PERMISSION_REQUEST_CODE) return
