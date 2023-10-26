@@ -27,7 +27,6 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     private fun createTransactionStateItem(item: TxHistoryItem): TransactionState {
         return TransactionState.Content(
             txHash = item.txHash,
-            address = stringReference("mocked address"),
             amount = item.getAmount(),
             timestamp = item.getRawTimestamp(),
             status = item.status.tiUiStatus(),
@@ -101,7 +100,10 @@ internal class TokenDetailsTxHistoryTransactionStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        val prefix = if (isOutgoing) "-" else "+"
+        val prefix = when (status) {
+            TxHistoryItem.TransactionStatus.Failed -> ""
+            else -> if (isOutgoing) "-" else "+"
+        }
         return prefix + amount.toFormattedCurrencyString(currency = symbol, decimals = decimals)
     }
 }
