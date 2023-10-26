@@ -1,18 +1,17 @@
 package com.tangem.tap.domain.walletStores.repository.implementation
 
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.doOnSuccess
 import com.tangem.common.mapFailure
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.makeWalletManagerForApp
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -70,7 +69,7 @@ internal class DefaultWalletManagersRepository(
             }
         val derivationParams = getDerivationParams(
             derivationPath = blockchainNetwork?.derivationPath,
-            card = scanResponse.card,
+            derivationStyleProvider = scanResponse.derivationStyleProvider,
         )
 
         val walletManager = blockchain?.let {
@@ -209,17 +208,16 @@ internal class DefaultWalletManagersRepository(
             }
     }
 
-    private fun getDerivationParams(derivationPath: String?, card: CardDTO): DerivationParams? {
-        return derivationPath?.let {
-            DerivationParams.Custom(
-                path = DerivationPath(it),
-            )
-        } ?: if (!card.settings.isHDWalletAllowed) {
-            null
-        } else if (card.useOldStyleDerivation) {
-            DerivationParams.Default(DerivationStyle.LEGACY)
+    private fun getDerivationParams(
+        derivationPath: String?,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): DerivationParams? {
+        val derivationStyle = derivationStyleProvider.getDerivationStyle() ?: return null
+
+        return if (derivationPath == null) {
+            DerivationParams.Default(derivationStyle)
         } else {
-            DerivationParams.Default(DerivationStyle.NEW)
+            DerivationParams.Custom(DerivationPath(derivationPath))
         }
     }
 }
