@@ -26,6 +26,7 @@ fun TangemButton(
     showProgress: Boolean,
     enabled: Boolean,
     modifier: Modifier = Modifier,
+    additionalText: String? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
     elevation: ButtonElevation = TangemButtonsDefaults.elevation,
     textStyle: TextStyle = TangemTheme.typography.button,
@@ -73,6 +74,20 @@ fun TangemButton(
                     contentDescription = null,
                 )
             },
+            additionalText = {
+                if (additionalText != null) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        text = additionalText,
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.disabled,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            },
         )
     }
 }
@@ -86,18 +101,27 @@ private inline fun RowScope.ButtonContentContainer(
     progressIndicator: @Composable RowScope.() -> Unit,
     text: @Composable RowScope.() -> Unit,
     icon: @Composable RowScope.(Int) -> Unit,
+    additionalText: @Composable () -> Unit,
 ) {
     if (showProgress) {
         progressIndicator()
     } else {
-        if (buttonIcon is TangemButtonIconPosition.Start) {
-            icon(buttonIcon.iconResId)
-            Spacer(modifier = Modifier.requiredWidth(iconPadding))
-        }
-        text()
-        if (buttonIcon is TangemButtonIconPosition.End) {
-            Spacer(modifier = Modifier.requiredWidth(iconPadding))
-            icon(buttonIcon.iconResId)
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                if (buttonIcon is TangemButtonIconPosition.Start) {
+                    icon(buttonIcon.iconResId)
+                    Spacer(modifier = Modifier.requiredWidth(iconPadding))
+                }
+                text()
+                if (buttonIcon is TangemButtonIconPosition.End) {
+                    Spacer(modifier = Modifier.requiredWidth(iconPadding))
+                    icon(buttonIcon.iconResId)
+                }
+            }
+            additionalText()
         }
     }
 }
