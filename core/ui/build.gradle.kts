@@ -27,6 +27,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.paging)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.ui.utils)
 
     /** Other libraries */
     implementation(deps.compose.accompanist.systemUiController)
