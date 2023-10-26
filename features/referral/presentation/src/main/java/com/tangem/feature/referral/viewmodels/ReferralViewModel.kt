@@ -36,7 +36,7 @@ internal class ReferralViewModel @Inject constructor(
 
     private var referralRouter: ReferralRouter by Delegates.notNull()
 
-    private val lastReferralData = mutableStateOf<ReferralData?>(null)
+    private var lastReferralData: ReferralData? = null
 
     init {
         loadReferralData()
@@ -67,7 +67,7 @@ internal class ReferralViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 referralInteractor.getReferralStatus().apply {
-                    lastReferralData.value = this
+                    lastReferralData = this
                 }
             }
                 .onSuccess(::showContent)
@@ -84,14 +84,13 @@ internal class ReferralViewModel @Inject constructor(
             viewModelScope.launch(dispatchers.main) {
                 runCatching(dispatchers.io) { referralInteractor.startReferral() }
                     .onSuccess(::showContent)
-                    .onFailure {
-                        if (it is UserCancelledException) {
-                            val lastRefData = lastReferralData.value
-                            if (lastRefData != null) {
-                                showContent(lastRefData)
+                    .onFailure { throwable ->
+                        if (throwable is UserCancelledException) {
+                            lastReferralData?.let { referralData ->
+                                showContent(referralData)
                             }
                         } else {
-                            showErrorSnackbar(it)
+                            showErrorSnackbar(throwable)
                         }
                     }
             }
@@ -130,6 +129,7 @@ internal class ReferralViewModel @Inject constructor(
             code = referral.promocode,
             shareLink = referral.shareLink,
             url = tosLink,
+            expectedAwards = expectedAwards,
         )
         is ReferralData.NonParticipantData -> ReferralInfoState.NonParticipantContent(
             award = getAwardValue(),
