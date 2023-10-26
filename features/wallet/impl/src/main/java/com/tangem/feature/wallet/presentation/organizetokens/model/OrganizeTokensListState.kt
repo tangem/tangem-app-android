@@ -13,10 +13,18 @@ internal sealed class OrganizeTokensListState {
     ) : OrganizeTokensListState()
 
     data class Ungrouped(
-        override val items: PersistentList<DraggableItem.Token>,
+        override val items: PersistentList<DraggableItem>,
     ) : OrganizeTokensListState()
 
     object Empty : OrganizeTokensListState() {
         override val items: PersistentList<DraggableItem> = persistentListOf()
+    }
+
+    fun copySealed(items: PersistentList<DraggableItem> = this.items): OrganizeTokensListState {
+        return when (this) {
+            is GroupedByNetwork -> copy(items = items)
+            is Ungrouped -> copy(items = items)
+            is Empty -> Empty
+        }
     }
 }
