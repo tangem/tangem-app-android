@@ -10,12 +10,7 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
-import com.tangem.tap.common.extensions.getActivity
-import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.feedback.RateCanBeBetterEmail
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -24,6 +19,8 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutWarningCardActionBinding
 import timber.log.Timber
 
+// TODO: Delete with WalletFeatureToggles
+@Deprecated(message = "Used only in old wallet screen")
 class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WarningMessageVH {
@@ -94,11 +91,11 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
 
             val buttonAction =
                 when (warning.titleResId) {
-                    R.string.warning_important_security_info -> {
-                        View.OnClickListener {
-                            store.dispatch(WalletAction.DialogAction.SignedHashesMultiWalletDialog)
-                        }
-                    }
+                    // R.string.warning_important_security_info -> {
+                    //     View.OnClickListener {
+                    //         store.dispatch(WalletAction.DialogAction.SignedHashesMultiWalletDialog)
+                    //     }
+                    // }
                     else -> {
                         View.OnClickListener {
                             store.dispatch(GlobalAction.HideWarningMessage(warning))
@@ -120,12 +117,12 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
             }
-            binding.btnCanBeBetter.setOnClickListener {
-                Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
-                store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
-                store.dispatch(GlobalAction.HideWarningMessage(warning))
-                store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
-            }
+            // binding.btnCanBeBetter.setOnClickListener {
+            //     Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
+            //     store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
+            //     store.dispatch(GlobalAction.HideWarningMessage(warning))
+            //     store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
+            // }
             binding.btnReallyCool.setOnClickListener {
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
 

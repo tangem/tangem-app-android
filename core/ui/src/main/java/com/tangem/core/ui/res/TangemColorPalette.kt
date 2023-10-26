@@ -33,16 +33,16 @@ object TangemColorPalette {
     // endregion Green
 
     // region Blue
-    val Cobalt = Color(0xFF0029FF)
-    val Azure = Color(0xFF007AFF)
+    val Azure = Color(0xFF0099FF)
     // endregion Blue
 
     // region Red
-    val Amaranth = Color(0xFFDE1010)
-    val Flamingo = Color(0xFFED7979)
+    val Amaranth = Color(0xFFFF3333)
+    val Flamingo = Color(0xFFFF5B5B)
     // endregion Red
 
     // region Yellow
     val Tangerine = Color(0xFFFFB71B)
+    val Mustard = Color(0xFFFDDE55)
     // endregion Yellow
 }

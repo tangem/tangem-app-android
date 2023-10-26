@@ -156,6 +156,7 @@ class SeedPhraseViewModel @Inject constructor(
             ),
             suggestedPhraseClick = ::buttonSuggestedPhraseClick,
             buttonCreateWalletClick = {
+                analyticsEventHandler.send(SeedPhraseEvents.ButtonImport)
                 buttonImportWalletClick(importedMnemonicComponents, SeedPhraseSource.IMPORTED)
             },
         ),
@@ -165,7 +166,7 @@ class SeedPhraseViewModel @Inject constructor(
 
     // region CheckSeedPhrase
     private fun onTextFieldChanged(field: SeedPhraseField, textFieldValue: TextFieldValue) {
-        viewModelScope.launchSingle {
+        launchSingle {
             updateUi { uiBuilder.checkSeedPhrase.updateTextField(uiState, field, textFieldValue) }
 
             val fieldState = field.getState(uiState)
@@ -278,7 +279,6 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonImportWalletClick(mnemonicComponents: List<String>?, seedPhraseSource: SeedPhraseSource) {
-        analyticsEventHandler.send(SeedPhraseEvents.ButtonImport)
         mnemonicComponents ?: return
 
         viewModelScope.launch(dispatchers.io) {
@@ -325,7 +325,7 @@ class SeedPhraseViewModel @Inject constructor(
 
     private fun buttonGenerateSeedPhraseClick() {
         analyticsEventHandler.send(SeedPhraseEvents.ButtonGenerateSeedPhrase)
-        viewModelScope.launchSingle {
+        launchSingle {
             updateUi { uiBuilder.generateMnemonicComponents(uiState) }
             delay(DELAY_GENERATE_SEED_PHRASE)
             interactor.generateMnemonic()
@@ -380,7 +380,7 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
-        viewModelScope.launchSingle {
+        launchSingle {
             val textFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
             val word = uiState.importSeedPhraseState.suggestionsList[suggestionIndex]
             val cursorPosition = textFieldValue.selection.end
@@ -420,7 +420,7 @@ class SeedPhraseViewModel @Inject constructor(
         SeedPhraseField.Eleventh -> uiState.checkSeedPhraseState.tvEleventhPhrase
     }
 
-    private fun CoroutineScope.launchSingle(block: suspend CoroutineScope.() -> Unit): Job {
+    private fun launchSingle(block: suspend CoroutineScope.() -> Unit): Job {
         return viewModelScope.launch(dispatchers.single, block = block)
     }
 

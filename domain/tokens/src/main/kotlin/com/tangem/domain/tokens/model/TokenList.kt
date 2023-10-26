@@ -41,8 +41,14 @@ sealed class TokenList {
         override val sortedBy: SortType,
     ) : TokenList()
 
-    /** Represents a state where the token list is not initialized. */
-    object NotInitialized : TokenList()
+    /** Represents a state where the token list is empty. */
+    object Empty : TokenList() {
+
+        override val totalFiatBalance: FiatBalance = FiatBalance.Loaded(
+            amount = BigDecimal.ZERO,
+            isAllAmountsSummarized = true,
+        )
+    }
 
     /** Defines the possible sorting criteria for the tokens. */
     enum class SortType {

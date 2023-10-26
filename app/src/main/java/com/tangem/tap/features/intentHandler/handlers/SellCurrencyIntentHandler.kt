@@ -2,7 +2,7 @@ package com.tangem.tap.features.intentHandler.handlers
 
 import android.content.Intent
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.intentHandler.IntentHandler
 import com.tangem.tap.store
 import timber.log.Timber
@@ -12,7 +12,7 @@ import timber.log.Timber
  */
 class SellCurrencyIntentHandler : IntentHandler {
 
-    override suspend fun handleIntent(intent: Intent?): Boolean {
+    override fun handleIntent(intent: Intent?): Boolean {
         return try {
             val intentData = intent?.data ?: return false
             val transactionID = intentData.getQueryParameter(TRANSACTION_ID_PARAM) ?: return false
@@ -21,7 +21,7 @@ class SellCurrencyIntentHandler : IntentHandler {
             val destinationAddress = intentData.getQueryParameter(DEPOSIT_WALLET_ADDRESS_PARAM) ?: return false
 
             Timber.d("MoonPay Sell: $amount $currency to $destinationAddress")
-            store.dispatchWithMain(
+            store.dispatchOnMain(
                 TradeCryptoAction.SendCrypto(
                     currencyId = currency,
                     amount = amount,
