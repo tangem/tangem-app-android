@@ -3,21 +3,21 @@ package com.tangem.tap.features.tokens.impl.presentation.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import kotlinx.collections.immutable.ImmutableCollection
@@ -70,11 +70,21 @@ internal fun BriefNetworksList(
  */
 @Composable
 internal fun BriefNetworkItem(model: NetworkItemState, modifier: Modifier = Modifier) {
+    val isAdded = model is NetworkItemState.ManageContent && model.isAdded.value
     Box(modifier = modifier.size(size = TangemTheme.dimens.size20)) {
-        Image(
+        if (!isAdded) {
+            Box(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size20)
+                    .clip(CircleShape)
+                    .background(TangemTheme.colors.control.unchecked),
+            )
+        }
+        Icon(
             painter = painterResource(id = model.iconResId.value),
             contentDescription = null,
             modifier = Modifier.size(size = TangemTheme.dimens.size20),
+            tint = if (isAdded) Color.Unspecified else TangemTheme.colors.text.tertiary,
         )
 
         if (model.isMainNetwork) {
@@ -83,14 +93,14 @@ internal fun BriefNetworkItem(model: NetworkItemState, modifier: Modifier = Modi
                     .align(Alignment.TopEnd)
                     .size(TangemTheme.dimens.size7)
                     .clip(CircleShape)
-                    .background(TangemColorPalette.White),
+                    .background(TangemTheme.colors.background.primary),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
                     modifier = Modifier
                         .size(TangemTheme.dimens.size5)
                         .clip(CircleShape)
-                        .background(TangemColorPalette.Meadow),
+                        .background(TangemTheme.colors.icon.accent),
                 )
             }
         }
