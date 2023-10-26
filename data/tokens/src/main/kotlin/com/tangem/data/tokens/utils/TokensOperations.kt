@@ -2,40 +2,44 @@ package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
-import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.tokens.models.CryptoCurrency.ID
-import com.tangem.domain.tokens.models.Network
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency.ID
+import com.tangem.domain.tokens.model.Network
 import com.tangem.blockchain.common.Token as SdkToken
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Prefix.CUSTOM_TOKEN_PREFIX as CUSTOM_TOKEN_ID_PREFIX
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Prefix.TOKEN_PREFIX as TOKEN_ID_PREFIX
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Suffix.ContractAddress as CustomCurrencyIdSuffix
-import com.tangem.domain.tokens.models.CryptoCurrency.ID.Suffix.RawID as CurrencyIdSuffix
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Body as CurrencyIdBody
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.COIN_PREFIX as COIN_ID_PREFIX
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Prefix.TOKEN_PREFIX as TOKEN_ID_PREFIX
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Suffix.ContractAddress as CustomCurrencyIdSuffix
+import com.tangem.domain.tokens.model.CryptoCurrency.ID.Suffix.RawID as CurrencyIdSuffix
 
 private const val DEFAULT_TOKENS_ICONS_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins"
 private const val TOKEN_ICON_SIZE = "large"
 private const val TOKEN_ICON_EXT = "png"
 
-internal fun isCustomToken(tokenId: ID): Boolean {
-    return tokenId.rawCurrencyId == null
+internal fun isCustomToken(tokenId: ID, network: Network): Boolean {
+    return network.derivationPath is Network.DerivationPath.Custom || tokenId.rawCurrencyId == null
 }
 
-internal fun getDerivationPath(blockchain: Blockchain, derivationStyleProvider: DerivationStyleProvider): String? {
-    return blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
+internal fun isCustomCoin(network: Network): Boolean {
+    return network.derivationPath is Network.DerivationPath.Custom
 }
 
-internal fun getBlockchain(networkId: Network.ID): Blockchain {
-    return Blockchain.fromId(networkId.value)
+internal fun getCoinId(network: Network, coinId: String): ID {
+    return ID(COIN_ID_PREFIX, getCurrencyIdBody(network), CurrencyIdSuffix(rawId = coinId))
 }
 
-internal fun getCoinId(blockchain: Blockchain): ID {
-    return getTokenOrCoinId(blockchain, token = null)
-}
+internal fun getTokenId(network: Network, sdkToken: SdkToken): ID {
+    val sdkTokenId = sdkToken.id
+    val suffix = if (sdkTokenId == null) {
+        CustomCurrencyIdSuffix(contractAddress = sdkToken.contractAddress)
+    } else {
+        CurrencyIdSuffix(rawId = sdkTokenId, contractAddress = sdkToken.contractAddress)
+    }
 
-internal fun getTokenId(blockchain: Blockchain, token: SdkToken): ID {
-    return getTokenOrCoinId(blockchain, token)
+    return ID(TOKEN_ID_PREFIX, getCurrencyIdBody(network), suffix)
 }
 
 internal fun getTokenIconUrl(blockchain: Blockchain, token: SdkToken): String? {
@@ -51,22 +55,31 @@ internal fun getTokenIconUrl(blockchain: Blockchain, token: SdkToken): String? {
 internal fun getCoinIconUrl(blockchain: Blockchain): String? {
     val coinId = when (blockchain) {
         Blockchain.Unknown -> null
-        Blockchain.TerraV1, Blockchain.TerraV2 -> blockchain.toCoinId()
+        Blockchain.TerraV1, Blockchain.TerraV2, Blockchain.Near -> blockchain.toCoinId()
         else -> blockchain.toNetworkId()
     }
 
     return coinId?.let(::getTokenIconUrlFromDefaultHost)
 }
 
-private fun getTokenOrCoinId(blockchain: Blockchain, token: SdkToken?): ID {
-    val sdkTokenId = token?.id
-    val (prefix, suffix) = when {
-        token == null -> COIN_ID_PREFIX to CurrencyIdSuffix(rawId = blockchain.toCoinId())
-        sdkTokenId == null -> CUSTOM_TOKEN_ID_PREFIX to CustomCurrencyIdSuffix(contractAddress = token.contractAddress)
-        else -> TOKEN_ID_PREFIX to CurrencyIdSuffix(rawId = sdkTokenId)
+internal fun List<UserTokensResponse.Token>.hasCoinForToken(token: CryptoCurrency.Token): Boolean {
+    return any {
+        val blockchain = getBlockchain(networkId = token.network.id)
+        val tokenDerivation = token.network.derivationPath.value
+        it.id == blockchain.toCoinId() && it.derivationPath == tokenDerivation
     }
+}
 
-    return ID(prefix, Network.ID(blockchain.id), suffix)
+private fun getCurrencyIdBody(network: Network): CurrencyIdBody {
+    return when (val path = network.derivationPath) {
+        is Network.DerivationPath.Custom -> CurrencyIdBody.NetworkIdWithDerivationPath(
+            rawId = network.id.value,
+            derivationPath = path.value,
+        )
+        is Network.DerivationPath.Card,
+        is Network.DerivationPath.None,
+        -> CurrencyIdBody.NetworkId(network.id.value)
+    }
 }
 
 private fun getTokenIconUrlFromDefaultHost(tokenId: String): String {
