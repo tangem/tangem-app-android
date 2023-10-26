@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.transactions.state
 
 import androidx.paging.PagingData
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Wallet transaction history state */
@@ -13,19 +14,19 @@ sealed interface TxHistoryState {
      */
     data class Content(val contentItems: MutableStateFlow<PagingData<TxHistoryItemState>>) : TxHistoryState
 
-    /**
-     * Empty state
-     *
-     * @property onBuyClick lambda be invoke when buy button was clicked
-     */
-    data class Empty(val onBuyClick: () -> Unit) : TxHistoryState
+    /** Empty state */
+    object Empty : TxHistoryState
 
     /**
      * Not supported tx history state
      *
-     * @property onExploreClick lambda be invoke when explore button was clicked
+     * @property pendingTransactions pending transactions
+     * @property onExploreClick      lambda be invoke when explore button was clicked
      */
-    data class NotSupported(val onExploreClick: () -> Unit) : TxHistoryState
+    data class NotSupported(
+        val pendingTransactions: ImmutableList<TransactionState>,
+        val onExploreClick: () -> Unit,
+    ) : TxHistoryState
 
     /**
      * Error state
