@@ -1,18 +1,16 @@
 package com.tangem.domain.walletmanager.utils
 
-import android.content.res.AssetManager
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
-import okio.buffer
-import okio.source
 
 class SdkTransactionTypeConverter(
-    private val assetManager: AssetManager,
+    private val assetReader: AssetReader,
     private val moshi: Moshi,
 ) : Converter<TransactionHistoryItem.TransactionType, TxHistoryItem.TransactionType> {
 
@@ -43,8 +41,7 @@ class SdkTransactionTypeConverter(
     }
 
     private fun readSmartContractMethods(): Map<String, SmartContractMethod> {
-        return assetManager.open("contract_methods.json").use { stream ->
-            adapter.fromJson(stream.source().buffer())
-        } ?: emptyMap()
+        val json = assetReader.readJson("contract_methods")
+        return adapter.fromJson(json) ?: emptyMap()
     }
 }
