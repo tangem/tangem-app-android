@@ -32,6 +32,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import java.math.BigDecimal
+
+@Suppress("LargeClass")
 // [REDACTED_TODO_COMMENT]
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 @Suppress("LargeClass")
