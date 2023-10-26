@@ -768,6 +768,8 @@ internal class WalletViewModel @Inject constructor(
         refreshSingleCurrencyContent(selectedWalletIndex)
     }
 
+    // FIXME: refreshSingleCurrencyContent mustn't update the TxHistory and Buttons. It only must fetch primary
+    //  currency. Now it not works because GetPrimaryCurrency's subscriber uses .distinctUntilChanged()
     private fun refreshSingleCurrencyContent(walletIndex: Int) {
         uiState = stateFactory.getRefreshingState()
         val wallet = getWallet(walletIndex)
@@ -785,9 +787,12 @@ internal class WalletViewModel @Inject constructor(
                 val singleCurrencyState = uiState as WalletSingleCurrencyState
                 if (singleCurrencyState.txHistoryState !is TxHistoryState.Content) {
                     // show loading indicator while refreshing in non content state
-                    uiState = stateFactory.getLoadingTxHistoryState(1.right())
+                    uiState = stateFactory.getLoadingTxHistoryState(
+                        itemsCountEither = 1.right(),
+                        pendingTransactions = it.value.pendingTransactions,
+                    )
                 }
-                updateTxHistory(wallet.walletId, it.currency, refresh = true)
+                updateTxHistory(userWalletId = wallet.walletId, currencyStatus = it, refresh = true)
             }
         }.saveIn(refreshContentJobHolder)
     }
@@ -1218,7 +1223,7 @@ internal class WalletViewModel @Inject constructor(
 
                     updateNotifications(index)
                     updateButtons(userWallet = wallet, currencyStatus = status)
-                    updateTxHistory(wallet.walletId, status.currency, refresh = false)
+                    updateTxHistory(userWalletId = wallet.walletId, currencyStatus = status, refresh = false)
                 }
             }
             .flowOn(dispatchers.io)
@@ -1274,22 +1279,23 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private fun updateTxHistory(userWalletId: UserWalletId, currency: CryptoCurrency, refresh: Boolean) {
+    private fun updateTxHistory(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus, refresh: Boolean) {
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                 userWalletId = userWalletId,
-                network = currency.network,
+                network = currencyStatus.currency.network,
             )
 
             uiState = stateFactory.getLoadingTxHistoryState(
                 itemsCountEither = txHistoryItemsCountEither,
+                pendingTransactions = currencyStatus.value.pendingTransactions,
             )
 
             txHistoryItemsCountEither.onRight {
                 uiState = stateFactory.getLoadedTxHistoryState(
                     txHistoryEither = txHistoryItemsUseCase(
                         userWalletId = userWalletId,
-                        currency = currency,
+                        currency = currencyStatus.currency,
                         refresh = refresh,
                     ).map {
                         it.cachedIn(viewModelScope)
