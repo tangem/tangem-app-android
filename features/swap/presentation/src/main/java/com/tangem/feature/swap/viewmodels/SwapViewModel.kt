@@ -3,11 +3,13 @@ package com.tangem.feature.swap.viewmodels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
+import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
+import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
@@ -27,41 +29,52 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.runCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 @HiltViewModel
 internal class SwapViewModel @Inject constructor(
     private val swapInteractor: SwapInteractor,
     private val blockchainInteractor: BlockchainInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val listenToFlipsUseCase: ListenToFlipsUseCase,
     savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+) : ViewModel(), DefaultLifecycleObserver {
 
     private val currency = Json.decodeFromString<Currency>(
         savedStateHandle[SwapFragment.CURRENCY_BUNDLE_KEY]
             ?: error("no expected parameter Currency found"),
     )
     private val derivationPath = savedStateHandle.get<String>(SwapFragment.DERIVATION_PATH)
+    private val network = savedStateHandle.get<Network>(SwapFragment.NETWORK)
+
+    private var isBalanceHidden = true
 
     private val stateBuilder = StateBuilder(
         actions = createUiActions(),
+        isBalanceHiddenProvider = Provider { isBalanceHidden },
     )
+
     private val inputNumberFormatter =
         InputNumberFormatter(NumberFormat.getInstance(Locale.getDefault()) as DecimalFormat)
     private val amountDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<SwapState>()
 
     private var dataState by mutableStateOf(SwapProcessDataState(networkId = currency.networkId))
+
     var uiState: SwapStateHolder by mutableStateOf(
         stateBuilder.createInitialLoadingState(
             initialCurrency = currency,
@@ -74,12 +87,30 @@ internal class SwapViewModel @Inject constructor(
     private var isOrderReversed = false
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private var swapRouter: SwapRouter by Delegates.notNull()
-    var currentScreen = SwapNavScreen.Main
+    val currentScreen: SwapNavScreen
         get() = swapRouter.currentScreen
 
     init {
-        swapInteractor.initDerivationPath(derivationPath)
+        swapInteractor.initDerivationPathAndNetwork(derivationPath, network)
         initTokens(currency)
+    }
+
+    override fun onCreate(owner: LifecycleOwner) {
+        isBalanceHiddenUseCase()
+            .flowWithLifecycle(owner.lifecycle)
+            .onEach { hidden ->
+                isBalanceHidden = hidden
+                withContext(dispatchers.main) {
+                    uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
+                }
+            }
+            .launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            listenToFlipsUseCase()
+                .flowWithLifecycle(owner.lifecycle)
+                .collect()
+        }
     }
 
     override fun onCleared() {
@@ -328,6 +359,11 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onTokenSelect(id: String) {
         val foundToken = swapInteractor.findTokenById(id)
+
+        analyticsEventHandler.send(
+            event = SwapEvents.SearchTokenClicked(currencySymbol = foundToken?.symbol),
+        )
+
         if (foundToken != null) {
             val fromToken: Currency
             val toToken: Currency
@@ -425,7 +461,16 @@ internal class SwapViewModel @Inject constructor(
             },
             onGivePermissionClick = {
                 givePermissionsToSwap()
-                analyticsEventHandler.send(SwapEvents.ButtonPermissionApproveClicked)
+                val sendTokenSymbol = dataState.fromCurrency?.symbol
+                val receiveTokenSymbol = dataState.toCurrency?.symbol
+                if (sendTokenSymbol != null && receiveTokenSymbol != null) {
+                    analyticsEventHandler.send(
+                        SwapEvents.ButtonPermissionApproveClicked(
+                            sendToken = sendTokenSymbol,
+                            receiveToken = receiveTokenSymbol,
+                        ),
+                    )
+                }
             },
             onChangeCardsClicked = {
                 onChangeCardsClicked()
@@ -440,17 +485,24 @@ internal class SwapViewModel @Inject constructor(
                 analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
             },
             onAmountSelected = { onAmountSelected(it) },
-            onSearchFocusChange = { focused ->
-                if (focused) {
-                    analyticsEventHandler.send(SwapEvents.SearchTokenClicked)
-                }
-            },
             onChangeApproveType = { approveType ->
                 uiState = stateBuilder.updateApproveType(uiState, approveType)
             },
             onSelectItemFee = { feeItem ->
                 dataState = dataState.copy(selectedFee = feeItem.data)
-                uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem)
+                val spendAmount = dataState.swapDataModel?.swapModel?.fromTokenAmount
+                    ?: dataState.approveDataModel?.fromTokenAmount
+                spendAmount ?: return@UiActions
+                val fromToken = dataState.fromCurrency ?: return@UiActions
+                viewModelScope.launch(dispatchers.io) {
+                    val isFeeEnough = swapInteractor.checkFeeIsEnough(
+                        fee = feeItem.data.feeValue,
+                        spendAmount = spendAmount,
+                        networkId = dataState.networkId,
+                        fromToken = fromToken,
+                    )
+                    uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem, isFeeEnough)
+                }
             },
         )
     }
