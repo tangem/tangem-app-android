@@ -15,9 +15,9 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapMerge
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transformLatest
 
 class GetTokenListUseCase(
     internal val currenciesRepository: CurrenciesRepository,
@@ -28,13 +28,13 @@ class GetTokenListUseCase(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(userWalletId: UserWalletId): Flow<Either<TokenListError, TokenList>> {
-        return getTokensStatuses(userWalletId).flatMapMerge { maybeTokens ->
+        return getTokensStatuses(userWalletId).transformLatest { maybeTokens ->
             maybeTokens.fold(
                 ifLeft = { error ->
-                    flowOf(error.left())
+                    emit(error.left())
                 },
                 ifRight = { tokens ->
-                    createTokenList(userWalletId, tokens)
+                    emitAll(createTokenList(userWalletId, tokens))
                 },
             )
         }

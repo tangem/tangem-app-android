@@ -1,27 +1,17 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.with
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.animation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -33,20 +23,25 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import com.tangem.tap.common.compose.extensions.toPx
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("LongMethod")
 @Composable
 internal fun TokenItem(model: TokenItemState) {
     var isExpanded by rememberSaveable { mutableStateOf(value = false) }
+    var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
 
     ConstraintLayout(
         modifier = Modifier
             .fillMaxWidth()
+            .background(color = TangemTheme.colors.background.primary)
             .padding(top = TangemTheme.dimens.spacing16),
     ) {
         val (icon, title, availableNetworksText) = createRefs()
@@ -55,14 +50,24 @@ internal fun TokenItem(model: TokenItemState) {
         val spacing16 = TangemTheme.dimens.spacing16
         val spacing6 = TangemTheme.dimens.spacing6
 
-        Icon(
-            name = model.fullName,
-            iconUrl = model.iconUrl,
-            modifier = Modifier.constrainAs(icon) {
-                top.linkTo(parent.top)
-                start.linkTo(anchor = parent.start, margin = spacing16)
-            },
-        )
+        Box(
+            modifier = Modifier
+                .background(
+                    color = iconBackgroundColor,
+                    shape = TangemTheme.shapes.roundedCorners8,
+                )
+                .size(TangemTheme.dimens.size46)
+                .constrainAs(icon) {
+                    top.linkTo(parent.top)
+                    start.linkTo(anchor = parent.start, margin = spacing16)
+                },
+        ) {
+            Icon(
+                name = model.fullName,
+                iconUrl = model.iconUrl,
+                onContrastCalculate = { iconBackgroundColor = it },
+            )
+        }
 
         Title(
             title = model.fullName,
@@ -119,8 +124,11 @@ internal fun TokenItem(model: TokenItemState) {
 }
 
 @Composable
-private fun Icon(name: String, iconUrl: String, modifier: Modifier = Modifier) {
+private fun Icon(name: String, iconUrl: String, onContrastCalculate: (Color) -> Unit, modifier: Modifier = Modifier) {
     val iconModifier = modifier.size(size = TangemTheme.dimens.size46)
+    val screenBackgroundColor = TangemTheme.colors.background.primary.toArgb()
+    val isDarkTheme = isSystemInDarkTheme()
+    val coroutineScope = rememberCoroutineScope()
 
     SubcomposeAsyncImage(
         modifier = iconModifier,
@@ -128,6 +136,20 @@ private fun Icon(name: String, iconUrl: String, modifier: Modifier = Modifier) {
             .size(size = TangemTheme.dimens.size46.toPx().toInt())
             .data(data = iconUrl)
             .crossfade(enable = true)
+            .allowHardware(false)
+            .listener(
+                onSuccess = { _, result ->
+                    if (isDarkTheme) {
+                        coroutineScope.launch {
+                            val color = ImageBackgroundContrastChecker(
+                                drawable = result.drawable,
+                                backgroundColor = screenBackgroundColor,
+                            ).getContrastColorIfNeeded(isDarkTheme)
+                            onContrastCalculate(color)
+                        }
+                    }
+                },
+            )
             .build(),
         contentDescription = null,
         loading = { CurrencyPlaceholderIcon(id = name, modifier = iconModifier) },
@@ -183,18 +205,34 @@ private fun ChangeNetworksViewButton(isExpanded: Boolean, onClick: () -> Unit, m
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-private fun Preview_TokenItem_ManageAccess() {
-    TangemTheme {
+private fun Preview_TokenItem_ManageAccess_Light() {
+    TangemTheme(isDark = false) {
         TokenItem(model = TokenListPreviewData.createManageToken())
     }
 }
 
-@Preview
+@Preview()
 @Composable
-private fun Preview_TokenItem_ReadAccess() {
-    TangemTheme {
+private fun Preview_TokenItem_ManageAccess_Dark() {
+    TangemTheme(isDark = true) {
+        TokenItem(model = TokenListPreviewData.createManageToken())
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun Preview_TokenItem_ReadAccess_Light() {
+    TangemTheme(isDark = false) {
+        TokenItem(model = TokenListPreviewData.createReadToken())
+    }
+}
+
+@Preview()
+@Composable
+private fun Preview_TokenItem_ReadAccess_Dark() {
+    TangemTheme(isDark = true) {
         TokenItem(model = TokenListPreviewData.createReadToken())
     }
 }
