@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
-import android.content.res.AssetManager
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
@@ -39,7 +38,6 @@ import java.math.BigDecimal
 @Suppress("LargeClass")
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
-@Suppress("LargeClass")
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,

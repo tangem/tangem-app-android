@@ -7,27 +7,38 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 internal class TokenDetailsLoadingTxHistoryConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val clickIntents: TokenDetailsClickIntents,
-) : Converter<Either<TxHistoryStateError, Int>, TokenDetailsState> {
+) : Converter<TokenDetailsLoadingTxHistoryModel, TokenDetailsState> {
 
-    override fun convert(value: Either<TxHistoryStateError, Int>): TokenDetailsState {
-        return value.fold(ifLeft = ::convertError, ifRight = ::convert)
+    override fun convert(value: TokenDetailsLoadingTxHistoryModel): TokenDetailsState {
+        return value.historyLoadingState.fold(
+            ifLeft = { convertError(error = it, pendingTransactions = value.pendingTransactions) },
+            ifRight = ::convert,
+        )
     }
 
-    private fun convertError(error: TxHistoryStateError): TokenDetailsState {
+    private fun convertError(
+        error: TxHistoryStateError,
+        pendingTransactions: List<TransactionState>,
+    ): TokenDetailsState {
         return currentStateProvider().copy(
             txHistoryState = when (error) {
                 is TxHistoryStateError.EmptyTxHistories -> TxHistoryState.Empty
                 is TxHistoryStateError.DataError -> TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
                 is TxHistoryStateError.TxHistoryNotImplemented -> {
-                    TxHistoryState.NotSupported(onExploreClick = clickIntents::onExploreClick)
+                    TxHistoryState.NotSupported(
+                        pendingTransactions = pendingTransactions.toImmutableList(),
+                        onExploreClick = clickIntents::onExploreClick,
+                    )
                 }
             },
         )
@@ -59,4 +70,9 @@ internal class TokenDetailsLoadingTxHistoryConverter(
             }
         }
     }
+
+    data class TokenDetailsLoadingTxHistoryModel(
+        val historyLoadingState: Either<TxHistoryStateError, Int>,
+        val pendingTransactions: List<TransactionState>,
+    )
 }
