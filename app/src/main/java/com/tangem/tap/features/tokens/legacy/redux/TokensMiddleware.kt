@@ -15,6 +15,7 @@ import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.supportsHdWallet
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -36,6 +37,14 @@ import timber.log.Timber
 
 @Suppress("LargeClass")
 object TokensMiddleware {
+
+    // TODO: Move to DI
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
+
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     val tokensMiddleware: Middleware<AppState> = { _, _ ->
         { next ->
@@ -372,22 +381,13 @@ object TokensMiddleware {
         updatedScanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
     ) {
-        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
-        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
-
         scope.launch {
             userWalletsListManager.update(
                 userWalletId = userWalletId,
                 update = { it.copy(scanResponse = updatedScanResponse) },
             )
 
-            currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
-
-            networksRepository.getNetworkStatusesSync(
-                userWalletId = userWalletId,
-                networks = currencyList.map(CryptoCurrency::network).toSet(),
-                refresh = true,
-            )
+            addCryptoCurrenciesUseCase(userWalletId, currencyList)
         }
     }
 
