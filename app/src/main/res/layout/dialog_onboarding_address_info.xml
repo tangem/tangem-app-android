@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="502dp">
+    android:layout_height="wrap_content"
+    android:background="@color/background_primary">
 
     <include
         android:id="@+id/pseudo_toolbar"
@@ -32,9 +33,10 @@
         android:layout_marginEnd="40dp"
         android:textAlignment="center"
         android:textAllCaps="false"
-        app:layout_constraintBottom_toTopOf="@+id/guideline3"
+        android:layout_marginTop="30dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:textColor="@color/text_secondary"
         app:layout_constraintTop_toBottomOf="@+id/imv_qr_code"
         tools:text="Send only Ethereum (ETH) from Ethereum network to this address. Using other tokens and networks may result in loss of funds." />
 
@@ -52,13 +54,14 @@
         android:layout_marginStart="32dp"
         android:layout_marginEnd="8dp"
         android:background="@drawable/shape_rectangle_rounded_100"
-        android:backgroundTint="@color/lightGray0"
+        android:layout_marginTop="30dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         app:layout_constraintEnd_toStartOf="@+id/btn_fl_share"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline3">
+        android:backgroundTint="@color/button_secondary"
+        app:layout_constraintTop_toBottomOf="@id/tv_receive_message">
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
@@ -76,6 +79,7 @@
                 android:minWidth="120dp"
                 android:singleLine="true"
                 android:textSize="15sp"
+                android:textColor="@color/text_primary_1"
                 tools:text="addlkasLNXDLKNnkjkjhnjkjnljnnlsenn" />
 
             <View
@@ -85,6 +89,7 @@
             <androidx.appcompat.widget.AppCompatImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:tint="@color/accent"
                 android:background="?selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_copy_green" />
 
@@ -98,13 +103,14 @@
         android:layout_height="40dp"
         android:layout_marginEnd="32dp"
         android:background="@drawable/shape_rectangle_rounded_100"
-        android:backgroundTint="@color/lightGray0"
+        android:layout_marginTop="30dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
+        android:backgroundTint="@color/background_primary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/btn_fl_copy_address"
-        app:layout_constraintTop_toTopOf="@+id/guideline3">
+        app:layout_constraintTop_toBottomOf="@+id/tv_receive_message">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="22dp"
@@ -115,5 +121,12 @@
             android:tint="@color/accent" />
 
     </FrameLayout>
+
+    <View
+        android:id="@+id/empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        app:layout_constraintBaseline_toBaselineOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_fl_copy_address" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -40,10 +40,16 @@ object BigDecimalFormatter {
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
 
-    fun formatPercent(percent: BigDecimal, useAbsoluteValue: Boolean, locale: Locale = Locale.getDefault()): String {
+    fun formatPercent(
+        percent: BigDecimal,
+        useAbsoluteValue: Boolean,
+        locale: Locale = Locale.getDefault(),
+        maxFractionDigits: Int = 2,
+        minFractionDigits: Int = 2,
+    ): String {
         val formatter = NumberFormat.getPercentInstance(locale).apply {
-            maximumFractionDigits = 2
-            minimumFractionDigits = 2
+            maximumFractionDigits = maxFractionDigits
+            minimumFractionDigits = minFractionDigits
             roundingMode = RoundingMode.HALF_UP
         }
         val value = if (useAbsoluteValue) percent.abs() else percent
