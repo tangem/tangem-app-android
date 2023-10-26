@@ -23,6 +23,7 @@ internal class TokenListFiatBalanceOperations(
                 is CryptoCurrencyStatus.MissedDerivation,
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
+                is CryptoCurrencyStatus.NoQuote,
                 -> {
                     fiatBalance = TokenList.FiatBalance.Failed
                     break
@@ -35,9 +36,6 @@ internal class TokenListFiatBalanceOperations(
                 }
                 is CryptoCurrencyStatus.Custom -> {
                     fiatBalance = recalculateBalance(status, fiatBalance)
-                }
-                is CryptoCurrencyStatus.NoQuote -> {
-                    fiatBalance = recalculateBalanceWithoutQuote(fiatBalance)
                 }
             }
         }

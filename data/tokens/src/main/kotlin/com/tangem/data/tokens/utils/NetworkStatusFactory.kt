@@ -1,9 +1,6 @@
 package com.tangem.data.tokens.utils
 
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
@@ -42,7 +39,7 @@ internal class NetworkStatusFactory {
     private fun formatAmounts(
         amounts: Set<CryptoCurrencyAmount>,
         currencies: Set<CryptoCurrency>,
-    ): Map<CryptoCurrency.ID, NetworkStatus.AmountStatus> {
+    ): Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus> {
         return currencies.associate { currency ->
             val amount = when (currency) {
                 is CryptoCurrency.Coin -> {
@@ -56,11 +53,12 @@ internal class NetworkStatusFactory {
                     }
                 }
             }
+
             if (amount == null) {
-                Timber.e("Unable to find amount for cryptoCurrency: $currency")
-                currency.id to NetworkStatus.UnreachableAmount
+                Timber.w("Unable to find amount for cryptocurrency: $currency")
+                currency.id to CryptoCurrencyAmountStatus.NotFound
             } else {
-                currency.id to NetworkStatus.LoadedAmount(amount.value)
+                currency.id to CryptoCurrencyAmountStatus.Loaded(amount.value)
             }
         }
     }
