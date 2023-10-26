@@ -6,7 +6,7 @@ import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
-class MLKitBarcodeAnalyzer(private val listener: ScanningResultListener) : ImageAnalysis.Analyzer {
+class MLKitBarcodeAnalyzer(private val onScanned: (String) -> Unit) : ImageAnalysis.Analyzer {
 
     private var isScanning: Boolean = false
 
@@ -23,7 +23,7 @@ class MLKitBarcodeAnalyzer(private val listener: ScanningResultListener) : Image
                     codes.firstOrNull().let { barcode ->
                         val rawValue = barcode?.rawValue
                         rawValue?.let {
-                            listener.onScanned(it)
+                            onScanned.invoke(it)
                         }
                     }
 
