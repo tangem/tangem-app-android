@@ -1,18 +1,19 @@
 package com.tangem.data.tokens.repository
 
+import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.QuotesConverter
+import com.tangem.data.tokens.utils.QuotesUnsupportedCurrenciesIdAdapter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.appcurrency.SelectedAppCurrencyStore
 import com.tangem.datasource.local.quote.QuotesStore
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.Quote
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 internal class DefaultQuotesRepository(
     private val tangemTechApi: TangemTechApi,
@@ -23,23 +24,22 @@ internal class DefaultQuotesRepository(
 ) : QuotesRepository {
 
     private val quotesConverter = QuotesConverter()
+    private val quotesUnsupportedCurrenciesAdapter = QuotesUnsupportedCurrenciesIdAdapter()
 
+    @Volatile
     private var quotesFetchedForAppCurrency: String? = null
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<Quote>> {
-        return channelFlow {
-            launch(dispatchers.io) {
-                quotesStore.get(currenciesIds)
-                    .map(quotesConverter::convertSet)
-                    .collect(::send)
-            }
+        return selectedAppCurrencyStore.get()
+            .distinctUntilChanged()
+            .flatMapLatest { appCurrency ->
+                fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
 
-            launch(dispatchers.io) {
-                selectedAppCurrencyStore.get().collectLatest { appCurrency ->
-                    fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
-                }
+                quotesStore.get(currenciesIds).map(quotesConverter::convertSet)
             }
-        }
+            .cancellable()
+            .flowOn(dispatchers.io)
     }
 
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote> {
@@ -73,16 +73,24 @@ internal class DefaultQuotesRepository(
     }
 
     private suspend fun fetchQuotes(rawCurrenciesIds: Set<String>, appCurrencyId: String) {
-        try {
-            val response = tangemTechApi.getQuotes(
-                currencyId = appCurrencyId,
-                coinIds = rawCurrenciesIds.joinToString(separator = ","),
-            )
+        val replacementIdsResult = quotesUnsupportedCurrenciesAdapter.replaceUnsupportedCurrencies(rawCurrenciesIds)
+        val response = safeApiCall(
+            call = {
+                val coinIds = replacementIdsResult.idsForRequest.joinToString(separator = ",")
+                tangemTechApi.getQuotes(appCurrencyId, coinIds).bind()
+            },
+            onError = {
+                cacheRegistry.invalidate(rawCurrenciesIds.map(::getQuoteCacheKey))
+                null
+            },
+        )
 
-            quotesStore.store(response)
-        } catch (e: Throwable) {
-            Timber.e(e, "Unable to fetch quotes for: $rawCurrenciesIds")
-            throw e
+        if (response != null) {
+            val updatedResponse = quotesUnsupportedCurrenciesAdapter.getResponseWithUnsupportedCurrencies(
+                response,
+                replacementIdsResult.idsFiltered,
+            )
+            quotesStore.store(updatedResponse)
         }
     }
 

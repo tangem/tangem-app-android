@@ -1,13 +1,12 @@
 package com.tangem.tap.domain.tokens
 
-import android.content.Context
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.core.TangemSdkError
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.datasource.files.AndroidFileReader
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.userwallets.UserWalletIdBuilder
@@ -108,7 +107,8 @@ class UserTokensRepository(
         return runCatching { tangemTechApi.getUserTokens(userWalletId) }
             .fold(
                 onSuccess = { response ->
-                    response.tokens
+                    response.getOrThrow()
+                        .tokens
                         .mapNotNull(Currency.Companion::fromTokenResponse)
                         .also { storageService.saveUserTokens(userWalletId, it.toUserTokensResponse()) }
                         .distinct()
@@ -131,12 +131,12 @@ class UserTokensRepository(
 
         // TODO("After adding DI") get dependencies by DI
         fun init(
-            context: Context,
             tangemTechService: TangemTechService,
             networkConnectionManager: NetworkConnectionManager,
+            storageService: UserTokensStorageService,
         ): UserTokensRepository {
             return UserTokensRepository(
-                storageService = UserTokensStorageService(fileReader = AndroidFileReader(context)),
+                storageService = storageService,
                 tangemTechApi = tangemTechService.api,
                 dispatchers = AppCoroutineDispatcherProvider(),
                 networkConnectionManager = networkConnectionManager,

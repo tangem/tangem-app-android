@@ -2,123 +2,242 @@ package com.tangem.feature.wallet.presentation.common.state
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import androidx.compose.ui.graphics.Color
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 
 /** Token item state */
 @Immutable
-internal sealed interface TokenItemState {
+internal sealed class TokenItemState {
 
-    /** Unique id */
-    val id: String
+    abstract val id: String
+
+    abstract val iconState: IconState
+
+    abstract val titleState: TitleState
+
+    abstract val fiatAmountState: FiatAmountState?
+
+    abstract val cryptoAmountState: CryptoAmountState?
+
+    abstract val priceChangeState: PriceChangeState?
 
     /** Loading token state */
-    data class Loading(override val id: String) : TokenItemState
+    data class Loading(
+        override val id: String,
+        override val iconState: IconState,
+        override val titleState: TitleState.Content,
+    ) : TokenItemState() {
+        override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
+        override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Loading
+        override val priceChangeState: PriceChangeState = PriceChangeState.Loading
+    }
 
     /** Locked token state */
-    data class Locked(override val id: String) : TokenItemState
-
-    /** Content state */
-    sealed class ContentState(
-        override val id: String,
-        open val tokenIconUrl: String?,
-        @DrawableRes open val tokenIconResId: Int,
-        @DrawableRes open val networkBadgeIconResId: Int?,
-        open val name: String,
-    ) : TokenItemState
+    data class Locked(override val id: String) : TokenItemState() {
+        override val iconState: IconState = IconState.Locked
+        override val titleState: TitleState = TitleState.Locked
+        override val fiatAmountState: FiatAmountState = FiatAmountState.Locked
+        override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Locked
+        override val priceChangeState: PriceChangeState = PriceChangeState.Locked
+    }
 
     /**
      * Content token state
      *
      * @property id                    unique id
-     * @property tokenIconUrl          token icon url
-     * @property tokenIconResId        token icon resource id
-     * @property networkBadgeIconResId network badge icon resource id, may be null if it is a coin
-     * @property name                  token name
-     * @property amount                amount of token
-     * @property hasPending            pending tx in blockchain
-     * @property tokenOptions          state for token options
-     * @property isTestnet             indicates whether the token is from test network or not
+     * @property iconState             token icon state
+     * @property titleState            token name
      * @property onItemClick           callback which will be called when an item is clicked
      * @property onItemLongClick       callback which will be called when an item is long clicked
      */
     data class Content(
         override val id: String,
-        override val tokenIconUrl: String?,
-        @DrawableRes override val tokenIconResId: Int,
-        @DrawableRes override val networkBadgeIconResId: Int?,
-        override val name: String,
-        val amount: String,
-        val hasPending: Boolean,
-        val tokenOptions: TokenOptionsState,
-        val isTestnet: Boolean,
+        override val iconState: IconState,
+        override val titleState: TitleState,
+        override val fiatAmountState: FiatAmountState,
+        override val cryptoAmountState: CryptoAmountState.Content,
+        override val priceChangeState: PriceChangeState?,
         val onItemClick: () -> Unit,
         val onItemLongClick: () -> Unit,
-    ) : ContentState(id, tokenIconUrl, tokenIconResId, networkBadgeIconResId, name)
+    ) : TokenItemState()
 
     /**
      * Draggable token state
      *
      * @property id                    unique id
-     * @property tokenIconUrl          token icon url
-     * @property tokenIconResId        token icon resource id
-     * @property networkBadgeIconResId network badge icon resource id, may be null if it is a coin
-     * @property name                  token name
-     * @property fiatAmount            fiat amount of token
-     * @property isTestnet             indicates whether the token is from test network or not
+     * @property iconState             token icon state
+     * @property titleState            token name
      */
     data class Draggable(
         override val id: String,
-        override val tokenIconUrl: String?,
-        @DrawableRes override val tokenIconResId: Int,
-        @DrawableRes override val networkBadgeIconResId: Int?,
-        override val name: String,
-        val fiatAmount: String,
-        val isTestnet: Boolean,
-    ) : ContentState(id, tokenIconUrl, tokenIconResId, networkBadgeIconResId, name)
+        override val iconState: IconState,
+        override val titleState: TitleState,
+        override val cryptoAmountState: CryptoAmountState,
+    ) : TokenItemState() {
+        override val fiatAmountState: FiatAmountState? = null
+        override val priceChangeState: PriceChangeState? = null
+    }
 
     /**
      * Unreachable token state
      *
      * @property id                    token id
-     * @property tokenIconUrl          token icon url
-     * @property tokenIconResId        token icon resource id
-     * @property networkBadgeIconResId network badge icon resource id, may be null if it is a coin
-     * @property name                  token name
+     * @property iconState             token icon state
+     * @property titleState            token name
+     * @property onItemClick           callback which will be called when an item is clicked
+     * @property onItemLongClick       callback which will be called when an item is long clicked
      */
     data class Unreachable(
         override val id: String,
-        override val tokenIconUrl: String?,
-        @DrawableRes override val tokenIconResId: Int,
-        @DrawableRes override val networkBadgeIconResId: Int?,
-        override val name: String,
-    ) : ContentState(id, tokenIconUrl, tokenIconResId, networkBadgeIconResId, name)
+        override val iconState: IconState,
+        override val titleState: TitleState,
+        val onItemClick: () -> Unit,
+        val onItemLongClick: () -> Unit,
+    ) : TokenItemState() {
+        override val fiatAmountState: FiatAmountState? = null
+        override val cryptoAmountState: CryptoAmountState? = null
+        override val priceChangeState: PriceChangeState? = null
+    }
 
-    /** Token options state */
+    /**
+     * No derivation address state
+     *
+     * @property id                     token id
+     * @property iconState              token icon state
+     * @property titleState             token name
+     * @property onItemLongClick        callback which will be called when an item is long clicked
+     */
+    data class NoAddress(
+        override val id: String,
+        override val iconState: IconState,
+        override val titleState: TitleState,
+        val onItemLongClick: () -> Unit,
+    ) : TokenItemState() {
+        override val fiatAmountState: FiatAmountState? = null
+        override val cryptoAmountState: CryptoAmountState? = null
+        override val priceChangeState: PriceChangeState? = null
+    }
+
+    /**
+     * Represents the various states an icon can be in.
+     */
     @Immutable
-    sealed interface TokenOptionsState {
+    sealed class IconState {
 
-        val config: PriceChangeConfig
-
-        /**
-         * Visible token options state
-         *
-         * @property fiatAmount fiat amount of token
-         * @property config     value of price changing
-         */
-        data class Visible(
-            override val config: PriceChangeConfig,
-            val fiatAmount: String,
-        ) : TokenOptionsState
+        abstract val isGrayscale: Boolean
+        abstract val showCustomBadge: Boolean
+        abstract val networkBadgeIconResId: Int?
 
         /**
-         * Hidden token options state
+         * Represents a coin icon.
          *
-         * @property config value of price changing
+         * @property url The URL where the coin icon can be fetched from. May be `null` if not found.
+         * @property fallbackResId The drawable resource ID to be used as a fallback if the URL is not available.
+         * @property isGrayscale Specifies whether to show the icon in grayscale.
+         * @property showCustomBadge Specifies whether to show the custom token badge.
          */
-        data class Hidden(override val config: PriceChangeConfig) : TokenOptionsState
+        data class CoinIcon(
+            val url: String?,
+            @DrawableRes val fallbackResId: Int,
+            override val isGrayscale: Boolean,
+            override val showCustomBadge: Boolean,
+        ) : IconState() {
+
+            override val networkBadgeIconResId: Int? = null
+        }
+
+        /**
+         * Represents a token icon.
+         *
+         * @property url The URL where the token icon can be fetched from. May be `null` if not found.
+         * @property networkBadgeIconResId The drawable resource ID for the network badge.
+         * @property isGrayscale Specifies whether to show the icon in grayscale.
+         * @property showCustomBadge Specifies whether to show the custom token badge.
+         * @property fallbackTint The color to be used for tinting the fallback icon.
+         * @property fallbackBackground The background color to be used for the fallback icon.
+         */
+        data class TokenIcon(
+            val url: String?,
+            @DrawableRes override val networkBadgeIconResId: Int,
+            override val isGrayscale: Boolean,
+            override val showCustomBadge: Boolean,
+            val fallbackTint: Color,
+            val fallbackBackground: Color,
+        ) : IconState()
+
+        /**
+         * Represents a custom token icon.
+         *
+         * @property tint The color to be used for tinting the icon.
+         * @property background The background color to be used for the icon.
+         * @property networkBadgeIconResId The drawable resource ID for the network badge.
+         * @property isGrayscale Specifies whether to show the icon in grayscale.
+         */
+        data class CustomTokenIcon(
+            val tint: Color,
+            val background: Color,
+            @DrawableRes override val networkBadgeIconResId: Int,
+            override val isGrayscale: Boolean,
+        ) : IconState() {
+
+            override val showCustomBadge: Boolean = true
+        }
+
+        object Loading : IconState() {
+            override val isGrayscale: Boolean = false
+            override val showCustomBadge: Boolean = false
+            override val networkBadgeIconResId: Int? = null
+        }
+
+        object Locked : IconState() {
+            override val isGrayscale: Boolean = false
+            override val showCustomBadge: Boolean = false
+            override val networkBadgeIconResId: Int? = null
+        }
+    }
+
+    @Immutable
+    sealed class TitleState {
+
+        data class Content(val text: String, val hasPending: Boolean = false) : TitleState()
+
+        object Loading : TitleState()
+
+        object Locked : TitleState()
+    }
+
+    @Immutable
+    sealed class FiatAmountState {
+        data class Content(val text: String) : FiatAmountState()
+
+        object Loading : FiatAmountState()
+
+        object Locked : FiatAmountState()
+    }
+
+    @Immutable
+    sealed class CryptoAmountState {
+        data class Content(val text: String) : CryptoAmountState()
+
+        object Unreachable : CryptoAmountState()
+
+        object Loading : CryptoAmountState()
+
+        object Locked : CryptoAmountState()
+    }
+
+    sealed class PriceChangeState {
+
+        data class Content(val valueInPercent: String, val type: PriceChangeType) : PriceChangeState()
+
+        object Unknown : PriceChangeState()
+
+        object Loading : PriceChangeState()
+
+        object Locked : PriceChangeState()
     }
 
     companion object {
-        const val DOTS = "•••"
+        const val UNKNOWN_AMOUNT_SIGN = "—"
     }
 }
