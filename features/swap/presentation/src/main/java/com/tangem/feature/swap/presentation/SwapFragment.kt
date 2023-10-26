@@ -1,14 +1,14 @@
 package com.tangem.feature.swap.presentation
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.animation.Crossfade
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.ComposeView
-import androidx.fragment.app.Fragment
+import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
+import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.swap.router.CustomTabsManager
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -18,32 +18,41 @@ import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.feature.swap.viewmodels.SwapViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.lang.ref.WeakReference
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class SwapFragment : Fragment() {
+class SwapFragment : ComposeFragment() {
+
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     private val viewModel by viewModels<SwapViewModel>()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
         viewModel.setRouter(
             SwapRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
                 customTabsManager = CustomTabsManager(WeakReference(context)),
             ),
         )
+    }
+
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
         viewModel.onScreenOpened()
 
-        return ComposeView(inflater.context).apply {
-            setContent {
-                ScreenContent(viewModel = viewModel)
-            }
-        }
+        val backgroundColor = TangemTheme.colors.background.secondary
+        SystemBarsEffect { setSystemBarsColor(backgroundColor) }
+
+        ScreenContent(viewModel = viewModel)
     }
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
     private fun ScreenContent(viewModel: SwapViewModel) {
-        Crossfade(targetState = viewModel.currentScreen) { screen ->
+        Crossfade(targetState = viewModel.currentScreen, label = "") { screen ->
             when (screen) {
                 SwapNavScreen.Main -> SwapScreen(stateHolder = viewModel.uiState)
                 SwapNavScreen.Success -> {
@@ -57,11 +66,7 @@ class SwapFragment : Fragment() {
                 SwapNavScreen.SelectToken -> {
                     val tokenState = viewModel.uiState.selectTokenState
                     if (tokenState != null) {
-                        SwapSelectTokenScreen(
-                            state = tokenState,
-                            onSearchFocusChange = viewModel.uiState.onSearchFocusChange,
-                            onBack = viewModel.uiState.onBackClicked,
-                        )
+                        SwapSelectTokenScreen(state = tokenState, onBack = viewModel.uiState.onBackClicked)
                     } else {
                         SwapScreen(stateHolder = viewModel.uiState)
                     }
@@ -70,8 +75,14 @@ class SwapFragment : Fragment() {
         }
     }
 
+    override fun onDestroy() {
+        lifecycle.removeObserver(viewModel)
+        super.onDestroy()
+    }
+
     companion object {
         const val CURRENCY_BUNDLE_KEY = "swap_currency"
         const val DERIVATION_PATH = "DERIVATION_STYLE"
+        const val NETWORK = "NETWORK"
     }
 }
