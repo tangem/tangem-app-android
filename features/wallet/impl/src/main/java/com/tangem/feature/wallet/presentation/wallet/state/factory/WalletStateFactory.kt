@@ -92,6 +92,7 @@ internal class WalletStateFactory(
     private val loadingTransactionsStateConverter by lazy {
         WalletLoadingTxHistoryConverter(
             currentStateProvider = currentStateProvider,
+            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
             clickIntents = clickIntents,
         )
     }
@@ -225,9 +226,15 @@ internal class WalletStateFactory(
         )
     }
 
-    fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): WalletState {
+    fun getLoadingTxHistoryState(
+        itemsCountEither: Either<TxHistoryStateError, Int>,
+        pendingTransactions: Set<TxHistoryItem>,
+    ): WalletState {
         return loadingTransactionsStateConverter.convert(
-            WalletLoadingTxHistoryConverter.WalletLoadingTxHistoryModel(historyLoadingState = itemsCountEither),
+            WalletLoadingTxHistoryConverter.WalletLoadingTxHistoryModel(
+                historyLoadingState = itemsCountEither,
+                pendingTransactions = pendingTransactions,
+            ),
         )
     }
 
