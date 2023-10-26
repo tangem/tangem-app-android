@@ -18,34 +18,32 @@ import com.tangem.feature.swap.presentation.R
 
 @Composable
 fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
-    TangemTheme {
-        Scaffold(
-            modifier = Modifier.systemBarsPadding(),
-            content = { padding ->
-                ResultScreenContent(
-                    resultMessage = makeSuccessMessage(
-                        fromTokenAmount = state.fromTokenAmount,
-                        toTokenAmount = state.toTokenAmount,
-                    ),
-                    resultColor = TangemTheme.colors.icon.attention,
-                    onButtonClick = onBack,
-                    icon = R.drawable.ic_clock_24,
-                    secondaryButtonIcon = R.drawable.ic_arrow_top_right_24,
-                    onSecondaryButtonClick = state.onSecondaryButtonClick,
-                    secondaryButtonText = R.string.swapping_success_view_explorer_button_title,
-                    title = R.string.swapping_success_view_title,
-                    modifier = Modifier.padding(padding),
-                )
-            },
-            topBar = {
-                AppBarWithBackButton(
-                    text = stringResource(R.string.common_swap),
-                    onBackClick = onBack,
-                    iconRes = R.drawable.ic_close_24,
-                )
-            },
-        )
-    }
+    Scaffold(
+        modifier = Modifier.systemBarsPadding(),
+        content = { padding ->
+            ResultScreenContent(
+                resultMessage = makeSuccessMessage(
+                    fromTokenAmount = state.fromTokenAmount,
+                    toTokenAmount = state.toTokenAmount,
+                ),
+                resultColor = TangemTheme.colors.icon.attention,
+                onButtonClick = onBack,
+                icon = R.drawable.ic_clock_24,
+                secondaryButtonIcon = R.drawable.ic_arrow_top_right_24,
+                onSecondaryButtonClick = state.onSecondaryButtonClick,
+                secondaryButtonText = R.string.swapping_success_view_explorer_button_title,
+                title = R.string.swapping_success_view_title,
+                modifier = Modifier.padding(padding),
+            )
+        },
+        topBar = {
+            AppBarWithBackButton(
+                text = stringResource(R.string.common_swap),
+                onBackClick = onBack,
+                iconRes = R.drawable.ic_close_24,
+            )
+        },
+    )
 }
 
 @Composable

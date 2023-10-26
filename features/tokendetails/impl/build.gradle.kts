@@ -27,6 +27,7 @@ dependencies {
     implementation(deps.compose.paging)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.ui.utils)
 
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
@@ -42,23 +43,28 @@ dependencies {
 
     /** Core modules */
     implementation(projects.common)
-    implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Domain modules */
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.balanceHiding)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.send.api)
 }
