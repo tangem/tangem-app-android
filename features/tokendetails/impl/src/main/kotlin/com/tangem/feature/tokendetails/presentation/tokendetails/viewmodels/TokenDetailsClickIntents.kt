@@ -1,12 +1,11 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
-import com.tangem.core.ui.components.transactions.intents.TxHistoryClickIntents
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+import com.tangem.domain.tokens.model.CryptoCurrency
 
-interface TokenDetailsClickIntents : TxHistoryClickIntents {
+interface TokenDetailsClickIntents {
 
     fun onBackClick()
-
-    fun onMoreClick()
 
     fun onSendClick()
 
@@ -15,4 +14,28 @@ interface TokenDetailsClickIntents : TxHistoryClickIntents {
     fun onSellClick()
 
     fun onSwapClick()
+
+    fun onDismissDialog()
+
+    fun onHideClick()
+
+    fun onHideConfirmed()
+
+    fun onRefreshSwipe()
+
+    fun onBuyClick()
+
+    fun onBuyCoinClick(cryptoCurrency: CryptoCurrency)
+
+    fun onReloadClick()
+
+    fun onExploreClick()
+
+    fun onTransactionClick(txHash: String)
+
+    fun onAddressTypeSelected(addressModel: AddressModel)
+
+    fun onDismissBottomSheet()
+
+    fun onCloseRentInfoNotification()
 }
