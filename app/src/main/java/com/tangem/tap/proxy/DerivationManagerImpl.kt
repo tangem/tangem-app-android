@@ -18,6 +18,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -45,6 +46,11 @@ class DerivationManagerImpl(
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
 ) : DerivationManager {
+
+    // TODO: Move to DI
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine { continuation ->
         val blockchain = Blockchain.fromNetworkId(currency.networkId)
@@ -164,15 +170,8 @@ class DerivationManagerImpl(
             derivationPath = derivationPath,
             derivationStyleProvider = derivationStyleProvider,
         )
-        currenciesRepository.addCurrencies(
-            userWalletId,
-            listOf(cryptoCurrency),
-        )
-        networksRepository.getNetworkStatusesSync(
-            userWalletId = userWalletId,
-            networks = setOf(cryptoCurrency.network),
-            refresh = true,
-        )
+
+        addCryptoCurrenciesUseCase(userWalletId, cryptoCurrency)
     }
 
     private fun convertCurrency(
