@@ -238,9 +238,12 @@ private fun Amount(state: TransactionState, isBalanceHidden: Boolean, modifier: 
                 text = if (isBalanceHidden) Strings.STARS else state.amount,
                 modifier = modifier,
                 textAlign = TextAlign.End,
-                color = when (state.direction) {
-                    Direction.INCOMING -> TangemTheme.colors.text.accent
-                    Direction.OUTGOING -> TangemTheme.colors.text.primary1
+                color = when (state.status) {
+                    Status.Failed -> TangemTheme.colors.text.warning
+                    else -> when (state.direction) {
+                        Direction.INCOMING -> TangemTheme.colors.text.accent
+                        Direction.OUTGOING -> TangemTheme.colors.text.primary1
+                    }
                 },
                 style = TangemTheme.typography.body2,
             )
@@ -317,7 +320,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
     collection = listOf(
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            address = TextReference.Str("33BddS...ga2B"),
             amount = "-0.500913 BTC",
             timestamp = "8:41",
             status = Status.Confirmed,
@@ -329,7 +331,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Unconfirmed,
@@ -341,7 +342,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Unconfirmed,
@@ -353,7 +353,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Failed,
@@ -365,7 +364,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Confirmed,
@@ -377,7 +375,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Unconfirmed,
@@ -389,7 +386,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Confirmed,
@@ -401,7 +397,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            address = TextReference.Str("33BddS...ga2B"),
             amount = "+0.500913 BTC",
             timestamp = "8:41",
             status = Status.Confirmed,
