@@ -66,20 +66,9 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
     }
 
     private fun bindPreview(cameraProvider: ProcessCameraProvider?) {
-
-        // if (isDestroyed || isFinishing) {
-        //This check is to avoid an exception when trying to re-bind use cases but user closes the activity.
-        //java.lang.IllegalArgumentException: Trying to create use case mediator with destroyed lifecycle.
-        // return
-        // }
-
         cameraProvider?.unbindAll()
 
         val preview: Preview = Preview.Builder()
-            .build()
-
-        val cameraSelector: CameraSelector = CameraSelector.Builder()
-            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
             .build()
 
         val imageAnalysis = ImageAnalysis.Builder()
@@ -89,7 +78,6 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
         val orientationEventListener = object : OrientationEventListener(requireContext()) {
             override fun onOrientationChanged(orientation: Int) {
-                // Monitors orientation values to determine the target rotation value
                 val rotation: Int = when (orientation) {
                     in 45..134 -> Surface.ROTATION_270
                     in 135..224 -> Surface.ROTATION_180
@@ -102,69 +90,30 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
         }
         orientationEventListener.enable()
 
-        //switch the analyzers here, i.e. MLKitBarcodeAnalyzer, ZXingBarcodeAnalyzer
         class ScanningListener : ScanningResultListener {
-            override fun onScanned(scannedText: String) {
+            override fun onScanned(result: String) {
 
-                Toast.makeText(context, scannedText, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
                 imageAnalysis.clearAnalyzer()
                 store.dispatch(NavigationAction.PopBackTo())
                 setFitSystemWindows(fit = false)
-                if (!scannedText.isNullOrBlank()) {
-                    store.dispatch(WalletConnectAction.OpenSession(scannedText))
+                if (result.isNotBlank()) {
+                    store.dispatch(WalletConnectAction.OpenSession(result))
                 }
-                // requireActivity().runOnUiThread {
-                //     imageAnalysis.clearAnalyzer()
-                //     cameraProvider?.unbindAll()
-                //     ScannerResultDialog.newInstance(
-                //         result,
-                //         object : ScannerResultDialog.DialogDismissListener {
-                //             override fun onDismiss() {
-                //                 bindPreview(cameraProvider)
-                //             }
-                //         })
-                //         .show(supportFragmentManager, ScannerResultDialog::class.java.simpleName)
-                // }
             }
         }
 
-        var analyzer: ImageAnalysis.Analyzer = MLKitBarcodeAnalyzer(ScanningListener())
-
-//        if (scannerSDK == ScannerSDK.ZXING) {
-//            analyzer = ZXingBarcodeAnalyzer(ScanningListener())
-//        }
+        val analyzer: ImageAnalysis.Analyzer = MLKitBarcodeAnalyzer(ScanningListener())
 
         imageAnalysis.setAnalyzer(cameraExecutor, analyzer)
 
         preview.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
-
-        val camera =
-            cameraProvider?.bindToLifecycle(this, cameraSelector, imageAnalysis, preview)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // scannerView?.setResultHandler(this)
-        // scannerView?.startCamera()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // scannerView?.stopCamera()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         setFitSystemWindows(fit = false)
     }
-
-    // override fun handleResult(result: Result) {
-    //     store.dispatch(NavigationAction.PopBackTo())
-    //     setFitSystemWindows(fit = false)
-    //     if (!result.text.isNullOrBlank()) {
-    //         store.dispatch(WalletConnectAction.OpenSession(result.text))
-    //     }
-    // }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         if (requestCode != CameraView.PERMISSION_REQUEST_CODE) return
