@@ -5,12 +5,12 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.*
-import com.tangem.common.biometric.BiometricManager
+import com.tangem.common.authentication.KeystoreManager
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.bip39.DefaultMnemonic
@@ -26,12 +26,12 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
-import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -39,31 +39,38 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions")
-class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigRepository, private val resources: Resources) {
+class TangemSdkManager(
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
+    private val resources: Resources,
+) {
 
     private val tangemSdk: TangemSdk
         get() = cardSdkConfigRepository.sdk
 
     private val userCodeRepository by lazy {
         UserCodeRepository(
-            biometricManager = tangemSdk.biometricManager,
+            keystoreManager = tangemSdk.keystoreManager,
             secureStorage = tangemSdk.secureStorage,
         )
     }
 
     val canUseBiometry: Boolean
-        get() = tangemSdk.biometricManager.canAuthenticate || needEnrollBiometrics
+        get() = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
 
     val needEnrollBiometrics: Boolean
-        get() = tangemSdk.biometricManager.canEnrollBiometrics
+        get() = tangemSdk.authenticationManager.needEnrollBiometrics
 
-    val biometricManager: BiometricManager
-        get() = tangemSdk.biometricManager
+    val keystoreManager: KeystoreManager
+        get() = tangemSdk.keystoreManager
+
+    val secureStorage: SecureStorage
+        get() = tangemSdk.secureStorage
+
+    val userCodeRequestPolicy: UserCodeRequestPolicy
+        get() = tangemSdk.config.userCodeRequestPolicy
 
     suspend fun scanProduct(
-        userTokensRepository: UserTokensRepository,
         cardId: String? = null,
-        additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
@@ -71,8 +78,7 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         return runTaskAsyncReturnOnMain(
             runnable = ScanProductTask(
                 card = null,
-                userTokensRepository = userTokensRepository,
-                additionalBlockchainsToDerive = additionalBlockchainsToDerive,
+                derivationsFinder = derivationsFinder,
                 allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
             ),
             cardId = cardId,
@@ -141,7 +147,9 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
-            runnable = ResetToFactorySettingsTask(allowsRequestAccessCodeFromRepository),
+            runnable = ResetToFactorySettingsTask(
+                allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+            ),
             cardId = cardId,
             initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
         )
@@ -247,17 +255,8 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         return resources.getString(stringResId, *formatArgs)
     }
 
-    fun setAccessCodeRequestPolicy(useBiometricsForAccessCode: Boolean) {
-        tangemSdk.config.userCodeRequestPolicy = if (useBiometricsForAccessCode) {
-            UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
-        } else {
-            UserCodeRequestPolicy.Default
-        }
-    }
-
-    fun useBiometricsForAccessCode(): Boolean {
-        val policy = tangemSdk.config.userCodeRequestPolicy
-        return policy is UserCodeRequestPolicy.AlwaysWithBiometrics && policy.codeType == UserCodeType.AccessCode
+    fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
+        tangemSdk.config.userCodeRequestPolicy = policy
     }
 
     companion object {
