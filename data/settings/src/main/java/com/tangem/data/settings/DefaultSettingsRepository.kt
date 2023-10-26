@@ -10,12 +10,6 @@ internal class DefaultSettingsRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SettingsRepository {
 
-    override suspend fun isUserAlreadyRateApp(): Boolean {
-        return withContext(dispatchers.io) {
-            preferencesDataSource.appRatingLaunchObserver.isReadyToShow()
-        }
-    }
-
     override suspend fun shouldShowSaveUserWalletScreen(): Boolean {
         return withContext(dispatchers.io) { preferencesDataSource.shouldShowSaveUserWalletScreen }
     }

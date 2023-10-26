@@ -7,8 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,6 +23,7 @@ fun SimpleSettingsRow(
     @DrawableRes icon: Int,
     onItemsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    rowColors: RowColors = getDefaultRowColors(),
     enabled: Boolean = true,
     subtitle: String? = null,
 ) {
@@ -41,24 +41,17 @@ fun SimpleSettingsRow(
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val textColor: Color by animateColorAsState(
-            targetValue = if (enabled) {
-                TangemTheme.colors.text.primary1
-            } else {
-                TangemTheme.colors.text.secondary
-            },
-        )
         Icon(
             painter = painterResource(id = icon),
             contentDescription = null,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing20),
-            tint = textColor,
+            tint = rowColors.iconColor(enabled = enabled).value,
         )
         Column(modifier = Modifier.padding(end = TangemTheme.dimens.spacing20)) {
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = textColor,
+                color = rowColors.titleColor(enabled = enabled).value,
             )
             AnimatedVisibility(
                 visible = !subtitle.isNullOrEmpty(),
@@ -66,9 +59,75 @@ fun SimpleSettingsRow(
                 Text(
                     text = subtitle ?: "",
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = rowColors.subtitleColor(enabled = enabled).value,
                 )
             }
         }
     }
+}
+
+@Composable
+fun getWarningRowColors(): RowColors = DefaultRowColors(
+    titleColor = TangemTheme.colors.text.warning,
+    iconColor = TangemTheme.colors.text.warning,
+    disabledTitleColor = TangemTheme.colors.text.secondary,
+    disabledIconColor = TangemTheme.colors.text.secondary,
+)
+
+@Composable
+fun getDefaultRowColors(): RowColors = DefaultRowColors(
+    titleColor = TangemTheme.colors.text.primary1,
+    iconColor = TangemTheme.colors.text.primary1,
+    disabledTitleColor = TangemTheme.colors.text.secondary,
+    disabledIconColor = TangemTheme.colors.text.secondary,
+)
+
+@Immutable
+private class DefaultRowColors(
+    private val titleColor: Color,
+    private val iconColor: Color,
+    private val disabledTitleColor: Color,
+    private val disabledIconColor: Color,
+) : RowColors {
+    @Composable
+    override fun titleColor(enabled: Boolean): State<Color> {
+        return animateColorAsState(
+            targetValue = if (enabled) {
+                titleColor
+            } else {
+                disabledTitleColor
+            },
+        )
+    }
+
+    @Composable
+    override fun subtitleColor(enabled: Boolean): State<Color> {
+        return rememberUpdatedState(newValue = TangemTheme.colors.text.secondary)
+    }
+
+    @Composable
+    override fun iconColor(enabled: Boolean): State<Color> {
+        return animateColorAsState(
+            targetValue = if (enabled) {
+                iconColor
+            } else {
+                disabledIconColor
+            },
+        )
+    }
+}
+
+@Stable
+interface RowColors {
+    @Suppress("TopLevelComposableFunctions")
+    @Composable
+    fun titleColor(enabled: Boolean): State<Color>
+
+    @Suppress("TopLevelComposableFunctions")
+    @Composable
+    fun subtitleColor(enabled: Boolean): State<Color>
+
+    @Suppress("TopLevelComposableFunctions")
+    @Composable
+    fun iconColor(enabled: Boolean): State<Color>
 }
