@@ -7,6 +7,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -78,6 +79,7 @@ internal class MockCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        contractAddress: String?,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
         val token = token.getOrElse { e -> throw e }
@@ -85,6 +87,11 @@ internal class MockCurrenciesRepository(
         require(token.id == id)
 
         return token
+    }
+
+    override fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
+        /* no-op */
+        return emptyFlow()
     }
 
     override suspend fun getNetworkCoin(
