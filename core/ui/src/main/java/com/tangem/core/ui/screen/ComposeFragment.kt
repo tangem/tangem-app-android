@@ -29,7 +29,7 @@ abstract class ComposeFragment : Fragment(), ComposeScreen {
      * @return `true` if transitions were inflated; `false` otherwise.
      */
     protected open fun TransitionInflater.inflateTransitions(): Boolean {
-        enterTransition = inflateTransition(R.transition.slide_right)
+        enterTransition = inflateTransition(R.transition.fade)
         exitTransition = inflateTransition(R.transition.fade)
 
         return true

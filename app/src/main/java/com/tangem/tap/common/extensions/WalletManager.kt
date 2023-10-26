@@ -1,12 +1,12 @@
 package com.tangem.tap.common.extensions
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.amountToCreateAccount
 import com.tangem.tap.common.TestActions
+import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.model.WalletDataModel
@@ -26,10 +26,8 @@ import timber.log.Timber
         "or WalletCurrenciesManager.update(...) (to update only one user wallet blockchain and its tokens) instead",
 )
 @Suppress("MagicNumber")
-suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
-    val scanResponse = store.state.globalState.scanResponse
-
-    if (scanResponse?.isDemoCard() == true || TestActions.testAmountInjectionForWalletManagerEnabled) {
+suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try {
+    if (isDemoCard || TestActions.testAmountInjectionForWalletManagerEnabled) {
         delay(500)
         TestActions.testAmountInjectionForWalletManagerEnabled = false
         Result.Success(wallet)
@@ -71,6 +69,7 @@ fun WalletManager.getTopUpUrl(): String? {
         cryptoCurrencyName = wallet.blockchain.currency,
         fiatCurrencyName = globalState.appCurrency.code,
         walletAddress = defaultAddress,
+        isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
     )
 }
 
@@ -79,12 +78,4 @@ fun WalletManager?.getAddressData(): WalletDataModel.AddressData? {
 
     val addressDataList = wallet.createAddressesData()
     return if (addressDataList.isEmpty()) null else addressDataList[0]
-}
-
-fun <T> WalletManager.Companion.stub(): T {
-    val wallet = Wallet(Blockchain.Unknown, setOf(), Wallet.PublicKey(byteArrayOf(), null), setOf())
-    return object : WalletManager(wallet) {
-        override val currentHost: String = ""
-        override suspend fun update() {}
-    } as T
 }

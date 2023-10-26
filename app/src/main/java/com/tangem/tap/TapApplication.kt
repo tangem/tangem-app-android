@@ -22,13 +22,20 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.domain.DomainLayer
+import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.domain.apptheme.GetAppThemeModeUseCase
+import com.tangem.domain.apptheme.repository.AppThemeModeRepository
+import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.settings.repositories.AppRatingRepository
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletManagersRepository
-import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -48,9 +55,13 @@ import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.shop.TangemShopService
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
+import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.tokens.UserTokensRepository
+import com.tangem.tap.domain.tokens.UserTokensStorageService
 import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
 import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
+import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
+import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
 import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletStores.WalletStoresManager
@@ -61,8 +72,11 @@ import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementa
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
+import com.tangem.tap.features.details.DarkThemeFeatureToggle
+import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.runBlocking
@@ -78,7 +92,8 @@ lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
-lateinit var userTokensRepository: UserTokensRepository
+internal lateinit var userTokensRepository: UserTokensRepository
+internal lateinit var derivationsFinder: DerivationsFinder
 
 private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
 private val walletManagersRepository by lazy {
@@ -119,8 +134,9 @@ val totalFiatBalanceCalculator by lazy {
 }
 
 @HiltAndroidApp
-class TapApplication : Application(), ImageLoaderFactory {
+internal class TapApplication : Application(), ImageLoaderFactory {
 
+    // region Injected
     @Inject
     lateinit var appStateHolder: AppStateHolder
 
@@ -155,9 +171,6 @@ class TapApplication : Application(), ImageLoaderFactory {
     // lateinit var learn2earnInteractor: Learn2earnInteractor
 
     @Inject
-    lateinit var tokenDetailsFeatureToggles: TokenDetailsFeatureToggles
-
-    @Inject
     lateinit var scanCardProcessor: ScanCardProcessor
 
     @Inject
@@ -169,29 +182,41 @@ class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var walletManagersFacade: WalletManagersFacade
 
+    @Inject
+    lateinit var networksRepository: NetworksRepository
+
+    @Inject
+    lateinit var currenciesRepository: CurrenciesRepository
+
+    @Inject
+    lateinit var appThemeModeRepository: AppThemeModeRepository
+
+    @Inject
+    lateinit var balanceHidingRepository: BalanceHidingRepository
+
+    @Inject
+    lateinit var detailsFeatureToggles: DetailsFeatureToggles
+
+    @Inject
+    lateinit var darkThemeFeatureToggle: DarkThemeFeatureToggle
+
+    @Inject
+    lateinit var userTokensStore: UserTokensStore
+
+    @Inject
+    lateinit var appRatingRepository: AppRatingRepository
+
+    @Inject
+    lateinit var getAppThemeModeUseCase: GetAppThemeModeUseCase
+
+    @Inject
+    lateinit var walletsRepository: WalletsRepository
+    // endregion Injected
+
     override fun onCreate() {
         super.onCreate()
 
-        store = Store(
-            reducer = { action, state ->
-                appReducer(action, state, appStateHolder)
-            },
-            middleware = AppState.getMiddleware(),
-            state = AppState(
-                daggerGraphState = DaggerGraphState(
-                    assetReader = assetReader,
-                    networkConnectionManager = networkConnectionManager,
-                    customTokenFeatureToggles = customTokenFeatureToggles,
-                    walletFeatureToggles = walletFeatureToggles,
-                    walletConnectRepository = walletConnect2Repository,
-                    walletConnectSessionsRepository = walletConnectSessionsRepository,
-                    tokenDetailsFeatureToggles = tokenDetailsFeatureToggles,
-                    scanCardProcessor = scanCardProcessor,
-                    appCurrencyRepository = appCurrencyRepository,
-                    walletManagersFacade = walletManagersFacade,
-                ),
-            ),
-        )
+        store = createReduxStore()
 
         if (BuildConfig.DEBUG) {
             Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
@@ -208,9 +233,18 @@ class TapApplication : Application(), ImageLoaderFactory {
         activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        DomainLayer.init()
         preferencesStorage = preferencesDataSource
         walletConnectRepository = WalletConnectRepository(this)
+
+        // TODO: Try to performance and user experience.
+        //  [REDACTED_JIRA]
+        runBlocking {
+            walletsRepository.initialize()
+            initUserWalletsListManager()
+            featureTogglesManager.init()
+            appRatingRepository.initialize()
+            // learn2earnInteractor.init()
+        }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
         initConfigManager(configLoader, ::initWithConfigDependency)
@@ -224,24 +258,51 @@ class TapApplication : Application(), ImageLoaderFactory {
             )
         }
 
+        val userTokensStorageService = UserTokensStorageService.init(context = this)
         userTokensRepository = UserTokensRepository.init(
-            context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
             networkConnectionManager = networkConnectionManager,
+            storageService = userTokensStorageService,
+        )
+        derivationsFinder = DerivationsFinder(
+            legacyTokensStore = userTokensStorageService,
+            newTokensStore = userTokensStore,
+            walletFeatureToggles = walletFeatureToggles,
+            dispatchers = AppCoroutineDispatcherProvider(),
         )
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
 
-        // TODO: Try to performance and user experience.
-        //  [REDACTED_JIRA]
-        runBlocking {
-            featureTogglesManager.init()
-            // learn2earnInteractor.init()
-        }
-
         initTopUpController()
         walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
+    }
+
+    private fun createReduxStore(): Store<AppState> {
+        return Store(
+            reducer = { action, state -> appReducer(action, state, appStateHolder) },
+            middleware = AppState.getMiddleware(),
+            state = AppState(
+                daggerGraphState = DaggerGraphState(
+                    assetReader = assetReader,
+                    networkConnectionManager = networkConnectionManager,
+                    customTokenFeatureToggles = customTokenFeatureToggles,
+                    walletFeatureToggles = walletFeatureToggles,
+                    walletConnectRepository = walletConnect2Repository,
+                    walletConnectSessionsRepository = walletConnectSessionsRepository,
+                    scanCardProcessor = scanCardProcessor,
+                    appCurrencyRepository = appCurrencyRepository,
+                    walletManagersFacade = walletManagersFacade,
+                    appStateHolder = appStateHolder,
+                    networksRepository = networksRepository,
+                    currenciesRepository = currenciesRepository,
+                    appThemeModeRepository = appThemeModeRepository,
+                    balanceHidingRepository = balanceHidingRepository,
+                    detailsFeatureToggles = detailsFeatureToggles,
+                    walletsRepository = walletsRepository,
+                ),
+            ),
+        )
     }
 
     private fun initTopUpController() {
@@ -303,14 +364,16 @@ class TapApplication : Application(), ImageLoaderFactory {
         foregroundActivityObserver: ForegroundActivityObserver,
         store: Store<AppState>,
     ) {
-        fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo = AdditionalFeedbackInfo().apply {
-            appVersion = try {
-                // TODO don't use deprecated method
-                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                pInfo.versionName
-            } catch (e: PackageManager.NameNotFoundException) {
-                e.printStackTrace()
-                "x.y.z"
+        fun initAdditionalFeedbackInfo(context: Context): AdditionalFeedbackInfo {
+            return AdditionalFeedbackInfo().apply {
+                appVersion = try {
+                    // TODO don't use deprecated method
+                    val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                    pInfo.versionName
+                } catch (e: PackageManager.NameNotFoundException) {
+                    e.printStackTrace()
+                    "x.y.z"
+                }
             }
         }
 
@@ -343,5 +406,15 @@ class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initWarningMessagesManager() {
         store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
+    }
+
+    private suspend fun initUserWalletsListManager() {
+        val manager = if (walletsRepository.shouldSaveUserWalletsSync()) {
+            UserWalletsListManager.provideBiometricImplementation(applicationContext)
+        } else {
+            UserWalletsListManager.provideRuntimeImplementation()
+        }
+
+        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 }
