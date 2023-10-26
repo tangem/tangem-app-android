@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/send_fee_label"
-        android:textColor="@color/darkGray1"
+        android:textColor="@color/text_tertiary"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvReceiptAmount" />
@@ -59,7 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:textAllCaps="true"
-        android:textColor="@color/darkGray1"
+        android:textColor="@color/text_tertiary"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tvReceiptFee"

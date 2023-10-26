@@ -31,11 +31,11 @@ internal class NetworkGroupToDraggableItemsConverter(
     }
 
     private fun createGroupHeader(group: NetworkGroup) = DraggableItem.GroupHeader(
-        id = getGroupHeaderId(group.network.id),
+        id = getGroupHeaderId(group.network),
         networkName = group.network.name,
     )
 
     private fun createTokens(group: NetworkGroup): List<DraggableItem.Token> {
-        return itemConverter.convertList(group.currencies.toList())
+        return itemConverter.convertList(group.currencies)
     }
 }

@@ -94,7 +94,7 @@ private fun TextField(model: AddCustomTokenInputField, isError: Boolean) {
             label = {
                 Text(
                     text = model.label.resolveReference(),
-                    style = TangemTheme.typography.caption,
+                    style = TangemTheme.typography.caption2,
                     color = TangemTextFieldsDefault.defaultTextFieldColors.labelColor(
                         enabled = isEnabled,
                         error = isError,
@@ -178,7 +178,7 @@ private fun SelectorField(model: AddCustomTokenSelectorField) {
                                 text = subtitle,
                                 color = TangemTheme.colors.text.secondary,
                                 maxLines = 1,
-                                style = TangemTheme.typography.caption,
+                                style = TangemTheme.typography.caption2,
                             )
                         }
                     }
