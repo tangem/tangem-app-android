@@ -1,19 +1,19 @@
 package com.tangem.domain.walletmanager.utils
 
-import android.content.res.AssetManager
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem as SdkTransactionHistoryItem
 
 internal class SdkTransactionHistoryItemConverter(
-    assetManager: AssetManager,
+    assetReader: AssetReader,
     moshi: Moshi,
 ) : Converter<SdkTransactionHistoryItem, TxHistoryItem> {
 
     private val typeConverter by lazy {
-        SdkTransactionTypeConverter(assetManager, moshi)
+        SdkTransactionTypeConverter(assetReader, moshi)
     }
 
     override fun convert(value: SdkTransactionHistoryItem): TxHistoryItem = TxHistoryItem(
