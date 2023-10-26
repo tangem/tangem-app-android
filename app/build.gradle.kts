@@ -145,7 +145,6 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
-    // implementation(deps.zxing.qrBarcodeScanner)
     implementation(deps.otaliastudiosCameraView)
     implementation(deps.coil)
     implementation(deps.appsflyer)
@@ -183,6 +182,7 @@ dependencies {
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
 
+    /** Chucker */
     implementation(deps.camera.camera2)
     implementation(deps.camera.lifecycle)
     implementation(deps.camera.view)
