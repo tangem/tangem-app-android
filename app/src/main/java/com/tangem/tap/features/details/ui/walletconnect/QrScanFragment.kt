@@ -7,6 +7,7 @@ import android.util.Size
 import android.view.*
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -108,6 +109,12 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
         imageAnalysis.setAnalyzer(cameraExecutor, analyzer)
 
         preview.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
+
+
+        val cameraSelector: CameraSelector = CameraSelector.Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .build()
+        cameraProvider?.bindToLifecycle(this, cameraSelector, imageAnalysis, preview)
     }
 
     override fun onDestroy() {
