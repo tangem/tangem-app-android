@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import java.math.BigDecimal
 
+@Suppress("LargeClass")
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 @Suppress("LargeClass")
