@@ -1,4 +1,4 @@
-package com.tangem.tap.features.details.ui.walletconnect
+package com.tangem.tap.common.qrCodeScan
 
 interface ScanningResultListener {
 

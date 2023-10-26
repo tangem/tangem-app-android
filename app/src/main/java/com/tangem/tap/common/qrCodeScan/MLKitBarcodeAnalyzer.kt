@@ -1,4 +1,4 @@
-package com.tangem.tap.features.details.ui.walletconnect
+package com.tangem.tap.common.qrCodeScan
 
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
