@@ -35,6 +35,7 @@ import java.math.BigDecimal
 
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
+@Suppress("LargeClass")
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
@@ -333,7 +334,11 @@ class DefaultWalletManagersFacade(
             is Result.Success -> {
                 val balance = manager.wallet.fundsAvailable(AmountType.Coin)
                 val outgoingTxs = manager.wallet.recentTransactions
-                    .filter { it.sourceAddress == manager.wallet.address && it.amount.type == AmountType.Coin }
+                    .filter {
+                        it.sourceAddress == manager.wallet.address &&
+                            it.amount.type == AmountType.Coin &&
+                            it.status != TransactionStatus.Confirmed
+                    }
 
                 val rentExempt = result.data
                 val setRent = if (outgoingTxs.isEmpty()) {
