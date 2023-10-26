@@ -27,6 +27,5 @@ private fun internalReduce(action: Action, state: AppState): DisclaimerState {
         is DisclaimerAction.OnProgressStateChanged -> disclaimerState.copy(
             progressState = action.state,
         )
-        else -> disclaimerState
     }
 }

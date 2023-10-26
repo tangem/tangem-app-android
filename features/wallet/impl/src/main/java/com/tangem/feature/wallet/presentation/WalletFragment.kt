@@ -38,7 +38,7 @@ internal class WalletFragment : ComposeFragment() {
             setSystemBarsColor(systemBarsColor)
         }
 
-        _walletRouter.Initialize(fragmentManager = requireActivity().supportFragmentManager)
+        _walletRouter.Initialize(onFinish = requireActivity()::finish)
     }
 
     companion object {
