@@ -94,3 +94,48 @@ fun getActiveIconResByCoinId(coinId: String, networkId: String): Int {
         else -> R.drawable.ic_alert_24
     }
 }
+
+@Suppress("ComplexMethod")
+@DrawableRes
+fun getGreyedOutIconRes(blockchainId: String): Int {
+    return when (blockchainId) {
+        "ARBITRUM-ONE", "ARBITRUM/test" -> R.drawable.ic_arbitrum_22
+        "BTC", "BTC/test" -> R.drawable.ic_bitcoin_16
+        "BCH" -> R.drawable.ic_bitcoin_cash_16
+        "LTC" -> R.drawable.ic_litecoin_22
+        "ETH", "ETH/test" -> R.drawable.ic_eth_16
+        "ETC", "ETC/test" -> R.drawable.ic_eth_16
+        "RSK" -> R.drawable.ic_rsk_16
+        "CARDANO", "CARDANO-S" -> R.drawable.ic_cardano_16
+        "XTZ" -> R.drawable.ic_tezos_16
+        "XRP" -> R.drawable.ic_xrp_22
+        "XLM", "XLM/test" -> R.drawable.ic_stellar_16
+        "AVALANCHE", "AVALANCHE/test" -> R.drawable.ic_avalanche_22
+        "POLYGON", "POLYGON/test" -> R.drawable.ic_polygon_16
+        "SOLANA", "SOLANA/test" -> R.drawable.ic_solana_16
+        "FTM", "FTM/test" -> R.drawable.ic_fantom_22
+        "BSC", "BSC/test", "BINANCE", "BINANCE/test" -> R.drawable.ic_bsc_16
+        "DOGE" -> R.drawable.ic_dogecoin_16
+        "TRON", "TRON/test" -> R.drawable.ic_tron_22
+        "GNO" -> R.drawable.ic_gnosis_22
+        "ETH-Pow", "ETH-Pow/test" -> R.drawable.ic_ethereumpow_22
+        "ETH-Fair" -> R.drawable.ic_ethereumfair_22
+        "Polkadot", "Polkadot/test" -> R.drawable.ic_polkadot_16
+        "Kusama" -> R.drawable.ic_kusama_16
+        "OPTIMISM", "OPTIMISM/test" -> R.drawable.ic_optimism_22
+        "DASH" -> R.drawable.ic_dash_22
+        "KAS" -> R.drawable.ic_kaspa_22
+        "The-Open-Network", "The-Open-Network/test" -> R.drawable.ic_ton_22
+        "KAVA", "KAVA/test" -> R.drawable.ic_kava_22
+        "ravencoin", "ravencoin/test" -> R.drawable.ic_ravencoin_22
+        "cosmos", "cosmos/test" -> R.drawable.ic_cosmos_22
+        "terra", "terra-luna" -> R.drawable.ic_terra_22
+        "terra-2", "terra-luna-2" -> R.drawable.ic_terra2_22
+        "cronos" -> R.drawable.ic_cronos_22
+        "TELOS", "TELOS/test" -> R.drawable.ic_telos_22
+        "aleph-zero", "aleph-zero/test" -> R.drawable.ic_azero_22
+        "octaspace", "octaspace/test" -> R.drawable.ic_octaspace_22
+        "chia", "chia/test" -> R.drawable.ic_chia_22
+        else -> R.drawable.ic_alert_24
+    }
+}
