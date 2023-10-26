@@ -12,7 +12,6 @@ import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.isLockedSync
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
@@ -29,6 +28,12 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
+import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -292,10 +297,14 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
                 }
                 CreateTwinWalletMode.RecreateWallet -> {
-                    if (preferencesStorage.shouldSaveUserWallets) {
-                        OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
-                    } else {
-                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                    scope.launch {
+                        val walletsRepository = store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+
+                        if (walletsRepository.shouldSaveUserWalletsSync()) {
+                            OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
+                        } else {
+                            store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                        }
                     }
                 }
             }
