@@ -1,9 +1,6 @@
 package com.tangem.domain.tokens.operations
 
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
 
 internal class CurrencyStatusOperations(
@@ -39,16 +36,16 @@ internal class CurrencyStatusOperations(
         )
 
     private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Status {
-        val amount = status.amounts[currency.id]?.let {
-            when (it) {
-                is NetworkStatus.UnreachableAmount -> {
-                    return CryptoCurrencyStatus.NoAmount(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
-                }
-                is NetworkStatus.LoadedAmount -> {
-                    it.value
-                }
+        val amount = when (val amount = status.amounts[currency.id]) {
+            null -> {
+                return CryptoCurrencyStatus.Loading
             }
-        } ?: return CryptoCurrencyStatus.Loading
+            is CryptoCurrencyAmountStatus.NotFound -> {
+                return CryptoCurrencyStatus.NoAmount(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+            }
+            is CryptoCurrencyAmountStatus.Loaded -> amount.value
+        }
+
         val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
         val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
 
