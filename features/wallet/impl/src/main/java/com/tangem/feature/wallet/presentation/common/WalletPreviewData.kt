@@ -420,7 +420,6 @@ internal object WalletPreviewData {
                             TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Content(
                                     txHash = UUID.randomUUID().toString(),
-                                    address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Unconfirmed,
@@ -435,7 +434,6 @@ internal object WalletPreviewData {
                             TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Content(
                                     txHash = UUID.randomUUID().toString(),
-                                    address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Confirmed,
