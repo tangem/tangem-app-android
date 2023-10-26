@@ -31,8 +31,8 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
     private val binding: LayoutQrScanningBinding by viewBinding(LayoutQrScanningBinding::bind)
 
-    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-    private lateinit var cameraExecutor: ExecutorService
+    private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
+    private var cameraExecutor: ExecutorService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,10 +55,13 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
         cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-            bindPreview(cameraProvider)
-        }, ContextCompat.getMainExecutor(requireContext()),)
+        cameraProviderFuture?.addListener(
+            {
+                val cameraProvider = cameraProviderFuture?.get()
+                bindPreview(cameraProvider)
+            },
+            ContextCompat.getMainExecutor(requireContext()),
+        )
 
         binding.overlay.post {
             binding.overlay.setViewFinder()
@@ -106,10 +109,11 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
         val analyzer: ImageAnalysis.Analyzer = MLKitBarcodeAnalyzer(ScanningListener())
 
-        imageAnalysis.setAnalyzer(cameraExecutor, analyzer)
+        cameraExecutor?.let {
+            imageAnalysis.setAnalyzer(it, analyzer)
+        }
 
         preview.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
-
 
         val cameraSelector: CameraSelector = CameraSelector.Builder()
             .requireLensFacing(CameraSelector.LENS_FACING_BACK)
