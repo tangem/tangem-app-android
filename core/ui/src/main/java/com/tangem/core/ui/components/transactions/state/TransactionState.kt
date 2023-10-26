@@ -16,7 +16,6 @@ sealed interface TransactionState {
     /**
      * Content state
      *
-     * @property address   address
      * @property amount    amount
      * @property timestamp timestamp
      * @property status    transaction status
@@ -25,7 +24,6 @@ sealed interface TransactionState {
      */
     data class Content(
         override val txHash: String,
-        val address: TextReference,
         val amount: String,
         val timestamp: String,
         val status: Status,
