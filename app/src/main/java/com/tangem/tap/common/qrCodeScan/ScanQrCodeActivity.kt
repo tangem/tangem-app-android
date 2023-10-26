@@ -1,21 +1,18 @@
 package com.tangem.tap.common.qrCodeScan
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.Result
 import com.otaliastudios.cameraview.CameraView.PERMISSION_REQUEST_CODE
 
 /**
  * Created by Anton Zhilenkov on 03/09/2020.
  */
-class ScanQrCodeActivity : AppCompatActivity()  {
+class ScanQrCodeActivity : AppCompatActivity() {
 
     // private lateinit var mScannerView: ZXingScannerView
 

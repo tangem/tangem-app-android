@@ -20,6 +20,7 @@ class ViewFinderOverlay(context: Context, attrs: AttributeSet) : View(context, a
 
     private var boxRect: RectF? = null
 
+    @Suppress("MagicNumber")
     fun setViewFinder() {
         val overlayWidth = width.toFloat()
         val overlayHeight = height.toFloat()
@@ -38,5 +39,4 @@ class ViewFinderOverlay(context: Context, attrs: AttributeSet) : View(context, a
             canvas.drawRoundRect(it, boxCornerRadius, boxCornerRadius, boxPaint)
         }
     }
-
 }

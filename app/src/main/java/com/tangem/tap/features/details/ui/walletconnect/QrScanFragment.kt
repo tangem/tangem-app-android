@@ -7,7 +7,6 @@ import android.util.Size
 import android.view.*
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -58,7 +57,7 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
             bindPreview(cameraProvider)
-        }, ContextCompat.getMainExecutor(requireContext()))
+        }, ContextCompat.getMainExecutor(requireContext()),)
 
         binding.overlay.post {
             binding.overlay.setViewFinder()
@@ -77,6 +76,8 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
             .build()
 
         val orientationEventListener = object : OrientationEventListener(requireContext()) {
+
+            @Suppress("MagicNumber")
             override fun onOrientationChanged(orientation: Int) {
                 val rotation: Int = when (orientation) {
                     in 45..134 -> Surface.ROTATION_270
@@ -92,7 +93,6 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
         class ScanningListener : ScanningResultListener {
             override fun onScanned(result: String) {
-
                 Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
                 imageAnalysis.clearAnalyzer()
                 store.dispatch(NavigationAction.PopBackTo())
