@@ -47,7 +47,9 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
             color = TangemTheme.colors.text.secondary,
         )
 
-        ActionButton(config = state.actionButtonConfig)
+        state.actionButtonConfig?.let {
+            ActionButton(config = it)
+        }
     }
 }
 
@@ -73,7 +75,7 @@ private fun EmptyTransactionBlock_Dark(
 
 private class EmptyTransactionBlockStateProvider : CollectionPreviewParameterProvider<EmptyTransactionsBlockState>(
     collection = listOf(
-        EmptyTransactionsBlockState.Empty(onClick = {}),
+        EmptyTransactionsBlockState.Empty,
         EmptyTransactionsBlockState.FailedToLoad(onClick = {}),
         EmptyTransactionsBlockState.NotImplemented(onClick = {}),
     ),

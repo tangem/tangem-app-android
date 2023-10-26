@@ -1,25 +1,38 @@
 package com.tangem.feature.swap
 
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Approver
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.extensions.Result
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
-import com.tangem.feature.swap.converters.ApproveConverter
+import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
 import com.tangem.feature.swap.converters.TokensConverter
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
-import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.QuoteModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 import javax.inject.Inject
+import com.tangem.blockchain.common.Token as SdkToken
 
 internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
@@ -27,12 +40,12 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val oneInchErrorsHandler: OneInchErrorsHandler,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val configManager: ConfigManager,
+    private val walletManagersFacade: WalletManagersFacade,
 ) : SwapRepository {
 
     private val tokensConverter = TokensConverter()
     private val quotesConverter = QuotesConverter()
     private val swapConverter = SwapConverter()
-    private val approveConverter = ApproveConverter()
 
     override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
         // workaround cause backend do not return arbitrum and optimism rates
@@ -96,29 +109,6 @@ internal class SwapRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun dataToApprove(networkId: String, tokenAddress: String, amount: String?): ApproveModel {
-        return withContext(coroutineDispatcher.io) {
-            approveConverter.convert(getOneInchApi(networkId).approveTransaction(tokenAddress, amount))
-        }
-    }
-
-    override suspend fun checkTokensSpendAllowance(
-        networkId: String,
-        tokenAddress: String,
-        walletAddress: String,
-    ): AggregatedSwapDataModel<String> {
-        return withContext(coroutineDispatcher.io) {
-            try {
-                val response = oneInchErrorsHandler.handleOneInchResponse(
-                    getOneInchApi(networkId).approveAllowance(tokenAddress, walletAddress),
-                )
-                AggregatedSwapDataModel(response.allowance)
-            } catch (ex: OneIncResponseException) {
-                AggregatedSwapDataModel(null, mapErrors(ex.data.description))
-            }
-        }
-    }
-
     override suspend fun prepareSwapTransaction(
         networkId: String,
         fromTokenAddress: String,
@@ -150,6 +140,106 @@ internal class SwapRepositoryImpl @Inject constructor(
 
     override fun getTangemFee(): Double {
         return configManager.config.swapReferrerAccount?.fee?.toDoubleOrNull() ?: 0.0
+    }
+
+    override suspend fun getCryptoCurrency(
+        userWallet: UserWallet,
+        currency: Currency,
+        network: Network,
+    ): CryptoCurrency? {
+        val blockchain = Blockchain.fromNetworkId(currency.networkId) ?: return null
+        val cryptoCurrencyFactory = CryptoCurrencyFactory()
+        return when (currency) {
+            is Currency.NativeToken -> {
+                cryptoCurrencyFactory.createCoin(
+                    blockchain = blockchain,
+                    extraDerivationPath = network.derivationPath.value,
+                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                )
+            }
+            is Currency.NonNativeToken -> {
+                val sdkToken = SdkToken(
+                    name = currency.name,
+                    symbol = currency.symbol,
+                    contractAddress = currency.contractAddress,
+                    decimals = currency.decimalCount,
+                    id = currency.id,
+                )
+                cryptoCurrencyFactory.createToken(
+                    sdkToken = sdkToken,
+                    blockchain = blockchain,
+                    extraDerivationPath = network.derivationPath.value,
+                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+                )
+            }
+        } as CryptoCurrency
+    }
+
+    override suspend fun getAllowance(
+        userWalletId: UserWalletId,
+        networkId: String,
+        derivationPath: String?,
+        tokenDecimalCount: Int,
+        tokenAddress: String,
+    ): BigDecimal {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+        )
+        val spenderAddress = addressForTrust(networkId)
+
+        val result = (walletManager as? Approver)?.getAllowance(
+            spenderAddress,
+            Token(
+                symbol = blockchain.currency,
+                contractAddress = tokenAddress,
+                decimals = tokenDecimalCount,
+            ),
+        ) ?: error("Cannot cast to Approver")
+
+        return when (result) {
+            is Result.Success -> result.data
+            is Result.Failure -> error(result.error)
+        }
+    }
+
+    override suspend fun getApproveData(
+        userWalletId: UserWalletId,
+        networkId: String,
+        derivationPath: String?,
+        currency: Currency,
+        amount: BigDecimal?,
+    ): String {
+        val blockchain =
+            requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+        )
+        val spenderAddress = addressForTrust(networkId)
+
+        return (walletManager as? Approver)?.getApproveData(
+            spenderAddress,
+            amount?.let { convertToAmount(it, currency, blockchain) },
+        ) ?: error("Cannot cast to Approver")
+    }
+
+    private fun convertToAmount(amount: BigDecimal, currency: Currency, blockchain: Blockchain): Amount {
+        return when (currency) {
+            is Currency.NativeToken -> {
+                Amount(value = amount, blockchain = blockchain)
+            }
+            is Currency.NonNativeToken -> {
+                Amount(
+                    currencySymbol = currency.symbol,
+                    value = amount,
+                    decimals = currency.decimalCount,
+                )
+            }
+        }
     }
 
     private fun getOneInchApi(networkId: String): OneInchApi {
