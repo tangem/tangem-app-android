@@ -24,7 +24,9 @@ internal class DefaultQuotesStore(
             merge(*flows.toTypedArray())
                 .scan<StoredQuote, Set<StoredQuote>>(emptySet()) { acc, quote ->
                     acc.addOrReplace(quote) { it.rawCurrencyId == quote.rawCurrencyId }
-                }.collect(::send)
+                }
+                .filter(Set<StoredQuote>::isNotEmpty)
+                .collect(::send)
         }
     }
 
