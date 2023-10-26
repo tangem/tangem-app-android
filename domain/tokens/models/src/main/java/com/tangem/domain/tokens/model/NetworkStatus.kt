@@ -42,7 +42,7 @@ data class NetworkStatus(
      */
     data class Verified(
         val address: NetworkAddress,
-        val amounts: Map<CryptoCurrency.ID, AmountStatus>,
+        val amounts: Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus>,
         val pendingTransactions: Map<CryptoCurrency.ID, Set<TxHistoryItem>>,
     ) : Status()
 
@@ -58,14 +58,4 @@ data class NetworkStatus(
         val amountToCreateAccount: BigDecimal,
         val errorMessage: String,
     ) : Status()
-
-    /**
-     * Represents possible statuses of amount.
-     *
-     * This sealed class includes states as LoadedAmount, UnreachableAmount.
-     */
-    sealed class AmountStatus
-
-    data class LoadedAmount(val value: BigDecimal) : AmountStatus()
-    object UnreachableAmount : AmountStatus()
 }
