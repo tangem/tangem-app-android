@@ -40,7 +40,7 @@ object TokenListPreviewData {
             NetworkItemState.ManageContent(
                 name = "Ethereum",
                 protocolName = "MAIN",
-                iconResId = mutableStateOf(R.drawable.ic_eth_no_color),
+                iconResId = mutableStateOf(R.drawable.ic_eth_16),
                 isMainNetwork = true,
                 isAdded = mutableStateOf(true),
                 id = "",
@@ -53,7 +53,7 @@ object TokenListPreviewData {
             NetworkItemState.ManageContent(
                 name = "BNB SMART CHAIN",
                 protocolName = "BEP20",
-                iconResId = mutableStateOf(R.drawable.ic_bsc_no_color),
+                iconResId = mutableStateOf(R.drawable.ic_bsc_16),
                 isMainNetwork = false,
                 isAdded = mutableStateOf(false),
                 id = "",
@@ -71,13 +71,13 @@ object TokenListPreviewData {
             NetworkItemState.ReadContent(
                 name = "Ethereum",
                 protocolName = "MAIN",
-                iconResId = mutableStateOf(R.drawable.ic_eth_no_color),
+                iconResId = mutableStateOf(R.drawable.ic_eth_16),
                 isMainNetwork = true,
             ),
             NetworkItemState.ReadContent(
                 name = "BNB SMART CHAIN",
                 protocolName = "BEP20",
-                iconResId = mutableStateOf(R.drawable.ic_bsc_no_color),
+                iconResId = mutableStateOf(R.drawable.ic_bsc_16),
                 isMainNetwork = false,
             ),
         )
