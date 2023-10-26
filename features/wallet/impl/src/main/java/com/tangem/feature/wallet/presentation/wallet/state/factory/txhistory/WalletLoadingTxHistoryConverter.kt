@@ -6,10 +6,13 @@ import com.tangem.common.Converter
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.*
+import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -23,17 +26,27 @@ import kotlinx.coroutines.flow.update
  */
 internal class WalletLoadingTxHistoryConverter(
     private val currentStateProvider: Provider<WalletState>,
+    private val currentCardTypeResolverProvider: Provider<CardTypesResolver>,
     private val clickIntents: WalletClickIntents,
 ) : Converter<WalletLoadingTxHistoryConverter.WalletLoadingTxHistoryModel, WalletState> {
 
+    private val txHistoryItemConverter by lazy {
+        val blockchain = currentCardTypeResolverProvider().getBlockchain()
+        WalletTxHistoryTransactionStateConverter(
+            symbol = blockchain.currency,
+            decimals = blockchain.decimals(),
+            clickIntents = clickIntents,
+        )
+    }
+
     override fun convert(value: WalletLoadingTxHistoryModel): WalletState {
         return value.historyLoadingState.fold(
-            ifLeft = ::convertError,
+            ifLeft = { convertError(it, value.pendingTransactions) },
             ifRight = ::convertRight,
         )
     }
 
-    private fun convertError(error: TxHistoryStateError): WalletState {
+    private fun convertError(error: TxHistoryStateError, pendingTransactions: Set<TxHistoryItem>): WalletState {
         val state = currentStateProvider()
 
         return if (state is WalletSingleCurrencyState.Content) {
@@ -42,7 +55,11 @@ internal class WalletLoadingTxHistoryConverter(
                     is TxHistoryStateError.EmptyTxHistories -> Empty
                     is TxHistoryStateError.DataError -> Error(onReloadClick = clickIntents::onReloadClick)
                     is TxHistoryStateError.TxHistoryNotImplemented -> {
-                        NotSupported(onExploreClick = clickIntents::onExploreClick)
+                        NotSupported(
+                            pendingTransactions = txHistoryItemConverter.convertList(pendingTransactions)
+                                .toImmutableList(),
+                            onExploreClick = clickIntents::onExploreClick,
+                        )
                     }
                 },
             )
@@ -78,5 +95,8 @@ internal class WalletLoadingTxHistoryConverter(
         }
     }
 
-    data class WalletLoadingTxHistoryModel(val historyLoadingState: Either<TxHistoryStateError, Int>)
+    data class WalletLoadingTxHistoryModel(
+        val historyLoadingState: Either<TxHistoryStateError, Int>,
+        val pendingTransactions: Set<TxHistoryItem>,
+    )
 }
