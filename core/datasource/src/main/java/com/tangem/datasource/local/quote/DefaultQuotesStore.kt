@@ -4,9 +4,8 @@ import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.quote.model.StoredQuote
 import com.tangem.domain.tokens.model.CryptoCurrency
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.combine
+import com.tangem.utils.extensions.addOrReplace
+import kotlinx.coroutines.flow.*
 
 internal class DefaultQuotesStore(
     private val dataStore: StringKeyDataStore<StoredQuote>,
@@ -22,7 +21,10 @@ internal class DefaultQuotesStore(
                 send(emptySet())
             }
 
-            combine(flows) { quotes -> quotes.toSet() }.collect(::send)
+            merge(*flows.toTypedArray())
+                .scan<StoredQuote, Set<StoredQuote>>(emptySet()) { acc, quote ->
+                    acc.addOrReplace(quote) { it.rawCurrencyId == quote.rawCurrencyId }
+                }.collect(::send)
         }
     }
 
