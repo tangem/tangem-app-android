@@ -1,18 +1,27 @@
 package com.tangem.core.ui.components.transactions
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.util.fastForEach
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionBlock
 import com.tangem.core.ui.components.transactions.empty.EmptyTransactionsBlockState
+import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * LazyList extension for transactions history [TxHistoryState]
@@ -45,6 +54,12 @@ fun LazyListScope.txHistoryItems(
             )
         }
         is TxHistoryState.NotSupported -> {
+            if (state.pendingTransactions.isNotEmpty()) {
+                item(key = "PendingTxsBlock", contentType = "PendingTxsBlock") {
+                    PendingTxsBlock(pendingTxs = state.pendingTransactions, isBalanceHidden = isBalanceHidden)
+                }
+            }
+
             nonContentItem(
                 state = EmptyTransactionsBlockState.NotImplemented(onClick = state.onExploreClick),
                 modifier = modifier,
@@ -84,6 +99,21 @@ private fun LazyListScope.contentItems(
             }
         },
     )
+}
+
+@Composable
+private fun PendingTxsBlock(pendingTxs: ImmutableList<TransactionState>, isBalanceHidden: Boolean) {
+    Column(
+        modifier = Modifier
+            .padding(top = TangemTheme.dimens.spacing12)
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+            .background(color = TangemTheme.colors.background.primary),
+        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
+        horizontalAlignment = Alignment.Start,
+    ) {
+        pendingTxs.fastForEach { Transaction(state = it, isBalanceHidden = isBalanceHidden) }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
