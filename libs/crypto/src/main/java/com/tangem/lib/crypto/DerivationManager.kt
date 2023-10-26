@@ -22,4 +22,9 @@ interface DerivationManager {
      * Checks that given [networkId] has derivations for [derivationPath]
      */
     fun hasDerivation(networkId: String, derivationPath: String): Boolean
+
+    /**
+     * Makes derivation for [Currency] if it is missing and adds token to wallet
+     */
+    suspend fun deriveAndAddTokens(currency: Currency): String
 }

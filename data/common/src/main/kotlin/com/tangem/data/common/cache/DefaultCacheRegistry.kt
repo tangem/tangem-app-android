@@ -2,8 +2,11 @@ package com.tangem.data.common.cache
 
 import com.tangem.datasource.local.cache.CacheKeysStore
 import com.tangem.datasource.local.cache.model.CacheKey
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import org.joda.time.Duration
 import org.joda.time.LocalDateTime
+import timber.log.Timber
 
 internal class DefaultCacheRegistry(
     private val cacheKeysStore: CacheKeysStore,
@@ -18,11 +21,18 @@ internal class DefaultCacheRegistry(
     }
 
     override suspend fun invalidate(key: String) {
-        cacheKeysStore.remove(key)
+        Timber.d("Invalidate the cache key: $key")
+        withContext(NonCancellable) { cacheKeysStore.remove(key) }
+    }
+
+    override suspend fun invalidate(keys: Collection<String>) {
+        Timber.d("Invalidate cache keys: $keys")
+        withContext(NonCancellable) { cacheKeysStore.remove(keys) }
     }
 
     override suspend fun invalidateAll() {
-        cacheKeysStore.clear()
+        Timber.d("Invalidate all cache keys")
+        withContext(NonCancellable) { cacheKeysStore.clear() }
     }
 
     override suspend fun invokeOnExpire(
@@ -34,18 +44,23 @@ internal class DefaultCacheRegistry(
         val isExpired = isExpired(key) || skipCache
         if (!isExpired) return
 
-        cacheKeysStore.store(
-            key = CacheKey(
-                id = key,
-                updatedAt = LocalDateTime.now(),
-                expiresIn = expireIn,
-            ),
-        )
-
         try {
+            Timber.d("Invoke the action associated with the cache key: $key")
+
+            cacheKeysStore.store(
+                key = CacheKey(
+                    id = key,
+                    updatedAt = LocalDateTime.now(),
+                    expiresIn = expireIn,
+                ),
+            )
+
             block()
         } catch (e: Throwable) {
+            Timber.e(e, "The action related to the cache key has failed: $key")
+
             invalidate(key)
+
             throw e
         }
     }

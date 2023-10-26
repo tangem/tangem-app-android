@@ -17,6 +17,7 @@ dependencies {
     implementation(deps.tangem.card.android)
     implementation(deps.tangem.card.core)
 
+    implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
     implementation(projects.data.source.preferences)
