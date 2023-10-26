@@ -3,16 +3,15 @@ package com.tangem.domain.tokens
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import arrow.core.raise.ensure
-import com.tangem.domain.tokens.models.CryptoCurrency
-import com.tangem.domain.tokens.models.remove.RemoveCurrencyError
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.remove.RemoveCurrencyError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
 class RemoveCurrencyUseCase(
-    internal val currenciesRepository: CurrenciesRepository,
-    internal val dispatchers: CoroutineDispatcherProvider,
+    private val currenciesRepository: CurrenciesRepository,
+    private val walletManagersFacade: WalletManagersFacade,
 ) {
 
     suspend operator fun invoke(
@@ -20,21 +19,39 @@ class RemoveCurrencyUseCase(
         currency: CryptoCurrency,
     ): Either<RemoveCurrencyError, Unit> {
         return either {
-            ensure(
-                condition = !currency.hasLinkedTokens(userWalletId),
-                raise = { RemoveCurrencyError.HasLinkedTokens(currency) },
-            )
+            if (hasLinkedTokens(userWalletId, currency)) {
+                raise(RemoveCurrencyError.HasLinkedTokens)
+            }
+
             catch(
-                block = { currenciesRepository.removeCurrency(userWalletId, currency) },
+                block = {
+                    currenciesRepository.removeCurrency(userWalletId, currency)
+
+                    when (currency) {
+                        is CryptoCurrency.Coin -> {
+                            walletManagersFacade.remove(userWalletId, setOf(currency.network))
+                        }
+                        is CryptoCurrency.Token -> {
+                            walletManagersFacade.removeTokens(userWalletId, setOf(currency))
+                        }
+                    }
+                },
                 catch = { raise(RemoveCurrencyError.DataError(it)) },
             )
         }
     }
 
-    private suspend fun CryptoCurrency.hasLinkedTokens(userWalletId: UserWalletId): Boolean {
-        val walletCurrencies = currenciesRepository
-            .getMultiCurrencyWalletCurrenciesSync(userWalletId = userWalletId, refresh = false)
+    suspend fun hasLinkedTokens(userWalletId: UserWalletId, currency: CryptoCurrency): Boolean {
+        return when (currency) {
+            is CryptoCurrency.Coin -> {
+                val walletCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(
+                    userWalletId = userWalletId,
+                    refresh = false,
+                )
 
-        return this is CryptoCurrency.Coin && walletCurrencies.any { it != this && it.network.id == this.network.id }
+                walletCurrencies.any { it is CryptoCurrency.Token && it.network == currency.network }
+            }
+            is CryptoCurrency.Token -> false
+        }
     }
 }
