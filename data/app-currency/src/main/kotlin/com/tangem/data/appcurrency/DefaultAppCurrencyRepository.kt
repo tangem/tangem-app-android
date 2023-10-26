@@ -1,6 +1,7 @@
 package com.tangem.data.appcurrency
 
 import com.tangem.data.appcurrency.utils.AppCurrencyConverter
+import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.joda.time.Duration
-import timber.log.Timber
 
 internal class DefaultAppCurrencyRepository(
     private val tangemTechApi: TangemTechApi,
@@ -34,7 +34,7 @@ internal class DefaultAppCurrencyRepository(
                 .collect(::send)
         }
 
-        launch(dispatchers.io) {
+        withContext(dispatchers.io) {
             if (selectedAppCurrencyStore.isEmpty()) {
                 fetchDefaultAppCurrency()
             }
@@ -47,6 +47,7 @@ internal class DefaultAppCurrencyRepository(
 
             val currencies = availableAppCurrenciesStore.getAllSyncOrNull()
                 ?.map(appCurrencyConverter::convert)
+                ?.sortedBy(AppCurrency::name)
 
             requireNotNull(currencies) {
                 "No available currencies stored"
@@ -80,15 +81,15 @@ internal class DefaultAppCurrencyRepository(
     }
 
     private suspend fun fetchAvailableCurrencies() {
-        try {
-            val response = tangemTechApi.getCurrencyList()
+        val response = safeApiCall(
+            call = { tangemTechApi.getCurrencyList().bind() },
+            onError = {
+                cacheRegistry.invalidate(AVAILABLE_CURRENCIES_CACHE_KEY)
+                getDefaultCurrenciesResponse()
+            },
+        )
 
-            availableAppCurrenciesStore.store(response)
-        } catch (e: Throwable) {
-            Timber.e(e, "Unable to fetch available currencies")
-
-            availableAppCurrenciesStore.store(getDefaultCurrenciesResponse())
-        }
+        availableAppCurrenciesStore.store(response)
     }
 
     private fun getDefaultCurrenciesResponse(): CurrenciesResponse = CurrenciesResponse(
