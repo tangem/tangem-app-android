@@ -11,6 +11,7 @@ import com.tangem.core.ui.res.TangemColorPalette.Dark6
 import com.tangem.core.ui.res.TangemColorPalette.Light4
 import com.tangem.core.ui.res.TangemColorPalette.Light5
 import com.tangem.core.ui.res.TangemColorPalette.Meadow
+import com.tangem.core.ui.res.TangemColorPalette.Mustard
 import com.tangem.core.ui.res.TangemColorPalette.Tangerine
 import com.tangem.core.ui.res.TangemColorPalette.White
 
@@ -23,7 +24,7 @@ enum class TextColorType(val lightColor: Color, val darkColor: Color) {
     DISABLED(lightColor = Light4, darkColor = Dark3),
     ACCENT(lightColor = Meadow, darkColor = Meadow),
     WARNING(lightColor = Amaranth, darkColor = Amaranth),
-    ATTENTION(lightColor = Tangerine, darkColor = Tangerine),
+    ATTENTION(lightColor = Tangerine, darkColor = Mustard),
     CONSTANT_WHITE(lightColor = White, darkColor = White),
 }
 

@@ -19,20 +19,20 @@ class ToggleTokenListGroupingUseCase(
     suspend operator fun invoke(tokenList: TokenList): Either<TokenListSortingError, TokenList> {
         return withContext(dispatchers.default) {
             either {
-                ensure(tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading) {
-                    TokenListSortingError.TokenListIsLoading
-                }
-
                 when (tokenList) {
                     is TokenList.GroupedByNetwork -> ungroupTokens(tokenList)
                     is TokenList.Ungrouped -> groupTokens(tokenList)
-                    is TokenList.NotInitialized -> raise(TokenListSortingError.TokenListIsEmpty)
+                    is TokenList.Empty -> raise(TokenListSortingError.TokenListIsEmpty)
                 }
             }
         }
     }
 
     private fun Raise<TokenListSortingError>.groupTokens(tokenList: TokenList.Ungrouped): TokenList.GroupedByNetwork {
+        ensure(tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading) {
+            TokenListSortingError.TokenListIsLoading
+        }
+
         val sortingOperations = TokenListSortingOperations(tokenList)
 
         return TokenList.GroupedByNetwork(
@@ -47,6 +47,10 @@ class ToggleTokenListGroupingUseCase(
     private fun Raise<TokenListSortingError>.ungroupTokens(
         tokenList: TokenList.GroupedByNetwork,
     ): TokenList.Ungrouped {
+        ensure(tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading) {
+            TokenListSortingError.TokenListIsLoading
+        }
+
         val sortingOperations = TokenListSortingOperations(tokenList)
 
         return TokenList.Ungrouped(

@@ -1,18 +1,11 @@
 package com.tangem.tap.features.home.compose.content
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.tap.common.compose.extensions.AnimatedValue
 import com.tangem.tap.common.compose.extensions.asImageBitmap
 import com.tangem.tap.common.compose.extensions.toAnimatable
@@ -22,13 +15,8 @@ import com.tangem.wallet.R
 [REDACTED_AUTHOR]
  */
 @Composable
-fun FloatingCardsContent(isPaused: Boolean, stepDuration: Int, isNewWalletAvailable: MutableState<Boolean>) {
-    val bottomInsetsPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
-    val imageBitmap = if (isNewWalletAvailable.value) {
-        asImageBitmap(R.drawable.img_card_placeholder_wallet_2)
-    } else {
-        asImageBitmap(R.drawable.card_placeholder_wallet)
-    }
+fun FloatingCardsContent(isPaused: Boolean, stepDuration: Int) {
+    val imageBitmap = asImageBitmap(R.drawable.img_card_placeholder_wallet_2)
     val cards = listOf(
         FloatingCard.first(),
         FloatingCard.second(),
@@ -44,14 +32,6 @@ fun FloatingCardsContent(isPaused: Boolean, stepDuration: Int, isNewWalletAvaila
                 stepDuration = stepDuration,
             )
         }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(bottomInsetsPx.dp)
-                .background(BottomGradient),
-        )
     }
 }
 
@@ -115,11 +95,3 @@ private object FloatingCard {
         scale = 0.6f to 0.75f,
     )
 }
-
-private val BottomGradient: Brush = Brush.verticalGradient(
-    colors = listOf(
-        TangemColorPalette.White.copy(alpha = 0f),
-        TangemColorPalette.White.copy(alpha = 0.75f),
-        TangemColorPalette.White.copy(alpha = 0.95f),
-    ),
-)
