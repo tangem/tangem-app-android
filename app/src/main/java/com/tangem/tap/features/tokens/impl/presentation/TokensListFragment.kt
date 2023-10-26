@@ -1,22 +1,18 @@
 package com.tangem.tap.features.tokens.impl.presentation
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.transition.TransitionInflater
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.features.tokens.impl.presentation.ui.TokensListScreen
 import com.tangem.tap.features.tokens.impl.presentation.viewmodels.TokensListViewModel
-import com.tangem.wallet.R
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Fragment with list of tokens
@@ -24,33 +20,23 @@ import dagger.hilt.android.AndroidEntryPoint
 [REDACTED_AUTHOR]
  */
 @AndroidEntryPoint
-internal class TokensListFragment : Fragment() {
+internal class TokensListFragment : ComposeFragment() {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        with(TransitionInflater.from(requireContext())) {
-            enterTransition = inflateTransition(R.transition.fade)
-            exitTransition = inflateTransition(R.transition.fade)
+    @Inject
+    override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        val viewModel = hiltViewModel<TokensListViewModel>().apply {
+            LocalLifecycleOwner.current.lifecycle.addObserver(this)
         }
-
-        return ComposeView(inflater.context).apply {
-            setContent {
-                isTransitionGroup = true
-
-                val viewModel = hiltViewModel<TokensListViewModel>().apply {
-                    LocalLifecycleOwner.current.lifecycle.addObserver(this)
-                }
-
-                TangemTheme {
-                    val statusBarColor = TangemTheme.colors.background.secondary
-                    SystemBarsEffect {
-                        setSystemBarsColor(color = statusBarColor)
-                    }
-                    TokensListScreen(
-                        modifier = Modifier.systemBarsPadding(),
-                        stateHolder = viewModel.uiState,
-                    )
-                }
-            }
+        val statusBarColor = TangemTheme.colors.background.secondary
+        SystemBarsEffect {
+            setSystemBarsColor(color = statusBarColor)
         }
+        TokensListScreen(
+            modifier = Modifier.systemBarsPadding(),
+            stateHolder = viewModel.uiState,
+        )
     }
 }
