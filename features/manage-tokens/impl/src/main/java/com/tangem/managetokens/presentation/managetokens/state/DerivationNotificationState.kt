@@ -23,13 +23,11 @@ data class DerivationNotificationState(
             text = resourceReference(id = R.string.common_generate_addresses),
             iconResId = R.drawable.ic_tangem_24,
             onClick = onGenerateClick,
-// [REDACTED_TODO_COMMENT]
-            // Task: https://tangem.atlassian.net/browse/AND-4979
-            // additionalText = pluralReference(
-            //     id = R.plurals.manage_tokens_number_of_wallets,
-            //     count = totalNeeded,
-            //     formatArgs = wrappedList(missingAddressesCount, totalNeeded)
-            // )
+            additionalText = pluralReference(
+                id = R.plurals.manage_tokens_number_of_wallets_android,
+                count = totalNeeded,
+                formatArgs = wrappedList(missingAddressesCount, totalNeeded),
+            ),
         ),
     )
 }
