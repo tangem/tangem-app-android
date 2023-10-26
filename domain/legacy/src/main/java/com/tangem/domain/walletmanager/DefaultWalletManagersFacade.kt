@@ -15,6 +15,7 @@ import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
@@ -43,7 +44,7 @@ class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
     configManager: ConfigManager,
-    assetManager: AssetManager,
+    assetReader: AssetReader,
     moshi: Moshi,
 ) : WalletManagersFacade {
 
@@ -52,7 +53,7 @@ class DefaultWalletManagersFacade(
     private val walletManagerFactory by lazy { WalletManagerFactory(configManager) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
-    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetManager, moshi) }
+    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
 
     override suspend fun update(
         userWalletId: UserWalletId,
