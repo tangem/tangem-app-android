@@ -6,6 +6,8 @@ import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
+import com.tangem.utils.extensions.removeBy
+import kotlinx.coroutines.flow.Flow
 
 internal class DefaultWalletManagersStore(
     dataStore: StringKeyDataStore<List<WalletManager>>,
@@ -13,6 +15,10 @@ internal class DefaultWalletManagersStore(
 
     override fun provideStringKey(key: UserWalletId): String {
         return key.stringValue
+    }
+
+    override fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>> {
+        return get(key = userWalletId)
     }
 
     override suspend fun getSyncOrNull(
@@ -28,16 +34,28 @@ internal class DefaultWalletManagersStore(
         }
     }
 
+    override suspend fun getAllSync(userWalletId: UserWalletId): List<WalletManager> {
+        return getSyncOrNull(userWalletId) ?: emptyList()
+    }
+
     override suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager) {
         val walletManagers = getSyncOrNull(userWalletId)
 
         val updatedWalletManagers = walletManagers
             ?.addOrReplace(walletManager) {
                 it.wallet.blockchain == walletManager.wallet.blockchain &&
-                    it.wallet.publicKey == walletManager.wallet.publicKey
+                    it.wallet.publicKey.derivationPath == walletManager.wallet.publicKey.derivationPath
             }
             ?: listOf(walletManager)
 
         store(userWalletId, updatedWalletManagers)
+    }
+
+    override suspend fun remove(userWalletId: UserWalletId, predicate: (WalletManager) -> Boolean) {
+        val walletManagers = getSyncOrNull(userWalletId)?.toMutableList() ?: return
+
+        walletManagers.removeBy(predicate)
+
+        store(userWalletId, walletManagers)
     }
 }
