@@ -199,7 +199,10 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             // if countEither is left, handling error state run inside getLoadingTxHistoryState
             if (showItemsLoading || txHistoryItemsCountEither.isLeft()) {
-                uiState = stateFactory.getLoadingTxHistoryState(itemsCountEither = txHistoryItemsCountEither)
+                uiState = stateFactory.getLoadingTxHistoryState(
+                    itemsCountEither = txHistoryItemsCountEither,
+                    pendingTransactions = uiState.pendingTxs,
+                )
             }
 
             txHistoryItemsCountEither.onRight {
