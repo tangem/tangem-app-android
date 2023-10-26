@@ -1,7 +1,5 @@
 package com.tangem.tap.domain.tasks.product
 
-import com.tangem.blockchain.blockchains.cardano.CardanoUtils
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
@@ -15,13 +13,11 @@ import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -35,16 +31,14 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import kotlinx.coroutines.launch
 import kotlin.collections.set
 
-class ScanProductTask(
-    val card: Card? = null,
-    private val userTokensRepository: UserTokensRepository?,
-    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
+internal class ScanProductTask(
+    private val card: Card?,
+    private val derivationsFinder: DerivationsFinder?,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
@@ -63,14 +57,14 @@ class ScanProductTask(
 
         val commandProcessor = when {
             cardDto.isTangemTwins -> ScanTwinProcessor()
-            else -> ScanWalletProcessor(userTokensRepository, additionalBlockchainsToDerive)
+            else -> ScanWalletProcessor(derivationsFinder)
         }
         commandProcessor.proceed(cardDto, session) { processorResult ->
             when (processorResult) {
                 is CompletionResult.Success -> ScanTask().run(session) { scanTaskResult ->
                     when (scanTaskResult) {
                         is CompletionResult.Success -> {
-                            // it need because processorResult.data.card doesn't contains attestation result
+                            // it needed because processorResult.data.card doesn't contains attestation result
                             // and CardWallet.derivedKeys
                             val processorScanResponseWithNewCard = processorResult.data.copy(
                                 card = CardDTO(scanTaskResult.data),
@@ -99,8 +93,7 @@ class ScanProductTask(
 }
 
 private class ScanWalletProcessor(
-    private val userTokensRepository: UserTokensRepository?,
-    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
+    private val derivationsFinder: DerivationsFinder?,
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -244,122 +237,17 @@ private class ScanWalletProcessor(
         }
     }
 
-    private suspend fun getBlockchainsToDerive(
-        card: CardDTO,
-        derivationStyleProvider: DerivationStyleProvider,
-    ): List<BlockchainNetwork> {
-        val userTokensRepository = userTokensRepository ?: return emptyList()
-        val blockchainsToDerive = userTokensRepository.loadBlockchainsToDerive(
-            card,
-            derivationStyleProvider.getDerivationStyle(),
-        )
-            .toMutableList()
-            .ifEmpty { getDefaultBlockchains(derivationStyleProvider) }
-
-        if (card.settings.isHDWalletAllowed) {
-            blockchainsToDerive += getEthereumBlockchains(derivationStyleProvider)
-        }
-
-        additionalBlockchainsToDerive?.let {
-            blockchainsToDerive += getAdditionalBlockchainToDerive(derivationStyleProvider, it)
-        }
-
-        // we should generate second key for cardano
-        // because cardano address generation for wallet2 requires keys from 2 derivations
-        // https://developers.cardano.org/docs/get-started/cardano-serialization-lib/generating-keys/
-        val secondCardanoNetwork = blockchainsToDerive
-            .find { it.blockchain == Blockchain.Cardano }
-            ?.let { getCardanoSecondNetwork(it) }
-        secondCardanoNetwork?.let { blockchainsToDerive.add(it) }
-
-        // pay attention to this
-        if (!card.useOldStyleDerivation) {
-            removeUnnecessaryBlockchains(blockchainsToDerive, derivationStyleProvider)
-        }
-
-        return blockchainsToDerive.distinct()
-    }
-
     private fun getWalletProductType(card: CardDTO): ProductType {
         if (card.batchId == CardDTO.RING_BATCH_ID) {
             return ProductType.Ring
         }
-        return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available) {
+        return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
+            card.settings.isKeysImportAllowed
+        ) {
             ProductType.Wallet2
         } else {
             ProductType.Wallet
         }
-    }
-
-    private fun getDefaultBlockchains(
-        derivationStyleProvider: DerivationStyleProvider,
-    ): MutableList<BlockchainNetwork> {
-        return mutableListOf(
-            BlockchainNetwork(
-                blockchain = Blockchain.Bitcoin,
-                derivationStyleProvider = derivationStyleProvider,
-            ),
-            BlockchainNetwork(
-                blockchain = Blockchain.Ethereum,
-                derivationStyleProvider = derivationStyleProvider,
-            ),
-        )
-    }
-
-    private fun getEthereumBlockchains(derivationStyleProvider: DerivationStyleProvider): List<BlockchainNetwork> {
-        return listOf(
-            BlockchainNetwork(
-                blockchain = Blockchain.Ethereum,
-                derivationStyleProvider = derivationStyleProvider,
-            ),
-            BlockchainNetwork(
-                blockchain = Blockchain.EthereumTestnet,
-                derivationStyleProvider = derivationStyleProvider,
-            ),
-        )
-    }
-
-    private fun getAdditionalBlockchainToDerive(
-        derivationStyleProvider: DerivationStyleProvider,
-        collection: Collection<Blockchain>,
-    ): List<BlockchainNetwork> {
-        return collection.map {
-            BlockchainNetwork(
-                blockchain = it,
-                derivationStyleProvider = derivationStyleProvider,
-            )
-        }
-    }
-
-    private fun getCardanoSecondNetwork(cardanoBlockchainNetwork: BlockchainNetwork): BlockchainNetwork? {
-        val cardanoStandardDerivation = cardanoBlockchainNetwork.derivationPath?.let { DerivationPath(it) }
-            ?: return null
-        val cardanoPatchedDerivation = CardanoUtils.extendedDerivationPath(cardanoStandardDerivation)
-        return BlockchainNetwork(
-            blockchain = Blockchain.Cardano,
-            derivationPath = cardanoPatchedDerivation.rawPath,
-            tokens = emptyList(),
-        )
-    }
-
-    private fun removeUnnecessaryBlockchains(
-        blockchainsToDerive: MutableList<BlockchainNetwork>,
-        derivationStyleProvider: DerivationStyleProvider,
-    ) {
-        blockchainsToDerive.removeAll(
-            listOf(
-                Blockchain.BSC, Blockchain.BSCTestnet,
-                Blockchain.Polygon, Blockchain.PolygonTestnet,
-                Blockchain.RSK,
-                Blockchain.Fantom, Blockchain.FantomTestnet,
-                Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-            ).map {
-                BlockchainNetwork(
-                    blockchain = it,
-                    derivationStyleProvider = derivationStyleProvider,
-                )
-            },
-        )
     }
 
     private suspend fun collectDerivations(
@@ -367,8 +255,10 @@ private class ScanWalletProcessor(
         config: CardConfig,
         derivationStyleProvider: DerivationStyleProvider,
     ): Map<ByteArrayKey, List<DerivationPath>> {
-        val blockchains = getBlockchainsToDerive(card, derivationStyleProvider)
         val derivations = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
+        val blockchains = derivationsFinder
+            ?.findBlockchainsToDerive(card, derivationStyleProvider)
+            ?: return derivations
 
         blockchains.forEach { blockchain ->
             val curve = config.primaryCurve(blockchain.blockchain)
@@ -376,7 +266,7 @@ private class ScanWalletProcessor(
             if (wallet.chainCode == null) return@forEach
 
             val key = wallet.publicKey.toMapKey()
-            val path = blockchain.derivationPath?.let { DerivationPath(it) }
+            val path = blockchain.derivationPath
             if (path != null) {
                 val addedDerivations = derivations[key]
                 if (addedDerivations != null) {
@@ -386,6 +276,7 @@ private class ScanWalletProcessor(
                 }
             }
         }
+
         return derivations
     }
 }

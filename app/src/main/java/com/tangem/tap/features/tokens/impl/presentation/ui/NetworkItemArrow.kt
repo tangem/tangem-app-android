@@ -1,12 +1,7 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -45,8 +40,24 @@ internal fun NetworkItemArrow(itemHeight: Dp, isLastItem: Boolean) {
 
 @Preview
 @Composable
-private fun Preview_NetworkItemArrow_Column() {
-    TangemTheme {
+private fun Preview_NetworkItemArrow_Column_Light() {
+    TangemTheme(isDark = false) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = TangemTheme.colors.background.primary)
+                .padding(start = TangemTheme.dimens.size36),
+        ) {
+            NetworkItemArrow(itemHeight = TangemTheme.dimens.size62, isLastItem = false)
+            NetworkItemArrow(itemHeight = TangemTheme.dimens.size62, isLastItem = true)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun Preview_NetworkItemArrow_Column_Dark() {
+    TangemTheme(isDark = true) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
