@@ -23,12 +23,13 @@ internal class TokenListFiatBalanceOperations(
                 is CryptoCurrencyStatus.MissedDerivation,
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
+                is CryptoCurrencyStatus.NoQuote,
                 -> {
                     fiatBalance = TokenList.FiatBalance.Failed
                     break
                 }
                 is CryptoCurrencyStatus.NoAccount -> {
-                    fiatBalance = recalculateBalanceWithoutQuote(fiatBalance)
+                    fiatBalance = recalculateNoAccountBalance(fiatBalance)
                 }
                 is CryptoCurrencyStatus.Loaded -> {
                     fiatBalance = recalculateBalance(status, fiatBalance)
@@ -36,18 +37,18 @@ internal class TokenListFiatBalanceOperations(
                 is CryptoCurrencyStatus.Custom -> {
                     fiatBalance = recalculateBalance(status, fiatBalance)
                 }
-                is CryptoCurrencyStatus.NoQuote -> {
-                    fiatBalance = recalculateBalanceWithoutQuote(fiatBalance)
-                }
             }
         }
 
         return fiatBalance
     }
 
-    private fun recalculateBalanceWithoutQuote(currentBalance: TokenList.FiatBalance): TokenList.FiatBalance {
+    private fun recalculateNoAccountBalance(currentBalance: TokenList.FiatBalance): TokenList.FiatBalance {
         return (currentBalance as? TokenList.FiatBalance.Loaded)?.copy(isAllAmountsSummarized = false)
-            ?: TokenList.FiatBalance.Failed
+            ?: TokenList.FiatBalance.Loaded(
+                amount = BigDecimal.ZERO,
+                isAllAmountsSummarized = false,
+            )
     }
 
     private fun recalculateBalance(
