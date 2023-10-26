@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
@@ -28,8 +29,7 @@ internal class TokenListToWalletStateConverter(
 
     override fun convert(value: TokenListWithWallet): WalletState {
         val tokenList = value.tokenList
-        val isSingleCurrencyWalletWithToken = !value.wallet.isMultiCurrency &&
-            value.wallet.scanResponse.walletData?.token != null
+        val isSingleCurrencyWalletWithToken = value.wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         return when (val state = currentStateProvider()) {
             is WalletMultiCurrencyState.Content -> {
                 state.copy(
