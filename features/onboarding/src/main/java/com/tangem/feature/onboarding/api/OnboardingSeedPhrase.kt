@@ -1,6 +1,7 @@
 package com.tangem.feature.onboarding.api
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.runtime.Composable
@@ -18,7 +19,7 @@ class OnboardingSeedPhrase : OnboardingSeedPhraseApi {
     @Composable
     override fun ScreenContent(uiState: OnboardingSeedPhraseState, subScreen: SeedPhraseScreen, progress: Float) {
         BackHandler(onBack = uiState.onBackClick)
-        TangemTheme {
+        TangemTheme(isDark = isSystemInDarkTheme()) {
             Column {
                 ProgressIndicator(progress)
                 Content(subScreen, uiState)
