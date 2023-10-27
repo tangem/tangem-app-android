@@ -103,7 +103,7 @@ internal class BiometricUserWalletsListManager(
 
     override suspend fun save(userWallet: UserWallet, canOverride: Boolean): CompletionResult<Unit> {
         return if (canOverride) {
-            saveInternal(userWallet, changeSelectedUserWallet = true)
+            saveInternal(userWallet, changeSelectedUserWallet = true, canOverridePublicInfo = false)
         } else {
             val isWalletSaved = state.value.userWallets
                 .any {
@@ -113,7 +113,7 @@ internal class BiometricUserWalletsListManager(
             if (isWalletSaved) {
                 CompletionResult.Failure(UserWalletsListError.WalletAlreadySaved)
             } else {
-                saveInternal(userWallet, changeSelectedUserWallet = true)
+                saveInternal(userWallet, changeSelectedUserWallet = true, canOverridePublicInfo = false)
             }
         }
     }
@@ -127,7 +127,7 @@ internal class BiometricUserWalletsListManager(
                 update(storedUserWallet)
             }
             .flatMap { updatedUserWallet ->
-                saveInternal(updatedUserWallet, changeSelectedUserWallet = false)
+                saveInternal(updatedUserWallet, changeSelectedUserWallet = false, canOverridePublicInfo = true)
             }
             .flatMap {
                 get(userWalletId)
@@ -181,10 +181,11 @@ internal class BiometricUserWalletsListManager(
     private suspend fun saveInternal(
         userWallet: UserWallet,
         changeSelectedUserWallet: Boolean,
+        canOverridePublicInfo: Boolean,
     ): CompletionResult<Unit> {
         return saveEncryptionKeyIfNotNull(userWallet)
             .flatMap { sensitiveInformationRepository.save(userWallet, encryptionKey = it) }
-            .flatMap { publicInformationRepository.save(userWallet) }
+            .flatMap { publicInformationRepository.save(userWallet, canOverridePublicInfo) }
             .map {
                 if (changeSelectedUserWallet) {
                     selectedUserWalletRepository.set(userWallet.walletId)
