@@ -4,10 +4,14 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.screen.ComposeBottomSheetFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
+import com.tangem.features.send.impl.presentation.send.state.SendUiState
 import com.tangem.features.send.impl.presentation.send.ui.SendScreen
+import com.tangem.features.send.impl.presentation.send.viewmodel.SendViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -24,13 +28,16 @@ internal class SendFragment : ComposeBottomSheetFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        SystemBarsEffect {
-            setSystemBarsColor(color = Color.Transparent)
+        val viewModel = hiltViewModel<SendViewModel>()
+        LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
+
+        SystemBarsEffect { setSystemBarsColor(color = Color.Transparent) }
+        BackHandler { dismiss() }
+
+        when (val state = viewModel.uiState) {
+            is SendUiState.Content -> SendScreen(state)
+            SendUiState.Dismiss -> dismiss()
         }
-        BackHandler {
-            dismiss()
-        }
-        SendScreen()
     }
 
     companion object {
