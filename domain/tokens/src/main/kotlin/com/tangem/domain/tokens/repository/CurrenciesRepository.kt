@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -173,4 +174,12 @@ interface CurrenciesRepository {
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
 
     fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
+
+    /**
+     * Determines whether the currency has pending transaction or currency network has pending transaction
+     *
+     * @param cryptoCurrencyStatus currency status
+     * @param coinStatus main currency status in [cryptoCurrencyStatus] network
+     */
+    fun hasPendingTransactions(cryptoCurrencyStatus: CryptoCurrencyStatus, coinStatus: CryptoCurrencyStatus?): Boolean
 }
