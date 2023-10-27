@@ -59,12 +59,13 @@ internal class SwapRepositoryImpl @Inject constructor(
         return withContext(coroutineDispatcher.io) {
             val rates = tangemTechApi.getRates(currencyId.lowercase(), addedTokens.joinToString(",")).rates
             val ethRate = rates[ETHEREUM_ID]
-            rates.mapValues {
-                if (it.key == OPTIMISM_ID || it.key == ARBITRUM_ID) {
-                    ethRate ?: 0.0
-                } else {
-                    it.value
+            if (tokenIds.contains(OPTIMISM_ID) || tokenIds.contains(ARBITRUM_ID)) {
+                rates.toMutableMap().apply {
+                    put(OPTIMISM_ID, ethRate ?: 0.0)
+                    put(ARBITRUM_ID, ethRate ?: 0.0)
                 }
+            } else {
+                rates
             }
         }
     }
