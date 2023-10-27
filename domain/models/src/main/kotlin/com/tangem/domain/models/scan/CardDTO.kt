@@ -8,7 +8,7 @@ import com.tangem.common.card.EncryptionMode
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.attestation.Attestation
-import java.util.*
+import java.util.Date
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 
 // TODO: Move to :domain:card:models
@@ -69,9 +69,7 @@ data class CardDTO(
         if (isPasscodeSet != other.isPasscodeSet) return false
         if (supportedCurves != other.supportedCurves) return false
         if (wallets != other.wallets) return false
-        if (attestation != other.attestation) return false
-
-        return true
+        return attestation == other.attestation
     }
 
     override fun hashCode(): Int {
@@ -210,9 +208,7 @@ data class CardDTO(
             if (other !is Issuer) return false
 
             if (name != other.name) return false
-            if (!publicKey.contentEquals(other.publicKey)) return false
-
-            return true
+            return publicKey.contentEquals(other.publicKey)
         }
 
         override fun hashCode(): Int {
@@ -234,7 +230,7 @@ data class CardDTO(
         val hasBackup: Boolean,
         val derivedKeys: Map<DerivationPath, ExtendedPublicKey>,
         val extendedPublicKey: ExtendedPublicKey?,
-        val isImported: Boolean,
+        val isImported: Boolean = false,
     ) {
         constructor(wallet: CardWallet) : this(
             publicKey = wallet.publicKey,
@@ -268,9 +264,7 @@ data class CardDTO(
             if (remainingSignatures != other.remainingSignatures) return false
             if (index != other.index) return false
             if (hasBackup != other.hasBackup) return false
-            if (isImported != other.isImported) return false
-
-            return true
+            return isImported == other.isImported
         }
 
         override fun hashCode(): Int {
