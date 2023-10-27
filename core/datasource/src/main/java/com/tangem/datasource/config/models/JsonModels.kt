@@ -31,7 +31,6 @@ class ConfigValueModel(
     val infuraProjectId: String?,
     val appsFlyer: AppsFlyer,
     val shopifyShop: ShopifyShop?,
-    val zendesk: ZendeskConfig?,
     val sprinklr: SprinklrConfig?,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
