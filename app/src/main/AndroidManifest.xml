@@ -142,10 +142,6 @@
             android:theme="@style/AppTheme" />
 
         <activity
-            android:name="zendesk.messaging.MessagingActivity"
-            android:theme="@style/ZendeskTheme" />
-
-        <activity
             android:name="com.tangem.feature.learn2earn.presentation.webView.Learn2earnWebViewActivity"
             android:theme="@style/AppTheme" />
 
