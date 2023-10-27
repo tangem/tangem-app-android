@@ -1,7 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import com.tangem.common.Provider
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -12,6 +14,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 
 internal class WalletCryptoCurrencyActionsConverter(
+    private val currentWalletProvider: Provider<UserWallet>,
     private val currentStateProvider: Provider<WalletState>,
     private val clickIntents: WalletClickIntents,
 ) : Converter<TokenActionsState, WalletState> {
@@ -28,6 +31,7 @@ internal class WalletCryptoCurrencyActionsConverter(
 
     private fun TokenActionsState.mapToManageButtons(): PersistentList<WalletManageButton> {
         return this.states
+            .filterIfS2C()
             .mapNotNull { action ->
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
@@ -59,5 +63,13 @@ internal class WalletCryptoCurrencyActionsConverter(
                 }
             }
             .toPersistentList()
+    }
+
+    private fun List<TokenActionsState.ActionState>.filterIfS2C(): List<TokenActionsState.ActionState> {
+        return if (currentWalletProvider().scanResponse.cardTypesResolver.isStart2Coin()) {
+            filterNot { it is TokenActionsState.ActionState.Buy || it is TokenActionsState.ActionState.Sell }
+        } else {
+            this
+        }
     }
 }

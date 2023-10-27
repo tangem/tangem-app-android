@@ -127,6 +127,7 @@ internal class WalletStateFactory(
 
     private val cryptoCurrencyActionsConverter by lazy {
         WalletCryptoCurrencyActionsConverter(
+            currentWalletProvider = currentWalletProvider,
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
         )
