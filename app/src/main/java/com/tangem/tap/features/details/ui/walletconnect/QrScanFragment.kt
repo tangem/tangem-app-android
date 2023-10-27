@@ -18,8 +18,6 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.common.util.concurrent.ListenableFuture
 import com.otaliastudios.cameraview.CameraView
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.tap.common.qrCodeScan.MLKitBarcodeAnalyzer
-import com.tangem.tap.common.qrCodeScan.ScanningResultListener
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder
 import com.tangem.tap.store
