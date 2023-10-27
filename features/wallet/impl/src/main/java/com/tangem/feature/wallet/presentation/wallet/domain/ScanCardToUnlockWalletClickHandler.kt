@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.raise.ensure
+import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.doOnFailure
-import com.tangem.common.doOnSuccess
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWalletId
@@ -20,25 +20,28 @@ internal class ScanCardToUnlockWalletClickHandler @Inject constructor(
 
     suspend operator fun invoke(walletId: UserWalletId): Either<ScanCardToUnlockWalletError, Unit> {
         return either {
-            scanCardProcessor.scan()
-                .doOnSuccess { scanResponse ->
+            when (val result = scanCardProcessor.scan()) {
+                is CompletionResult.Failure -> {
+                    if (result.error is TangemSdkError.UserCancelled) {
+                        scanFailsCounter++
+                        ensure(scanFailsCounter < 2) { ScanCardToUnlockWalletError.ManyScanFails }
+                    }
+                }
+                is CompletionResult.Success -> {
                     scanFailsCounter = 0
 
                     // If card's public key is null then user wallet will be null
-                    val scannedWallet = UserWalletBuilder(scanResponse = scanResponse).build()
+                    val scannedWallet = UserWalletBuilder(scanResponse = result.data).build()
 
-                    if (walletId == scannedWallet?.walletId) {
+                    ensure(walletId == scannedWallet?.walletId) {
+                        ScanCardToUnlockWalletError.WrongCardIsScanned
+                    }
+
+                    if (scannedWallet != null) {
                         saveWalletUseCase(userWallet = scannedWallet, canOverride = true)
-                    } else {
-                        raise(ScanCardToUnlockWalletError.WrongCardIsScanned)
                     }
                 }
-                .doOnFailure {
-                    if (it is TangemSdkError.UserCancelled) {
-                        scanFailsCounter++
-                        if (scanFailsCounter >= 2) raise(ScanCardToUnlockWalletError.ManyScanFails)
-                    }
-                }
+            }
         }
     }
 }
