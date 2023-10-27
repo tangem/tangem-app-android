@@ -42,10 +42,6 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
         toppedUpWalletStorage = ToppedUpWalletStorage(preferences, moshiConverter)
     }
 
-    var zendeskFirstLaunchTime: Long?
-        get() = preferences.getLong(ZENDESK_FIRST_LAUNCH_KEY, 0).takeIf { it != 0L }
-        set(value) = preferences.edit { putLong(ZENDESK_FIRST_LAUNCH_KEY, value ?: 0) }
-
     var sprinklrFirstLaunchTime: Long?
         get() = preferences.getLong(SPRINKLR_FIRST_LAUNCH_KEY, 0).takeIf { it != 0L }
         set(value) = preferences.edit { putLong(SPRINKLR_FIRST_LAUNCH_KEY, value ?: 0) }
@@ -93,7 +89,6 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
-        private const val ZENDESK_FIRST_LAUNCH_KEY = "chatFirstLaunchKey"
         private const val SPRINKLR_FIRST_LAUNCH_KEY = "sprinklrFirstLaunch"
         private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
         private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
