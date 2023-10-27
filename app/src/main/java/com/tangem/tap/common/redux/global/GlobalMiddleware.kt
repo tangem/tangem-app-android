@@ -9,6 +9,7 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -25,11 +26,7 @@ import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -130,8 +127,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
 
             scope.launch {
                 val scanResponseProvider: () -> ScanResponse? = {
-                    store.state.globalState.scanResponse
-                        ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                    userWalletsListManager.selectedUserWalletSync?.scanResponse
                 }
                 val cardProvider: () -> CardDTO? = { scanResponseProvider.invoke()?.card }
 
