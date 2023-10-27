@@ -1,55 +1,7 @@
 package com.tangem.tap.common.extensions
 
-import androidx.annotation.DrawableRes
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.remove
-import com.tangem.wallet.R
-
-@Suppress("ComplexMethod")
-@DrawableRes
-fun Blockchain.getGreyedOutIconRes(): Int {
-    return when (this) {
-        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> R.drawable.ic_arbitrum_no_color
-        Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> R.drawable.ic_bitcoin_no_color
-        Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_no_color
-        Blockchain.Litecoin -> R.drawable.ic_litecoin_no_color
-        Blockchain.Ethereum, Blockchain.EthereumTestnet -> R.drawable.ic_eth_no_color
-        Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> R.drawable.ic_eth_no_color
-        Blockchain.RSK -> R.drawable.ic_rsk_no_color
-        Blockchain.Cardano -> R.drawable.ic_cardano_no_color
-        Blockchain.Tezos -> R.drawable.ic_tezos_no_color
-        Blockchain.XRP -> R.drawable.ic_xrp_no_color
-        Blockchain.Stellar -> R.drawable.ic_stellar_no_color
-        Blockchain.Avalanche, Blockchain.AvalancheTestnet -> R.drawable.ic_avalanche_no_color
-        Blockchain.Polygon, Blockchain.PolygonTestnet -> R.drawable.ic_polygon_no_color
-        Blockchain.Solana, Blockchain.SolanaTestnet -> R.drawable.ic_solana_no_color
-        Blockchain.Fantom, Blockchain.FantomTestnet -> R.drawable.ic_fantom_no_color
-        Blockchain.BSC, Blockchain.BSCTestnet, Blockchain.Binance, Blockchain.BinanceTestnet ->
-            R.drawable.ic_bsc_no_color
-        Blockchain.Dogecoin -> R.drawable.ic_dogecoin_no_color
-        Blockchain.Tron, Blockchain.TronTestnet -> R.drawable.ic_tron_no_color
-        Blockchain.Gnosis -> R.drawable.ic_gnosis_no_color
-        Blockchain.EthereumPow, Blockchain.EthereumPowTestnet -> R.drawable.ic_ethereumpow_no_color
-        Blockchain.EthereumFair -> R.drawable.ic_ethereumfair_no_color
-        Blockchain.Polkadot, Blockchain.PolkadotTestnet -> R.drawable.ic_polkadot_no_color
-        Blockchain.Kusama -> R.drawable.ic_kusama_no_color
-        Blockchain.Optimism, Blockchain.OptimismTestnet -> R.drawable.ic_optimism_no_color
-        Blockchain.Dash -> R.drawable.ic_dash_no_color
-        Blockchain.Kaspa -> R.drawable.ic_kaspa_no_color
-        Blockchain.TON, Blockchain.TONTestnet -> R.drawable.ic_ton_no_color
-        Blockchain.Kava, Blockchain.KavaTestnet -> R.drawable.ic_kava_no_color
-        Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> R.drawable.ic_ravencoin_no_color
-        Blockchain.Cosmos, Blockchain.CosmosTestnet -> R.drawable.ic_cosmos_no_color
-        Blockchain.TerraV1 -> R.drawable.ic_terra_no_color
-        Blockchain.TerraV2 -> R.drawable.ic_terra2_no_color
-        Blockchain.Cronos -> R.drawable.ic_cronos_no_color
-        Blockchain.Telos, Blockchain.TelosTestnet -> R.drawable.ic_telos_no_color
-        Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> R.drawable.ic_azero_no_color
-        Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> R.drawable.ic_octaspace_no_color
-        Blockchain.Chia, Blockchain.ChiaTestnet -> R.drawable.ic_chia_no_color
-        else -> R.drawable.ic_tangem_logo
-    }
-}
 
 fun Blockchain.getNetworkName(): String {
     return when (this) {
