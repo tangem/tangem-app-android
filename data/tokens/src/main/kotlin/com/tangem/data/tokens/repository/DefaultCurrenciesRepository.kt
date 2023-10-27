@@ -17,6 +17,7 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -299,6 +300,20 @@ internal class DefaultCurrenciesRepository(
                     }
                 }
                 .collectLatest(::send)
+        }
+    }
+
+    override fun hasPendingTransactions(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus?,
+    ): Boolean {
+        val blockchain = Blockchain.fromId(cryptoCurrencyStatus.currency.network.id.value)
+        val isBitcoinBlockchain = blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
+        return if (cryptoCurrencyStatus.currency is CryptoCurrency.Coin && isBitcoinBlockchain) {
+            val outgoingTransactions = cryptoCurrencyStatus.value.pendingTransactions.filter { it.isOutgoing }
+            outgoingTransactions.isNotEmpty()
+        } else {
+            coinStatus?.value?.hasCurrentNetworkTransactions == true
         }
     }
 
