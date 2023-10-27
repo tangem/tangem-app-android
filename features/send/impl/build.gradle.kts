@@ -19,6 +19,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
     implementation(deps.arrow.core)
+    implementation(deps.tangem.card.core)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
@@ -38,6 +39,7 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain modules */
+    implementation(projects.domain.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
