@@ -39,6 +39,7 @@ import com.tangem.tap.common.shop.googlepay.GooglePayService
 import com.tangem.tap.common.shop.googlepay.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
@@ -349,7 +350,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
-        if (store.state.globalState.userWalletsListManager?.hasUserWallets == true) {
+        val canSaveWallets = userWalletsListManager is BiometricUserWalletsListManager
+        val hasSavedWallets = userWalletsListManager.hasUserWallets
+
+        if (canSaveWallets && hasSavedWallets) {
             store.dispatch(
                 NavigationAction.NavigateTo(
                     screen = AppScreen.Welcome,
