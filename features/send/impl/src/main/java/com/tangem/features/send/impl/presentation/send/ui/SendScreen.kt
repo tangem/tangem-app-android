@@ -16,7 +16,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.send.state.SendUiState
 
 @Composable
-fun SendScreen() {
+internal fun SendScreen(uiState: SendUiState.Content) {
     Column(
         modifier = Modifier
             .imePadding()
@@ -37,13 +37,17 @@ fun SendScreen() {
                 .weight(1f)
                 .scrollable(state = rememberScrollState(), orientation = Orientation.Vertical),
         ) {
-            SendScreenContent()
+            SendScreenContent(uiState)
         }
-        SendNavigationButtons(uiState = SendUiState.Content.Initial())
+        SendNavigationButtons(uiState)
     }
 }
 
 @Composable
-fun SendScreenContent() {
-    // todo work in progress
+private fun SendScreenContent(uiState: SendUiState.Content) {
+    when (uiState) {
+        is SendUiState.Content.AmountState -> SendAmountContent(uiState)
+        else -> { /* [REDACTED_TODO_COMMENT]*/
+        }
+    }
 }
