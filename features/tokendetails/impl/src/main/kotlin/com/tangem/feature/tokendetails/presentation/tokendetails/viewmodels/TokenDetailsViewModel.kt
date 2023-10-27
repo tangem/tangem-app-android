@@ -239,7 +239,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         showErrorIfDemoModeOrElse {
             val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
 
-            viewModelScope.launch(dispatchers.io) {
+            viewModelScope.launch(dispatchers.main) {
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.New.Buy(
                         userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
