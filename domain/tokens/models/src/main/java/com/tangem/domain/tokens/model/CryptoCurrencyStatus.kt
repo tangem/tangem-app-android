@@ -77,6 +77,7 @@ data class CryptoCurrencyStatus(
         val amountToCreateAccount: BigDecimal,
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
+        override val networkAddress: NetworkAddress?,
     ) : Status(isError = false) {
 
         override val amount: BigDecimal = BigDecimal.ZERO
