@@ -54,7 +54,7 @@ class ScanQrCodeActivity : AppCompatActivity() {
                     },
                 )
             },
-            ContextCompat.getMainExecutor(this)
+            ContextCompat.getMainExecutor(this),
         )
 
         binding.overlay.post {

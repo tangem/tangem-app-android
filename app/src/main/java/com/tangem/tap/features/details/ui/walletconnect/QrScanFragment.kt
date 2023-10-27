@@ -18,7 +18,6 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutQrScanningBinding
-import timber.log.Timber
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
