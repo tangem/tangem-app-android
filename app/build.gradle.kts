@@ -94,6 +94,7 @@ dependencies {
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.browser)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.androidx.swipeRefreshLayout)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
@@ -130,9 +131,6 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("com.google.mlkit:vision-common:17.3.0")
-    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0")
     kapt(deps.hilt.kapt)
 
     /** Other libraries */
@@ -182,7 +180,7 @@ dependencies {
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
 
-    /** Chucker */
+    /** Camera */
     implementation(deps.camera.camera2)
     implementation(deps.camera.lifecycle)
     implementation(deps.camera.view)
@@ -193,5 +191,6 @@ dependencies {
     }
 
     implementation(deps.listenableFuture)
+    implementation(deps.mlKit.barcodeScanning)
 
 }
