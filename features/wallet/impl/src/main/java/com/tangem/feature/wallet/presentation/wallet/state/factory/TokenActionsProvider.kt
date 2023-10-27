@@ -29,7 +29,6 @@ internal class TokenActionsProvider(
     fun provideActions(tokenActions: TokenActionsState): ImmutableList<TokenActionButtonConfig> {
         return tokenActions.states
             .filterIfSingleWithToken()
-            .filterIfS2C()
             .mapNotNull {
                 mapTokenActionState(
                     actionsState = it,
@@ -42,14 +41,6 @@ internal class TokenActionsProvider(
     private fun List<TokenActionsState.ActionState>.filterIfSingleWithToken(): List<TokenActionsState.ActionState> {
         return if (currentWalletProvider().scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
             filter { it !is TokenActionsState.ActionState.HideToken }
-        } else {
-            this
-        }
-    }
-
-    private fun List<TokenActionsState.ActionState>.filterIfS2C(): List<TokenActionsState.ActionState> {
-        return if (currentWalletProvider().scanResponse.cardTypesResolver.isStart2Coin()) {
-            filterNot { it is TokenActionsState.ActionState.Buy || it is TokenActionsState.ActionState.Sell }
         } else {
             this
         }
