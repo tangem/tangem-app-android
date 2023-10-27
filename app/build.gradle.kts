@@ -156,8 +156,6 @@ dependencies {
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
-    implementation(deps.zendesk.chat)
-    implementation(deps.zendesk.messaging)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
     implementation(deps.shopify.buy) {
