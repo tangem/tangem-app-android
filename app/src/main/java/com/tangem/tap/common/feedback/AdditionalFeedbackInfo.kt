@@ -36,8 +36,7 @@ class AdditionalFeedbackInfo {
     var userWalletId: String = ""
 
     // wallets
-    var walletsInfo = emptyList<EmailWalletInfo>()
-        private set
+    val walletsInfo = mutableListOf<EmailWalletInfo>()
     var onSendErrorWalletInfo: EmailWalletInfo? = null
         private set
     var signedHashesCount: String = ""
@@ -74,7 +73,10 @@ class AdditionalFeedbackInfo {
 
     @Deprecated("Don't use it directly")
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
-        walletsInfo = walletManagers.map(::createEmailWalletInfo)
+        walletsInfo.clear()
+        walletManagers.forEach {
+            walletsInfo.add(createEmailWalletInfo(it))
+        }
     }
 
     fun updateOnSendError(
