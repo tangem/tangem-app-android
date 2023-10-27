@@ -15,13 +15,14 @@ import java.util.concurrent.ExecutorService
 
 class PreviewBinder {
 
-     fun bindPreview(
+    @Suppress("LongParameterList")
+    fun bindPreview(
         context: Context,
         binding: LayoutQrScanningBinding,
         lifecycleOwner: LifecycleOwner,
         cameraProvider: ProcessCameraProvider?,
         cameraExecutor: ExecutorService?,
-        onScanned: (String) -> Unit
+        onScanned: (String) -> Unit,
     ) {
         cameraProvider?.unbindAll()
 
@@ -54,7 +55,7 @@ class PreviewBinder {
             onScanned.invoke(it)
         }
 
-         cameraExecutor?.let {
+        cameraExecutor?.let {
             imageAnalysis.setAnalyzer(it, analyzer)
         }
 
@@ -65,5 +66,4 @@ class PreviewBinder {
             .build()
         cameraProvider?.bindToLifecycle(lifecycleOwner, cameraSelector, imageAnalysis, preview)
     }
-
 }

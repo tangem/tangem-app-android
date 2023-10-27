@@ -3,26 +3,15 @@ package com.tangem.tap.common.qrCodeScan
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.util.Size
-import android.view.OrientationEventListener
-import android.view.Surface
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.common.util.concurrent.ListenableFuture
 import com.otaliastudios.cameraview.CameraView.PERMISSION_REQUEST_CODE
-import com.tangem.core.navigation.NavigationAction
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder
-import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutQrScanningBinding
 import java.util.concurrent.ExecutorService
@@ -62,10 +51,10 @@ class ScanQrCodeActivity : AppCompatActivity() {
                     onScanned = { result ->
                         setResult(SCAN_QR_REQUEST_CODE, Intent().apply { putExtra(SCAN_RESULT, result) })
                         finish()
-                    }
+                    },
                 )
             },
-            ContextCompat.getMainExecutor(this)
+            ContextCompat.getMainExecutor(this),
         )
 
         binding.overlay.post {

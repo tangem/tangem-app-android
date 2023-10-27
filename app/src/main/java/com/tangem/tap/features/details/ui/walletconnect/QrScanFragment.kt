@@ -3,13 +3,8 @@ package com.tangem.tap.features.details.ui.walletconnect
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Size
 import android.view.*
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
@@ -73,7 +68,7 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
                         if (result.isNotBlank()) {
                             store.dispatch(WalletConnectAction.OpenSession(result))
                         }
-                    }
+                    },
                 )
             },
             ContextCompat.getMainExecutor(requireContext()),
