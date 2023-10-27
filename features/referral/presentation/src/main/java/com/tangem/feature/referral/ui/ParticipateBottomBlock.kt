@@ -75,8 +75,6 @@ private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: Expected
 
         if (expectedAwards != null) {
             Awards(expectedAwards)
-        } else if (purchasedWalletCount != 0) {
-            EmptyUpcomingPayments()
         }
     }
 }
@@ -96,7 +94,7 @@ private fun Counter(purchasedWalletCount: Int, expectedAwards: ExpectedAwards?) 
         ),
         endTextColor = TangemTheme.colors.text.primary1,
         endTextStyle = TangemTheme.typography.body2,
-        cornersToRound = if (isExpectedAwardsPresent || purchasedWalletCount != 0) {
+        cornersToRound = if (isExpectedAwardsPresent) {
             CornersToRound.TOP_2
         } else {
             CornersToRound.ALL_4
@@ -158,23 +156,6 @@ private fun Awards(expectedAwards: ExpectedAwards) {
     if (expectedAwards.expectedAwards.size > elementsCountToShowInLessMode) {
         LessMoreButton(isExpanded = isExpanded)
     }
-}
-
-@Composable
-private fun EmptyUpcomingPayments() {
-    Divider(
-        color = TangemTheme.colors.stroke.primary,
-        thickness = TangemTheme.dimens.size0_5,
-    )
-    AwardText(
-        startText = stringResource(id = R.string.referral_expected_awards),
-        startTextColor = TangemTheme.colors.text.tertiary,
-        startTextStyle = TangemTheme.typography.subtitle2,
-        endText = "",
-        endTextColor = TangemTheme.colors.text.tertiary,
-        endTextStyle = TangemTheme.typography.body2,
-        cornersToRound = CornersToRound.BOTTOM_2,
-    )
 }
 
 @Composable
