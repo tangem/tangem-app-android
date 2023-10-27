@@ -6,7 +6,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletPublicInformation
 
 internal interface UserWalletsPublicInformationRepository {
-    suspend fun save(userWallet: UserWallet): CompletionResult<Unit>
+    suspend fun save(userWallet: UserWallet, canOverride: Boolean): CompletionResult<Unit>
 
     suspend fun getAll(): CompletionResult<List<UserWalletPublicInformation>>
 
