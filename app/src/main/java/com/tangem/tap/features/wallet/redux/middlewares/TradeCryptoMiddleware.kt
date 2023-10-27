@@ -366,7 +366,10 @@ class TradeCryptoMiddleware {
                     )
                 }
             }
-            val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
+            val bundle = bundleOf(
+                SendRouter.CRYPTO_CURRENCY_KEY to currency,
+                SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
+            )
             store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
     }
@@ -416,7 +419,10 @@ class TradeCryptoMiddleware {
                 is CryptoCurrency.Token -> error("Action.tokenStatus.currency is Token")
             }
 
-            val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
+            val bundle = bundleOf(
+                SendRouter.CRYPTO_CURRENCY_KEY to currency,
+                SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
+            )
             store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
     }
