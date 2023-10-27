@@ -102,10 +102,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // send
-        if (cryptoCurrencyStatus.value.amount.isNullOrZero() ||
-            coinStatus?.value?.amount.isNullOrZero() ||
-            coinStatus?.value?.hasCurrentNetworkTransactions == true
-        ) {
+        if (isSendDisabled(cryptoCurrencyStatus = cryptoCurrencyStatus, coinStatus = coinStatus)) {
             disabledList.add(TokenActionsState.ActionState.Send(false))
         } else {
             activeList.add(TokenActionsState.ActionState.Send(true))
@@ -151,4 +148,12 @@ class GetCryptoCurrencyActionsUseCase(
         activeList.add(TokenActionsState.ActionState.HideToken(true))
         return activeList + disabledList
     }
+
+    private fun isSendDisabled(cryptoCurrencyStatus: CryptoCurrencyStatus, coinStatus: CryptoCurrencyStatus?): Boolean =
+        cryptoCurrencyStatus.value.amount.isNullOrZero() ||
+            coinStatus?.value?.amount.isNullOrZero() ||
+            currenciesRepository.hasPendingTransactions(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                coinStatus = coinStatus,
+            )
 }
