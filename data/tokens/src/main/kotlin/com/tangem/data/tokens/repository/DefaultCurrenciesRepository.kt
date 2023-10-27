@@ -86,7 +86,7 @@ internal class DefaultCurrenciesRepository(
                 savedCurrencies = savedCurrencies.tokens,
             )
 
-            val newCurrencies = newCoins + filteredCurrencies
+            val newCurrencies = (newCoins + filteredCurrencies).distinct()
 
             storeAndPushTokens(
                 userWalletId = userWalletId,
