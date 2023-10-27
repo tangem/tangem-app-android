@@ -91,7 +91,7 @@ class GetCurrencyWarningsUseCase(
             when {
                 tokenStatus != null && coinStatus != null -> {
                     buildList {
-                        if (tokenStatus.value.hasCurrentNetworkTransactions) {
+                        if (currenciesRepository.hasPendingTransactions(tokenStatus, coinStatus)) {
                             add(CryptoCurrencyWarning.HasPendingTransactions(coinStatus.currency.symbol))
                         }
                         if (!tokenStatus.value.amount.isZero() && coinStatus.value.amount.isZero()) {
