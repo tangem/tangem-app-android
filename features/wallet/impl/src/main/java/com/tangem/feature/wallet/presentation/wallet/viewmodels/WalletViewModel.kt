@@ -76,6 +76,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -507,7 +508,8 @@ internal class WalletViewModel @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) {
             val userWallet = state.walletsListConfig.wallets[index]
-            launch(dispatchers.io) {
+
+            withContext(dispatchers.io) {
                 selectWalletUseCase(userWallet.id)
             }
 
