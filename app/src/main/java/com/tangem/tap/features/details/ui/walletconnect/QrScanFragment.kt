@@ -59,10 +59,9 @@ class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
                     context = requireContext(),
                     binding = binding,
                     lifecycleOwner = this,
-                    cameraProvider = cameraProvider,
-                    cameraExecutor = cameraExecutor,
+                    cameraProvider = requireNotNull(cameraProvider),
+                    cameraExecutor = requireNotNull(cameraExecutor),
                     onScanned = { result ->
-                        Timber.e("Recognized $result")
                         store.dispatch(NavigationAction.PopBackTo())
                         setFitSystemWindows(fit = false)
                         if (result.isNotBlank()) {

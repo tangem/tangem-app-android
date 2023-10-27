@@ -46,15 +46,15 @@ class ScanQrCodeActivity : AppCompatActivity() {
                     context = this,
                     binding = binding,
                     lifecycleOwner = this,
-                    cameraProvider = cameraProvider,
-                    cameraExecutor = cameraExecutor,
+                    cameraProvider = requireNotNull(cameraProvider),
+                    cameraExecutor = requireNotNull(cameraExecutor),
                     onScanned = { result ->
                         setResult(SCAN_QR_REQUEST_CODE, Intent().apply { putExtra(SCAN_RESULT, result) })
                         finish()
                     },
                 )
             },
-            ContextCompat.getMainExecutor(this),
+            ContextCompat.getMainExecutor(this)
         )
 
         binding.overlay.post {

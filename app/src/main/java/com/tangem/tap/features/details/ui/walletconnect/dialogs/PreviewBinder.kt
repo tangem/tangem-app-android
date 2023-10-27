@@ -20,11 +20,11 @@ class PreviewBinder {
         context: Context,
         binding: LayoutQrScanningBinding,
         lifecycleOwner: LifecycleOwner,
-        cameraProvider: ProcessCameraProvider?,
-        cameraExecutor: ExecutorService?,
+        cameraProvider: ProcessCameraProvider,
+        cameraExecutor: ExecutorService,
         onScanned: (String) -> Unit,
     ) {
-        cameraProvider?.unbindAll()
+        cameraProvider.unbindAll()
 
         val preview: Preview = Preview.Builder()
             .build()
@@ -55,7 +55,7 @@ class PreviewBinder {
             onScanned.invoke(it)
         }
 
-        cameraExecutor?.let {
+        cameraExecutor.let {
             imageAnalysis.setAnalyzer(it, analyzer)
         }
 
@@ -64,6 +64,6 @@ class PreviewBinder {
         val cameraSelector: CameraSelector = CameraSelector.Builder()
             .requireLensFacing(CameraSelector.LENS_FACING_BACK)
             .build()
-        cameraProvider?.bindToLifecycle(lifecycleOwner, cameraSelector, imageAnalysis, preview)
+        cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, imageAnalysis, preview)
     }
 }
