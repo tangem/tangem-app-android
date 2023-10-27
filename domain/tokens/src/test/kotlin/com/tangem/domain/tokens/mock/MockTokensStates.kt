@@ -63,6 +63,7 @@ internal object MockTokensStates {
             priceChange = MockQuotes.quote7.priceChange,
             fiatRate = MockQuotes.quote7.fiatRate,
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
+            networkAddress = null,
         ),
     )
 
@@ -72,6 +73,7 @@ internal object MockTokensStates {
             priceChange = MockQuotes.quote8.priceChange,
             fiatRate = MockQuotes.quote8.fiatRate,
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
+            networkAddress = null,
         ),
     )
 
@@ -81,6 +83,7 @@ internal object MockTokensStates {
             priceChange = MockQuotes.quote9.priceChange,
             fiatRate = MockQuotes.quote9.fiatRate,
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
+            networkAddress = null,
         ),
     )
 
@@ -90,6 +93,7 @@ internal object MockTokensStates {
             priceChange = MockQuotes.quote10.priceChange,
             fiatRate = MockQuotes.quote10.fiatRate,
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
+            networkAddress = null,
         ),
     )
 
