@@ -24,7 +24,7 @@ class GetExploreUrlUseCase(private val walletsManagersFacade: WalletManagersFaca
                     contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
                 )
             },
-            catch = { "" }
+            catch = { "" },
         )
     }
 }
