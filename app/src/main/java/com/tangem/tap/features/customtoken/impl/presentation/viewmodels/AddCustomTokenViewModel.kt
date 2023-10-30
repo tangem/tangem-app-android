@@ -898,7 +898,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
             viewModelScope.launch(dispatchers.io) {
                 runCatching { featureInteractor.saveToken(currency) }
                     .onSuccess { featureRouter.openWalletScreen() }
-                    .onFailure(Timber::e)
+                    .onFailure {
+                        Timber.e(it)
+                    }
             }
         }
     }
