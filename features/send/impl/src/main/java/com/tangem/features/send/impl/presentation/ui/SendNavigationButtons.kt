@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.ui
+package com.tangem.features.send.impl.presentation.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -18,7 +18,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.impl.presentation.send.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.SendUiState
 
 @Composable
 internal fun SendNavigationButtons(uiState: SendUiState.Content) {
