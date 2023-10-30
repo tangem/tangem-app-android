@@ -4,6 +4,7 @@ import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.core.TangemError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
@@ -69,8 +70,12 @@ class DefaultCustomTokenInteractor(
         val currency = Currency.fromCustomCurrency(customCurrency)
         val isNeedToDerive = isNeedToDerive(userWallet, currency)
         if (isNeedToDerive) {
-            deriveMissingBlockchains(userWallet = userWallet, currencyList = listOf(currency)) {
-                submitAdd(userWallet = userWallet.copy(scanResponse = it), currency = currency)
+            deriveMissingBlockchains(
+                userWallet = userWallet,
+                currencyList = listOf(currency),
+                onSuccess = { submitAdd(userWallet = userWallet.copy(scanResponse = it), currency = currency) },
+            ) {
+                throw it
             }
         } else {
             submitAdd(userWallet, currency)
@@ -86,6 +91,7 @@ class DefaultCustomTokenInteractor(
         userWallet: UserWallet,
         currencyList: List<Currency>,
         onSuccess: suspend (ScanResponse) -> Unit,
+        onFailure: suspend (TangemError) -> Unit,
     ) {
         val scanResponse = userWallet.scanResponse
         val config = CardConfig.createConfig(scanResponse.card)
@@ -130,6 +136,7 @@ class DefaultCustomTokenInteractor(
                 onSuccess(updatedScanResponse)
             }
             is CompletionResult.Failure -> {
+                onFailure.invoke(result.error)
                 store.dispatchDebugErrorNotification(TapError.CustomError("Error adding tokens"))
             }
         }
