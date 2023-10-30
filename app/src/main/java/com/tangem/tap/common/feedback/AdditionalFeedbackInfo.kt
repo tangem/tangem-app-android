@@ -7,6 +7,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import java.util.concurrent.CopyOnWriteArrayList
 
 class AdditionalFeedbackInfo {
 
@@ -36,7 +37,7 @@ class AdditionalFeedbackInfo {
     var userWalletId: String = ""
 
     // wallets
-    val walletsInfo = mutableListOf<EmailWalletInfo>()
+    val walletsInfo = CopyOnWriteArrayList<EmailWalletInfo>()
     var onSendErrorWalletInfo: EmailWalletInfo? = null
         private set
     var signedHashesCount: String = ""
@@ -74,9 +75,7 @@ class AdditionalFeedbackInfo {
     @Deprecated("Don't use it directly")
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
         walletsInfo.clear()
-        walletManagers.forEach {
-            walletsInfo.add(createEmailWalletInfo(it))
-        }
+        walletsInfo.addAll(elements = walletManagers.map(::createEmailWalletInfo))
     }
 
     fun updateOnSendError(
