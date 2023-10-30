@@ -1,7 +1,7 @@
-package com.tangem.features.send.impl.presentation.send.state.fields
+package com.tangem.features.send.impl.presentation.state.fields
 
 import com.tangem.common.Provider
-import com.tangem.features.send.impl.presentation.send.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.utils.converter.Converter
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
