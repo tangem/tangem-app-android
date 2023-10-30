@@ -323,7 +323,7 @@ internal object WalletPreviewData {
         persistentListOf(
             WalletManageButton.Buy(enabled = true, onClick = {}),
             WalletManageButton.Send(enabled = true, onClick = {}),
-            WalletManageButton.Receive(onClick = {}),
+            WalletManageButton.Receive(enabled = true, onClick = {}),
             WalletManageButton.Sell(enabled = true, onClick = {}),
             WalletManageButton.Swap(enabled = true, onClick = {}),
         )
