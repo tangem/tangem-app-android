@@ -645,10 +645,23 @@ internal class WalletViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
         )
 
-        val currency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return
-        viewModelScope.launch(dispatchers.io) {
-            val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+        val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+        when (cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> {
+                uiState = stateFactory.getStateWithClosedBottomSheet()
+                reduxStateHolder.dispatch(
+                    action = TradeCryptoAction.New.SendCoin(
+                        userWallet = userWallet,
+                        coinStatus = cryptoCurrencyStatus,
+                    ),
+                )
+            }
+            is CryptoCurrency.Token -> sendToken(userWallet, cryptoCurrencyStatus)
+        }
+    }
 
+    private fun sendToken(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        viewModelScope.launch(dispatchers.io) {
             getNetworkCoinStatusUseCase(
                 userWalletId = userWallet.walletId,
                 networkId = cryptoCurrencyStatus.currency.network.id,
@@ -658,10 +671,11 @@ internal class WalletViewModel @Inject constructor(
                 .take(count = 1)
                 .collectLatest {
                     it.onRight { coinStatus ->
+                        uiState = stateFactory.getStateWithClosedBottomSheet()
                         reduxStateHolder.dispatch(
                             action = TradeCryptoAction.New.SendToken(
                                 userWallet = userWallet,
-                                tokenCurrency = currency,
+                                tokenCurrency = requireNotNull(cryptoCurrencyStatus.currency as? CryptoCurrency.Token),
                                 tokenFiatRate = cryptoCurrencyStatus.value.fiatRate,
                                 coinFiatRate = coinStatus.value.fiatRate,
                             ),
@@ -803,18 +817,18 @@ internal class WalletViewModel @Inject constructor(
 
     private fun openExplorer() {
         val state = uiState as? WalletState.ContentState ?: return
-        val currencyNetwork = singleWalletCryptoCurrencyStatus?.currency?.network ?: return
+        val currency = singleWalletCryptoCurrencyStatus?.currency ?: return
 
         viewModelScope.launch(dispatchers.main) {
             val userWalletId = getWallet(state.walletsListConfig.selectedWalletIndex).walletId
 
-            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currencyNetwork)
+            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currency.network)
 
             if (addresses.size == 1) {
                 router.openUrl(
                     url = getExploreUrlUseCase(
                         userWalletId = userWalletId,
-                        network = currencyNetwork,
+                        currency = currency,
                         addressType = AddressType.Default,
                     ),
                 )
@@ -832,7 +846,7 @@ internal class WalletViewModel @Inject constructor(
                         onClick = {
                             onAddressTypeSelected(
                                 userWalletId = userWalletId,
-                                currencyNetwork = currencyNetwork,
+                                currency = currency,
                                 addressModel = it,
                             )
                         },
@@ -844,14 +858,14 @@ internal class WalletViewModel @Inject constructor(
 
     private fun onAddressTypeSelected(
         userWalletId: UserWalletId,
-        currencyNetwork: Network,
+        currency: CryptoCurrency,
         addressModel: AddressModel,
     ) {
         viewModelScope.launch(dispatchers.main) {
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = userWalletId,
-                    network = currencyNetwork,
+                    currency = currency,
                     addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
