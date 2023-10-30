@@ -55,6 +55,7 @@ interface SwapInteractor {
      * @param fromToken [Currency] from which want to swap
      * @param toToken [Currency] that receive after swap
      * @param amountToSwap amount you want to swap
+     * @param selectedFee selected fee to swap
      * @return
      */
     @Throws(IllegalStateException::class)
@@ -63,6 +64,7 @@ interface SwapInteractor {
         fromToken: Currency,
         toToken: Currency,
         amountToSwap: String,
+        selectedFee: FeeType = FeeType.NORMAL,
     ): SwapState
 
     /**
