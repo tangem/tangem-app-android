@@ -646,10 +646,23 @@ internal class WalletViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
         )
 
-        val currency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return
-        viewModelScope.launch(dispatchers.io) {
-            val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+        val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+        when (cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> {
+                uiState = stateFactory.getStateWithClosedBottomSheet()
+                reduxStateHolder.dispatch(
+                    action = TradeCryptoAction.New.SendCoin(
+                        userWallet = userWallet,
+                        coinStatus = cryptoCurrencyStatus,
+                    ),
+                )
+            }
+            is CryptoCurrency.Token -> sendToken(userWallet, cryptoCurrencyStatus)
+        }
+    }
 
+    private fun sendToken(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        viewModelScope.launch(dispatchers.io) {
             getNetworkCoinStatusUseCase(
                 userWalletId = userWallet.walletId,
                 networkId = cryptoCurrencyStatus.currency.network.id,
@@ -659,10 +672,11 @@ internal class WalletViewModel @Inject constructor(
                 .take(count = 1)
                 .collectLatest {
                     it.onRight { coinStatus ->
+                        uiState = stateFactory.getStateWithClosedBottomSheet()
                         reduxStateHolder.dispatch(
                             action = TradeCryptoAction.New.SendToken(
                                 userWallet = userWallet,
-                                tokenCurrency = currency,
+                                tokenCurrency = requireNotNull(cryptoCurrencyStatus.currency as? CryptoCurrency.Token),
                                 tokenFiatRate = cryptoCurrencyStatus.value.fiatRate,
                                 coinFiatRate = coinStatus.value.fiatRate,
                             ),
