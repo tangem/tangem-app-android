@@ -7,11 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.res.TangemTheme
 
@@ -172,6 +171,8 @@ fun SecondaryButton(
     modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    size: TangemButtonSize = TangemButtonSize.Default,
+    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -181,6 +182,8 @@ fun SecondaryButton(
         colors = TangemButtonsDefaults.secondaryButtonColors,
         enabled = enabled,
         showProgress = showProgress,
+        size = size,
+        shape = shape,
     )
 }
 
