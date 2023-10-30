@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.ui
+package com.tangem.features.send.impl.presentation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,9 +18,9 @@ import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
-import com.tangem.features.send.impl.presentation.send.state.SendAmountSegmentedButtonsConfig
-import com.tangem.features.send.impl.presentation.send.state.SendUiState
-import com.tangem.features.send.impl.presentation.send.ui.amount.AmountFieldContainer
+import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
+import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.ui.amount.AmountFieldContainer
 
 @Composable
 internal fun SendAmountContent(amountState: SendUiState.Content.AmountState) {

@@ -1,11 +1,12 @@
-package com.tangem.features.send.impl.presentation.send.state
+package com.tangem.features.send.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.send.impl.presentation.send.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.send.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
+import com.tangem.features.send.impl.presentation.state.fields.SendTextField
+import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.PersistentList
 
 /**
