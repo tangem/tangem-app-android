@@ -1,11 +1,11 @@
-package com.tangem.features.send.impl.presentation.send.state.fields
+package com.tangem.features.send.impl.presentation.state.fields
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.send.impl.R
-import com.tangem.features.send.impl.presentation.send.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.converter.Converter
 import java.text.NumberFormat
 
