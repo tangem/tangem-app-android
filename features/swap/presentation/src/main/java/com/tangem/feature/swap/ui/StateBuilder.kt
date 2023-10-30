@@ -312,7 +312,7 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
         } else {
             permissionState
         }
-        return when (val fee = uiState.fee) {
+        val updateState = when (val fee = uiState.fee) {
             is FeeState.Loaded -> {
                 getUpdatedFeeStateForEnoughFee(uiState, fee, item, newSelectedItem, newPermissionState, isFeeEnough)
             }
@@ -320,6 +320,15 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
                 getUpdatedFeeStateForNotEnoughFee(uiState, fee, item, newSelectedItem, newPermissionState, isFeeEnough)
             }
             else -> uiState
+        }
+        return if (isFeeEnough) {
+            updateState.copy(
+                warnings = uiState.warnings.filterNot { it is SwapWarning.InsufficientFunds },
+            )
+        } else {
+            updateState.copy(
+                warnings = uiState.warnings.plus(SwapWarning.InsufficientFunds),
+            )
         }
     }
 
@@ -348,6 +357,9 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
         return uiState.copy(
             fee = newFeeState,
             permissionState = newPermissionState,
+            swapButton = uiState.swapButton.copy(
+                enabled = isFeeEnough,
+            ),
         )
     }
 
@@ -376,6 +388,9 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
         return uiState.copy(
             fee = newFeeState,
             permissionState = newPermissionState,
+            swapButton = uiState.swapButton.copy(
+                enabled = isFeeEnough,
+            ),
         )
     }
 
