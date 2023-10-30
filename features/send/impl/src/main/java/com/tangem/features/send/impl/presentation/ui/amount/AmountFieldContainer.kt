@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.ui.amount
+package com.tangem.features.send.impl.presentation.ui.amount
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -13,7 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.impl.presentation.send.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.SendUiState
 
 @Composable
 internal fun AmountFieldContainer(amountState: SendUiState.Content.AmountState, modifier: Modifier = Modifier) {
