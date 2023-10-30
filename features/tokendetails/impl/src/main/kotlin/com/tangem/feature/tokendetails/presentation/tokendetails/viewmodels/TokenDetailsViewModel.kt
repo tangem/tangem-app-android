@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -397,7 +398,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 router.openUrl(
                     url = getExploreUrlUseCase(
                         userWalletId = userWalletId,
-                        network = cryptoCurrency.network,
+                        currency = cryptoCurrency,
                         addressType = AddressType.Default,
                     ),
                 )
@@ -429,7 +430,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = userWalletId,
-                    network = cryptoCurrency.network,
+                    currency = cryptoCurrency,
                     addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
@@ -438,12 +439,18 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onTransactionClick(txHash: String) {
-        router.openUrl(
-            url = getExplorerTransactionUrlUseCase(
-                txHash = txHash,
-                networkId = cryptoCurrency.network.id,
-            ),
-        )
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        // TODO: Fix ton tx urls [REDACTED_TASK_KEY]
+        if (blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet) {
+            return
+        } else {
+            router.openUrl(
+                url = getExplorerTransactionUrlUseCase(
+                    txHash = txHash,
+                    networkId = cryptoCurrency.network.id,
+                ),
+            )
+        }
     }
 
     override fun onRefreshSwipe() {
