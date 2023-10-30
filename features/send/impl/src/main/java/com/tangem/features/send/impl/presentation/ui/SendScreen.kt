@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.ui
+package com.tangem.features.send.impl.presentation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.impl.presentation.send.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.SendUiState
 
 @Composable
 internal fun SendScreen(uiState: SendUiState.Content) {
