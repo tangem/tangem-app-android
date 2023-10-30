@@ -148,7 +148,7 @@ internal class WalletSkeletonStateConverter(
         return persistentListOf(
             WalletManageButton.Buy(enabled = false, onClick = {}),
             WalletManageButton.Send(enabled = false, onClick = {}),
-            WalletManageButton.Receive(onClick = {}),
+            WalletManageButton.Receive(enabled = false, onClick = {}),
             WalletManageButton.Sell(enabled = false, onClick = {}),
         )
     }
