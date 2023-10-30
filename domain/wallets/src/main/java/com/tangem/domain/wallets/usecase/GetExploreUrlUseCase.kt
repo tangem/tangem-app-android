@@ -1,8 +1,8 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.raise.catch
-import com.tangem.domain.tokens.model.Network
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -12,11 +12,19 @@ class GetExploreUrlUseCase(private val walletsManagersFacade: WalletManagersFaca
     // FIXME: Handle error
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        network: Network,
+        currency: CryptoCurrency,
         addressType: AddressType = AddressType.Default,
     ): String {
-        return catch({ walletsManagersFacade.getExploreUrl(userWalletId, network, addressType) }) {
-            ""
-        }
+        return catch(
+            block = {
+                walletsManagersFacade.getExploreUrl(
+                    userWalletId = userWalletId,
+                    network = currency.network,
+                    addressType = addressType,
+                    contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
+                )
+            },
+            catch = { "" }
+        )
     }
 }

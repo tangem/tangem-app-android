@@ -81,7 +81,7 @@ spr-client = "3.6.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.0-365"
+tangemBlockchainSdk = "release-app_5.0-368"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "release-app_5.0-308"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
