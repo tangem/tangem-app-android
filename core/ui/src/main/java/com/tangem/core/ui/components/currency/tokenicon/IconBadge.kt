@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.common.component.token.icon
+package com.tangem.core.ui.components.currency.tokenicon
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
