@@ -89,6 +89,7 @@
     <string name="common_like">Like</string>
     <string name="common_locked">Locked</string>
     <string name="common_main_network">Main network</string>
+    <string name="common_next">Next</string>
     <string name="common_no">No</string>
     <string name="common_no_address">No address</string>
     <string name="common_no_data">No data</string>
@@ -114,7 +115,6 @@
     <string name="common_submit">Submit</string>
     <string name="common_success">Success</string>
     <string name="common_swap">Swap</string>
-    <string name="common_next">Next</string>
     <string name="common_terms_and_conditions">terms and conditions</string>
     <string name="common_transaction_failed">Transaction failed</string>
     <string name="common_transactions">Transactions</string>
@@ -391,6 +391,7 @@
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priority</string>
     <string name="send_max_amount_label">Maximum amount</string>
+    <string name="send_max_amount">Max</string>
     <string name="send_network_fee_title">Network fee</string>
     <string name="send_title_currency_format">Sending %s</string>
     <string name="send_total_label">Total</string>
@@ -399,6 +400,7 @@
     <string name="send_total_subtitle_format">%s will be sent</string>
     <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
     <string name="send_validation_invalid_address">Invalid address</string>
+    <string name="send_insufficient_funds">Insufficient funds for transfer</string>
     <string name="shop_buy_now">Buy now</string>
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
