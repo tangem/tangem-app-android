@@ -74,7 +74,7 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
         val tokens = stateHolder.tokens.collectAsLazyPagingItems()
 
         TokensListContent(
-            isDifferentAddressesBlockVisible = stateHolder.isDifferentAddressesBlockVisible && !stateHolder.isLoading,
+            isDifferentAddressesBlockVisible = stateHolder.isDifferentAddressesBlockVisible,
             tokens = tokens,
             scaffoldPadding = scaffoldPadding,
             bottomMarginDp = floatingButtonHeight,
@@ -125,8 +125,11 @@ private fun TokensListContent(
         state = state,
         contentPadding = PaddingValues(bottom = bottomMarginDp),
     ) {
-        if (isDifferentAddressesBlockVisible) {
-            item { DifferentAddressesWarning() }
+        item(
+            key = "DifferentAddressesWarning$isDifferentAddressesBlockVisible",
+            contentType = "DifferentAddressesWarning$isDifferentAddressesBlockVisible",
+        ) {
+            if (isDifferentAddressesBlockVisible) DifferentAddressesWarning()
         }
 
         tokens.itemKey(TokenItemState::composedId)
