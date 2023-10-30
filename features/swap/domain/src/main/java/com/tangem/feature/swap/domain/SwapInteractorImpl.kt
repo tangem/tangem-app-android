@@ -167,6 +167,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fromToken: Currency,
         toToken: Currency,
         amountToSwap: String,
+        selectedFee: FeeType,
     ): SwapState {
         syncWalletBalanceForTokens(networkId, listOf(fromToken, toToken))
         val amountDecimal = toBigDecimalOrNull(amountToSwap)
@@ -190,6 +191,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromToken = fromToken,
                 toToken = toToken,
                 amount = amount,
+                selectedFee = selectedFee,
             )
         } else {
             loadQuoteData(
@@ -454,6 +456,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fromToken: Currency,
         toToken: Currency,
         amount: SwapAmount,
+        selectedFee: FeeType,
     ): SwapState {
         repository.prepareSwapTransaction(
             networkId = networkId,
@@ -475,10 +478,14 @@ internal class SwapInteractorImpl @Inject constructor(
                     derivationPath = derivationPath,
                 )
                 val txFeeState = proxyFeesToFeeState(networkId, feeData)
+                val feeByPriority = when (selectedFee) {
+                    FeeType.NORMAL -> txFeeState.normalFee.feeValue
+                    FeeType.PRIORITY -> txFeeState.priorityFee.feeValue
+                }
                 val isBalanceIncludeFeeEnough =
-                    isBalanceEnough(networkId, fromToken, amount, txFeeState.priorityFee.feeValue)
+                    isBalanceEnough(networkId, fromToken, amount, feeByPriority)
                 val isFeeEnough = checkFeeIsEnough(
-                    fee = txFeeState.normalFee.feeValue,
+                    fee = feeByPriority,
                     spendAmount = amount,
                     networkId = networkId,
                     fromToken = fromToken,
