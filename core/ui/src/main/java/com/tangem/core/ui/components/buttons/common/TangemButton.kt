@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -30,13 +31,14 @@ fun TangemButton(
     size: TangemButtonSize = TangemButtonSize.Default,
     elevation: ButtonElevation = TangemButtonsDefaults.elevation,
     textStyle: TextStyle = TangemTheme.typography.button,
+    shape: Shape = size.toShape(),
 ) {
     Button(
         modifier = modifier.heightIn(min = size.toHeightDp()),
         onClick = { if (!showProgress) onClick() },
         enabled = enabled,
         elevation = elevation,
-        shape = size.toShape(),
+        shape = shape,
         colors = colors,
         contentPadding = size.toContentPadding(icon = icon),
     ) {
