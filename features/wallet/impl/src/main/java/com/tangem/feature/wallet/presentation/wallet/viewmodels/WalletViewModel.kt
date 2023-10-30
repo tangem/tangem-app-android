@@ -817,18 +817,18 @@ internal class WalletViewModel @Inject constructor(
 
     private fun openExplorer() {
         val state = uiState as? WalletState.ContentState ?: return
-        val currencyNetwork = singleWalletCryptoCurrencyStatus?.currency?.network ?: return
+        val currency = singleWalletCryptoCurrencyStatus?.currency ?: return
 
         viewModelScope.launch(dispatchers.main) {
             val userWalletId = getWallet(state.walletsListConfig.selectedWalletIndex).walletId
 
-            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currencyNetwork)
+            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currency.network)
 
             if (addresses.size == 1) {
                 router.openUrl(
                     url = getExploreUrlUseCase(
                         userWalletId = userWalletId,
-                        network = currencyNetwork,
+                        currency = currency,
                         addressType = AddressType.Default,
                     ),
                 )
@@ -846,7 +846,7 @@ internal class WalletViewModel @Inject constructor(
                         onClick = {
                             onAddressTypeSelected(
                                 userWalletId = userWalletId,
-                                currencyNetwork = currencyNetwork,
+                                currency = currency,
                                 addressModel = it,
                             )
                         },
@@ -858,14 +858,14 @@ internal class WalletViewModel @Inject constructor(
 
     private fun onAddressTypeSelected(
         userWalletId: UserWalletId,
-        currencyNetwork: Network,
+        currency: CryptoCurrency,
         addressModel: AddressModel,
     ) {
         viewModelScope.launch(dispatchers.main) {
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = userWalletId,
-                    network = currencyNetwork,
+                    currency = currency,
                     addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
