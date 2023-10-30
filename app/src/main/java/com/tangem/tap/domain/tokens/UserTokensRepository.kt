@@ -108,9 +108,9 @@ class UserTokensRepository(
             .fold(
                 onSuccess = { response ->
                     response.getOrThrow()
+                        .also { storageService.saveUserTokens(userWalletId, it) }
                         .tokens
                         .mapNotNull(Currency.Companion::fromTokenResponse)
-                        .also { storageService.saveUserTokens(userWalletId, it.toUserTokensResponse()) }
                         .distinct()
                 },
                 onFailure = { handleGetUserTokensFailure(userWalletId = userWalletId, error = it) },
