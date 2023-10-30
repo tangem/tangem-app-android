@@ -9,17 +9,14 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.send.impl.presentation.send.state.SendUiState
 
 @Composable
-fun SendScreen() {
-    // todo will be removed
-    val config = remember { SendBottomSheetConfig(SendStates.Amount) }
-
+internal fun SendScreen(uiState: SendUiState.Content) {
     Column(
         modifier = Modifier
             .imePadding()
@@ -40,13 +37,17 @@ fun SendScreen() {
                 .weight(1f)
                 .scrollable(state = rememberScrollState(), orientation = Orientation.Vertical),
         ) {
-            SendScreenContent()
+            SendScreenContent(uiState)
         }
-        SendNavigationButtons(config.currentState)
+        SendNavigationButtons(uiState)
     }
 }
 
 @Composable
-fun SendScreenContent() {
-    // todo work in progress
+private fun SendScreenContent(uiState: SendUiState.Content) {
+    when (uiState) {
+        is SendUiState.Content.AmountState -> SendAmountContent(uiState)
+        else -> { /* [REDACTED_TODO_COMMENT]*/
+        }
+    }
 }
