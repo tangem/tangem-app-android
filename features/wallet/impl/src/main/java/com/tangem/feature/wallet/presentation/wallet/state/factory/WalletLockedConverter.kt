@@ -72,7 +72,7 @@ internal class WalletLockedConverter(
                     is WalletManageButton.Sell -> button.copy(enabled = false)
                     is WalletManageButton.Send -> button.copy(enabled = false)
                     is WalletManageButton.Swap -> button.copy(enabled = false)
-                    is WalletManageButton.Receive -> button
+                    is WalletManageButton.Receive -> button.copy(enabled = false)
                 }
             }
             .toPersistentList()

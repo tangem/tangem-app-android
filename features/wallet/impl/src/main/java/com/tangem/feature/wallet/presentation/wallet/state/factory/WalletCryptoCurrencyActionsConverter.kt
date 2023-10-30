@@ -42,6 +42,7 @@ internal class WalletCryptoCurrencyActionsConverter(
                     }
                     is TokenActionsState.ActionState.Receive -> {
                         WalletManageButton.Receive(
+                            enabled = action.enabled,
                             onClick = { clickIntents.onReceiveClick(cryptoCurrencyStatus) },
                         )
                     }
