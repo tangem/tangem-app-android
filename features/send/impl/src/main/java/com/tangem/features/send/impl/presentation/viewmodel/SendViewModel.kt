@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.viewmodel
+package com.tangem.features.send.impl.presentation.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,8 +14,8 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.api.navigation.SendRouter
-import com.tangem.features.send.impl.presentation.send.state.SendStateFactory
-import com.tangem.features.send.impl.presentation.send.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.SendStateFactory
+import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
