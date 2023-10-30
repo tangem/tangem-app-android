@@ -188,8 +188,9 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
 
                         walletManagersFacade
                             .getAll(userWallet.walletId)
+                            .distinctUntilChanged()
                             .onEach(infoHolder::setWalletsInfo)
-                            .launchIn(scope)
+                            .launchIn(mainScope)
                     }
                 }
                 .flowOn(Dispatchers.IO)
