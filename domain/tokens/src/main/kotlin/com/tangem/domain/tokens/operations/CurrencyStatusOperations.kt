@@ -31,6 +31,7 @@ internal class CurrencyStatusOperations(
     private fun createNoAccountStatus(status: NetworkStatus.NoAccount): CryptoCurrencyStatus.NoAccount =
         CryptoCurrencyStatus.NoAccount(
             amountToCreateAccount = status.amountToCreateAccount,
+            fiatAmount = if (quote == null) null else BigDecimal.ZERO,
             priceChange = quote?.priceChange,
             fiatRate = quote?.fiatRate,
             networkAddress = status.address,
