@@ -205,6 +205,7 @@ internal class SwapViewModel @Inject constructor(
                         fromToken = fromToken,
                         toToken = toToken,
                         amountToSwap = amount,
+                        selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     )
                 }
             },
