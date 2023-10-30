@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.viewmodel
+package com.tangem.features.send.impl.presentation.viewmodel
 
 interface SendClickIntents {
 
