@@ -92,11 +92,9 @@ object TokensMiddleware {
                         updatedScanResponse = it,
                         currencyList = currencyList,
                     )
-                    store.dispatchOnMain(NavigationAction.PopBackTo())
                 }
             } else {
                 submitNewAdd(userWalletId = action.userWallet.walletId, scanResponse, currencyList = currencyList)
-                store.dispatchOnMain(NavigationAction.PopBackTo())
             }
         }
     }
@@ -387,6 +385,8 @@ object TokensMiddleware {
             )
 
             addCryptoCurrenciesUseCase(userWalletId, currencyList)
+
+            store.dispatchOnMain(NavigationAction.PopBackTo())
         }
     }
 
