@@ -90,21 +90,31 @@ internal class TokenDetailsLoadedBalanceConverter(
         return when (status) {
             is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencySymbol)
             is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencySymbol)
+            is CryptoCurrencyStatus.NoAccount -> {
+                if (status.fiatRate == null) {
+                    MarketPriceBlockState.Error(currencySymbol)
+                } else {
+                    status.toContentConfig(currencySymbol)
+                }
+            }
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
-            -> MarketPriceBlockState.Content(
-                currencySymbol = currencySymbol,
-                price = formatPrice(status, appCurrencyProvider()),
-                priceChangeConfig = PriceChangeState.Content(
-                    valueInPercent = formatPriceChange(status),
-                    type = getPriceChangeType(status),
-                ),
-            )
+            -> status.toContentConfig(currencySymbol)
         }
+    }
+
+    private fun CryptoCurrencyStatus.Status.toContentConfig(currencySymbol: String): MarketPriceBlockState.Content {
+        return MarketPriceBlockState.Content(
+            currencySymbol = currencySymbol,
+            price = formatPrice(status = this, appCurrency = appCurrencyProvider()),
+            priceChangeConfig = PriceChangeState.Content(
+                valueInPercent = formatPriceChange(status = this),
+                type = getPriceChangeType(status = this),
+            ),
+        )
     }
 
     private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeType {
