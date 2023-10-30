@@ -135,6 +135,7 @@ class DefaultWalletManagersFacade(
         userWalletId: UserWalletId,
         network: Network,
         addressType: AddressType,
+        contractAddress: String?,
     ): String {
         val blockchain = Blockchain.fromId(network.id.value)
 
@@ -148,8 +149,12 @@ class DefaultWalletManagersFacade(
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
 
-        val address = walletManager.wallet.addresses.find { it.type == addressType }?.value
-        return walletManager.wallet.getExploreUrl(address)
+        val address = walletManager
+            .wallet
+            .addresses
+            .find { it.type == addressType }
+            ?.value ?: walletManager.wallet.address
+        return blockchain.getExploreUrl(address, contractAddress)
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState {
