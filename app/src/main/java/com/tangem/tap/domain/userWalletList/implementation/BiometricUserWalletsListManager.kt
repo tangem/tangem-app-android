@@ -59,6 +59,7 @@ internal class BiometricUserWalletsListManager(
     override suspend fun unlock(throwIfNotAllWalletsUnlocked: Boolean): CompletionResult<UserWallet> {
         return unlockWithBiometryInternal()
             .mapFailure { error ->
+                Timber.e(error, "Unable to unlock user wallets")
                 if (error is UserWalletsListError) {
                     error
                 } else {
