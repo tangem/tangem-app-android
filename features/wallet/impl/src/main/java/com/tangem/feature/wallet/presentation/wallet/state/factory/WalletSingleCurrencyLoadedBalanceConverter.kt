@@ -43,7 +43,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
 
                 state.copy(
                     walletsListConfig = getUpdatedSelectedWallet(status = status.value, state = state),
-                    marketPriceBlockState = getMarketPriceState(status = status.value, currencyName = currencyName),
+                    marketPriceBlockState = getMarketPriceState(status = status.value, currencySymbol = currencyName),
                 )
             }
             is WalletMultiCurrencyState.Content,
@@ -54,32 +54,27 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         }
     }
 
-    private fun getMarketPriceState(status: CryptoCurrencyStatus.Status, currencyName: String): MarketPriceBlockState {
+    private fun getMarketPriceState(
+        status: CryptoCurrencyStatus.Status,
+        currencySymbol: String,
+    ): MarketPriceBlockState {
         return when (status) {
-            is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencyName)
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.NoAmount,
-            -> MarketPriceBlockState.Content(
-                currencySymbol = currencyName,
-                price = formatPrice(status, appCurrencyProvider()),
-                priceChangeConfig = PriceChangeState.Content(
-                    valueInPercent = formatPriceChange(status),
-                    type = getPriceChangeType(status),
-                ),
-            )
-            is CryptoCurrencyStatus.NoAccount -> MarketPriceBlockState.Content(
-                currencySymbol = currencyName,
-                price = formatPrice(status, appCurrencyProvider()),
-                priceChangeConfig = PriceChangeState.Content(
-                    valueInPercent = formatPriceChange(status),
-                    type = getPriceChangeType(status),
-                ),
-            )
-            is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencyName)
+            -> status.toContentConfig(currencySymbol)
+            is CryptoCurrencyStatus.NoAccount -> {
+                if (status.fiatRate == null) {
+                    MarketPriceBlockState.Error(currencySymbol)
+                } else {
+                    status.toContentConfig(currencySymbol)
+                }
+            }
+            is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencySymbol)
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
-            -> MarketPriceBlockState.Error(currencyName)
+            is CryptoCurrencyStatus.NoQuote,
+            -> MarketPriceBlockState.Error(currencySymbol)
         }
     }
 
@@ -135,6 +130,17 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
         return state.walletsListConfig.copy(
             wallets = state.walletsListConfig.wallets.toPersistentList()
                 .set(index = state.walletsListConfig.selectedWalletIndex, element = updatedWallet),
+        )
+    }
+
+    private fun CryptoCurrencyStatus.Status.toContentConfig(currencySymbol: String): MarketPriceBlockState.Content {
+        return MarketPriceBlockState.Content(
+            currencySymbol = currencySymbol,
+            price = formatPrice(status = this, appCurrency = appCurrencyProvider()),
+            priceChangeConfig = PriceChangeState.Content(
+                valueInPercent = formatPriceChange(status = this),
+                type = getPriceChangeType(status = this),
+            ),
         )
     }
 
