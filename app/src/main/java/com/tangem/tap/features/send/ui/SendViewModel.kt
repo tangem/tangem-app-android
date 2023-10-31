@@ -1,7 +1,7 @@
 package com.tangem.tap.features.send.ui
 
 import androidx.lifecycle.*
-import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
@@ -29,7 +29,7 @@ import javax.inject.Inject
 internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val appStateHolder: AppStateHolder,
-    private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
@@ -41,11 +41,11 @@ internal class SendViewModel @Inject constructor(
     private val cryptoCurrency: CryptoCurrency? = savedStateHandle[SendRouter.CRYPTO_CURRENCY_KEY]
 
     override fun onCreate(owner: LifecycleOwner) {
-        isBalanceHiddenUseCase()
+        getBalanceHidingSettingsUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .onEach { isBalanceHidden ->
+            .onEach {
                 withContext(dispatchers.main) {
-                    appStateHolder.mainStore?.dispatch(AmountAction.HideBalance(isBalanceHidden))
+                    appStateHolder.mainStore?.dispatch(AmountAction.HideBalance(it.isBalanceHidden))
                 }
             }
             .launchIn(viewModelScope)
