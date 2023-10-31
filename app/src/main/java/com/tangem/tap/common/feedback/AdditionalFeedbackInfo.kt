@@ -74,8 +74,10 @@ class AdditionalFeedbackInfo {
 
     @Deprecated("Don't use it directly")
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
-        walletsInfo.clear()
-        walletsInfo.addAll(elements = walletManagers.map(::createEmailWalletInfo))
+        synchronized(walletsInfo) {
+            walletsInfo.clear()
+            walletsInfo.addAll(elements = walletManagers.map(::createEmailWalletInfo))
+        }
     }
 
     fun updateOnSendError(
