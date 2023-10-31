@@ -77,9 +77,9 @@ interface WalletManagersFacade {
      * Returns transactions count
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param network The network.
+     * @param currency currency.
      */
-    suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState
+    suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState
 
     /**
      * Returns transaction history items wrapped to pagination
