@@ -7,7 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
@@ -38,7 +38,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private val toggleTokenListSortingUseCase: ToggleTokenListSortingUseCase,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -74,10 +74,10 @@ internal class OrganizeTokensViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened)
 
-        isBalanceHiddenUseCase()
+        getBalanceHidingSettingsUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .onEach { hidden ->
-                isBalanceHidden = hidden
+            .onEach {
+                isBalanceHidden = it.isBalanceHidden
                 stateHolder.updateHiddenState(isBalanceHidden)
             }
             .launchIn(viewModelScope)
