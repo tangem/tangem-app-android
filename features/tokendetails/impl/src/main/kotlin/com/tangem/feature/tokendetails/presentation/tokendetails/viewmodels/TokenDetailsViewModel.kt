@@ -195,7 +195,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                 userWalletId = userWalletId,
-                network = cryptoCurrency.network,
+                currency = cryptoCurrency,
             )
 
             // if countEither is left, handling error state run inside getLoadingTxHistoryState
