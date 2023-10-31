@@ -1332,7 +1332,7 @@ internal class WalletViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                 userWalletId = userWalletId,
-                network = currencyStatus.currency.network,
+                currency = currencyStatus.currency,
             )
 
             uiState = stateFactory.getLoadingTxHistoryState(

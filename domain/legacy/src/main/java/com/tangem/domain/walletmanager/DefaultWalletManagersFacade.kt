@@ -157,12 +157,12 @@ class DefaultWalletManagersFacade(
         return blockchain.getExploreUrl(address, contractAddress)
     }
 
-    override suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState {
-        val blockchain = Blockchain.fromId(network.id.value)
+    override suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState {
+        val blockchain = Blockchain.fromId(currency.network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            derivationPath = currency.network.derivationPath.value,
         )
 
         requireNotNull(walletManager) {
@@ -170,7 +170,13 @@ class DefaultWalletManagersFacade(
         }
 
         return walletManager
-            .getTransactionHistoryState(walletManager.wallet.address)
+            .getTransactionHistoryState(
+                address = walletManager.wallet.address,
+                filterType = when (currency) {
+                    is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
+                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                },
+            )
             .let(txHistoryStateConverter::convert)
     }
 
