@@ -18,6 +18,7 @@ import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
+import com.tangem.tap.features.main.ui.ModalNotificationBottomSheetFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
 import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
@@ -194,5 +195,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
         AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
         AppScreen.AppCurrencySelector -> AppCurrencySelectorFragment()
+        AppScreen.ModalNotification -> ModalNotificationBottomSheetFragment()
     }
 }
