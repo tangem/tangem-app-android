@@ -20,6 +20,7 @@ androidxFragment = "1.5.3"
 androidxLifecycle = "2.5.1"
 androidx-paging = "3.1.1"
 androidx-palette = "1.0.0"
+androidx-datastore = "1.0.0"
 # endregion AndroidX
 
 # region Compose
@@ -136,6 +137,7 @@ lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", v
 lifecycle-viewModel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
 lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compoese-lifecycle-runtime" }
 androidx-palette = { module = "androidx.palette:palette", version.ref = "androidx-palette" }
+androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
 # region AndroidX
 
 # region Compose
