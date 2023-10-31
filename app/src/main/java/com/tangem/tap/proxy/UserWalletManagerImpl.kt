@@ -154,7 +154,7 @@ class UserWalletManagerImpl(
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         return walletManager.wallet.recentTransactions
             .lastOrNull { it.hash?.isNotEmpty() == true }
-            ?.hash?.let { HEX_PREFIX + it }
+            ?.hash
     }
 
     override suspend fun getCurrentWalletTokensBalance(
