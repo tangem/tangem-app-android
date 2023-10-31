@@ -2,6 +2,9 @@ package com.tangem.tap.features.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
@@ -16,6 +19,7 @@ import javax.inject.Inject
 internal class MainViewModel @Inject constructor(
     private val updateBalanceHidingSettingsUseCase: UpdateBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
+    private val reduxNavController: ReduxNavController,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
 
@@ -48,7 +52,7 @@ internal class MainViewModel @Inject constructor(
             .onEach {
                 if (state.value.modalNotification?.isShow != true) {
                     stateHolder.updateWithHiddenBalancesNotification()
-                    // TODO: reduxNavController.navigate(NavigationAction.NavigateTo(AppScreen.ModalNotification))
+                    reduxNavController.navigate(NavigationAction.NavigateTo(AppScreen.ModalNotification))
                 }
             }
             .launchIn(viewModelScope)
