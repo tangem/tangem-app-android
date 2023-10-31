@@ -9,5 +9,6 @@ data class DataSourceTopupInfo(
         Full(serializedName = "Full"),
         CustomToken(serializedName = "Custom token"),
         BlockchainError(serializedName = "Blockchain error"),
+        NoRate(serializedName = "No rate"),
     }
 }
