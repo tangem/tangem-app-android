@@ -62,18 +62,24 @@ interface WalletManagersFacade {
      * @param userWalletId The ID of the user's wallet.
      * @param network The network.
      * @param addressType Address type.
+     * @param contractAddress Contract address if currency is Token.
      *
      * @return The network explorer URL, maybe empty if the wallet manager was not found.
      * */
-    suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network, addressType: AddressType): String
+    suspend fun getExploreUrl(
+        userWalletId: UserWalletId,
+        network: Network,
+        addressType: AddressType,
+        contractAddress: String?,
+    ): String
 
     /**
      * Returns transactions count
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param network The network.
+     * @param currency currency.
      */
-    suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState
+    suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState
 
     /**
      * Returns transaction history items wrapped to pagination

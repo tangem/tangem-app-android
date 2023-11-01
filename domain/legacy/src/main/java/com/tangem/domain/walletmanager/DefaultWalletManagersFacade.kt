@@ -135,6 +135,7 @@ class DefaultWalletManagersFacade(
         userWalletId: UserWalletId,
         network: Network,
         addressType: AddressType,
+        contractAddress: String?,
     ): String {
         val blockchain = Blockchain.fromId(network.id.value)
 
@@ -148,16 +149,20 @@ class DefaultWalletManagersFacade(
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
 
-        val address = walletManager.wallet.addresses.find { it.type == addressType }?.value
-        return walletManager.wallet.getExploreUrl(address)
+        val address = walletManager
+            .wallet
+            .addresses
+            .find { it.type == addressType }
+            ?.value ?: walletManager.wallet.address
+        return blockchain.getExploreUrl(address, contractAddress)
     }
 
-    override suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState {
-        val blockchain = Blockchain.fromId(network.id.value)
+    override suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState {
+        val blockchain = Blockchain.fromId(currency.network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            derivationPath = currency.network.derivationPath.value,
         )
 
         requireNotNull(walletManager) {
@@ -165,7 +170,13 @@ class DefaultWalletManagersFacade(
         }
 
         return walletManager
-            .getTransactionHistoryState(walletManager.wallet.address)
+            .getTransactionHistoryState(
+                address = walletManager.wallet.address,
+                filterType = when (currency) {
+                    is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
+                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                },
+            )
             .let(txHistoryStateConverter::convert)
     }
 

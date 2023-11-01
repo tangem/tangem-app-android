@@ -43,7 +43,10 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.NetworkGroup
+import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -76,6 +79,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -507,7 +511,8 @@ internal class WalletViewModel @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) {
             val userWallet = state.walletsListConfig.wallets[index]
-            launch(dispatchers.io) {
+
+            withContext(dispatchers.io) {
                 selectWalletUseCase(userWallet.id)
             }
 
@@ -644,10 +649,23 @@ internal class WalletViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
         )
 
-        val currency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return
-        viewModelScope.launch(dispatchers.io) {
-            val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+        val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
+        when (cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> {
+                uiState = stateFactory.getStateWithClosedBottomSheet()
+                reduxStateHolder.dispatch(
+                    action = TradeCryptoAction.New.SendCoin(
+                        userWallet = userWallet,
+                        coinStatus = cryptoCurrencyStatus,
+                    ),
+                )
+            }
+            is CryptoCurrency.Token -> sendToken(userWallet, cryptoCurrencyStatus)
+        }
+    }
 
+    private fun sendToken(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        viewModelScope.launch(dispatchers.io) {
             getNetworkCoinStatusUseCase(
                 userWalletId = userWallet.walletId,
                 networkId = cryptoCurrencyStatus.currency.network.id,
@@ -657,10 +675,11 @@ internal class WalletViewModel @Inject constructor(
                 .take(count = 1)
                 .collectLatest {
                     it.onRight { coinStatus ->
+                        uiState = stateFactory.getStateWithClosedBottomSheet()
                         reduxStateHolder.dispatch(
                             action = TradeCryptoAction.New.SendToken(
                                 userWallet = userWallet,
-                                tokenCurrency = currency,
+                                tokenCurrency = requireNotNull(cryptoCurrencyStatus.currency as? CryptoCurrency.Token),
                                 tokenFiatRate = cryptoCurrencyStatus.value.fiatRate,
                                 coinFiatRate = coinStatus.value.fiatRate,
                             ),
@@ -803,18 +822,18 @@ internal class WalletViewModel @Inject constructor(
 
     private fun openExplorer() {
         val state = uiState as? WalletState.ContentState ?: return
-        val currencyNetwork = singleWalletCryptoCurrencyStatus?.currency?.network ?: return
+        val currency = singleWalletCryptoCurrencyStatus?.currency ?: return
 
         viewModelScope.launch(dispatchers.main) {
             val userWalletId = getWallet(state.walletsListConfig.selectedWalletIndex).walletId
 
-            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currencyNetwork)
+            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currency.network)
 
             if (addresses.size == 1) {
                 router.openUrl(
                     url = getExploreUrlUseCase(
                         userWalletId = userWalletId,
-                        network = currencyNetwork,
+                        currency = currency,
                         addressType = AddressType.Default,
                     ),
                 )
@@ -832,7 +851,7 @@ internal class WalletViewModel @Inject constructor(
                         onClick = {
                             onAddressTypeSelected(
                                 userWalletId = userWalletId,
-                                currencyNetwork = currencyNetwork,
+                                currency = currency,
                                 addressModel = it,
                             )
                         },
@@ -844,14 +863,14 @@ internal class WalletViewModel @Inject constructor(
 
     private fun onAddressTypeSelected(
         userWalletId: UserWalletId,
-        currencyNetwork: Network,
+        currency: CryptoCurrency,
         addressModel: AddressModel,
     ) {
         viewModelScope.launch(dispatchers.main) {
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = userWalletId,
-                    network = currencyNetwork,
+                    currency = currency,
                     addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
@@ -1102,7 +1121,7 @@ internal class WalletViewModel @Inject constructor(
                 uiState = stateFactory.getStateByTokensList(maybeTokenList.getTokenListWithWallet(wallet))
 
                 maybeTokenList.onRight {
-                    analyticsEventsHandler.sendBalanceLoadedEvent(fiatBalance = it.totalFiatBalance)
+                    analyticsEventsHandler.sendBalanceLoadedEvent(it)
                     checkMultiWalletWithFunds(it)
                 }
 
@@ -1205,15 +1224,31 @@ internal class WalletViewModel @Inject constructor(
 
                 maybeCryptoCurrencyStatus.onRight { status ->
                     val fiatAmount = status.value.fiatAmount
-                    analyticsEventsHandler.send(
-                        event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(
-                            balance = when {
-                                fiatAmount == null -> AnalyticsParam.CardBalanceState.BlockchainError
+
+                    val cardBalanceState = when (status.value) {
+                        is CryptoCurrencyStatus.Loaded,
+                        is CryptoCurrencyStatus.NoAccount,
+                        is CryptoCurrencyStatus.NoAmount,
+                        -> {
+                            when {
+                                fiatAmount == null -> null
                                 fiatAmount.isZero() -> AnalyticsParam.CardBalanceState.Empty
                                 else -> AnalyticsParam.CardBalanceState.Full
-                            },
-                        ),
-                    )
+                            }
+                        }
+                        is CryptoCurrencyStatus.NoQuote -> AnalyticsParam.CardBalanceState.NoRate
+                        is CryptoCurrencyStatus.Unreachable -> AnalyticsParam.CardBalanceState.BlockchainError
+                        is CryptoCurrencyStatus.MissedDerivation,
+                        is CryptoCurrencyStatus.Loading,
+                        is CryptoCurrencyStatus.Custom,
+                        -> null
+                    }
+
+                    cardBalanceState?.let {
+                        analyticsEventsHandler.send(
+                            event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(balance = it),
+                        )
+                    }
 
                     singleWalletCryptoCurrencyStatus = status
 
@@ -1245,7 +1280,7 @@ internal class WalletViewModel @Inject constructor(
                 uiState = stateFactory.getStateByTokensList(maybeTokenList.getTokenListWithWallet(wallet))
 
                 maybeTokenList.onRight { tokenList ->
-                    analyticsEventsHandler.sendBalanceLoadedEvent(tokenList.totalFiatBalance)
+                    analyticsEventsHandler.sendBalanceLoadedEvent(tokenList)
                     checkMultiWalletWithFunds(tokenList)
                 }
 
@@ -1259,9 +1294,23 @@ internal class WalletViewModel @Inject constructor(
             .saveIn(tokensJobHolder)
     }
 
-    private fun AnalyticsEventHandler.sendBalanceLoadedEvent(fiatBalance: TokenList.FiatBalance) {
-        val cardBalanceState = when (fiatBalance) {
-            is TokenList.FiatBalance.Failed -> AnalyticsParam.CardBalanceState.BlockchainError
+    private fun AnalyticsEventHandler.sendBalanceLoadedEvent(tokenList: TokenList) {
+        val cardBalanceState = when (val fiatBalance = tokenList.totalFiatBalance) {
+            is TokenList.FiatBalance.Failed -> {
+                val currenciesStatuses = when (tokenList) {
+                    is TokenList.Empty -> emptyList()
+                    is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies)
+                    is TokenList.Ungrouped -> tokenList.currencies
+                }
+
+                when {
+                    currenciesStatuses.isEmpty() -> AnalyticsParam.CardBalanceState.Empty
+                    currenciesStatuses.any { it.value is CryptoCurrencyStatus.NoQuote } -> {
+                        AnalyticsParam.CardBalanceState.NoRate
+                    }
+                    else -> AnalyticsParam.CardBalanceState.BlockchainError
+                }
+            }
             is TokenList.FiatBalance.Loaded -> {
                 if (fiatBalance.amount > BigDecimal.ZERO) {
                     AnalyticsParam.CardBalanceState.Full
@@ -1271,7 +1320,7 @@ internal class WalletViewModel @Inject constructor(
                     null
                 }
             }
-            else -> null
+            TokenList.FiatBalance.Loading -> null
         }
 
         cardBalanceState?.let {
@@ -1283,7 +1332,7 @@ internal class WalletViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                 userWalletId = userWalletId,
-                network = currencyStatus.currency.network,
+                currency = currencyStatus.currency,
             )
 
             uiState = stateFactory.getLoadingTxHistoryState(

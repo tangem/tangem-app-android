@@ -154,7 +154,7 @@ class UserWalletManagerImpl(
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         return walletManager.wallet.recentTransactions
             .lastOrNull { it.hash?.isNotEmpty() == true }
-            ?.hash?.let { HEX_PREFIX + it }
+            ?.hash
     }
 
     override suspend fun getCurrentWalletTokensBalance(
@@ -241,10 +241,6 @@ class UserWalletManagerImpl(
         return requireNotNull(walletManager) {
             "No wallet manager found"
         }
-    }
-
-    companion object {
-        private const val HEX_PREFIX = "0x"
     }
 }
 

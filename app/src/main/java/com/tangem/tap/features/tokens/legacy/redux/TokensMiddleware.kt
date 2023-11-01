@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
@@ -93,11 +94,9 @@ object TokensMiddleware {
                         updatedScanResponse = it,
                         currencyList = currencyList,
                     )
-                    store.dispatchOnMain(NavigationAction.PopBackTo())
                 }
             } else {
                 submitNewAdd(userWalletId = action.userWallet.walletId, scanResponse, currencyList = currencyList)
-                store.dispatchOnMain(NavigationAction.PopBackTo())
             }
         }
     }
@@ -271,7 +270,6 @@ object TokensMiddleware {
                     val updatedScanResponse = scanResponse.copy(derivedKeys = updatedDerivedKeys)
 
                     store.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
-                    delay(DELAY_SDK_DIALOG_CLOSE)
 
                     onSuccess(updatedScanResponse)
                 }
@@ -385,10 +383,11 @@ object TokensMiddleware {
             userWalletsListManager.update(
                 userWalletId = userWalletId,
                 update = { it.copy(scanResponse = updatedScanResponse) },
-            )
-
-            addCryptoCurrenciesUseCase(userWalletId, currencyList)
+            ).doOnSuccess {
+                addCryptoCurrenciesUseCase(userWalletId, currencyList)
+            }
         }
+        store.dispatchOnMain(NavigationAction.PopBackTo())
     }
 
     private suspend fun removeLegacyCurrenciesIfNeeded(currencies: List<Currency>) {
