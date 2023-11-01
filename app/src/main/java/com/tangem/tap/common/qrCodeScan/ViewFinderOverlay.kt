@@ -15,6 +15,7 @@ class ViewFinderOverlay(context: Context, attrs: AttributeSet) : View(context, a
         strokeWidth = context.resources.getDimensionPixelOffset(R.dimen.qr_border_stroke_width).toFloat()
     }
 
+    private val boxWidthRatio = 0.8F
     private val boxCornerRadius: Float =
         context.resources.getDimensionPixelOffset(R.dimen.qr_border_corner_radius).toFloat()
 
@@ -24,11 +25,10 @@ class ViewFinderOverlay(context: Context, attrs: AttributeSet) : View(context, a
     fun setViewFinder() {
         val overlayWidth = width.toFloat()
         val overlayHeight = height.toFloat()
-        val boxWidth = overlayWidth * 80 / 100
-        val boxHeight = overlayHeight * 36 / 100
+        val boxSize = overlayWidth * boxWidthRatio
         val cx = overlayWidth / 2
         val cy = overlayHeight / 2
-        boxRect = RectF(cx - boxWidth / 2, cy - boxHeight / 2, cx + boxWidth / 2, cy + boxHeight / 2)
+        boxRect = RectF(cx - boxSize / 2, cy - boxSize / 2, cx + boxSize / 2, cy + boxSize / 2)
 
         invalidate()
     }

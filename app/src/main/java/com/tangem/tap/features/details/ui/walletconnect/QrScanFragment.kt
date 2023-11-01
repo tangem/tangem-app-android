@@ -21,7 +21,7 @@ import com.tangem.wallet.databinding.LayoutQrScanningBinding
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
+internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
     private val binding: LayoutQrScanningBinding by viewBinding(LayoutQrScanningBinding::bind)
 

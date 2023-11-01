@@ -13,7 +13,7 @@ import com.tangem.tap.common.qrCodeScan.MLKitBarcodeAnalyzer
 import com.tangem.wallet.databinding.LayoutQrScanningBinding
 import java.util.concurrent.ExecutorService
 
-class PreviewBinder {
+internal class PreviewBinder {
 
     @Suppress("LongParameterList")
     fun bindPreview(
