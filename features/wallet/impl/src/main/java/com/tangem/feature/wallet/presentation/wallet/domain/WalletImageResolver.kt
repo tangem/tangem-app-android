@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import androidx.annotation.DrawableRes
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
 
@@ -42,6 +43,8 @@ internal object WalletImageResolver {
         @DrawableRes twoBackupResId: Int = R.drawable.ill_wallet2_cards3_120_106,
     ): Int? {
         return resolveWalletWithBackups { count ->
+            if (DemoConfig().isDemoCardId(cardId)) return@resolveWalletWithBackups oneBackupResId
+
             when (count) {
                 WALLET_WITH_ONE_BACKUP_COUNT -> oneBackupResId
                 WALLET_WITH_TWO_BACKUPS_COUNT -> twoBackupResId
