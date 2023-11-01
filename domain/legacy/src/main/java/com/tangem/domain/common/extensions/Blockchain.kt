@@ -72,6 +72,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "chia/test" -> Blockchain.ChiaTestnet
         "near-protocol" -> Blockchain.Near
         "near-protocol/test" -> Blockchain.NearTestnet
+        "decimal" -> Blockchain.Decimal
+        "decimal/test" -> Blockchain.DecimalTestnet
         else -> null
     }
 }
@@ -145,6 +147,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.ChiaTestnet -> "chia/test"
         Blockchain.Near -> "near-protocol"
         Blockchain.NearTestnet -> "near-protocol/test"
+        Blockchain.Decimal -> "decimal"
+        Blockchain.DecimalTestnet -> "decimal/test"
     }
 }
 
@@ -191,6 +195,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Chia, Blockchain.ChiaTestnet -> "chia"
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
+        Blockchain.Decimal -> "decimal"
+        Blockchain.DecimalTestnet -> "decimal/test"
         Blockchain.Unknown -> "unknown"
     }
 }
