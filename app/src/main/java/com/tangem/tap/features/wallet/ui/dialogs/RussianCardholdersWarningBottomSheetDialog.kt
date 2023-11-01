@@ -39,6 +39,7 @@ class RussianCardholdersWarningBottomSheetDialog(
         binding?.btnYes?.setOnClickListener {
             if (dialogData != null) {
                 store.dispatchOpenUrl(dialogData.topUpUrl)
+                Analytics.send(Token.Topup.ScreenOpened())
             } else {
                 store.dispatch(TradeCryptoAction.Buy(checkUserLocation = false))
             }
