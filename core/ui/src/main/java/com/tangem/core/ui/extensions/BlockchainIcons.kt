@@ -45,6 +45,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "aleph-zero", "aleph-zero/test" -> R.drawable.img_azero_22
         "octaspace", "octaspace/test" -> R.drawable.img_octaspace_22
         "chia", "chia/test" -> R.drawable.img_chia_22
+        "decimal", "decimal/testnet" -> R.drawable.img_decimal_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -88,6 +89,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "octaspace" -> R.drawable.img_octaspace_22
         "chia" -> R.drawable.img_chia_22
         "near" -> R.drawable.img_near_22
+        "decimal" -> R.drawable.img_decimal_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -133,6 +135,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "aleph-zero", "aleph-zero/test" -> R.drawable.ic_azero_22
         "octaspace", "octaspace/test" -> R.drawable.ic_octaspace_22
         "chia", "chia/test" -> R.drawable.ic_chia_22
+        "decimal", "decimal/test" -> R.drawable.ic_decimal_22
         else -> R.drawable.ic_alert_24
     }
 }
