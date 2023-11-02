@@ -8,7 +8,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
@@ -39,7 +38,6 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     savedStateHandle: SavedStateHandle,
@@ -81,12 +79,6 @@ internal class OrganizeTokensViewModel @Inject constructor(
                 stateHolder.updateHiddenState(isBalanceHidden)
             }
             .launchIn(viewModelScope)
-
-        viewModelScope.launch {
-            listenToFlipsUseCase()
-                .flowWithLifecycle(owner.lifecycle)
-                .collect()
-        }
 
         bootstrapTokenList()
         bootstrapDragAndDropUpdates()
