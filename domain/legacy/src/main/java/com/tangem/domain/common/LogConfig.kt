@@ -5,7 +5,6 @@ import com.tangem.domain.features.BuildConfig
 object LogConfig {
     const val imageLoader: Boolean = false
     val storeAction: Boolean = BuildConfig.DEBUG
-    const val zendesk: Boolean = false
     val network: NetworkLogConfig = NetworkLogConfig
     val analyticsHandlers: AnalyticsHandlersLogConfig = AnalyticsHandlersLogConfig
 }
