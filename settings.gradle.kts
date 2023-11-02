@@ -39,7 +39,7 @@ dependencyResolutionManagement {
             }
         }
         maven("https://jitpack.io")
-        maven("https://zendesk.jfrog.io/zendesk/repo")
+        maven("https://clients-nexus.sprinklr.com/")
     }
 
     versionCatalogs {
