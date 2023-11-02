@@ -32,4 +32,10 @@ internal sealed class WalletAlertState {
         override val message: TextReference = resourceReference(R.string.error_wrong_wallet_tapped)
         override val onConfirmClick: (() -> Unit)? = null
     }
+
+    object RescanWallets : WalletAlertState() {
+        override val title: TextReference = resourceReference(R.string.common_attention)
+        override val message: TextReference = resourceReference(R.string.key_invalidated_warning_description)
+        override val onConfirmClick: (() -> Unit)? = null
+    }
 }

@@ -76,6 +76,7 @@ fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    size: TangemButtonSize = TangemButtonSize.Default,
     showProgress: Boolean = false,
     enabled: Boolean = true,
 ) {
@@ -87,6 +88,7 @@ fun PrimaryButton(
         colors = TangemButtonsDefaults.primaryButtonColors,
         enabled = enabled,
         showProgress = showProgress,
+        size = size,
     )
 }
 
@@ -99,6 +101,7 @@ fun PrimaryButtonIconEnd(
     @DrawableRes iconResId: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    size: TangemButtonSize = TangemButtonSize.Default,
     showProgress: Boolean = false,
     enabled: Boolean = true,
 ) {
@@ -110,6 +113,7 @@ fun PrimaryButtonIconEnd(
         colors = TangemButtonsDefaults.primaryButtonColors,
         enabled = enabled,
         showProgress = showProgress,
+        size = size,
     )
 }
 

@@ -9,14 +9,23 @@ import org.rekotlin.Store
 
 internal class ResetCardViewModel(private val store: Store<AppState>) {
 
-    fun updateState(state: CardSettingsState?): ResetCardScreenState {
+    fun updateState(state: CardSettingsState?): ResetCardScreenState.ResetCardScreenContent {
         val descriptionText = state?.cardInfo
             ?.toResetCardDescriptionText()
             ?: TextReference.Str(value = "")
 
-        return ResetCardScreenState(
+        val warningsToShow = buildList {
+            add(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS)
+
+            if (state?.isShowPasswordResetRadioButton == true) {
+                add(ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE)
+            }
+        }
+
+        return ResetCardScreenState.ResetCardScreenContent(
             accepted = state?.resetButtonEnabled ?: false,
             descriptionText = descriptionText,
+            warningsToShow = warningsToShow,
             acceptCondition1Checked = state?.condition1Checked ?: false,
             acceptCondition2Checked = state?.condition2Checked ?: false,
             onAcceptCondition1ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition1(it)) },
