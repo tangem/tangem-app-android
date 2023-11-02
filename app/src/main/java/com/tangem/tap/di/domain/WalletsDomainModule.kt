@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -58,8 +59,11 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun providesSelectWalletUseCase(walletsStateHolder: WalletsStateHolder): SelectWalletUseCase {
-        return SelectWalletUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesSelectWalletUseCase(
+        walletsStateHolder: WalletsStateHolder,
+        reduxStateHolder: ReduxStateHolder,
+    ): SelectWalletUseCase {
+        return SelectWalletUseCase(walletsStateHolder, reduxStateHolder)
     }
 
     @Provides
