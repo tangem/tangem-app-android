@@ -24,7 +24,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             iconResId = iconResId,
             buttonsState = buttonsState,
         ),
-    )
+    ) {
 
     sealed class Informational(
         title: TextReference,
@@ -108,5 +108,35 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             id = R.string.warning_send_blocked_pending_transactions_message,
             formatArgs = wrappedList(coinSymbol),
         ),
-    )
+    ) {
+        data class RentInfo(
+            private val rentInfo: CryptoCurrencyWarning.Rent,
+            private val onCloseClick: () -> Unit,
+        ) : Informational(
+            title = TextReference.Res(R.string.warning_rent_fee_title),
+            subtitle = TextReference.Res(
+                id = R.string.warning_solana_rent_fee_message,
+                formatArgs = wrappedList(rentInfo.rent, rentInfo.exemptionAmount),
+            ),
+            onCloseClick = onCloseClick,
+        )
+
+        data class ExistentialDeposit(
+            private val existentialInfo: CryptoCurrencyWarning.ExistentialDeposit,
+        ) : Informational(
+            title = resourceReference(R.string.warning_existential_deposit_title),
+            subtitle = TextReference.Res(
+                id = R.string.warning_existential_deposit_message,
+                formatArgs = wrappedList(existentialInfo.currencyName, existentialInfo.edStringValueWithSymbol),
+            ),
+        )
+
+        class NetworksNoAccount(val network: String, val symbol: String, val amount: String) : Informational(
+            title = resourceReference(R.string.warning_no_account_title),
+            subtitle = resourceReference(
+                R.string.no_account_generic,
+                wrappedList(network, amount, symbol),
+            ),
+        )
+    }
 }

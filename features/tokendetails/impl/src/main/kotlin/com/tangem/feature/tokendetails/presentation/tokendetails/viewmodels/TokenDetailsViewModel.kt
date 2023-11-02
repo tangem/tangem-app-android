@@ -15,7 +15,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -65,7 +65,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
-    private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -117,11 +117,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
-        isBalanceHiddenUseCase()
+        getBalanceHidingSettingsUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .onEach { hidden ->
+            .onEach {
                 uiState = stateFactory.getStateWithUpdatedHidden(
-                    isBalanceHidden = hidden,
+                    isBalanceHidden = it.isBalanceHidden,
                 )
             }
             .launchIn(viewModelScope)
