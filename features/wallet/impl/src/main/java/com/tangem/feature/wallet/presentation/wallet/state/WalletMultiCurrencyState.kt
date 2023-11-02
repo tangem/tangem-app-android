@@ -28,7 +28,6 @@ internal sealed class WalletMultiCurrencyState : WalletState.ContentState() {
         override val event: StateEvent<WalletEvent> = consumedEvent(),
         override val isBalanceHidden: Boolean,
         val isManageTokensAvailable: Boolean = true,
-        val tokenActionsBottomSheet: ActionsBottomSheetConfig?,
         val onManageTokensClick: () -> Unit,
     ) : WalletMultiCurrencyState()
 

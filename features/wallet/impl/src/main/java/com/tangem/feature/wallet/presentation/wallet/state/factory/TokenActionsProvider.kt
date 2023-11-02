@@ -1,9 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
+import com.tangem.common.Provider
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.TokenActionButtonConfig
@@ -15,27 +18,39 @@ import kotlinx.collections.immutable.toImmutableList
 /**
  * Converter from loaded [TokenItemState.Content] to ImmutableList<[TokenActionButtonConfig]>
  *
- * @property clickIntents screen click intents
- *
+ * @property currentWalletProvider current wallet provider
+ * @property clickIntents          screen click intents
  */
-@Suppress("UnusedPrivateMember") // will be used in next PRs
-internal class TokenActionsProvider(private val clickIntents: WalletClickIntents) {
+internal class TokenActionsProvider(
+    private val currentWalletProvider: Provider<UserWallet>,
+    private val clickIntents: WalletClickIntents,
+) {
 
     fun provideActions(tokenActions: TokenActionsState): ImmutableList<TokenActionButtonConfig> {
         return tokenActions.states
+            .filterIfSingleWithToken()
             .mapNotNull {
-                mapTokenActionState(it, tokenActions.cryptoCurrencyStatus)
+                mapTokenActionState(
+                    actionsState = it,
+                    cryptoCurrencyStatus = tokenActions.cryptoCurrencyStatus,
+                )
             }
             .toImmutableList()
+    }
+
+    private fun List<TokenActionsState.ActionState>.filterIfSingleWithToken(): List<TokenActionsState.ActionState> {
+        return if (currentWalletProvider().scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+            filter { it !is TokenActionsState.ActionState.HideToken }
+        } else {
+            this
+        }
     }
 
     private fun mapTokenActionState(
         actionsState: TokenActionsState.ActionState,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): TokenActionButtonConfig? {
-        if (actionsState is TokenActionsState.ActionState.Send &&
-            cryptoCurrencyStatus.value.amount.isNullOrZero()
-        ) {
+        if (actionsState is TokenActionsState.ActionState.Send && cryptoCurrencyStatus.value.amount.isNullOrZero()) {
             return null
         }
         val title: TextReference
@@ -74,7 +89,7 @@ internal class TokenActionsProvider(private val clickIntents: WalletClickIntents
             }
             is TokenActionsState.ActionState.HideToken -> {
                 title = resourceReference(R.string.token_details_hide_token)
-                icon = R.drawable.ic_trash_24
+                icon = R.drawable.ic_hide_24
                 action = { clickIntents.onHideTokensClick(cryptoCurrencyStatus) }
             }
         }
@@ -82,6 +97,7 @@ internal class TokenActionsProvider(private val clickIntents: WalletClickIntents
             text = title,
             iconResId = icon,
             onClick = action,
+            isWarning = actionsState is TokenActionsState.ActionState.HideToken,
             enabled = actionsState.enabled,
         )
     }

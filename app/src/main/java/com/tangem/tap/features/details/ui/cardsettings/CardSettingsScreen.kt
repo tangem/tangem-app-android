@@ -6,16 +6,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.userwallets.Artwork
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
@@ -32,7 +29,7 @@ internal fun CardSettingsScreen(
         modifier = modifier,
         content = {
             if (needReadCard) {
-                CardSettingsReadCard(state.onScanCardClick, state.cardImage)
+                CardSettingsReadCard(state.onScanCardClick)
             } else {
                 CardSettings(state = state)
             }
@@ -44,39 +41,39 @@ internal fun CardSettingsScreen(
 
 @Suppress("MagicNumber")
 @Composable
-private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwork?) {
+private fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = TangemTheme.dimens.size70),
+        modifier = Modifier.fillMaxSize(),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = TangemTheme.dimens.size16, end = TangemTheme.dimens.size16),
+                .padding(bottom = TangemTheme.dimens.spacing40),
         ) {
-            val circleColor = TangemTheme.colors.stroke.primary
-            Canvas(
+            Image(
                 modifier = Modifier
-                    .size(300.dp)
-                    .align(Alignment.Center),
-            ) {
-                drawCircle(
-                    color = circleColor,
-                    radius = size.minDimension / 2.0f,
-                )
-            }
-            SubcomposeAsyncImage(
-                model = ImageRequest.Builder(context = LocalContext.current)
-                    .data(cardArtwork?.artworkId)
-                    .crossfade(enable = true)
-                    .build(),
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth(),
-                loading = { /* no-op */ },
-                error = { /* no-op */ },
+                    .fillMaxWidth()
+                    .padding(
+                        start = TangemTheme.dimens.spacing80,
+                        end = TangemTheme.dimens.spacing80,
+                        top = TangemTheme.dimens.spacing70,
+                    )
+                    .rotate(-15f),
+                painter = painterResource(id = R.drawable.card_placeholder_secondary),
                 contentDescription = null,
+                contentScale = ContentScale.FillWidth,
+            )
+            Image(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = TangemTheme.dimens.spacing60,
+                        end = TangemTheme.dimens.spacing60,
+                    )
+                    .rotate(-1f),
+                painter = painterResource(id = R.drawable.card_placeholder_black),
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth,
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -84,9 +81,9 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwo
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.size16,
-                    end = TangemTheme.dimens.size16,
-                    bottom = TangemTheme.dimens.size32,
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing16,
+                    bottom = TangemTheme.dimens.spacing32,
                 ),
         ) {
             Text(
@@ -103,7 +100,7 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit, cardArtwork: Artwo
                     .verticalScroll(rememberScrollState())
                     .weight(weight = 1f, fill = false),
             )
-            Spacer(modifier = Modifier.size(TangemTheme.dimens.size28))
+            Spacer(modifier = Modifier.size(TangemTheme.dimens.size32))
             DetailsMainButton(
                 title = stringResource(id = R.string.scan_card_settings_button),
                 onClick = onScanCardClick,
@@ -122,21 +119,21 @@ private fun CardSettings(state: CardSettingsScreenState) {
     ) {
         items(state.cardDetails) {
             val paddingBottom = when (it) {
-                is CardInfo.CardId, is CardInfo.Issuer -> 12.dp
-                is CardInfo.SignedHashes -> 14.dp
-                is CardInfo.SecurityMode -> 16.dp
-                is CardInfo.ChangeAccessCode -> 16.dp
-                is CardInfo.AccessCodeRecovery -> 16.dp
-                is CardInfo.ResetToFactorySettings -> 28.dp
+                is CardInfo.CardId, is CardInfo.Issuer -> TangemTheme.dimens.spacing12
+                is CardInfo.SignedHashes -> TangemTheme.dimens.spacing14
+                is CardInfo.SecurityMode -> TangemTheme.dimens.spacing16
+                is CardInfo.ChangeAccessCode -> TangemTheme.dimens.spacing16
+                is CardInfo.AccessCodeRecovery -> TangemTheme.dimens.spacing16
+                is CardInfo.ResetToFactorySettings -> TangemTheme.dimens.spacing28
             }
             val paddingTop = when (it) {
-                is CardInfo.CardId -> 0.dp
-                is CardInfo.Issuer -> 12.dp
-                is CardInfo.SignedHashes -> 12.dp
-                is CardInfo.SecurityMode -> 14.dp
-                is CardInfo.ChangeAccessCode -> 16.dp
-                is CardInfo.AccessCodeRecovery -> 16.dp
-                is CardInfo.ResetToFactorySettings -> 16.dp
+                is CardInfo.CardId -> TangemTheme.dimens.spacing0
+                is CardInfo.Issuer -> TangemTheme.dimens.spacing12
+                is CardInfo.SignedHashes -> TangemTheme.dimens.spacing12
+                is CardInfo.SecurityMode -> TangemTheme.dimens.spacing14
+                is CardInfo.ChangeAccessCode -> TangemTheme.dimens.spacing16
+                is CardInfo.AccessCodeRecovery -> TangemTheme.dimens.spacing16
+                is CardInfo.ResetToFactorySettings -> TangemTheme.dimens.spacing16
             }
             Column(
                 modifier = Modifier
@@ -145,7 +142,12 @@ private fun CardSettings(state: CardSettingsScreenState) {
                         enabled = it.clickable,
                         onClick = { state.onElementClick(it) },
                     )
-                    .padding(start = 20.dp, end = 20.dp, bottom = paddingBottom, top = paddingTop),
+                    .padding(
+                        start = TangemTheme.dimens.spacing20,
+                        end = TangemTheme.dimens.spacing20,
+                        bottom = paddingBottom,
+                        top = paddingTop,
+                    ),
             ) {
                 val titleColor = if (it.clickable) {
                     TangemTheme.colors.text.primary1
@@ -162,7 +164,7 @@ private fun CardSettings(state: CardSettingsScreenState) {
                     color = titleColor,
                     style = TangemTheme.typography.subtitle1,
                 )
-                Spacer(modifier = Modifier.size(4.dp))
+                Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
                 Text(
                     text = it.subtitle.resolveReference(),
                     color = subtitleColor,

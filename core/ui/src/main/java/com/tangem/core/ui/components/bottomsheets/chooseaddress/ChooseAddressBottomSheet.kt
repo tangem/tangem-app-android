@@ -12,12 +12,8 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 fun ChooseAddressBottomSheet(config: TangemBottomSheetConfig) {
-    if (config.content is ChooseAddressBottomSheetConfig && config.isShow) {
-        TangemBottomSheet(config) { content ->
-            ChooseAddressBottomSheetContent(
-                content = content as ChooseAddressBottomSheetConfig,
-            )
-        }
+    TangemBottomSheet(config) { content: ChooseAddressBottomSheetConfig ->
+        ChooseAddressBottomSheetContent(content = content)
     }
 }
 
