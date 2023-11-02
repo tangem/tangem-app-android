@@ -63,9 +63,9 @@ internal object TokensDomainModule {
     @ViewModelScoped
     fun provideRemoveCurrencyUseCase(
         currenciesRepository: CurrenciesRepository,
-        dispatchers: CoroutineDispatcherProvider,
+        walletManagersFacade: WalletManagersFacade,
     ): RemoveCurrencyUseCase {
-        return RemoveCurrencyUseCase(currenciesRepository, dispatchers)
+        return RemoveCurrencyUseCase(currenciesRepository, walletManagersFacade)
     }
 
     @Provides
@@ -167,9 +167,19 @@ internal object TokensDomainModule {
     fun provideGetCryptoCurrencyActionsUseCase(
         rampStateManager: RampStateManager,
         marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
-        return GetCryptoCurrencyActionsUseCase(rampStateManager, marketCryptoCurrencyRepository, dispatchers)
+        return GetCryptoCurrencyActionsUseCase(
+            rampManager = rampStateManager,
+            marketCryptoCurrencyRepository = marketCryptoCurrencyRepository,
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            dispatchers = dispatchers,
+        )
     }
 
     @Provides
