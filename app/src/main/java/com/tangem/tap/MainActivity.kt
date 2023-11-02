@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
@@ -53,6 +54,7 @@ import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandle
 import com.tangem.tap.features.intentHandler.handlers.BuyCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.SellCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
+import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
@@ -125,6 +127,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var sendRouter: SendRouter
 
+    internal val viewModel: MainViewModel by viewModels()
+
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
 // [REDACTED_TODO_COMMENT]
     private val intentProcessor: IntentProcessor = IntentProcessor()
@@ -150,6 +154,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         checkGooglePayAvailability()
 
         checkForNotificationPermission()
+        observeStateUpdates()
+    }
+
+    private fun observeStateUpdates() {
+        viewModel.state
+            .flowWithLifecycle(lifecycle)
+            .onEach {
+// [REDACTED_TODO_COMMENT]
+            }
+            .launchIn(lifecycleScope)
     }
 
     private fun installActivityDependencies() {
