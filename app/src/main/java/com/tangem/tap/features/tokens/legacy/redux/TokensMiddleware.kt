@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
@@ -15,6 +16,7 @@ import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.supportsHdWallet
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -36,6 +38,14 @@ import timber.log.Timber
 
 @Suppress("LargeClass")
 object TokensMiddleware {
+
+    // TODO: Move to DI
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
+
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     val tokensMiddleware: Middleware<AppState> = { _, _ ->
         { next ->
@@ -84,11 +94,9 @@ object TokensMiddleware {
                         updatedScanResponse = it,
                         currencyList = currencyList,
                     )
-                    store.dispatchOnMain(NavigationAction.PopBackTo())
                 }
             } else {
                 submitNewAdd(userWalletId = action.userWallet.walletId, scanResponse, currencyList = currencyList)
-                store.dispatchOnMain(NavigationAction.PopBackTo())
             }
         }
     }
@@ -262,7 +270,6 @@ object TokensMiddleware {
                     val updatedScanResponse = scanResponse.copy(derivedKeys = updatedDerivedKeys)
 
                     store.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
-                    delay(DELAY_SDK_DIALOG_CLOSE)
 
                     onSuccess(updatedScanResponse)
                 }
@@ -372,23 +379,15 @@ object TokensMiddleware {
         updatedScanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
     ) {
-        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
-        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
-
         scope.launch {
             userWalletsListManager.update(
                 userWalletId = userWalletId,
                 update = { it.copy(scanResponse = updatedScanResponse) },
-            )
-
-            currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
-
-            networksRepository.getNetworkStatusesSync(
-                userWalletId = userWalletId,
-                networks = currencyList.map(CryptoCurrency::network).toSet(),
-                refresh = true,
-            )
+            ).doOnSuccess {
+                addCryptoCurrenciesUseCase(userWalletId, currencyList)
+            }
         }
+        store.dispatchOnMain(NavigationAction.PopBackTo())
     }
 
     private suspend fun removeLegacyCurrenciesIfNeeded(currencies: List<Currency>) {
@@ -403,7 +402,19 @@ object TokensMiddleware {
     private suspend fun removeNewCurrenciesIfNeeded(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) return
         val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
 
         currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = currencies)
+
+        walletManagersFacade.remove(
+            userWalletId = userWalletId,
+            networks = currencies
+                .filterIsInstance<CryptoCurrency.Coin>()
+                .mapTo(hashSetOf(), CryptoCurrency::network),
+        )
+        walletManagersFacade.removeTokens(
+            userWalletId = userWalletId,
+            tokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
+        )
     }
 }
