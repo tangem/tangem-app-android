@@ -9,4 +9,3 @@ data class PairsRequestBody(
     @Json(name = "to")
     val to: List<LeastTokenInfo>,
 )
-

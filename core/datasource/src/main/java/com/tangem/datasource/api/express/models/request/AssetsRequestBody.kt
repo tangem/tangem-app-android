@@ -5,4 +5,3 @@ import com.squareup.moshi.Json
 data class AssetsRequestBody(
     @Json(name = "filter") val filter: List<LeastTokenInfo>?,
 )
-

@@ -14,6 +14,7 @@ import java.math.BigDecimal
 /**
  * Interface of Tangem Express API (new swap mechanism)
  */
+@Suppress("LongParameterList")
 interface ExpressApi {
 // [REDACTED_TODO_COMMENT]
     @POST("assets")
@@ -25,9 +26,7 @@ interface ExpressApi {
     ): ApiResponse<List<Asset>>
 
     @POST("pairs")
-    suspend fun getPairs(
-        @Body body: PairsRequestBody,
-    ): ApiResponse<List<SwapPair>>
+    suspend fun getPairs(@Body body: PairsRequestBody): ApiResponse<List<SwapPair>>
 
     @GET("providers")
     suspend fun getProviders(): ApiResponse<List<ExchangeProvider>>
@@ -56,8 +55,5 @@ interface ExpressApi {
     ): ApiResponse<ExchangeDataResponse>
 
     @GET("exchange-results")
-    suspend fun getExchangeResults(
-        @Query("txId") txId: String,
-    ): ApiResponse<ExchangeResultsResponse>
-
+    suspend fun getExchangeResults(@Query("txId") txId: String): ApiResponse<ExchangeResultsResponse>
 }
