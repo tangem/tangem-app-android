@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import androidx.annotation.DrawableRes
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
 
@@ -22,6 +23,10 @@ internal object WalletImageResolver {
     fun resolve(userWallet: UserWallet): Int? {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         return when {
+            cardTypesResolver.isDevKit() -> R.drawable.ill_dev_120_106
+            cardTypesResolver.isTronWallet() -> userWallet.resolveTronWallet()
+            cardTypesResolver.isKaspaWallet() -> userWallet.resolveKaspaWallet()
+            cardTypesResolver.isBadWallet() -> userWallet.resolveBadWallet()
             cardTypesResolver.isWallet2() -> userWallet.resolveWallet2()
             cardTypesResolver.isShibaWallet() -> userWallet.resolveShibaWallet()
             cardTypesResolver.isTangemWallet() -> userWallet.resolveWallet1()
@@ -29,29 +34,51 @@ internal object WalletImageResolver {
             cardTypesResolver.isTangemTwins() -> R.drawable.ill_twins_120_106
             cardTypesResolver.isStart2Coin() -> R.drawable.ill_start2coin_120_106
             cardTypesResolver.isTangemNote() -> resolveNote(blockchain = cardTypesResolver.getBlockchain())
-            cardTypesResolver.isDevKit() -> R.drawable.ill_dev_120_106
             else -> null
         }
     }
 
-    private fun UserWallet.resolveWallet2(): Int? {
+    private fun UserWallet.resolveWallet2(
+        @DrawableRes oneBackupResId: Int = R.drawable.ill_wallet2_cards2_120_106,
+        @DrawableRes twoBackupResId: Int = R.drawable.ill_wallet2_cards3_120_106,
+    ): Int? {
         return resolveWalletWithBackups { count ->
+            if (DemoConfig().isDemoCardId(cardId)) return@resolveWalletWithBackups oneBackupResId
+
             when (count) {
-                WALLET_WITH_ONE_BACKUP_COUNT -> R.drawable.ill_wallet2_cards2_120_106
-                WALLET_WITH_TWO_BACKUPS_COUNT -> R.drawable.ill_wallet2_cards3_120_106
+                WALLET_WITH_ONE_BACKUP_COUNT -> oneBackupResId
+                WALLET_WITH_TWO_BACKUPS_COUNT -> twoBackupResId
                 else -> null
             }
         }
     }
 
+    private fun UserWallet.resolveTronWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_tron_card2_120_106,
+            twoBackupResId = R.drawable.ill_tron_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveKaspaWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_kaspa_card2_120_106,
+            twoBackupResId = R.drawable.ill_kaspa_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveBadWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_bad_card2_120_106,
+            twoBackupResId = R.drawable.ill_bad_card3_120_106,
+        )
+    }
+
     private fun UserWallet.resolveShibaWallet(): Int? {
-        return resolveWalletWithBackups { count ->
-            when (count) {
-                WALLET_WITH_ONE_BACKUP_COUNT -> R.drawable.ill_shiba_card2_120_106
-                WALLET_WITH_TWO_BACKUPS_COUNT -> R.drawable.ill_shiba_card3_120_106
-                else -> null
-            }
-        }
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_shiba_card2_120_106,
+            twoBackupResId = R.drawable.ill_shiba_card3_120_106,
+        )
     }
 
     private fun UserWallet.resolveWallet1(): Int? {
