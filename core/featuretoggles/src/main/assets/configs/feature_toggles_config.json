@@ -26,5 +26,13 @@
     {
         "name": "DARK_THEME_ENABLED",
         "version": "5.0.0"
+    },
+    {
+        "name": "REDESIGNED_MANAGE_TOKENS_SCREEN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "REDESIGNED_SEND_SCREEN_ENABLED",
+        "version": "undefined"
     }
 ]

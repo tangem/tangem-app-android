@@ -92,6 +92,9 @@ dependencies {
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.tokendetails.impl)
     implementation(projects.features.send.api)
+    implementation(projects.features.manageTokens.api)
+    implementation(projects.features.manageTokens.impl)
+    implementation(projects.features.send.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -183,4 +186,10 @@ dependencies {
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
+
+    /** Chucker */
+    debugImplementation(deps.chucker)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
 }
