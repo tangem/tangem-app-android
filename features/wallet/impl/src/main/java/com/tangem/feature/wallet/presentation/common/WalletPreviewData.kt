@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
@@ -88,7 +89,7 @@ internal object WalletPreviewData {
     }
 
     val coinIconState
-        get() = TokenItemState.IconState.CoinIcon(
+        get() = TokenIconState.CoinIcon(
             url = null,
             fallbackResId = R.drawable.img_polygon_22,
             isGrayscale = false,
@@ -96,7 +97,7 @@ internal object WalletPreviewData {
         )
 
     private val tokenIconState
-        get() = TokenItemState.IconState.TokenIcon(
+        get() = TokenIconState.TokenIcon(
             url = null,
             networkBadgeIconResId = R.drawable.img_polygon_22,
             fallbackTint = TangemColorPalette.Black,
@@ -106,7 +107,7 @@ internal object WalletPreviewData {
         )
 
     private val customTokenIconState
-        get() = TokenItemState.IconState.CustomTokenIcon(
+        get() = TokenIconState.CustomTokenIcon(
             tint = TangemColorPalette.Black,
             background = TangemColorPalette.Meadow,
             networkBadgeIconResId = R.drawable.img_polygon_22,
