@@ -28,6 +28,10 @@
     <string name="app_settings_theme_mode_system">Как в системе</string>
     <string name="app_settings_theme_selector_title">Тема</string>
     <string name="app_settings_title">Настройки приложения</string>
+    <string name="balance_hidden_description">Чтобы скрыть или показать баланс, просто поверните ваше устройство вниз или отключите опцию его в разделе \"Настройки\"</string>
+    <string name="balance_hidden_do_not_show_button">Больше не показывать</string>
+    <string name="balance_hidden_got_it_button">Понятно</string>
+    <string name="balance_hidden_title">Балансы скрыты</string>
     <string name="biometric_lockout_permanent_warning_description">Пожалуйста, отсканируйте карту</string>
     <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту</string>
     <string name="biometric_lockout_warning_title">Слишком много попыток</string>
@@ -452,6 +456,9 @@
     <string name="swapping_token_list_title">Выберите токен</string>
     <string name="swapping_token_list_your_tokens">Ваши токены</string>
     <string name="swapping_token_not_available">не доступен</string>
+    <string name="toast_balances_hidden">Балансы скрыты</string>
+    <string name="toast_balances_shown">Балансы показаны</string>
+    <string name="toast_undo">Отменить</string>
     <plurals name="token_count">
         <item quantity="one">%d токен</item>
         <item quantity="few">%d токена</item>
