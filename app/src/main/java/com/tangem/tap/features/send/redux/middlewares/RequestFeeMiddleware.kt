@@ -15,6 +15,7 @@ import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.scope
+import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -71,6 +72,13 @@ class RequestFeeMiddleware {
                     is Result.Failure -> {
                         dispatch(FeeAction.FeeCalculation.ClearResult)
                         dispatch(FeeAction.ChangeLayoutVisibility(main = false))
+
+                        store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
+                            walletManager = walletManager,
+                            amountToSend = destinationAmount,
+                            feeAmount = null,
+                            destinationAddress = destinationAddress,
+                        )
 
                         val blockchainSdkError = feeResult.error as? BlockchainSdkError ?: return@withContext
                         dispatch(
