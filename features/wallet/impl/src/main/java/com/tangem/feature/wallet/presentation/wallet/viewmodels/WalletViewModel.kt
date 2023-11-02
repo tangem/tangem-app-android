@@ -28,7 +28,6 @@ import com.tangem.domain.analytics.ChangeCardAnalyticsContextUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.CardTypesResolver
@@ -116,7 +115,6 @@ internal class WalletViewModel @Inject constructor(
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
     private val walletManagersFacade: WalletManagersFacade,
@@ -220,12 +218,6 @@ internal class WalletViewModel @Inject constructor(
                 uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = it.isBalanceHidden)
             }
             .launchIn(viewModelScope)
-
-        viewModelScope.launch {
-            listenToFlipsUseCase()
-                .flowWithLifecycle(owner.lifecycle)
-                .collect()
-        }
     }
 
     private fun updateWallets(sourceList: List<UserWallet>) {
