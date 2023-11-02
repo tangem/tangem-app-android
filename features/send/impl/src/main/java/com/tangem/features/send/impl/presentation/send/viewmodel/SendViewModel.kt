@@ -81,6 +81,7 @@ internal class SendViewModel @Inject constructor(
             userWalletId = userWalletId,
             currencyId = cryptoCurrency.id,
             derivationPath = cryptoCurrency.network.derivationPath,
+            contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress,
             isSingleWalletWithTokens = isSingleWallet,
         )
             .flowWithLifecycle(owner.lifecycle)
