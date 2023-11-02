@@ -106,7 +106,7 @@ class MultiWalletView : WalletView() {
             Analytics.send(Portfolio.ButtonManageTokens())
 
             store.dispatch(action = TokensAction.SetArgs.ManageAccess)
-            store.dispatch(action = NavigationAction.NavigateTo(screen = AppScreen.AddTokens))
+            store.dispatch(action = NavigationAction.NavigateTo(screen = AppScreen.ManageTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
     }
