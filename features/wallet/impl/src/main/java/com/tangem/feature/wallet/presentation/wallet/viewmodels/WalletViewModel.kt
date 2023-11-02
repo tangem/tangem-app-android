@@ -27,7 +27,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.analytics.ChangeCardAnalyticsContextUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
@@ -116,6 +116,7 @@ internal class WalletViewModel @Inject constructor(
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
@@ -212,12 +213,12 @@ internal class WalletViewModel @Inject constructor(
                 }
         }
 
-        isBalanceHiddenUseCase()
+        getBalanceHidingSettingsUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .onEach { hidden ->
-                isBalanceHidden = hidden
-                WalletStateCache.updateAll { copySealed(isBalanceHidden = hidden) }
-                uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = hidden)
+            .onEach {
+                isBalanceHidden = it.isBalanceHidden
+                WalletStateCache.updateAll { copySealed(isBalanceHidden = it.isBalanceHidden) }
+                uiState = stateFactory.getHiddenBalanceState(isBalanceHidden = it.isBalanceHidden)
             }
             .launchIn(viewModelScope)
 
