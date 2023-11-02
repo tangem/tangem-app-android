@@ -4,6 +4,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
@@ -22,5 +24,6 @@ internal data class TokenDetailsState(
     val pullToRefreshConfig: TokenDetailsPullToRefreshConfig,
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val isBalanceHidden: Boolean,
-    val isCustomToken: Boolean,
+    val isMarketPriceAvailable: Boolean,
+    val event: StateEvent<TextReference>,
 )

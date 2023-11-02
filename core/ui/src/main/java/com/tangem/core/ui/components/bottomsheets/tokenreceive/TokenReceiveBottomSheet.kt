@@ -1,5 +1,7 @@
 package com.tangem.core.ui.components.bottomsheets.tokenreceive
 
+import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,7 +24,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.MiddleEllipsisText
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -32,12 +33,8 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 fun TokenReceiveBottomSheet(config: TangemBottomSheetConfig) {
-    if (config.content is TokenReceiveBottomSheetConfig && config.isShow) {
-        TangemBottomSheet(config) { content ->
-            TokenReceiveBottomSheetContent(
-                content = content as TokenReceiveBottomSheetConfig,
-            )
-        }
+    TangemBottomSheet(config) { content: TokenReceiveBottomSheetConfig ->
+        TokenReceiveBottomSheetContent(content = content)
     }
 }
 
@@ -79,6 +76,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
                     content.onCopyClick.invoke()
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     clipboardManager.setText(AnnotatedString(selectedAddress.value))
+                    Toast.makeText(context, R.string.wallet_notification_address_copied, Toast.LENGTH_SHORT).show()
                 },
             )
             SecondaryButtonIconStart(
@@ -115,6 +113,7 @@ private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChang
         state = pagerState,
     ) { currentPage ->
         Column(
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
         ) {
@@ -136,7 +135,7 @@ private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChang
                 modifier = Modifier
                     .size(TangemTheme.dimens.size248),
             )
-            MiddleEllipsisText(
+            Text(
                 text = content.addresses[currentPage].value,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -158,11 +157,9 @@ private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChang
         ) {
             repeat(pagerState.pageCount) { iteration ->
                 item(key = iteration) {
-                    val color = if (pagerState.currentPage == iteration) {
-                        selectedColor
-                    } else {
-                        unselectedColor
-                    }
+                    val color by animateColorAsState(
+                        if (pagerState.currentPage == iteration) selectedColor else unselectedColor,
+                    )
                     Box(
                         modifier = Modifier
                             .padding(
