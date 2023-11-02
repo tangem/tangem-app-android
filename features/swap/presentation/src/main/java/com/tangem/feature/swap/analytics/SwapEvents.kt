@@ -30,7 +30,12 @@ sealed class SwapEvents(
     )
 
     object ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
-    object ButtonPermissionApproveClicked : SwapEvents(event = "Button - Permission Approve")
+
+    data class ButtonPermissionApproveClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
+        event = "Button - Permission Approve",
+        params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
+    )
+
     object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
     object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
     object SwapInProgressScreen : SwapEvents(event = "Swap in Progress Screen Opened")
