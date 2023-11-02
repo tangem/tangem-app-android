@@ -1,11 +1,10 @@
 package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
-import arrow.core.left
 import arrow.core.raise.either
-import arrow.core.right
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.legacy.ensureUserWalletListManagerNotNull
 import com.tangem.domain.wallets.models.SelectWalletError
@@ -18,7 +17,10 @@ import com.tangem.domain.wallets.models.UserWalletId
  *
 [REDACTED_AUTHOR]
  */
-class SelectWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
+class SelectWalletUseCase(
+    private val walletsStateHolder: WalletsStateHolder,
+    private val reduxStateHolder: ReduxStateHolder,
+) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<SelectWalletError, Unit> {
         return either {
@@ -28,10 +30,8 @@ class SelectWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
             )
 
             userWalletsListManager.select(userWalletId)
-                .doOnSuccess { return Unit.right() }
-                .doOnFailure { return SelectWalletError.UnableToSelectUserWallet.left() }
-
-            return Unit.right()
+                .doOnFailure { raise(SelectWalletError.UnableToSelectUserWallet) }
+                .doOnSuccess { reduxStateHolder.onUserWalletSelected(it) }
         }
     }
 }
