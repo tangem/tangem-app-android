@@ -1,4 +1,4 @@
-package com.tangem.feature.swap.models.response
+package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
 import java.math.BigDecimal
