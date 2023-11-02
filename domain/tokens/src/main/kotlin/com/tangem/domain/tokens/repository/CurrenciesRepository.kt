@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -116,13 +117,17 @@ interface CurrenciesRepository {
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    suspend fun getMultiCurrencyWalletCurrenciesSync(userWalletId: UserWalletId, refresh: Boolean): List<CryptoCurrency>
+    suspend fun getMultiCurrencyWalletCurrenciesSync(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): List<CryptoCurrency>
 
     /**
      * Retrieves the cryptocurrency for a specific multi-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
      * @param id The unique identifier of the cryptocurrency to be retrieved.
+     * @param contractAddress The contract address of the crypto currency
      * @param derivationPath currency derivation path.
      * @return The cryptocurrency associated with the user wallet and ID.
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
@@ -131,6 +136,7 @@ interface CurrenciesRepository {
     suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        contractAddress: String?,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency
 
@@ -168,4 +174,12 @@ interface CurrenciesRepository {
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
 
     fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
+
+    /**
+     * Determines whether the currency has pending transaction or currency network has pending transaction
+     *
+     * @param cryptoCurrencyStatus currency status
+     * @param coinStatus main currency status in [cryptoCurrencyStatus] network
+     */
+    fun hasPendingTransactions(cryptoCurrencyStatus: CryptoCurrencyStatus, coinStatus: CryptoCurrencyStatus?): Boolean
 }
