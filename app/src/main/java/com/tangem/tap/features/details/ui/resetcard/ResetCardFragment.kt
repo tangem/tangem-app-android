@@ -22,7 +22,7 @@ internal class ResetCardFragment : ComposeFragment(), StoreSubscriber<DetailsSta
     private val viewModel = ResetCardViewModel(store)
 
     private var screenState: MutableState<ResetCardScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.detailsState.cardSettingsState))
+        mutableStateOf(ResetCardScreenState.InitialState)
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
