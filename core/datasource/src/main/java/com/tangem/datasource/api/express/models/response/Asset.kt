@@ -25,5 +25,5 @@ data class Asset(
     val isActive: Boolean,
 
     @Json(name = "exchangeAvailable")
-    val exchangeAvailable: Boolean
+    val exchangeAvailable: Boolean,
 )
