@@ -1,9 +1,9 @@
-package com.tangem.feature.swap
+package com.tangem.datasource.api.express
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.feature.swap.models.request.AssetsRequestBody
-import com.tangem.feature.swap.models.request.PairsRequestBody
-import com.tangem.feature.swap.models.response.*
+import com.tangem.datasource.api.express.models.request.AssetsRequestBody
+import com.tangem.datasource.api.express.models.request.PairsRequestBody
+import com.tangem.datasource.api.express.models.response.*
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -14,7 +14,7 @@ import java.math.BigDecimal
 /**
  * Interface of Tangem Express API (new swap mechanism)
  */
-internal interface ExpressApi {
+interface ExpressApi {
 
     // TODO move first three params to retrofit interceptor
     @POST("assets")
