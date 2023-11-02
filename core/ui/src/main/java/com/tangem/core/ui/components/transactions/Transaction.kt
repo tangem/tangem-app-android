@@ -362,6 +362,15 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             subtitle = TextReference.Str("33BddS...ga2B"),
             onClick = {},
         ),
+        TransactionState.Approve(
+            txHash = UUID.randomUUID().toString(),
+            address = TextReference.Str("33BddS...ga2B"),
+            amount = "+0.500913 BTC",
+            timestamp = "8:41",
+            status = Status.Confirmed,
+            direction = Direction.OUTGOING,
+            onClick = {},
+        ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "+0.500913 BTC",
