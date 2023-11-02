@@ -4,9 +4,11 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -78,6 +80,7 @@ internal class MockCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        contractAddress: String?,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
         val token = token.getOrElse { e -> throw e }
@@ -85,6 +88,11 @@ internal class MockCurrenciesRepository(
         require(token.id == id)
 
         return token
+    }
+
+    override fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
+        /* no-op */
+        return emptyFlow()
     }
 
     override suspend fun getNetworkCoin(
@@ -103,7 +111,10 @@ internal class MockCurrenciesRepository(
         return isSortedByBalance.map { it.getOrElse { e -> throw e } }
     }
 
-    override fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
-        TODO("Not yet implemented")
+    override fun hasPendingTransactions(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus?,
+    ): Boolean {
+        return false
     }
 }

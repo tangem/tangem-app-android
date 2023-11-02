@@ -80,7 +80,7 @@ sealed class Settings(
 
         object ButtonEnableBiometricAuthentication : AppSettings(event = "Button - Enable Biometric Authentication")
 
-        class MainCurrencyChanged(currencyType: String) : MainScreen(
+        class MainCurrencyChanged(currencyType: String) : AppSettings(
             event = "Main Currency Changed",
             params = mapOf("Currency Type" to currencyType),
         )
