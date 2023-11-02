@@ -1,9 +1,8 @@
 package com.tangem.feature.wallet.presentation.common.state
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 
 /** Token item state */
 @Immutable
@@ -11,7 +10,7 @@ internal sealed class TokenItemState {
 
     abstract val id: String
 
-    abstract val iconState: IconState
+    abstract val iconState: TokenIconState
 
     abstract val titleState: TitleState
 
@@ -24,7 +23,7 @@ internal sealed class TokenItemState {
     /** Loading token state */
     data class Loading(
         override val id: String,
-        override val iconState: IconState,
+        override val iconState: TokenIconState,
         override val titleState: TitleState.Content,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
@@ -34,7 +33,7 @@ internal sealed class TokenItemState {
 
     /** Locked token state */
     data class Locked(override val id: String) : TokenItemState() {
-        override val iconState: IconState = IconState.Locked
+        override val iconState: TokenIconState = TokenIconState.Locked
         override val titleState: TitleState = TitleState.Locked
         override val fiatAmountState: FiatAmountState = FiatAmountState.Locked
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Locked
@@ -52,7 +51,7 @@ internal sealed class TokenItemState {
      */
     data class Content(
         override val id: String,
-        override val iconState: IconState,
+        override val iconState: TokenIconState,
         override val titleState: TitleState,
         override val fiatAmountState: FiatAmountState,
         override val cryptoAmountState: CryptoAmountState.Content,
@@ -70,7 +69,7 @@ internal sealed class TokenItemState {
      */
     data class Draggable(
         override val id: String,
-        override val iconState: IconState,
+        override val iconState: TokenIconState,
         override val titleState: TitleState,
         override val cryptoAmountState: CryptoAmountState,
     ) : TokenItemState() {
@@ -89,7 +88,7 @@ internal sealed class TokenItemState {
      */
     data class Unreachable(
         override val id: String,
-        override val iconState: IconState,
+        override val iconState: TokenIconState,
         override val titleState: TitleState,
         val onItemClick: () -> Unit,
         val onItemLongClick: () -> Unit,
@@ -109,91 +108,13 @@ internal sealed class TokenItemState {
      */
     data class NoAddress(
         override val id: String,
-        override val iconState: IconState,
+        override val iconState: TokenIconState,
         override val titleState: TitleState,
         val onItemLongClick: () -> Unit,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val cryptoAmountState: CryptoAmountState? = null
         override val priceChangeState: PriceChangeState? = null
-    }
-
-    /**
-     * Represents the various states an icon can be in.
-     */
-    @Immutable
-    sealed class IconState {
-
-        abstract val isGrayscale: Boolean
-        abstract val showCustomBadge: Boolean
-        abstract val networkBadgeIconResId: Int?
-
-        /**
-         * Represents a coin icon.
-         *
-         * @property url The URL where the coin icon can be fetched from. May be `null` if not found.
-         * @property fallbackResId The drawable resource ID to be used as a fallback if the URL is not available.
-         * @property isGrayscale Specifies whether to show the icon in grayscale.
-         * @property showCustomBadge Specifies whether to show the custom token badge.
-         */
-        data class CoinIcon(
-            val url: String?,
-            @DrawableRes val fallbackResId: Int,
-            override val isGrayscale: Boolean,
-            override val showCustomBadge: Boolean,
-        ) : IconState() {
-
-            override val networkBadgeIconResId: Int? = null
-        }
-
-        /**
-         * Represents a token icon.
-         *
-         * @property url The URL where the token icon can be fetched from. May be `null` if not found.
-         * @property networkBadgeIconResId The drawable resource ID for the network badge.
-         * @property isGrayscale Specifies whether to show the icon in grayscale.
-         * @property showCustomBadge Specifies whether to show the custom token badge.
-         * @property fallbackTint The color to be used for tinting the fallback icon.
-         * @property fallbackBackground The background color to be used for the fallback icon.
-         */
-        data class TokenIcon(
-            val url: String?,
-            @DrawableRes override val networkBadgeIconResId: Int,
-            override val isGrayscale: Boolean,
-            override val showCustomBadge: Boolean,
-            val fallbackTint: Color,
-            val fallbackBackground: Color,
-        ) : IconState()
-
-        /**
-         * Represents a custom token icon.
-         *
-         * @property tint The color to be used for tinting the icon.
-         * @property background The background color to be used for the icon.
-         * @property networkBadgeIconResId The drawable resource ID for the network badge.
-         * @property isGrayscale Specifies whether to show the icon in grayscale.
-         */
-        data class CustomTokenIcon(
-            val tint: Color,
-            val background: Color,
-            @DrawableRes override val networkBadgeIconResId: Int,
-            override val isGrayscale: Boolean,
-        ) : IconState() {
-
-            override val showCustomBadge: Boolean = true
-        }
-
-        object Loading : IconState() {
-            override val isGrayscale: Boolean = false
-            override val showCustomBadge: Boolean = false
-            override val networkBadgeIconResId: Int? = null
-        }
-
-        object Locked : IconState() {
-            override val isGrayscale: Boolean = false
-            override val showCustomBadge: Boolean = false
-            override val networkBadgeIconResId: Int? = null
-        }
     }
 
     @Immutable

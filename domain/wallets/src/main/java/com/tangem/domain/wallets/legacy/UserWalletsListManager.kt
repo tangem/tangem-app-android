@@ -113,6 +113,13 @@ interface UserWalletsListManager {
          */
         suspend fun unlock(throwIfNotAllWalletsUnlocked: Boolean = false): CompletionResult<UserWallet>
 
+        /**
+         * Unlock all [UserWallet]s and select passed [UserWalletId]
+         *
+         * @param selectedWalletId [UserWalletId] of [UserWallet] which must be selected
+         */
+        suspend fun unlockAndSelect(selectedWalletId: UserWalletId): CompletionResult<UserWallet>
+
         /** Remove [UserWallet]s from [userWallets] and set [isLocked] as true */
         fun lock()
     }
