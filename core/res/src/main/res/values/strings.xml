@@ -222,10 +222,9 @@
     <string name="manage_tokens_network_selector_title">Choose networks</string>
     <string name="manage_tokens_network_selector_wallet">Wallet</string>
     <string name="manage_tokens_nothing_found">Couldn’t find this token, you can add it manually</string>
-    <string name="manage_tokens_number_of_wallets">%d of %#@total_wallets@</string>
-    <plurals name="manage_tokens_number_of_walletstotal_wallets">
-        <item quantity="one">%d wallet</item>
-        <item quantity="other">%d wallets</item>
+    <plurals name="manage_tokens_number_of_wallets_android">
+        <item quantity="one">%1$d of %2$d wallet</item>
+        <item quantity="other">%1$d of %2$d wallets</item>
     </plurals>
     <string name="manage_tokens_search_placeholder">e.g. BTC I trust, hodl I must</string>
     <string name="manage_tokens_title">Coin market cap</string>
@@ -392,6 +391,7 @@
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priority</string>
     <string name="send_max_amount_label">Maximum amount</string>
+    <string name="send_max_amount">Max</string>
     <string name="send_network_fee_title">Network fee</string>
     <string name="send_title_currency_format">Sending %s</string>
     <string name="send_total_label">Total</string>
@@ -400,6 +400,7 @@
     <string name="send_total_subtitle_format">%s will be sent</string>
     <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
     <string name="send_validation_invalid_address">Invalid address</string>
+    <string name="send_insufficient_funds">Insufficient funds for transfer</string>
     <string name="shop_buy_now">Buy now</string>
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
