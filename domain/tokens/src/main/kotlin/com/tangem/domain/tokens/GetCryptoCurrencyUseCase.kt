@@ -6,7 +6,6 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -19,17 +18,13 @@ class GetCryptoCurrencyUseCase(
      *
      * @param userWalletId The ID of the user's wallet.
      * @param id The ID of the cryptocurrency.
-     * @param contractAddress The contract address of the crypto currency
-     * @param derivationPath currency derivation path.
      * @return An [Either] representing success (Right) or an error (Left) in fetching the status.
      */
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
-        contractAddress: String?,
-        derivationPath: Network.DerivationPath,
     ): Either<CurrencyStatusError, CryptoCurrency> {
-        return either { getCurrency(userWalletId, id, contractAddress, derivationPath) }
+        return either { getCurrency(userWalletId, id) }
     }
 
     /**
@@ -45,17 +40,10 @@ class GetCryptoCurrencyUseCase(
     private suspend fun Raise<CurrencyStatusError>.getCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
-        contractAddress: String?,
-        derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
         return catch(
             block = {
-                currenciesRepository.getMultiCurrencyWalletCurrency(
-                    userWalletId,
-                    id,
-                    contractAddress,
-                    derivationPath,
-                )
+                currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, id)
             },
             catch = { raise(CurrencyStatusError.DataError(it)) },
         )
