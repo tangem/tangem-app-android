@@ -350,7 +350,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     private fun initWithConfigDependency(config: Config) {
         shopService = TangemShopService(this, config.shopify!!)
         initAnalytics(this, config)
-        initFeedbackManager(this, preferencesStorage, foregroundActivityObserver, store)
+        initFeedbackManager(this, foregroundActivityObserver, store)
     }
 
     private fun initAnalytics(application: Application, config: Config) {
@@ -372,7 +372,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initFeedbackManager(
         context: Context,
-        preferencesStorage: PreferencesDataSource,
         foregroundActivityObserver: ForegroundActivityObserver,
         store: Store<AppState>,
     ) {
@@ -411,7 +410,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         val feedbackManager = FeedbackManager(
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
-            chatManager = ChatManager(preferencesStorage, foregroundActivityObserver, store),
+            chatManager = ChatManager(foregroundActivityObserver),
         )
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }

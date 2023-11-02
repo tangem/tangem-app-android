@@ -30,18 +30,19 @@ class GetCurrencyWarningsUseCase(
     ): Flow<Set<CryptoCurrencyWarning>> {
         val currency = currencyStatus.currency
         return combine(
-            getFeeWarningFlow(
+            getCoinRelatedWarnings(
                 userWalletId = userWalletId,
                 networkId = currency.network.id,
                 currencyId = currency.id,
                 derivationPath = derivationPath,
+                contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
                 isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
             flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(getNetworkUnavailableWarning(currencyStatus)),
             flowOf(getNetworkNoAccountWarning(currencyStatus)),
-        ) { maybeFeeWarning, maybeRentWarning, maybeEdWarning, maybeNetworkUnavailable, maybeNetworkNoAccount ->
+        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeNetworkUnavailable, maybeNetworkNoAccount ->
             setOfNotNull(
                 maybeRentWarning,
                 maybeEdWarning?.let {
@@ -50,20 +51,22 @@ class GetCurrencyWarningsUseCase(
                         edStringValueWithSymbol = "${it.toPlainString()} ${currency.symbol}",
                     )
                 },
-                maybeFeeWarning,
+                *coinRelatedWarnings.toTypedArray(),
                 maybeNetworkUnavailable,
                 maybeNetworkNoAccount,
             )
         }.flowOn(dispatchers.io)
     }
 
-    private suspend fun getFeeWarningFlow(
+    @Suppress("LongParameterList")
+    private suspend fun getCoinRelatedWarnings(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
+        contractAddress: String?,
         derivationPath: Network.DerivationPath,
         isSingleWalletWithTokens: Boolean,
-    ): Flow<CryptoCurrencyWarning?> {
+    ): Flow<List<CryptoCurrencyWarning>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
@@ -74,7 +77,7 @@ class GetCurrencyWarningsUseCase(
         val currencyFlow = if (isSingleWalletWithTokens) {
             operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
         } else {
-            operations.getCurrencyStatusFlow(currencyId, derivationPath)
+            operations.getCurrencyStatusFlow(currencyId, contractAddress, derivationPath)
         }
         val networkFlow = if (isSingleWalletWithTokens) {
             operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
@@ -87,17 +90,21 @@ class GetCurrencyWarningsUseCase(
         ) { tokenStatus, coinStatus ->
             when {
                 tokenStatus != null && coinStatus != null -> {
-                    if (!tokenStatus.value.amount.isZero() && coinStatus.value.amount.isZero()) {
-                        CryptoCurrencyWarning.BalanceNotEnoughForFee(
-                            currency = tokenStatus.currency,
-                            blockchainFullName = coinStatus.currency.name,
-                            blockchainSymbol = coinStatus.currency.symbol,
-                        )
-                    } else {
-                        null
+                    buildList {
+                        if (currenciesRepository.hasPendingTransactions(tokenStatus, coinStatus)) {
+                            add(CryptoCurrencyWarning.HasPendingTransactions(coinStatus.currency.symbol))
+                        }
+                        if (!tokenStatus.value.amount.isZero() && coinStatus.value.amount.isZero()) {
+                            add(
+                                CryptoCurrencyWarning.BalanceNotEnoughForFee(
+                                    tokenCurrency = tokenStatus.currency,
+                                    coinCurrency = coinStatus.currency,
+                                ),
+                            )
+                        }
                     }
                 }
-                else -> CryptoCurrencyWarning.SomeNetworksUnreachable
+                else -> listOf(CryptoCurrencyWarning.SomeNetworksUnreachable)
             }
         }
     }
