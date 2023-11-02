@@ -17,6 +17,7 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -38,9 +39,10 @@ internal class DefaultCurrenciesRepository(
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
-    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(demoConfig)
+    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory()
     private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
     private val userTokensResponseFactory = UserTokensResponseFactory()
+    private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
@@ -84,7 +86,7 @@ internal class DefaultCurrenciesRepository(
                 savedCurrencies = savedCurrencies.tokens,
             )
 
-            val newCurrencies = newCoins + filteredCurrencies
+            val newCurrencies = (newCoins + filteredCurrencies).distinct()
 
             storeAndPushTokens(
                 userWalletId = userWalletId,
@@ -213,6 +215,7 @@ internal class DefaultCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+        contractAddress: String?,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency = withContext(dispatchers.io) {
         val userWallet = getUserWallet(userWalletId)
@@ -222,7 +225,13 @@ internal class DefaultCurrenciesRepository(
             "Unable to find tokens response for user wallet with provided ID: $userWalletId"
         }
 
-        responseCurrenciesFactory.createCurrency(id, response, userWallet.scanResponse, derivationPath.value)
+        responseCurrenciesFactory.createCurrency(
+            currencyId = id,
+            contractAddress = contractAddress,
+            response = response,
+            scanResponse = userWallet.scanResponse,
+            derivationPath = derivationPath.value,
+        )
     }
 
     override suspend fun getNetworkCoin(
@@ -294,6 +303,20 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
+    override fun hasPendingTransactions(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus?,
+    ): Boolean {
+        val blockchain = Blockchain.fromId(cryptoCurrencyStatus.currency.network.id.value)
+        val isBitcoinBlockchain = blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
+        return if (cryptoCurrencyStatus.currency is CryptoCurrency.Coin && isBitcoinBlockchain) {
+            val outgoingTransactions = cryptoCurrencyStatus.value.pendingTransactions.filter { it.isOutgoing }
+            outgoingTransactions.isNotEmpty()
+        } else {
+            coinStatus?.value?.hasCurrentNetworkTransactions == true
+        }
+    }
+
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
         return userTokensStore.get(userWallet.walletId).map { storedTokens ->
             responseCurrenciesFactory.createCurrencies(
@@ -314,6 +337,18 @@ internal class DefaultCurrenciesRepository(
     private suspend fun fetchTokens(userWallet: UserWallet) {
         val userWalletId = userWallet.walletId
 
+        if (demoConfig.isDemoCardId(userWallet.cardId) && userTokensStore.getSyncOrNull(key = userWalletId) == null) {
+            userTokensStore.store(
+                key = userWalletId,
+                value = userTokensResponseFactory.createUserTokensResponse(
+                    currencies = cardCurrenciesFactory.createDefaultCoinsForMultiCurrencyCard(userWallet.scanResponse),
+                    isGroupedByNetwork = false,
+                    isSortedByBalance = false,
+                ),
+            )
+            return
+        }
+
         val response = safeApiCall(
             call = {
                 tangemTechApi.getUserTokens(userWalletId.stringValue).bind().let {
@@ -323,12 +358,14 @@ internal class DefaultCurrenciesRepository(
             onError = { handleFetchTokensError(userWallet, it) },
         )
 
-        userTokensStore.store(userWallet.walletId, response)
-        fetchExchangeableUserMarketCoinsByIds(userWalletId, response)
+        val compatibleUserTokensResponse = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(response)
+        userTokensStore.store(userWallet.walletId, compatibleUserTokensResponse)
+        fetchExchangeableUserMarketCoinsByIds(userWalletId, compatibleUserTokensResponse)
     }
 
     private suspend fun storeAndPushTokens(userWalletId: UserWalletId, response: UserTokensResponse) {
-        userTokensStore.store(userWalletId, response)
+        val compatibleUserTokensResponse = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(response)
+        userTokensStore.store(userWalletId, compatibleUserTokensResponse)
         try {
             tangemTechApi.saveUserTokens(userWalletId.stringValue, response)
         } catch (e: Throwable) {
