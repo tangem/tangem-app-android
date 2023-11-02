@@ -12,6 +12,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.operations.attestation.Attestation
 
+@Suppress("TooManyFunctions")
 internal class TangemCardTypesResolver(
     private val card: CardDTO,
     private val productType: ProductType,
@@ -29,12 +30,23 @@ internal class TangemCardTypesResolver(
         return card.firmwareVersion.compareTo(FirmwareVersion.KeysImportAvailable) == 0
     }
 
+    override fun isTronWallet(): Boolean = card.batchId == TRON_WALLET_BATCH_ID
+
+    override fun isKaspaWallet(): Boolean = card.batchId == KASPA_WALLET_BATCH_ID
+
+    override fun isBadWallet(): Boolean = card.batchId == BAD_WALLET_BATCH_ID
+
     override fun isWhiteWallet(): Boolean {
         return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
     }
 
     override fun isWallet2(): Boolean {
-        return card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available && card.settings.isKeysImportAllowed
+        return card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
+            card.settings.isKeysImportAllowed
+    }
+
+    override fun isRing(): Boolean {
+        return productType == ProductType.Ring
     }
 
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins
@@ -42,6 +54,8 @@ internal class TangemCardTypesResolver(
     override fun isStart2Coin(): Boolean = card.isStart2Coin
 
     override fun isDevKit(): Boolean = card.batchId == DEV_KIT_CARD_BATCH_ID
+
+    override fun isSingleWalletWithToken(): Boolean = walletData?.token != null && !isMultiwalletAllowed()
 
     override fun isMultiwalletAllowed(): Boolean {
         return !isTangemTwins() && !card.isStart2Coin && !isTangemNote() &&
@@ -113,5 +127,8 @@ internal class TangemCardTypesResolver(
     private companion object {
 
         const val DEV_KIT_CARD_BATCH_ID = "CB83"
+        const val TRON_WALLET_BATCH_ID = "AF07"
+        const val KASPA_WALLET_BATCH_ID = "AF08"
+        const val BAD_WALLET_BATCH_ID = "AF09"
     }
 }
