@@ -14,8 +14,7 @@ internal class AddressValidator {
         val blockchain = walletManager.wallet.blockchain
         val wallet = walletManager.wallet
         val regex = Regex("^[a-z0-9-_]+$")
-        return if ((blockchain == Blockchain.Near || blockchain == Blockchain.NearTestnet) &&
-            address.length != NEAR_IMPLICIT_ADDRESS_LENGTH && regex.matches(address)
+        return if (blockchain.isNear() && address.length != NEAR_IMPLICIT_ADDRESS_LENGTH && regex.matches(address)
         ) {
             validateNearNamedAddress(walletManager, address)
         } else {
@@ -33,6 +32,10 @@ internal class AddressValidator {
         } else {
             AddressVerifyAction.Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN
         }
+    }
+
+    private fun Blockchain.isNear(): Boolean {
+        return this == Blockchain.Near || this == Blockchain.NearTestnet
     }
 
     private fun validateAddress(wallet: Wallet, address: String): AddressVerifyAction.Error? {
