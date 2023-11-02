@@ -41,7 +41,8 @@ internal class TangemCardTypesResolver(
     }
 
     override fun isWallet2(): Boolean {
-        return productType == ProductType.Wallet2
+        return card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
+            card.settings.isKeysImportAllowed
     }
 
     override fun isRing(): Boolean {

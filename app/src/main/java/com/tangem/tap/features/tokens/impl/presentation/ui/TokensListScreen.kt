@@ -36,6 +36,8 @@ import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
 import com.tangem.wallet.R
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 
@@ -114,12 +116,9 @@ private fun TokensListContent(
 ) {
     val state = rememberLazyListState()
 
-    if (state.isScrollInProgress) {
-        LocalSoftwareKeyboardController.current?.hide()
-    }
-
     LazyColumn(
         modifier = Modifier
+            .imePadding()
             .fillMaxSize()
             .padding(scaffoldPadding),
         state = state,
@@ -138,6 +137,13 @@ private fun TokensListContent(
         items(items = tokens.itemSnapshotList.items, key = TokenItemState::composedId) {
             TokenItem(model = it)
         }
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(key1 = state) {
+        snapshotFlow(state::isScrollInProgress)
+            .distinctUntilChanged()
+            .collectLatest { if (it) keyboardController?.hide() }
     }
 }
 
