@@ -173,7 +173,6 @@ fun SecondaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: TangemButtonSize = TangemButtonSize.Default,
     showProgress: Boolean = false,
     enabled: Boolean = true,
     size: TangemButtonSize = TangemButtonSize.Default,
