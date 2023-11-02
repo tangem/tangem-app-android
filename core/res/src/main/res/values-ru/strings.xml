@@ -210,6 +210,24 @@
     <string name="main_tokens">Токены</string>
     <string name="manage_tokens_add">Добавить</string>
     <string name="manage_tokens_edit">Изменить</string>
+    <string name="manage_tokens_network_selector_native_title">Основная сеть</string>
+    <string name="manage_tokens_network_selector_non_native_subtitle">Не основной или основной блокчейн, на котором размещен токен</string>
+    <string name="manage_tokens_network_selector_non_native_title">Не основные сети</string>
+    <string name="manage_tokens_network_selector_other_title">Сети</string>
+    <string name="manage_tokens_network_selector_title">Выберите сети</string>
+    <string name="manage_tokens_network_selector_wallet">Кошелек</string>
+    <string name="manage_tokens_nothing_found">Не удалось найти этот токен, вы можете добавить его вручную.</string>
+    <plurals name="manage_tokens_number_of_wallets_android">
+        <item quantity="one">%1$d из %2$d кошелька</item>
+        <item quantity="few">%1$d из %2$d кошельков</item>
+        <item quantity="many">%1$d из %2$d кошельков</item>
+        <item quantity="other">%1$d из %2$d кошельков</item>
+    </plurals>
+    <string name="manage_tokens_search_placeholder">например Bitcoin</string>
+    <string name="manage_tokens_title">Рыночная капитализация</string>
+    <string name="manage_tokens_unavailable_description">Выбранный токен не доступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
+    <string name="manage_tokens_unavailable_vote">Голосовать</string>
+    <string name="manage_tokens_wallet_selector_title">Выберите кошелек</string>
     <string name="onboarding_access_code_feature_1_description">Вам необходимо установить единый код доступа для защиты всех ваших карт</string>
     <string name="onboarding_access_code_feature_1_title">Защита</string>
     <string name="onboarding_access_code_feature_2_description">Позже вы сможете установить индивидуальный код доступа для каждой карты</string>
