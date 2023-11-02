@@ -12,6 +12,10 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
+import com.tangem.features.managetokens.navigation.ManageTokensRouter
+import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
+import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -36,6 +40,8 @@ data class DaggerGraphState(
     val walletConnectSessionsRepository: WalletConnectSessionsRepository? = null,
     val walletConnectInteractor: WalletConnectInteractor? = null,
     val tokenDetailsRouter: TokenDetailsRouter? = null,
+    val manageTokensFeatureToggles: ManageTokensFeatureToggles? = null,
+    val manageTokensRouter: ManageTokensRouter? = null,
     val scanCardProcessor: ScanCardProcessor? = null,
     val cardSdkConfigRepository: CardSdkConfigRepository? = null,
     val appCurrencyRepository: AppCurrencyRepository? = null,
@@ -46,6 +52,8 @@ data class DaggerGraphState(
     val detailsFeatureToggles: DetailsFeatureToggles? = null,
     val walletsRepository: WalletsRepository? = null,
     val networksRepository: NetworksRepository? = null,
+    val sendFeatureToggles: SendFeatureToggles? = null,
+    val sendRouter: SendRouter? = null,
 
     // FIXME: It is used only for TokensList screen. Remove after refactoring of TokensList
     val currenciesRepository: CurrenciesRepository? = null,

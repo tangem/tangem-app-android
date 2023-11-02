@@ -28,6 +28,7 @@ dependencies {
     implementation(deps.compose.paging)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
+    implementation(deps.compose.coil)
 
     /** Other libraries */
     implementation(deps.compose.accompanist.systemUiController)
