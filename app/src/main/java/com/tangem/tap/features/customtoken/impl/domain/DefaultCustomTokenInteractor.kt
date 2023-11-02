@@ -4,6 +4,7 @@ import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.core.TangemError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
@@ -16,6 +17,7 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -46,6 +48,13 @@ class DefaultCustomTokenInteractor(
     private val featureRepository: CustomTokenRepository,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) : CustomTokenInteractor {
+// [REDACTED_TODO_COMMENT]
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
+
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     override suspend fun findToken(address: String, blockchain: Blockchain): FoundToken {
         return featureRepository.findToken(
@@ -60,8 +69,12 @@ class DefaultCustomTokenInteractor(
         val currency = Currency.fromCustomCurrency(customCurrency)
         val isNeedToDerive = isNeedToDerive(userWallet, currency)
         if (isNeedToDerive) {
-            deriveMissingBlockchains(userWallet = userWallet, currencyList = listOf(currency)) {
-                submitAdd(userWallet = userWallet, currency = currency)
+            deriveMissingBlockchains(
+                userWallet = userWallet,
+                currencyList = listOf(currency),
+                onSuccess = { submitAdd(userWallet = userWallet.copy(scanResponse = it), currency = currency) },
+            ) {
+                throw it
             }
         } else {
             submitAdd(userWallet, currency)
@@ -77,6 +90,7 @@ class DefaultCustomTokenInteractor(
         userWallet: UserWallet,
         currencyList: List<Currency>,
         onSuccess: suspend (ScanResponse) -> Unit,
+        onFailure: suspend (TangemError) -> Unit,
     ) {
         val scanResponse = userWallet.scanResponse
         val config = CardConfig.createConfig(scanResponse.card)
@@ -121,6 +135,7 @@ class DefaultCustomTokenInteractor(
                 onSuccess(updatedScanResponse)
             }
             is CompletionResult.Failure -> {
+                onFailure.invoke(result.error)
                 store.dispatchDebugErrorNotification(TapError.CustomError("Error adding tokens"))
             }
         }
@@ -219,21 +234,13 @@ class DefaultCustomTokenInteractor(
         updatedScanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
     ) {
-        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
-        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
         scope.launch {
             userWalletsListManager.update(
                 userWalletId = userWalletId,
                 update = { it.copy(scanResponse = updatedScanResponse) },
             )
 
-            currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = currencyList)
-            val networks = currencyList.map { it.network }.toSet()
-            networksRepository.getNetworkStatusesSync(
-                userWalletId = userWalletId,
-                networks = networks,
-                refresh = true,
-            )
+            addCryptoCurrenciesUseCase(userWalletId, currencyList)
         }
     }
 }

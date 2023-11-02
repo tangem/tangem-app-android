@@ -56,4 +56,6 @@ internal interface InnerWalletRouter : WalletRouter {
 
     /** Open manage tokens screen */
     fun openManageTokensScreen()
+
+    fun openScanFailedDialog()
 }

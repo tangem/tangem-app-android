@@ -5,7 +5,6 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.wallet.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -47,7 +46,7 @@ internal sealed class SettingsItem(
         override val onClick: () -> Unit,
     ) : SettingsItem(
         iconResId = R.drawable.ic_plus_24,
-        title = stringReference(value = "Add new wallet"),
+        title = resourceReference(R.string.user_wallet_list_add_button),
     )
 
     data class ScanWallet(
@@ -55,7 +54,7 @@ internal sealed class SettingsItem(
         override val onClick: () -> Unit,
     ) : SettingsItem(
         iconResId = R.drawable.ic_plus_24,
-        title = stringReference(value = "Scan new wallet"),
+        title = resourceReference(R.string.scan_card_settings_button),
     )
 
     data class LinkMoreCards(

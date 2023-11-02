@@ -205,6 +205,7 @@ internal class SwapViewModel @Inject constructor(
                         fromToken = fromToken,
                         toToken = toToken,
                         amountToSwap = amount,
+                        selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     )
                 }
             },
@@ -461,7 +462,16 @@ internal class SwapViewModel @Inject constructor(
             },
             onGivePermissionClick = {
                 givePermissionsToSwap()
-                analyticsEventHandler.send(SwapEvents.ButtonPermissionApproveClicked)
+                val sendTokenSymbol = dataState.fromCurrency?.symbol
+                val receiveTokenSymbol = dataState.toCurrency?.symbol
+                if (sendTokenSymbol != null && receiveTokenSymbol != null) {
+                    analyticsEventHandler.send(
+                        SwapEvents.ButtonPermissionApproveClicked(
+                            sendToken = sendTokenSymbol,
+                            receiveToken = receiveTokenSymbol,
+                        ),
+                    )
+                }
             },
             onChangeCardsClicked = {
                 onChangeCardsClicked()
@@ -481,7 +491,19 @@ internal class SwapViewModel @Inject constructor(
             },
             onSelectItemFee = { feeItem ->
                 dataState = dataState.copy(selectedFee = feeItem.data)
-                uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem)
+                val spendAmount = dataState.swapDataModel?.swapModel?.fromTokenAmount
+                    ?: dataState.approveDataModel?.fromTokenAmount
+                spendAmount ?: return@UiActions
+                val fromToken = dataState.fromCurrency ?: return@UiActions
+                viewModelScope.launch(dispatchers.io) {
+                    val isFeeEnough = swapInteractor.checkFeeIsEnough(
+                        fee = feeItem.data.feeValue,
+                        spendAmount = spendAmount,
+                        networkId = dataState.networkId,
+                        fromToken = fromToken,
+                    )
+                    uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem, isFeeEnough)
+                }
             },
         )
     }
