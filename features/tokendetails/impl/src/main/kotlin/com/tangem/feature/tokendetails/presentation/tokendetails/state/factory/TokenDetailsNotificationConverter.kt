@@ -19,20 +19,20 @@ internal class TokenDetailsNotificationConverter(
 
     fun removeRentInfo(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
         val newNotifications = currentState.notifications.toMutableList()
-        newNotifications.removeBy { it is TokenDetailsNotification.Informational.RentInfo }
+        newNotifications.removeBy { it is TokenDetailsNotification.RentInfo }
         return newNotifications.toImmutableList()
     }
 
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
-            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.Warning.NetworkFee(
+            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFee(
                 feeInfo = warning,
                 onBuyClick = { clickIntents.onBuyCoinClick(warning.coinCurrency) },
             )
-            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.Informational.ExistentialDeposit(
+            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDeposit(
                 existentialInfo = warning,
             )
-            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.Informational.RentInfo(
+            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.RentInfo(
                 rentInfo = warning,
                 onCloseClick = clickIntents::onCloseRentInfoNotification,
             )
