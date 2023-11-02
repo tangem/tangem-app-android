@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 interface TxHistoryRepository {
 
     @Throws(TxHistoryStateError::class)
-    suspend fun getTxHistoryItemsCount(userWalletId: UserWalletId, network: Network): Int
+    suspend fun getTxHistoryItemsCount(userWalletId: UserWalletId, currency: CryptoCurrency): Int
 
     @Throws(TxHistoryListError::class)
     fun getTxHistoryItems(
