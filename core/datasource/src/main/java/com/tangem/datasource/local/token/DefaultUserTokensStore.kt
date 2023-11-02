@@ -10,6 +10,6 @@ internal class DefaultUserTokensStore(
 ) : UserTokensStore, StringKeyDataStoreDecorator<UserWalletId, UserTokensResponse>(dataStore) {
 
     override fun provideStringKey(key: UserWalletId): String {
-        return key.stringValue
+        return "user_tokens_${key.stringValue}"
     }
 }
