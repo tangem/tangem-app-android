@@ -1,9 +1,7 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,6 +36,8 @@ import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
 import com.tangem.wallet.R
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 
@@ -82,14 +82,14 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
             bottomMarginDp = floatingButtonHeight,
         )
 
-        stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
+        Crossfade(targetState = stateHolder.isLoading, label = "Update progress bar visibility") {
+            if (it) {
+                LoadingContent()
+            }
+        }
 
-        AnimatedVisibility(
-            visible = stateHolder.isLoading,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            LoadingContent()
+        LaunchedEffect(key1 = tokens.loadState.refresh) {
+            stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
         }
     }
 }
@@ -116,19 +116,19 @@ private fun TokensListContent(
 ) {
     val state = rememberLazyListState()
 
-    if (state.isScrollInProgress) {
-        LocalSoftwareKeyboardController.current?.hide()
-    }
-
     LazyColumn(
         modifier = Modifier
+            .imePadding()
             .fillMaxSize()
             .padding(scaffoldPadding),
         state = state,
         contentPadding = PaddingValues(bottom = bottomMarginDp),
     ) {
-        if (isDifferentAddressesBlockVisible) {
-            item { DifferentAddressesWarning() }
+        item(
+            key = "DifferentAddressesWarning$isDifferentAddressesBlockVisible",
+            contentType = "DifferentAddressesWarning$isDifferentAddressesBlockVisible",
+        ) {
+            if (isDifferentAddressesBlockVisible) DifferentAddressesWarning()
         }
 
         tokens.itemKey(TokenItemState::composedId)
@@ -137,6 +137,13 @@ private fun TokensListContent(
         items(items = tokens.itemSnapshotList.items, key = TokenItemState::composedId) {
             TokenItem(model = it)
         }
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(key1 = state) {
+        snapshotFlow(state::isScrollInProgress)
+            .distinctUntilChanged()
+            .collectLatest { if (it) keyboardController?.hide() }
     }
 }
 

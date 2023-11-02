@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.converters
 
+import com.tangem.common.Provider
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.feature.swap.domain.models.ui.FoundTokensState
@@ -12,6 +13,7 @@ import com.tangem.feature.swap.models.TokenToSelect
 class TokensDataConverter(
     private val onSearchEntered: (String) -> Unit,
     private val onTokenSelected: (String) -> Unit,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
 ) {
 
     fun convertWithNetwork(value: FoundTokensState, network: NetworkInfo): SwapSelectTokenStateHolder {
@@ -34,6 +36,7 @@ class TokensDataConverter(
             addedTokenBalanceData = TokenBalanceData(
                 amount = tokenWithBalance.tokenBalanceData?.amount,
                 amountEquivalent = tokenWithBalance.tokenBalanceData?.amountEquivalent,
+                isBalanceHidden = isBalanceHiddenProvider.invoke(),
             ),
         )
     }
