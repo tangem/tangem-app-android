@@ -1,8 +1,8 @@
-package com.tangem.feature.swap.models.request
+package com.tangem.datasource.api.express.models.request
 
 import com.squareup.moshi.Json
 
-internal data class LeastTokenInfo(
+data class LeastTokenInfo(
     @Json(name = "contractAddress")
     val contractAddress: String,
 
