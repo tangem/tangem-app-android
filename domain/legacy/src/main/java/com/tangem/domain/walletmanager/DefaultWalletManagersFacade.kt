@@ -1,16 +1,20 @@
 package com.tangem.domain.walletmanager
 
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
+import arrow.core.right
+import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
@@ -24,18 +28,22 @@ import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
+import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import java.math.BigDecimal
 
+@Suppress("LargeClass")
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
     configManager: ConfigManager,
+    assetReader: AssetReader,
+    moshi: Moshi,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
@@ -43,7 +51,7 @@ class DefaultWalletManagersFacade(
     private val walletManagerFactory by lazy { WalletManagerFactory(configManager) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
-    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter() }
+    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
 
     override suspend fun update(
         userWalletId: UserWalletId,
@@ -55,6 +63,50 @@ class DefaultWalletManagersFacade(
         val derivationPath = network.derivationPath.value
 
         return getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)
+    }
+
+    override suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>) {
+        if (networks.isEmpty()) return
+
+        val blockchainsToDerivationPaths = networks.map {
+            Blockchain.fromId(it.id.value) to it.derivationPath.value
+        }
+
+        walletManagersStore.remove(userWalletId) { walletManager ->
+            val wallet = walletManager.wallet
+            val blockchainToDerivationPath = wallet.blockchain to wallet.publicKey.derivationPath?.rawPath
+
+            blockchainToDerivationPath in blockchainsToDerivationPaths
+        }
+    }
+
+    override suspend fun removeTokens(userWalletId: UserWalletId, tokens: Set<CryptoCurrency.Token>) {
+        if (tokens.isEmpty()) return
+
+        tokens
+            .groupBy(CryptoCurrency.Token::network)
+            .forEach { (network, networkTokens) ->
+                removeTokens(userWalletId, network, networkTokens)
+            }
+    }
+
+    private suspend fun removeTokens(
+        userWalletId: UserWalletId,
+        network: Network,
+        networkTokens: List<CryptoCurrency.Token>,
+    ) {
+        val walletManager = walletManagersStore.getSyncOrNull(
+            userWalletId = userWalletId,
+            blockchain = Blockchain.fromId(network.id.value),
+            derivationPath = network.derivationPath.value,
+        ) ?: return
+        val tokensToRemove = sdkTokenConverter.convertList(networkTokens)
+
+        tokensToRemove.forEach { token ->
+            walletManager.removeToken(token)
+        }
+
+        walletManagersStore.store(userWalletId, walletManager)
     }
 
     override suspend fun updatePendingTransactions(
@@ -83,6 +135,7 @@ class DefaultWalletManagersFacade(
         userWalletId: UserWalletId,
         network: Network,
         addressType: AddressType,
+        contractAddress: String?,
     ): String {
         val blockchain = Blockchain.fromId(network.id.value)
 
@@ -96,16 +149,20 @@ class DefaultWalletManagersFacade(
             "Unable to get a wallet manager for blockchain: $blockchain"
         }
 
-        val address = walletManager.wallet.addresses.find { it.type == addressType }?.value
-        return walletManager.wallet.getExploreUrl(address)
+        val address = walletManager
+            .wallet
+            .addresses
+            .find { it.type == addressType }
+            ?.value ?: walletManager.wallet.address
+        return blockchain.getExploreUrl(address, contractAddress)
     }
 
-    override suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState {
-        val blockchain = Blockchain.fromId(network.id.value)
+    override suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState {
+        val blockchain = Blockchain.fromId(currency.network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            derivationPath = currency.network.derivationPath.value,
         )
 
         requireNotNull(walletManager) {
@@ -113,7 +170,13 @@ class DefaultWalletManagersFacade(
         }
 
         return walletManager
-            .getTransactionHistoryState(walletManager.wallet.address)
+            .getTransactionHistoryState(
+                address = walletManager.wallet.address,
+                filterType = when (currency) {
+                    is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
+                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                },
+            )
             .let(txHistoryStateConverter::convert)
     }
 
@@ -286,7 +349,11 @@ class DefaultWalletManagersFacade(
             is Result.Success -> {
                 val balance = manager.wallet.fundsAvailable(AmountType.Coin)
                 val outgoingTxs = manager.wallet.recentTransactions
-                    .filter { it.sourceAddress == manager.wallet.address && it.amount.type == AmountType.Coin }
+                    .filter {
+                        it.sourceAddress == manager.wallet.address &&
+                            it.amount.type == AmountType.Coin &&
+                            it.status != TransactionStatus.Confirmed
+                    }
 
                 val rentExempt = result.data
                 val setRent = if (outgoingTxs.isEmpty()) {
@@ -316,6 +383,29 @@ class DefaultWalletManagersFacade(
 
     override fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>> {
         return walletManagersStore.getAll(userWalletId)
+    }
+
+    override suspend fun validateSignatureCount(
+        userWalletId: UserWalletId,
+        network: Network,
+        signedHashes: Int,
+    ): Either<Throwable, Unit> {
+        return either {
+            val walletManager = getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = Blockchain.fromId(network.id.value),
+                derivationPath = network.derivationPath.value,
+            )
+
+            val validator = ensureNotNull(walletManager as? SignatureCountValidator) {
+                raise(IllegalStateException("Wallet manager is not a SignatureCountValidator"))
+            }
+
+            when (val result = validator.validateSignatureCount(signedHashes)) {
+                is SimpleResult.Failure -> raise(result.error)
+                is SimpleResult.Success -> Unit.right()
+            }
+        }
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {

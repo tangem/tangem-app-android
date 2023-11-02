@@ -1,6 +1,7 @@
 package com.tangem.tap.domain
 
 import android.content.res.Resources
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
@@ -87,12 +88,13 @@ class TangemSdkManager(
 
     suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
-            CreateProductWalletTask(
+            runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
                 derivationStyleProvider = scanResponse.derivationStyleProvider,
             ),
-            scanResponse.card.cardId,
-            Message(resources.getString(R.string.initial_message_create_wallet_body)),
+            cardId = scanResponse.card.cardId,
+            initialMessage = Message(resources.getString(R.string.initial_message_create_wallet_body)),
+            iconScanRes = if (scanResponse.cardTypesResolver.isRing()) R.drawable.img_hand_scan_ring else null,
         )
     }
 
@@ -100,7 +102,7 @@ class TangemSdkManager(
         scanResponse: ScanResponse,
         mnemonic: String,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        val mnemonic = try {
+        val defaultMnemonic = try {
             DefaultMnemonic(mnemonic, tangemSdk.wordlist)
         } catch (e: TangemSdkError.MnemonicException) {
             return CompletionResult.Failure(e)
@@ -109,7 +111,7 @@ class TangemSdkManager(
             CreateProductWalletTask(
                 scanResponse.cardTypesResolver,
                 derivationStyleProvider = scanResponse.derivationStyleProvider,
-                mnemonic,
+                defaultMnemonic,
             ),
             scanResponse.card.cardId,
             Message(resources.getString(R.string.initial_message_create_wallet_body)),
@@ -221,9 +223,10 @@ class TangemSdkManager(
         cardId: String? = null,
         initialMessage: Message? = null,
         accessCode: String? = null,
+        @DrawableRes iconScanRes: Int? = null,
     ): CompletionResult<T> = withContext(Dispatchers.Main) {
         suspendCancellableCoroutine { continuation ->
-            tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode) { result ->
+            tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode, iconScanRes) { result ->
                 if (continuation.isActive) continuation.resume(result)
             }
         }
