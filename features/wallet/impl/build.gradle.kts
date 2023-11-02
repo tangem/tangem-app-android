@@ -65,6 +65,7 @@ dependencies {
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)
