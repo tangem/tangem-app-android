@@ -18,6 +18,7 @@ import androidx.navigation.navArgument
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.core.navigation.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.navigation.OnboardingRouter
@@ -79,7 +80,7 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
          * If backstack contains only NavGraph entry and wallet screen entry then we close the wallet fragment.
          */
         if (navController.currentBackStack.value.size == BACKSTACK_ENTRY_COUNT_TO_CLOSE_WALLET_SCREEN) {
-            if (screen == AppScreen.Home) {
+            if (screen != null) {
                 reduxNavController.navigate(action = NavigationAction.PopBackTo(screen))
             } else {
                 onFinish.invoke()
@@ -94,8 +95,6 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
     }
 
     override fun openDetailsScreen() {
-        // FIXME: Prepare details screen (e.g. dispatch action: `DetailsAction.PrepareScreen`)
-        // [REDACTED_JIRA]
         reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.Details))
     }
 
@@ -136,6 +135,10 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
 
     override fun openManageTokensScreen() {
         reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.ManageTokens))
+    }
+
+    override fun openScanFailedDialog() {
+        reduxNavController.navigate(action = NavigationAction.OpenDialog(StateDialog.ScanFailsDialog))
     }
 
     private companion object {
