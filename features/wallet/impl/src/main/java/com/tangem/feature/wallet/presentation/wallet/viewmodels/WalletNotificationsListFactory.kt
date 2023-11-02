@@ -159,6 +159,18 @@ internal class WalletNotificationsListFactory(
         addMissingAddressesNotification(maybeMissedAddressCurrencies)
     }
 
+    private fun MutableList<WalletNotification>.addInformationalNotifications(
+        cardTypesResolver: CardTypesResolver,
+        maybeMissedAddressCurrencies: Either<GetCurrenciesError, List<CryptoCurrency>>,
+    ) {
+        addIf(
+            element = WalletNotification.Informational.DemoCard,
+            condition = isDemoCardUseCase(cardId = cardTypesResolver.getCardId()),
+        )
+
+        addMissingAddressesNotification(maybeMissedAddressCurrencies)
+    }
+
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
         if (condition) {
             add(element = element)
