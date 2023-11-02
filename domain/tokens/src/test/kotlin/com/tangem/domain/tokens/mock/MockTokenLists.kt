@@ -42,7 +42,7 @@ internal object MockTokenLists {
     )
 
     val noQuotesUngroupedTokenList = failedUngroupedTokenList.copy(
-        totalFiatBalance = TokenList.FiatBalance.Loaded(amount = BigDecimal.ZERO, isAllAmountsSummarized = false),
+        totalFiatBalance = TokenList.FiatBalance.Failed,
         currencies = MockTokensStates.noQuotesTokensStatuses,
     )
 
