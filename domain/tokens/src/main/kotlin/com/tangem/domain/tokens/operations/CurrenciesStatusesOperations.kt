@@ -107,10 +107,11 @@ internal class CurrenciesStatusesOperations(
 
     suspend fun getCurrencyStatusFlow(
         currencyId: CryptoCurrency.ID,
+        contractAddress: String?,
         derivationPath: Network.DerivationPath,
     ): Flow<Either<Error, CryptoCurrencyStatus>> {
         val currency = recover(
-            block = { getMultiCurrencyWalletCurrency(currencyId, derivationPath) },
+            block = { getMultiCurrencyWalletCurrency(currencyId, contractAddress, derivationPath) },
             recover = { return flowOf(it.left()) },
         )
 
@@ -246,13 +247,15 @@ internal class CurrenciesStatusesOperations(
 
     private suspend fun Raise<Error>.getMultiCurrencyWalletCurrency(
         currencyId: CryptoCurrency.ID,
+        contractAddress: String?,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency {
         return Either.catch {
             currenciesRepository.getMultiCurrencyWalletCurrency(
-                userWalletId,
-                currencyId,
-                derivationPath,
+                userWalletId = userWalletId,
+                id = currencyId,
+                contractAddress = contractAddress,
+                derivationPath = derivationPath,
             )
         }
             .mapLeft { Error.DataError(it) }
