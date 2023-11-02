@@ -13,16 +13,17 @@ internal class AddressValidator {
     suspend fun validateAddress(walletManager: WalletManager, address: String): AddressVerifyAction.Error? {
         val blockchain = walletManager.wallet.blockchain
         val wallet = walletManager.wallet
+        val regex = Regex("^[a-z0-9-_]+$")
         return if ((blockchain == Blockchain.Near || blockchain == Blockchain.NearTestnet) &&
-            address.length != NEAR_IMPLICIT_ADDRESS_LENGTH
+            address.length != NEAR_IMPLICIT_ADDRESS_LENGTH && regex.matches(address)
         ) {
-            validateNearAddress(walletManager, address)
+            validateNearNamedAddress(walletManager, address)
         } else {
             validateAddress(wallet, address)
         }
     }
 
-    private suspend fun validateNearAddress(
+    private suspend fun validateNearNamedAddress(
         walletManager: WalletManager,
         address: String,
     ): AddressVerifyAction.Error? {
