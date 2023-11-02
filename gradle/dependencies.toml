@@ -77,13 +77,14 @@ walletConnectCore = "1.18.0"
 walletConnectWeb3 = "1.11.0"
 prettyLogger = "2.2.0"
 okHttp-prettyLogging = "3.1.0"
+chucker = "4.0.0"
 spr-client = "3.6.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.0-374"
+tangemBlockchainSdk = "develop-375"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.0-309"
+tangemCardSdk = "develop-310"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
@@ -228,4 +229,6 @@ walletConnectCore = { module = "com.walletconnect:android-core", version.ref = "
 walletConnectWeb3 = { module = "com.walletconnect:web3wallet", version.ref = "walletConnectWeb3" }
 prettyLogger = { module = "com.orhanobut:logger", version.ref = "prettyLogger" }
 sprClient = { module = "com.spr:messengerclient", version.ref = "spr-client" }
+chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
+chuckerStub = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
 # endregion Other
