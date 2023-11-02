@@ -1,8 +1,8 @@
-package com.tangem.feature.swap.models.request
+package com.tangem.datasource.api.express.models.request
 
 import com.squareup.moshi.Json
 
-internal data class PairsRequestBody(
+data class PairsRequestBody(
     @Json(name = "from")
     val from: List<LeastTokenInfo>,
 
