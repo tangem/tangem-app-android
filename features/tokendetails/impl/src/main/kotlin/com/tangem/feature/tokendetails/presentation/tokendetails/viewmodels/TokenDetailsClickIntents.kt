@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+import com.tangem.domain.tokens.model.CryptoCurrency
 
 interface TokenDetailsClickIntents {
 
@@ -23,6 +24,8 @@ interface TokenDetailsClickIntents {
     fun onRefreshSwipe()
 
     fun onBuyClick()
+
+    fun onBuyCoinClick(cryptoCurrency: CryptoCurrency)
 
     fun onReloadClick()
 

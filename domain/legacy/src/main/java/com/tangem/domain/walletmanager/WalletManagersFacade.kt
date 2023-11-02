@@ -1,5 +1,6 @@
 package com.tangem.domain.walletmanager
 
+import arrow.core.Either
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
@@ -37,6 +38,16 @@ interface WalletManagersFacade {
     ): UpdateWalletManagerResult
 
     /**
+     * Removes the wallet managers associated with a user's wallet and networks.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param networks Set of networks
+     * */
+    suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>)
+
+    suspend fun removeTokens(userWalletId: UserWalletId, tokens: Set<CryptoCurrency.Token>)
+
+    /**
      * Returns [UpdateWalletManagerResult] with last pending transactions
      *
      * @param userWalletId The ID of the user's wallet.
@@ -51,18 +62,24 @@ interface WalletManagersFacade {
      * @param userWalletId The ID of the user's wallet.
      * @param network The network.
      * @param addressType Address type.
+     * @param contractAddress Contract address if currency is Token.
      *
      * @return The network explorer URL, maybe empty if the wallet manager was not found.
      * */
-    suspend fun getExploreUrl(userWalletId: UserWalletId, network: Network, addressType: AddressType): String
+    suspend fun getExploreUrl(
+        userWalletId: UserWalletId,
+        network: Network,
+        addressType: AddressType,
+        contractAddress: String?,
+    ): String
 
     /**
      * Returns transactions count
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param network The network.
+     * @param currency currency.
      */
-    suspend fun getTxHistoryState(userWalletId: UserWalletId, network: Network): TxHistoryState
+    suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState
 
     /**
      * Returns transaction history items wrapped to pagination
@@ -79,7 +96,7 @@ interface WalletManagersFacade {
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem>
 
-    // TODO: Remove after refactoring
+    @Deprecated("Will be removed in future")
     suspend fun getOrCreateWalletManager(
         userWalletId: UserWalletId,
         blockchain: Blockchain,
@@ -111,5 +128,12 @@ interface WalletManagersFacade {
      */
     suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
 
+    @Deprecated("Will be removed in future")
     fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>>
+
+    suspend fun validateSignatureCount(
+        userWalletId: UserWalletId,
+        network: Network,
+        signedHashes: Int,
+    ): Either<Throwable, Unit>
 }
