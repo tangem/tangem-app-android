@@ -28,6 +28,10 @@
     <string name="app_settings_theme_mode_system">System default</string>
     <string name="app_settings_theme_selector_title">Theme</string>
     <string name="app_settings_title">App Settings</string>
+    <string name="balance_hidden_description">To hide or show your balances, simply flip your device screen down, or switch it off in Settings</string>
+    <string name="balance_hidden_do_not_show_button">Don\'t show again</string>
+    <string name="balance_hidden_got_it_button">Got it</string>
+    <string name="balance_hidden_title">Balances are hidden</string>
     <string name="biometric_lockout_permanent_warning_description">Please scan the card</string>
     <string name="biometric_lockout_warning_description">Please try again in 30 seconds or scan the card</string>
     <string name="biometric_lockout_warning_title">Too many attempts</string>
@@ -453,6 +457,9 @@
     <string name="swapping_token_list_title">Choose token</string>
     <string name="swapping_token_list_your_tokens">Your tokens</string>
     <string name="swapping_token_not_available">not available</string>
+    <string name="toast_balances_hidden">Balances hidden</string>
+    <string name="toast_balances_shown">Balances shown</string>
+    <string name="toast_undo">Undo</string>
     <plurals name="token_count">
         <item quantity="one">%d token</item>
         <item quantity="other">%d tokens</item>
