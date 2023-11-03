@@ -178,7 +178,12 @@ class WalletConnectSdkHelper {
             SimpleResult.Success -> {
                 val sentFrom = AnalyticsParam.TxSentFrom.WalletConnect
                 Analytics.send(Basic.TransactionSent(sentFrom = sentFrom, memoType = MemoType.Null))
-                HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
+                val hash = data.walletManager.wallet.recentTransactions.last().hash
+                if (hash?.startsWith(HEX_PREFIX) == true) {
+                    hash
+                } else {
+                    HEX_PREFIX + hash
+                }
             }
             is SimpleResult.Failure -> {
                 Timber.e(result.error as BlockchainSdkError)
@@ -202,12 +207,17 @@ class WalletConnectSdkHelper {
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)
         return when (result) {
             is CompletionResult.Success -> {
-                HEX_PREFIX + EthereumUtils.prepareTransactionToSend(
+                val hash = EthereumUtils.prepareTransactionToSend(
                     signature = result.data.signature,
                     transactionToSign = dataToSign,
                     walletPublicKey = data.walletManager.wallet.publicKey,
                     blockchain = data.walletManager.wallet.blockchain,
                 ).toHexString()
+                if (hash.startsWith(HEX_PREFIX)) {
+                    hash
+                } else {
+                    HEX_PREFIX + hash
+                }
             }
             is CompletionResult.Failure -> {
                 Timber.e(result.error.customMessage)
