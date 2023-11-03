@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import timber.log.Timber
 import java.util.Locale
 
 object GlobalMiddleware {
@@ -190,6 +191,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                             .getAll(userWallet.walletId)
                             .distinctUntilChanged()
                             .onEach(infoHolder::setWalletsInfo)
+                            .catch { Timber.e(it) }
                             .launchIn(mainScope)
                     }
                 }
