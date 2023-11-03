@@ -4,10 +4,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
-import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -18,26 +17,13 @@ internal class ResponseCryptoCurrenciesFactory {
 
     fun createCurrency(
         currencyId: CryptoCurrency.ID,
-        contractAddress: String?,
         response: UserTokensResponse,
         scanResponse: ScanResponse,
-        derivationPath: String?,
     ): CryptoCurrency {
-        val responseTokenId = currencyId.rawCurrencyId
-        val networkId = Blockchain.fromId(currencyId.rawNetworkId).toNetworkId()
-
-        val token = requireNotNull(
-            value = response.tokens
-                .find {
-                    it.id == responseTokenId && it.networkId == networkId && it.derivationPath == derivationPath &&
-                        it.contractAddress == contractAddress
-                },
-            lazyMessage = { "Unable find a token with provided TokenID($responseTokenId) and NetworkID($networkId)" },
-        )
-
-        return requireNotNull(createCurrency(token, scanResponse)) {
-            "Unable to create a currency with provided ID: $currencyId"
-        }
+        return response.tokens
+            .asSequence()
+            .mapNotNull { createCurrency(it, scanResponse) }
+            .first { it.id == currencyId }
     }
 
     fun createCurrencies(response: UserTokensResponse, scanResponse: ScanResponse): List<CryptoCurrency> {
@@ -56,9 +42,8 @@ internal class ResponseCryptoCurrenciesFactory {
         }
 
         val cardDerivationStyleProvider = scanResponse.derivationStyleProvider
-        val card = scanResponse.card
 
-        if (card.isTestCard) {
+        if (scanResponse.cardTypesResolver.isTestCard()) {
             blockchain = blockchain.getTestnetVersion() ?: blockchain
         }
 
