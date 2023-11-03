@@ -221,6 +221,4 @@ private val excludedBlockchains = listOf(
     Blockchain.Ducatus,
     Blockchain.Telos,
     Blockchain.TelosTestnet,
-    Blockchain.Near,
-    Blockchain.NearTestnet,
 )
