@@ -160,8 +160,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             getCurrencyStatusUpdatesUseCase(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
-                contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress,
-                derivationPath = cryptoCurrency.network.derivationPath,
                 isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
@@ -456,8 +454,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                     fetchCurrencyStatusUseCase(
                         userWalletId = userWalletId,
                         id = cryptoCurrency.id,
-                        contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress,
-                        derivationPath = cryptoCurrency.network.derivationPath,
                         refresh = true,
                     )
                 },
