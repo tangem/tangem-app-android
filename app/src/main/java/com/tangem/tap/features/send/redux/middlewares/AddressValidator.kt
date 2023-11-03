@@ -31,7 +31,9 @@ internal class AddressValidator {
         }
 
         // named address validation
-        if (address.length in 2..63 && nearAddressRegex.matches(address)) {
+        if (address.length in NEAR_MIN_ADDRESS_LENGTH until NEAR_IMPLICIT_ADDRESS_LENGTH &&
+            nearAddressRegex.matches(address)
+        ) {
             val result = (walletManager as? NearWalletManager)?.getAccount(address)
             return if (result is Result.Success && result.data is NearAccount.Full) {
                 null
@@ -60,6 +62,7 @@ internal class AddressValidator {
     }
 
     companion object {
+        private const val NEAR_MIN_ADDRESS_LENGTH = 2
         private const val NEAR_IMPLICIT_ADDRESS_LENGTH = 64
         private val hexRegex = Regex("^[0-9a-f]+$")
         private val nearAddressRegex = Regex("^(([a-z\\d]+[\\-_])*[a-z\\d]+\\.)*([a-z\\d]+[\\-_])*[a-z\\d]+\$")
