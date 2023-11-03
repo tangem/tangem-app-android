@@ -13,25 +13,34 @@ internal class AddressValidator {
     suspend fun validateAddress(walletManager: WalletManager, address: String): AddressVerifyAction.Error? {
         val blockchain = walletManager.wallet.blockchain
         val wallet = walletManager.wallet
-        val regex = Regex("^[a-z0-9-_]+$")
-        return if (blockchain.isNear() && address.length != NEAR_IMPLICIT_ADDRESS_LENGTH && regex.matches(address)
-        ) {
-            validateNearNamedAddress(walletManager, address)
+
+        return if (blockchain.isNear()) {
+            validateNearAddress(walletManager, address)
         } else {
             validateAddress(wallet, address)
         }
     }
 
-    private suspend fun validateNearNamedAddress(
+    private suspend fun validateNearAddress(
         walletManager: WalletManager,
         address: String,
     ): AddressVerifyAction.Error? {
-        val result = (walletManager as? NearWalletManager)?.getAccount(address)
-        return if (result is Result.Success && result.data is NearAccount.Full) {
-            null
-        } else {
-            AddressVerifyAction.Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN
+        // implicit address validation
+        if (address.length == NEAR_IMPLICIT_ADDRESS_LENGTH && hexRegex.matches(address)) {
+            return validateAddress(walletManager.wallet, address)
         }
+
+        // named address validation
+        if (address.length in 2..63 && nearAddressRegex.matches(address)) {
+            val result = (walletManager as? NearWalletManager)?.getAccount(address)
+            return if (result is Result.Success && result.data is NearAccount.Full) {
+                null
+            } else {
+                AddressVerifyAction.Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN
+            }
+        }
+
+        return AddressVerifyAction.Error.ADDRESS_INVALID_OR_UNSUPPORTED_BY_BLOCKCHAIN
     }
 
     private fun Blockchain.isNear(): Boolean {
@@ -52,5 +61,7 @@ internal class AddressValidator {
 
     companion object {
         private const val NEAR_IMPLICIT_ADDRESS_LENGTH = 64
+        private val hexRegex = Regex("^[0-9a-f]+$")
+        private val nearAddressRegex = Regex("^(([a-z\\d]+[\\-_])*[a-z\\d]+\\.)*([a-z\\d]+[\\-_])*[a-z\\d]+\$")
     }
 }
