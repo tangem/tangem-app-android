@@ -8,14 +8,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-fun TangemBottomSheetDraggableHeader() {
+fun TangemBottomSheetDraggableHeader(color: Color = TangemTheme.colors.background.primary) {
     Surface(
         modifier = Modifier
             .height(TangemTheme.dimens.size20),
-        color = TangemTheme.colors.background.primary,
+        color = color,
     ) {
         Box(
             modifier = Modifier
