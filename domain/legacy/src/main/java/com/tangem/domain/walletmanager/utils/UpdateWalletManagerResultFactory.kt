@@ -57,9 +57,7 @@ internal class UpdateWalletManagerResultFactory {
     }
 
     private fun getTokensAmounts(amounts: Set<Amount>): Set<CryptoCurrencyAmount> {
-        val mutableAmounts = hashSetOf<CryptoCurrencyAmount>()
-
-        return amounts.mapNotNullTo(mutableAmounts, ::createCurrencyAmount)
+        return amounts.mapNotNullTo(hashSetOf(), ::createCurrencyAmount)
     }
 
     private fun getDemoTokensAmounts(demoAmount: Amount, tokens: Set<Token>): Set<CryptoCurrencyAmount> {
