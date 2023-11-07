@@ -1,24 +1,20 @@
 package com.tangem.tap.network.auth
 
-import com.tangem.common.extensions.toHexString
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
-import com.tangem.lib.auth.AuthProvider
 import com.tangem.lib.auth.ExpressAuthProvider
-import com.tangem.lib.auth.ExpressSessionIdGenerator
-import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.lib.auth.sessionId.ExpressSessionIdGenerator
 import java.util.UUID
 
 class ExpressAuthProviderImpl(
-    private val walletStateHolder: WalletsStateHolder,
     private val userWalletsStore: UserWalletsStore,
-    private val appStateHolder: AppStateHolder
+    private val configManager: ConfigManager
 ) : ExpressAuthProvider, ExpressSessionIdGenerator {
 
     private var uuid = UUID.randomUUID()
 
     override fun getApiKey(): String {
-        TODO()
+        return configManager.config.tangemExpressApiKey
     }
 
     override fun getUserId(): String {

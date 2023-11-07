@@ -1,4 +1,4 @@
-package com.tangem.lib.auth
+package com.tangem.lib.auth.sessionId
 
 interface ExpressSessionIdGenerator {
 

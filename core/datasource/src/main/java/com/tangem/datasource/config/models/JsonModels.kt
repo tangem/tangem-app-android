@@ -40,6 +40,7 @@ class ConfigValueModel(
     val tangemComAuthorization: String?,
     val chiaFireAcademyApiKey: String?,
     val chiaTangemApiKey: String?,
+    val tangemExpressApiKey: String,
 )
 
 data class AppsFlyer(
