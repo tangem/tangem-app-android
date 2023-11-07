@@ -215,8 +215,6 @@ internal class DefaultCurrenciesRepository(
     override suspend fun getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
-        contractAddress: String?,
-        derivationPath: Network.DerivationPath,
     ): CryptoCurrency = withContext(dispatchers.io) {
         val userWallet = getUserWallet(userWalletId)
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
@@ -227,10 +225,8 @@ internal class DefaultCurrenciesRepository(
 
         responseCurrenciesFactory.createCurrency(
             currencyId = id,
-            contractAddress = contractAddress,
             response = response,
             scanResponse = userWallet.scanResponse,
-            derivationPath = derivationPath.value,
         )
     }
 

@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -26,16 +27,18 @@ fun TangemButton(
     showProgress: Boolean,
     enabled: Boolean,
     modifier: Modifier = Modifier,
+    additionalText: String? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
     elevation: ButtonElevation = TangemButtonsDefaults.elevation,
     textStyle: TextStyle = TangemTheme.typography.button,
+    shape: Shape = size.toShape(),
 ) {
     Button(
         modifier = modifier.heightIn(min = size.toHeightDp()),
         onClick = { if (!showProgress) onClick() },
         enabled = enabled,
         elevation = elevation,
-        shape = size.toShape(),
+        shape = shape,
         colors = colors,
         contentPadding = size.toContentPadding(icon = icon),
     ) {
@@ -73,6 +76,20 @@ fun TangemButton(
                     contentDescription = null,
                 )
             },
+            additionalText = {
+                if (additionalText != null) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        text = additionalText,
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.disabled,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            },
         )
     }
 }
@@ -86,18 +103,27 @@ private inline fun RowScope.ButtonContentContainer(
     progressIndicator: @Composable RowScope.() -> Unit,
     text: @Composable RowScope.() -> Unit,
     icon: @Composable RowScope.(Int) -> Unit,
+    additionalText: @Composable () -> Unit,
 ) {
     if (showProgress) {
         progressIndicator()
     } else {
-        if (buttonIcon is TangemButtonIconPosition.Start) {
-            icon(buttonIcon.iconResId)
-            Spacer(modifier = Modifier.requiredWidth(iconPadding))
-        }
-        text()
-        if (buttonIcon is TangemButtonIconPosition.End) {
-            Spacer(modifier = Modifier.requiredWidth(iconPadding))
-            icon(buttonIcon.iconResId)
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                if (buttonIcon is TangemButtonIconPosition.Start) {
+                    icon(buttonIcon.iconResId)
+                    Spacer(modifier = Modifier.requiredWidth(iconPadding))
+                }
+                text()
+                if (buttonIcon is TangemButtonIconPosition.End) {
+                    Spacer(modifier = Modifier.requiredWidth(iconPadding))
+                    icon(buttonIcon.iconResId)
+                }
+            }
+            additionalText()
         }
     }
 }
