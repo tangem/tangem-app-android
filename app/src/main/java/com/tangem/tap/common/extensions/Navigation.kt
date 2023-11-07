@@ -18,6 +18,7 @@ import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
+import com.tangem.tap.features.main.ui.ModalNotificationBottomSheetFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
 import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
@@ -59,12 +60,8 @@ fun FragmentActivity.openFragment(
         }
     }
 
-    if (screen.isDialogFragment) {
-        val dialogFragment = requireNotNull(fragment as? DialogFragment) {
-            "If screen.isDialogFragment == true then fragment must be a DialogFragment"
-        }
-
-        dialogFragment.showAllowingStateLoss(
+    if (screen.isDialogFragment && fragment is DialogFragment) {
+        fragment.showAllowingStateLoss(
             fragmentManager = supportFragmentManager,
             baseTransaction = transaction,
             tag = screen.name,
@@ -125,7 +122,7 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
     return tag?.let { AppScreen.valueOf(tag) }
 }
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
         AppScreen.Home -> HomeFragment()
@@ -146,7 +143,18 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
                 WalletFragment()
             }
         }
-        AppScreen.Send -> SendFragment()
+        AppScreen.Send -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::sendFeatureToggles,
+            )
+            if (featureToggles.isRedesignedSendEnabled) {
+                store.state.daggerGraphState
+                    .get(getDependency = DaggerGraphState::sendRouter)
+                    .getEntryFragment()
+            } else {
+                SendFragment()
+            }
+        }
         AppScreen.Details -> DetailsFragment()
         AppScreen.DetailsSecurity -> SecurityModeFragment()
         AppScreen.CardSettings -> CardSettingsFragment()
@@ -154,7 +162,18 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.ResetToFactory -> ResetCardFragment()
         AppScreen.AccessCodeRecovery -> AccessCodeRecoveryFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
-        AppScreen.AddTokens -> TokensListFragment()
+        AppScreen.ManageTokens -> {
+            val featureToggles = store.state.daggerGraphState.get(
+                getDependency = DaggerGraphState::manageTokensFeatureToggles,
+            )
+            if (featureToggles.isRedesignedScreenEnabled) {
+                store.state.daggerGraphState
+                    .get(getDependency = DaggerGraphState::manageTokensRouter)
+                    .getEntryFragment()
+            } else {
+                TokensListFragment()
+            }
+        }
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> {
             val featureToggles = store.state.daggerGraphState.get(
@@ -176,5 +195,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
         AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
         AppScreen.AppCurrencySelector -> AppCurrencySelectorFragment()
+        AppScreen.ModalNotification -> ModalNotificationBottomSheetFragment()
     }
 }

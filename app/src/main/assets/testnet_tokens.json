@@ -511,8 +511,7 @@
             "id": "aleph-zero",
             "symbol": "AZERO",
             "name": "Aleph Zero",
-            "networks":
-            [
+            "networks": [
                 {
                     "networkId": "aleph-zero/test"
                 }
@@ -522,10 +521,19 @@
             "id": "near",
             "symbol": "NEAR",
             "name": "NEAR",
-            "networks":
-            [
+            "networks": [
                 {
                     "networkId": "near-protocol/test"
+                }
+            ]
+        },
+        {
+            "id": "decimal",
+            "name": "Decimal",
+            "symbol": "tDEL",
+            "networks": [
+                {
+                    "networkId": "decimal/test"
                 }
             ]
         }
