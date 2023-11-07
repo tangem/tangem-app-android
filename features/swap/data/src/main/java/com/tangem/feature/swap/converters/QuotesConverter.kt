@@ -9,11 +9,7 @@ class QuotesConverter : Converter<QuoteResponse, QuoteModel> {
 
     override fun convert(value: QuoteResponse): QuoteModel {
         return QuoteModel(
-            fromTokenAmount = createFromAmountWithOffset(value.fromTokenAmount, value.fromToken.decimals),
             toTokenAmount = createFromAmountWithOffset(value.toTokenAmount, value.toToken.decimals),
-            fromTokenAddress = value.fromToken.address,
-            toTokenAddress = value.toToken.address,
-            estimatedGas = value.estimatedGas,
         )
     }
 }
