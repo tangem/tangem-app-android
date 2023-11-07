@@ -35,7 +35,7 @@ sealed class StateEvent<in A> {
      */
     data class Triggered<A>(
         val data: A,
-        internal val onConsume: () -> Unit,
+        val onConsume: () -> Unit,
     ) : StateEvent<A>()
 }
 
