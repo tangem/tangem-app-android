@@ -9,6 +9,7 @@ import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.core.ui.extensions.getGreyedOutIconRes
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.canHandleToken
@@ -20,7 +21,6 @@ import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
-import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
 import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
 import com.tangem.tap.features.tokens.impl.domain.models.Token
@@ -225,7 +225,7 @@ internal class TokensListViewModel @Inject constructor(
         return if (isAdded(address = address, blockchain = blockchain)) {
             getActiveIconRes(blockchain.id)
         } else {
-            blockchain.getGreyedOutIconRes()
+            getGreyedOutIconRes(blockchain.id)
         }
     }
 
