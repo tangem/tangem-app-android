@@ -7,11 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.res.TangemTheme
 
@@ -119,6 +118,32 @@ fun PrimaryButtonIconEnd(
 }
 
 /**
+ * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=68%3A20&mode=design&t=YXX8vqJcB9jn0wPp-1)
+ * */
+@Composable
+fun PrimaryButtonIconEndTwoLines(
+    text: String,
+    @DrawableRes iconResId: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    showProgress: Boolean = false,
+    enabled: Boolean = true,
+    additionalText: String? = null,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        icon = TangemButtonIconPosition.End(iconResId),
+        onClick = onClick,
+        colors = TangemButtonsDefaults.primaryButtonColors,
+        enabled = enabled,
+        showProgress = showProgress,
+        additionalText = additionalText,
+        size = TangemButtonSize.TwoLines,
+    )
+}
+
+/**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=233%3A258&t=TmfD6UBHPg9uYfev-4)
  * */
 @Composable
@@ -148,9 +173,10 @@ fun SecondaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: TangemButtonSize = TangemButtonSize.Default,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    size: TangemButtonSize = TangemButtonSize.Default,
+    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -161,6 +187,7 @@ fun SecondaryButton(
         enabled = enabled,
         showProgress = showProgress,
         size = size,
+        shape = shape,
     )
 }
 
@@ -266,6 +293,13 @@ private fun PrimaryButtonSample() {
             iconResId = R.drawable.ic_tangem_24,
             enabled = false,
             onClick = { },
+        )
+        PrimaryButtonIconEndTwoLines(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Manage tokens",
+            iconResId = R.drawable.ic_tangem_24,
+            onClick = { },
+            additionalText = "Manage these tokens",
         )
         PrimaryButtonIconStart(
             modifier = Modifier.fillMaxWidth(),
