@@ -45,11 +45,14 @@ fun LazyListScope.txHistoryItems(
             )
         }
         is TxHistoryState.Empty -> {
-            nonContentItem(state = EmptyTransactionsBlockState.Empty, modifier = modifier)
+            nonContentItem(state = EmptyTransactionsBlockState.Empty(state.onExploreClick), modifier = modifier)
         }
         is TxHistoryState.Error -> {
             nonContentItem(
-                state = EmptyTransactionsBlockState.FailedToLoad(onClick = state.onReloadClick),
+                state = EmptyTransactionsBlockState.FailedToLoad(
+                    onClick = state.onReloadClick,
+                    onExplore = state.onExploreClick,
+                ),
                 modifier = modifier,
             )
         }
