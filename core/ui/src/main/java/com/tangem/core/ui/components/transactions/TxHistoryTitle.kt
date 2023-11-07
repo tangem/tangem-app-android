@@ -11,17 +11,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
 
 /**
  * Transactions block title
  *
- * @param config   config
+ * @param onExploreClick lambda be invoke when explore button was clicked
  * @param modifier modifier
  */
 @Composable
-internal fun TxHistoryTitle(config: TxHistoryState.TxHistoryItemState.Title, modifier: Modifier = Modifier) {
+internal fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
@@ -37,7 +36,7 @@ internal fun TxHistoryTitle(config: TxHistoryState.TxHistoryItemState.Title, mod
         )
 
         Row(
-            modifier = Modifier.clickable(onClick = config.onExploreClick),
+            modifier = Modifier.clickable(onClick = onExploreClick),
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
         ) {
             Icon(
@@ -59,7 +58,7 @@ internal fun TxHistoryTitle(config: TxHistoryState.TxHistoryItemState.Title, mod
 @Composable
 private fun Preview_TransactionsBlockTitle_Light() {
     TangemTheme(isDark = false) {
-        TxHistoryTitle(config = TxHistoryState.TxHistoryItemState.Title(onExploreClick = {}))
+        TxHistoryTitle(onExploreClick = {})
     }
 }
 
@@ -67,6 +66,6 @@ private fun Preview_TransactionsBlockTitle_Light() {
 @Composable
 private fun Preview_TransactionsBlockTitle_Dark() {
     TangemTheme(isDark = true) {
-        TxHistoryTitle(config = TxHistoryState.TxHistoryItemState.Title(onExploreClick = {}))
+        TxHistoryTitle(onExploreClick = {})
     }
 }
