@@ -8,9 +8,13 @@ sealed class EmptyTransactionsBlockState(
     val actionButtonConfig: ActionButtonConfig? = null,
     val iconRes: Int,
     val text: TextReference,
+    val onExploreClick: (() -> Unit)?,
 ) {
 
-    data class FailedToLoad(val onClick: () -> Unit) : EmptyTransactionsBlockState(
+    data class FailedToLoad(
+        val onClick: () -> Unit,
+        val onExplore: () -> Unit,
+    ) : EmptyTransactionsBlockState(
         actionButtonConfig = ActionButtonConfig(
             text = TextReference.Res(R.string.common_reload),
             iconResId = R.drawable.ic_refresh_24,
@@ -19,11 +23,13 @@ sealed class EmptyTransactionsBlockState(
         ),
         iconRes = R.drawable.ic_alert_history_64,
         text = TextReference.Res(R.string.transaction_history_error_failed_to_load),
+        onExploreClick = onExplore,
     )
 
-    object Empty : EmptyTransactionsBlockState(
+    data class Empty(val onExplore: (() -> Unit)) : EmptyTransactionsBlockState(
         iconRes = R.drawable.ic_empty_token_64,
         text = TextReference.Res(R.string.transaction_history_empty_transactions),
+        onExploreClick = onExplore,
     )
 
     data class NotImplemented(val onClick: () -> Unit) : EmptyTransactionsBlockState(
@@ -35,5 +41,6 @@ sealed class EmptyTransactionsBlockState(
         ),
         iconRes = R.drawable.ic_compass_64,
         text = TextReference.Res(R.string.transaction_history_not_supported_description),
+        onExploreClick = null,
     )
 }
