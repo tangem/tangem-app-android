@@ -16,8 +16,7 @@ import java.math.BigDecimal
  */
 @Suppress("LongParameterList")
 interface ExpressApi {
-
-    // TODO move first three params to retrofit interceptor
+    
     @POST("assets")
     suspend fun getAssets(
         @Body body: AssetsRequestBody,
