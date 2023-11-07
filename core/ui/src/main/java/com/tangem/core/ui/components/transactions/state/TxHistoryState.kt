@@ -15,7 +15,7 @@ sealed interface TxHistoryState {
     data class Content(val contentItems: MutableStateFlow<PagingData<TxHistoryItemState>>) : TxHistoryState
 
     /** Empty state */
-    object Empty : TxHistoryState
+    data class Empty(val onExploreClick: () -> Unit) : TxHistoryState
 
     /**
      * Not supported tx history state
@@ -33,7 +33,7 @@ sealed interface TxHistoryState {
      *
      * @property onReloadClick lambda be invoke when reload button was clicked
      */
-    data class Error(val onReloadClick: () -> Unit) : TxHistoryState
+    data class Error(val onReloadClick: () -> Unit, val onExploreClick: () -> Unit) : TxHistoryState
 
     /** Transactions history item state */
     sealed interface TxHistoryItemState {
