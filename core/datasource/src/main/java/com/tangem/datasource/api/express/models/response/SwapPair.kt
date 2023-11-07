@@ -1,13 +1,14 @@
 package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
+import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 
 data class SwapPair(
     @Json(name = "from")
-    val from: String,
+    val from: LeastTokenInfo,
 
     @Json(name = "to")
-    val to: String,
+    val to: LeastTokenInfo,
 
     @Json(name = "providers")
     val providers: List<SwapPairProvider>,
@@ -18,7 +19,7 @@ data class SwapPairProvider(
     @Json(name = "providerId")
     val providerId: Int,
 
-    @Json(name = "providerId")
+    @Json(name = "rateType")
     val rateType: RateType,
 )
 
