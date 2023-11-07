@@ -63,6 +63,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)

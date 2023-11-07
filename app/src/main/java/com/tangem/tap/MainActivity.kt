@@ -1,14 +1,21 @@
 package com.tangem.tap
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.viewModels
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
@@ -16,14 +23,20 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.data.card.sdk.CardSdkLifecycleObserver
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.features.managetokens.navigation.ManageTokensRouter
+import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -46,12 +59,15 @@ import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandle
 import com.tangem.tap.features.intentHandler.handlers.BuyCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.SellCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
+import com.tangem.tap.features.main.MainViewModel
+import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
+import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -110,7 +126,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var tokenDetailsRouter: TokenDetailsRouter
 
     @Inject
+    lateinit var manageTokensRouter: ManageTokensRouter
+
+    @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
+
+    @Inject
+    lateinit var sendRouter: SendRouter
+
+    internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
 
@@ -136,6 +160,29 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         initContent()
 
         checkGooglePayAvailability()
+
+        checkForNotificationPermission()
+        observeStateUpdates()
+    }
+
+    private fun observeStateUpdates() {
+        viewModel.state
+            .flowWithLifecycle(lifecycle)
+            .onEach { state ->
+                if (state.toast is StateEvent.Triggered) {
+                    showToast(state.toast.data)
+                    state.toast.onConsume()
+                }
+            }
+            .launchIn(lifecycleScope)
+    }
+
+    private fun showToast(toast: Toast) {
+        dismissSnackbar()
+        showSnackbar(toast.message, Snackbar.LENGTH_LONG, toast.action.text) {
+            toast.action.onClick()
+            dismissSnackbar()
+        }
     }
 
     private fun installActivityDependencies() {
@@ -156,7 +203,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
                 tokenDetailsRouter = tokenDetailsRouter,
+                manageTokensRouter = manageTokensRouter,
                 cardSdkConfigRepository = cardSdkConfigRepository,
+                sendRouter = sendRouter,
             ),
         )
     }
@@ -285,18 +334,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
     }
 
-    override fun showSnackbar(text: Int, buttonTitle: Int?, action: View.OnClickListener?) {
-        if (snackbar != null) return
+    override fun showSnackbar(
+        @StringRes text: Int,
+        length: Int,
+        @StringRes buttonTitle: Int?,
+        action: View.OnClickListener?,
+    ) {
+        showSnackbar(getString(text), length, buttonTitle?.let(::getString), action)
+    }
 
-        snackbar = Snackbar.make(
-            binding.fragmentContainer,
-            getString(text),
-            Snackbar.LENGTH_INDEFINITE,
-        )
-        if (buttonTitle != null && action != null) {
-            snackbar?.setAction(getString(buttonTitle), action)
-        }
-        snackbar?.show()
+    override fun showSnackbar(
+        text: TextReference,
+        length: Int,
+        buttonTitle: TextReference?,
+        action: View.OnClickListener?,
+    ) {
+        showSnackbar(text.resolveReference(resources), length, buttonTitle?.resolveReference(resources), action)
     }
 
     override fun dismissSnackbar() {
@@ -330,6 +383,33 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onUserInteraction()
 
         lockUserWalletsTimer?.restart()
+    }
+
+    private fun showSnackbar(text: String, length: Int, buttonTitle: String?, action: View.OnClickListener?) {
+        if (snackbar != null) return
+
+        snackbar = Snackbar.make(binding.fragmentContainer, text, length).apply {
+            val textColor = getColor(R.color.text_primary_2)
+
+            setBackgroundTint(getColor(R.color.button_primary))
+            setActionTextColor(textColor)
+            setTextColor(textColor)
+
+            if (buttonTitle != null && action != null) {
+                setAction(buttonTitle, action)
+            }
+
+            addCallback(
+                object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                    override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                        snackbar = null
+                        removeCallback(this)
+                    }
+                },
+            )
+        }
+
+        snackbar?.show()
     }
 
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
@@ -370,5 +450,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
+    }
+
+    private fun checkForNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            BuildConfig.DEBUG &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+        }
     }
 }
