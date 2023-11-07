@@ -47,7 +47,10 @@ internal class WalletLoadedTxHistoryConverter(
                 state.copy(
                     txHistoryState = when (error) {
                         is TxHistoryListError.DataError -> {
-                            TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+                            TxHistoryState.Error(
+                                onReloadClick = clickIntents::onReloadClick,
+                                onExploreClick = clickIntents::onExploreClick,
+                            )
                         }
                     },
                 )
