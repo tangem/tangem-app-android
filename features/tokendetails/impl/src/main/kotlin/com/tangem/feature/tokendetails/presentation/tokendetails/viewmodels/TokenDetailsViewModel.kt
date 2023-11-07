@@ -15,8 +15,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
-import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
@@ -65,8 +64,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
-    private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
-    private val listenToFlipsUseCase: ListenToFlipsUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val walletManagersFacade: WalletManagersFacade,
@@ -117,20 +115,14 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
-        isBalanceHiddenUseCase()
+        getBalanceHidingSettingsUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .onEach { hidden ->
+            .onEach {
                 uiState = stateFactory.getStateWithUpdatedHidden(
-                    isBalanceHidden = hidden,
+                    isBalanceHidden = it.isBalanceHidden,
                 )
             }
             .launchIn(viewModelScope)
-
-        viewModelScope.launch {
-            listenToFlipsUseCase()
-                .flowWithLifecycle(owner.lifecycle)
-                .collect()
-        }
     }
 
     private suspend fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
@@ -168,8 +160,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             getCurrencyStatusUpdatesUseCase(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
-                contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress,
-                derivationPath = cryptoCurrency.network.derivationPath,
                 isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
@@ -464,8 +454,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                     fetchCurrencyStatusUseCase(
                         userWalletId = userWalletId,
                         id = cryptoCurrency.id,
-                        contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress,
-                        derivationPath = cryptoCurrency.network.derivationPath,
                         refresh = true,
                     )
                 },
