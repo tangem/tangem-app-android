@@ -243,7 +243,7 @@ internal class SendStateSubscriber(
         }
 
         val filter = DecimalDigitsInputFilter(
-            digitsBeforeDecimal = 12,
+            digitsBeforeDecimal = 40,
             digitsAfterDecimal = state.maxLengthOfAmount,
             decimalSeparator = state.decimalSeparator,
         )
