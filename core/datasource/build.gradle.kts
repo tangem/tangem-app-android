@@ -11,8 +11,11 @@ dependencies {
     /** Project */
     implementation(projects.core.utils)
     implementation(projects.libs.auth)
+    implementation(projects.domain.appTheme.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.txhistory.models)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain)
@@ -44,4 +47,11 @@ dependencies {
 
     /** Security */
     implementation(deps.spongecastle.core)
+
+    /** Chucker */
+    /** Chucker */
+    debugImplementation(deps.chucker)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
 }

@@ -18,10 +18,8 @@ import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
-import com.tangem.tap.features.send.ui.dialogs.KaspaWarningDialog
-import com.tangem.tap.features.send.ui.dialogs.RequestFeeErrorDialog
-import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
-import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
+import com.tangem.tap.features.send.ui.SendViewModel
+import com.tangem.tap.features.send.ui.dialogs.*
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.utils.ROUGH_SIGN
 import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
@@ -32,13 +30,23 @@ import com.tangem.wallet.R
 [REDACTED_AUTHOR]
  */
 @Suppress("LargeClass")
-class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber<SendState>(fragment) {
+internal class SendStateSubscriber(
+    fragment: BaseStoreFragment,
+) : FragmentStateSubscriber<SendState>(fragment) {
 
     private var dialog: Dialog? = null
+    private var sendViewModel: SendViewModel? = null
+    fun initViewModel(viewModel: SendViewModel) {
+        sendViewModel = viewModel
+    }
 
     override fun updateWithNewState(fg: BaseStoreFragment, state: SendState) {
         fg.view ?: return
         if (fg !is SendFragment) return
+        if (state.isSuccessSend) {
+            sendViewModel?.updateCurrencyDelayed()
+            return
+        }
 
         val lastChangedStates = state.lastChangedStates.toList()
         state.lastChangedStates.clear()
@@ -124,6 +132,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
+    @Suppress("ComplexMethod")
     private fun handleSendScreen(fg: SendFragment, state: SendState) = with(fg.binding) {
         when (state.dialog) {
             is SendAction.Dialog.TezosWarningDialog -> {
@@ -135,6 +144,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             is SendAction.Dialog.KaspaWarningDialog -> {
                 if (dialog == null) {
                     dialog = KaspaWarningDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
+            is SendAction.Dialog.ChiaWarningDialog -> {
+                if (dialog == null) {
+                    dialog = ChiaWarningDialog.create(fg.requireContext(), state.dialog)
                     dialog?.show()
                 }
             }
@@ -256,24 +271,39 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
         val imageRes = if (state.inputIsEnabled) R.drawable.ic_arrows_up_down else 0
         tvAmountCurrency.setCompoundDrawablesWithIntrinsicBounds(0, 0, imageRes, 0)
-        val textColor = if (state.inputIsEnabled) R.color.blue else R.color.textGray
+        val textColor = if (state.inputIsEnabled) R.color.accent else R.color.text_secondary
         tvAmountCurrency.setTextColor(fg.getColor(textColor))
     }
 
     @Suppress("MagicNumber")
-    private fun handleFeeState(fg: SendFragment, state: FeeState) = with(fg.binding.clNetworkFee) {
-        fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.show(state.mainLayoutIsVisible)
-        flExpandCollapse.imvExpandCollapse.rotation = if (state.controlsLayoutIsVisible) 0f else 180f
-        llFeeControlsContainer.show(state.controlsLayoutIsVisible)
-        chipGroup.show(state.feeChipGroupIsVisible)
+    private fun handleFeeState(fg: SendFragment, state: FeeState) {
+        with(fg.binding.clNetworkFee) {
+            fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.show(state.mainLayoutIsVisible)
+            flExpandCollapse.imvExpandCollapse.rotation = if (state.controlsLayoutIsVisible) 0f else 180f
+            llFeeControlsContainer.show(state.controlsLayoutIsVisible)
+            chipGroup.show(state.feeChipGroupIsVisible)
 
-        swIncludeFee.isEnabled = state.includeFeeSwitcherIsEnabled
-        if (swIncludeFee.isChecked != state.feeIsIncluded) {
-            swIncludeFee.isChecked = state.feeIsIncluded
+            swIncludeFee.isEnabled = state.includeFeeSwitcherIsEnabled
+            if (swIncludeFee.isChecked != state.feeIsIncluded) {
+                swIncludeFee.isChecked = state.feeIsIncluded
+            }
+
+            val chipId = FeeUiHelper.toId(state.selectedFeeType)
+            if (chipGroup.checkedChipId != chipId && chipId != View.NO_ID) chipGroup.check(chipId)
         }
-
-        val chipId = FeeUiHelper.toId(state.selectedFeeType)
-        if (chipGroup.checkedChipId != chipId && chipId != View.NO_ID) chipGroup.check(chipId)
+        with(fg.binding.clReceiptContainer) {
+            when (state.progressState) {
+                ProgressState.Loading -> {
+                    tvReceiptFeeValue.hide()
+                    pbReceiptFee.show()
+                }
+                ProgressState.Done -> {
+                    pbReceiptFee.hide()
+                    tvReceiptFeeValue.show()
+                }
+                else -> {}
+            }
+        }
     }
 
     @Suppress("LongMethod", "ComplexMethod")

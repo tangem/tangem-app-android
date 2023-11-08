@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -12,6 +13,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.datasource.connection.NetworkConnectionManager
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.userwallets.GetCardImageUseCase
 import com.tangem.domain.wallets.legacy.lockIfLockable
 import com.tangem.tap.*
@@ -87,7 +89,7 @@ class WalletMiddleware {
         val walletState = store.state.walletState
 
         when (action) {
-            is WalletAction.TradeCryptoAction -> tradeCryptoMiddleware.handle(state, action)
+            is TradeCryptoAction -> tradeCryptoMiddleware.handle(state, action)
             is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
             is WalletAction.MultiWallet -> multiWalletMiddleware.handle(action, walletState)
             is WalletAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
@@ -114,9 +116,9 @@ class WalletMiddleware {
             }
             is WalletAction.Scan -> {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                scope.launch {
+                action.scope.launch {
                     delay(timeMillis = 700)
-                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent))
+                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent, action.scope))
                 }
             }
             is WalletAction.LoadData,
@@ -178,7 +180,7 @@ class WalletMiddleware {
                     }
 
                     if (walletState.isMultiwalletAllowed) {
-                        val amountToSend = sendableAmounts.find { it.currencySymbol == currency.currencySymbol }
+                        val amountToSend = findAmountToSend(currency = currency, amounts = sendableAmounts)
                         if (amountToSend == null) {
                             val error = TapError.UnsupportedState("WalletAction.Send: Amount to send is null")
                             FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
@@ -225,7 +227,7 @@ class WalletMiddleware {
                 showSaveWalletIfNeeded()
             }
             is WalletAction.ChangeWallet -> {
-                changeWallet(walletState)
+                changeWallet(walletState, action.scope)
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
@@ -271,6 +273,18 @@ class WalletMiddleware {
                             )
                         }
                 }
+            }
+        }
+    }
+
+    private fun findAmountToSend(currency: Currency, amounts: List<Amount>): Amount? {
+        return amounts.find { amount ->
+            val amountType = amount.type
+            if (amountType is AmountType.Token && currency is Currency.Token) {
+                val token = amountType.token
+                token.symbol == currency.currencySymbol && token.contractAddress == currency.token.contractAddress
+            } else {
+                amount.currencySymbol == currency.currencySymbol
             }
         }
     }
@@ -378,7 +392,7 @@ class WalletMiddleware {
         }
     }
 
-    private fun changeWallet(state: WalletState) {
+    private fun changeWallet(state: WalletState, lifecycleScope: LifecycleCoroutineScope) {
         when {
             state.canSaveUserWallets -> {
                 Analytics.send(MainScreen.ButtonMyWallets())
@@ -386,7 +400,12 @@ class WalletMiddleware {
             }
             else -> {
                 Analytics.send(MainScreen.ButtonScanCard())
-                store.dispatch(WalletAction.Scan(Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main)))
+                store.dispatch(
+                    WalletAction.Scan(
+                        onScanSuccessEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main),
+                        scope = lifecycleScope,
+                    ),
+                )
             }
         }
     }

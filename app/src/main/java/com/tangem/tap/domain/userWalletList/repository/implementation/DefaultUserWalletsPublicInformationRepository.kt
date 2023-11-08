@@ -24,18 +24,23 @@ internal class DefaultUserWalletsPublicInformationRepository(
         Types.newParameterizedType(List::class.java, UserWalletPublicInformation::class.java),
     )
 
-    override suspend fun save(userWallet: UserWallet): CompletionResult<Unit> {
+    override suspend fun save(userWallet: UserWallet, canOverride: Boolean): CompletionResult<Unit> {
         return withContext(Dispatchers.IO) {
-            getAll()
-                .flatMap { savedInformation ->
-                    val infoToSave = withContext(Dispatchers.Default) {
-                        savedInformation.addOrReplace(userWallet.publicInformation) {
-                            userWallet.walletId == it.walletId
-                        }
+            getAll().flatMap { savedWalletsInformation ->
+                val infoToSave = if (canOverride) {
+                    savedWalletsInformation.addOrReplace(userWallet.publicInformation) {
+                        it.walletId == userWallet.walletId
                     }
-
-                    save(infoToSave)
+                } else {
+                    if (savedWalletsInformation.none { it.walletId == userWallet.walletId }) {
+                        savedWalletsInformation + userWallet.publicInformation
+                    } else {
+                        return@withContext CompletionResult.Success(Unit)
+                    }
                 }
+
+                save(infoToSave)
+            }
         }
     }
 

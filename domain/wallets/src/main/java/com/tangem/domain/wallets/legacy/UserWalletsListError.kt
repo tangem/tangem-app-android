@@ -15,12 +15,8 @@ sealed class UserWalletsListError(code: Int) : TangemError(code) {
         override val messageResId: Int = R.string.user_wallet_list_error_wallet_already_saved
     }
 
-    object EncryptionKeyInvalidated : UserWalletsListError(code = 60002) {
+    object AllKeysInvalidated : UserWalletsListError(code = 60002) {
         override var customMessage: String = "Encryption key invalidated"
-    }
-
-    object BiometricsAuthenticationDisabled : UserWalletsListError(code = 60005) {
-        override var customMessage: String = "Biometrics authentication disabled"
     }
 
     data class BiometricsAuthenticationLockout(val isPermanent: Boolean) : UserWalletsListError(code = 60003) {
@@ -30,5 +26,17 @@ sealed class UserWalletsListError(code: Int) : TangemError(code) {
     data class UnableToUnlockUserWallets(override val cause: Throwable? = null) : UserWalletsListError(code = 60004) {
         override var customMessage: String = "An error has occurred, please scan your card to log in"
         override val messageResId: Int = R.string.user_wallet_list_error_unable_to_unlock
+    }
+
+    object BiometricsAuthenticationDisabled : UserWalletsListError(code = 60005) {
+        override var customMessage: String = "Biometrics authentication disabled"
+    }
+
+    object NoUserWalletSelected : UserWalletsListError(code = 60006) {
+        override var customMessage: String = "No user wallet selected"
+    }
+
+    object NotAllUserWalletsUnlocked : UserWalletsListError(code = 60007) {
+        override var customMessage: String = "Not all user wallets was unlocked"
     }
 }

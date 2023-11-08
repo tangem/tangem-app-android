@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.badoo.mvicore.DiffStrategy
 import com.badoo.mvicore.ModelWatcher
@@ -21,6 +20,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.feature.swap.api.SwapFeatureToggleManager
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.sdk.extensions.dpToPx
@@ -62,7 +62,9 @@ import javax.inject.Inject
 /**
  * Wallet details fragment - use only for MultiWallet
  */
+// TODO: Delete with WalletFeatureToggles
 @Suppress("LargeClass", "MagicNumber")
+@Deprecated(message = "Used only in old wallet screen")
 @AndroidEntryPoint
 class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeStoreSubscriber<WalletState> {
 
@@ -151,9 +153,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 }
             },
         )
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -276,9 +275,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
     ) {
         val exchangeManager = store.state.globalState.exchangeManager
         binding.rowButtons.apply {
-            onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
-            onSellClick = { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
-            onSwapClick = { store.dispatch(WalletAction.TradeCryptoAction.Swap) }
+            onBuyClick = { store.dispatch(TradeCryptoAction.Buy()) }
+            onSellClick = { store.dispatch(TradeCryptoAction.Sell) }
+            onSwapClick = { store.dispatch(TradeCryptoAction.Swap) }
             onTradeClick = {
                 store.dispatch(
                     WalletAction.DialogAction.ChooseTradeActionDialog(
@@ -423,6 +422,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                     is WalletDataModel.SameCurrencyTransactionInProgress,
                     -> {
                         lBalance.tvStatus.setVerifiedBalanceStatus(R.string.wallet_balance_verified)
+                        showPendingTransactionsIfPresent(status.pendingTransactions)
                     }
 
                     is WalletDataModel.TransactionInProgress -> {
@@ -438,10 +438,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), SafeSt
                 lBalance.root.show()
                 lBalance.groupBalance.hide()
                 lBalance.tvError.show()
-                lBalance.tvError.setWarningStatus(
-                    R.string.wallet_balance_blockchain_unreachable,
-                    status.errorMessage,
-                )
+                // TODO: Delete with WalletFeatureToggles
+                // lBalance.tvError.setWarningStatus(
+                //     R.string.wallet_balance_blockchain_unreachable,
+                //     status.errorMessage,
+                // )
             }
             is WalletDataModel.NoAccount -> {
                 lBalance.root.hide()

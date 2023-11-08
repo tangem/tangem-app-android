@@ -11,7 +11,8 @@ import com.tangem.core.ui.res.TangemTheme
 internal object TangemButtonsDefaults {
 
     val elevation: ButtonElevation
-        @Composable get() = ButtonDefaults.elevation(
+        @Composable
+        get() = ButtonDefaults.elevation(
             defaultElevation = TangemTheme.dimens.elevation0,
             pressedElevation = TangemTheme.dimens.elevation0,
         )
@@ -63,16 +64,6 @@ internal object TangemButtonsDefaults {
             backgroundColor = Color.Transparent,
             contentColor = TangemTheme.colors.text.tertiary,
             disabledBackgroundColor = Color.Transparent,
-            disabledContentColor = TangemTheme.colors.text.disabled,
-        )
-
-    val backgroundButtonColors: ButtonColors
-        @Composable
-        @ReadOnlyComposable
-        get() = TangemButtonColors(
-            backgroundColor = TangemTheme.colors.background.primary,
-            contentColor = TangemTheme.colors.text.primary1,
-            disabledBackgroundColor = TangemTheme.colors.button.disabled,
             disabledContentColor = TangemTheme.colors.text.disabled,
         )
 }

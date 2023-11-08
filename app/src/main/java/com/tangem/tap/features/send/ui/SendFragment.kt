@@ -11,6 +11,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -18,6 +19,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
@@ -39,12 +41,12 @@ import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentSendBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -56,7 +58,10 @@ private const val EDIT_TEXT_INPUT_DEBOUNCE = 400L
 [REDACTED_AUTHOR]
  */
 @OptIn(FlowPreview::class)
+@AndroidEntryPoint
 class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
+
+    private val viewModel by viewModels<SendViewModel>()
 
     lateinit var sendBtn: ViewStateWidget
 
@@ -70,6 +75,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
+        sendSubscriber.initViewModel(viewModel)
         Analytics.send(Token.Send.ScreenOpened())
     }
 
@@ -337,9 +344,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         if (externalTransactionData == null) {
             store.dispatch(NavigationAction.PopBackTo())
         } else {
-            store.dispatch(
-                WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId),
-            )
+            store.dispatch(TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
         }
     }
 
@@ -350,6 +355,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     override fun onDestroy() {
         store.dispatch(ReleaseSendState)
+        lifecycle.removeObserver(viewModel)
         super.onDestroy()
     }
 }

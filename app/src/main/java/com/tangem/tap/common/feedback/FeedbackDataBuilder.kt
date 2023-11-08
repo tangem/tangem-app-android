@@ -33,10 +33,10 @@ class FeedbackDataBuilder(
             builder.appendKeyValue("Derivation path", it.derivationPath)
             builder.appendKeyValue("Outputs count", it.outputsCount)
 
-            infoHolder.tokens[it.blockchain]?.let { tokens ->
+            if (it.tokens.isNotEmpty()) {
                 builder.append("Tokens:")
                 breakLine()
-                tokens.forEach { token ->
+                it.tokens.forEach { token ->
                     builder.appendKeyValue("ID", token.id ?: "[custom token]")
                     builder.appendKeyValue("Name", token.name)
                     builder.appendKeyValue("Contract address", token.contractAddress)

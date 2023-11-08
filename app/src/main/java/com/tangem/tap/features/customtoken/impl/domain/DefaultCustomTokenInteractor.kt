@@ -1,18 +1,27 @@
 package com.tangem.tap.features.customtoken.impl.domain
 
+import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.core.TangemError
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -22,22 +31,31 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
  * Default implementation of custom token interactor
  *
  * @property featureRepository feature repository
- * @property reduxStateHolder  redux state holder
  *
 [REDACTED_AUTHOR]
  */
 class DefaultCustomTokenInteractor(
     private val featureRepository: CustomTokenRepository,
-    private val reduxStateHolder: AppStateHolder,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) : CustomTokenInteractor {
+
+    // TODO: Move to DI
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
+
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     override suspend fun findToken(address: String, blockchain: Blockchain): FoundToken {
         return featureRepository.findToken(
@@ -47,35 +65,52 @@ class DefaultCustomTokenInteractor(
     }
 
     override suspend fun saveToken(customCurrency: CustomCurrency) {
-        val scanResponse = reduxStateHolder.scanResponse ?: return
+        val userWallet = getSelectedWalletSyncUseCase().fold(ifLeft = { return }, ifRight = { it })
 
         val currency = Currency.fromCustomCurrency(customCurrency)
-        val isNeedToDerive = isNeedToDerive(scanResponse, currency)
+        val isNeedToDerive = isNeedToDerive(userWallet, currency)
         if (isNeedToDerive) {
-            deriveMissingBlockchains(scanResponse = scanResponse, currencyList = listOf(currency)) {
-                submitAdd(scanResponse = it, currency = currency)
+            deriveMissingBlockchains(
+                userWallet = userWallet,
+                currencyList = listOf(currency),
+                onSuccess = { submitAdd(userWallet = userWallet.copy(scanResponse = it), currency = currency) },
+            ) {
+                throw it
             }
         } else {
-            submitAdd(scanResponse, currency)
+            submitAdd(userWallet, currency)
         }
     }
 
-    private fun isNeedToDerive(scanResponse: ScanResponse, currency: Currency): Boolean {
+    private fun isNeedToDerive(userWallet: UserWallet, currency: Currency): Boolean {
+        val scanResponse = userWallet.scanResponse
         return currency.derivationPath?.let { !scanResponse.hasDerivation(currency.blockchain, it) } ?: false
     }
 
     private suspend fun deriveMissingBlockchains(
-        scanResponse: ScanResponse,
+        userWallet: UserWallet,
         currencyList: List<Currency>,
         onSuccess: suspend (ScanResponse) -> Unit,
+        onFailure: suspend (TangemError) -> Unit,
     ) {
+        val scanResponse = userWallet.scanResponse
         val config = CardConfig.createConfig(scanResponse.card)
-        val derivationDataList = currencyList.mapNotNull {
-            val curve = config.primaryCurve(it.blockchain)
-            curve?.let { getDerivations(curve, scanResponse, currencyList) }
+        val derivationDataList = currencyList.mapNotNull { currency ->
+            val curve = config.primaryCurve(currency.blockchain)
+            curve?.let { getDerivations(curve, scanResponse, currency) }
         }
 
-        val derivations = derivationDataList.associate(TokensMiddleware.DerivationData::derivations)
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
             return
@@ -101,6 +136,7 @@ class DefaultCustomTokenInteractor(
                 onSuccess(updatedScanResponse)
             }
             is CompletionResult.Failure -> {
+                onFailure.invoke(result.error)
                 store.dispatchDebugErrorNotification(TapError.CustomError("Error adding tokens"))
             }
         }
@@ -109,22 +145,26 @@ class DefaultCustomTokenInteractor(
     private fun getDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<Currency>,
+        currency: Currency,
     ): TokensMiddleware.DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
-        val manageTokensCandidates = currencyList.map { it.blockchain }.distinct().filter {
-            it.getSupportedCurves().contains(curve)
-        }.mapNotNull {
-            it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
-        }
+        val supportedCurves = currency.blockchain.getSupportedCurves()
+        val path = currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            .takeIf { supportedCurves.contains(curve) }
 
-        val customTokensCandidates = currencyList.filter {
-            it.blockchain.getSupportedCurves().contains(curve)
-        }.mapNotNull { it.derivationPath }.map { DerivationPath(it) }
+        val customPath = currency.derivationPath?.let {
+            DerivationPath(it)
+        }.takeIf { supportedCurves.contains(curve) }
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct()
+        val bothCandidates = listOfNotNull(path, customPath).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
+
+        if (currency is Currency.Blockchain && currency.blockchain == Blockchain.Cardano) {
+            currency.derivationPath?.let {
+                bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
+            }
+        }
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
         val alreadyDerivedKeys: ExtendedPublicKeysMap =
@@ -137,7 +177,42 @@ class DefaultCustomTokenInteractor(
         return TokensMiddleware.DerivationData(derivations = mapKeyOfWalletPublicKey to toDerive)
     }
 
-    private suspend fun submitAdd(scanResponse: ScanResponse, currency: Currency) {
+    private suspend fun submitAdd(userWallet: UserWallet, currency: Currency) {
+        val scanResponse = userWallet.scanResponse
+        val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+
+        if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            val cryptoCurrencyFactory = CryptoCurrencyFactory()
+
+            submitNewAdd(
+                userWalletId = userWallet.walletId,
+                updatedScanResponse = scanResponse,
+                currencyList = listOfNotNull(
+                    when (currency) {
+                        is Currency.Blockchain -> {
+                            cryptoCurrencyFactory.createCoin(
+                                blockchain = currency.blockchain,
+                                extraDerivationPath = currency.derivationPath,
+                                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                            )
+                        }
+                        is Currency.Token -> {
+                            cryptoCurrencyFactory.createToken(
+                                sdkToken = currency.token,
+                                blockchain = currency.blockchain,
+                                extraDerivationPath = currency.derivationPath,
+                                derivationStyleProvider = scanResponse.derivationStyleProvider,
+                            )
+                        }
+                    },
+                ),
+            )
+        } else {
+            submitLegacyAdd(scanResponse = scanResponse, currency = currency)
+        }
+    }
+
+    private suspend fun submitLegacyAdd(scanResponse: ScanResponse, currency: Currency) {
         val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
             Timber.e("Unable to add currencies, no user wallet selected")
             return
@@ -153,5 +228,20 @@ class DefaultCustomTokenInteractor(
                     currenciesToAdd = listOf(currency),
                 )
             }
+    }
+
+    private fun submitNewAdd(
+        userWalletId: UserWalletId,
+        updatedScanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+    ) {
+        scope.launch {
+            userWalletsListManager.update(
+                userWalletId = userWalletId,
+                update = { it.copy(scanResponse = updatedScanResponse) },
+            )
+
+            addCryptoCurrenciesUseCase(userWalletId, currencyList)
+        }
     }
 }

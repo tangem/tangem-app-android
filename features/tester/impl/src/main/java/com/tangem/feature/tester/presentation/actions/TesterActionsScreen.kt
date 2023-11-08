@@ -2,11 +2,7 @@ package com.tangem.feature.tester.presentation.actions
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -16,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.feature.tester.impl.R
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -33,23 +30,37 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
             )
         }
         item {
-            val onClick = remember(state.hideAllCurrencies) {
-                { (state.hideAllCurrencies as? HideAllCurrenciesState.Clickable)?.onClick?.invoke() ?: Unit }
+            val onClick = remember(state.hideAllCurrenciesConfig) {
+                { (state.hideAllCurrenciesConfig as? HideAllCurrenciesConfig.Clickable)?.onClick?.invoke() ?: Unit }
             }
             TesterActionItem(
-                progress = state.hideAllCurrencies is HideAllCurrenciesState.Progress,
+                name = stringResource(R.string.hide_all_currencies),
+                progress = state.hideAllCurrenciesConfig is HideAllCurrenciesConfig.Progress,
                 onClick = onClick,
+            )
+        }
+        item {
+            val config = state.toggleAppThemeConfig
+
+            TesterActionItem(
+                name = stringResource(id = R.string.toggle_app_theme, config.currentAppTheme.name),
+                onClick = config.onClick,
             )
         }
     }
 }
 
 @Composable
-private fun TesterActionItem(progress: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun TesterActionItem(
+    name: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    progress: Boolean = false,
+) {
     Box(modifier = modifier.padding(all = TangemTheme.dimens.spacing16)) {
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.hide_all_currencies),
+            text = name,
             onClick = onClick,
             showProgress = progress,
         )
@@ -63,7 +74,13 @@ private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
         modifier = modifier
             .background(TangemTheme.colors.background.primary),
     ) {
-        TesterActionsScreen(state = TesterActionsContentState({}, HideAllCurrenciesState.Clickable({})))
+        TesterActionsScreen(
+            state = TesterActionsContentState(
+                onBackClick = {},
+                hideAllCurrenciesConfig = HideAllCurrenciesConfig.Clickable {},
+                toggleAppThemeConfig = ToggleAppThemeConfig(AppThemeMode.DEFAULT) {},
+            ),
+        )
     }
 }
 

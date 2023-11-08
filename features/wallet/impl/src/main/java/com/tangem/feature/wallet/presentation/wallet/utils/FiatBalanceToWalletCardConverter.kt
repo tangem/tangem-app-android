@@ -3,18 +3,17 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 import com.tangem.common.Provider
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.model.TokenList.FiatBalance
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
+import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.utils.converter.Converter
 
 internal class FiatBalanceToWalletCardConverter(
     private val currentState: WalletCardState,
-    private val cardTypeResolverProvider: Provider<CardTypesResolver>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val isLockedState: Boolean,
-    private val isWalletContentHidden: Boolean,
+    private val currentWalletProvider: Provider<UserWallet>,
 ) : Converter<FiatBalance, WalletCardState> {
 
     override fun convert(value: FiatBalance): WalletCardState {
@@ -26,48 +25,36 @@ internal class FiatBalanceToWalletCardConverter(
     }
 
     private fun WalletCardState.toLoadingWalletCardState(): WalletCardState {
-        return WalletCardState.Loading(id, title, imageResId, onClick)
+        return WalletCardState.Loading(id, title, additionalInfo, imageResId, onRenameClick, onDeleteClick)
     }
 
     private fun WalletCardState.toErrorWalletCardState(): WalletCardState {
         return WalletCardState.Error(
             id = id,
             title = title,
+            additionalInfo = additionalInfo,
             imageResId = imageResId,
-            onClick = onClick,
-            additionalInfo = WalletAdditionalInfoFactory.resolve(
-                cardTypesResolver = cardTypeResolverProvider(),
-                isLocked = isLockedState,
-            ),
+            onDeleteClick = onDeleteClick,
+            onRenameClick = onRenameClick,
         )
     }
 
     private fun FiatBalance.Loaded.convertToWalletCardState(): WalletCardState {
-        return if (isWalletContentHidden) {
-            WalletCardState.HiddenContent(
-                id = currentState.id,
-                title = currentState.title,
-                imageResId = currentState.imageResId,
-                onClick = currentState.onClick,
-            )
-        } else {
-            val appCurrency = appCurrencyProvider()
+        val appCurrency = appCurrencyProvider()
 
-            WalletCardState.Content(
-                id = currentState.id,
-                title = currentState.title,
-                additionalInfo = WalletAdditionalInfoFactory.resolve(
-                    cardTypesResolver = cardTypeResolverProvider(),
-                    isLocked = isLockedState,
-                ),
-                imageResId = currentState.imageResId,
-                onClick = currentState.onClick,
-                balance = formatFiatAmount(
-                    fiatAmount = this.amount,
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
-                ),
-            )
-        }
+        return WalletCardState.Content(
+            id = currentState.id,
+            title = currentState.title,
+            additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = currentWalletProvider()),
+            imageResId = currentState.imageResId,
+            onRenameClick = currentState.onRenameClick,
+            onDeleteClick = currentState.onDeleteClick,
+            balance = formatFiatAmount(
+                fiatAmount = this.amount,
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            ),
+            cardCount = currentWalletProvider().getCardsCount(),
+        )
     }
 }

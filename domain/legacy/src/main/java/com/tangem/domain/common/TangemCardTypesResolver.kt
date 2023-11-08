@@ -12,6 +12,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.operations.attestation.Attestation
 
+@Suppress("TooManyFunctions")
 internal class TangemCardTypesResolver(
     private val card: CardDTO,
     private val productType: ProductType,
@@ -25,19 +26,36 @@ internal class TangemCardTypesResolver(
             card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
     }
 
+    override fun isShibaWallet(): Boolean {
+        return card.firmwareVersion.compareTo(FirmwareVersion.KeysImportAvailable) == 0
+    }
+
+    override fun isTronWallet(): Boolean = card.batchId == TRON_WALLET_BATCH_ID
+
+    override fun isKaspaWallet(): Boolean = card.batchId == KASPA_WALLET_BATCH_ID
+
+    override fun isBadWallet(): Boolean = card.batchId == BAD_WALLET_BATCH_ID
+
     override fun isWhiteWallet(): Boolean {
-        return walletData == null && card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
+        return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
     }
 
     override fun isWallet2(): Boolean {
-        return card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available && card.settings.isKeysImportAllowed
+        return card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
+            card.settings.isKeysImportAllowed
+    }
+
+    override fun isRing(): Boolean {
+        return productType == ProductType.Ring
     }
 
     override fun isTangemTwins(): Boolean = productType == ProductType.Twins
 
     override fun isStart2Coin(): Boolean = card.isStart2Coin
 
-    override fun isDev(): Boolean = card.isTestCard
+    override fun isDevKit(): Boolean = card.batchId == DEV_KIT_CARD_BATCH_ID
+
+    override fun isSingleWalletWithToken(): Boolean = walletData?.token != null && !isMultiwalletAllowed()
 
     override fun isMultiwalletAllowed(): Boolean {
         return !isTangemTwins() && !card.isStart2Coin && !isTangemNote() &&
@@ -71,8 +89,6 @@ internal class TangemCardTypesResolver(
         )
     }
 
-    override fun getBackupCardsCount(): Int = card.wallets.size
-
     override fun isReleaseFirmwareType(): Boolean = card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release
 
     override fun getRemainingSignatures(): Int? = card.wallets.firstOrNull()?.remainingSignatures
@@ -90,10 +106,6 @@ internal class TangemCardTypesResolver(
         }
     }
 
-    override fun hasBackup(): Boolean = card.backupStatus != CardDTO.BackupStatus.NoBackup
-
-    override fun isBackupForbidden(): Boolean = !(card.settings.isBackupAllowed || card.settings.isHDWalletAllowed)
-
     private fun Blockchain.Companion.fromBlockchainName(blockchainName: String): Blockchain {
         // workaround for BSC (BNB) notes cards
         return when (blockchainName) {
@@ -110,5 +122,13 @@ internal class TangemCardTypesResolver(
                 Blockchain.fromId(blockchainName)
             }
         }
+    }
+
+    private companion object {
+
+        const val DEV_KIT_CARD_BATCH_ID = "CB83"
+        const val TRON_WALLET_BATCH_ID = "AF07"
+        const val KASPA_WALLET_BATCH_ID = "AF08"
+        const val BAD_WALLET_BATCH_ID = "AF09"
     }
 }

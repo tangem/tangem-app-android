@@ -1,452 +1,410 @@
 package com.tangem.feature.wallet.presentation.common.component
 
-import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.Stable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.composed
+import androidx.compose.ui.layout.*
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.Dp
-import androidx.constraintlayout.compose.ConstrainedLayoutReference
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.ConstraintLayoutScope
-import androidx.constraintlayout.compose.Dimension
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
-import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.marketprice.PriceChangeConfig
+import androidx.compose.ui.unit.Constraints
+import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
+import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.component.token.*
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState.TokenOptionsState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
-import org.burnoutcrew.reorderable.detectReorder
+import kotlin.math.max
 
-private const val DOTS = "•••"
-val TOKEN_ITEM_HEIGHT: Dp
-    @Composable
-    @ReadOnlyComposable
-    get() = TangemTheme.dimens.size68
+private const val TITLE_MIN_WIDTH_COEFFICIENT = 0.22
+private const val PRICE_CHANGE_MIN_WIDTH_COEFFICIENT = 0.16
 
-@Composable
-internal fun TokenItem(state: TokenItemState, modifier: Modifier = Modifier) {
-    when (state) {
-        is TokenItemState.Content -> ContentTokenItem(state, modifier)
-        is TokenItemState.Loading -> LoadingTokenItem(modifier)
-        is TokenItemState.Draggable -> DraggableTokenItem(state, modifier, reorderableTokenListState = null)
-        is TokenItemState.Unreachable -> UnreachableTokenItem(state, modifier)
-    }
+private enum class LayoutId {
+    ICON, TITLE, FIAT_AMOUNT, CRYPTO_AMOUNT, PRICE_CHANGE, NON_FIAT_CONTENT
 }
 
 @Composable
-private fun ContentTokenItem(content: TokenItemState.Content, modifier: Modifier = Modifier) {
-    InternalTokenItem(
-        modifier = modifier,
-        onClick = content.onClick,
-        name = content.name,
-        tokenIconUrl = content.tokenIconUrl,
-        tokenIconResId = content.tokenIconResId,
-        networkIconResId = content.networkIconResId,
-        amount = if (content.tokenOptions is TokenOptionsState.Hidden) DOTS else content.amount,
-        hasPending = content.hasPending,
-        options = { ref ->
-            TokenOptionsBlock(
-                modifier = Modifier.constrainAsOptionsItem(scope = this, ref),
-                state = content.tokenOptions,
-            )
-        },
-    )
-}
-
-@Composable
-internal fun DraggableTokenItem(
-    state: TokenItemState.Draggable,
+internal fun TokenItem(
+    state: TokenItemState,
+    isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
     reorderableTokenListState: ReorderableLazyListState? = null,
 ) {
-    InternalTokenItem(
-        modifier = modifier,
-        name = state.name,
-        tokenIconUrl = state.tokenIconUrl,
-        tokenIconResId = state.tokenIconResId,
-        networkIconResId = state.networkIconResId,
-        amount = state.fiatAmount,
-        hasPending = false,
-        options = { ref ->
-            Box(
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size32)
-                    .constrainAsOptionsItem(scope = this, ref)
-                    .let {
-                        if (reorderableTokenListState != null) {
-                            it.detectReorder(reorderableTokenListState)
-                        } else {
-                            it
-                        }
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_drag_24),
-                    tint = TangemTheme.colors.icon.informative,
-                    contentDescription = null,
-                )
-            }
-        },
-    )
-}
+    CustomContainer(
+        state = state,
+        modifier = modifier
+            .tokenClickable(state = state)
+            .background(color = TangemTheme.colors.background.primary),
+    ) {
+        TokenIcon(state = state.iconState, modifier = Modifier.layoutId(layoutId = LayoutId.ICON))
 
-@Composable
-internal fun UnreachableTokenItem(state: TokenItemState.Unreachable, modifier: Modifier = Modifier) {
-    InternalTokenItem(
-        modifier = modifier,
-        name = state.name,
-        tokenIconUrl = state.tokenIconUrl,
-        tokenIconResId = state.tokenIconResId,
-        networkIconResId = state.networkIconResId,
-        amount = null,
-        hasPending = false,
-        options = { ref ->
-            Text(
-                modifier = Modifier.constrainAsOptionsItem(scope = this, ref),
-                text = stringResource(id = R.string.common_unreachable),
-                style = TangemTypography.body2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-        },
-    )
-}
-
-@Composable
-private fun LoadingTokenItem(modifier: Modifier = Modifier) {
-    BaseSurface(modifier) {
-        Row(
+        TokenTitle(
+            state = state.titleState,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = TangemTheme.dimens.spacing12,
-                    vertical = TangemTheme.dimens.spacing4,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
-        ) {
-            CircleShimmer(modifier = Modifier.size(size = TangemTheme.dimens.size42))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
-                    RectangleShimmer(
-                        modifier = Modifier.size(
-                            width = TangemTheme.dimens.size72,
-                            height = TangemTheme.dimens.size12,
-                        ),
-                    )
-                    RectangleShimmer(
-                        modifier = Modifier.size(
-                            width = TangemTheme.dimens.size50,
-                            height = TangemTheme.dimens.size12,
-                        ),
-                    )
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
-                    RectangleShimmer(
-                        modifier = Modifier.size(
-                            width = TangemTheme.dimens.size40,
-                            height = TangemTheme.dimens.size12,
-                        ),
-                    )
-                    RectangleShimmer(
-                        modifier = Modifier.size(
-                            width = TangemTheme.dimens.size40,
-                            height = TangemTheme.dimens.size12,
-                        ),
-                    )
-                }
-            }
+                .layoutId(layoutId = LayoutId.TITLE)
+                .padding(horizontal = TangemTheme.dimens.spacing8)
+                .padding(bottom = TangemTheme.dimens.spacing2),
+        )
+
+        TokenFiatAmount(
+            state = state.fiatAmountState,
+            isBalanceHidden = isBalanceHidden,
+            modifier = Modifier
+                .layoutId(layoutId = LayoutId.FIAT_AMOUNT)
+                .padding(bottom = TangemTheme.dimens.spacing2),
+        )
+
+        TokenCryptoAmount(
+            state = state.cryptoAmountState,
+            isBalanceHidden = isBalanceHidden,
+            modifier = Modifier
+                .layoutId(layoutId = LayoutId.CRYPTO_AMOUNT)
+                .padding(horizontal = TangemTheme.dimens.spacing8),
+        )
+
+        TokenPriceChange(
+            state = state.priceChangeState,
+            modifier = Modifier.layoutId(layoutId = LayoutId.PRICE_CHANGE),
+        )
+
+        NonFiatContentBlock(
+            state = state,
+            reorderableTokenListState = reorderableTokenListState,
+            modifier = Modifier.layoutId(layoutId = LayoutId.NON_FIAT_CONTENT),
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed {
+    when (state) {
+        is TokenItemState.Content -> {
+            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
+            combinedClickable(onClick = state.onItemClick, onLongClick = onLongClick)
         }
+        is TokenItemState.Unreachable -> {
+            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
+            combinedClickable(onClick = state.onItemClick, onLongClick = onLongClick)
+        }
+        is TokenItemState.NoAddress -> {
+            val onLongClick = rememberHapticFeedback(state = state, onAction = state.onItemLongClick)
+            combinedClickable(onClick = {}, onLongClick = onLongClick)
+        }
+        is TokenItemState.Draggable,
+        is TokenItemState.Loading,
+        is TokenItemState.Locked,
+        -> this
     }
 }
 
 /**
- * Block for end part of token item
- * shows status is reachable, is drag, hidden or show balance
+ * IMPORTANT! All margins that used between children setup like as children paddings.
  */
-@OptIn(ExperimentalAnimationApi::class)
+@Suppress("LongMethod")
 @Composable
-private fun TokenOptionsBlock(state: TokenOptionsState, modifier: Modifier = Modifier) {
-    AnimatedContent(targetState = state, label = "Update the options", modifier = modifier) { options ->
-        when (options) {
-            is TokenOptionsState.Visible -> {
-                TokenFiatPercentageBlock(fiatAmount = options.fiatAmount, priceChange = options.priceChange)
+private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val density = LocalDensity.current
+    val dimens = TangemTheme.dimens
+
+    Layout(content = content, modifier = modifier) { measurables, constraints ->
+
+        val layoutWidth = constraints.maxWidth
+        val layoutPadding = with(density) { dimens.size14.roundToPx() }
+        val layoutWidthWithPaddings = layoutWidth - 2 * layoutPadding
+
+        val titleMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
+        val priceChangeMinWidth = (layoutWidth * PRICE_CHANGE_MIN_WIDTH_COEFFICIENT).toInt()
+
+        val icon = measurables.measure(layoutId = LayoutId.ICON, constraints = constraints)
+
+        /*
+         * Title width take the whole REMAINING space.
+         * If FiatAmount took the whole free space, then Title will has min width.
+         */
+        val title: Placeable
+
+        // FiatAmount width must take the whole free space but is not greater the Title min size
+        var fiatAmount: Placeable? = null
+
+        // CryptoAmount width must take the whole free space but is not greater the PriceChange min size
+        var cryptoAmount: Placeable? = null
+
+        /*
+         * PriceChange width take the whole REMAINING space.
+         * If CryptoAmount took the whole free space, then PriceChange will has min width.
+         */
+        val priceChange: Placeable?
+
+        val nonFiatContent = measurables.measure(layoutId = LayoutId.NON_FIAT_CONTENT, constraints = constraints)
+
+        var firstRowRemainingFreeSpace: Int? = null
+        var secondRowRemainingFreeSpace: Int? = null
+
+        when (state) {
+            is TokenItemState.Content,
+            is TokenItemState.Loading,
+            is TokenItemState.Locked,
+            -> {
+                fiatAmount = measurables.measureFiatAmount(
+                    state = state,
+                    maxWidth = layoutWidthWithPaddings - icon.width - titleMinWidth,
+                    defaultConstraints = constraints,
+                )
+
+                cryptoAmount = measurables.measureCryptoAmount(
+                    state = state,
+                    maxWidth = layoutWidthWithPaddings - icon.width - priceChangeMinWidth,
+                    defaultConstraints = constraints,
+                )
+
+                firstRowRemainingFreeSpace = layoutWidthWithPaddings - icon.width - fiatAmount.width
+                secondRowRemainingFreeSpace = layoutWidthWithPaddings - icon.width - cryptoAmount.width
             }
-            is TokenOptionsState.Hidden -> {
-                TokenFiatPercentageBlock(fiatAmount = DOTS, priceChange = options.priceChange)
+            is TokenItemState.Draggable -> {
+                cryptoAmount = measurables.measureCryptoAmount(
+                    state = state,
+                    maxWidth = layoutWidthWithPaddings - icon.width - nonFiatContent.width,
+                    defaultConstraints = constraints,
+                )
+
+                firstRowRemainingFreeSpace = layoutWidthWithPaddings - icon.width - nonFiatContent.width
             }
+            is TokenItemState.NoAddress,
+            is TokenItemState.Unreachable,
+            -> {
+                firstRowRemainingFreeSpace = layoutWidthWithPaddings - icon.width - nonFiatContent.width
+            }
+        }
+
+        title = measurables.measureTitle(
+            state = state,
+            minWidth = titleMinWidth,
+            remainingFreeSpace = firstRowRemainingFreeSpace,
+            defaultConstraints = constraints,
+        )
+
+        priceChange = secondRowRemainingFreeSpace?.let {
+            measurables.measurePriceChange(
+                state = state,
+                minWidth = priceChangeMinWidth,
+                remainingFreeSpace = secondRowRemainingFreeSpace,
+                defaultConstraints = constraints,
+            )
+        }
+
+        val layoutHeight = calculateLayoutHeight(
+            state = state,
+            minLayoutHeight = with(density) { dimens.size68.roundToPx() },
+            layoutPadding = layoutPadding,
+            betweenRowsPadding = with(density) { dimens.size2.roundToPx() },
+            title = title,
+            fiatAmount = fiatAmount,
+            cryptoAmount = cryptoAmount,
+            priceChange = priceChange,
+        )
+
+        layout(width = constraints.maxWidth, height = layoutHeight) {
+            icon.placeRelative(x = layoutPadding, y = (layoutHeight - icon.height).div(other = 2))
+
+            title.placeRelative(
+                x = layoutPadding + icon.width,
+                y = when (state) {
+                    is TokenItemState.NoAddress,
+                    is TokenItemState.Unreachable,
+                    -> (layoutHeight - title.height).div(other = 2)
+                    else -> layoutPadding
+                },
+            )
+
+            cryptoAmount?.placeRelative(
+                x = layoutPadding + icon.width,
+                y = layoutHeight - cryptoAmount.height - layoutPadding,
+            )
+
+            fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width - layoutPadding, y = layoutPadding)
+
+            priceChange?.placeRelative(
+                x = layoutWidth - priceChange.width - layoutPadding,
+                y = layoutHeight - priceChange.height - layoutPadding,
+            )
+
+            nonFiatContent.placeRelative(
+                x = layoutWidth - nonFiatContent.width - layoutPadding,
+                y = (layoutHeight - nonFiatContent.height).div(other = 2),
+            )
         }
     }
 }
+
+private fun List<Measurable>.measureFiatAmount(
+    state: TokenItemState,
+    maxWidth: Int,
+    defaultConstraints: Constraints,
+): Placeable {
+    return measure(
+        layoutId = LayoutId.FIAT_AMOUNT,
+        constraints = when (state) {
+            is TokenItemState.Content,
+            is TokenItemState.Draggable,
+            -> createConstrainsSafely(maxWidth = maxWidth)
+            else -> defaultConstraints
+        },
+    )
+}
+
+private fun List<Measurable>.measureCryptoAmount(
+    state: TokenItemState,
+    maxWidth: Int,
+    defaultConstraints: Constraints,
+): Placeable {
+    return measure(
+        layoutId = LayoutId.CRYPTO_AMOUNT,
+        constraints = when (state) {
+            is TokenItemState.Content,
+            is TokenItemState.Draggable,
+            -> createConstrainsSafely(maxWidth = maxWidth)
+            else -> defaultConstraints
+        },
+    )
+}
+
+private fun List<Measurable>.measureTitle(
+    state: TokenItemState,
+    minWidth: Int,
+    remainingFreeSpace: Int,
+    defaultConstraints: Constraints,
+): Placeable {
+    return measure(
+        layoutId = LayoutId.TITLE,
+        constraints = when (state) {
+            is TokenItemState.Content,
+            is TokenItemState.Draggable,
+            is TokenItemState.NoAddress,
+            is TokenItemState.Unreachable,
+            -> createDynamicConstrains(minWidth = minWidth, remainingFreeSpace = remainingFreeSpace)
+            else -> defaultConstraints
+        },
+    )
+}
+
+private fun List<Measurable>.measurePriceChange(
+    state: TokenItemState,
+    minWidth: Int,
+    remainingFreeSpace: Int,
+    defaultConstraints: Constraints,
+): Placeable {
+    return measure(
+        layoutId = LayoutId.PRICE_CHANGE,
+        constraints = when (state) {
+            is TokenItemState.Content,
+            -> createDynamicConstrains(minWidth = minWidth, remainingFreeSpace = remainingFreeSpace)
+            else -> defaultConstraints
+        },
+    )
+}
+
+private fun List<Measurable>.measure(layoutId: LayoutId, constraints: Constraints): Placeable {
+    return requireNotNull(
+        value = firstOrNull { it.layoutId == layoutId },
+        lazyMessage = { "Measurables[$layoutId] is null" },
+    ).measure(constraints)
+}
+
+private fun createDynamicConstrains(minWidth: Int, remainingFreeSpace: Int): Constraints {
+    return createConstrainsSafely(
+        minWidth = minWidth,
+        maxWidth = max(a = minWidth, b = remainingFreeSpace),
+    )
+}
+
+private fun createConstrainsSafely(
+    minWidth: Int = 0,
+    maxWidth: Int = Constraints.Infinity,
+    minHeight: Int = 0,
+    maxHeight: Int = Constraints.Infinity,
+): Constraints {
+    return Constraints(
+        minWidth = minWidth.makeNotLessZero(),
+        maxWidth = maxWidth.makeNotLessZero(),
+        minHeight = minHeight.makeNotLessZero(),
+        maxHeight = maxHeight.makeNotLessZero(),
+    )
+}
+
+private fun Int.makeNotLessZero(): Int = max(a = 0, b = this)
 
 @Suppress("LongParameterList")
-@Composable
-private fun InternalTokenItem(
-    name: String,
-    tokenIconUrl: String?,
-    @DrawableRes tokenIconResId: Int,
-    @DrawableRes networkIconResId: Int?,
-    amount: String?,
-    hasPending: Boolean,
-    options: @Composable ConstraintLayoutScope.(ref: ConstrainedLayoutReference) -> Unit,
-    modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
-) {
-    BaseSurface(
-        modifier = modifier,
-        onClick = onClick,
-    ) {
-        ConstraintLayout(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = TangemTheme.dimens.spacing14,
-                    vertical = TangemTheme.dimens.spacing4,
-                ),
-        ) {
-            val (iconItem, tokenNameItem, optionsItem) = createRefs()
+private fun calculateLayoutHeight(
+    state: TokenItemState,
+    minLayoutHeight: Int,
+    layoutPadding: Int,
+    betweenRowsPadding: Int,
+    title: Placeable,
+    fiatAmount: Placeable?,
+    cryptoAmount: Placeable?,
+    priceChange: Placeable?,
+): Int {
+    val firstColumnHeight: Int
+    val secondColumnHeight: Int
 
-            TokenIcon(
-                modifier = Modifier.constrainAs(iconItem) {
-                    centerVerticallyTo(parent)
-                    start.linkTo(parent.start)
-                },
-                tokenIconUrl = tokenIconUrl,
-                tokenIconResId = tokenIconResId,
-                networkIconRes = networkIconResId,
-            )
-
-            TokenTitleAmountBlock(
-                modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing8)
-                    .constrainAs(tokenNameItem) {
-                        centerVerticallyTo(parent)
-                        start.linkTo(iconItem.end)
-                        end.linkTo(optionsItem.start)
-                        width = Dimension.fillToConstraints
-                    },
-                title = name,
-                amount = amount,
-                hasPending = hasPending,
-            )
-
-            options(optionsItem)
+    when (state) {
+        is TokenItemState.Content,
+        is TokenItemState.Loading,
+        is TokenItemState.Locked,
+        -> {
+            firstColumnHeight = 2 * layoutPadding + title.height + betweenRowsPadding + (cryptoAmount?.height ?: 0)
+            secondColumnHeight = 2 * layoutPadding + (fiatAmount?.height ?: 0) + betweenRowsPadding +
+                (priceChange?.height ?: 0)
+        }
+        is TokenItemState.Draggable,
+        is TokenItemState.NoAddress,
+        is TokenItemState.Unreachable,
+        -> {
+            firstColumnHeight = minLayoutHeight
+            secondColumnHeight = minLayoutHeight
         }
     }
+
+    return max(firstColumnHeight, secondColumnHeight).coerceAtLeast(minLayoutHeight)
 }
 
-@Stable
-private fun Modifier.constrainAsOptionsItem(scope: ConstraintLayoutScope, ref: ConstrainedLayoutReference): Modifier {
-    return with(scope) {
-        this@constrainAsOptionsItem.constrainAs(ref) {
-            centerVerticallyTo(parent)
-            end.linkTo(parent.end)
-        }
-    }
-}
-
+@Preview(widthDp = 360)
 @Composable
-private fun BaseSurface(
-    modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
-    content: @Composable () -> Unit,
-) {
-    Surface(
-        modifier = modifier.defaultMinSize(minHeight = TOKEN_ITEM_HEIGHT),
-        color = TangemTheme.colors.background.primary,
-        onClick = onClick ?: {},
-        enabled = onClick != null,
-    ) {
-        content()
-    }
-}
-
-@Composable
-private fun TokenTitleAmountBlock(title: String, amount: String?, hasPending: Boolean, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2),
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
-            Text(
-                text = title,
-                style = TangemTypography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
-            )
-
-            AnimatedVisibility(visible = hasPending, modifier = Modifier.align(Alignment.CenterVertically)) {
-                Image(
-                    painter = painterResource(id = R.drawable.img_loader_15),
-                    contentDescription = null,
-                )
-            }
-        }
-
-        AnimatedVisibility(visible = !amount.isNullOrBlank()) {
-            Text(
-                text = requireNotNull(amount),
-                style = TangemTypography.body2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-private fun TokenFiatPercentageBlock(
-    fiatAmount: String,
-    priceChange: PriceChangeConfig,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier.requiredWidth(IntrinsicSize.Max)) {
-        Text(
-            modifier = Modifier.align(Alignment.End),
-            text = fiatAmount,
-            style = TangemTypography.body2,
-            color = TangemTheme.colors.text.primary1,
-        )
-        SpacerH2()
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            AnimatedContent(
-                targetState = priceChange.type,
-                label = "Update the price change's arrow",
-                modifier = Modifier.align(Alignment.CenterVertically),
-            ) {
-                Image(
-                    painter = painterResource(
-                        id = when (priceChange.type) {
-                            PriceChangeConfig.Type.UP -> R.drawable.img_arrow_up_8
-                            PriceChangeConfig.Type.DOWN -> R.drawable.img_arrow_down_8
-                        },
-                    ),
-                    contentDescription = null,
-                )
-            }
-
-            SpacerW4()
-
-            AnimatedContent(
-                targetState = priceChange.type,
-                label = "Update the price change's arrow",
-                modifier = Modifier.align(Alignment.CenterVertically),
-            ) {
-                Text(
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                    text = priceChange.valueInPercent,
-                    style = TangemTypography.body2,
-                    color = when (priceChange.type) {
-                        PriceChangeConfig.Type.UP -> TangemTheme.colors.text.accent
-                        PriceChangeConfig.Type.DOWN -> TangemTheme.colors.text.warning
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TokenIcon(
-    tokenIconUrl: String?,
-    modifier: Modifier = Modifier,
-    @DrawableRes tokenIconResId: Int? = null,
-    @DrawableRes networkIconRes: Int? = null,
-) {
-    Box(
-        modifier = modifier
-            .padding(end = TangemTheme.dimens.spacing16)
-            .size(TangemTheme.dimens.size42),
-    ) {
-        val tokenImageModifier = Modifier
-            .align(Alignment.BottomStart)
-            .size(TangemTheme.dimens.size36)
-
-        val data = if (tokenIconUrl.isNullOrEmpty()) tokenIconResId else tokenIconUrl
-        SubcomposeAsyncImage(
-            modifier = tokenImageModifier,
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(data)
-                .crossfade(true)
-                .build(),
-            loading = { CircleShimmer(modifier = tokenImageModifier) },
-            contentDescription = null,
-        )
-
-        AnimatedVisibility(
-            visible = networkIconRes != null,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(TangemTheme.dimens.size18)
-                .background(color = Color.White, shape = CircleShape),
-        ) {
-            Image(
-                modifier = Modifier
-                    .padding(all = TangemTheme.dimens.spacing0_5)
-                    .align(Alignment.Center),
-                painter = painterResource(id = requireNotNull(networkIconRes)),
-                contentDescription = null,
-            )
-        }
-    }
-}
-
-// region preview
-
-@Preview
-@Composable
-private fun Preview_Tokens_LightTheme(@PreviewParameter(TokenConfigProvider::class) state: TokenItemState) {
+private fun Preview_CustomTokenItem_InLight(@PreviewParameter(TokenItemStateProvider::class) state: TokenItemState) {
     TangemTheme(isDark = false) {
-        TokenItem(state)
+        TokenItem(state = state, isBalanceHidden = false)
     }
 }
 
-@Preview
-@Composable
-private fun Preview_Tokens_DarkTheme(@PreviewParameter(TokenConfigProvider::class) state: TokenItemState) {
-    TangemTheme(isDark = true) {
-        TokenItem(state)
-    }
-}
-
-private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItemState>(
+private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenItemState>(
     collection = listOf(
-        WalletPreviewData.tokenItemVisibleState,
+        WalletPreviewData.tokenItemVisibleState.copy(
+            iconState = WalletPreviewData.coinIconState.copy(showCustomBadge = true),
+            titleState = TokenItemState.TitleState.Content(
+                text = "PolygonPolygonPolygonPolygonPolygonPolygon",
+                hasPending = true,
+            ),
+            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3213123123321312312312312312 $"),
+            cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,4123123213123123123123123123 MATIC"),
+            priceChangeState = TokenItemState.PriceChangeState.Content(
+                valueInPercent = "2365723643724723423742342374623642374723472342342.0%",
+                type = PriceChangeType.UP,
+            ),
+        ),
         WalletPreviewData.tokenItemUnreachableState,
+        WalletPreviewData.tokenItemNoAddressState,
         WalletPreviewData.tokenItemDragState,
         WalletPreviewData.tokenItemHiddenState,
         WalletPreviewData.loadingTokenItemState,
+        WalletPreviewData.testnetTokenItemVisibleState,
+        WalletPreviewData.customTokenItemVisibleState,
+        WalletPreviewData.customTestnetTokenItemVisibleState,
     ),
 )
-
-// endregion preview

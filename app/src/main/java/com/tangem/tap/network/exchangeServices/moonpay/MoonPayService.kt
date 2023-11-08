@@ -102,6 +102,7 @@ class MoonPayService(
         cryptoCurrencyName: CryptoCurrencyName,
         fatCurrency: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String {
         if (action == CurrencyExchangeManager.Action.Buy) throw UnsupportedOperationException()
 
@@ -112,6 +113,7 @@ class MoonPayService(
             .appendQueryParameter("baseCurrencyCode", cryptoCurrencyName)
             .appendQueryParameter("refundWalletAddress", walletAddress)
             .appendQueryParameter("redirectURL", "tangem://sell-request.tangem.com")
+        if (isDarkTheme) uri.appendQueryParameter("theme", "dark")
 
         val originalQuery = uri.build().encodedQuery ?: uri.build().toString()
         val signature = createSignature(originalQuery)

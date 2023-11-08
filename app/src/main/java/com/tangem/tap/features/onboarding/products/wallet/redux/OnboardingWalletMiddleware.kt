@@ -5,6 +5,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.common.extensions.toHexString
+import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -18,6 +20,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.Artwork
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
+import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -33,6 +36,7 @@ import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -92,7 +96,21 @@ private fun handleWalletAction(action: Action) {
         is OnboardingWalletAction.LoadArtwork -> {
             scope.launch {
                 val cardArtwork = when (onboardingManager) {
-                    null -> action.cardArtworkUriForUnfinishedBackup
+                    null -> {
+                        // onboardingManager is null when backup started from previously interrupted
+                        val primaryCardId = backupService.primaryCardId
+                        val cardPublicKey = backupService.primaryPublicKey
+                        if (primaryCardId != null && cardPublicKey != null) {
+                            // uses when no scanResponse and backup state restored
+                            loadArtworkForUnfinishedBackup(
+                                cardId = primaryCardId,
+                                cardPublicKey = cardPublicKey,
+                                defaultArtwork = action.cardArtworkUriForUnfinishedBackup,
+                            )
+                        } else {
+                            action.cardArtworkUriForUnfinishedBackup
+                        }
+                    }
                     else -> onboardingManager.loadArtworkUrl()
                         .takeIf { it != Artwork.DEFAULT_IMG_URL }
                         ?.let { Uri.parse(it) }
@@ -104,14 +122,16 @@ private fun handleWalletAction(action: Action) {
             scanResponse ?: return
             scope.launch {
                 val result = tangemSdkManager.createProductWallet(scanResponse)
-                store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(result))
+                store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(true, result))
             }
         }
         is OnboardingWalletAction.WalletWasCreated -> {
             scanResponse ?: return
             when (val result = action.result) {
                 is CompletionResult.Success -> {
-                    Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
+                    if (action.shouldSendAnalyticsEvent) {
+                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
+                    }
                     // here we must use updated scanResponse after createWallet & derivation
                     val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
                         card = result.data.card,
@@ -133,6 +153,7 @@ private fun handleWalletAction(action: Action) {
                     }
 
                     scope.launch {
+                        // TODO: Use new repo [REDACTED_JIRA]
                         userTokensRepository.saveUserTokens(
                             card = result.data.card,
                             tokens = blockchainNetworks.toCurrencies(),
@@ -144,12 +165,12 @@ private fun handleWalletAction(action: Action) {
                 is CompletionResult.Failure -> Unit
             }
         }
-        OnboardingWalletAction.FinishOnboarding -> {
+        is OnboardingWalletAction.FinishOnboarding -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
 
             if (scanResponse == null) {
                 store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(HomeAction.ReadCard())
+                store.dispatch(HomeAction.ReadCard(scope = action.scope))
             } else {
                 val backupState = store.state.onboardingWalletState.backupState
                 val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
@@ -179,6 +200,24 @@ private fun handleWalletAction(action: Action) {
         }
         OnboardingWalletAction.OnBackPressed -> handleOnBackPressed(onboardingWalletState)
         else -> Unit
+    }
+}
+
+private suspend fun loadArtworkForUnfinishedBackup(
+    cardId: String,
+    cardPublicKey: ByteArray,
+    defaultArtwork: Uri?,
+): Uri {
+    return when (val cardInfo = OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)) {
+        is Result.Success -> {
+            val artworkId = cardInfo.data.artwork?.id
+            if (artworkId.isNullOrEmpty()) {
+                defaultArtwork ?: Uri.EMPTY
+            } else {
+                Uri.parse(OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId))
+            }
+        }
+        is Result.Failure -> defaultArtwork ?: Uri.EMPTY
     }
 }
 
@@ -234,7 +273,12 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                             SeedPhraseSource.IMPORTED -> AnalyticsParam.WalletCreationType.SeedImport
                             SeedPhraseSource.GENERATED -> AnalyticsParam.WalletCreationType.NewSeed
                         }
-                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully(creationType))
+                        Analytics.send(
+                            event = Onboarding.CreateWallet.WalletCreatedSuccessfully(
+                                creationType = creationType,
+                                seedPhraseLength = action.mnemonicComponents.size,
+                            ),
+                        )
                         val response = CreateWalletResponse(
                             card = result.data.card,
                             derivedKeys = result.data.derivedKeys,
@@ -268,7 +312,8 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                     CompletionResult.Failure(mediateResult.error)
                 }
             }
-            store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(result))
+            // do not send analytics event for wallet2 flow, cause its already sent
+            store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(false, result))
         }
 
         else -> Unit
@@ -322,7 +367,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.ScanPrimaryCard -> {
-            backupService.readPrimaryCard(cardId = card?.cardId) { result ->
+            val iconScanRes = if (scanResponse?.cardTypesResolver?.isRing() == true) {
+                R.drawable.img_hand_scan_ring
+            } else {
+                null
+            }
+            backupService.readPrimaryCard(iconScanRes = iconScanRes, cardId = card?.cardId) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.StartAddingBackupCards)
@@ -389,7 +439,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.WritePrimaryCard -> {
-            backupService.proceedBackup { result ->
+            val iconScanRes = if (scanResponse?.cardTypesResolver?.isRing() == true) {
+                R.drawable.img_hand_scan_ring
+            } else {
+                null
+            }
+            backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.PrepareToWriteBackupCard(1))
@@ -446,6 +501,23 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
             }
 
+            userWalletsListManager.selectedUserWalletSync?.walletId?.let {
+                scope.launch {
+                    userWalletsListManager.update(
+                        userWalletId = it,
+                        update = { wallet ->
+                            wallet.copy(
+                                scanResponse = updateScanResponseAfterBackup(
+                                    scanResponse = wallet.scanResponse,
+                                    backupState = backupState,
+                                ),
+                            )
+                        },
+                    )
+                    store.dispatchOnMain(GlobalAction.UpdateUserWalletsListManager(userWalletsListManager))
+                }
+            }
+
             val notActivatedCardIds = gatherCardIds(backupState, card)
                 .mapNotNull { if (cardActivationIsFinished(it)) null else it }
 
@@ -457,7 +529,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
 
         is BackupAction.ResetBackupCard -> {
-            scope.launch { tangemSdkManager.resetToFactorySettings(action.cardId) }
+            scope.launch { tangemSdkManager.resetToFactorySettings(action.cardId, false) }
         }
 
         else -> Unit

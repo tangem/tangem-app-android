@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.OutlineTextField
-import com.tangem.core.ui.components.PrimaryButtonIconStart
+import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseState
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Description
@@ -56,7 +56,7 @@ fun CheckSeedPhraseScreen(state: CheckSeedPhraseState, modifier: Modifier = Modi
         }
         OnboardingActionBlock(
             firstActionContent = {
-                PrimaryButtonIconStart(
+                PrimaryButtonIconEnd(
                     modifier = Modifier
                         .fillMaxWidth(),
                     text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),

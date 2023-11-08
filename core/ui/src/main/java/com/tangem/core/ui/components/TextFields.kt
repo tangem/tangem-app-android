@@ -9,29 +9,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldColors
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -43,7 +25,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=213%3A218&t=TmfD6UBHPg9uYfev-4)
@@ -121,7 +102,7 @@ private fun TangemTextField(
                 if (!label.isNullOrEmpty()) {
                     Text(
                         text = label,
-                        style = TangemTheme.typography.caption,
+                        style = TangemTheme.typography.caption2,
                         color = colors.labelColor(
                             enabled = enabled,
                             error = isError,
@@ -179,7 +160,7 @@ private fun TangemTextField(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     text = caption,
-                    style = TangemTypography.body1,
+                    style = TangemTheme.typography.body1,
                     color = colors.captionColor(enabled = enabled, isError = isError).value,
                 )
             }
@@ -210,8 +191,8 @@ object TangemTextFieldsDefault {
             cursorColor = TangemTheme.colors.icon.primary1,
             errorCursorColor = TangemTheme.colors.icon.warning,
             focusedIndicatorColor = TangemTheme.colors.icon.primary1,
-            unfocusedIndicatorColor = TangemTheme.colors.stroke.primary,
-            disabledIndicatorColor = TangemTheme.colors.stroke.primary,
+            unfocusedIndicatorColor = TangemTheme.colors.stroke.secondary,
+            disabledIndicatorColor = TangemTheme.colors.stroke.secondary,
             errorIndicatorColor = TangemTheme.colors.icon.warning,
             leadingIconColor = TangemTheme.colors.icon.informative,
             disabledLeadingIconColor = Color.Transparent,

@@ -1,15 +1,16 @@
 package com.tangem.tap.domain
 
 import android.content.res.Resources
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.*
-import com.tangem.common.biometric.BiometricManager
+import com.tangem.common.authentication.KeystoreManager
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.bip39.DefaultMnemonic
@@ -25,12 +26,12 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
-import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -38,31 +39,38 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions")
-class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigRepository, private val resources: Resources) {
+class TangemSdkManager(
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
+    private val resources: Resources,
+) {
 
     private val tangemSdk: TangemSdk
         get() = cardSdkConfigRepository.sdk
 
     private val userCodeRepository by lazy {
         UserCodeRepository(
-            biometricManager = tangemSdk.biometricManager,
+            keystoreManager = tangemSdk.keystoreManager,
             secureStorage = tangemSdk.secureStorage,
         )
     }
 
     val canUseBiometry: Boolean
-        get() = tangemSdk.biometricManager.canAuthenticate || needEnrollBiometrics
+        get() = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
 
     val needEnrollBiometrics: Boolean
-        get() = tangemSdk.biometricManager.canEnrollBiometrics
+        get() = tangemSdk.authenticationManager.needEnrollBiometrics
 
-    val biometricManager: BiometricManager
-        get() = tangemSdk.biometricManager
+    val keystoreManager: KeystoreManager
+        get() = tangemSdk.keystoreManager
+
+    val secureStorage: SecureStorage
+        get() = tangemSdk.secureStorage
+
+    val userCodeRequestPolicy: UserCodeRequestPolicy
+        get() = tangemSdk.config.userCodeRequestPolicy
 
     suspend fun scanProduct(
-        userTokensRepository: UserTokensRepository,
         cardId: String? = null,
-        additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
@@ -70,8 +78,7 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         return runTaskAsyncReturnOnMain(
             runnable = ScanProductTask(
                 card = null,
-                userTokensRepository = userTokensRepository,
-                additionalBlockchainsToDerive = additionalBlockchainsToDerive,
+                derivationsFinder = derivationsFinder,
                 allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
             ),
             cardId = cardId,
@@ -81,12 +88,13 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
 
     suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
-            CreateProductWalletTask(
+            runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
                 derivationStyleProvider = scanResponse.derivationStyleProvider,
             ),
-            scanResponse.card.cardId,
-            Message(resources.getString(R.string.initial_message_create_wallet_body)),
+            cardId = scanResponse.card.cardId,
+            initialMessage = Message(resources.getString(R.string.initial_message_create_wallet_body)),
+            iconScanRes = if (scanResponse.cardTypesResolver.isRing()) R.drawable.img_hand_scan_ring else null,
         )
     }
 
@@ -94,7 +102,7 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         scanResponse: ScanResponse,
         mnemonic: String,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        val mnemonic = try {
+        val defaultMnemonic = try {
             DefaultMnemonic(mnemonic, tangemSdk.wordlist)
         } catch (e: TangemSdkError.MnemonicException) {
             return CompletionResult.Failure(e)
@@ -103,7 +111,7 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
             CreateProductWalletTask(
                 scanResponse.cardTypesResolver,
                 derivationStyleProvider = scanResponse.derivationStyleProvider,
-                mnemonic,
+                defaultMnemonic,
             ),
             scanResponse.card.cardId,
             Message(resources.getString(R.string.initial_message_create_wallet_body)),
@@ -134,9 +142,14 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
     }
 
-    suspend fun resetToFactorySettings(cardId: String): CompletionResult<CardDTO> {
+    suspend fun resetToFactorySettings(
+        cardId: String,
+        allowsRequestAccessCodeFromRepository: Boolean,
+    ): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
-            runnable = ResetToFactorySettingsTask(),
+            runnable = ResetToFactorySettingsTask(
+                allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+            ),
             cardId = cardId,
             initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
         )
@@ -210,9 +223,10 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         cardId: String? = null,
         initialMessage: Message? = null,
         accessCode: String? = null,
+        @DrawableRes iconScanRes: Int? = null,
     ): CompletionResult<T> = withContext(Dispatchers.Main) {
         suspendCancellableCoroutine { continuation ->
-            tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode) { result ->
+            tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode, iconScanRes) { result ->
                 if (continuation.isActive) continuation.resume(result)
             }
         }
@@ -241,17 +255,8 @@ class TangemSdkManager(private val cardSdkConfigRepository: CardSdkConfigReposit
         return resources.getString(stringResId, *formatArgs)
     }
 
-    fun setAccessCodeRequestPolicy(useBiometricsForAccessCode: Boolean) {
-        tangemSdk.config.userCodeRequestPolicy = if (useBiometricsForAccessCode) {
-            UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
-        } else {
-            UserCodeRequestPolicy.Default
-        }
-    }
-
-    fun useBiometricsForAccessCode(): Boolean {
-        val policy = tangemSdk.config.userCodeRequestPolicy
-        return policy is UserCodeRequestPolicy.AlwaysWithBiometrics && policy.codeType == UserCodeType.AccessCode
+    fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
+        tangemSdk.config.userCodeRequestPolicy = policy
     }
 
     companion object {

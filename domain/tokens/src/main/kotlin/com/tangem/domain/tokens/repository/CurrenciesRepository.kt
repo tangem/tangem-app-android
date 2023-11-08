@@ -1,6 +1,8 @@
 package com.tangem.domain.tokens.repository
 
-import com.tangem.domain.tokens.models.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -28,6 +30,36 @@ interface CurrenciesRepository {
     )
 
     /**
+     * Add currencies to a specific user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currencies The currencies which must be added.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
+
+    /**
+     * Removes currency from a specific user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currency The currency which must be removed.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * ID provided.
+     */
+    suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency)
+
+    /**
+     * Removes currencies from a specific user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param currencies The currencies which must be removed.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
+
+    /**
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
@@ -38,15 +70,57 @@ interface CurrenciesRepository {
     suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
 
     /**
-     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
+     * Retrieves the cryptocurrencies for a specific single-currency user wallet with tokens on the card.
      *
      * @param userWalletId The unique identifier of the user wallet.
-     * @param refresh A boolean flag indicating whether the data should be refreshed.
+     * @return The primary cryptocurrency associated with the user wallet.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
+     * ID provided.
+     */
+    suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>
+
+    /**
+     * Retrieves the cryptocurrency for a specific single-currency user old wallet
+     * that stores token on card
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param id The unique identifier of the cryptocurrency to be retrieved.
+     * @return The cryptocurrency associated with the user wallet and ID.
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getSingleCurrencyWalletWithCardCurrency(
+        userWalletId: UserWalletId,
+        id: CryptoCurrency.ID,
+    ): CryptoCurrency
+
+    /**
+     * Retrieves updates of the list of cryptocurrencies within a multi-currency wallet.
+     *
+     * Loads remote cryptocurrencies if they have expired.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
      * @return A [Flow] emitting the set of cryptocurrencies associated with the user wallet.
      * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    fun getMultiCurrencyWalletCurrencies(userWalletId: UserWalletId, refresh: Boolean): Flow<List<CryptoCurrency>>
+    fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
+
+    /**
+     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
+     *
+     * Loads cryptocurrencies if they have expired or if [refresh] is `true`.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param refresh A boolean flag indicating whether the data should be refreshed.
+     * @return A list of [CryptoCurrency].
+     * @throws com.tangem.domain.core.error.DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getMultiCurrencyWalletCurrenciesSync(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): List<CryptoCurrency>
 
     /**
      * Retrieves the cryptocurrency for a specific multi-currency user wallet.
@@ -58,6 +132,19 @@ interface CurrenciesRepository {
      * ID provided.
      */
     suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
+
+    /**
+     * Get the coin for a specific network.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param networkId    The unique identifier of the network.
+     * @param derivationPath currency derivation path.
+     */
+    suspend fun getNetworkCoin(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin
 
     /**
      * Determines whether the tokens within a specific multi-currency user wallet are grouped.
@@ -78,4 +165,14 @@ interface CurrenciesRepository {
      * ID provided.
      */
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
+
+    fun getMissedAddressesCryptoCurrencies(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
+
+    /**
+     * Determines whether the currency has pending transaction or currency network has pending transaction
+     *
+     * @param cryptoCurrencyStatus currency status
+     * @param coinStatus main currency status in [cryptoCurrencyStatus] network
+     */
+    fun hasPendingTransactions(cryptoCurrencyStatus: CryptoCurrencyStatus, coinStatus: CryptoCurrencyStatus?): Boolean
 }

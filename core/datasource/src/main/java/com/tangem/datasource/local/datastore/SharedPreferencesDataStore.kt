@@ -4,61 +4,63 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.squareup.moshi.JsonAdapter
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.datasource.local.datastore.utils.Trigger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import timber.log.Timber
 
-internal class SharedPreferencesDataStore<Value : Any>(
+internal abstract class SharedPreferencesDataStore<Value : Any>(
     preferencesName: String,
-    private val context: Context,
-    private val adapter: JsonAdapter<Value>,
+    context: Context,
 ) : StringKeyDataStore<Value> {
 
-    private val sharedPreferences: SharedPreferences by lazy {
+    protected val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(preferencesName, MODE_PRIVATE)
     }
 
     private val writeTrigger = Trigger()
 
+    abstract fun getByKey(key: String): Value?
+
+    abstract fun storeByKey(key: String, value: Value)
+
+    override suspend fun isEmpty(): Boolean {
+        return sharedPreferences.all.isEmpty()
+    }
+
+    override suspend fun contains(key: String): Boolean {
+        return sharedPreferences.contains(key)
+    }
+
     override fun get(key: String): Flow<Value> {
         return writeTrigger
-            .map { getInternal(key) }
-            .filterNotNull()
+            .mapNotNull { getInternal(key) }
             .distinctUntilChanged()
     }
 
     override fun getAll(): Flow<List<Value>> {
-        return writeTrigger
-            .map { getAllInternal() }
-            .distinctUntilChanged()
+        throw UnsupportedOperationException("Unknown key")
     }
 
-    override suspend fun getSyncOrNull(key: String): Value? {
-        return getInternal(key)
-    }
+    override suspend fun getSyncOrNull(key: String): Value? = getInternal(key)
 
     override suspend fun getAllSyncOrNull(): List<Value> {
-        return getAllInternal()
+        throw UnsupportedOperationException("Unknown key")
     }
 
-    override suspend fun store(key: String, item: Value) {
+    override suspend fun store(key: String, value: Value) {
         try {
-            val json = adapter.toJson(item)
-
-            sharedPreferences.edit { putString(key, json) }
+            storeByKey(key, value)
             writeTrigger.trigger()
         } catch (e: Throwable) {
             Timber.e(e, "Unable to edit preferences: $key")
         }
     }
 
-    override suspend fun store(items: Map<String, Value>) {
-        items.forEach { (key, item) ->
+    override suspend fun store(values: Map<String, Value>) {
+        values.forEach { (key, item) ->
             store(key, item)
         }
     }
@@ -68,32 +70,29 @@ internal class SharedPreferencesDataStore<Value : Any>(
         writeTrigger.trigger()
     }
 
+    override suspend fun remove(keys: Collection<String>) {
+        sharedPreferences.edit {
+            keys.forEach { key ->
+                remove(key)
+            }
+        }
+
+        writeTrigger.trigger()
+    }
+
     override suspend fun clear() {
         sharedPreferences.edit { clear() }
         writeTrigger.trigger()
     }
 
     private fun getInternal(key: String): Value? {
-        return try {
-            val json = sharedPreferences.getString(key, null) ?: return null
+        if (!sharedPreferences.contains(key)) return null
 
-            adapter.fromJson(json)
+        return try {
+            getByKey(key)
         } catch (e: Throwable) {
             Timber.e(e, "Unable to get value from preferences: $key")
             null
-        }
-    }
-
-    private fun getAllInternal(): List<Value> {
-        return sharedPreferences.all.mapNotNull { (key, value) ->
-            try {
-                val json = value as? String ?: return@mapNotNull null
-
-                adapter.fromJson(json)
-            } catch (e: Throwable) {
-                Timber.e(e, "Unable to convert value from JSON: $key")
-                null
-            }
         }
     }
 }

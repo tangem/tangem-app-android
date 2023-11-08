@@ -23,6 +23,8 @@ sealed class NavigationAction : Action {
 
     object OpenBiometricsSettings : NavigationAction()
 
+    data class OpenDialog(val stateDialog: StateDialog) : NavigationAction()
+
     data class Share(val data: String) : NavigationAction()
 
     data class ActivityCreated(val activity: WeakReference<AppCompatActivity>) : NavigationAction()

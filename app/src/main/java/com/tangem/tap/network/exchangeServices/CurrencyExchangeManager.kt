@@ -5,7 +5,6 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.models.scan.CardDTO
@@ -13,6 +12,7 @@ import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -51,6 +51,7 @@ class CurrencyExchangeManager(
         cryptoCurrencyName: CryptoCurrencyName,
         fiatCurrencyName: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String? {
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
@@ -61,6 +62,7 @@ class CurrencyExchangeManager(
             cryptoCurrencyName,
             fiatCurrencyName,
             walletAddress,
+            isDarkTheme,
         )
     }
 
@@ -87,17 +89,12 @@ class CurrencyExchangeManager(
     }
 }
 
-suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, token: Token) {
-    walletManager.safeUpdate()
+suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, destinationAddress: String) {
+    walletManager.safeUpdate(card.isDemoCard())
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
-    val destinationAddress = token.contractAddress
 
-    val feeResult = walletManager.getFee(
-        amountToSend,
-        destinationAddress,
-    ) as? Result.Success ?: return
-
+    val feeResult = walletManager.getFee(amountToSend, destinationAddress) as? Result.Success ?: return
     val fee = when (val feeForTx = feeResult.data) {
         is TransactionFee.Choosable -> feeForTx.minimum
         is TransactionFee.Single -> feeForTx.normal
@@ -105,8 +102,6 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
 
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
     if (coinValue < fee.amount.value) return
-
-    val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     val signer = TangemSigner(
         card = card,
@@ -121,5 +116,13 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
             ),
         )
     }
-    walletManager.send(transaction, signer)
+
+    walletManager.send(
+        transactionData = walletManager.createTransaction(
+            amount = amountToSend,
+            fee = fee,
+            destination = destinationAddress,
+        ),
+        signer = signer,
+    )
 }

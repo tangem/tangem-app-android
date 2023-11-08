@@ -39,7 +39,7 @@ dependencyResolutionManagement {
             }
         }
         maven("https://jitpack.io")
-        maven("https://zendesk.jfrog.io/zendesk/repo")
+        maven("https://clients-nexus.sprinklr.com/")
     }
 
     versionCatalogs {
@@ -91,6 +91,12 @@ include(":features:tokendetails:impl")
 
 include(":features:learn2earn:api")
 include(":features:learn2earn:impl")
+
+include(":features:send:api")
+include(":features:send:impl")
+
+include(":features:manage-tokens:api")
+include(":features:manage-tokens:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -110,14 +116,22 @@ include(":domain:txhistory")
 include(":domain:txhistory:models")
 include(":domain:app-currency")
 include(":domain:app-currency:models")
+include(":domain:app-theme")
+include(":domain:app-theme:models")
+include(":domain:balance-hiding")
+include(":domain:balance-hiding:models")
+
 // endregion Domain modules
 
 // region Data modules
+include(":data:app-currency")
+include(":data:app-theme")
+include(":data:balance-hiding")
 include(":data:common")
 include(":data:card")
 include(":data:tokens")
 include(":data:source:preferences")
 include(":data:settings")
 include(":data:txhistory")
-include(":data:app-currency")
+include(":data:wallets")
 // endregion Data modules

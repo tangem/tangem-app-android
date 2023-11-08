@@ -26,7 +26,7 @@ internal fun AgreementText(@StringRes firstPartResId: Int, onClick: () -> Unit) 
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = TangemTheme.dimens.spacing54),
-        style = TangemTheme.typography.caption.copy(textAlign = TextAlign.Center),
+        style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Center),
         maxLines = 2,
         onClick = {
             val clickableSpanStyle = requireNotNull(agreementText.spanStyles.getOrNull(1))

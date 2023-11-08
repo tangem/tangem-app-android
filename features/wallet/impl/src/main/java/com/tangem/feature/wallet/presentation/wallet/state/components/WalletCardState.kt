@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import com.tangem.common.Strings
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -15,19 +16,18 @@ internal sealed interface WalletCardState {
     /** Title */
     val title: String
 
+    /** Wallet additional info */
+    val additionalInfo: WalletAdditionalInfo?
+
     /** Wallet image resource id */
     @get:DrawableRes
     val imageResId: Int?
 
-    /** Lambda be invoked when card is clicked */
-    val onClick: (() -> Unit)?
+    /** Lambda be invoked when Rename button is clicked */
+    val onRenameClick: (UserWalletId, String) -> Unit
 
-    /** Additional text availability */
-    sealed interface AdditionalTextAvailability {
-
-        /** Additional wallet information */
-        val additionalInfo: TextReference
-    }
+    /** Lambda be invoked when Delete button is clicked */
+    val onDeleteClick: (UserWalletId) -> Unit
 
     /**
      * Wallet card content state
@@ -35,71 +35,95 @@ internal sealed interface WalletCardState {
      * @property id             wallet id
      * @property title          wallet name
      * @property imageResId     wallet image resource id
-     * @property onClick        lambda be invoked when wallet card is clicked
+     * @property onRenameClick  lambda be invoked when Rename button is clicked
+     * @property onDeleteClick  lambda be invoked when Delete button is clicked
      * @property additionalInfo wallet additional info
+     * @property cardCount      number of cards in the wallet
      * @property balance        wallet balance
      */
     data class Content(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
-        override val onClick: (() -> Unit)? = null,
-        override val additionalInfo: TextReference,
+        override val onRenameClick: (UserWalletId, String) -> Unit,
+        override val onDeleteClick: (UserWalletId) -> Unit,
+        val cardCount: Int?,
         val balance: String,
-    ) : WalletCardState, AdditionalTextAvailability
-
-    /**
-     * Wallet card loading state
-     *
-     * @property id         wallet id
-     * @property title      wallet name
-     * @property imageResId wallet image resource id
-     * @property onClick    lambda be invoked when wallet card is clicked
-     */
-    data class Loading(
-        override val id: UserWalletId,
-        override val title: String,
-        override val imageResId: Int?,
-        override val onClick: (() -> Unit)? = null,
     ) : WalletCardState
 
     /**
-     * Wallet card hidden content state
+     * Wallet card locked state
      *
-     * @property id         wallet id
-     * @property title      wallet name
-     * @property imageResId wallet image resource id
-     * @property onClick    lambda be invoked when wallet card is clicked
+     * @property id             wallet id
+     * @property title          wallet name
+     * @property additionalInfo wallet additional info
+     * @property imageResId     wallet image resource id
+     * @property onRenameClick  lambda be invoked when Rename button is clicked
+     * @property onDeleteClick  lambda be invoked when Delete button is clicked
      */
-    data class HiddenContent(
+    data class LockedContent(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
-        override val onClick: (() -> Unit)?,
-    ) : WalletCardState, AdditionalTextAvailability {
-
-        override val additionalInfo: TextReference = HIDDEN_BALANCE_TEXT
-    }
+        override val onRenameClick: (UserWalletId, String) -> Unit,
+        override val onDeleteClick: (UserWalletId) -> Unit,
+    ) : WalletCardState
 
     /**
      * Wallet card error state
      *
-     * @property id             wallet id
-     * @property title          wallet name
-     * @property imageResId     wallet image resource id
-     * @property onClick        lambda be invoked when wallet card is clicked
-     * @property additionalInfo wallet additional info
+     * @property id            wallet id
+     * @property title         wallet name
+     * @property imageResId    wallet image resource id
+     * @property onRenameClick lambda be invoked when Rename button is clicked
+     * @property onDeleteClick lambda be invoked when Delete button is clicked
      */
     data class Error(
         override val id: UserWalletId,
         override val title: String,
+        override val additionalInfo: WalletAdditionalInfo? = defaultAdditionalInfo,
         override val imageResId: Int?,
-        override val onClick: (() -> Unit)?,
-        override val additionalInfo: TextReference = EMPTY_BALANCE_TEXT,
-    ) : WalletCardState, AdditionalTextAvailability
+        override val onRenameClick: (UserWalletId, String) -> Unit,
+        override val onDeleteClick: (UserWalletId) -> Unit,
+    ) : WalletCardState {
+
+        private companion object {
+            val defaultAdditionalInfo: WalletAdditionalInfo
+                get() = WalletAdditionalInfo(hideable = true, content = EMPTY_BALANCE_TEXT)
+        }
+    }
+
+    /**
+     * Wallet card loading state
+     *
+     * @property id            wallet id
+     * @property title         wallet name
+     * @property imageResId    wallet image resource id
+     * @property onRenameClick lambda be invoked when Rename button is clicked
+     * @property onDeleteClick lambda be invoked when Delete button is clicked
+     */
+    data class Loading(
+        override val id: UserWalletId,
+        override val title: String,
+        override val additionalInfo: WalletAdditionalInfo? = null,
+        override val imageResId: Int?,
+        override val onRenameClick: (UserWalletId, String) -> Unit,
+        override val onDeleteClick: (UserWalletId) -> Unit,
+    ) : WalletCardState
+
+    fun copySealed(title: String = this.title): WalletCardState {
+        return when (this) {
+            is Content -> copy(title = title)
+            is Error -> copy(title = title)
+            is Loading -> copy(title = title)
+            is LockedContent -> copy(title = title)
+        }
+    }
 
     companion object {
-        val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = "•••") }
+        val HIDDEN_BALANCE_TEXT by lazy { TextReference.Str(value = Strings.STARS) }
         val EMPTY_BALANCE_TEXT by lazy { TextReference.Str(value = "—") }
     }
 }

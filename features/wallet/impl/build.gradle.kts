@@ -29,10 +29,13 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.arrow.core)
+    implementation(deps.googlePlay.core)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
+    implementation(deps.reKotlin)
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
+    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -43,6 +46,8 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Domain modules */
     implementation(projects.common)
@@ -59,8 +64,14 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
+
+    //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
+    implementation(projects.features.onboarding)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.send.api)
 }
