@@ -471,9 +471,11 @@ internal class SwapViewModel @Inject constructor(
             onBackClicked = { onSearchEntered("") },
             onMaxAmountSelected = { onMaxAmountClicked() },
             openPermissionBottomSheet = {
+                singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
             },
             hidePermissionBottomSheet = {
+                startLoadingQuotesFromLastState()
                 analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
             },
             onAmountSelected = { onAmountSelected(it) },
