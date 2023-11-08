@@ -34,6 +34,12 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
         },
     )
 
+    LaunchedEffect(bottomSheetState.targetValue) {
+        if (bottomSheetState.targetValue == ModalBottomSheetValue.Hidden) {
+            stateHolder.onCancelPermissionBottomSheet.invoke()
+        }
+    }
+
     ModalBottomSheetLayout(
         modifier = Modifier.systemBarsPadding(),
         sheetContent = {
