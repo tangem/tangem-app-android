@@ -601,8 +601,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 val contractAddress = uiState.form.contractAddressInputField.value
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
                 val networkId = Blockchain.fromNetworkId(networkSelectorValue.toNetworkId())?.id
-
-                val savedTokenId = if (token.isCustom) null else token.id.value
+// [REDACTED_TODO_COMMENT]
+                val savedTokenId = if (token.isCustom) null else token.id.rawCurrencyId
 
                 val sameId = foundToken?.id == savedTokenId
                 val sameAddress = contractAddress == token.contractAddress
