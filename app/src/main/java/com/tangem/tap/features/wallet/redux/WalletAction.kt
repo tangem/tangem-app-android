@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -18,6 +19,7 @@ import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.wallet.R
+import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 sealed class WalletAction : Action {
@@ -73,7 +75,10 @@ sealed class WalletAction : Action {
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
     }
 
-    data class Scan(val onScanSuccessEvent: AnalyticsEvent?) : WalletAction()
+    data class Scan(
+        val onScanSuccessEvent: AnalyticsEvent?,
+        val scope: CoroutineScope,
+    ) : WalletAction()
 
     data class Send(val amount: Amount? = null) : WalletAction()
 
@@ -109,21 +114,13 @@ sealed class WalletAction : Action {
     data class ExploreAddress(val exploreUrl: String, val context: Context) : WalletAction()
 
     object CreateWallet : WalletAction()
-    object ChangeWallet : WalletAction()
+    data class ChangeWallet(val scope: LifecycleCoroutineScope) : WalletAction()
     object ShowSaveWalletIfNeeded : WalletAction()
 
     sealed class TradeCryptoAction : WalletAction() {
         object Sell : TradeCryptoAction()
 
         data class Buy(val checkUserLocation: Boolean = true) : TradeCryptoAction()
-
-        data class FinishSelling(val transactionId: String) : TradeCryptoAction()
-        data class SendCrypto(
-            val currencyId: String,
-            val amount: String,
-            val destinationAddress: String,
-            val transactionId: String,
-        ) : TradeCryptoAction()
 
         object Swap : TradeCryptoAction()
     }

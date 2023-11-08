@@ -1,5 +1,7 @@
 package com.tangem.datasource.utils
 
+import android.content.Context
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import okhttp3.Interceptor
@@ -25,8 +27,11 @@ internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeade
  *
  * @param level logging level. By default, only the request body.
  */
-internal fun OkHttpClient.Builder.allowLogging(): OkHttpClient.Builder {
-    return if (BuildConfig.DEBUG) {
+internal fun OkHttpClient.Builder.addLoggers(context: Context? = null): OkHttpClient.Builder {
+    return if (BuildConfig.LOG_ENABLED) {
+        context?.let {
+            addInterceptor(interceptor = ChuckerInterceptor(it))
+        }
         addInterceptor(interceptor = createNetworkLoggingInterceptor())
     } else {
         this

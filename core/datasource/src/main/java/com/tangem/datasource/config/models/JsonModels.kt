@@ -31,7 +31,7 @@ class ConfigValueModel(
     val infuraProjectId: String?,
     val appsFlyer: AppsFlyer,
     val shopifyShop: ShopifyShop?,
-    val zendesk: ZendeskConfig?,
+    val sprinklr: SprinklrConfig?,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
     val swapReferrerAccount: SwapReferrerAccount?,
@@ -39,6 +39,7 @@ class ConfigValueModel(
     val walletConnectProjectId: String,
     val tangemComAuthorization: String?,
     val chiaFireAcademyApiKey: String?,
+    val chiaTangemApiKey: String?,
 )
 
 data class AppsFlyer(

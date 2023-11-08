@@ -62,7 +62,9 @@ private fun handleHomeAction(action: Action) {
             store.dispatch(GlobalAction.FetchUserCountry)
         }
         is HomeAction.ReadCard -> {
-            readCard(action.analyticsEvent)
+            action.scope.launch {
+                readCard(action.analyticsEvent)
+            }
         }
         is HomeAction.GoToShop -> {
             Analytics.send(Shop.ScreenOpened())
@@ -77,8 +79,7 @@ private fun handleHomeAction(action: Action) {
     }
 }
 
-private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
-    delay(timeMillis = 200)
+private suspend fun readCard(analyticsEvent: AnalyticsEvent?) {
     store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
         isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
     )

@@ -15,7 +15,6 @@ import com.tangem.domain.common.configs.Wallet2CardConfig
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.blockchain.common.CardanoAddressConfig
 
 fun WalletManagerFactory.makeWalletManagerForApp(
     scanResponse: ScanResponse,
@@ -57,12 +56,12 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 derivationPath = derivationPath ?: return null,
                 derivedWalletKeys = derivedKeys ?: return null,
                 isWallet2 = scanResponse.cardTypesResolver.isWallet2(),
-            )
+            ) ?: return null
 
             createWalletManager(
                 blockchain = environmentBlockchain,
                 publicKey = publicKey,
-                curve = wallet.curve
+                curve = wallet.curve,
             )
         }
         else -> {
@@ -81,8 +80,8 @@ private fun makePublicKey(
     derivationPath: DerivationPath,
     derivedWalletKeys: Map<DerivationPath, ExtendedPublicKey>,
     isWallet2: Boolean,
-): Wallet.PublicKey {
-    val derivedKey = derivedWalletKeys[derivationPath] ?: error("No derivation found")
+): Wallet.PublicKey? {
+    val derivedKey = derivedWalletKeys[derivationPath] ?: return null
 
     val derivationKey = Wallet.HDKey(
         path = derivationPath,
@@ -92,20 +91,16 @@ private fun makePublicKey(
     // we should generate second key for cardano
     // because cardano address generation for wallet2 requires keys from 2 derivations
     // https://developers.cardano.org/docs/get-started/cardano-serialization-lib/generating-keys/
-    if (blockchain == Blockchain.Cardano) {
-        CardanoAddressConfig.useExtendedAddressing = isWallet2
+    if (blockchain == Blockchain.Cardano && isWallet2) {
+        val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath)
+        val secondDerivedKey = derivedWalletKeys[extendedDerivationPath] ?: error("No derivation found")
 
-        if (isWallet2) {
-            val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath)
-            val secondDerivedKey = derivedWalletKeys[extendedDerivationPath] ?: error("No derivation found")
+        val secondDerivationKey = Wallet.HDKey(secondDerivedKey, extendedDerivationPath)
 
-            val secondDerivationKey = Wallet.HDKey(secondDerivedKey, extendedDerivationPath)
-
-            return Wallet.PublicKey(
-                seedKey = seedKey,
-                derivationType = Wallet.PublicKey.DerivationType.Double(derivationKey, secondDerivationKey),
-            )
-        }
+        return Wallet.PublicKey(
+            seedKey = seedKey,
+            derivationType = Wallet.PublicKey.DerivationType.Double(derivationKey, secondDerivationKey),
+        )
     }
 
     return Wallet.PublicKey(

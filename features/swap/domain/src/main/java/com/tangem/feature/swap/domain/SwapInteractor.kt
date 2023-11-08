@@ -1,13 +1,15 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.ui.*
+import java.math.BigDecimal
 
 interface SwapInteractor {
 
-    fun initDerivationPath(derivationPath: String?)
+    fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?)
 
     /**
      * Init tokens to swap, load tokens list available to swap for given network
@@ -53,6 +55,7 @@ interface SwapInteractor {
      * @param fromToken [Currency] from which want to swap
      * @param toToken [Currency] that receive after swap
      * @param amountToSwap amount you want to swap
+     * @param selectedFee selected fee to swap
      * @return
      */
     @Throws(IllegalStateException::class)
@@ -61,6 +64,7 @@ interface SwapInteractor {
         fromToken: Currency,
         toToken: Currency,
         amountToSwap: String,
+        selectedFee: FeeType = FeeType.NORMAL,
     ): SwapState
 
     /**
@@ -94,4 +98,11 @@ interface SwapInteractor {
     fun getTokenBalance(networkId: String, token: Currency): SwapAmount
 
     fun isAvailableToSwap(networkId: String): Boolean
+
+    suspend fun checkFeeIsEnough(
+        fee: BigDecimal?,
+        spendAmount: SwapAmount,
+        networkId: String,
+        fromToken: Currency,
+    ): Boolean
 }

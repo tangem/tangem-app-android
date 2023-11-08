@@ -18,12 +18,6 @@ import timber.log.Timber
  */
 interface CustomTokenValidator<T> : Validator<T, AddCustomTokenError>
 
-class StringIsEmptyValidator : CustomTokenValidator<String> {
-    override fun validate(data: String?): AddCustomTokenError? {
-        return if (data.isNullOrEmpty()) null else AddCustomTokenError.FieldIsNotEmpty
-    }
-}
-
 class StringIsNotEmptyValidator : CustomTokenValidator<String> {
     override fun validate(data: String?): AddCustomTokenError? {
         return if (data.isNullOrEmpty()) AddCustomTokenError.FieldIsEmpty else null
@@ -36,7 +30,11 @@ class TokenContractAddressValidator : CustomTokenValidator<String> {
 
     private val successAddressValidator = object : AddressService {
 
-        override fun makeAddress(publicKey: Wallet.PublicKey, addressType: AddressType, curve: EllipticCurve): PlainAddress {
+        override fun makeAddress(
+            publicKey: Wallet.PublicKey,
+            addressType: AddressType,
+            curve: EllipticCurve,
+        ): PlainAddress {
             throw UnsupportedOperationException()
         }
 

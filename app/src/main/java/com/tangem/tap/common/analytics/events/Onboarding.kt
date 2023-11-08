@@ -23,9 +23,14 @@ sealed class Onboarding(
         class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
         class WalletCreatedSuccessfully(
             creationType: AnalyticsParam.WalletCreationType = AnalyticsParam.WalletCreationType.PrivateKey,
+            seedPhraseLength: Int? = null,
         ) : CreateWallet(
             event = "Wallet Created Successfully",
-            params = mapOf(AnalyticsParam.CREATION_TYPE to creationType.value),
+            params = buildMap {
+                put(AnalyticsParam.CREATION_TYPE, creationType.value)
+
+                if (seedPhraseLength != null) put(AnalyticsParam.SEED_PHRASE_LENGTH, seedPhraseLength.toString())
+            },
         )
     }
 
@@ -44,6 +49,16 @@ sealed class Onboarding(
         class Finished(cardsCount: Int) : Backup(
             event = "Backup Finished",
             params = mapOf("Cards count" to "$cardsCount"),
+        )
+
+        object ResetCancelEvent : Backup(
+            event = "Reset Card Notification",
+            params = mapOf("Option" to "Cancel"),
+        )
+
+        object ResetPerformEvent : Backup(
+            event = "Reset Card Notification",
+            params = mapOf("Option" to "Reset"),
         )
     }
 

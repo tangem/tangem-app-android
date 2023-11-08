@@ -6,7 +6,7 @@ import com.tangem.tap.features.details.redux.ManageSecurityState
 import com.tangem.tap.features.details.redux.SecurityOption
 import org.rekotlin.Store
 
-class SecurityModeViewModel(val store: Store<AppState>) {
+internal class SecurityModeViewModel(val store: Store<AppState>) {
 
     fun updateState(state: ManageSecurityState?): SecurityModeScreenState {
         if (state == null) {

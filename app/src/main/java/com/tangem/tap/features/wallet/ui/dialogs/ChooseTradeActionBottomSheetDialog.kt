@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
@@ -39,15 +40,15 @@ class ChooseTradeActionBottomSheetDialog(
 
                 dialogBtnBuy.setOnClickListener {
                     dismiss()
-                    store.dispatch(WalletAction.TradeCryptoAction.Buy())
+                    store.dispatch(TradeCryptoAction.Buy())
                 }
                 dialogBtnSell.setOnClickListener {
                     dismiss()
-                    store.dispatch(WalletAction.TradeCryptoAction.Sell)
+                    store.dispatch(TradeCryptoAction.Sell)
                 }
                 dialogBtnSwap.setOnClickListener {
                     dismiss()
-                    store.dispatch(WalletAction.TradeCryptoAction.Swap)
+                    store.dispatch(TradeCryptoAction.Swap)
                 }
             }
         }

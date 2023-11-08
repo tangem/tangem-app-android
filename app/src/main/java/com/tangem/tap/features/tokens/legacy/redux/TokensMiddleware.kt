@@ -1,70 +1,121 @@
 package com.tangem.tap.features.tokens.legacy.redux
 
+import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.flatMap
-import com.tangem.core.analytics.Analytics
-import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.common.util.supportsHdWallet
-import com.tangem.domain.features.addCustomToken.CustomCurrency
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.redux.domainStore
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.TokenWithBlockchain
+import com.tangem.domain.tokens.TokensAction
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
-import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
 
+@Suppress("LargeClass")
 object TokensMiddleware {
+
+    // TODO: Move to DI
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
+
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     val tokensMiddleware: Middleware<AppState> = { _, _ ->
         { next ->
             { action ->
                 when (action) {
-                    is TokensAction.SaveChanges -> handleSaveChanges(action)
-                    is TokensAction.PrepareAndNavigateToAddCustomToken -> handleAddingCustomToken()
+                    is TokensAction.LegacySaveChanges -> handleLegacySaveChanges(action)
+                    is TokensAction.NewSaveChanges -> handleNewSaveChanges(action)
                 }
                 next(action)
             }
         }
     }
 
-    private fun handleSaveChanges(action: TokensAction.SaveChanges) {
+    private fun handleNewSaveChanges(action: TokensAction.NewSaveChanges) {
         scope.launch {
-            val scanResponse = store.state.globalState.scanResponse ?: return@launch
+            val scanResponse = action.userWallet.scanResponse
 
-            val currentTokens = store.state.tokensState.addedTokens
-            val currentBlockchains = store.state.tokensState.addedBlockchains
+            val currentTokens = action.currentTokens
+            val currentBlockchains = action.currentCoins
 
-            val blockchainsToAdd = action.blockchains.filterNot(currentBlockchains::contains)
-            val blockchainsToRemove =
-                store.state.tokensState.addedBlockchains.filterNot(action.blockchains::contains)
+            val blockchainsToAdd = action.changedCoins.filterNot(currentBlockchains::contains)
+            val blockchainsToRemove = currentBlockchains.filterNot(action.changedCoins::contains)
 
-            val tokensToAdd = action.tokens.filterNot(currentTokens::contains)
-            val tokensToRemove = currentTokens.filterNot { token -> action.tokens.any { it.token == token.token } }
+            val tokensToAdd = action.changedTokens.filterNot(currentTokens::contains)
+            val tokensToRemove = currentTokens.filterNot { token -> action.changedTokens.any { it == token } }
 
-            removeCurrenciesIfNeeded(
+            removeNewCurrenciesIfNeeded(
+                userWalletId = action.userWallet.walletId,
+                currencies = blockchainsToRemove + tokensToRemove,
+            )
+
+            val isNothingToDoWithTokens = tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
+            val isNothingToDoWithBlockchain = blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
+            if (isNothingToDoWithTokens && isNothingToDoWithBlockchain) {
+                store.dispatchDebugErrorNotification(message = "Nothing to save")
+                store.dispatchOnMain(NavigationAction.PopBackTo())
+                return@launch
+            }
+
+            val currencyList = blockchainsToAdd + tokensToAdd
+
+            if (scanResponse.supportsHdWallet()) {
+                deriveMissingCoins(scanResponse = scanResponse, currencyList = currencyList) {
+                    submitNewAdd(
+                        userWalletId = action.userWallet.walletId,
+                        updatedScanResponse = it,
+                        currencyList = currencyList,
+                    )
+                }
+            } else {
+                submitNewAdd(userWalletId = action.userWallet.walletId, scanResponse, currencyList = currencyList)
+            }
+        }
+    }
+
+    private fun handleLegacySaveChanges(action: TokensAction.LegacySaveChanges) {
+        scope.launch {
+            val scanResponse = action.scanResponse
+
+            val currentTokens = action.currentTokens
+            val currentBlockchains = action.currentBlockchains
+
+            val blockchainsToAdd = action.changedBlockchains.filterNot(currentBlockchains::contains)
+            val blockchainsToRemove = currentBlockchains.filterNot(action.changedBlockchains::contains)
+
+            val tokensToAdd = action.changedTokens.filterNot(currentTokens::contains)
+            val tokensToRemove =
+                currentTokens.filterNot { token -> action.changedTokens.any { it.token == token.token } }
+
+            removeLegacyCurrenciesIfNeeded(
                 currencies = convertToCurrencies(
                     blockchains = blockchainsToRemove,
                     tokens = tokensToRemove,
@@ -88,11 +139,11 @@ object TokensMiddleware {
 
             if (scanResponse.supportsHdWallet()) {
                 deriveMissingBlockchains(scanResponse, currencyList) {
-                    submitAdd(it, currencyList)
+                    submitLegacyAdd(it, currencyList)
                     store.dispatchOnMain(NavigationAction.PopBackTo())
                 }
             } else {
-                submitAdd(scanResponse, currencyList)
+                submitLegacyAdd(scanResponse, currencyList)
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             }
         }
@@ -103,15 +154,14 @@ object TokensMiddleware {
         tokens: List<TokenWithBlockchain>,
         derivationStyle: DerivationStyle?,
     ): List<Currency> {
-        return blockchains.map {
-            Currency.Blockchain(it, it.derivationPath(derivationStyle)?.rawPath)
-        } + tokens.map {
-            Currency.Token(
-                it.token,
-                it.blockchain,
-                it.blockchain.derivationPath(derivationStyle)?.rawPath,
-            )
-        }
+        return blockchains.map { Currency.Blockchain(it, it.derivationPath(derivationStyle)?.rawPath) } +
+            tokens.map {
+                Currency.Token(
+                    token = it.token,
+                    blockchain = it.blockchain,
+                    derivationPath = it.blockchain.derivationPath(derivationStyle)?.rawPath,
+                )
+            }
     }
 
     private fun deriveMissingBlockchains(
@@ -120,11 +170,22 @@ object TokensMiddleware {
         onSuccess: (ScanResponse) -> Unit,
     ) {
         val config = CardConfig.createConfig(scanResponse.card)
-        val derivationDataList = currencyList.mapNotNull {
-            val curve = config.primaryCurve(it.blockchain)
-            curve?.let { getDerivations(curve, scanResponse, currencyList) }
+        val derivationDataList = currencyList.mapNotNull { currency ->
+            val curve = config.primaryCurve(currency.blockchain)
+            curve?.let { getLegacyDerivations(curve, scanResponse, currency) }
         }
-        val derivations = derivationDataList.associate { it.derivations }
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
+
         if (derivations.isEmpty()) {
             onSuccess(scanResponse)
             return
@@ -162,25 +223,122 @@ object TokensMiddleware {
         }
     }
 
-    private fun getDerivations(
+    private fun deriveMissingCoins(
+        scanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+        onSuccess: (ScanResponse) -> Unit,
+    ) {
+        val config = CardConfig.createConfig(scanResponse.card)
+        val derivationDataList = currencyList.mapNotNull { currency ->
+            val curve = config.primaryCurve(blockchain = Blockchain.fromId(currency.network.id.value))
+            curve?.let { getNewDerivations(curve, scanResponse, currency) }
+        }
+        val derivations = buildMap<ByteArrayKey, MutableList<DerivationPath>> {
+            derivationDataList.forEach {
+                val current = this[it.derivations.first]
+                if (current != null) {
+                    current.addAll(it.derivations.second)
+                    current.distinct()
+                } else {
+                    this[it.derivations.first] = it.derivations.second.toMutableList()
+                }
+            }
+        }
+
+        if (derivations.isEmpty()) {
+            onSuccess(scanResponse)
+            return
+        }
+
+        scope.launch {
+            val result = tangemSdkManager.derivePublicKeys(
+                cardId = null,
+                derivations = derivations,
+            )
+            when (result) {
+                is CompletionResult.Success -> {
+                    val newDerivedKeys = result.data.entries
+                    val oldDerivedKeys = scanResponse.derivedKeys
+
+                    val walletKeys = (newDerivedKeys.keys + oldDerivedKeys.keys).toSet()
+
+                    val updatedDerivedKeys = walletKeys.associateWith { walletKey ->
+                        val oldDerivations = ExtendedPublicKeysMap(oldDerivedKeys[walletKey] ?: emptyMap())
+                        val newDerivations = newDerivedKeys[walletKey] ?: ExtendedPublicKeysMap(emptyMap())
+                        ExtendedPublicKeysMap(oldDerivations + newDerivations)
+                    }
+                    val updatedScanResponse = scanResponse.copy(derivedKeys = updatedDerivedKeys)
+
+                    store.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
+
+                    onSuccess(updatedScanResponse)
+                }
+                is CompletionResult.Failure -> {
+                    store.dispatchDebugErrorNotification(TapError.CustomError("Error adding tokens"))
+                }
+            }
+        }
+    }
+
+    private fun getLegacyDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currencyList: List<Currency>,
+        currency: Currency,
     ): DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
-        val manageTokensCandidates = currencyList.map { it.blockchain }.distinct().filter {
-            it.getSupportedCurves().contains(curve)
-        }.mapNotNull {
-            it.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+        val supportedCurves = currency.blockchain.getSupportedCurves()
+        val path = currency.blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            .takeIf { supportedCurves.contains(curve) }
+
+        val customPath = currency.derivationPath?.let {
+            DerivationPath(it)
+        }.takeIf { supportedCurves.contains(curve) }
+
+        val bothCandidates = listOfNotNull(path, customPath).distinct().toMutableList()
+        if (bothCandidates.isEmpty()) return null
+
+        if (currency is Currency.Blockchain && currency.blockchain == Blockchain.Cardano) {
+            currency.derivationPath?.let {
+                bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
+            }
         }
 
-        val customTokensCandidates = currencyList.filter {
-            it.blockchain.getSupportedCurves().contains(curve)
-        }.mapNotNull { it.derivationPath }.map { DerivationPath(it) }
+        val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
+        val alreadyDerivedKeys: ExtendedPublicKeysMap =
+            scanResponse.derivedKeys[mapKeyOfWalletPublicKey] ?: ExtendedPublicKeysMap(emptyMap())
+        val alreadyDerivedPaths = alreadyDerivedKeys.keys.toList()
 
-        val bothCandidates = (manageTokensCandidates + customTokensCandidates).distinct()
+        val toDerive = bothCandidates.filterNot { alreadyDerivedPaths.contains(it) }
+        if (toDerive.isEmpty()) return null
+
+        return DerivationData(derivations = mapKeyOfWalletPublicKey to toDerive)
+    }
+
+    private fun getNewDerivations(
+        curve: EllipticCurve,
+        scanResponse: ScanResponse,
+        currency: CryptoCurrency,
+    ): DerivationData? {
+        val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
+
+        val blockchain = Blockchain.fromId(currency.network.id.value)
+        val supportedCurves = blockchain.getSupportedCurves()
+        val path = blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())
+            .takeIf { supportedCurves.contains(curve) }
+
+        val customPath = currency.network.derivationPath.value?.let {
+            DerivationPath(it)
+        }.takeIf { supportedCurves.contains(curve) }
+
+        val bothCandidates = listOfNotNull(path, customPath).distinct().toMutableList()
         if (bothCandidates.isEmpty()) return null
+
+        if (currency is CryptoCurrency.Coin && blockchain == Blockchain.Cardano) {
+            currency.network.derivationPath.value?.let {
+                bothCandidates.add(CardanoUtils.extendedDerivationPath(DerivationPath(it)))
+            }
+        }
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
         val alreadyDerivedKeys: ExtendedPublicKeysMap =
@@ -195,7 +353,7 @@ object TokensMiddleware {
 
     class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
-    private fun submitAdd(scanResponse: ScanResponse, currencyList: List<Currency>) {
+    private fun submitLegacyAdd(scanResponse: ScanResponse, currencyList: List<Currency>) {
         val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
             Timber.e("Unable to add currencies, no user wallet selected")
             return
@@ -216,7 +374,23 @@ object TokensMiddleware {
         }
     }
 
-    private suspend fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
+    private fun submitNewAdd(
+        userWalletId: UserWalletId,
+        updatedScanResponse: ScanResponse,
+        currencyList: List<CryptoCurrency>,
+    ) {
+        scope.launch {
+            userWalletsListManager.update(
+                userWalletId = userWalletId,
+                update = { it.copy(scanResponse = updatedScanResponse) },
+            ).doOnSuccess {
+                addCryptoCurrenciesUseCase(userWalletId, currencyList)
+            }
+        }
+        store.dispatchOnMain(NavigationAction.PopBackTo())
+    }
+
+    private suspend fun removeLegacyCurrenciesIfNeeded(currencies: List<Currency>) {
         if (currencies.isEmpty()) return
         val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
             Timber.e("Unable to remove currencies, no user wallet selected")
@@ -225,55 +399,22 @@ object TokensMiddleware {
         walletCurrenciesManager.removeCurrencies(selectedUserWallet, currencies)
     }
 
-    private fun isNeedToDerive(scanResponse: ScanResponse, currency: Currency): Boolean {
-        return currency.derivationPath?.let {
-            !scanResponse.hasDerivation(currency.blockchain, it)
-        } ?: false
-    }
+    private suspend fun removeNewCurrenciesIfNeeded(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) return
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
 
-    private fun handleAddingCustomToken() = scope.launch {
-        val onAddCustomToken = fun(customCurrency: CustomCurrency) {
-            val scanResponse = store.state.globalState.scanResponse ?: return
+        currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = currencies)
 
-            fun submitAndPopBack(scanResponse: ScanResponse, currencyList: List<Currency>) {
-                submitAdd(scanResponse, currencyList)
-                // pop from the AddCustomTokenScreen
-                store.dispatchOnMain(NavigationAction.PopBackTo())
-                store.dispatchOnMain(NavigationAction.PopBackTo())
-            }
-
-            Analytics.send(ManageTokens.CustomToken.TokenWasAdded(customCurrency))
-            val currency = Currency.fromCustomCurrency(customCurrency)
-            val isNeedToDerive = isNeedToDerive(scanResponse, currency)
-            val currencyList = listOf(currency)
-            if (isNeedToDerive) {
-                deriveMissingBlockchains(scanResponse, currencyList) {
-                    submitAndPopBack(it, currencyList)
-                }
-            } else {
-                submitAndPopBack(scanResponse, currencyList)
-            }
-        }
-
-        val addedCurrencies = store.state.walletState.walletsStores
-            .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
-            .flatten()
-            .map { currency ->
-                when (currency) {
-                    is Currency.Blockchain -> DomainWrapped.Currency.Blockchain(
-                        currency.blockchain,
-                        currency.derivationPath,
-                    )
-
-                    is Currency.Token -> DomainWrapped.Currency.Token(
-                        currency.token,
-                        currency.blockchain,
-                        currency.derivationPath,
-                    )
-                }
-            }
-        domainStore.dispatch(AddCustomTokenAction.Init.SetAddedCurrencies(addedCurrencies))
-        domainStore.dispatch(AddCustomTokenAction.Init.SetOnAddTokenCallback(onAddCustomToken))
-        store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomToken))
+        walletManagersFacade.remove(
+            userWalletId = userWalletId,
+            networks = currencies
+                .filterIsInstance<CryptoCurrency.Coin>()
+                .mapTo(hashSetOf(), CryptoCurrency::network),
+        )
+        walletManagersFacade.removeTokens(
+            userWalletId = userWalletId,
+            tokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
+        )
     }
 }

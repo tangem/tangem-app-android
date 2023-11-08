@@ -5,6 +5,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
+import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
@@ -12,11 +13,12 @@ sealed class OnboardingWalletAction : Action {
     object GetToCreateWalletStep : OnboardingWalletAction()
     object CreateWallet : OnboardingWalletAction()
     data class WalletWasCreated(
+        val shouldSendAnalyticsEvent: Boolean,
         val result: CompletionResult<CreateProductWalletTaskResponse>,
     ) : OnboardingWalletAction()
 
     object Done : OnboardingWalletAction()
-    object FinishOnboarding : OnboardingWalletAction()
+    data class FinishOnboarding(val scope: CoroutineScope) : OnboardingWalletAction()
 
     object ResumeBackup : OnboardingWalletAction()
 

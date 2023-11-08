@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.ui.walletconnect.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -11,7 +12,7 @@ import com.tangem.wallet.R
 
 object ChooseNetworkDialog {
     fun create(session: WalletConnectSession, networks: List<Blockchain>, context: Context): AlertDialog {
-        return AlertDialog.Builder(context)
+        return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog)
             .setTitle(context.getString(R.string.wallet_connect_select_network))
             .setNegativeButton(context.getString(R.string.common_cancel)) { _, _ ->
                 store.dispatch(WalletConnectAction.FailureEstablishingSession(session.session))

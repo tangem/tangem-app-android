@@ -9,12 +9,10 @@ object GenericCardConfig : CardConfig {
         get() = listOf(
             EllipticCurve.Secp256k1,
             EllipticCurve.Ed25519,
-            EllipticCurve.Bip0340,
-            EllipticCurve.Bls12381G2Aug,
         )
 
     /**
-     * Old logic to determine primary curve for blockchain in TangemWallet
+     * Old logic to determine primary curve for blockchain
      */
     override fun primaryCurve(blockchain: Blockchain): EllipticCurve? {
         return when {

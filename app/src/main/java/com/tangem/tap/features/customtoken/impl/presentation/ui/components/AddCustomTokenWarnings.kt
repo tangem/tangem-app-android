@@ -72,8 +72,16 @@ private fun AddCustomTokenWarning(warning: AddCustomTokenWarning) {
 
 @Preview
 @Composable
-private fun Preview_AddCustomTokenWarnings() {
+private fun Preview_AddCustomTokenWarnings_Light() {
     TangemTheme {
+        AddCustomTokenWarnings(warnings = AddCustomTokenPreviewData.createWarnings())
+    }
+}
+
+@Preview
+@Composable
+private fun Preview_AddCustomTokenWarnings_Dark() {
+    TangemTheme(isDark = true) {
         AddCustomTokenWarnings(warnings = AddCustomTokenPreviewData.createWarnings())
     }
 }

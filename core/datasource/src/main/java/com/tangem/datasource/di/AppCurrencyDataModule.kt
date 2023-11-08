@@ -7,8 +7,8 @@ import com.tangem.datasource.local.appcurrency.AvailableAppCurrenciesStore
 import com.tangem.datasource.local.appcurrency.SelectedAppCurrencyStore
 import com.tangem.datasource.local.appcurrency.implementation.DefaultAvailableAppCurrenciesStore
 import com.tangem.datasource.local.appcurrency.implementation.DefaultSelectedAppCurrencyStore
+import com.tangem.datasource.local.datastore.JsonSharedPreferencesDataStore
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.datastore.SharedPreferencesDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,7 +35,7 @@ internal object AppCurrencyDataModule {
         @NetworkMoshi moshi: Moshi,
     ): SelectedAppCurrencyStore {
         return DefaultSelectedAppCurrencyStore(
-            dataStore = SharedPreferencesDataStore(
+            dataStore = JsonSharedPreferencesDataStore(
                 preferencesName = "selected_app_currency",
                 context = context,
                 adapter = moshi.adapter(CurrenciesResponse.Currency::class.java),

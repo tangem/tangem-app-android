@@ -7,7 +7,6 @@ import android.view.animation.OvershootInterpolator
 import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
-import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.Message
@@ -15,7 +14,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.ShareElement
-import com.tangem.core.ui.fragments.setStatusBarColor
+import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.models.scan.ScanResponse
@@ -58,11 +57,11 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun configureTransitions() {
         when (store.state.twinCardsState.mode) {
-            CreateTwinWalletMode.CreateWallet -> super.configureTransitions()
+            CreateTwinWalletMode.CreateWallet -> {
+                super.configureTransitions()
+            }
             CreateTwinWalletMode.RecreateWallet -> {
-                val inflater = TransitionInflater.from(requireContext())
-                enterTransition = inflater.inflateTransition(R.transition.slide_right)
-                exitTransition = inflater.inflateTransition(R.transition.fade)
+                configureDefaultTransactions()
             }
         }
     }
@@ -104,7 +103,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun onStart() {
         super.onStart()
-        setStatusBarColor(R.color.backgroundWhite)
+        setStatusBarColor(R.color.background_primary)
     }
 
     private fun reconfigureLayoutForTwins(containerBinding: LayoutOnboardingContainerTopBinding) =
@@ -175,10 +174,12 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     private fun setupWelcomeState(state: TwinCardsState) {
-        setupWelcomeState(state) { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet)) }
+        setupWelcomeState(state) {
+            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet))
+        }
     }
 
-    private fun setupWelcomeState(state: TwinCardsState, mainAction: VoidCallback) =
+    private fun setupWelcomeState(state: TwinCardsState, onMainButtonClick: VoidCallback) =
         with(mainBinding.onboardingActionContainer) {
             twinsWidget.toWelcome(false)
 
@@ -192,7 +193,8 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             )
 
             btnMainAction.setText(R.string.common_continue)
-            btnMainAction.setOnClickListener { mainAction() }
+            btnMainAction.icon = null
+            btnMainAction.setOnClickListener { onMainButtonClick() }
         }
 
     private fun setupWarningState(state: TwinCardsState) = with(mainBinding.onboardingActionContainer) {
@@ -210,6 +212,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         }
         btnMainAction.isEnabled = state.userWasUnderstandIfWalletRecreate
         btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
         btnMainAction.setOnClickListener {
             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet))
         }
@@ -251,6 +254,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         tvBody.setText(R.string.onboarding_twins_interrupt_warning)
 
         btnMainAction.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
         btnMainAction.setOnClickListener {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(
@@ -274,6 +278,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         btnMainAction.text =
             getString(R.string.twins_recreate_button_format, twinPairIndexNumber)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
         btnMainAction.setOnClickListener {
             store.dispatch(
                 TwinCardsAction.Wallet.LaunchSecondStep(
@@ -298,6 +303,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         tvBody.setText(R.string.onboarding_twins_interrupt_warning)
 
         btnMainAction.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
         btnMainAction.setOnClickListener {
             store.dispatch(
                 TwinCardsAction.Wallet.LaunchThirdStep(
@@ -335,7 +341,6 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             btnMainAction.setOnClickListener {
                 store.dispatch(TwinCardsAction.TopUp)
             }
-
             btnAlternativeAction.isVisible = true
             btnAlternativeAction.setText(R.string.onboarding_top_up_button_show_wallet_address)
             btnAlternativeAction.setOnClickListener {
@@ -352,6 +357,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         tvHeader.setText(R.string.onboarding_topup_title)
         tvBody.setText(R.string.onboarding_top_up_body)
+        btnMainAction.icon = null
 
         btnRefreshBalanceWidget.changeState(state.walletBalance.state)
         if (btnRefreshBalanceWidget.isShowing != true) {
@@ -362,11 +368,15 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
+        mainBinding.onboardingTopContainer.imvCardBackground.backgroundTintList =
+            requireContext().resources.getColorStateList(R.color.onboarding_card_background, null)
+
         updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet_twins)
     }
 
     private fun setupDoneState(state: TwinCardsState) = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
         btnMainAction.setOnClickListener {
             store.dispatch(TwinCardsAction.Confetti.Hide)
             store.dispatch(TwinCardsAction.Done)

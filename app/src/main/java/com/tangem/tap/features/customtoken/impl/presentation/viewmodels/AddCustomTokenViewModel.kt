@@ -17,10 +17,15 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.AddCustomTokenError
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
@@ -34,7 +39,6 @@ import com.tangem.tap.features.customtoken.impl.presentation.validators.ContactA
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContractAddressValidatorResult
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
@@ -50,22 +54,24 @@ import javax.inject.Inject
 /**
  * ViewModel for add custom token screen
  *
- * @param analyticsEventHandler analytics event handler
- * @param featureRouter         feature router
- * @property featureInteractor  feature interactor
- * @property dispatchers        coroutine dispatchers provider
- * @property reduxStateHolder   redux state holder
+ * @param analyticsEventHandler           analytics event handler
+ * @param featureRouter                   feature router
+ * @property featureInteractor            feature interactor
+ * @property getSelectedWalletSyncUseCase use case that returns selected wallet
+ * @property dispatchers                  coroutine dispatchers provider
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 @HiltViewModel
 internal class AddCustomTokenViewModel @Inject constructor(
     analyticsEventHandler: AnalyticsEventHandler,
     featureRouter: CustomTokenRouter,
+    getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val featureInteractor: CustomTokenInteractor,
     private val dispatchers: AppCoroutineDispatcherProvider,
-    private val reduxStateHolder: AppStateHolder,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val analyticsSender = AddCustomTokenAnalyticsSender(analyticsEventHandler)
@@ -73,11 +79,29 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val testActionsHandler = TestActionsHandler()
     private val formStateBuilder = FormStateBuilder()
 
+    private var currentCryptoCurrencies: List<CryptoCurrency> = emptyList()
+
     /** Screen state */
     var uiState by mutableStateOf(getInitialUiState())
         private set
 
     private var foundToken: FoundToken? = null
+
+    init {
+        if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            viewModelScope.launch(dispatchers.main) {
+                currentCryptoCurrencies = getSelectedWalletSyncUseCase().fold(
+                    ifLeft = { emptyList() },
+                    ifRight = { selectedWallet ->
+                        getCurrenciesUseCase(selectedWallet.walletId).fold(
+                            ifLeft = { emptyList() },
+                            ifRight = { it },
+                        )
+                    },
+                )
+            }
+        }
+    }
 
     override fun onCreate(owner: LifecycleOwner) {
         analyticsSender.sendWhenScreenOpened()
@@ -145,6 +169,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         fun createDerivationPathSelectorAdditionalItem(
             blockchain: Blockchain,
             type: DerivationPathSelectorType = DerivationPathSelectorType.BLOCKCHAIN,
+            derivationPath: String,
         ): SelectorItem.TitleWithSubtitle {
             return when (type) {
                 DerivationPathSelectorType.DEFAULT -> SelectorItem.TitleWithSubtitle(
@@ -160,8 +185,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     type = DerivationPathSelectorType.CUSTOM,
                 )
                 DerivationPathSelectorType.BLOCKCHAIN -> SelectorItem.TitleWithSubtitle(
-                    title = blockchain.derivationPath(DerivationStyle.LEGACY)?.rawPath?.let(TextReference::Str)
-                        ?: TextReference.Res(R.string.custom_token_derivation_path_default),
+                    title = TextReference.Str(derivationPath),
                     subtitle = TextReference.Str(blockchain.fullName),
                     blockchain = blockchain,
                 )
@@ -207,14 +231,27 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
         private fun getNetworkSelectorItems(): List<SelectorItem.Title> {
             val defaultNetwork = createNetworkSelectorItem(blockchain = Blockchain.Unknown)
-            val scanResponse = reduxStateHolder.scanResponse
+            val scanResponse = getSelectedWalletSyncUseCase().fold(
+                ifLeft = { null },
+                ifRight = { it.scanResponse },
+            )
+            val derivationStyle = scanResponse?.derivationStyleProvider?.getDerivationStyle()
             return listOf(defaultNetwork) + Blockchain.values()
                 .filter { blockchain ->
                     scanResponse?.card?.supportedBlockchains(scanResponse.cardTypesResolver)
-                        ?.contains(blockchain) == true
+                        ?.contains(blockchain) == true && isDerivationPathNotEmpty(derivationStyle, blockchain)
                 }
                 .sortedBy(Blockchain::fullName)
                 .map(::createNetworkSelectorItem)
+        }
+
+        private fun isDerivationPathNotEmpty(derivationStyle: DerivationStyle?, blockchain: Blockchain): Boolean {
+            // derivationStyle is null for cards without HD wallets, always return true
+            return if (derivationStyle != null) {
+                blockchain.derivationPath(derivationStyle)?.rawPath?.isNotEmpty() == true
+            } else {
+                true
+            }
         }
 
         private fun createTokenNameInputField(): AddCustomTokenInputField.TokenName {
@@ -233,7 +270,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 value = "",
                 onValueChange = actionsHandler::onTokenSymbolValueChange,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                label = TextReference.Res(R.string.custom_token_token_symbol_input_title),
+                label = TextReference.Res(R.string.custom_token_token_symbol_input_title_old),
                 placeholder = TextReference.Res(id = R.string.custom_token_token_symbol_input_placeholder),
                 isEnabled = false,
             )
@@ -251,45 +288,75 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         private fun createDerivationPathsSelectorField(): AddCustomTokenSelectorField.DerivationPath? {
-            if (reduxStateHolder.scanResponse?.card?.settings?.isHDWalletAllowed == false) return null
+            return getSelectedWalletSyncUseCase().fold(
+                ifLeft = { null },
+                ifRight = {
+                    if (!it.scanResponse.card.settings.isHDWalletAllowed) return null
 
-            val selectorItems = getDerivationPathsSelectorItems()
-            return AddCustomTokenSelectorField.DerivationPath(
-                label = TextReference.Res(R.string.custom_token_derivation_path_input_title),
-                selectedItem = requireNotNull(selectorItems.firstOrNull()),
-                items = selectorItems,
-                onMenuItemClick = actionsHandler::onDerivationPathSelectorItemClick,
-                isEnabled = true,
+                    val selectorItems = getDerivationPathsSelectorItems(it.scanResponse.derivationStyleProvider)
+                    AddCustomTokenSelectorField.DerivationPath(
+                        label = TextReference.Res(R.string.custom_token_derivation_path_input_title),
+                        selectedItem = requireNotNull(selectorItems.firstOrNull()),
+                        items = selectorItems,
+                        onMenuItemClick = actionsHandler::onDerivationPathSelectorItemClick,
+                        isEnabled = true,
+                    )
+                },
             )
         }
 
-        private fun getDerivationPathsSelectorItems(): List<SelectorItem.TitleWithSubtitle> {
+        private fun getDerivationPathsSelectorItems(
+            derivationStyleProvider: DerivationStyleProvider?,
+        ): List<SelectorItem.TitleWithSubtitle> {
+            val derivationStyle = derivationStyleProvider?.getDerivationStyle()
             return listOf(
                 createDerivationPathSelectorAdditionalItem(
                     blockchain = Blockchain.Unknown,
                     type = DerivationPathSelectorType.DEFAULT,
+                    derivationPath = "",
                 ),
                 createDerivationPathSelectorAdditionalItem(
                     blockchain = Blockchain.Unknown,
                     type = DerivationPathSelectorType.CUSTOM,
+                    derivationPath = "",
                 ),
             ) + Blockchain.values()
                 .filter { blockchain ->
                     blockchain.isSupportedInApp() && !blockchain.isTestnet()
                 }
                 .sortedBy(Blockchain::fullName)
-                .map(::createDerivationPathSelectorAdditionalItem)
+                .mapNotNull {
+                    val derivationPath = if (derivationStyle != null) {
+                        it.derivationPath(derivationStyle)?.rawPath
+                    } else {
+                        // derivationStyle is null for cards without HDWallet, use DerivationStyle.V1
+                        it.derivationPath(DerivationStyle.V1)?.rawPath
+                    }
+                    if (derivationPath?.isNotEmpty() == true) {
+                        createDerivationPathSelectorAdditionalItem(
+                            blockchain = it,
+                            derivationPath = derivationPath,
+                        )
+                    } else {
+                        null
+                    }
+                }
         }
 
         private fun createDerivationPathInputField(): AddCustomTokenInputField.DerivationPath? {
-            if (reduxStateHolder.scanResponse?.card?.settings?.isHDWalletAllowed == false) return null
+            return getSelectedWalletSyncUseCase().fold(
+                ifLeft = { null },
+                ifRight = {
+                    if (!it.scanResponse.card.settings.isHDWalletAllowed) return null
 
-            return AddCustomTokenInputField.DerivationPath(
-                value = "",
-                onValueChange = actionsHandler::onDerivationPathValueChange,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                label = TextReference.Res(R.string.custom_token_custom_derivation),
-                placeholder = TextReference.Str(value = DERIVATION_PATH_PLACEHOLDER),
+                    AddCustomTokenInputField.DerivationPath(
+                        value = "",
+                        onValueChange = actionsHandler::onDerivationPathValueChange,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        label = TextReference.Res(R.string.custom_token_custom_derivation),
+                        placeholder = TextReference.Str(value = DERIVATION_PATH_PLACEHOLDER),
+                    )
+                },
             )
         }
     }
@@ -407,11 +474,15 @@ internal class AddCustomTokenViewModel @Inject constructor(
         val isSupportedToken = if (!isNetworkSelected()) {
             true
         } else {
-            val scanResponse = reduxStateHolder.scanResponse
-            scanResponse?.card?.canHandleToken(
-                blockchain = networkSelectorValue,
-                cardTypesResolver = scanResponse.cardTypesResolver,
-            ) ?: false
+            getSelectedWalletSyncUseCase().fold(
+                ifLeft = { false },
+                ifRight = {
+                    it.scanResponse.card.canHandleToken(
+                        blockchain = networkSelectorValue,
+                        cardTypesResolver = it.scanResponse.cardTypesResolver,
+                    )
+                },
+            )
         }
 
         return buildSet {
@@ -445,13 +516,16 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     address = uiState.form.contractAddressInputField.value,
                     blockchain = networkSelectorValue,
                 )
-                val scanResponse = reduxStateHolder.scanResponse
-                val isSupportedToken = scanResponse?.card
-                    ?.canHandleToken(
-                        blockchain = networkSelectorValue,
-                        cardTypesResolver = scanResponse.cardTypesResolver,
-                    )
-                    ?: false
+
+                val isSupportedToken = getSelectedWalletSyncUseCase().fold(
+                    ifLeft = { false },
+                    ifRight = {
+                        it.scanResponse.card.canHandleToken(
+                            blockchain = networkSelectorValue,
+                            cardTypesResolver = it.scanResponse.cardTypesResolver,
+                        )
+                    },
+                )
 
                 uiState.copySealed(
                     floatingButton = uiState.floatingButton.copy(
@@ -513,6 +587,33 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isTokenAlreadyAdded(): Boolean {
+        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            isTokenAlreadyAddedNew()
+        } else {
+            isTokenAlreadyAddedOld()
+        }
+    }
+
+    private fun isTokenAlreadyAddedNew(): Boolean {
+        return currentCryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Token>()
+            .any { token ->
+                val contractAddress = uiState.form.contractAddressInputField.value
+                val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
+                val networkId = Blockchain.fromNetworkId(networkSelectorValue.toNetworkId())?.id
+
+                val savedTokenId = if (token.isCustom) null else token.id.value
+
+                val sameId = foundToken?.id == savedTokenId
+                val sameAddress = contractAddress == token.contractAddress
+                val sameBlockchain = networkId == token.network.id.value
+                val isSameDerivationPath = getDerivationPath()?.rawPath == token.network.derivationPath.value
+
+                sameId && sameAddress && sameBlockchain && isSameDerivationPath
+            }
+    }
+
+    private fun isTokenAlreadyAddedOld(): Boolean {
         return store.state.walletState.walletsStores
             .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
             .flatten()
@@ -530,6 +631,23 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isBlockchainAlreadyAdded(): Boolean {
+        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
+            isBlockchainAlreadyAddedNew()
+        } else {
+            isBlockchainAlreadyAddedOld()
+        }
+    }
+
+    private fun isBlockchainAlreadyAddedNew(): Boolean {
+        return currentCryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Coin>()
+            .any { coin ->
+                coin.network.id.value == uiState.form.networkSelectorField.selectedItem.blockchain.id &&
+                    coin.network.derivationPath.value == getDerivationPath()?.rawPath
+            }
+    }
+
+    private fun isBlockchainAlreadyAddedOld(): Boolean {
         return store.state.walletState.walletsStores
             .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
             .flatten()
@@ -608,17 +726,31 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun getDerivationPathForBlockchain(blockchain: Blockchain?): DerivationPath? {
         if (blockchain == null) return null
 
-        val derivationStyle = if (!isDerivationPathSelected()) {
-            reduxStateHolder.scanResponse?.derivationStyleProvider?.getDerivationStyle()
-        } else {
-            DerivationStyle.LEGACY
-        }
+        val derivationStyle = getSelectedWalletSyncUseCase().fold(
+            ifLeft = { null },
+            ifRight = {
+                it.scanResponse.derivationStyleProvider.getDerivationStyle()
+            },
+        )
+
         val derivationNetwork = if (blockchain == Blockchain.Unknown) {
             uiState.form.networkSelectorField.selectedItem.blockchain
         } else {
             blockchain
         }
         return derivationNetwork.derivationPath(derivationStyle)
+    }
+
+    private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
+        return getSelectedWalletSyncUseCase().fold(
+            ifLeft = { false },
+            ifRight = {
+                !it.scanResponse.card.canHandleBlockchain(
+                    blockchain = blockchain,
+                    cardTypesResolver = it.scanResponse.cardTypesResolver,
+                )
+            },
+        )
     }
 
     private inner class ActionsHandler(private val featureRouter: CustomTokenRouter) {
@@ -733,6 +865,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
         fun onAddCustomTokenClick() {
             if (!isNetworkSelected()) return
+            val blockchain = uiState.form.networkSelectorField.selectedItem.blockchain
+            if (isUnsupportedBlockchain(blockchain)) {
+                featureRouter.openUnsupportedNetworkAlert(blockchain)
+                return
+            }
 
             val currency = when (getCustomTokenType()) {
                 CustomTokenType.TOKEN -> {
@@ -744,13 +881,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
                             decimals = requireNotNull(uiState.form.decimalsInputField.value.toIntOrNull()),
                             id = foundToken?.id,
                         ),
-                        network = uiState.form.networkSelectorField.selectedItem.blockchain,
+                        network = blockchain,
                         derivationPath = getDerivationPath(),
                     )
                 }
                 CustomTokenType.BLOCKCHAIN -> {
                     CustomCurrency.CustomBlockchain(
-                        network = uiState.form.networkSelectorField.selectedItem.blockchain,
+                        network = blockchain,
                         derivationPath = getDerivationPath(),
                     )
                 }
@@ -761,7 +898,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
             viewModelScope.launch(dispatchers.io) {
                 runCatching { featureInteractor.saveToken(currency) }
                     .onSuccess { featureRouter.openWalletScreen() }
-                    .onFailure(Timber::e)
+                    .onFailure {
+                        Timber.e(it)
+                    }
             }
         }
     }
@@ -799,11 +938,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
                         decimalsInputField = decimalsInputField.copy(value = "", isEnabled = false),
                         derivationPathSelectorField = derivationPathSelectorField?.copy(
                             isEnabled = true,
-                            selectedItem = formStateBuilder
-                                .createDerivationPathSelectorAdditionalItem(
-                                    blockchain = Blockchain.Unknown,
-                                    type = DerivationPathSelectorType.DEFAULT,
-                                ),
+                            selectedItem = formStateBuilder.createDerivationPathSelectorAdditionalItem(
+                                blockchain = Blockchain.Unknown,
+                                type = DerivationPathSelectorType.DEFAULT,
+                                derivationPath = "",
+                            ),
                         ),
                     ),
                 )

@@ -1,127 +1,115 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
-import androidx.paging.PagingData
-import androidx.paging.map
 import com.tangem.common.Provider
-import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.transactions.state.TransactionState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
-import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.map
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.mutate
 
 internal class WalletRefreshStateConverter(
     private val currentStateProvider: Provider<WalletState>,
-    private val clickIntents: WalletClickIntents,
-) : Converter<Unit, WalletState> {
+) : Converter<Boolean, WalletState> {
 
-    override fun convert(value: Unit): WalletState {
-        return when (val state = currentStateProvider()) {
-            is WalletMultiCurrencyState.Content -> state.getRefreshState()
-            is WalletSingleCurrencyState.Content -> state.getRefreshState()
-            else -> state
+    override fun convert(value: Boolean): WalletState {
+        val state = currentStateProvider()
+        val contentState = state as? WalletState.ContentState ?: return state
+
+        return if (value) {
+            contentState.getRefreshingState()
+        } else {
+            contentState.getRefreshedState()
         }
     }
 
-    private fun WalletMultiCurrencyState.Content.getRefreshState(): WalletMultiCurrencyState.Content {
+    private fun WalletState.ContentState.getRefreshingState(): WalletState {
+        return when (this) {
+            is WalletMultiCurrencyState.Content -> getRefreshingState()
+            is WalletSingleCurrencyState.Content -> getRefreshingState()
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            -> this
+        }
+    }
+
+    private fun WalletState.ContentState.getRefreshedState(): WalletState {
+        return when (this) {
+            is WalletMultiCurrencyState.Content -> getRefreshedState()
+            is WalletSingleCurrencyState.Content -> getRefreshedState()
+            is WalletMultiCurrencyState.Locked,
+            is WalletSingleCurrencyState.Locked,
+            -> this
+        }
+    }
+
+    private fun WalletMultiCurrencyState.Content.getRefreshingState(): WalletMultiCurrencyState {
         return copy(
-            walletsListConfig = getWalletsListConfig(),
-            pullToRefreshConfig = getPullToRefreshConfig(),
-            tokensListState = getTokenListState(),
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = true),
+            tokensListState = updateTokenListState(isRefreshing = true),
         )
     }
 
-    private fun WalletSingleCurrencyState.Content.getRefreshState(): WalletSingleCurrencyState.Content {
+    private fun WalletSingleCurrencyState.Content.getRefreshingState(): WalletSingleCurrencyState {
         return copy(
-            // TODO: [REDACTED_JIRA]
-            walletsListConfig = getWalletsListConfig(),
-            pullToRefreshConfig = getPullToRefreshConfig(),
-            txHistoryState = getTxHistoryState(),
-            marketPriceBlockState = MarketPriceBlockState.Loading(currencyName = marketPriceBlockState.currencyName),
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = true),
+            buttons = updateButtons(isRefreshing = true),
         )
     }
 
-    private fun WalletState.ContentState.getWalletsListConfig(): WalletsListConfig {
-        val selectedWallet = walletsListConfig.wallets[walletsListConfig.selectedWalletIndex]
-
-        return walletsListConfig.copy(
-            wallets = walletsListConfig.wallets
-                .toPersistentList()
-                .set(
-                    index = walletsListConfig.selectedWalletIndex,
-                    element = WalletCardState.Loading(
-                        id = selectedWallet.id,
-                        title = selectedWallet.title,
-                        imageResId = selectedWallet.imageResId,
-                    ),
-                ),
+    private fun WalletMultiCurrencyState.Content.getRefreshedState(): WalletMultiCurrencyState {
+        return copy(
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = false),
+            tokensListState = updateTokenListState(isRefreshing = false),
         )
     }
 
-    private fun WalletState.ContentState.getPullToRefreshConfig(): WalletPullToRefreshConfig {
-        return pullToRefreshConfig.copy(isRefreshing = true)
+    private fun WalletSingleCurrencyState.Content.getRefreshedState(): WalletSingleCurrencyState {
+        return copy(
+            pullToRefreshConfig = updatePullToRefreshConfig(isRefreshing = false),
+            buttons = updateButtons(isRefreshing = false),
+        )
     }
 
-    private fun WalletMultiCurrencyState.Content.getTokenListState(): WalletTokensListState {
-        return when (tokensListState) {
+    private fun WalletMultiCurrencyState.updateTokenListState(isRefreshing: Boolean): WalletTokensListState {
+        return when (val listState = tokensListState) {
             is WalletTokensListState.Content -> {
-                WalletTokensListState.Loading(
-                    items = tokensListState.items
-                        .filterIsInstance<TokensListItemState.Token>()
-                        .map {
-                            TokensListItemState.Token(state = TokenItemState.Loading(id = it.state.id))
-                        }
-                        .toImmutableList(),
-                )
+                when (listState.organizeTokensButton) {
+                    is WalletTokensListState.OrganizeTokensButtonState.Hidden -> listState
+                    is WalletTokensListState.OrganizeTokensButtonState.Visible -> listState.copy(
+                        organizeTokensButton = listState.organizeTokensButton.copy(
+                            isEnabled = !isRefreshing,
+                        ),
+                    )
+                }
             }
-            is WalletTokensListState.Empty -> WalletTokensListState.Loading()
-            is WalletTokensListState.Loading,
             is WalletTokensListState.Locked,
-            -> tokensListState
+            is WalletTokensListState.Loading,
+            is WalletTokensListState.Empty,
+            -> listState
         }
     }
 
-    private fun WalletSingleCurrencyState.Content.getTxHistoryState(): TxHistoryState {
-        return when (txHistoryState) {
-            is TxHistoryState.Content -> {
-                TxHistoryState.Loading(
-                    onExploreClick = clickIntents::onExploreClick,
-                    transactions = txHistoryState.contentItems
-                        .filterIsInstance<PagingData<TxHistoryItemState.Transaction>>()
-                        .mapPagingData { transaction ->
-                            transaction.copy(
-                                state = TransactionState.Loading(txHash = transaction.state.txHash),
-                            )
-                        },
-                )
+    private fun WalletSingleCurrencyState.updateButtons(isRefreshing: Boolean): PersistentList<WalletManageButton> {
+        val isButtonsEnabled = !isRefreshing
+
+        return buttons.mutate {
+            it.mapNotNull { button ->
+                when (button) {
+                    is WalletManageButton.Buy -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.Send -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.Sell -> button.copy(enabled = isButtonsEnabled)
+                    is WalletManageButton.Receive -> button
+                    is WalletManageButton.Swap -> null
+                }
             }
-            is TxHistoryState.Empty,
-            is TxHistoryState.Error,
-            is TxHistoryState.NotSupported,
-            -> TxHistoryState.Loading(onExploreClick = clickIntents::onExploreClick)
-            is TxHistoryState.Locked,
-            is TxHistoryState.Loading,
-            -> txHistoryState
         }
     }
 
-    private fun Flow<PagingData<TxHistoryItemState.Transaction>>.mapPagingData(
-        transform: (TxHistoryItemState.Transaction) -> TxHistoryItemState,
-    ): Flow<PagingData<TxHistoryItemState>> {
-        return map { it.map(transform) }
+    private fun WalletState.ContentState.updatePullToRefreshConfig(isRefreshing: Boolean): WalletPullToRefreshConfig {
+        return pullToRefreshConfig.copy(isRefreshing = isRefreshing)
     }
 }

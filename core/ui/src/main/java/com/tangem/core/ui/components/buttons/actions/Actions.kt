@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.buttons.actions
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,7 +20,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW8
-import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -78,43 +79,52 @@ private fun Button(
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
 ) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (config.enabled) color else TangemTheme.colors.button.disabled,
+        label = "Update background color",
+    )
+
     Row(
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size36)
             .clip(shape)
-            .background(
-                color = if (config.enabled) color else TangemTheme.colors.button.disabled,
-                shape = shape,
-            )
+            .background(color = backgroundColor, shape = shape)
             .clickable(enabled = config.enabled, onClick = config.onClick)
-            .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing24,
-            )
+            .padding(start = TangemTheme.dimens.spacing16, end = TangemTheme.dimens.spacing24)
             .padding(vertical = TangemTheme.dimens.spacing8),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val iconTint by animateColorAsState(
+            targetValue = when {
+                !config.enabled -> TangemTheme.colors.icon.informative
+                config.dimContent -> TangemTheme.colors.icon.informative
+                else -> TangemTheme.colors.icon.primary1
+            },
+            label = "Update tint color",
+        )
+
         Icon(
             painter = painterResource(id = config.iconResId),
             contentDescription = null,
             modifier = Modifier.size(size = TangemTheme.dimens.size20),
-            tint = when {
-                !config.enabled -> TangemTheme.colors.icon.informative
-                config.dimContent -> TangemTheme.colors.icon.secondary
-                else -> TangemTheme.colors.icon.primary1
-            },
+            tint = iconTint,
         )
 
         SpacerW8()
 
-        Text(
-            text = config.text.resolveReference(),
-            color = when {
+        val textColor by animateColorAsState(
+            targetValue = when {
                 !config.enabled -> TangemTheme.colors.text.disabled
-                config.dimContent -> TangemTheme.colors.text.secondary
+                config.dimContent -> TangemTheme.colors.text.tertiary
                 else -> TangemTheme.colors.text.primary1
             },
+            label = "Update text color",
+        )
+
+        Text(
+            text = config.text.resolveReference(),
+            color = textColor,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
             style = TangemTheme.typography.button,

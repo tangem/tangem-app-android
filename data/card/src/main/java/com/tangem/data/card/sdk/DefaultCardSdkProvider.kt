@@ -27,8 +27,11 @@ internal class DefaultCardSdkProvider @Inject constructor() : CardSdkProvider, C
         _sdk = TangemSdk.initWithBiometrics(activity = context as FragmentActivity, config = config)
     }
 
-    override fun onDestroy() {
-        _sdk = null
+    override fun onDestroy(context: Context) {
+        // Commented out to prevent crash on getting sdk when it's null.
+        // FIXME: We still should find the real cause and fix it properly.
+        // idea: pass everywhere DefaultCardSdkProvider instead sdk to reach lazy access to sdk property
+        // _sdk = null
     }
 
     private companion object {

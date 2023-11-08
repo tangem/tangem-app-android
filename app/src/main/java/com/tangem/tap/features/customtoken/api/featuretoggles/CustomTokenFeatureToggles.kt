@@ -7,8 +7,5 @@ package com.tangem.tap.features.customtoken.api.featuretoggles
  */
 interface CustomTokenFeatureToggles {
 
-    /** Availability of redesigned screen (internal feature) */
-    val isRedesignedScreenEnabled: Boolean
-
     val isNewCardScanningEnabled: Boolean
 }

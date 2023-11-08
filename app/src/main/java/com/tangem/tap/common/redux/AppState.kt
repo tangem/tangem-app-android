@@ -6,6 +6,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.NetworkServices
 import com.tangem.tap.common.redux.global.GlobalMiddleware
 import com.tangem.tap.common.redux.global.GlobalState
+import com.tangem.tap.common.redux.legacy.LegacyMiddleware
 import com.tangem.tap.common.redux.navigation.navigationMiddleware
 import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
@@ -32,8 +33,6 @@ import com.tangem.tap.features.shop.redux.ShopMiddleware
 import com.tangem.tap.features.shop.redux.ShopState
 import com.tangem.tap.features.signin.redux.SignInMiddleware
 import com.tangem.tap.features.signin.redux.SignInState
-import com.tangem.tap.features.sprinklr.redux.SprinklrMiddleware
-import com.tangem.tap.features.sprinklr.redux.SprinklrState
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.legacy.redux.TokensState
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -66,12 +65,11 @@ data class AppState(
     val welcomeState: WelcomeState = WelcomeState(),
     val saveWalletState: SaveWalletState = SaveWalletState(),
     val walletSelectorState: WalletSelectorState = WalletSelectorState(),
-    val sprinklrState: SprinklrState = SprinklrState(),
     val signInState: SignInState = SignInState(),
     val daggerGraphState: DaggerGraphState = DaggerGraphState(),
 ) : StateType {
 
-    val domainState: DomainState
+    private val domainState: DomainState
         get() = domainStore.state
 
     val domainNetworks: NetworkServices
@@ -108,9 +106,9 @@ data class AppState(
                 WalletSelectorMiddleware().middleware,
                 LockUserWalletsTimerMiddleware().middleware,
                 AccessCodeRequestPolicyMiddleware().middleware,
-                SprinklrMiddleware().middleware,
                 SignInMiddleware.middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,
+                LegacyMiddleware.legacyMiddleware,
             )
         }
     }

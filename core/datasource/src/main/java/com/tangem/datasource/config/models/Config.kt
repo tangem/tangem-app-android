@@ -15,7 +15,7 @@ data class Config(
     @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false,
     val shopify: ShopifyShop? = null,
-    val zendesk: ZendeskConfig? = null,
+    val sprinklr: SprinklrConfig? = null,
     val swapReferrerAccount: SwapReferrerAccount? = null,
     val walletConnectProjectId: String = "",
     val tangemComAuthorization: String? = null,

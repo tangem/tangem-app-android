@@ -51,7 +51,7 @@ interface UserWalletManager {
      * @param derivationPath if null uses default
      */
     @Throws(IllegalStateException::class)
-    fun getWalletAddress(networkId: String, derivationPath: String?): String
+    suspend fun getWalletAddress(networkId: String, derivationPath: String?): String
 
     /**
      * Return balances from wallet found by networkId
@@ -69,7 +69,7 @@ interface UserWalletManager {
     ): Map<String, ProxyAmount>
 
     @Throws(IllegalStateException::class)
-    fun getNativeTokenBalance(networkId: String, derivationPath: String?): ProxyAmount?
+    suspend fun getNativeTokenBalance(networkId: String, derivationPath: String?): ProxyAmount?
 
     /**
      * @param networkId
@@ -84,5 +84,5 @@ interface UserWalletManager {
     fun getUserAppCurrency(): ProxyFiatCurrency
 
     @Throws(IllegalStateException::class)
-    fun getLastTransactionHash(networkId: String, derivationPath: String?): String?
+    suspend fun getLastTransactionHash(networkId: String, derivationPath: String?): String?
 }

@@ -1,33 +1,52 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.Image
+import androidx.annotation.StringRes
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.ConstraintLayoutScope
-import androidx.constraintlayout.compose.Dimension
+import androidx.compose.ui.unit.*
+import androidx.constraintlayout.compose.*
+import com.tangem.common.Strings
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
+import com.tangem.core.ui.components.wallets.RenameWalletDialogContent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
+
+private const val HALF_OF_ITEM_WIDTH = 0.5
 
 /**
  * Wallet card
@@ -37,193 +56,337 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCard
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongMethod")
 @Composable
-internal fun WalletCard(state: WalletCardState, modifier: Modifier = Modifier) {
+internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     @Suppress("DestructuringDeclarationWithTooManyEntries")
-    CardContainer(onClick = state.onClick, modifier = modifier) {
-        val (title, balance, additionalText, image) = createRefs()
+    CardContainer(
+        name = state.title,
+        onDeleteClick = { state.onDeleteClick(state.id) },
+        onRenameClick = { state.onRenameClick(state.id, it) },
+        isLockedState = state is WalletCardState.LockedContent,
+        modifier = modifier,
+    ) { itemSize ->
+        val (titleRef, balanceRef, additionalTextRef, imageRef) = createRefs()
 
         val contentVerticalMargin = TangemTheme.dimens.spacing12
-        Title(
-            state = state,
-            modifier = Modifier.constrainAs(title) {
+        TitleText(
+            text = state.title,
+            modifier = Modifier.constrainAs(titleRef) {
                 start.linkTo(parent.start)
                 top.linkTo(anchor = parent.top, margin = contentVerticalMargin)
-                end.linkTo(image.start)
+                end.linkTo(imageRef.start)
                 width = Dimension.fillToConstraints
             },
         )
 
-        val betweenContentMargin = TangemTheme.dimens.spacing8
+        var balanceWidth by remember { mutableIntStateOf(value = Int.MIN_VALUE) }
         Balance(
             state = state,
-            modifier = Modifier.constrainAs(balance) {
-                start.linkTo(parent.start)
-                top.linkTo(anchor = title.bottom, margin = betweenContentMargin)
-                bottom.linkTo(anchor = additionalText.top, margin = betweenContentMargin)
-            },
+            isBalanceHidden = isBalanceHidden,
+            modifier = Modifier
+                .onSizeChanged { balanceWidth = it.width }
+                .padding(vertical = TangemTheme.dimens.spacing8)
+                .constrainAs(balanceRef) {
+                    start.linkTo(parent.start)
+                    top.linkTo(anchor = titleRef.bottom)
+                    bottom.linkTo(anchor = additionalTextRef.top)
+                },
         )
 
+        val additionalText by remember(state.additionalInfo, isBalanceHidden) {
+            mutableStateOf(
+                if (state.additionalInfo?.hideable == true && isBalanceHidden) {
+                    WalletCardState.HIDDEN_BALANCE_TEXT
+                } else {
+                    state.additionalInfo?.content
+                },
+            )
+        }
         AdditionalInfo(
-            state = state,
-            modifier = Modifier.constrainAs(additionalText) {
+            text = additionalText,
+            modifier = Modifier.constrainAs(additionalTextRef) {
                 start.linkTo(parent.start)
+                top.linkTo(balanceRef.bottom)
                 bottom.linkTo(anchor = parent.bottom, margin = contentVerticalMargin)
+
+                if (additionalText != null) {
+                    width = if (state.imageResId != null) {
+                        end.linkTo(imageRef.start)
+                        Dimension.fillToConstraints
+                    } else {
+                        Dimension.wrapContent
+                    }
+                }
             },
         )
 
-        val imageWidth = TangemTheme.dimens.size120
-        Image(
-            id = state.imageResId,
-            modifier = Modifier.constrainAs(image) {
-                centerVerticallyTo(parent)
-                top.linkTo(parent.top)
-                end.linkTo(parent.end)
-                height = Dimension.fillToConstraints
-                width = Dimension.value(imageWidth)
-            },
-        )
+        // If balance has a large width then image must be hidden
+        val hasSpaceForImage by remember(key1 = balanceWidth, key2 = itemSize.width) {
+            mutableStateOf(value = balanceWidth < itemSize.width * HALF_OF_ITEM_WIDTH)
+        }
+
+        if (hasSpaceForImage) {
+            Image(
+                id = state.imageResId,
+                modifier = Modifier.constrainAs(imageRef) {
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                    height = Dimension.fillToConstraints
+                },
+            )
+        }
     }
 }
 
 @Composable
 private fun CardContainer(
-    onClick: (() -> Unit)?,
+    name: String,
+    onDeleteClick: () -> Unit,
+    onRenameClick: (String) -> Unit,
+    isLockedState: Boolean,
     modifier: Modifier = Modifier,
-    content: @Composable ConstraintLayoutScope.() -> Unit,
+    content: @Composable (ConstraintLayoutScope.(IntSize) -> Unit),
 ) {
+    var isMenuVisible by rememberSaveable { mutableStateOf(value = false) }
+    var pressOffset by remember { mutableStateOf(value = DpOffset.Zero) }
+    var itemSize by remember { mutableStateOf(value = IntSize.Zero) }
+
+    val density = LocalDensity.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val haptic = LocalHapticFeedback.current
+
     Surface(
-        modifier = modifier.defaultMinSize(minHeight = TangemTheme.dimens.size108),
+        modifier = modifier
+            .defaultMinSize(minHeight = TangemTheme.dimens.size108)
+            .onSizeChanged { itemSize = it }
+            .then(
+                if (isLockedState) {
+                    Modifier
+                } else {
+                    Modifier
+                        .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+                        .indication(interactionSource = interactionSource, indication = LocalIndication.current)
+                        .pointerInput(true) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    isMenuVisible = true
+                                    pressOffset = DpOffset(x = it.x.toDp(), y = it.y.toDp())
+                                },
+                                onPress = {
+                                    val press = PressInteraction.Press(it)
+                                    interactionSource.emit(press)
+                                    tryAwaitRelease()
+                                    interactionSource.emit(PressInteraction.Release(press))
+                                },
+                            )
+                        }
+                },
+            ),
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = TangemTheme.colors.background.primary,
-        onClick = onClick ?: {},
-        enabled = onClick != null,
     ) {
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing14),
         ) {
-            content()
+            content(itemSize)
         }
+    }
+
+    var isRenameWalletDialogVisible by rememberSaveable { mutableStateOf(value = false) }
+
+    val itemHeight by remember(itemSize.height) {
+        mutableStateOf(value = with(density) { itemSize.height.toDp() })
+    }
+    ManageWalletContextMenu(
+        isMenuVisible = isMenuVisible,
+        pressOffset = pressOffset,
+        itemHeight = itemHeight,
+        onDismissRequest = { isMenuVisible = false },
+        onShowRenameWalletDialogClick = { isRenameWalletDialogVisible = true },
+        onDeleteClick = onDeleteClick,
+    )
+
+    if (isRenameWalletDialogVisible) {
+        RenameWalletDialogContent(
+            name = name,
+            onConfirm = {
+                onRenameClick(it)
+                isRenameWalletDialogVisible = false
+            },
+            onDismiss = { isRenameWalletDialogVisible = false },
+        )
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
-private fun Title(state: WalletCardState, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+private fun ManageWalletContextMenu(
+    isMenuVisible: Boolean,
+    pressOffset: DpOffset,
+    itemHeight: Dp,
+    onDismissRequest: () -> Unit,
+    onShowRenameWalletDialogClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
+    DropdownMenu(
+        expanded = isMenuVisible,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        offset = pressOffset.copy(y = pressOffset.y - itemHeight),
     ) {
-        TitleText(title = state.title)
-
-        AnimatedVisibility(visible = state is WalletCardState.HiddenContent, label = "Update the hidden icon") {
-            when (state) {
-                is WalletCardState.HiddenContent -> {
-                    Icon(
-                        modifier = Modifier.size(size = TangemTheme.dimens.size20),
-                        painter = painterResource(id = R.drawable.ic_eye_off_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors.icon.informative,
-                    )
-                }
-                is WalletCardState.Content,
-                is WalletCardState.Error,
-                is WalletCardState.Loading,
-                -> Unit
-            }
-        }
+        MenuItem(
+            textResId = R.string.common_rename,
+            imageVector = Icons.Outlined.Edit,
+            onClick = {
+                onDismissRequest()
+                onShowRenameWalletDialogClick()
+            },
+        )
+        MenuItem(
+            textResId = R.string.common_delete,
+            imageVector = Icons.Outlined.Delete,
+            onClick = {
+                onDismissRequest()
+                onDeleteClick()
+            },
+        )
     }
 }
 
 @Composable
-private fun TitleText(title: String) {
-    Text(
-        text = title,
-        color = TangemTheme.colors.text.tertiary,
-        style = TangemTheme.typography.body2,
-        maxLines = 1,
+private fun MenuItem(@StringRes textResId: Int, imageVector: ImageVector, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = { Text(text = stringResource(id = textResId), style = TangemTheme.typography.subtitle2) },
+        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        trailingIcon = { Icon(imageVector = imageVector, contentDescription = null) },
+        onClick = onClick,
+        colors = MenuDefaults.itemColors(
+            textColor = TangemTheme.colors.text.primary1,
+            trailingIconColor = TangemTheme.colors.icon.primary1,
+        ),
     )
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun Balance(state: WalletCardState, modifier: Modifier = Modifier) {
+private fun TitleText(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = TangemTheme.colors.text.tertiary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = TangemTheme.typography.button,
+    )
+}
+
+@Composable
+private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = state,
         label = "Update the balance",
         modifier = modifier,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
+                fadeOut(animationSpec = tween(durationMillis = 90))
+        },
     ) { walletCardState ->
         when (walletCardState) {
             is WalletCardState.Content -> {
                 ResizableText(
-                    text = walletCardState.balance,
+                    text = if (isBalanceHidden) Strings.STARS else walletCardState.balance,
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     color = TangemTheme.colors.text.primary1,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                     style = TangemTheme.typography.h2,
                 )
             }
+            is WalletCardState.Error -> NonContentBalanceText(
+                text = if (isBalanceHidden) WalletCardState.HIDDEN_BALANCE_TEXT else WalletCardState.EMPTY_BALANCE_TEXT,
+            )
             is WalletCardState.Loading -> {
-                RectangleShimmer(
-                    modifier = Modifier.size(
-                        width = TangemTheme.dimens.size102,
-                        height = TangemTheme.dimens.size32,
-                    ),
-                )
+                RectangleShimmer(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
             }
-            is WalletCardState.HiddenContent -> {
-                Text(
-                    text = WalletCardState.HIDDEN_BALANCE_TEXT.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.h2,
-                )
-            }
-            is WalletCardState.Error -> {
-                Text(
-                    text = WalletCardState.EMPTY_BALANCE_TEXT.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.h2,
-                )
+            is WalletCardState.LockedContent -> {
+                LockedContent(modifier = Modifier.nonContentBalanceSize(TangemTheme.dimens))
             }
         }
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun AdditionalInfo(state: WalletCardState, modifier: Modifier = Modifier) {
+private fun NonContentBalanceText(text: TextReference) {
+    Text(
+        text = text.resolveReference(),
+        color = TangemTheme.colors.text.primary1,
+        style = TangemTheme.typography.h2,
+    )
+}
+
+private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
+    return this
+        .padding(vertical = dimens.spacing4)
+        .size(width = dimens.size102, height = dimens.size24)
+}
+
+@Composable
+private fun AdditionalInfo(text: TextReference?, modifier: Modifier = Modifier) {
     AnimatedContent(
-        targetState = state,
+        targetState = text,
         label = "Update the additional text",
         modifier = modifier,
-    ) { walletCardState ->
-        when (walletCardState) {
-            is WalletCardState.AdditionalTextAvailability -> {
-                Text(
-                    text = walletCardState.additionalInfo.resolveReference(),
-                    color = TangemTheme.colors.text.disabled,
-                    style = TangemTheme.typography.caption,
-                )
-            }
-            is WalletCardState.Loading -> {
-                RectangleShimmer(
-                    modifier = Modifier.size(
-                        width = TangemTheme.dimens.size84,
-                        height = TangemTheme.dimens.size16,
-                    ),
-                )
-            }
+        transitionSpec = {
+            fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
+                fadeOut(animationSpec = tween(durationMillis = 90))
+        },
+    ) { animatedText ->
+        if (animatedText != null) {
+            AdditionalInfoText(text = animatedText)
+        } else {
+            RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
         }
     }
+}
+
+@Composable
+private fun AdditionalInfoText(text: TextReference) {
+    Text(
+        text = text.resolveReference(),
+        color = TangemTheme.colors.text.tertiary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = TangemTheme.typography.caption2,
+    )
+}
+
+private fun Modifier.nonContentAdditionalInfoSize(dimens: TangemDimens): Modifier {
+    return size(width = dimens.size84, height = dimens.size16)
+}
+
+@Composable
+private fun LockedContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.field.primary,
+            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+        ),
+    )
 }
 
 @Composable
 private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
     AnimatedVisibility(visible = id != null, modifier = modifier) {
+        val imageRes = id ?: return@AnimatedVisibility
+
         Image(
-            painter = painterResource(id = requireNotNull(id)),
+            painter = painterResource(id = imageRes),
             contentDescription = null,
+            modifier = Modifier.width(width = TangemTheme.dimens.size120),
             contentScale = ContentScale.FillWidth,
         )
     }
@@ -238,7 +401,7 @@ private fun Preview_WalletCard_LightTheme(
     state: WalletCardState,
 ) {
     TangemTheme(isDark = false) {
-        WalletCard(state = state)
+        WalletCard(state = state, isBalanceHidden = false)
     }
 }
 
@@ -246,7 +409,7 @@ private fun Preview_WalletCard_LightTheme(
 @Composable
 private fun Preview_WalletCard_DarkTheme(@PreviewParameter(WalletCardStateProvider::class) state: WalletCardState) {
     TangemTheme(isDark = true) {
-        WalletCard(state)
+        WalletCard(state = state, isBalanceHidden = false)
     }
 }
 
@@ -254,7 +417,6 @@ private class WalletCardStateProvider : CollectionPreviewParameterProvider<Walle
     collection = listOf(
         WalletPreviewData.walletCardContentState,
         WalletPreviewData.walletCardLoadingState,
-        WalletPreviewData.walletCardHiddenContentState,
         WalletPreviewData.walletCardErrorState,
     ),
 )

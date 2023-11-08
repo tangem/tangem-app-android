@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -30,12 +30,6 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
         configureTransitions()
     }
 
-    protected open fun configureTransitions() {
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mainView = super.onCreateView(inflater, container, savedInstanceState)!!
         return mainView
@@ -56,6 +50,16 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
 
     protected open fun loadToolbarMenu(): MenuProvider? = null
 
+    protected open fun configureTransitions() {
+        configureDefaultTransactions()
+    }
+
+    protected fun configureDefaultTransactions() {
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(R.transition.fade)
+        exitTransition = inflater.inflateTransition(R.transition.fade)
+    }
+
     fun showRetrySnackbar(message: String, action: VoidCallback) {
         val snackbar = Snackbar.make(mainView, message, Snackbar.LENGTH_INDEFINITE)
         snackbar.setAction(getString(R.string.common_retry)) {
@@ -71,13 +75,11 @@ interface FragmentOnBackPressedHandler {
 
 @SuppressLint("FragmentBackPressedCallback")
 fun Fragment.addBackPressHandler(handler: FragmentOnBackPressedHandler) {
-    activity?.onBackPressedDispatcher?.addCallback(
-        this,
-        object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                handler.handleOnBackPressed()
-            }
-        },
-    )
-    view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener { activity?.onBackPressed() }
+    requireActivity().onBackPressedDispatcher.addCallback {
+        handler.handleOnBackPressed()
+    }
+
+    view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener {
+        handler.handleOnBackPressed()
+    }
 }

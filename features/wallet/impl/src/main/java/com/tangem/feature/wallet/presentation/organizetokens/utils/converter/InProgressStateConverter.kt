@@ -10,6 +10,9 @@ internal class InProgressStateConverter : TwoWayConverter<OrganizeTokensState, O
             actions = value.actions.copy(
                 showApplyProgress = true,
             ),
+            header = value.header.copy(
+                isEnabled = false,
+            ),
         )
     }
 
@@ -17,6 +20,9 @@ internal class InProgressStateConverter : TwoWayConverter<OrganizeTokensState, O
         return value.copy(
             actions = value.actions.copy(
                 showApplyProgress = false,
+            ),
+            header = value.header.copy(
+                isEnabled = true,
             ),
         )
     }

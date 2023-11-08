@@ -8,13 +8,8 @@ import com.tangem.domain.card.repository.ScanCardRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
-import com.tangem.tap.domain.tokens.UserTokensRepository
 
 internal class DefaultScanCardRepository(
-    // FIXME: The repository should not depend on another repository.
-    //  But now we need to provide loadBlockchainsToDerive() to ScanProductTask and it's hard to move this method from
-    //  UserTokensRepository.
-    private val userTokensRepository: UserTokensRepository,
     private val tangemSdkManager: TangemSdkManager,
 ) : ScanCardRepository {
 
@@ -27,7 +22,6 @@ internal class DefaultScanCardRepository(
         when (
             val result = tangemSdkManager.scanProduct(
                 cardId = cardId,
-                userTokensRepository = userTokensRepository,
                 allowsRequestAccessCodeFromRepository = allowRequestAccessCodeFromStorage,
             )
         ) {

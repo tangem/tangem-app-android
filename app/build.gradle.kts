@@ -9,70 +9,92 @@ plugins {
     id("configuration")
 }
 
-//conflict of dependencies when adding WalletConnectV2.0 library
-configurations {
-    all {
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
-        resolutionStrategy {
-            force("org.bouncycastle:bcpkix-jdk15on:1.70")
+configurations.all {
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    exclude(group = "com.github.komputing.kethereum")
+
+    resolutionStrategy {
+        dependencySubstitution {
+            substitute(module("com.facebook.react:react-native"))
+                .using(module("com.facebook.react:react-android:0.72.4"))
+
+            substitute(module("com.facebook.react:hermes-engine"))
+                .using(module("com.facebook.react:hermes-android:0.72.4"))
         }
-        exclude(group = "com.github.komputing.kethereum")
+
+        force(
+            "org.bouncycastle:bcpkix-jdk15on:1.70",
+            "com.facebook.react:react-android:0.72.4",
+            "com.facebook.react:hermes-android:0.72.4",
+        )
     }
 }
 
+
 dependencies {
     implementation(files("libs/walletconnect-1.5.6.aar"))
-    implementation(project(":domain:legacy"))
-    implementation(project(":domain:models"))
-    implementation(project(":domain:core"))
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    implementation(projects.domain.core)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
-    implementation(project(":domain:wallets"))
-    implementation(project(":domain:wallets:models"))
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.appTheme)
+    implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
 
-    implementation(project(":common"))
-    implementation(project(":core:analytics"))
+    implementation(projects.common)
+    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(project(":core:navigation"))
-    implementation(project(":core:featuretoggles"))
-    implementation(project(":core:res"))
-    implementation(project(":core:ui"))
-    implementation(project(":core:datasource"))
-    implementation(project(":core:utils"))
-    implementation(project(":libs:crypto"))
-    implementation(project(":libs:auth"))
+    implementation(projects.core.navigation)
+    implementation(projects.core.featuretoggles)
+    implementation(projects.core.res)
+    implementation(projects.core.ui)
+    implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+    implementation(projects.libs.crypto)
+    implementation(projects.libs.auth)
 
-    implementation(project(":data:source:preferences"))
+    implementation(projects.data.appCurrency)
+    implementation(projects.data.appTheme)
+    implementation(projects.data.balanceHiding)
     implementation(projects.data.card)
     implementation(projects.data.common)
     implementation(projects.data.settings)
+    implementation(projects.data.source.preferences)
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
-    implementation(projects.data.appCurrency)
+    implementation(projects.data.wallets)
 
     /** Features */
-    implementation(project(":features:onboarding"))
-    implementation(project(":features:learn2earn:api"))
-    implementation(project(":features:learn2earn:impl"))
-    implementation(project(":features:referral:presentation"))
-    implementation(project(":features:referral:domain"))
-    implementation(project(":features:referral:data"))
-    implementation(project(":features:swap:api"))
-    implementation(project(":features:swap:presentation"))
-    implementation(project(":features:swap:domain"))
-    implementation(project(":features:swap:data"))
-    implementation(project(":features:tester:api"))
-    implementation(project(":features:tester:impl"))
-    implementation(project(":features:wallet:api"))
-    implementation(project(":features:wallet:impl"))
+    implementation(projects.features.onboarding)
+    implementation(projects.features.learn2earn.api)
+    implementation(projects.features.learn2earn.impl)
+    implementation(projects.features.referral.presentation)
+    implementation(projects.features.referral.domain)
+    implementation(projects.features.referral.data)
+    implementation(projects.features.swap.api)
+    implementation(projects.features.swap.presentation)
+    implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.data)
+    implementation(projects.features.tester.api)
+    implementation(projects.features.tester.impl)
+    implementation(projects.features.wallet.api)
+    implementation(projects.features.wallet.impl)
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.tokendetails.impl)
+    implementation(projects.features.send.api)
+    implementation(projects.features.manageTokens.api)
+    implementation(projects.features.manageTokens.impl)
+    implementation(projects.features.send.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -86,10 +108,12 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.lifecycle.compose)
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
     implementation(deps.compose.material)
+    implementation(deps.compose.material3)
     implementation(deps.compose.animation)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
@@ -135,8 +159,6 @@ dependencies {
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
-    implementation(deps.zendesk.chat)
-    implementation(deps.zendesk.messaging)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
     implementation(deps.shopify.buy) {
@@ -154,10 +176,20 @@ dependencies {
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
     implementation(deps.prettyLogger)
+    implementation("com.facebook.react:react-android:0.72.4")
+    implementation(deps.sprClient) {
+        exclude(group = "com.github.stephenc.jcip")
+    }
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
+
+    /** Chucker */
+    debugImplementation(deps.chucker)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
 }

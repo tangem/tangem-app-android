@@ -8,7 +8,7 @@ import com.tangem.common.card.EncryptionMode
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.attestation.Attestation
-import java.util.*
+import java.util.Date
 import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
 
 // TODO: Move to :domain:card:models
@@ -46,7 +46,7 @@ data class CardDTO(
         isAccessCodeSet = card.isAccessCodeSet,
         isPasscodeSet = card.isPasscodeSet,
         supportedCurves = card.supportedCurves,
-        wallets = card.wallets.map { Wallet(it) },
+        wallets = card.wallets.map(::Wallet),
         attestation = card.attestation,
         backupStatus = BackupStatus.fromSdkStatus(card.backupStatus),
     )
@@ -69,9 +69,7 @@ data class CardDTO(
         if (isPasscodeSet != other.isPasscodeSet) return false
         if (supportedCurves != other.supportedCurves) return false
         if (wallets != other.wallets) return false
-        if (attestation != other.attestation) return false
-
-        return true
+        return attestation == other.attestation
     }
 
     override fun hashCode(): Int {
@@ -210,9 +208,7 @@ data class CardDTO(
             if (other !is Issuer) return false
 
             if (name != other.name) return false
-            if (!publicKey.contentEquals(other.publicKey)) return false
-
-            return true
+            return publicKey.contentEquals(other.publicKey)
         }
 
         override fun hashCode(): Int {
@@ -234,6 +230,7 @@ data class CardDTO(
         val hasBackup: Boolean,
         val derivedKeys: Map<DerivationPath, ExtendedPublicKey>,
         val extendedPublicKey: ExtendedPublicKey?,
+        val isImported: Boolean = false,
     ) {
         constructor(wallet: CardWallet) : this(
             publicKey = wallet.publicKey,
@@ -246,8 +243,10 @@ data class CardDTO(
             hasBackup = wallet.hasBackup,
             derivedKeys = wallet.derivedKeys,
             extendedPublicKey = wallet.extendedPublicKey,
+            isImported = wallet.isImported,
         )
 
+        @Suppress("CyclomaticComplexMethod")
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Wallet) return false
@@ -256,15 +255,16 @@ data class CardDTO(
             if (chainCode != null) {
                 if (other.chainCode == null) return false
                 if (!chainCode.contentEquals(other.chainCode)) return false
-            } else if (other.chainCode != null) return false
+            } else {
+                if (other.chainCode != null) return false
+            }
             if (curve != other.curve) return false
             if (settings != other.settings) return false
             if (totalSignedHashes != other.totalSignedHashes) return false
             if (remainingSignatures != other.remainingSignatures) return false
             if (index != other.index) return false
             if (hasBackup != other.hasBackup) return false
-
-            return true
+            return isImported == other.isImported
         }
 
         override fun hashCode(): Int {
@@ -276,6 +276,7 @@ data class CardDTO(
             result = 31 * result + (remainingSignatures ?: 0)
             result = 31 * result + index
             result = 31 * result + hasBackup.hashCode()
+            result = 31 * result + isImported.hashCode()
             return result
         }
     }
@@ -317,5 +318,9 @@ data class CardDTO(
                 }
             }
         }
+    }
+
+    companion object {
+        const val RING_BATCH_ID = "AC17"
     }
 }

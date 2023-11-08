@@ -1,23 +1,18 @@
 package com.tangem.tap.features.tokens.impl.presentation.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FabPosition
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -27,21 +22,22 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.paging.PagingData
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.items
+import androidx.paging.compose.*
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListStateHolder
 import com.tangem.tap.features.tokens.impl.presentation.states.TokensListToolbarState
 import com.tangem.wallet.R
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 
@@ -75,6 +71,7 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
+        backgroundColor = TangemTheme.colors.background.primary,
     ) { scaffoldPadding ->
         val tokens = stateHolder.tokens.collectAsLazyPagingItems()
 
@@ -85,14 +82,14 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
             bottomMarginDp = floatingButtonHeight,
         )
 
-        stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
+        Crossfade(targetState = stateHolder.isLoading, label = "Update progress bar visibility") {
+            if (it) {
+                LoadingContent()
+            }
+        }
 
-        AnimatedVisibility(
-            visible = stateHolder.isLoading,
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            LoadingContent()
+        LaunchedEffect(key1 = tokens.loadState.refresh) {
+            stateHolder.onTokensLoadStateChanged(tokens.loadState.refresh)
         }
     }
 }
@@ -102,10 +99,10 @@ private fun LoadingContent() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = TangemColorPalette.White),
+            .background(color = TangemTheme.colors.background.primary),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(color = TangemColorPalette.Meadow)
+        CircularProgressIndicator(color = TangemTheme.colors.icon.accent)
     }
 }
 
@@ -119,24 +116,34 @@ private fun TokensListContent(
 ) {
     val state = rememberLazyListState()
 
-    if (state.isScrollInProgress) {
-        LocalSoftwareKeyboardController.current?.hide()
-    }
-
     LazyColumn(
         modifier = Modifier
+            .imePadding()
             .fillMaxSize()
             .padding(scaffoldPadding),
         state = state,
         contentPadding = PaddingValues(bottom = bottomMarginDp),
     ) {
-        if (isDifferentAddressesBlockVisible) {
-            item { DifferentAddressesWarning() }
+        item(
+            key = "DifferentAddressesWarning$isDifferentAddressesBlockVisible",
+            contentType = "DifferentAddressesWarning$isDifferentAddressesBlockVisible",
+        ) {
+            if (isDifferentAddressesBlockVisible) DifferentAddressesWarning()
         }
 
-        items(items = tokens, key = TokenItemState::composedId) {
-            it?.let { TokenItem(model = it) }
+        tokens.itemKey(TokenItemState::composedId)
+        tokens.itemContentType(TokenItemState::composedId)
+
+        items(items = tokens.itemSnapshotList.items, key = TokenItemState::composedId) {
+            TokenItem(model = it)
         }
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(key1 = state) {
+        snapshotFlow(state::isScrollInProgress)
+            .distinctUntilChanged()
+            .collectLatest { if (it) keyboardController?.hide() }
     }
 }
 
@@ -146,19 +153,19 @@ private fun DifferentAddressesWarning() {
         modifier = Modifier
             .padding(TangemTheme.dimens.spacing16)
             .background(
-                color = TangemColorPalette.Light1,
+                color = TangemTheme.colors.button.disabled,
                 shape = RoundedCornerShape(TangemTheme.dimens.radius10),
             ),
         contentAlignment = Alignment.Center,
     ) {
-        val text = stringResource(id = R.string.alert_manage_tokens_addresses_message)
+        val text = stringResource(id = R.string.warning_manage_tokens_legacy_derivation_message)
         Text(
             text = text,
             modifier = Modifier.padding(
                 horizontal = TangemTheme.dimens.spacing16,
                 vertical = TangemTheme.dimens.spacing8,
             ),
-            color = TangemColorPalette.Dark1,
+            color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Start,
             style = TangemTheme.typography.body2.copy(
                 letterSpacing = TextUnit(value = 0.5f, type = TextUnitType.Sp),
@@ -180,73 +187,71 @@ private fun SaveChangesButton(onClick: () -> Unit, modifier: Modifier = Modifier
     )
 }
 
-@Preview
+@Preview(showSystemUi = true)
 @Composable
-private fun Preview_TokensListScreen_Loading() {
-    TangemTheme {
-        TokensListScreen(
-            stateHolder = TokensListStateHolder.ReadContent(
-                toolbarState = TokensListToolbarState.Title.Manage(
-                    titleResId = R.string.main_manage_tokens,
-                    onBackButtonClick = {},
-                    onSearchButtonClick = {},
-                    onAddCustomTokenClick = {},
-                ),
-                isLoading = true,
-                isDifferentAddressesBlockVisible = false,
-                tokens = emptyFlow(),
-                onTokensLoadStateChanged = {},
-            ),
-        )
+private fun Preview_TokensListScreen_Light(
+    @PreviewParameter(TokensListScreenProvider::class) stateHolder: TokensListStateHolder,
+) {
+    TangemTheme(isDark = false) {
+        TokensListScreen(stateHolder)
     }
 }
 
-@Preview
+@Preview(showSystemUi = true)
 @Composable
-private fun Preview_TokensListScreen_Manage() {
-    TangemTheme {
-        TokensListScreen(
-            stateHolder = TokensListStateHolder.ManageContent(
-                toolbarState = TokensListToolbarState.Title.Manage(
-                    titleResId = R.string.main_manage_tokens,
-                    onBackButtonClick = {},
-                    onSearchButtonClick = {},
-                    onAddCustomTokenClick = {},
-                ),
-                isLoading = false,
-                isDifferentAddressesBlockVisible = true,
-                tokens = flowOf(
-                    PagingData.from(
-                        listOf(TokenListPreviewData.createManageToken()),
-                    ),
-                ),
-                onSaveButtonClick = {},
-                onTokensLoadStateChanged = {},
-            ),
-        )
+private fun Preview_TokensListScreen_Dark(
+    @PreviewParameter(TokensListScreenProvider::class) stateHolder: TokensListStateHolder,
+) {
+    TangemTheme(isDark = true) {
+        TokensListScreen(stateHolder)
     }
 }
 
-@Preview
-@Composable
-private fun Preview_TokensListScreen_Read() {
-    TangemTheme {
-        TokensListScreen(
-            stateHolder = TokensListStateHolder.ReadContent(
-                toolbarState = TokensListToolbarState.Title.Read(
-                    titleResId = R.string.common_search_tokens,
-                    onBackButtonClick = {},
-                    onSearchButtonClick = {},
-                ),
-                isLoading = false,
-                isDifferentAddressesBlockVisible = false,
-                tokens = flowOf(
-                    PagingData.from(
-                        listOf(TokenListPreviewData.createManageToken()),
-                    ),
-                ),
-                onTokensLoadStateChanged = {},
+private class TokensListScreenProvider : CollectionPreviewParameterProvider<TokensListStateHolder>(
+    collection = listOf(
+        TokensListStateHolder.ReadContent(
+            toolbarState = TokensListToolbarState.Title.Manage(
+                titleResId = R.string.main_manage_tokens,
+                onBackButtonClick = {},
+                onSearchButtonClick = {},
+                onAddCustomTokenClick = {},
             ),
-        )
-    }
-}
+            isLoading = true,
+            isDifferentAddressesBlockVisible = false,
+            tokens = emptyFlow(),
+            onTokensLoadStateChanged = {},
+        ),
+        TokensListStateHolder.ManageContent(
+            toolbarState = TokensListToolbarState.Title.Manage(
+                titleResId = R.string.main_manage_tokens,
+                onBackButtonClick = {},
+                onSearchButtonClick = {},
+                onAddCustomTokenClick = {},
+            ),
+            isLoading = false,
+            isDifferentAddressesBlockVisible = true,
+            tokens = flowOf(
+                PagingData.from(
+                    listOf(TokenListPreviewData.createManageToken()),
+                ),
+            ),
+            onSaveButtonClick = {},
+            onTokensLoadStateChanged = {},
+        ),
+        TokensListStateHolder.ReadContent(
+            toolbarState = TokensListToolbarState.Title.Read(
+                titleResId = R.string.common_search_tokens,
+                onBackButtonClick = {},
+                onSearchButtonClick = {},
+            ),
+            isLoading = false,
+            isDifferentAddressesBlockVisible = false,
+            tokens = flowOf(
+                PagingData.from(
+                    listOf(TokenListPreviewData.createManageToken()),
+                ),
+            ),
+            onTokensLoadStateChanged = {},
+        ),
+    ),
+)

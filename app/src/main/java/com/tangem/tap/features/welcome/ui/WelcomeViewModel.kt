@@ -1,6 +1,7 @@
 package com.tangem.tap.features.welcome.ui
 
-import androidx.lifecycle.ViewModel
+import android.content.Intent
+import androidx.lifecycle.*
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.wallets.legacy.UserWalletsListError
@@ -11,23 +12,45 @@ import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.features.welcome.redux.WelcomeState
 import com.tangem.tap.features.welcome.ui.model.WarningModel
 import com.tangem.tap.store
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
-internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
+@HiltViewModel
+internal class WelcomeViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+) : ViewModel(),
+    StoreSubscriber<WelcomeState>,
+    DefaultLifecycleObserver {
+
+    private val initialIntent: Intent? = savedStateHandle[WelcomeFragment.INITIAL_INTENT_KEY]
+
     private val stateInternal = MutableStateFlow(WelcomeScreenState())
     val state: StateFlow<WelcomeScreenState> = stateInternal
 
     init {
+        store.dispatch(WelcomeAction.SetCoroutineScope(viewModelScope))
+
         subscribeToStoreChanges()
         initGlobalState()
     }
 
+    override fun onCreate(owner: LifecycleOwner) {
+        val welcomeAction = if (initialIntent != null) {
+            WelcomeAction.ProceedWithIntent(initialIntent)
+        } else {
+            WelcomeAction.ProceedWithBiometrics()
+        }
+
+        store.dispatch(welcomeAction)
+    }
+
     fun unlockWallets() {
         Analytics.send(SignIn.ButtonBiometricSignIn())
-        store.dispatch(WelcomeAction.ProceedWithBiometrics)
+        store.dispatch(WelcomeAction.ProceedWithBiometrics())
     }
 
     fun scanCard() {
@@ -59,6 +82,7 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
     }
 
     override fun onCleared() {
+        store.dispatch(WelcomeAction.ClearCoroutineScope)
         store.unsubscribe(this)
     }
 
@@ -68,7 +92,9 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
                 isPermanent = error.isPermanent,
                 onDismiss = this::dismissWarning,
             )
-            is UserWalletsListError.EncryptionKeyInvalidated -> WarningModel.KeyInvalidatedWarning(
+            is UserWalletsListError.AllKeysInvalidated,
+            is UserWalletsListError.NoUserWalletSelected,
+            -> WarningModel.KeyInvalidatedWarning(
                 onDismiss = this::dismissWarning,
             )
             is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(

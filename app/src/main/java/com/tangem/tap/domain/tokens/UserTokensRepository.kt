@@ -1,13 +1,12 @@
 package com.tangem.tap.domain.tokens
 
-import android.content.Context
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.core.TangemSdkError
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.datasource.files.AndroidFileReader
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.userwallets.UserWalletIdBuilder
@@ -28,17 +27,22 @@ class UserTokensRepository(
     private val networkConnectionManager: NetworkConnectionManager,
 ) {
 
-    suspend fun getUserTokens(card: CardDTO): List<Currency> = withContext(dispatchers.io) {
-        val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
+    suspend fun getUserTokens(card: CardDTO, derivationStyle: DerivationStyle?): List<Currency> =
+        withContext(dispatchers.io) {
+            val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
 
-        if (DemoHelper.isDemoCardId(card.cardId)) {
-            return@withContext loadTokensOffline(userWalletId = userWalletId).ifEmpty(::loadDemoCurrencies)
+            if (DemoHelper.isDemoCardId(card.cardId)) {
+                return@withContext loadTokensOffline(userWalletId = userWalletId).ifEmpty {
+                    loadDemoCurrencies(
+                        derivationStyle,
+                    )
+                }
+            }
+
+            if (!networkConnectionManager.isOnline) return@withContext loadTokensOffline(userWalletId = userWalletId)
+
+            return@withContext remoteGetUserTokens(userWalletId = userWalletId)
         }
-
-        if (!networkConnectionManager.isOnline) return@withContext loadTokensOffline(userWalletId = userWalletId)
-
-        return@withContext remoteGetUserTokens(userWalletId = userWalletId)
-    }
 
     suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) = withContext(dispatchers.io) {
         val userWalletId = getUserWalletId(card) ?: return@withContext
@@ -48,28 +52,29 @@ class UserTokensRepository(
     }
 
     // FIXME: Move to data layer
-    suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> = withContext(dispatchers.io) {
-        val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
-        val blockchainNetworks = loadTokensOffline(userWalletId = userWalletId).toBlockchainNetworks()
+    suspend fun loadBlockchainsToDerive(card: CardDTO, derivationStyle: DerivationStyle?): List<BlockchainNetwork> =
+        withContext(dispatchers.io) {
+            val userWalletId = getUserWalletId(card) ?: return@withContext emptyList()
+            val blockchainNetworks = loadTokensOffline(userWalletId = userWalletId).toBlockchainNetworks()
 
-        if (DemoHelper.isDemoCardId(card.cardId)) {
-            return@withContext blockchainNetworks.ifEmpty(loadDemoCurrencies()::toBlockchainNetworks)
+            if (DemoHelper.isDemoCardId(card.cardId)) {
+                return@withContext blockchainNetworks.ifEmpty(loadDemoCurrencies(derivationStyle)::toBlockchainNetworks)
+            }
+
+            return@withContext blockchainNetworks
         }
-
-        return@withContext blockchainNetworks
-    }
 
     private fun loadTokensOffline(userWalletId: String): List<Currency> {
         return storageService.getUserTokens(userWalletId = userWalletId) ?: emptyList()
     }
 
     // FIXME: Move to user wallet config
-    private fun loadDemoCurrencies(): List<Currency> {
+    private fun loadDemoCurrencies(derivationStyle: DerivationStyle?): List<Currency> {
         return DemoHelper.config.demoBlockchains
             .map { blockchain ->
                 BlockchainNetwork(
                     blockchain = blockchain,
-                    derivationPath = blockchain.derivationPath(DerivationStyle.LEGACY)?.rawPath,
+                    derivationPath = blockchain.derivationPath(derivationStyle)?.rawPath,
                     tokens = emptyList(),
                 )
             }
@@ -102,9 +107,10 @@ class UserTokensRepository(
         return runCatching { tangemTechApi.getUserTokens(userWalletId) }
             .fold(
                 onSuccess = { response ->
-                    response.tokens
+                    response.getOrThrow()
+                        .also { storageService.saveUserTokens(userWalletId, it) }
+                        .tokens
                         .mapNotNull(Currency.Companion::fromTokenResponse)
-                        .also { storageService.saveUserTokens(userWalletId, it.toUserTokensResponse()) }
                         .distinct()
                 },
                 onFailure = { handleGetUserTokensFailure(userWalletId = userWalletId, error = it) },
@@ -125,12 +131,12 @@ class UserTokensRepository(
 
         // TODO("After adding DI") get dependencies by DI
         fun init(
-            context: Context,
             tangemTechService: TangemTechService,
             networkConnectionManager: NetworkConnectionManager,
+            storageService: UserTokensStorageService,
         ): UserTokensRepository {
             return UserTokensRepository(
-                storageService = UserTokensStorageService(fileReader = AndroidFileReader(context)),
+                storageService = storageService,
                 tangemTechApi = tangemTechService.api,
                 dispatchers = AppCoroutineDispatcherProvider(),
                 networkConnectionManager = networkConnectionManager,

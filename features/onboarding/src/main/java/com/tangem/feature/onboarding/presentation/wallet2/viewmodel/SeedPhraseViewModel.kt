@@ -13,7 +13,7 @@ import com.tangem.data.common.locale.LocaleProvider
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.SeedPhraseInteractor
-import com.tangem.feature.onboarding.presentation.wallet2.analytics.OnboardingSeedButtonOtherOptions
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.CreateWalletEvents
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseEvents
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.model.*
@@ -88,10 +88,11 @@ class SeedPhraseViewModel @Inject constructor(
         router.currentScreen.onEach { screen ->
             when (screen) {
                 SeedPhraseScreen.Intro -> {
-                    analyticsEventHandler.send(SeedPhraseEvents.IntroScreenOpened)
+                    /* no-op */
                 }
 
                 SeedPhraseScreen.AboutSeedPhrase -> {
+                    analyticsEventHandler.send(SeedPhraseEvents.IntroScreenOpened)
                     mediator.allowScreenshots(true)
                 }
 
@@ -114,6 +115,12 @@ class SeedPhraseViewModel @Inject constructor(
 
     fun setMediator(mediator: SeedPhraseMediator) {
         this.mediator = mediator
+    }
+
+    fun setCardArtworkUri(cardArtworkUri: String) {
+        if (uiState.introState.cardImageUrl != cardArtworkUri) {
+            uiState = uiBuilder.setCardArtwork(uiState, cardArtworkUri)
+        }
     }
 
     private fun createUiActions(): UiActions = UiActions(
@@ -149,6 +156,7 @@ class SeedPhraseViewModel @Inject constructor(
             ),
             suggestedPhraseClick = ::buttonSuggestedPhraseClick,
             buttonCreateWalletClick = {
+                analyticsEventHandler.send(SeedPhraseEvents.ButtonImport)
                 buttonImportWalletClick(importedMnemonicComponents, SeedPhraseSource.IMPORTED)
             },
         ),
@@ -158,7 +166,7 @@ class SeedPhraseViewModel @Inject constructor(
 
     // region CheckSeedPhrase
     private fun onTextFieldChanged(field: SeedPhraseField, textFieldValue: TextFieldValue) {
-        viewModelScope.launchSingle {
+        launchSingle {
             updateUi { uiBuilder.checkSeedPhrase.updateTextField(uiState, field, textFieldValue) }
 
             val fieldState = field.getState(uiState)
@@ -265,12 +273,12 @@ class SeedPhraseViewModel @Inject constructor(
     // region ButtonClickHandlers
     private fun buttonCreateWalletClick() {
         viewModelScope.launch(dispatchers.io) {
+            analyticsEventHandler.send(CreateWalletEvents.OnboardingSeedButtonCreateWallet)
             mediator.createWallet(::handleWalletCreationResult)
         }
     }
 
     private fun buttonImportWalletClick(mnemonicComponents: List<String>?, seedPhraseSource: SeedPhraseSource) {
-        analyticsEventHandler.send(SeedPhraseEvents.ButtonImport)
         mnemonicComponents ?: return
 
         viewModelScope.launch(dispatchers.io) {
@@ -299,7 +307,7 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonOtherOptionsClick() {
-        analyticsEventHandler.send(OnboardingSeedButtonOtherOptions)
+        analyticsEventHandler.send(CreateWalletEvents.OnboardingSeedButtonOtherOptions)
         router.openScreen(SeedPhraseScreen.AboutSeedPhrase)
     }
 
@@ -317,7 +325,7 @@ class SeedPhraseViewModel @Inject constructor(
 
     private fun buttonGenerateSeedPhraseClick() {
         analyticsEventHandler.send(SeedPhraseEvents.ButtonGenerateSeedPhrase)
-        viewModelScope.launchSingle {
+        launchSingle {
             updateUi { uiBuilder.generateMnemonicComponents(uiState) }
             delay(DELAY_GENERATE_SEED_PHRASE)
             interactor.generateMnemonic()
@@ -368,12 +376,11 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonContinueClick() {
-        analyticsEventHandler.send(SeedPhraseEvents.CheckingScreenOpened)
         router.openScreen(SeedPhraseScreen.CheckSeedPhrase)
     }
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
-        viewModelScope.launchSingle {
+        launchSingle {
             val textFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
             val word = uiState.importSeedPhraseState.suggestionsList[suggestionIndex]
             val cursorPosition = textFieldValue.selection.end
@@ -413,7 +420,7 @@ class SeedPhraseViewModel @Inject constructor(
         SeedPhraseField.Eleventh -> uiState.checkSeedPhraseState.tvEleventhPhrase
     }
 
-    private fun CoroutineScope.launchSingle(block: suspend CoroutineScope.() -> Unit): Job {
+    private fun launchSingle(block: suspend CoroutineScope.() -> Unit): Job {
         return viewModelScope.launch(dispatchers.single, block = block)
     }
 

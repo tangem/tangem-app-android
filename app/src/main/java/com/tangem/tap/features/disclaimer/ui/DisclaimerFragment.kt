@@ -7,7 +7,7 @@ import android.webkit.WebView
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.core.navigation.AppScreen
-import com.tangem.core.ui.fragments.setStatusBarColor
+import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -56,7 +56,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
 
     override fun onStart() {
         super.onStart()
-        setStatusBarColor(R.color.backgroundLightGray)
+        setStatusBarColor(R.color.background_secondary)
 
         webViewClient.onProgressStateChanged = { store.dispatch(DisclaimerAction.OnProgressStateChanged(it)) }
         store.subscribe(subscriber = this) { state ->
@@ -80,10 +80,11 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
             }
             AppScreen.Details -> {
-                enterTransition = inflater.inflateTransition(android.R.transition.fade)
-                exitTransition = inflater.inflateTransition(android.R.transition.fade)
+                super.configureTransitions()
             }
-            else -> {}
+            else -> {
+                /* no-op */
+            }
         }
     }
 
@@ -122,6 +123,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 webView.loadLocalTermsOfServices()
             }
             else -> {
+                webView.setBackgroundColor(resources.getColor(R.color.transparent, null))
                 webView.loadUrl(disclaimer.getUri().toString())
             }
         }
