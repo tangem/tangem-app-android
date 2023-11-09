@@ -1,7 +1,6 @@
 package com.tangem.datasource.local.token
 
 import com.tangem.datasource.api.express.models.response.Asset
-import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import com.tangem.domain.wallets.models.UserWalletId
 

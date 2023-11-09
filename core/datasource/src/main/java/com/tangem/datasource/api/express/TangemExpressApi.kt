@@ -15,11 +15,9 @@ import java.math.BigDecimal
  */
 @Suppress("LongParameterList")
 interface TangemExpressApi {
-    
+
     @POST("assets")
-    suspend fun getAssets(
-        @Body body: AssetsRequestBody,
-    ): ApiResponse<List<Asset>>
+    suspend fun getAssets(@Body body: AssetsRequestBody): ApiResponse<List<Asset>>
 
     @POST("pairs")
     suspend fun getPairs(@Body body: PairsRequestBody): ApiResponse<List<SwapPair>>

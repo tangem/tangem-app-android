@@ -8,7 +8,7 @@ import java.util.UUID
 
 class ExpressAuthProviderImpl(
     private val userWalletsStore: UserWalletsStore,
-    private val configManager: ConfigManager
+    private val configManager: ConfigManager,
 ) : ExpressAuthProvider, ExpressSessionIdGenerator {
 
     private var uuid = UUID.randomUUID()

@@ -7,6 +7,7 @@ import com.tangem.data.tokens.utils.*
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
 import com.tangem.datasource.api.express.models.request.AssetsRequestBody
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -31,7 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
     private val tangemExpressApi: TangemExpressApi,
@@ -350,7 +351,7 @@ internal class DefaultCurrenciesRepository(
                 .distinctBy { it.networkId }
                 .map {
                     LeastTokenInfo(
-                        contractAddress = (it.contractAddress ?: "0"),
+                        contractAddress = it.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
                         network = it.networkId,
                     )
                 }
@@ -358,8 +359,8 @@ internal class DefaultCurrenciesRepository(
             val response = tangemExpressApi.getAssets(
                 AssetsRequestBody(
                     tokensList = tokensList,
-                    onlyActive = true
-                )
+                    onlyActive = true,
+                ),
             )
 
             assetsStore.store(userWalletId, response.getOrThrow())

@@ -91,9 +91,7 @@ internal object TokensDataModule {
 
     @Provides
     @Singleton
-    fun provideDefaultMarketCoinsRepository(
-        assetsStore: AssetsStore,
-    ): MarketCryptoCurrencyRepository {
+    fun provideDefaultMarketCoinsRepository(assetsStore: AssetsStore): MarketCryptoCurrencyRepository {
         return DefaultMarketCryptoCurrencyRepository(assetsStore)
     }
 }

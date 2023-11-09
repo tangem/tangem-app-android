@@ -33,7 +33,6 @@ class NetworkModule {
         @ApplicationContext context: Context,
         expressAuthProvider: ExpressAuthProvider,
     ): TangemExpressApi {
-
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
