@@ -185,12 +185,13 @@ dependencies {
     implementation(deps.camera.lifecycle)
     implementation(deps.camera.view)
 
+    implementation(deps.listenableFuture)
+    implementation(deps.mlKit.barcodeScanning)
+
+    /** Excluded dependencies */
     implementation("com.google.guava:guava:30.0-android") {
         // excludes version 9999.0-empty-to-avoid-conflict-with-guava
         exclude(group="com.google.guava", module = "listenablefuture")
     }
-
-    implementation(deps.listenableFuture)
-    implementation(deps.mlKit.barcodeScanning)
 
 }
