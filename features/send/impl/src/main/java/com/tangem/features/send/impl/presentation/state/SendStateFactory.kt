@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.state
+package com.tangem.features.send.impl.presentation.state
 
 import arrow.core.Either
 import com.tangem.common.Provider
@@ -7,9 +7,10 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.send.impl.presentation.send.state.fields.SendAmountFieldChangeConverter
-import com.tangem.features.send.impl.presentation.send.state.fields.SendAmountFieldConverter
-import com.tangem.features.send.impl.presentation.send.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
+import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
+import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
+import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 
 internal class SendStateFactory(
     private val clickIntents: SendClickIntents,
