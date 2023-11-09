@@ -5,13 +5,14 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.sessionId.ExpressSessionIdGenerator
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
-class ExpressAuthProviderImpl(
+internal class DefaultExpressAuthProvider(
     private val userWalletsStore: UserWalletsStore,
     private val configManager: ConfigManager
 ) : ExpressAuthProvider, ExpressSessionIdGenerator {
 
-    private var uuid = UUID.randomUUID()
+    private var uuid = AtomicReference(UUID.randomUUID())
 
     override fun getApiKey(): String {
         return configManager.config.tangemExpressApiKey
@@ -22,10 +23,10 @@ class ExpressAuthProviderImpl(
     }
 
     override fun getSessionId(): String {
-        return uuid.toString()
+        return uuid.get().toString()
     }
 
     override fun generateNewSessionId() {
-        uuid = UUID.randomUUID()
+        uuid = AtomicReference(UUID.randomUUID())
     }
 }
