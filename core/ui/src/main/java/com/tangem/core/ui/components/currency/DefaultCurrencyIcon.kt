@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
@@ -33,7 +34,8 @@ internal inline fun DefaultCurrencyIcon(
             .background(
                 color = iconBackgroundColor,
                 shape = TangemTheme.shapes.roundedCorners8,
-            ),
+            )
+            .clip(TangemTheme.shapes.roundedCorners8),
         model = ImageRequest.Builder(context = LocalContext.current)
             .data(iconData)
             .crossfade(enable = true)
