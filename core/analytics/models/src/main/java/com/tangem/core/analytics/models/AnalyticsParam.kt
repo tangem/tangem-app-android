@@ -5,8 +5,9 @@ sealed class AnalyticsParam {
     sealed class CardBalanceState(val value: String) {
         object Empty : CardBalanceState("Empty")
         object Full : CardBalanceState("Full")
-        object CustomToken : CardBalanceState("Custom token")
-        object BlockchainError : CardBalanceState("Blockchain error")
+        object CustomToken : CardBalanceState("Custom Token")
+        object BlockchainError : CardBalanceState("Blockchain Error")
+        object NoRate : CardBalanceState("No Rate")
         companion object
     }
 

@@ -70,8 +70,10 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "octaspace/test" -> Blockchain.OctaSpaceTestnet
         "chia" -> Blockchain.Chia
         "chia/test" -> Blockchain.ChiaTestnet
-        "near" -> Blockchain.Near
-        "near/test" -> Blockchain.NearTestnet
+        "near-protocol" -> Blockchain.Near
+        "near-protocol/test" -> Blockchain.NearTestnet
+        "decimal" -> Blockchain.Decimal
+        "decimal/test" -> Blockchain.DecimalTestnet
         else -> null
     }
 }
@@ -143,8 +145,10 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.OctaSpaceTestnet -> "octaspace/test"
         Blockchain.Chia -> "chia"
         Blockchain.ChiaTestnet -> "chia/test"
-        Blockchain.Near -> "near"
-        Blockchain.NearTestnet -> "near/test"
+        Blockchain.Near -> "near-protocol"
+        Blockchain.NearTestnet -> "near-protocol/test"
+        Blockchain.Decimal -> "decimal"
+        Blockchain.DecimalTestnet -> "decimal/test"
     }
 }
 
@@ -159,7 +163,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano -> "cardano"
         Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
-        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "ethereum"
+        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "arbitrum-one"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
         Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
@@ -175,7 +179,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.EthereumPow, Blockchain.EthereumPowTestnet -> "ethereum-pow-iou"
         Blockchain.EthereumFair -> "ethereumfair"
         Blockchain.Kusama -> "kusama"
-        Blockchain.Optimism, Blockchain.OptimismTestnet -> "ethereum"
+        Blockchain.Optimism, Blockchain.OptimismTestnet -> "optimistic-ethereum"
         Blockchain.Dash -> "dash"
         Blockchain.Kaspa -> "kaspa"
         Blockchain.TON, Blockchain.TONTestnet -> "the-open-network"
@@ -191,6 +195,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Chia, Blockchain.ChiaTestnet -> "chia"
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
+        Blockchain.Decimal -> "decimal"
+        Blockchain.DecimalTestnet -> "decimal/test"
         Blockchain.Unknown -> "unknown"
     }
 }
@@ -203,6 +209,7 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
     return when (this) {
         Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
         Blockchain.XRP -> BigDecimal.TEN
+        Blockchain.Near, Blockchain.NearTestnet -> 0.00182.toBigDecimal()
         else -> null
     }
 }

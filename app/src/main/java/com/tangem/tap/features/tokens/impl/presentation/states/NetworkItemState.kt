@@ -3,7 +3,7 @@ package com.tangem.tap.features.tokens.impl.presentation.states
 import androidx.compose.runtime.MutableState
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.extensions.getActiveIconRes
-import com.tangem.tap.common.extensions.getGreyedOutIconRes
+import com.tangem.core.ui.extensions.getGreyedOutIconRes
 
 /**
  * Network item state
@@ -76,7 +76,7 @@ sealed interface NetworkItemState {
         fun changeToggleState() {
             val reverseState = !isAdded.value
             isAdded.value = reverseState
-            iconResId.value = if (reverseState) getActiveIconRes(blockchain.id) else blockchain.getGreyedOutIconRes()
+            iconResId.value = if (reverseState) getActiveIconRes(blockchain.id) else getGreyedOutIconRes(blockchain.id)
         }
     }
 }

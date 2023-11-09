@@ -5,10 +5,12 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
@@ -87,7 +89,7 @@ internal object WalletPreviewData {
     }
 
     val coinIconState
-        get() = TokenItemState.IconState.CoinIcon(
+        get() = TokenIconState.CoinIcon(
             url = null,
             fallbackResId = R.drawable.img_polygon_22,
             isGrayscale = false,
@@ -95,7 +97,7 @@ internal object WalletPreviewData {
         )
 
     private val tokenIconState
-        get() = TokenItemState.IconState.TokenIcon(
+        get() = TokenIconState.TokenIcon(
             url = null,
             networkBadgeIconResId = R.drawable.img_polygon_22,
             fallbackTint = TangemColorPalette.Black,
@@ -105,7 +107,7 @@ internal object WalletPreviewData {
         )
 
     private val customTokenIconState
-        get() = TokenItemState.IconState.CustomTokenIcon(
+        get() = TokenIconState.CustomTokenIcon(
             tint = TangemColorPalette.Black,
             background = TangemColorPalette.Meadow,
             networkBadgeIconResId = R.drawable.img_polygon_22,
@@ -308,12 +310,11 @@ internal object WalletPreviewData {
     }
 
     val actionsBottomSheet = ActionsBottomSheetConfig(
-        isShow = true,
-        onDismissRequest = {},
         actions = listOf(
             TokenActionButtonConfig(
                 text = TextReference.Str("Send"),
                 iconResId = R.drawable.ic_share_24,
+                isWarning = false,
                 onClick = {},
             ),
         ).toImmutableList(),
@@ -323,7 +324,7 @@ internal object WalletPreviewData {
         persistentListOf(
             WalletManageButton.Buy(enabled = true, onClick = {}),
             WalletManageButton.Send(enabled = true, onClick = {}),
-            WalletManageButton.Receive(onClick = {}),
+            WalletManageButton.Receive(enabled = true, onClick = {}),
             WalletManageButton.Sell(enabled = true, onClick = {}),
             WalletManageButton.Swap(enabled = true, onClick = {}),
         )
@@ -386,7 +387,6 @@ internal object WalletPreviewData {
                 WalletNotification.Warning.NetworksUnreachable,
             ),
             bottomSheetConfig = bottomSheet,
-            tokenActionsBottomSheet = actionsBottomSheet,
             onManageTokensClick = {},
             event = consumedEvent(),
             isBalanceHidden = false,
@@ -419,25 +419,29 @@ internal object WalletPreviewData {
                         listOf(
                             TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Transfer(
+                                TransactionState.Content(
                                     txHash = UUID.randomUUID().toString(),
-                                    address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Unconfirmed,
                                     direction = TransactionState.Content.Direction.OUTGOING,
+                                    iconRes = com.tangem.core.ui.R.drawable.ic_arrow_up_24,
+                                    title = resourceReference(com.tangem.core.ui.R.string.common_transfer),
+                                    subtitle = TextReference.Str("33BddS...ga2B"),
                                     onClick = {},
                                 ),
                             ),
                             TxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
                             TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Transfer(
+                                TransactionState.Content(
                                     txHash = UUID.randomUUID().toString(),
-                                    address = TextReference.Str("33BddS...ga2B"),
                                     amount = "-0.500913 BTC",
                                     timestamp = "8:41",
                                     status = TransactionState.Content.Status.Confirmed,
                                     direction = TransactionState.Content.Direction.OUTGOING,
+                                    iconRes = com.tangem.core.ui.R.drawable.ic_arrow_up_24,
+                                    title = resourceReference(com.tangem.core.ui.R.string.common_transfer),
+                                    subtitle = TextReference.Str("33BddS...ga2B"),
                                     onClick = {},
                                 ),
                             ),
