@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.ui.amount
+package com.tangem.features.send.impl.presentation.ui.amount
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.impl.presentation.send.state.fields.SendTextField
+import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 
 @Composable
 internal fun ColumnScope.AmountField(
