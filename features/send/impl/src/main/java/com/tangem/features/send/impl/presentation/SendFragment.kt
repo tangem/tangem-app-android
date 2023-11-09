@@ -9,9 +9,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.screen.ComposeBottomSheetFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
-import com.tangem.features.send.impl.presentation.send.state.SendUiState
-import com.tangem.features.send.impl.presentation.send.ui.SendScreen
-import com.tangem.features.send.impl.presentation.send.viewmodel.SendViewModel
+import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.ui.SendScreen
+import com.tangem.features.send.impl.presentation.viewmodel.SendViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
