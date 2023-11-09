@@ -4,7 +4,6 @@ import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.ReferralInteractorImpl
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.feature.referral.domain.converter.TokensConverter
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
 import dagger.Module
@@ -24,14 +23,12 @@ class ReferralDomainModule {
         derivationManager: DerivationManager,
         userWalletManager: UserWalletManager,
         tokensConverter: TokensConverter,
-        walletFeatureToggles: WalletFeatureToggles,
     ): ReferralInteractor {
         return ReferralInteractorImpl(
             repository = referralRepository,
             derivationManager = derivationManager,
             userWalletManager = userWalletManager,
             tokensConverter = tokensConverter,
-            walletFeatureToggles = walletFeatureToggles,
         )
     }
 }

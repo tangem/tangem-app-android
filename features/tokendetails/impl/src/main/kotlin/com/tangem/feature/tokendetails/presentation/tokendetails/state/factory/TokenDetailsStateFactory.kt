@@ -8,7 +8,11 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -22,7 +26,9 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -60,7 +66,10 @@ internal class TokenDetailsStateFactory(
     }
 
     private val loadingTransactionsStateConverter by lazy {
-        TokenDetailsLoadingTxHistoryConverter(currentStateProvider = currentStateProvider, clickIntents = clickIntents)
+        TokenDetailsLoadingTxHistoryConverter(
+            currentStateProvider = currentStateProvider,
+            clickIntents = clickIntents,
+        )
     }
 
     private val loadedTxHistoryConverter by lazy {
@@ -102,8 +111,16 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): TokenDetailsState {
-        return loadingTransactionsStateConverter.convert(value = itemsCountEither)
+    fun getLoadingTxHistoryState(
+        itemsCountEither: Either<TxHistoryStateError, Int>,
+        pendingTransactions: List<TransactionState>,
+    ): TokenDetailsState {
+        return loadingTransactionsStateConverter.convert(
+            value = TokenDetailsLoadingTxHistoryModel(
+                historyLoadingState = itemsCountEither,
+                pendingTransactions = pendingTransactions,
+            ),
+        )
     }
 
     fun getLoadedTxHistoryState(
@@ -188,12 +205,14 @@ internal class TokenDetailsStateFactory(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = ChooseAddressBottomSheetConfig(
-                    addressModels = addresses.map {
-                        AddressModel(
-                            value = it.value,
-                            type = AddressModel.Type.valueOf(it.type.name),
-                        )
-                    },
+                    addressModels = addresses
+                        .map { address ->
+                            AddressModel(
+                                value = address.value,
+                                type = AddressModel.Type.valueOf(address.type.name),
+                            )
+                        }
+                        .toImmutableList(),
                     onClick = clickIntents::onAddressTypeSelected,
                 ),
             ),
@@ -221,5 +240,21 @@ internal class TokenDetailsStateFactory(
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.removeRentInfo(state))
+    }
+
+    fun getStateAndTriggerEvent(
+        state: TokenDetailsState,
+        errorMessage: TextReference,
+        setUiState: (TokenDetailsState) -> Unit,
+    ): TokenDetailsState {
+        return state.copy(
+            event = triggeredEvent(
+                data = errorMessage,
+                onConsume = {
+                    val currentState = currentStateProvider()
+                    setUiState(currentState.copy(event = consumedEvent()))
+                },
+            ),
+        )
     }
 }

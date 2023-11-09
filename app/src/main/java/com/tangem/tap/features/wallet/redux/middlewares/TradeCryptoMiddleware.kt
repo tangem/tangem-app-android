@@ -74,6 +74,7 @@ class TradeCryptoMiddleware {
         }
     }
 
+    @Deprecated("Use proceedNewBuyAction instead")
     private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
         val selectedWalletData = store.state.walletState.selectedWalletData ?: return
         val currency = chooseAppropriateCurrency(store.state.walletState) ?: return
@@ -331,8 +332,7 @@ class TradeCryptoMiddleware {
     }
 
     private fun handleNewSendToken(action: TradeCryptoAction.New.SendToken) {
-        val cryptoStatus = action.tokenStatus
-        val currency = cryptoStatus.currency
+        val currency = action.tokenCurrency
         val blockchain = Blockchain.fromId(currency.network.id.value)
 
         scope.launch {
@@ -351,22 +351,25 @@ class TradeCryptoMiddleware {
                 return@launch
             }
 
-            val sendableAmounts = walletManager.wallet.amounts.values.filter { it.type is AmountType.Token }
-            when (currency) {
-                is CryptoCurrency.Coin -> error("Action.tokenStatus.currency is Coin")
-                is CryptoCurrency.Token -> {
-                    store.dispatchOnMain(
-                        action = PrepareSendScreen(
-                            walletManager = walletManager,
-                            coinAmount = walletManager.wallet.amounts[AmountType.Coin],
-                            coinRate = action.coinFiatRate,
-                            tokenAmount = sendableAmounts.first(),
-                            tokenRate = cryptoStatus.value.fiatRate,
-                        ),
-                    )
-                }
+            val sendableAmount = walletManager.wallet.amounts.values.firstOrNull {
+                val amountType = it.type
+                amountType is AmountType.Token && amountType.token.contractAddress == currency.contractAddress
             }
-            val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
+
+            store.dispatchOnMain(
+                action = PrepareSendScreen(
+                    walletManager = walletManager,
+                    coinAmount = walletManager.wallet.amounts[AmountType.Coin],
+                    coinRate = action.coinFiatRate,
+                    tokenAmount = sendableAmount,
+                    tokenRate = action.tokenFiatRate,
+                ),
+            )
+
+            val bundle = bundleOf(
+                SendRouter.CRYPTO_CURRENCY_KEY to currency,
+                SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
+            )
             store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
     }
@@ -416,7 +419,10 @@ class TradeCryptoMiddleware {
                 is CryptoCurrency.Token -> error("Action.tokenStatus.currency is Token")
             }
 
-            val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
+            val bundle = bundleOf(
+                SendRouter.CRYPTO_CURRENCY_KEY to currency,
+                SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
+            )
             store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
     }
