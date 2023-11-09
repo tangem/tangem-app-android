@@ -804,7 +804,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     networkSelectorField = uiState.form.networkSelectorField.copy(
                         selectedItem = selectedItem,
                     ),
-                    showTokenFields = selectedItem.blockchain.canHandleTokens(),
+                    showTokenFields = selectedItem.blockchain.canHandleTokens() &&
+                        // workaround cause in Terra we support only 1 token
+                        selectedItem.blockchain != Blockchain.TerraV1,
                 ),
             )
             onContactAddressValueChange(uiState.form.contractAddressInputField.value)
