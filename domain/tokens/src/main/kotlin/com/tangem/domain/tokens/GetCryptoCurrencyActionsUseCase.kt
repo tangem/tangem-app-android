@@ -84,7 +84,7 @@ class GetCryptoCurrencyActionsUseCase(
         activeList.add(TokenActionsState.ActionState.Receive(true))
 
         // swap
-        if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency.id)) {
+        if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency)) {
             activeList.add(TokenActionsState.ActionState.Swap(true))
         } else {
             disabledList.add(TokenActionsState.ActionState.Swap(false))
