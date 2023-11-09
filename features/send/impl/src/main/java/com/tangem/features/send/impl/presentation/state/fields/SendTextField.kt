@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.state.fields
+package com.tangem.features.send.impl.presentation.state.fields
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Immutable
