@@ -31,7 +31,7 @@ class AuthModule {
     ): ExpressAuthProvider {
         return ExpressAuthProviderImpl(
             userWalletsStore = userWalletsStore,
-            configManager = configManager
+            configManager = configManager,
         )
     }
 }

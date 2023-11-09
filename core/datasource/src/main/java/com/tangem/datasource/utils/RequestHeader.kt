@@ -20,9 +20,9 @@ sealed class RequestHeader(vararg pairs: Pair<String, () -> String>) {
         "card_public_key" to { authProvider.getCardPublicKey() },
     )
 
-    class Express(expressAuthProvider: ExpressAuthProvider): RequestHeader(
+    class Express(expressAuthProvider: ExpressAuthProvider) : RequestHeader(
         "api-key" to { expressAuthProvider.getApiKey() },
         "user-id" to { expressAuthProvider.getUserId() },
-        "session-id" to { expressAuthProvider.getSessionId() }
+        "session-id" to { expressAuthProvider.getSessionId() },
     )
 }
