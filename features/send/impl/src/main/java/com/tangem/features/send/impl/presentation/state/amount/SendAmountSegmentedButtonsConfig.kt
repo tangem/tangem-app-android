@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.send.state
+package com.tangem.features.send.impl.presentation.state.amount
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
