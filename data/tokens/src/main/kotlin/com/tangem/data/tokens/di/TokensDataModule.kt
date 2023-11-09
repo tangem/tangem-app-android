@@ -5,11 +5,12 @@ import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultMarketCryptoCurrencyRepository
 import com.tangem.data.tokens.repository.DefaultNetworksRepository
 import com.tangem.data.tokens.repository.DefaultQuotesRepository
+import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.appcurrency.SelectedAppCurrencyStore
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.quote.QuotesStore
-import com.tangem.datasource.local.token.UserMarketCoinsStore
+import com.tangem.datasource.local.token.AssetsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -32,17 +33,19 @@ internal object TokensDataModule {
     @Singleton
     fun provideCurrenciesRepository(
         tangemTechApi: TangemTechApi,
+        tangemExpressApi: TangemExpressApi,
         userTokensStore: UserTokensStore,
         userWalletsStore: UserWalletsStore,
-        userMarketCoinsStore: UserMarketCoinsStore,
+        assetsStore: AssetsStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
+            tangemExpressApi = tangemExpressApi,
             userTokensStore = userTokensStore,
             userWalletsStore = userWalletsStore,
-            userMarketCoinsStore = userMarketCoinsStore,
+            assetsStore = assetsStore,
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
         )
@@ -88,9 +91,7 @@ internal object TokensDataModule {
 
     @Provides
     @Singleton
-    fun provideDefaultMarketCoinsRepository(
-        userMarketCoinsStore: UserMarketCoinsStore,
-    ): MarketCryptoCurrencyRepository {
-        return DefaultMarketCryptoCurrencyRepository(userMarketCoinsStore)
+    fun provideDefaultMarketCoinsRepository(assetsStore: AssetsStore): MarketCryptoCurrencyRepository {
+        return DefaultMarketCryptoCurrencyRepository(assetsStore)
     }
 }
