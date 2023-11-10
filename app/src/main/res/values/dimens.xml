@@ -42,4 +42,7 @@
 
     <dimen name="layout_address_info_margin">16dp</dimen>
 
+    <dimen name="qr_border_stroke_width">4dp</dimen>
+    <dimen name="qr_border_corner_radius">8dp</dimen>
+
 </resources>
