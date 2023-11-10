@@ -14,7 +14,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.buttons.actions.ActionButton
-import com.tangem.core.ui.components.transactions.TxHistoryTitle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
@@ -29,32 +28,59 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(color = TangemTheme.colors.background.primary),
+            .background(color = TangemTheme.colors.background.primary)
+            .padding(vertical = TangemTheme.dimens.spacing24),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (state.onExploreClick != null) {
-            TxHistoryTitle(onExploreClick = state.onExploreClick, modifier = Modifier.fillMaxWidth())
-        }
         Image(
-            modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing24)
-                .size(TangemTheme.dimens.size64),
+            modifier = Modifier.size(TangemTheme.dimens.size64),
             painter = painterResource(id = state.iconRes),
             contentDescription = null,
         )
 
         Text(
-            modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing32, vertical = TangemTheme.dimens.spacing24),
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing32),
             textAlign = TextAlign.Center,
             text = state.text.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
         )
 
-        state.actionButtonConfig?.let {
-            ActionButton(config = it, modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing24))
-        }
+        Buttons(
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing18),
+            state = state.buttonsState,
+        )
+    }
+}
+
+@Composable
+private fun Buttons(state: EmptyTransactionsBlockState.ButtonsState, modifier: Modifier = Modifier) {
+    when (state) {
+        is EmptyTransactionsBlockState.ButtonsState.SingleButton -> SingleButton(state = state, modifier = modifier)
+        is EmptyTransactionsBlockState.ButtonsState.PairButtons -> PairButtons(state = state, modifier = modifier)
+    }
+}
+
+@Composable
+private fun SingleButton(state: EmptyTransactionsBlockState.ButtonsState.SingleButton, modifier: Modifier = Modifier) {
+    ActionButton(modifier = modifier, config = state.actionButtonConfig)
+}
+
+@Composable
+private fun PairButtons(state: EmptyTransactionsBlockState.ButtonsState.PairButtons, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+    ) {
+        ActionButton(
+            modifier = Modifier.weight(1F),
+            config = state.firstButtonConfig,
+        )
+        ActionButton(
+            modifier = Modifier.weight(1F),
+            config = state.secondButtonConfig,
+        )
     }
 }
 
@@ -81,7 +107,7 @@ private fun EmptyTransactionBlock_Dark(
 private class EmptyTransactionBlockStateProvider : CollectionPreviewParameterProvider<EmptyTransactionsBlockState>(
     collection = listOf(
         EmptyTransactionsBlockState.Empty {},
-        EmptyTransactionsBlockState.FailedToLoad(onClick = {}, onExplore = {}),
-        EmptyTransactionsBlockState.NotImplemented(onClick = {}),
+        EmptyTransactionsBlockState.FailedToLoad(onReload = {}, onExplore = {}),
+        EmptyTransactionsBlockState.NotImplemented(onExplore = {}),
     ),
 )
