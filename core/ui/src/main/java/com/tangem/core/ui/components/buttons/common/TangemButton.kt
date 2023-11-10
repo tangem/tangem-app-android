@@ -109,10 +109,7 @@ private inline fun RowScope.ButtonContentContainer(
         progressIndicator()
     } else {
         Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
+            Row(horizontalArrangement = Arrangement.Center) {
                 if (buttonIcon is TangemButtonIconPosition.Start) {
                     icon(buttonIcon.iconResId)
                     Spacer(modifier = Modifier.requiredWidth(iconPadding))
