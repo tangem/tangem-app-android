@@ -602,7 +602,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
                 val networkId = Blockchain.fromNetworkId(networkSelectorValue.toNetworkId())?.id
 
-                val savedTokenId = if (token.isCustom) null else token.id.value
+                // todo after move foundToken to CryptoCurrency model, use only id
+                val savedTokenId = if (token.isCustom) null else token.id.rawCurrencyId
 
                 val sameId = foundToken?.id == savedTokenId
                 val sameAddress = contractAddress == token.contractAddress
@@ -804,7 +805,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     networkSelectorField = uiState.form.networkSelectorField.copy(
                         selectedItem = selectedItem,
                     ),
-                    showTokenFields = selectedItem.blockchain.canHandleTokens(),
+                    showTokenFields = selectedItem.blockchain.canHandleTokens() &&
+                        // workaround cause in Terra we support only 1 token
+                        selectedItem.blockchain != Blockchain.TerraV1,
                 ),
             )
             onContactAddressValueChange(uiState.form.contractAddressInputField.value)
