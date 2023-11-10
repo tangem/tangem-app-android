@@ -1,8 +1,9 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.balancehiding.DeviceFlipDetector
-import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
@@ -63,8 +64,10 @@ internal object SettingsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun providesIsBalanceHiddenUseCase(balanceHidingRepository: BalanceHidingRepository): IsBalanceHiddenUseCase {
-        return IsBalanceHiddenUseCase(
+    fun providesGetBalanceHidingSettingsUseCase(
+        balanceHidingRepository: BalanceHidingRepository,
+    ): GetBalanceHidingSettingsUseCase {
+        return GetBalanceHidingSettingsUseCase(
             balanceHidingRepository = balanceHidingRepository,
         )
     }
@@ -79,5 +82,13 @@ internal object SettingsDomainModule {
             flipDetector = flipDetector,
             balanceHidingRepository = balanceHidingRepository,
         )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideUpdateHideBalancesSettingsUseCase(
+        balanceHidingRepository: BalanceHidingRepository,
+    ): UpdateBalanceHidingSettingsUseCase {
+        return UpdateBalanceHidingSettingsUseCase(balanceHidingRepository)
     }
 }

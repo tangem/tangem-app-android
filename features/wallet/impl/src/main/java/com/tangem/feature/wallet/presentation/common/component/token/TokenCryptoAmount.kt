@@ -48,12 +48,12 @@ private fun CryptoAmountText(amount: String, modifier: Modifier = Modifier) {
         color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        style = TangemTheme.typography.body2,
+        style = TangemTheme.typography.caption2,
     )
 }
 
 private fun Modifier.placeholderSize(): Modifier = composed {
     return@composed this
-        .padding(vertical = TangemTheme.dimens.spacing3)
-        .size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12)
+        .padding(vertical = TangemTheme.dimens.spacing2)
+        .size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12)
 }
