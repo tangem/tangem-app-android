@@ -323,6 +323,10 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address> {
+        return getAddresses(userWalletId, network).sortedBy { it.type }
+    }
+
+    override suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address> {
         val blockchain = Blockchain.fromId(network.id.value)
 
         return getOrCreateWalletManager(
@@ -332,7 +336,6 @@ class DefaultWalletManagersFacade(
         )
             ?.wallet
             ?.addresses
-            ?.sortedBy { it.type }
             .orEmpty()
     }
 
