@@ -86,6 +86,7 @@
     <string name="common_error">Error</string>
     <string name="common_exchange">Exchange</string>
     <string name="common_explore_transaction_history">Explore transaction history</string>
+    <string name="common_explore">Explore</string>
     <string name="common_explorer">Explorer</string>
     <string name="common_fee_selector_title">Speed and fee</string>
     <string name="common_fee_selector_footer">Network transaction fees are used to support network security, incentivize validators, allocate resources, and determine transaction priority</string>
