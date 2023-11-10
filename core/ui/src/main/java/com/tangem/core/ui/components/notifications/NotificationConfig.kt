@@ -28,6 +28,7 @@ data class NotificationConfig(
 
         data class PrimaryButtonConfig(
             val text: TextReference,
+            val additionalText: TextReference? = null,
             @DrawableRes val iconResId: Int? = null,
             val onClick: () -> Unit,
         ) : ButtonsState()
