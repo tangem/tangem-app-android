@@ -28,6 +28,7 @@ import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -55,21 +56,44 @@ internal class SwapRepositoryImpl @Inject constructor(
         currencyList: List<CryptoCurrency>,
     ): List<SwapPair> {
         return withContext(coroutineDispatcher.io) {
-            val fromCurrencies = NetworkLeastTokenInfo(
+            val initialCurrency = NetworkLeastTokenInfo(
                 contractAddress = initialCurrency.contractAddress,
                 network = initialCurrency.network
             )
-            val toCurrencies = currencyList.map { leastTokenInfoConverter.convert(it) }
+            val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
 
-            tangemExpressApi.getPairs(
-                PairsRequestBody(
-                    from = arrayListOf(fromCurrencies),
-                    to = toCurrencies
+            val pairs = async {
+                getPairsInternal(
+                    from = arrayListOf(initialCurrency),
+                    to = currenciesList
                 )
-            )
-                .getOrThrow()
-                .map { swapPairInfoConverter.convert(it) }
+            }
+
+            val reversedPairs = async {
+                getPairsInternal(
+                    from = currenciesList,
+                    to = arrayListOf(initialCurrency)
+                )
+            }
+
+            pairs.await() + reversedPairs.await()
+
         }
+    }
+
+    private suspend fun getPairsInternal(
+        from: List<NetworkLeastTokenInfo>,
+        to: List<NetworkLeastTokenInfo>,
+    ):
+        List<SwapPair> {
+        return tangemExpressApi.getPairs(
+            PairsRequestBody(
+                from = from,
+                to = to
+            )
+        )
+            .getOrThrow()
+            .map { swapPairInfoConverter.convert(it) }
     }
 
     override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
