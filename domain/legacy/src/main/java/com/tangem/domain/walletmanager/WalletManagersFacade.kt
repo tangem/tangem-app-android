@@ -114,6 +114,13 @@ interface WalletManagersFacade {
      */
     suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address>
 
+    /** Returns list of all addresses for all currencies in selected wallet
+     *
+     * @param userWalletId selected wallet id
+     * @param network required to create wallet manager
+     */
+    suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address>
+
     /**
      * Returns info about rent if wallet manager implemented [RentProvider], otherwise null
      *
