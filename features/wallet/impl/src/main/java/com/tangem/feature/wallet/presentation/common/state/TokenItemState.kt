@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.common.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 
 /** Token item state */
 @Immutable
@@ -18,7 +18,7 @@ internal sealed class TokenItemState {
 
     abstract val cryptoAmountState: CryptoAmountState?
 
-    abstract val priceChangeState: PriceChangeState?
+    abstract val cryptoPriceState: CryptoPriceState?
 
     /** Loading token state */
     data class Loading(
@@ -28,7 +28,7 @@ internal sealed class TokenItemState {
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Loading
-        override val priceChangeState: PriceChangeState = PriceChangeState.Loading
+        override val cryptoPriceState: CryptoPriceState = CryptoPriceState.Loading
     }
 
     /** Locked token state */
@@ -37,7 +37,7 @@ internal sealed class TokenItemState {
         override val titleState: TitleState = TitleState.Locked
         override val fiatAmountState: FiatAmountState = FiatAmountState.Locked
         override val cryptoAmountState: CryptoAmountState = CryptoAmountState.Locked
-        override val priceChangeState: PriceChangeState = PriceChangeState.Locked
+        override val cryptoPriceState: CryptoPriceState = CryptoPriceState.Locked
     }
 
     /**
@@ -55,7 +55,7 @@ internal sealed class TokenItemState {
         override val titleState: TitleState,
         override val fiatAmountState: FiatAmountState,
         override val cryptoAmountState: CryptoAmountState.Content,
-        override val priceChangeState: PriceChangeState?,
+        override val cryptoPriceState: CryptoPriceState,
         val onItemClick: () -> Unit,
         val onItemLongClick: () -> Unit,
     ) : TokenItemState()
@@ -74,7 +74,7 @@ internal sealed class TokenItemState {
         override val cryptoAmountState: CryptoAmountState,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
-        override val priceChangeState: PriceChangeState? = null
+        override val cryptoPriceState: CryptoPriceState? = null
     }
 
     /**
@@ -95,7 +95,7 @@ internal sealed class TokenItemState {
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val cryptoAmountState: CryptoAmountState? = null
-        override val priceChangeState: PriceChangeState? = null
+        override val cryptoPriceState: CryptoPriceState? = null
     }
 
     /**
@@ -114,7 +114,7 @@ internal sealed class TokenItemState {
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val cryptoAmountState: CryptoAmountState? = null
-        override val priceChangeState: PriceChangeState? = null
+        override val cryptoPriceState: CryptoPriceState? = null
     }
 
     @Immutable
@@ -147,15 +147,19 @@ internal sealed class TokenItemState {
         object Locked : CryptoAmountState()
     }
 
-    sealed class PriceChangeState {
+    sealed class CryptoPriceState {
 
-        data class Content(val valueInPercent: String, val type: PriceChangeType) : PriceChangeState()
+        data class Content(
+            val price: String,
+            val priceChangePercent: String?,
+            val type: PriceChangeType?,
+        ) : CryptoPriceState()
 
-        object Unknown : PriceChangeState()
+        object Unknown : CryptoPriceState()
 
-        object Loading : PriceChangeState()
+        object Loading : CryptoPriceState()
 
-        object Locked : PriceChangeState()
+        object Locked : CryptoPriceState()
     }
 
     companion object {
