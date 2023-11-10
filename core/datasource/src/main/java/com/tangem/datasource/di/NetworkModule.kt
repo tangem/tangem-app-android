@@ -1,17 +1,18 @@
 package com.tangem.datasource.di
 
+import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
-import com.tangem.datasource.api.paymentology.PaymentologyApi
 import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
-import com.tangem.datasource.utils.allowLogging
+import com.tangem.datasource.utils.addLoggers
 import com.tangem.lib.auth.AuthProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -25,7 +26,7 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemTechApi(@NetworkMoshi moshi: Moshi): TangemTechApi {
+    fun provideTangemTechApi(@NetworkMoshi moshi: Moshi, @ApplicationContext context: Context): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
@@ -37,7 +38,7 @@ class NetworkModule {
                         // TODO("refactor header init") get auth data after biometric auth to avoid race condition
                         // AuthenticationHeader(authProvider),
                     )
-                    .allowLogging()
+                    .addLoggers(context)
                     .build(),
             )
             .build()
@@ -46,26 +47,15 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun providePaymentologyApi(@NetworkMoshi moshi: Moshi): PaymentologyApi {
-        return Retrofit.Builder()
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl(PAYMENTOLOGY_BASE_URL)
-            .client(
-                OkHttpClient.Builder()
-                    .allowLogging()
-                    .build(),
-            )
-            .build()
-            .create(PaymentologyApi::class.java)
-    }
-
-    @Provides
-    @Singleton
     @PromotionOneInch
-    fun providePromotionOneInchApi(authProvider: AuthProvider, @NetworkMoshi moshi: Moshi): PromotionApi {
+    fun providePromotionOneInchApi(
+        authProvider: AuthProvider,
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+    ): PromotionApi {
         val okClient = OkHttpClient.Builder()
             .addHeaders(AuthenticationHeader(authProvider))
-            .allowLogging()
+            .addLoggers(context)
             .callTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .connectTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .readTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
