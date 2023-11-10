@@ -5,7 +5,6 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -33,16 +32,12 @@ class GetCurrencyStatusUpdatesUseCase(
      *
      * @param userWalletId The unique identifier of the user's wallet.
      * @param currencyId The unique identifier of the cryptocurrency.
-     * @param contractAddress The contract address of the crypto currency
-     * @param derivationPath currency derivation path.
      * @param isSingleWalletWithTokens Indicates whether the user wallet contains only one token on card (old cards)
      * @return A [Flow] emitting either a [CurrencyStatusError] or a [CryptoCurrencyStatus], indicating the result of the fetch operation.
      */
     operator fun invoke(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
-        contractAddress: String?,
-        derivationPath: Network.DerivationPath,
         isSingleWalletWithTokens: Boolean,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         return flow {
@@ -50,8 +45,6 @@ class GetCurrencyStatusUpdatesUseCase(
                 getCurrency(
                     userWalletId = userWalletId,
                     currencyId = currencyId,
-                    contractAddress = contractAddress,
-                    derivationPath = derivationPath,
                     isSingleWalletWithTokens = isSingleWalletWithTokens,
                 ),
             )
@@ -61,9 +54,7 @@ class GetCurrencyStatusUpdatesUseCase(
     private suspend fun getCurrency(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
-        derivationPath: Network.DerivationPath,
         isSingleWalletWithTokens: Boolean,
-        contractAddress: String?,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -75,7 +66,7 @@ class GetCurrencyStatusUpdatesUseCase(
         val currencyFlow = if (isSingleWalletWithTokens) {
             operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
         } else {
-            operations.getCurrencyStatusFlow(currencyId, contractAddress, derivationPath)
+            operations.getCurrencyStatusFlow(currencyId)
         }
         return currencyFlow.map { maybeCurrency ->
             maybeCurrency.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError)

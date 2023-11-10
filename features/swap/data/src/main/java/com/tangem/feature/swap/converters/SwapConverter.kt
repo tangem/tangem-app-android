@@ -11,9 +11,6 @@ class SwapConverter : Converter<SwapResponse, SwapDataModel> {
 
     override fun convert(value: SwapResponse): SwapDataModel {
         return SwapDataModel(
-            fromTokenAddress = value.fromToken.address,
-            toTokenAddress = value.toToken.address,
-            fromTokenAmount = createFromAmountWithOffset(value.fromTokenAmount, value.fromToken.decimals),
             toTokenAmount = createFromAmountWithOffset(value.toTokenAmount, value.toToken.decimals),
             transaction = convertTransaction(value.transaction),
         )
