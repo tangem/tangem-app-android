@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -34,12 +36,45 @@ internal class SwapInteractorImpl @Inject constructor(
     private val networksRepository: NetworksRepository,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
 ) : SwapInteractor {
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
     private val amountFormatter = AmountFormatter()
     private var derivationPath: String? = null
     private var network: Network? = null
+
+    override suspend fun getPairs(currency: Currency) {
+        val currencies = getSelectedWalletSyncUseCase().fold(
+            ifLeft = { emptyList() },
+            ifRight = { selectedWallet ->
+                getCryptoCurrenciesUseCase(selectedWallet.walletId).fold(
+                    ifLeft = { emptyList() },
+                    ifRight = { it },
+                )
+            },
+        )
+
+        val contractAddress = (currency as? Currency.NonNativeToken)?.contractAddress ?: "0"
+        val network = currency.networkId
+
+        val pairs = getPairs(
+            initialCurrency = LeastTokenInfo(
+                contractAddress = contractAddress,
+                network = network
+            ),
+            currenciesList = currencies
+        )
+
+        Timber.e("$pairs")
+    }
+
+    override suspend fun getPairs(
+        initialCurrency: LeastTokenInfo,
+        currenciesList: List<CryptoCurrency>,
+    ): List<SwapPair> {
+        return repository.getPairs(initialCurrency, currenciesList)
+    }
 
     override fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?) {
         this.derivationPath = derivationPath

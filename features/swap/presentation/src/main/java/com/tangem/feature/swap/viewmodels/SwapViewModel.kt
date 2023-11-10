@@ -139,6 +139,13 @@ internal class SwapViewModel @Inject constructor(
     private fun initTokens(currency: Currency) {
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
+                 swapInteractor.getPairs(currency)
+
+            }
+        }
+
+        viewModelScope.launch(dispatchers.main) {
+            runCatching(dispatchers.io) {
                 swapInteractor.initTokensToSwap(currency)
             }
                 .onSuccess { state ->
