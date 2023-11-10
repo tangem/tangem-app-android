@@ -99,6 +99,8 @@ interface SwapInteractor {
 
     fun isAvailableToSwap(networkId: String): Boolean
 
+    fun getSwapAmountForToken(amount: String, token: Currency): SwapAmount
+
     suspend fun checkFeeIsEnough(
         fee: BigDecimal?,
         spendAmount: SwapAmount,

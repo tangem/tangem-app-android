@@ -20,6 +20,7 @@ androidxFragment = "1.5.3"
 androidxLifecycle = "2.5.1"
 androidx-paging = "3.1.1"
 androidx-palette = "1.0.0"
+androidx-datastore = "1.0.0"
 # endregion AndroidX
 
 # region Compose
@@ -67,7 +68,8 @@ spongycastleCryptoCore = "1.58.0.0"
 timber = "4.7.1"
 viewBindingDelegate = "1.5.9"
 xmlShimmer = "1.1.3"
-zxingQrBarcodeScanner = "1.9.8"
+zendeskChat = "3.3.5"
+zendeskMessaging = "5.2.4"
 zxingQrCode = "3.5.1"
 mviCore = "1.3.1"
 kotlinSerialization = "1.4.1"
@@ -77,13 +79,18 @@ walletConnectCore = "1.18.0"
 walletConnectWeb3 = "1.11.0"
 prettyLogger = "2.2.0"
 okHttp-prettyLogging = "3.1.0"
+chucker = "4.0.0"
+mlKit-barcodeScanning = "17.2.0"
+androidXCamera = "1.3.0"
+listenableFuture = "1.0"
+swipeRefreshLayout = "1.1.0"
 spr-client = "3.6.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.0-379"
+tangemBlockchainSdk = "release-app_5.2-385"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.0-309"
+tangemCardSdk = "release-app_5.2-311"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
@@ -130,11 +137,13 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx
 androidx-core-splashScreen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragment" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
+androidx-swipeRefreshLayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swipeRefreshLayout" }
+androidx-palette = { module = "androidx.palette:palette", version.ref = "androidx-palette" }
 lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref = "androidxLifecycle" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
 lifecycle-viewModel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
 lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compoese-lifecycle-runtime" }
-androidx-palette = { module = "androidx.palette:palette", version.ref = "androidx-palette" }
+androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
 # region AndroidX
 
 # region Compose
@@ -217,7 +226,8 @@ retrofit-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.re
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydelegate-noreflection", version.ref = "viewBindingDelegate" }
 xmlShimmer = { module = "com.github.skydoves:androidveil", version.ref = "xmlShimmer" }
-zxing-qrBarcodeScanner = { module = "me.dm7.barcodescanner:zxing", version.ref = "zxingQrBarcodeScanner" }
+zendesk-chat = { module = "com.zendesk:chat", version.ref = "zendeskChat" }
+zendesk-messaging = { module = "com.zendesk:messaging", version.ref = "zendeskMessaging" }
 zxing-qrCore = { module = "com.google.zxing:core", version.ref = "zxingQrCode" }
 mviCore-watcher = { module = "com.github.badoo.mvicore:mvicore-diff", version.ref = "mviCore" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
@@ -228,4 +238,12 @@ walletConnectCore = { module = "com.walletconnect:android-core", version.ref = "
 walletConnectWeb3 = { module = "com.walletconnect:web3wallet", version.ref = "walletConnectWeb3" }
 prettyLogger = { module = "com.orhanobut:logger", version.ref = "prettyLogger" }
 sprClient = { module = "com.spr:messengerclient", version.ref = "spr-client" }
+chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
+chuckerStub = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
+mlKit-barcodeScanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlKit-barcodeScanning" }
+listenableFuture = { module = "com.google.guava:listenablefuture", version.ref = "listenableFuture" }
+camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "androidXCamera" }
+camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "androidXCamera" }
+camera-view = { module = "androidx.camera:camera-view", version.ref = "androidXCamera" }
+
 # endregion Other

@@ -13,7 +13,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
@@ -280,7 +279,7 @@ class DetailsMiddleware {
             val repository = store.state.daggerGraphState.get(DaggerGraphState::balanceHidingRepository)
 
             scope.launch {
-                val newState = BalanceHidingSettings(
+                val newState = repository.getBalanceHidingSettings().copy(
                     isHidingEnabledInSettings = hideBalance,
                     isBalanceHidden = false,
                 )

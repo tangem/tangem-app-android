@@ -72,6 +72,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "chia/test" -> Blockchain.ChiaTestnet
         "near-protocol" -> Blockchain.Near
         "near-protocol/test" -> Blockchain.NearTestnet
+        "decimal" -> Blockchain.Decimal
+        "decimal/test" -> Blockchain.DecimalTestnet
         else -> null
     }
 }
@@ -145,6 +147,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.ChiaTestnet -> "chia/test"
         Blockchain.Near -> "near-protocol"
         Blockchain.NearTestnet -> "near-protocol/test"
+        Blockchain.Decimal -> "decimal"
+        Blockchain.DecimalTestnet -> "decimal/test"
     }
 }
 
@@ -188,10 +192,11 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Telos, Blockchain.TelosTestnet -> "telos"
         Blockchain.AlephZero, Blockchain.AlephZeroTestnet -> "aleph-zero"
         Blockchain.OctaSpace, Blockchain.OctaSpaceTestnet -> "octaspace"
-        Blockchain.Chia -> "chia"
-        Blockchain.ChiaTestnet -> "chia/test"
+        Blockchain.Chia, Blockchain.ChiaTestnet -> "chia"
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
+        Blockchain.Decimal -> "decimal"
+        Blockchain.DecimalTestnet -> "decimal/test"
         Blockchain.Unknown -> "unknown"
     }
 }
@@ -219,6 +224,4 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
-    Blockchain.Telos,
-    Blockchain.TelosTestnet,
 )
