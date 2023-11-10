@@ -47,9 +47,40 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
             color = TangemTheme.colors.text.secondary,
         )
 
-        state.actionButtonConfig?.let {
-            ActionButton(config = it)
-        }
+        Buttons(
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing18),
+            state = state.buttonsState,
+        )
+    }
+}
+
+@Composable
+private fun Buttons(state: EmptyTransactionsBlockState.ButtonsState, modifier: Modifier = Modifier) {
+    when (state) {
+        is EmptyTransactionsBlockState.ButtonsState.SingleButton -> SingleButton(state = state, modifier = modifier)
+        is EmptyTransactionsBlockState.ButtonsState.PairButtons -> PairButtons(state = state, modifier = modifier)
+    }
+}
+
+@Composable
+private fun SingleButton(state: EmptyTransactionsBlockState.ButtonsState.SingleButton, modifier: Modifier = Modifier) {
+    ActionButton(modifier = modifier, config = state.actionButtonConfig)
+}
+
+@Composable
+private fun PairButtons(state: EmptyTransactionsBlockState.ButtonsState.PairButtons, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+    ) {
+        ActionButton(
+            modifier = Modifier.weight(1F),
+            config = state.firstButtonConfig,
+        )
+        ActionButton(
+            modifier = Modifier.weight(1F),
+            config = state.secondButtonConfig,
+        )
     }
 }
 
@@ -75,8 +106,8 @@ private fun EmptyTransactionBlock_Dark(
 
 private class EmptyTransactionBlockStateProvider : CollectionPreviewParameterProvider<EmptyTransactionsBlockState>(
     collection = listOf(
-        EmptyTransactionsBlockState.Empty,
-        EmptyTransactionsBlockState.FailedToLoad(onClick = {}),
-        EmptyTransactionsBlockState.NotImplemented(onClick = {}),
+        EmptyTransactionsBlockState.Empty {},
+        EmptyTransactionsBlockState.FailedToLoad(onReload = {}, onExplore = {}),
+        EmptyTransactionsBlockState.NotImplemented(onExplore = {}),
     ),
 )

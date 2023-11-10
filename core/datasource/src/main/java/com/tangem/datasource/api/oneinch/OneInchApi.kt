@@ -117,8 +117,8 @@ interface OneInchApi {
      */
     @GET("quote")
     suspend fun quote(
-        @Query("fromTokenAddress") fromTokenAddress: String,
-        @Query("toTokenAddress") toTokenAddress: String,
+        @Query("src") fromTokenAddress: String,
+        @Query("dst") toTokenAddress: String,
         @Query("amount") amount: String,
         @Query("protocols") protocols: String? = null,
         @Query("fee") fee: String? = null,
@@ -128,6 +128,7 @@ interface OneInchApi {
         @Query("mainRouteParts") mainRouteParts: String? = null,
         @Query("parts") parts: String? = null,
         @Query("gasPrice") gasPrice: String? = null,
+        @Query("includeTokensInfo") includeTokensInfo: Boolean = true,
     ): Response<QuoteResponse>
 
     /**
@@ -178,18 +179,18 @@ interface OneInchApi {
      */
     @GET("swap")
     suspend fun swap(
-        @Query("fromTokenAddress") fromTokenAddress: String,
-        @Query("toTokenAddress") toTokenAddress: String,
+        @Query("src") fromTokenAddress: String,
+        @Query("dst") toTokenAddress: String,
         @Query("amount") amount: String,
-        @Query("fromAddress") fromAddress: String,
+        @Query("from") fromAddress: String,
         @Query("slippage") slippage: Int,
         @Query("protocols") protocols: String? = null,
-        @Query("destReceiver") destinationAddress: String? = null,
-        @Query("referrerAddress") referrerAddress: String? = null,
+        @Query("receiver") destinationAddress: String? = null,
+        @Query("referrer") referrerAddress: String? = null,
         @Query("fee") fee: String? = null,
         @Query("disableEstimate") disableEstimate: Boolean? = null,
         @Query("permit") permit: String? = null,
-        @Query("compatibilityMode") compatibilityMode: Boolean? = null,
+        @Query("compatibility") compatibilityMode: Boolean? = null,
         @Query("burnChi") burnChi: Boolean? = null,
         @Query("allowPartialFill") allowPartialFill: Boolean? = null,
         @Query("parts") parts: String? = null,
@@ -198,6 +199,7 @@ interface OneInchApi {
         @Query("complexityLevel") complexityLevel: String? = null,
         @Query("gasLimit") gasLimit: String? = null,
         @Query("gasPrice") gasPrice: String? = null,
+        @Query("includeTokensInfo") includeTokensInfo: Boolean = true,
     ): Response<SwapResponse>
     //endregion Swap
 }
