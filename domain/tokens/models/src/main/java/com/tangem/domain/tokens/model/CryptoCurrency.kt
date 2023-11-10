@@ -8,6 +8,7 @@ import kotlinx.parcelize.Parcelize
  *
  * @property id Unique identifier for the cryptocurrency.
  * @property network The network to which the cryptocurrency belongs.
+ * @property networkId The name of this network in the Tangem backend.
  * @property name Human-readable name of the cryptocurrency.
  * @property symbol Symbol of the cryptocurrency.
  * @property decimals Number of decimal places used by the cryptocurrency.
@@ -19,6 +20,7 @@ sealed class CryptoCurrency : Parcelable {
 
     abstract val id: ID
     abstract val network: Network
+    abstract val networkId: String
     abstract val name: String
     abstract val symbol: String
     abstract val decimals: Int
@@ -31,6 +33,7 @@ sealed class CryptoCurrency : Parcelable {
     data class Coin(
         override val id: ID,
         override val network: Network,
+        override val networkId: String,
         override val name: String,
         override val symbol: String,
         override val decimals: Int,
@@ -51,6 +54,7 @@ sealed class CryptoCurrency : Parcelable {
     data class Token(
         override val id: ID,
         override val network: Network,
+        override val networkId: String,
         override val name: String,
         override val symbol: String,
         override val decimals: Int,

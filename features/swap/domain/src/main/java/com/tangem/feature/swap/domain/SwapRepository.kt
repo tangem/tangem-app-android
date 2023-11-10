@@ -10,10 +10,7 @@ import java.math.BigDecimal
 
 interface SwapRepository {
 
-    suspend fun getPairs(
-        initialCurrency: LeastTokenInfo,
-        currencyList: List<CryptoCurrency>,
-    ): List<SwapPair>
+    suspend fun getPairs(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): List<SwapPairLeast>
 
     suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
 

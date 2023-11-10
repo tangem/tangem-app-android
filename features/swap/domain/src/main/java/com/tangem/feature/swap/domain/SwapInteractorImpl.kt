@@ -44,7 +44,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private var derivationPath: String? = null
     private var network: Network? = null
 
-    override suspend fun getPairs(currency: Currency) {
+    override suspend fun getPairs(currency: Currency): List<SwapPair> {
         val currencies = getSelectedWalletSyncUseCase().fold(
             ifLeft = { emptyList() },
             ifRight = { selectedWallet ->
@@ -55,24 +55,44 @@ internal class SwapInteractorImpl @Inject constructor(
             },
         )
 
-        val contractAddress = (currency as? Currency.NonNativeToken)?.contractAddress ?: "0"
-        val network = currency.networkId
-
         val pairs = getPairs(
             initialCurrency = LeastTokenInfo(
-                contractAddress = contractAddress,
-                network = network
+                contractAddress = (currency as? Currency.NonNativeToken)?.contractAddress ?: "0",
+                network = currency.networkId,
             ),
-            currenciesList = currencies
+            currenciesList = currencies,
         )
 
-        Timber.e("$pairs")
+        return createCryptoCurrencyPairs(pairs, currencies)
+    }
+
+    private fun createCryptoCurrencyPairs(
+        swapPairLeasts: List<SwapPairLeast>,
+        cryptoCurrenciesList: List<CryptoCurrency>,
+    ): List<SwapPair> {
+        return swapPairLeasts.map {
+            SwapPair(
+                from = findCryptoCurrencyByLeastInfo(it.from, cryptoCurrenciesList)!!,
+                to = findCryptoCurrencyByLeastInfo(it.to, cryptoCurrenciesList)!!,
+                providers = it.providers,
+            )
+        }
+    }
+
+    private fun findCryptoCurrencyByLeastInfo(
+        leastTokenInfo: LeastTokenInfo,
+        cryptoCurrenciesList: List<CryptoCurrency>,
+    ): CryptoCurrency? {
+        return cryptoCurrenciesList.find {
+            it.networkId == leastTokenInfo.network &&
+                (it as? CryptoCurrency.Token)?.contractAddress ?: "0" == leastTokenInfo.contractAddress
+        }
     }
 
     override suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
         currenciesList: List<CryptoCurrency>,
-    ): List<SwapPair> {
+    ): List<SwapPairLeast> {
         return repository.getPairs(initialCurrency, currenciesList)
     }
 

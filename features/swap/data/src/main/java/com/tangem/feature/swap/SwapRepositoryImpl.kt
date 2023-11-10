@@ -35,6 +35,7 @@ import javax.inject.Inject
 import com.tangem.blockchain.common.Token as SdkToken
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
+@Suppress("LongParameterList")
 internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val tangemExpressApi: TangemExpressApi,
@@ -54,43 +55,41 @@ internal class SwapRepositoryImpl @Inject constructor(
     override suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
         currencyList: List<CryptoCurrency>,
-    ): List<SwapPair> {
+    ): List<SwapPairLeast> {
         return withContext(coroutineDispatcher.io) {
-            val initialCurrency = NetworkLeastTokenInfo(
+            val initial = NetworkLeastTokenInfo(
                 contractAddress = initialCurrency.contractAddress,
-                network = initialCurrency.network
+                network = initialCurrency.network,
             )
             val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
 
             val pairs = async {
                 getPairsInternal(
-                    from = arrayListOf(initialCurrency),
-                    to = currenciesList
+                    from = arrayListOf(initial),
+                    to = currenciesList,
                 )
             }
 
             val reversedPairs = async {
                 getPairsInternal(
                     from = currenciesList,
-                    to = arrayListOf(initialCurrency)
+                    to = arrayListOf(initial),
                 )
             }
 
             pairs.await() + reversedPairs.await()
-
         }
     }
 
     private suspend fun getPairsInternal(
         from: List<NetworkLeastTokenInfo>,
         to: List<NetworkLeastTokenInfo>,
-    ):
-        List<SwapPair> {
+    ): List<SwapPairLeast> {
         return tangemExpressApi.getPairs(
             PairsRequestBody(
                 from = from,
-                to = to
-            )
+                to = to,
+            ),
         )
             .getOrThrow()
             .map { swapPairInfoConverter.convert(it) }

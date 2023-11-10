@@ -3,20 +3,14 @@ package com.tangem.feature.swap.domain
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
-import com.tangem.feature.swap.domain.models.domain.PermissionOptions
-import com.tangem.feature.swap.domain.models.domain.SwapPair
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 
 interface SwapInteractor {
 
-    suspend fun getPairs(currency: Currency)
+    suspend fun getPairs(currency: Currency): List<SwapPair>
 
-    suspend fun getPairs(
-        initialCurrency: LeastTokenInfo,
-        currenciesList: List<CryptoCurrency>,
-    ): List<SwapPair>
+    suspend fun getPairs(initialCurrency: LeastTokenInfo, currenciesList: List<CryptoCurrency>): List<SwapPairLeast>
 
     fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?)
 
