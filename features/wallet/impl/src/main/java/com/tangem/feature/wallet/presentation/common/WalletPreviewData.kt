@@ -2,10 +2,10 @@ package com.tangem.feature.wallet.presentation.common
 
 import androidx.paging.PagingData
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
@@ -121,7 +121,7 @@ internal object WalletPreviewData {
             titleState = TokenItemState.TitleState.Content(text = "Polygon", hasPending = true),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
-            priceChangeState = TokenItemState.PriceChangeState.Unknown,
+            cryptoPriceState = TokenItemState.CryptoPriceState.Unknown,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -141,8 +141,9 @@ internal object WalletPreviewData {
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
-            priceChangeState = TokenItemState.PriceChangeState.Content(
-                valueInPercent = "2.0%",
+            cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+                price = "312 USD",
+                priceChangePercent = "2.0%",
                 type = PriceChangeType.UP,
             ),
             onItemClick = {},
