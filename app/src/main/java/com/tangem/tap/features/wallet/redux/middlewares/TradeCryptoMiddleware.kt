@@ -15,7 +15,7 @@ import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.presentation.SwapFragment
-import com.tangem.features.send.navigation.SendRouter
+import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
@@ -366,7 +366,10 @@ class TradeCryptoMiddleware {
                 ),
             )
 
-            val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
+            val bundle = bundleOf(
+                SendRouter.CRYPTO_CURRENCY_KEY to currency,
+                SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
+            )
             store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
     }
@@ -416,7 +419,10 @@ class TradeCryptoMiddleware {
                 is CryptoCurrency.Token -> error("Action.tokenStatus.currency is Token")
             }
 
-            val bundle = bundleOf(SendRouter.CRYPTO_CURRENCY_KEY to currency)
+            val bundle = bundleOf(
+                SendRouter.CRYPTO_CURRENCY_KEY to currency,
+                SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
+            )
             store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
     }
