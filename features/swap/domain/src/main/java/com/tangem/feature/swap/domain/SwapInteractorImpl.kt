@@ -215,11 +215,12 @@ internal class SwapInteractorImpl @Inject constructor(
         amountToSwap: String,
         fee: TxFee,
     ): TxState {
-        val amount = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format, use only digits" }
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val amount = SwapAmount(amountDecimal, getTokenDecimals(currencyToSend))
         val result = transactionManager.sendTransaction(
             txData = SwapTxData(
                 networkId = networkId,
-                amountToSend = amount,
+                amountToSend = amountDecimal,
                 currencyToSend = swapCurrencyConverter.convert(currencyToSend),
                 feeAmount = fee.feeValue,
                 gasLimit = fee.gasLimit,
@@ -242,7 +243,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 }
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
-                        swapStateData.swapModel.fromTokenAmount,
+                        amount,
                         currencyToSend.symbol,
                     ),
                     toAmount = amountFormatter.formatSwapAmountToUI(
@@ -270,6 +271,11 @@ internal class SwapInteractorImpl @Inject constructor(
 
     override fun isAvailableToSwap(networkId: String): Boolean {
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
+    }
+
+    override fun getSwapAmountForToken(amount: String, token: Currency): SwapAmount {
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amount)) { "wrong amount format" }
+        return SwapAmount(amountDecimal, getTokenDecimals(token))
     }
 
     private suspend fun onSuccessLegacyFlow(currency: Currency) {
@@ -412,7 +418,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     networkId = networkId,
                     fromToken = fromToken,
                     toToken = toToken,
-                    fromTokenAmount = quoteDataModel.fromTokenAmount,
+                    fromTokenAmount = amount,
                     toTokenAmount = quoteDataModel.toTokenAmount,
                     swapStateData = null,
                 )
@@ -494,7 +500,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     networkId = networkId,
                     fromToken = fromToken,
                     toToken = toToken,
-                    fromTokenAmount = swapData.fromTokenAmount,
+                    fromTokenAmount = amount,
                     toTokenAmount = swapData.toTokenAmount,
                     swapStateData = SwapStateData(
                         fee = txFeeState,
