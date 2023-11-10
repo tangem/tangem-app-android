@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.common
 
 import androidx.paging.PagingData
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -88,7 +89,7 @@ internal object WalletPreviewData {
     }
 
     val coinIconState
-        get() = TokenItemState.IconState.CoinIcon(
+        get() = TokenIconState.CoinIcon(
             url = null,
             fallbackResId = R.drawable.img_polygon_22,
             isGrayscale = false,
@@ -96,7 +97,7 @@ internal object WalletPreviewData {
         )
 
     private val tokenIconState
-        get() = TokenItemState.IconState.TokenIcon(
+        get() = TokenIconState.TokenIcon(
             url = null,
             networkBadgeIconResId = R.drawable.img_polygon_22,
             fallbackTint = TangemColorPalette.Black,
@@ -106,7 +107,7 @@ internal object WalletPreviewData {
         )
 
     private val customTokenIconState
-        get() = TokenItemState.IconState.CustomTokenIcon(
+        get() = TokenIconState.CustomTokenIcon(
             tint = TangemColorPalette.Black,
             background = TangemColorPalette.Meadow,
             networkBadgeIconResId = R.drawable.img_polygon_22,
@@ -120,7 +121,7 @@ internal object WalletPreviewData {
             titleState = TokenItemState.TitleState.Content(text = "Polygon", hasPending = true),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
-            priceChangeState = TokenItemState.PriceChangeState.Unknown,
+            cryptoPriceState = TokenItemState.CryptoPriceState.Unknown,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -140,8 +141,9 @@ internal object WalletPreviewData {
             titleState = TokenItemState.TitleState.Content(text = "Polygon"),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,412 MATIC"),
-            priceChangeState = TokenItemState.PriceChangeState.Content(
-                valueInPercent = "2.0%",
+            cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+                price = "312 USD",
+                priceChangePercent = "2.0%",
                 type = PriceChangeType.UP,
             ),
             onItemClick = {},

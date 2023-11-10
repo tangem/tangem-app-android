@@ -35,7 +35,6 @@ class GetCurrencyWarningsUseCase(
                 networkId = currency.network.id,
                 currencyId = currency.id,
                 derivationPath = derivationPath,
-                contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
                 isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
@@ -63,7 +62,6 @@ class GetCurrencyWarningsUseCase(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
-        contractAddress: String?,
         derivationPath: Network.DerivationPath,
         isSingleWalletWithTokens: Boolean,
     ): Flow<List<CryptoCurrencyWarning>> {
@@ -77,7 +75,7 @@ class GetCurrencyWarningsUseCase(
         val currencyFlow = if (isSingleWalletWithTokens) {
             operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
         } else {
-            operations.getCurrencyStatusFlow(currencyId, contractAddress, derivationPath)
+            operations.getCurrencyStatusFlow(currencyId)
         }
         val networkFlow = if (isSingleWalletWithTokens) {
             operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)

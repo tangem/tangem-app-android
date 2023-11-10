@@ -15,7 +15,7 @@ internal fun TxHistoryListItem(
             TxHistoryGroupTitle(config = state, modifier = modifier)
         }
         is TxHistoryState.TxHistoryItemState.Title -> {
-            TxHistoryTitle(config = state, modifier = modifier)
+            TxHistoryTitle(onExploreClick = state.onExploreClick, modifier = modifier)
         }
         is TxHistoryState.TxHistoryItemState.Transaction -> {
             Transaction(
