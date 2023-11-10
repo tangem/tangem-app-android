@@ -15,6 +15,8 @@ dependencies {
 
     /** Network */
     implementation(deps.retrofit)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
 
     /** Domain */
     implementation(projects.domain.tokens.models)
