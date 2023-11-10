@@ -3,48 +3,63 @@ package com.tangem.tap.common.qrCodeScan
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.Result
+import by.kirich1409.viewbindingdelegate.viewBinding
+import com.google.common.util.concurrent.ListenableFuture
 import com.otaliastudios.cameraview.CameraView.PERMISSION_REQUEST_CODE
-import me.dm7.barcodescanner.zxing.ZXingScannerView
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder
+import com.tangem.wallet.R
+import com.tangem.wallet.databinding.LayoutQrScanningBinding
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
 [REDACTED_AUTHOR]
  */
-class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
+class ScanQrCodeActivity : AppCompatActivity() {
 
-    private lateinit var mScannerView: ZXingScannerView
+    private val binding: LayoutQrScanningBinding by viewBinding(LayoutQrScanningBinding::bind)
+
+    private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
+    private var cameraExecutor: ExecutorService? = null
+
+    private val binder = PreviewBinder()
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
 
-        mScannerView = ZXingScannerView(this).apply {
-            setFormats(listOf(BarcodeFormat.QR_CODE))
-        }
-        setContentView(mScannerView)
-
         if (!permissionIsGranted()) requestPermission()
-    }
 
-    override fun onResume() {
-        super.onResume()
-        mScannerView.setResultHandler(this)
-        mScannerView.startCamera()
-    }
+        setContentView(R.layout.layout_qr_scanning)
 
-    override fun onPause() {
-        super.onPause()
-        mScannerView.stopCamera()
-    }
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraExecutor = Executors.newSingleThreadExecutor()
 
-    override fun handleResult(result: Result) {
-        setResult(SCAN_QR_REQUEST_CODE, Intent().apply { putExtra(SCAN_RESULT, result.text) })
-        finish()
+        cameraProviderFuture?.addListener(
+            {
+                val cameraProvider = cameraProviderFuture?.get()
+                binder.bindPreview(
+                    context = this,
+                    binding = binding,
+                    lifecycleOwner = this,
+                    cameraProvider = requireNotNull(cameraProvider),
+                    cameraExecutor = requireNotNull(cameraExecutor),
+                    onScanned = { result ->
+                        setResult(SCAN_QR_REQUEST_CODE, Intent().apply { putExtra(SCAN_RESULT, result) })
+                        finish()
+                    },
+                )
+            },
+            ContextCompat.getMainExecutor(this),
+        )
+
+        binding.overlay.post {
+            binding.overlay.setViewFinder()
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -56,12 +71,8 @@ class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
     }
 
     private fun permissionIsGranted(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            cameraPermission == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
+        val cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        return cameraPermission == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPermission() {
