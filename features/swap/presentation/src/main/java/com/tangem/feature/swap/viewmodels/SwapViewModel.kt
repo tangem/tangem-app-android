@@ -7,8 +7,7 @@ import androidx.lifecycle.*
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
-import com.tangem.domain.balancehiding.IsBalanceHiddenUseCase
-import com.tangem.domain.balancehiding.ListenToFlipsUseCase
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
@@ -29,7 +28,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.runCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -49,8 +47,7 @@ internal class SwapViewModel @Inject constructor(
     private val blockchainInteractor: BlockchainInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val isBalanceHiddenUseCase: IsBalanceHiddenUseCase,
-    private val listenToFlipsUseCase: ListenToFlipsUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
 
@@ -96,21 +93,15 @@ internal class SwapViewModel @Inject constructor(
     }
 
     override fun onCreate(owner: LifecycleOwner) {
-        isBalanceHiddenUseCase()
+        getBalanceHidingSettingsUseCase()
             .flowWithLifecycle(owner.lifecycle)
-            .onEach { hidden ->
-                isBalanceHidden = hidden
+            .onEach {
+                isBalanceHidden = it.isBalanceHidden
                 withContext(dispatchers.main) {
                     uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
                 }
             }
             .launchIn(viewModelScope)
-
-        viewModelScope.launch {
-            listenToFlipsUseCase()
-                .flowWithLifecycle(owner.lifecycle)
-                .collect()
-        }
     }
 
     override fun onCleared() {
@@ -480,9 +471,11 @@ internal class SwapViewModel @Inject constructor(
             onBackClicked = { onSearchEntered("") },
             onMaxAmountSelected = { onMaxAmountClicked() },
             openPermissionBottomSheet = {
+                singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
             },
             hidePermissionBottomSheet = {
+                startLoadingQuotesFromLastState()
                 analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
             },
             onAmountSelected = { onAmountSelected(it) },
@@ -491,8 +484,10 @@ internal class SwapViewModel @Inject constructor(
             },
             onSelectItemFee = { feeItem ->
                 dataState = dataState.copy(selectedFee = feeItem.data)
-                val spendAmount = dataState.swapDataModel?.swapModel?.fromTokenAmount
-                    ?: dataState.approveDataModel?.fromTokenAmount
+                val spendAmount = dataState.amount?.let { amount ->
+                    val fromToken = dataState.fromCurrency ?: return@let null
+                    swapInteractor.getSwapAmountForToken(amount, fromToken)
+                } ?: dataState.approveDataModel?.fromTokenAmount
                 spendAmount ?: return@UiActions
                 val fromToken = dataState.fromCurrency ?: return@UiActions
                 viewModelScope.launch(dispatchers.io) {
