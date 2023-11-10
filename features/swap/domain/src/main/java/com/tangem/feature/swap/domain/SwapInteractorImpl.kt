@@ -70,12 +70,18 @@ internal class SwapInteractorImpl @Inject constructor(
         swapPairLeasts: List<SwapPairLeast>,
         cryptoCurrenciesList: List<CryptoCurrency>,
     ): List<SwapPair> {
-        return swapPairLeasts.map {
-            SwapPair(
-                from = findCryptoCurrencyByLeastInfo(it.from, cryptoCurrenciesList)!!,
-                to = findCryptoCurrencyByLeastInfo(it.to, cryptoCurrenciesList)!!,
-                providers = it.providers,
-            )
+        return swapPairLeasts.mapNotNull {
+            val from = findCryptoCurrencyByLeastInfo(it.from, cryptoCurrenciesList)
+            val to = findCryptoCurrencyByLeastInfo(it.to, cryptoCurrenciesList)
+            if (from != null && to != null) {
+                SwapPair(
+                    from = from,
+                    to = to,
+                    providers = it.providers,
+                )
+            } else {
+                null
+            }
         }
     }
 
