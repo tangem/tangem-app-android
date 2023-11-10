@@ -47,4 +47,13 @@ dependencies {
 
     /** Security */
     implementation(deps.spongecastle.core)
+
+    /** Chucker */
+    debugImplementation(deps.chucker)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
+
+    /** Local storages */
+    implementation(deps.androidx.datastore)
 }
