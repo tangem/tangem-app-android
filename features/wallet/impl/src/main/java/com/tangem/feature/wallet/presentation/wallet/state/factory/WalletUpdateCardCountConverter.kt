@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 import com.tangem.common.Provider
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
@@ -27,16 +28,16 @@ internal class WalletUpdateCardCountConverter(
     }
 
     private fun WalletsListConfig.refreshCardCount(): WalletsListConfig {
+        val selectedWallet = currentWalletProvider()
         return copy(
             wallets = wallets
                 .mapIndexed { index, walletCard ->
                     if (index == selectedWalletIndex) {
                         when (walletCard) {
                             is WalletCardState.Content -> walletCard.copy(
-                                additionalInfo = WalletAdditionalInfoFactory.resolve(
-                                    wallet = currentWalletProvider(),
-                                ),
-                                cardCount = currentWalletProvider().getCardsCount(),
+                                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = selectedWallet),
+                                imageResId = WalletImageResolver.resolve(userWallet = selectedWallet),
+                                cardCount = selectedWallet.getCardsCount(),
                             )
                             else -> walletCard
                         }
