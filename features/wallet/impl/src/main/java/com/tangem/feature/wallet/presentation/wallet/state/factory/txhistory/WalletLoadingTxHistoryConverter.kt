@@ -52,8 +52,11 @@ internal class WalletLoadingTxHistoryConverter(
         return if (state is WalletSingleCurrencyState.Content) {
             state.copy(
                 txHistoryState = when (error) {
-                    is TxHistoryStateError.EmptyTxHistories -> Empty
-                    is TxHistoryStateError.DataError -> Error(onReloadClick = clickIntents::onReloadClick)
+                    is TxHistoryStateError.EmptyTxHistories -> Empty(onExploreClick = clickIntents::onExploreClick)
+                    is TxHistoryStateError.DataError -> Error(
+                        onReloadClick = clickIntents::onReloadClick,
+                        onExploreClick = clickIntents::onExploreClick,
+                    )
                     is TxHistoryStateError.TxHistoryNotImplemented -> {
                         NotSupported(
                             pendingTransactions = txHistoryItemConverter.convertList(pendingTransactions)
