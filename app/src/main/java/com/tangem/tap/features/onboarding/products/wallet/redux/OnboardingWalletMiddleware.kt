@@ -4,6 +4,7 @@ import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
@@ -18,6 +19,7 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.Artwork
+import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.operations.attestation.OnlineCardVerifier
@@ -40,6 +42,7 @@ import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 object OnboardingWalletMiddleware {
     val handler = onboardingWalletMiddleware
@@ -501,10 +504,18 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
             }
 
-            userWalletsListManager.selectedUserWalletSync?.walletId?.let {
+            if (scanResponse != null) {
                 scope.launch {
+                    val userWallet = UserWalletBuilder(scanResponse)
+                        .backupCardsIds(backupState.backupCardIds.toSet())
+                        .build()
+                        .guard {
+                            Timber.e("User wallet not created")
+                            return@launch
+                        }
+
                     userWalletsListManager.update(
-                        userWalletId = it,
+                        userWalletId = userWallet.walletId,
                         update = { wallet ->
                             wallet.copy(
                                 scanResponse = updateScanResponseAfterBackup(
