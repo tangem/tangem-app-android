@@ -32,8 +32,11 @@ internal class TokenDetailsLoadingTxHistoryConverter(
     ): TokenDetailsState {
         return currentStateProvider().copy(
             txHistoryState = when (error) {
-                is TxHistoryStateError.EmptyTxHistories -> TxHistoryState.Empty
-                is TxHistoryStateError.DataError -> TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+                is TxHistoryStateError.EmptyTxHistories -> TxHistoryState.Empty(clickIntents::onExploreClick)
+                is TxHistoryStateError.DataError -> TxHistoryState.Error(
+                    onReloadClick = clickIntents::onReloadClick,
+                    onExploreClick = clickIntents::onExploreClick,
+                )
                 is TxHistoryStateError.TxHistoryNotImplemented -> {
                     TxHistoryState.NotSupported(
                         pendingTransactions = pendingTransactions.toImmutableList(),
