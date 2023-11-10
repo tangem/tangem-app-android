@@ -35,7 +35,7 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
 private fun FiatAmountText(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        modifier,
+        modifier = modifier,
         color = TangemTheme.colors.text.primary1,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
