@@ -29,10 +29,10 @@ data class SwapPair(
 )
 
 /**
+ * Provider that could swap given cryptocurrencies
  *
- *
- * @property providerId
- * @property rateTypes
+ * @property providerId provider id
+ * @property rateTypes supported rate types
  */
 data class SwapPairProvider(
     val providerId: Int,
@@ -40,8 +40,9 @@ data class SwapPairProvider(
 )
 
 /**
- * 
+ * Rate type.
  *
+ * Current implementation contains only float type, fixed will be supported later.
  */
 enum class RateType {
     FLOAT,
