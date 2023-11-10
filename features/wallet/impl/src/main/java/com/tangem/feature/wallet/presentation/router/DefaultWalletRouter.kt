@@ -134,7 +134,7 @@ internal class DefaultWalletRouter(private val reduxNavController: ReduxNavContr
     override fun isWalletLastScreen(): Boolean = reduxNavController.getBackStack().lastOrNull() == AppScreen.Wallet
 
     override fun openManageTokensScreen() {
-        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.AddTokens))
+        reduxNavController.navigate(action = NavigationAction.NavigateTo(AppScreen.ManageTokens))
     }
 
     override fun openScanFailedDialog() {
