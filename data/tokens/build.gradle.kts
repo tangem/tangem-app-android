@@ -32,6 +32,9 @@ dependencies {
     implementation(deps.tangem.blockchain)
     implementation(deps.tangem.card.core)
 
+    /** AndroidX */
+    implementation(deps.androidx.datastore)
+
     /** DI */
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
