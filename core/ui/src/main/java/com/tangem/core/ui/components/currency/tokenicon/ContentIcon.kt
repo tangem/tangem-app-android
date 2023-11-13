@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
+import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 internal fun ContentIcon(
@@ -67,8 +68,10 @@ private fun CoinIcon(
     val iconData: Any = if (url.isNullOrBlank()) fallbackResId else url
 
     DefaultCurrencyIcon(
-        modifier = modifier,
         iconData = iconData,
+        size = TangemTheme.dimens.size36,
+        alpha = alpha,
+        colorFilter = colorFilter,
         errorIcon = {
             Image(
                 painter = painterResource(id = fallbackResId),
@@ -77,8 +80,7 @@ private fun CoinIcon(
                 contentDescription = null,
             )
         },
-        alpha = alpha,
-        colorFilter = colorFilter,
+        modifier = modifier,
     )
 }
 
@@ -94,11 +96,12 @@ private fun TokenIcon(
         errorIcon()
     } else {
         DefaultCurrencyIcon(
-            modifier = modifier,
             iconData = url,
-            errorIcon = errorIcon,
+            size = TangemTheme.dimens.size36,
             alpha = alpha,
             colorFilter = colorFilter,
+            errorIcon = errorIcon,
+            modifier = modifier,
         )
     }
 }
