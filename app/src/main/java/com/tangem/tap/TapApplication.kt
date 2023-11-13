@@ -30,7 +30,6 @@ import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -210,9 +209,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var userTokensStore: UserTokensStore
 
     @Inject
-    lateinit var appRatingRepository: AppRatingRepository
-
-    @Inject
     lateinit var getAppThemeModeUseCase: GetAppThemeModeUseCase
 
     @Inject
@@ -247,10 +243,8 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 // [REDACTED_TODO_COMMENT]
 // [REDACTED_JIRA]
         runBlocking {
-            walletsRepository.initialize()
             initUserWalletsListManager()
             featureTogglesManager.init()
-            appRatingRepository.initialize()
             // learn2earnInteractor.init()
         }
 

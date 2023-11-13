@@ -1,29 +1,26 @@
 package com.tangem.data.wallets
 
-import com.tangem.datasource.local.userwallet.ShouldSaveUserWalletStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.get
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 
 internal class DefaultWalletsRepository(
-    private val shouldSaveUserWalletStore: ShouldSaveUserWalletStore,
-    private val dispatchers: CoroutineDispatcherProvider,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : WalletsRepository {
 
-    override suspend fun initialize() {
-        withContext(dispatchers.io) {
-            shouldSaveUserWalletStore.getSyncOrNull() ?: shouldSaveUserWalletStore.store(item = false)
-        }
-    }
-
     override suspend fun shouldSaveUserWalletsSync(): Boolean {
-        return withContext(dispatchers.io) { shouldSaveUserWalletStore.getSyncOrNull() ?: false }
+        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
     }
 
-    override fun shouldSaveUserWallets(): Flow<Boolean> = shouldSaveUserWalletStore.get()
+    override fun shouldSaveUserWallets(): Flow<Boolean> {
+        return appPreferencesStore.get(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
+    }
 
     override suspend fun saveShouldSaveUserWallets(item: Boolean) {
-        withContext(dispatchers.io) { shouldSaveUserWalletStore.store(item = item) }
+        appPreferencesStore.store(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, value = item)
     }
 }
