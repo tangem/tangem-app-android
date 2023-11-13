@@ -145,7 +145,6 @@ internal class SwapViewModel @Inject constructor(
             }
         }
 
-
         // old flow
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
