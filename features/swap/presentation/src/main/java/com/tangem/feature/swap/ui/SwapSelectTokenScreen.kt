@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -217,6 +218,7 @@ private fun TokenItem(token: TokenToSelect, network: Network, screenBackgroundCo
 @Composable
 private fun TokenIcon(token: TokenToSelect, screenBackgroundColor: Color, @DrawableRes iconPlaceholder: Int?) {
     var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
+    var isBackgroundColorDefined by remember { mutableStateOf(false) }
     val isDarkTheme = isSystemInDarkTheme()
     val coroutineScope = rememberCoroutineScope()
 
@@ -231,29 +233,35 @@ private fun TokenIcon(token: TokenToSelect, screenBackgroundColor: Color, @Drawa
                 shape = TangemTheme.shapes.roundedCorners8,
             ),
     ) {
-        val iconModifier = Modifier
-            .size(TangemTheme.dimens.size40)
+        val pixelsSize = with(LocalDensity.current) { TangemTheme.dimens.size40.roundToPx() }
+        val iconModifier = Modifier.size(TangemTheme.dimens.size40)
+
         val colorFilter = if (!token.available) {
             val matrix = ColorMatrix().apply { setToSaturation(0f) }
             ColorFilter.colorMatrix(matrix)
         } else {
             null
         }
+
         SubcomposeAsyncImage(
             modifier = iconModifier,
             model = ImageRequest.Builder(LocalContext.current)
                 .data(data)
+                .size(size = pixelsSize)
+                .memoryCacheKey(key = data.toString() + pixelsSize)
                 .crossfade(true)
                 .allowHardware(false)
                 .listener(
                     onSuccess = { _, result ->
-                        if (isDarkTheme) {
+                        if (!isBackgroundColorDefined && isDarkTheme) {
                             coroutineScope.launch {
                                 val color = ImageBackgroundContrastChecker(
                                     drawable = result.drawable,
                                     backgroundColor = screenBackgroundColor.toArgb(),
-                                ).getContrastColorIfNeeded(isDarkTheme)
+                                    size = pixelsSize,
+                                ).getContrastColor(isDarkTheme = true)
                                 iconBackgroundColor = color
+                                isBackgroundColorDefined = true
                             }
                         }
                     },
