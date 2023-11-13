@@ -15,6 +15,7 @@ import com.tangem.core.ui.components.currency.fiaticon.FiatIcon
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
@@ -72,8 +73,8 @@ private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig) {
         if (button.isFiat) {
             FiatIcon(
                 url = button.iconUrl,
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size18),
+                size = TangemTheme.dimens.size18,
+                modifier = Modifier.size(TangemTheme.dimens.size18),
             )
         } else {
             button.iconState?.let {
