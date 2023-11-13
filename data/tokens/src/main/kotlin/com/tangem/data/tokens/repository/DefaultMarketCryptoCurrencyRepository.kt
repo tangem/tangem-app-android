@@ -14,7 +14,7 @@ class DefaultMarketCryptoCurrencyRepository(
         val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE
 
         return assetsStore.getSyncOrNull(userWalletId)?.find {
-            it.network == cryptoCurrency.networkId &&
+            it.network == cryptoCurrency.network.backendId &&
                 it.token == cryptoCurrency.id.rawCurrencyId &&
                 it.contractAddress == contractAddress &&
                 it.isActive

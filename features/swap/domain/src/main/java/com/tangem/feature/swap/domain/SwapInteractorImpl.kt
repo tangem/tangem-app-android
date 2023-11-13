@@ -90,7 +90,7 @@ internal class SwapInteractorImpl @Inject constructor(
         cryptoCurrenciesList: List<CryptoCurrency>,
     ): CryptoCurrency? {
         return cryptoCurrenciesList.find {
-            it.networkId == leastTokenInfo.network &&
+            it.network.backendId == leastTokenInfo.network &&
                 (it as? CryptoCurrency.Token)?.contractAddress ?: "0" == leastTokenInfo.contractAddress
         }
     }

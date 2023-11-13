@@ -88,7 +88,6 @@ internal class ResponseCryptoCurrenciesFactory(private val demoConfig: DemoConfi
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
             network = network,
-            networkId = blockchain.toNetworkId(),
             name = responseToken.name,
             symbol = responseToken.symbol,
             decimals = responseToken.decimals,
@@ -110,7 +109,6 @@ internal class ResponseCryptoCurrenciesFactory(private val demoConfig: DemoConfi
         return CryptoCurrency.Token(
             id = id,
             network = network,
-            networkId = blockchain.toNetworkId(),
             name = sdkToken.name,
             symbol = sdkToken.symbol,
             decimals = sdkToken.decimals,

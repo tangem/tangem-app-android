@@ -28,7 +28,6 @@ class CryptoCurrencyFactory {
         return CryptoCurrency.Token(
             id = id,
             network = network,
-            networkId = blockchain.toNetworkId(),
             name = sdkToken.name,
             symbol = sdkToken.symbol,
             iconUrl = getTokenIconUrl(blockchain, sdkToken),
@@ -52,7 +51,6 @@ class CryptoCurrencyFactory {
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
             network = network,
-            networkId = blockchain.toNetworkId(),
             name = blockchain.fullName,
             symbol = blockchain.currency,
             iconUrl = getCoinIconUrl(blockchain),
