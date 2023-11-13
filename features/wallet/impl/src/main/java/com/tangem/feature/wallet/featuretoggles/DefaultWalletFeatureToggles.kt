@@ -14,6 +14,5 @@ internal class DefaultWalletFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : WalletFeatureToggles {
 
-    override val isRedesignedScreenEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "REDESIGNED_WALLET_SCREEN_ENABLED")
+    override val isRedesignedScreenEnabled = true
 }
