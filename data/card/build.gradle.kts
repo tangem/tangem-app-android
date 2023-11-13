@@ -11,6 +11,8 @@ android {
 }
 
 dependencies {
+    implementation(deps.androidx.datastore)
+
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
