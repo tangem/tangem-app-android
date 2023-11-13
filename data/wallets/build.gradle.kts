@@ -13,10 +13,12 @@ android {
 dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
-    implementation(projects.data.source.preferences)
     implementation(projects.domain.wallets)
 
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Local storages */
+    implementation(deps.androidx.datastore)
 }
