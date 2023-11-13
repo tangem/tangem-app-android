@@ -6,12 +6,16 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.local.appcurrency.AvailableAppCurrenciesStore
-import com.tangem.datasource.local.appcurrency.SelectedAppCurrencyStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObject
+import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,23 +23,25 @@ import org.joda.time.Duration
 
 internal class DefaultAppCurrencyRepository(
     private val tangemTechApi: TangemTechApi,
+    private val appPreferencesStore: AppPreferencesStore,
     private val availableAppCurrenciesStore: AvailableAppCurrenciesStore,
-    private val selectedAppCurrencyStore: SelectedAppCurrencyStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : AppCurrencyRepository {
 
     private val appCurrencyConverter = AppCurrencyConverter()
 
-    override fun getSelectedAppCurrency(): Flow<AppCurrency> = channelFlow {
-        launch(dispatchers.io) {
-            selectedAppCurrencyStore.get()
-                .map(appCurrencyConverter::convert)
-                .collect(::send)
-        }
+    override fun getSelectedAppCurrency(): Flow<AppCurrency> {
+        return channelFlow {
+            launch {
+                appPreferencesStore
+                    .getObject<CurrenciesResponse.Currency>(key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY)
+                    .filterNotNull()
+                    .map(appCurrencyConverter::convert)
+                    .collect(::send)
+            }
 
-        withContext(dispatchers.io) {
-            if (selectedAppCurrencyStore.isEmpty()) {
+            withContext(dispatchers.io) {
                 fetchDefaultAppCurrency()
             }
         }
@@ -61,7 +67,10 @@ internal class DefaultAppCurrencyRepository(
                 "Unable to find app currency with provided code: $currencyCode"
             }
 
-            selectedAppCurrencyStore.store(currency)
+            appPreferencesStore.storeObject(
+                key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+                value = currency,
+            )
         }
     }
 
