@@ -23,12 +23,15 @@ dependencies {
     /** Project - Utils */
     implementation(projects.core.utils)
 
+    /** AndroidX */
+    implementation(deps.androidx.datastore)
+
     /** DI */
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
 
     /** Other */
+    implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
     implementation(deps.timber)
-    implementation(deps.jodatime)
 }
