@@ -51,6 +51,7 @@ internal class MainViewModel @Inject constructor(
             }
             .onEach {
                 if (state.value.modalNotification?.isShow != true) {
+                    listenToFlipsUseCase.isEnabled = false
                     stateHolder.updateWithHiddenBalancesNotification()
                     reduxNavController.navigate(NavigationAction.NavigateTo(AppScreen.ModalNotification))
                 }
@@ -123,6 +124,7 @@ internal class MainViewModel @Inject constructor(
     }
 
     override fun onDismissBottomSheet() {
+        listenToFlipsUseCase.isEnabled = true
         stateHolder.updateWithoutModalNotification()
         stateHolder.updateWithHiddenBalancesToast(true)
     }
