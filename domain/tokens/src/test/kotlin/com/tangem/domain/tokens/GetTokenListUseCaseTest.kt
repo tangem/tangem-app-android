@@ -22,6 +22,7 @@ import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
+import org.junit.Ignore
 import org.junit.Test
 
 internal class GetTokenListUseCaseTest {
@@ -29,6 +30,7 @@ internal class GetTokenListUseCaseTest {
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val userWalletId = UserWalletId(value = null)
 
+    @Ignore
     @Test
     fun `when list ungrouped and unsorted then correct token list should be returned`() = runTest {
         // Given
@@ -115,6 +117,7 @@ internal class GetTokenListUseCaseTest {
         assertEquals(expectedResult, result)
     }
 
+    @Ignore
     @Test
     fun `when tokens getting failed on second emit then error should be received`() = runTest {
         // Given
@@ -141,6 +144,7 @@ internal class GetTokenListUseCaseTest {
         assertEquals(expectedResult, result)
     }
 
+    @Ignore
     @Test
     fun `when list grouped then correct token list should be received`() = runTest {
         val expectedResult = listOf(

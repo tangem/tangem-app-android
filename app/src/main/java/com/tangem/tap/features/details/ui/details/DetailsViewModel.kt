@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
@@ -128,51 +129,51 @@ internal class DetailsViewModel(
     }
 
     private fun navigateToToS() {
-        store.dispatch(DisclaimerAction.Show(AppScreen.Details))
+        store.dispatchOnMain(DisclaimerAction.Show(AppScreen.Details))
     }
 
     private fun navigateToReferralProgram() {
-        store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
     }
 
     private fun sendFeedback() {
         Analytics.send(Settings.ButtonSendFeedback())
-        store.dispatch(GlobalAction.SendEmail(FeedbackEmail()))
+        store.dispatchOnMain(GlobalAction.SendEmail(FeedbackEmail()))
     }
 
     private fun navigateToChat() {
         Analytics.send(Settings.ButtonChat())
-        store.dispatch(GlobalAction.OpenChat(SupportInfo()))
+        store.dispatchOnMain(GlobalAction.OpenChat(SupportInfo()))
     }
 
     private fun navigateToAppSettings() {
         Analytics.send(Settings.ButtonAppSettings())
-        store.dispatch(NavigationAction.NavigateTo(AppScreen.AppSettings))
+        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.AppSettings))
     }
 
     private fun navigateToCardSettings() {
         Analytics.send(Settings.ButtonCardSettings())
-        store.dispatch(NavigationAction.NavigateTo(AppScreen.CardSettings))
+        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.CardSettings))
     }
 
     private fun linkMoreCards() {
         Analytics.send(Settings.ButtonCreateBackup())
-        store.dispatch(WalletAction.MultiWallet.BackupWallet)
+        store.dispatchOnMain(WalletAction.MultiWallet.BackupWallet)
     }
 
     private fun scanAndSaveUserWallet() {
         Analytics.send(Settings.ScanNewCard)
-        store.dispatch(DetailsAction.ScanAndSaveUserWallet)
+        store.dispatchOnMain(DetailsAction.ScanAndSaveUserWallet)
     }
 
     private fun navigateToWalletConnect() {
         Analytics.send(Settings.ButtonWalletConnect())
-        store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
+        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
     }
 
     private fun handleSocialNetworkClick(link: SocialNetworkLink) {
         Analytics.send(Settings.ButtonSocialNetwork(link.network))
-        store.dispatch(NavigationAction.OpenUrl(link.url))
+        store.dispatchOnMain(NavigationAction.OpenUrl(link.url))
     }
 
     private fun getSocialLinks(): ImmutableList<SocialNetworkLink> {
