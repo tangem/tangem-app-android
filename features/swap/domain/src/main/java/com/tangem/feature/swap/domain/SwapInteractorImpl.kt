@@ -1,6 +1,8 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -35,6 +37,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val networksRepository: NetworksRepository,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
 ) : SwapInteractor {
 
     // TODO: Move to DI
@@ -46,6 +49,64 @@ internal class SwapInteractorImpl @Inject constructor(
     private val amountFormatter = AmountFormatter()
     private var derivationPath: String? = null
     private var network: Network? = null
+
+    override suspend fun getPairs(currency: Currency): List<SwapPair> {
+        val currencies = getSelectedWalletSyncUseCase().fold(
+            ifLeft = { emptyList() },
+            ifRight = { selectedWallet ->
+                getCryptoCurrenciesUseCase(selectedWallet.walletId).fold(
+                    ifLeft = { emptyList() },
+                    ifRight = { it },
+                )
+            },
+        )
+
+        val pairs = getPairs(
+            initialCurrency = LeastTokenInfo(
+                contractAddress = (currency as? Currency.NonNativeToken)?.contractAddress ?: "0",
+                network = currency.networkId,
+            ),
+            currenciesList = currencies,
+        )
+
+        return createCryptoCurrencyPairs(pairs, currencies)
+    }
+
+    private fun createCryptoCurrencyPairs(
+        swapPairLeasts: List<SwapPairLeast>,
+        cryptoCurrenciesList: List<CryptoCurrency>,
+    ): List<SwapPair> {
+        return swapPairLeasts.mapNotNull {
+            val from = findCryptoCurrencyByLeastInfo(it.from, cryptoCurrenciesList)
+            val to = findCryptoCurrencyByLeastInfo(it.to, cryptoCurrenciesList)
+            if (from != null && to != null) {
+                SwapPair(
+                    from = from,
+                    to = to,
+                    providers = it.providers,
+                )
+            } else {
+                null
+            }
+        }
+    }
+
+    private fun findCryptoCurrencyByLeastInfo(
+        leastTokenInfo: LeastTokenInfo,
+        cryptoCurrenciesList: List<CryptoCurrency>,
+    ): CryptoCurrency? {
+        return cryptoCurrenciesList.find {
+            it.network.backendId == leastTokenInfo.network &&
+                (it as? CryptoCurrency.Token)?.contractAddress ?: "0" == leastTokenInfo.contractAddress
+        }
+    }
+
+    override suspend fun getPairs(
+        initialCurrency: LeastTokenInfo,
+        currenciesList: List<CryptoCurrency>,
+    ): List<SwapPairLeast> {
+        return repository.getPairs(initialCurrency, currenciesList)
+    }
 
     override fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?) {
         this.derivationPath = derivationPath
