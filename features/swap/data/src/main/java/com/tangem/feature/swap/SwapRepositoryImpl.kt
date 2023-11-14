@@ -6,6 +6,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
@@ -19,23 +22,23 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.swap.converters.QuotesConverter
-import com.tangem.feature.swap.converters.SwapConverter
-import com.tangem.feature.swap.converters.TokensConverter
+import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
-import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.QuoteModel
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.blockchain.common.Token as SdkToken
+import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
+@Suppress("LongParameterList")
 internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
+    private val tangemExpressApi: TangemExpressApi,
     private val oneInchApiFactory: OneInchApiFactory,
     private val oneInchErrorsHandler: OneInchErrorsHandler,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
@@ -46,6 +49,51 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val tokensConverter = TokensConverter()
     private val quotesConverter = QuotesConverter()
     private val swapConverter = SwapConverter()
+    private val leastTokenInfoConverter = LeastTokenInfoConverter()
+    private val swapPairInfoConverter = SwapPairInfoConverter()
+
+    override suspend fun getPairs(
+        initialCurrency: LeastTokenInfo,
+        currencyList: List<CryptoCurrency>,
+    ): List<SwapPairLeast> {
+        return withContext(coroutineDispatcher.io) {
+            val initial = NetworkLeastTokenInfo(
+                contractAddress = initialCurrency.contractAddress,
+                network = initialCurrency.network,
+            )
+            val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
+
+            val pairs = async {
+                getPairsInternal(
+                    from = arrayListOf(initial),
+                    to = currenciesList,
+                )
+            }
+
+            val reversedPairs = async {
+                getPairsInternal(
+                    from = currenciesList,
+                    to = arrayListOf(initial),
+                )
+            }
+
+            pairs.await() + reversedPairs.await()
+        }
+    }
+
+    private suspend fun getPairsInternal(
+        from: List<NetworkLeastTokenInfo>,
+        to: List<NetworkLeastTokenInfo>,
+    ): List<SwapPairLeast> {
+        return tangemExpressApi.getPairs(
+            PairsRequestBody(
+                from = from,
+                to = to,
+            ),
+        )
+            .getOrThrow()
+            .map { swapPairInfoConverter.convert(it) }
+    }
 
     override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
         // workaround cause backend do not return arbitrum and optimism rates
