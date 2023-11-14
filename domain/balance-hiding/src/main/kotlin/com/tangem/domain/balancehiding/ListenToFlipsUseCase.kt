@@ -32,6 +32,7 @@ class ListenToFlipsUseCase(
                         balanceHidingRepository.storeBalanceHidingSettings(
                             balanceHidingSettings.copy(
                                 isBalanceHidden = !balanceHidingSettings.isBalanceHidden,
+                                isUpdateFromToast = false,
                             ),
                         )
                     },
