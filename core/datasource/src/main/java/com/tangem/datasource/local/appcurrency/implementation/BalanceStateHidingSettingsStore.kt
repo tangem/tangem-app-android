@@ -13,6 +13,7 @@ internal class BalanceStateHidingSettingsStore(
         return getSyncOrNull() ?: BalanceHidingSettings(
             isHidingEnabledInSettings = false,
             isBalanceHidden = false,
+            isBalanceHidingNotificationEnabled = true,
         )
     }
 }
