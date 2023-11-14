@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.tangem.common.Strings
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.components.SpacerW2
@@ -185,13 +186,25 @@ private fun TokenItem(token: TokenToSelect, network: Network, screenBackgroundCo
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
             ) {
                 Text(
-                    text = token.addedTokenBalanceData.amountEquivalent.orEmpty(),
+                    text = if (token.addedTokenBalanceData.isBalanceHidden &&
+                        !token.addedTokenBalanceData.amountEquivalent.isNullOrEmpty()
+                    ) {
+                        Strings.STARS
+                    } else {
+                        token.addedTokenBalanceData.amountEquivalent.orEmpty()
+                    },
                     style = TangemTheme.typography.subtitle1,
                     color = TangemTheme.colors.text.primary1,
                 )
                 SpacerW2()
                 Text(
-                    text = token.addedTokenBalanceData.amount.orEmpty(),
+                    text = if (token.addedTokenBalanceData.isBalanceHidden &&
+                        !token.addedTokenBalanceData.amount.isNullOrEmpty()
+                    ) {
+                        Strings.STARS
+                    } else {
+                        token.addedTokenBalanceData.amount.orEmpty()
+                    },
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                 )
@@ -264,6 +277,7 @@ private val token = TokenToSelect(
         amount = "15 000 $",
         amountEquivalent = "15 000 " +
             "USDT",
+        isBalanceHidden = false,
     ),
 )
 

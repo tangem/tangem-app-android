@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.widget.Toast
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.SnackbarHostState
@@ -57,7 +59,7 @@ internal fun WalletEventEffect(
                         .addOnCompleteListener {
                             handleOnCompleteRequestTask(
                                 reviewManager = reviewManager,
-                                activity = context as? Activity ?: return@addOnCompleteListener,
+                                activity = context.findActivity(),
                                 task = it,
                                 onDismissClick = value.onDismissClick,
                             )
@@ -67,6 +69,15 @@ internal fun WalletEventEffect(
             }
         },
     )
+}
+
+private fun Context.findActivity(): Activity {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    error("Permissions should be called in the context of an Activity")
 }
 
 private fun handleOnCompleteRequestTask(

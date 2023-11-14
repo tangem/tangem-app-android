@@ -16,7 +16,6 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -31,12 +30,14 @@ import com.tangem.tap.domain.walletconnect2.domain.WcEthereumTransaction
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.details.redux.walletconnect.*
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userWalletsListManager
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.*
 import timber.log.Timber
 import java.math.BigDecimal
@@ -49,7 +50,7 @@ class WalletConnectSdkHelper {
         val blockchain = Blockchain.fromNetworkId(data.networkId) ?: return null
         val walletManager = getWalletManager(blockchain, data.rawDerivationPath) ?: return null
 
-        walletManager.safeUpdate()
+        walletManager.safeUpdate(isDemoCard())
         val wallet = walletManager.wallet
         val balance = wallet.amounts[AmountType.Coin]?.value ?: return null
 
@@ -108,13 +109,20 @@ class WalletConnectSdkHelper {
         )
     }
 
-    private fun getWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager? {
-        val blockchainNetwork = BlockchainNetwork(
+    fun isDemoCard(): Boolean {
+        val userWallet = userWalletsListManager.selectedUserWalletSync ?: return false
+        return userWallet.scanResponse.isDemoCard()
+    }
+
+    private suspend fun getWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager? {
+        val userWallet = userWalletsListManager.selectedUserWalletSync ?: return null
+        val walletManagerFacade = store.state.daggerGraphState
+            .get(DaggerGraphState::walletManagersFacade)
+        return walletManagerFacade.getOrCreateWalletManager(
+            userWalletId = userWallet.walletId,
             blockchain = blockchain,
             derivationPath = derivationPath,
-            tokens = emptyList(),
         )
-        return store.state.walletState.getWalletManager(blockchainNetwork)
     }
 
     suspend fun completeTransaction(data: WcTransactionData, cardId: String?): String? {
@@ -170,7 +178,12 @@ class WalletConnectSdkHelper {
             SimpleResult.Success -> {
                 val sentFrom = AnalyticsParam.TxSentFrom.WalletConnect
                 Analytics.send(Basic.TransactionSent(sentFrom = sentFrom, memoType = MemoType.Null))
-                HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
+                val hash = data.walletManager.wallet.recentTransactions.last().hash
+                if (hash?.startsWith(HEX_PREFIX) == true) {
+                    hash
+                } else {
+                    HEX_PREFIX + hash
+                }
             }
             is SimpleResult.Failure -> {
                 Timber.e(result.error as BlockchainSdkError)
@@ -194,12 +207,17 @@ class WalletConnectSdkHelper {
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)
         return when (result) {
             is CompletionResult.Success -> {
-                HEX_PREFIX + EthereumUtils.prepareTransactionToSend(
+                val hash = EthereumUtils.prepareTransactionToSend(
                     signature = result.data.signature,
                     transactionToSign = dataToSign,
                     walletPublicKey = data.walletManager.wallet.publicKey,
                     blockchain = data.walletManager.wallet.blockchain,
                 ).toHexString()
+                if (hash.startsWith(HEX_PREFIX)) {
+                    hash
+                } else {
+                    HEX_PREFIX + hash
+                }
             }
             is CompletionResult.Failure -> {
                 Timber.e(result.error.customMessage)

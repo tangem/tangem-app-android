@@ -1,7 +1,7 @@
 package com.tangem.utils.extensions
 
 /**
- * Removes an element from the collection based on the provided predicate.
+ * Removes elements from the collection based on the provided predicate.
  *
  * !!!This function is not thread-safe!!!
  *
