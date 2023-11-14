@@ -156,7 +156,7 @@ private fun MainInfo(state: SwapStateHolder) {
             priceImpact = priceImpactWarning,
             networkIconRes = if (state.sendCardData.isNotNativeToken) networkIconRes else null,
             iconPlaceholder = state.sendCardData.coinId?.let {
-                getActiveIconResByCoinId(it, state.networkId)
+                getActiveIconResByCoinId(it)
             },
             onChangeTokenClick = if (state.sendCardData.canSelectAnotherToken) state.onSelectTokenClick else null,
             modifier = Modifier.constrainAs(topCard) {
@@ -174,7 +174,7 @@ private fun MainInfo(state: SwapStateHolder) {
             priceImpact = priceImpactWarning,
             networkIconRes = if (state.receiveCardData.isNotNativeToken) networkIconRes else null,
             iconPlaceholder = state.receiveCardData.coinId?.let {
-                getActiveIconResByCoinId(it, state.networkId)
+                getActiveIconResByCoinId(it)
             },
             onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) {
                 state.onSelectTokenClick
