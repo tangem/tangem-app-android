@@ -128,6 +128,15 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun initTokens(currency: Currency) {
+        // new flow
+        viewModelScope.launch(dispatchers.main) {
+            runCatching(dispatchers.io) {
+                val pairs = swapInteractor.getPairs(currency)
+                // TODO
+            }
+        }
+
+        // old flow
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.initTokensToSwap(currency)
