@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -35,6 +36,10 @@ internal class SwapInteractorImpl @Inject constructor(
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) : SwapInteractor {
+// [REDACTED_TODO_COMMENT]
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
     private val amountFormatter = AmountFormatter()
@@ -47,6 +52,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     override suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState {
+// [REDACTED_TODO_COMMENT]
         val networkId = initialCurrency.networkId
         val availableTokens = cache.getAvailableTokens(networkId)
         val allLoadedTokens = availableTokens.ifEmpty {
@@ -57,18 +63,18 @@ internal class SwapInteractorImpl @Inject constructor(
 
         // replace tokens in wallet tokens list with loaded same
         val loadedOnWalletsMap = mutableSetOf<String>()
-        val tokensInWallet =
-            userWalletManager.getUserTokens(
-                networkId = networkId,
-                derivationPath = derivationPath,
-                isExcludeCustom = true,
-            ).filter { it.symbol != initialCurrency.symbol }
-                .map { token ->
-                    allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
-                        loadedOnWalletsMap.add(it.symbol)
-                        it
-                    } ?: swapCurrencyConverter.convertBack(token)
-                }
+        val tokensInWallet = userWalletManager.getUserTokens(
+            networkId = networkId,
+            derivationPath = derivationPath,
+            isExcludeCustom = true,
+        )
+            .map { token ->
+                allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
+                    loadedOnWalletsMap.add(it.symbol)
+                    it
+                } ?: swapCurrencyConverter.convertBack(token)
+            }
+            .filter { it.symbol != initialCurrency.symbol && allLoadedTokens.contains(it) }
         val loadedTokens = allLoadedTokens
             .filter {
                 !loadedOnWalletsMap.contains(it.symbol)
@@ -160,10 +166,11 @@ internal class SwapInteractorImpl @Inject constructor(
         fromToken: Currency,
         toToken: Currency,
         amountToSwap: String,
+        selectedFee: FeeType,
     ): SwapState {
         syncWalletBalanceForTokens(networkId, listOf(fromToken, toToken))
         val amountDecimal = toBigDecimalOrNull(amountToSwap)
-        if (amountDecimal == null || amountDecimal.compareTo(BigDecimal.ZERO) == 0) {
+        if (amountDecimal == null || amountDecimal.signum() == 0) {
             return createEmptyAmountState(networkId, fromToken, toToken)
         }
         val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken))
@@ -183,6 +190,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromToken = fromToken,
                 toToken = toToken,
                 amount = amount,
+                selectedFee = selectedFee,
             )
         } else {
             loadQuoteData(
@@ -206,11 +214,12 @@ internal class SwapInteractorImpl @Inject constructor(
         amountToSwap: String,
         fee: TxFee,
     ): TxState {
-        val amount = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format, use only digits" }
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val amount = SwapAmount(amountDecimal, getTokenDecimals(currencyToSend))
         val result = transactionManager.sendTransaction(
             txData = SwapTxData(
                 networkId = networkId,
-                amountToSend = amount,
+                amountToSend = amountDecimal,
                 currencyToSend = swapCurrencyConverter.convert(currencyToSend),
                 feeAmount = fee.feeValue,
                 gasLimit = fee.gasLimit,
@@ -233,7 +242,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 }
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
-                        swapStateData.swapModel.fromTokenAmount,
+                        amount,
                         currencyToSend.symbol,
                     ),
                     toAmount = amountFormatter.formatSwapAmountToUI(
@@ -263,6 +272,11 @@ internal class SwapInteractorImpl @Inject constructor(
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
     }
 
+    override fun getSwapAmountForToken(amount: String, token: Currency): SwapAmount {
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amount)) { "wrong amount format" }
+        return SwapAmount(amountDecimal, getTokenDecimals(token))
+    }
+
     private suspend fun onSuccessLegacyFlow(currency: Currency) {
         userWalletManager.addToken(swapCurrencyConverter.convert(currency), derivationPath)
         userWalletManager.refreshWallet()
@@ -282,15 +296,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private suspend fun getAndAddCryptoCurrency(userWallet: UserWallet, currency: Currency, network: Network) {
         repository.getCryptoCurrency(userWallet, currency, network)?.let { cryptoCurrency ->
-            currenciesRepository.addCurrencies(
-                userWallet.walletId,
-                listOf(cryptoCurrency),
-            )
-            networksRepository.getNetworkStatusesSync(
-                userWalletId = userWallet.walletId,
-                networks = setOf(cryptoCurrency.network),
-                refresh = true,
-            )
+            addCryptoCurrenciesUseCase(userWallet.walletId, cryptoCurrency)
         }
     }
 
@@ -411,7 +417,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     networkId = networkId,
                     fromToken = fromToken,
                     toToken = toToken,
-                    fromTokenAmount = quoteDataModel.fromTokenAmount,
+                    fromTokenAmount = amount,
                     toTokenAmount = quoteDataModel.toTokenAmount,
                     swapStateData = null,
                 )
@@ -455,6 +461,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fromToken: Currency,
         toToken: Currency,
         amount: SwapAmount,
+        selectedFee: FeeType,
     ): SwapState {
         repository.prepareSwapTransaction(
             networkId = networkId,
@@ -476,10 +483,14 @@ internal class SwapInteractorImpl @Inject constructor(
                     derivationPath = derivationPath,
                 )
                 val txFeeState = proxyFeesToFeeState(networkId, feeData)
+                val feeByPriority = when (selectedFee) {
+                    FeeType.NORMAL -> txFeeState.normalFee.feeValue
+                    FeeType.PRIORITY -> txFeeState.priorityFee.feeValue
+                }
                 val isBalanceIncludeFeeEnough =
-                    isBalanceEnough(networkId, fromToken, amount, txFeeState.priorityFee.feeValue)
+                    isBalanceEnough(networkId, fromToken, amount, feeByPriority)
                 val isFeeEnough = checkFeeIsEnough(
-                    fee = txFeeState.normalFee.feeValue,
+                    fee = feeByPriority,
                     spendAmount = amount,
                     networkId = networkId,
                     fromToken = fromToken,
@@ -488,7 +499,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     networkId = networkId,
                     fromToken = fromToken,
                     toToken = toToken,
-                    fromTokenAmount = swapData.fromTokenAmount,
+                    fromTokenAmount = amount,
                     toTokenAmount = swapData.toTokenAmount,
                     swapStateData = SwapStateData(
                         fee = txFeeState,
@@ -566,7 +577,7 @@ internal class SwapInteractorImpl @Inject constructor(
         quotesLoadedState: SwapState.QuotesLoadedState,
     ): SwapState.QuotesLoadedState {
         // if token balance ZERO not show permission state to avoid user to spend money for fee
-        val isTokenZeroBalance = getTokenBalance(networkId, fromToken).value.compareTo(BigDecimal.ZERO) == 0
+        val isTokenZeroBalance = getTokenBalance(networkId, fromToken).value.signum() == 0
         if (isTokenZeroBalance) {
             return quotesLoadedState.copy(
                 permissionState = PermissionDataState.Empty,
@@ -609,6 +620,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 requestApproveData = RequestApproveStateData(
                     fee = feeState,
                     approveData = transactionData,
+                    fromTokenAmount = swapAmount,
                 ),
             ),
             preparedSwapConfigState = quotesLoadedState.preparedSwapConfigState.copy(
@@ -699,7 +711,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private suspend fun checkFeeIsEnough(
+    override suspend fun checkFeeIsEnough(
         fee: BigDecimal?,
         spendAmount: SwapAmount,
         networkId: String,
@@ -709,7 +721,7 @@ internal class SwapInteractorImpl @Inject constructor(
             return false
         }
         val nativeTokenBalance = userWalletManager.getNativeTokenBalance(networkId, derivationPath)
-        val percentsToFeeIncrease = BigDecimal.valueOf(INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT)
+        val percentsToFeeIncrease = BigDecimal.ONE
         return when (fromToken) {
             is Currency.NativeToken -> {
                 nativeTokenBalance?.let { balance ->
@@ -766,6 +778,8 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val DEFAULT_SLIPPAGE = 2
         private const val ZERO_BALANCE = "0"
         private const val DEFAULT_BLOCKCHAIN_INCH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+
+        @Suppress("UnusedPrivateMember")
         private const val INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT = 1.0 // if need to increase fee when check isEnough
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val USDT_SYMBOL = "USDT"

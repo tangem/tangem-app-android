@@ -18,6 +18,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -45,6 +46,10 @@ class DerivationManagerImpl(
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
 ) : DerivationManager {
+// [REDACTED_TODO_COMMENT]
+    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
 
     override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine { continuation ->
         val blockchain = Blockchain.fromNetworkId(currency.networkId)
@@ -96,6 +101,7 @@ class DerivationManagerImpl(
                     derivationPath = derivationPath,
                     derivationStyleProvider = derivationStyleProvider,
                 )
+                continuation.resumeWith(Result.success(derivationPath))
             }
         } else {
             val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
@@ -163,15 +169,8 @@ class DerivationManagerImpl(
             derivationPath = derivationPath,
             derivationStyleProvider = derivationStyleProvider,
         )
-        currenciesRepository.addCurrencies(
-            userWalletId,
-            listOf(cryptoCurrency),
-        )
-        networksRepository.getNetworkStatusesSync(
-            userWalletId = userWalletId,
-            networks = setOf(cryptoCurrency.network),
-            refresh = true,
-        )
+
+        addCryptoCurrenciesUseCase(userWalletId, cryptoCurrency)
     }
 
     private fun convertCurrency(
@@ -191,9 +190,11 @@ class DerivationManagerImpl(
             }
             is NonNativeToken -> {
                 val sdkToken = Token(
+                    name = currency.name,
                     symbol = currency.symbol,
                     contractAddress = currency.contractAddress,
                     decimals = currency.decimalCount,
+                    id = currency.id,
                 )
                 cryptoCurrencyFactory.createToken(
                     sdkToken = sdkToken,
@@ -233,7 +234,7 @@ class DerivationManagerImpl(
         }
 
         scope.launch {
-            val selectedUserWallet = appStateHolder.userWalletsListManager?.selectedUserWalletSync
+            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
 
             val result = appStateHolder.tangemSdkManager?.derivePublicKeys(
                 cardId = null, // always ignore cardId in derive task
@@ -255,12 +256,10 @@ class DerivationManagerImpl(
                         derivedKeys = updatedDerivedKeys,
                     )
                     if (selectedUserWallet != null) {
-                        val userWallet = selectedUserWallet.copy(
-                            scanResponse = updatedScanResponse,
+                        userWalletsListManager.update(
+                            userWalletId = selectedUserWallet.walletId,
+                            update = { it.copy(scanResponse = updatedScanResponse) },
                         )
-
-                        appStateHolder.userWalletsListManager?.save(userWallet, canOverride = true)
-                        appStateHolder.walletStoresManager?.fetch(userWallet, true)
                     }
                     appStateHolder.mainStore?.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
                     delay(DELAY_SDK_DIALOG_CLOSE)

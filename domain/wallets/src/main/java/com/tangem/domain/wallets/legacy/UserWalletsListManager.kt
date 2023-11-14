@@ -105,17 +105,13 @@ interface UserWalletsListManager {
         /**
          * Receive saved [UserWallet]s, populate [userWallets] flow with it and set [isLocked] as false.
          *
+         * @param throwIfNotAllWalletsUnlocked Indicates that the function must throw
+         * [UserWalletsListError.NotAllUserWalletsUnlocked] if not all user wallets are unlocked.
+         *
          * @return [CompletionResult] of operation, with selected [UserWallet]
          * or null if there is no selected [UserWallet]
          */
-        suspend fun unlock(): CompletionResult<UserWallet>
-
-        /**
-         * Unlock all [UserWallet]s and select passed [UserWalletId]
-         *
-         * @param selectedWalletId [UserWalletId] of [UserWallet] which must be selected
-         */
-        suspend fun unlockAndSelect(selectedWalletId: UserWalletId): CompletionResult<UserWallet>
+        suspend fun unlock(throwIfNotAllWalletsUnlocked: Boolean = false): CompletionResult<UserWallet>
 
         /** Remove [UserWallet]s from [userWallets] and set [isLocked] as true */
         fun lock()

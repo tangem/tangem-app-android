@@ -33,13 +33,20 @@ dependencyResolutionManagement {
             // setting any repository from tangem project allows maven search all packages in the project
             url = uri("https://maven.pkg.github.com/tangem/blockchain-sdk-kotlin")
             credentials {
-                println(System.getenv("GITHUB_ACTOR"))
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/wallet-core")
+            credentials {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
             }
         }
         maven("https://jitpack.io")
-        maven("https://zendesk.jfrog.io/zendesk/repo")
+        maven("https://clients-nexus.sprinklr.com/")
     }
 
     versionCatalogs {

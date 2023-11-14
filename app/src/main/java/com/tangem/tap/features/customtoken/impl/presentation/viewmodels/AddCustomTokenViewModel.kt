@@ -270,7 +270,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 value = "",
                 onValueChange = actionsHandler::onTokenSymbolValueChange,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                label = TextReference.Res(R.string.custom_token_token_symbol_input_title),
+                label = TextReference.Res(R.string.custom_token_token_symbol_input_title_old),
                 placeholder = TextReference.Res(id = R.string.custom_token_token_symbol_input_placeholder),
                 isEnabled = false,
             )
@@ -601,8 +601,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 val contractAddress = uiState.form.contractAddressInputField.value
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
                 val networkId = Blockchain.fromNetworkId(networkSelectorValue.toNetworkId())?.id
-
-                val savedTokenId = if (token.isCustom) null else token.id.value
+// [REDACTED_TODO_COMMENT]
+                val savedTokenId = if (token.isCustom) null else token.id.rawCurrencyId
 
                 val sameId = foundToken?.id == savedTokenId
                 val sameAddress = contractAddress == token.contractAddress
@@ -804,7 +804,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     networkSelectorField = uiState.form.networkSelectorField.copy(
                         selectedItem = selectedItem,
                     ),
-                    showTokenFields = selectedItem.blockchain.canHandleTokens(),
+                    showTokenFields = selectedItem.blockchain.canHandleTokens() &&
+                        // workaround cause in Terra we support only 1 token
+                        selectedItem.blockchain != Blockchain.TerraV1,
                 ),
             )
             onContactAddressValueChange(uiState.form.contractAddressInputField.value)
@@ -898,7 +900,9 @@ internal class AddCustomTokenViewModel @Inject constructor(
             viewModelScope.launch(dispatchers.io) {
                 runCatching { featureInteractor.saveToken(currency) }
                     .onSuccess { featureRouter.openWalletScreen() }
-                    .onFailure(Timber::e)
+                    .onFailure {
+                        Timber.e(it)
+                    }
             }
         }
     }
