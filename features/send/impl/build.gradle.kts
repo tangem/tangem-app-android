@@ -14,7 +14,12 @@ dependencies {
     /** AndroidX */
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.appCompat)
+
+    /** Other dependencies */
+    implementation(deps.kotlin.immutable.collections)
     implementation(deps.material)
+    implementation(deps.arrow.core)
+    implementation(deps.tangem.card.core)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
@@ -23,13 +28,24 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.navigation)
+    implementation(deps.compose.navigation.hilt)
+
+    /** Common */
+    implementation(projects.common)
 
     /** Core modules */
     implementation(projects.core.featuretoggles)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Domain modules */
+    implementation(projects.domain.models)
+    implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
 
     /** Feature modules */
     implementation(projects.features.send.api)
