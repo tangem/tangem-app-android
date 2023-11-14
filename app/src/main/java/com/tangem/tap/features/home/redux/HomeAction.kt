@@ -17,9 +17,8 @@ sealed class HomeAction : Action {
     /**
      * Action for scanning card
      *
-     * @property analyticsEvent          analytics event
-     * @property lifecycleCoroutineScope lifecycle scope. It will be canceled when lifecycle-aware component is
-     * destroyed.
+     * @property analyticsEvent analytics event
+     * @property scope          lifecycle scope. It will be canceled when lifecycle-aware component is destroyed
      */
     data class ReadCard(
         val analyticsEvent: AnalyticsEvent? = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Introduction),
