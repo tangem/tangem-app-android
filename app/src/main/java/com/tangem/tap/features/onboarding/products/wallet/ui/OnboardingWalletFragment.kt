@@ -177,13 +177,21 @@ class OnboardingWalletFragment :
                 seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
                 state.cardArtworkUri?.let {
                     seedPhraseViewModel.setCardArtworkUri(it.toString())
-                    loadImageIntoImageView(it, binding.imvFrontCard)
+                    if (state.isRingOnboarding) {
+                        binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
+                    } else {
+                        loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
+                    }
                     loadImageIntoImageView(it, binding.imvFirstBackupCard)
                     loadImageIntoImageView(it, binding.imvSecondBackupCard)
                 }
             }
             else -> {
-                loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
+                if (state.isRingOnboarding) {
+                    binding.imvFrontCard.load(R.drawable.img_ring_placeholder)
+                } else {
+                    loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
+                }
                 loadImageIntoImageView(state.cardArtworkUri, binding.imvFirstBackupCard)
                 loadImageIntoImageView(state.cardArtworkUri, binding.imvSecondBackupCard)
                 handleOnboardingStep(state)
@@ -390,9 +398,9 @@ class OnboardingWalletFragment :
     }
 
     private fun showWriteBackupCard(state: BackupState) = with(binding) {
+        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         prepareViewForFinalizeStep()
 
-        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
         tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
@@ -427,7 +435,7 @@ class OnboardingWalletFragment :
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             showConfetti(false)
-            store.dispatch(OnboardingWalletAction.FinishOnboarding(lifecycleCoroutineScope = lifecycleScope))
+            store.dispatch(OnboardingWalletAction.FinishOnboarding(scope = requireActivity().lifecycleScope))
         }
 
         animator.showSuccess {
