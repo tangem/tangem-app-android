@@ -80,7 +80,9 @@ internal class MainViewModel @Inject constructor(
                     return@onEach
                 }
 
-                displayBalancesHiddenStatusToast(settings)
+                if (!settings.isUpdateFromToast) {
+                    displayBalancesHiddenStatusToast(settings)
+                }
 
                 previousSettings = settings
             }
@@ -97,7 +99,10 @@ internal class MainViewModel @Inject constructor(
     override fun onHiddenBalanceToastAction() {
         viewModelScope.launch {
             updateBalanceHidingSettingsUseCase.invoke {
-                copy(isBalanceHidden = false)
+                copy(
+                    isBalanceHidden = false,
+                    isUpdateFromToast = true
+                )
             }
         }
     }
@@ -105,7 +110,10 @@ internal class MainViewModel @Inject constructor(
     override fun onShownBalanceToastAction() {
         viewModelScope.launch {
             updateBalanceHidingSettingsUseCase.invoke {
-                copy(isBalanceHidden = true)
+                copy(
+                    isBalanceHidden = true,
+                    isUpdateFromToast = true
+                )
             }
         }
     }
