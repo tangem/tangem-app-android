@@ -274,11 +274,18 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
             isBalanceHidden = isBalanceHidden,
         )
         val selectTokenState = uiState.selectTokenState?.copy(
-            addedTokens = uiState.selectTokenState.addedTokens.map {
-                it.copy(
-                    addedTokenBalanceData = it.addedTokenBalanceData?.copy(isBalanceHidden = isBalanceHidden),
-                )
-            },
+            availableTokens = uiState.selectTokenState.availableTokens.map {
+                when (it) {
+                    is TokenToSelectState.TokenToSelect -> {
+                        it.copy(
+                            addedTokenBalanceData = it.addedTokenBalanceData?.copy(isBalanceHidden = isBalanceHidden),
+                        )
+                    }
+                    is TokenToSelectState.Title -> {
+                        it
+                    }
+                }
+            }.toImmutableList(),
         )
 
         return uiState.copy(
