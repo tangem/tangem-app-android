@@ -141,6 +141,8 @@ class TopUpController(
                         DataSourceTopupInfo.CardBalanceState.Empty
                     AnalyticsParam.CardBalanceState.Full ->
                         DataSourceTopupInfo.CardBalanceState.Full
+                    AnalyticsParam.CardBalanceState.NoRate ->
+                        DataSourceTopupInfo.CardBalanceState.NoRate
                 },
             )
             topupWalletStorage.save(topupInfo)

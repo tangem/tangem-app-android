@@ -15,14 +15,19 @@ private const val CONTROL_BUTTONS_CONTENT_TYPE = "ControlButtons"
 /**
  * Single currency control buttons. Like, "Buy", "Sell", etc
  *
- * @param configs  list of buttons
- * @param modifier modifier
+ * @param configs             list of buttons
+ * @param selectedWalletIndex selected wallet index for creating a unique key
+ * @param modifier            modifier
  *
 [REDACTED_AUTHOR]
  */
 @OptIn(ExperimentalFoundationApi::class)
-internal fun LazyListScope.controlButtons(configs: ImmutableList<WalletManageButton>, modifier: Modifier = Modifier) {
-    item(key = CONTROL_BUTTONS_CONTENT_TYPE, contentType = CONTROL_BUTTONS_CONTENT_TYPE) {
+internal fun LazyListScope.controlButtons(
+    configs: ImmutableList<WalletManageButton>,
+    selectedWalletIndex: Int,
+    modifier: Modifier = Modifier,
+) {
+    item(key = CONTROL_BUTTONS_CONTENT_TYPE + selectedWalletIndex, contentType = CONTROL_BUTTONS_CONTENT_TYPE) {
         HorizontalActionChips(
             buttons = configs.map(WalletManageButton::config).toImmutableList(),
             modifier = modifier.animateItemPlacement(),
