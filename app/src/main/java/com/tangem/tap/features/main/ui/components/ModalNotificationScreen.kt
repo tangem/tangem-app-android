@@ -88,9 +88,9 @@ private fun ModalNotificationContentPreview_Light(
 ) {
     TangemTheme(isDark = false) {
         ModalNotificationContent(
-            param,
+            notification = param,
             modifier = Modifier.background(
-                color = TangemTheme.colors.background.plain,
+                color = TangemTheme.colors.background.primary,
                 shape = TangemTheme.shapes.bottomSheet,
             ),
         )
@@ -104,9 +104,9 @@ private fun ModalNotificationContentPreview_Dark(
 ) {
     TangemTheme(isDark = true) {
         ModalNotificationContent(
-            param,
+            notification = param,
             modifier = Modifier.background(
-                color = TangemTheme.colors.background.plain,
+                color = TangemTheme.colors.background.primary,
                 shape = TangemTheme.shapes.bottomSheet,
             ),
         )
