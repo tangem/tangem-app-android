@@ -8,7 +8,8 @@ import com.tangem.features.managetokens.impl.R
 
 data class DerivationNotificationState(
     val totalNeeded: Int,
-    val missingAddressesCount: Int,
+    val totalWallets: Int,
+    val walletsToDerive: Int,
     val onGenerateClick: () -> Unit,
 ) {
     val config = NotificationConfig(
@@ -25,8 +26,8 @@ data class DerivationNotificationState(
             onClick = onGenerateClick,
             additionalText = pluralReference(
                 id = R.plurals.manage_tokens_number_of_wallets_android,
-                count = totalNeeded,
-                formatArgs = wrappedList(missingAddressesCount, totalNeeded),
+                count = totalWallets,
+                formatArgs = wrappedList(walletsToDerive, totalWallets),
             ),
         ),
     )

@@ -54,7 +54,7 @@ private fun LoadedTokenItem(state: TokenItemState.Loaded, modifier: Modifier = M
                 modifier = Modifier
                     .weight(weight = 1f),
             ) {
-                TokenName(name = state.name, currencyId = state.currencyId)
+                TokenName(name = state.name, currencyId = state.currencySymbol)
                 TokenPriceData(price = state.rate, quotesState = state.quotes)
             }
             SpacerW24()
@@ -67,8 +67,8 @@ private fun LoadedTokenItem(state: TokenItemState.Loaded, modifier: Modifier = M
             }
 
             TokenButton(
-                type = state.availableAction,
-                onClick = { state.onButtonClick(state.currencyId) },
+                type = state.availableAction.value,
+                onClick = { state.onButtonClick(state) },
             )
         }
     }
