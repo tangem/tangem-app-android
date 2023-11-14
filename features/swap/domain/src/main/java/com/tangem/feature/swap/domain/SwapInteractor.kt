@@ -1,12 +1,16 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.PermissionOptions
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 
 interface SwapInteractor {
+
+    suspend fun getPairs(currency: Currency): List<SwapPair>
+
+    suspend fun getPairs(initialCurrency: LeastTokenInfo, currenciesList: List<CryptoCurrency>): List<SwapPairLeast>
 
     fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?)
 
@@ -17,6 +21,7 @@ interface SwapInteractor {
      * @return [TokensDataState] that contains info about all available to swap tokens for networkId
      * and preselected tokens which initially select to swap
      */
+    @Deprecated("method is used in the old swap mechanism")
     suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState
 
     /**

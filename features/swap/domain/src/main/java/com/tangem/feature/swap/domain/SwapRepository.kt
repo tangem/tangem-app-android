@@ -5,12 +5,12 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
-import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.QuoteModel
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.*
 import java.math.BigDecimal
 
 interface SwapRepository {
+
+    suspend fun getPairs(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): List<SwapPairLeast>
 
     suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
 
