@@ -23,6 +23,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
+import com.tangem.lib.crypto.models.Currency as LibCurrency
 
 @Suppress("LargeClass", "LongParameterList")
 internal class SwapInteractorImpl @Inject constructor(
@@ -70,7 +71,14 @@ internal class SwapInteractorImpl @Inject constructor(
             isExcludeCustom = true,
         )
             .map { token ->
-                allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
+                val contractAddress = (token as? LibCurrency.NonNativeToken)?.contractAddress
+                allLoadedTokens.firstOrNull {
+                    if (it is Currency.NonNativeToken) {
+                        it.symbol == token.symbol && it.contractAddress == contractAddress
+                    } else {
+                        it.symbol == token.symbol
+                    }
+                }?.let {
                     loadedOnWalletsMap.add(it.symbol)
                     it
                 } ?: swapCurrencyConverter.convertBack(token)
