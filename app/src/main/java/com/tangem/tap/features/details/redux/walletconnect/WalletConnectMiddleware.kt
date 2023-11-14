@@ -8,7 +8,6 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
@@ -324,10 +323,9 @@ class WalletConnectMiddleware {
             is WalletConnectAction.SessionRejected -> {
                 when (action.error) {
                     is WalletConnectError.ApprovalErrorAddNetwork -> {
-                        val blockchains = action.error.networks.mapNotNull { Blockchain.fromNetworkId(it)?.fullName }
                         store.dispatchOnMain(
                             GlobalAction.ShowDialog(
-                                WalletConnectDialog.AddNetwork(blockchains.toString()),
+                                WalletConnectDialog.UnsupportedNetwork(action.error.networks),
                             ),
                         )
                     }

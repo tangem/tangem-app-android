@@ -4,8 +4,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -54,34 +54,30 @@ fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
         textAlign = TextAlign.Center,
     )
 
-    Box {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            SpacerH(TangemTheme.dimens.spacing94)
-            StoriesTextAnimation(
-                slideInDuration = 500,
-                slideInDelay = 150,
-            ) { modifier ->
-                Text(
-                    modifier = modifier
-                        .weight(1f),
-                    text = stringResource(R.string.story_meet_title),
-                    style = style,
-                    color = TangemColorPalette.White,
-                    textAlign = TextAlign.Center,
-                )
-            }
-            SpacerH(TangemTheme.dimens.spacing46)
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        SpacerH(TangemTheme.dimens.spacing94)
+        StoriesTextAnimation(
+            slideInDuration = 500,
+            slideInDelay = 150,
+        ) { modifier ->
+            Text(
+                modifier = modifier,
+                text = stringResource(R.string.story_meet_title),
+                style = style,
+                color = TangemColorPalette.White,
+                textAlign = TextAlign.Center,
+            )
         }
+        SpacerH(TangemTheme.dimens.spacing46)
         Image(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
             painter = painterResource(R.drawable.img_meet_tangem),
-            contentScale = ContentScale.FillWidth,
+            contentScale = ContentScale.Inside,
             contentDescription = "Tangem Wallet card",
         )
     }
