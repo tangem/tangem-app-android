@@ -27,6 +27,7 @@ import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
+import com.tangem.tap.userWalletsListManager
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -416,7 +417,7 @@ class TransactionManagerImpl(
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
         val walletManager = if (walletFeatureToggles.isRedesignedScreenEnabled) {
             val selectedUserWallet = requireNotNull(
-                appStateHolder.userWalletsListManager?.selectedUserWalletSync,
+                userWalletsListManager.selectedUserWalletSync,
             ) { "userWallet or userWalletsListManager is null" }
             walletManagersFacade.getOrCreateWalletManager(
                 selectedUserWallet.walletId,

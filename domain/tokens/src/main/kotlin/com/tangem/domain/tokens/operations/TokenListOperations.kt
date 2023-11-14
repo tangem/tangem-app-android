@@ -50,8 +50,7 @@ internal class TokenListOperations(
     }
 
     private fun Raise<Error>.createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
-        val nonEmptyCurrencies = tokens.toNonEmptyListOrNull()
-            ?: return TokenList.Empty
+        val nonEmptyCurrencies = tokens.toNonEmptyListOrNull() ?: return TokenList.Empty
 
         val isAnyTokenLoading = nonEmptyCurrencies.any { it.value is CryptoCurrencyStatus.Loading }
         val fiatBalanceOperations = TokenListFiatBalanceOperations(nonEmptyCurrencies, isAnyTokenLoading)

@@ -42,7 +42,7 @@ data class NetworkStatus(
      */
     data class Verified(
         val address: NetworkAddress,
-        val amounts: Map<CryptoCurrency.ID, AmountStatus>,
+        val amounts: Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus>,
         val pendingTransactions: Map<CryptoCurrency.ID, Set<TxHistoryItem>>,
     ) : Status()
 
