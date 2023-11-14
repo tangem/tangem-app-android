@@ -5,6 +5,7 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -40,17 +41,23 @@ internal class TokenDetailsLoadedBalanceConverter(
         return state.copy(
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Error(state.tokenBalanceBlockState.actionButtons),
             marketPriceBlockState = MarketPriceBlockState.Error(state.marketPriceBlockState.currencySymbol),
-            notifications = persistentListOf(TokenDetailsNotification.Warning.NetworksUnreachable),
+            notifications = persistentListOf(TokenDetailsNotification.NetworksUnreachable),
         )
     }
 
     private fun convert(status: CryptoCurrencyStatus): TokenDetailsState {
         val state = currentStateProvider()
         val currencyName = state.marketPriceBlockState.currencySymbol
+        val pendingTxs = status.value.pendingTransactions.map(txHistoryItemConverter::convert).toPersistentList()
         return state.copy(
             tokenBalanceBlockState = getBalanceState(state.tokenBalanceBlockState, status),
             marketPriceBlockState = getMarketPriceState(status = status.value, currencySymbol = currencyName),
-            pendingTxs = status.value.pendingTransactions.map(txHistoryItemConverter::convert).toPersistentList(),
+            pendingTxs = pendingTxs,
+            txHistoryState = if (state.txHistoryState is TxHistoryState.NotSupported) {
+                state.txHistoryState.copy(pendingTransactions = pendingTxs)
+            } else {
+                state.txHistoryState
+            },
         )
     }
 
@@ -61,19 +68,15 @@ internal class TokenDetailsLoadedBalanceConverter(
         return when (status.value) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.NoAccount,
+            is CryptoCurrencyStatus.Custom,
             -> TokenDetailsBalanceBlockState.Content(
-                actionButtons = currentState.actionButtons,
-                fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
-                cryptoBalance = formatCryptoAmount(status),
-            )
-            is CryptoCurrencyStatus.NoAccount -> TokenDetailsBalanceBlockState.Content(
                 actionButtons = currentState.actionButtons,
                 fiatBalance = formatFiatAmount(status.value, appCurrencyProvider()),
                 cryptoBalance = formatCryptoAmount(status),
             )
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(currentState.actionButtons)
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
             -> TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
@@ -87,21 +90,31 @@ internal class TokenDetailsLoadedBalanceConverter(
         return when (status) {
             is CryptoCurrencyStatus.Loading -> MarketPriceBlockState.Loading(currencySymbol)
             is CryptoCurrencyStatus.NoQuote -> MarketPriceBlockState.Error(currencySymbol)
+            is CryptoCurrencyStatus.NoAccount -> {
+                if (status.fiatRate == null) {
+                    MarketPriceBlockState.Error(currencySymbol)
+                } else {
+                    status.toContentConfig(currencySymbol)
+                }
+            }
             is CryptoCurrencyStatus.Loaded,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
-            is CryptoCurrencyStatus.NoAccount,
             is CryptoCurrencyStatus.Unreachable,
             is CryptoCurrencyStatus.NoAmount,
-            -> MarketPriceBlockState.Content(
-                currencySymbol = currencySymbol,
-                price = formatPrice(status, appCurrencyProvider()),
-                priceChangeConfig = PriceChangeState.Content(
-                    valueInPercent = formatPriceChange(status),
-                    type = getPriceChangeType(status),
-                ),
-            )
+            -> status.toContentConfig(currencySymbol)
         }
+    }
+
+    private fun CryptoCurrencyStatus.Status.toContentConfig(currencySymbol: String): MarketPriceBlockState.Content {
+        return MarketPriceBlockState.Content(
+            currencySymbol = currencySymbol,
+            price = formatPrice(status = this, appCurrency = appCurrencyProvider()),
+            priceChangeConfig = PriceChangeState.Content(
+                valueInPercent = formatPriceChange(status = this),
+                type = getPriceChangeType(status = this),
+            ),
+        )
     }
 
     private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeType {

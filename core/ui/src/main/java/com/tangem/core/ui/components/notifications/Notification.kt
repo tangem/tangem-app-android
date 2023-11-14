@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -178,6 +179,7 @@ private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButt
         text = config.text.resolveReference(),
         onClick = config.onClick,
         modifier = Modifier.fillMaxWidth(),
+        size = TangemButtonSize.WideAction,
     )
 }
 
@@ -189,12 +191,14 @@ private fun SinglePrimaryButton(config: NotificationButtonsState.PrimaryButtonCo
             iconResId = config.iconResId,
             onClick = config.onClick,
             modifier = Modifier.fillMaxWidth(),
+            size = TangemButtonSize.WideAction,
         )
     } else {
         PrimaryButton(
             text = config.text.resolveReference(),
             onClick = config.onClick,
             modifier = Modifier.fillMaxWidth(),
+            size = TangemButtonSize.WideAction,
         )
     }
 }
@@ -206,12 +210,14 @@ private fun PairButtons(config: NotificationButtonsState.PairButtonsConfig) {
             text = config.secondaryText.resolveReference(),
             onClick = config.onSecondaryClick,
             modifier = Modifier.weight(weight = 1f),
+            size = TangemButtonSize.WideAction,
         )
 
         PrimaryButton(
             text = config.primaryText.resolveReference(),
             onClick = config.onPrimaryClick,
             modifier = Modifier.weight(weight = 1f),
+            size = TangemButtonSize.WideAction,
         )
     }
 }
