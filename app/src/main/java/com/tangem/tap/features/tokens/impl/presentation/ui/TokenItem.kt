@@ -10,6 +10,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -125,7 +126,9 @@ internal fun TokenItem(model: TokenItemState) {
 
 @Composable
 private fun Icon(name: String, iconUrl: String, onContrastCalculate: (Color) -> Unit, modifier: Modifier = Modifier) {
-    val iconModifier = modifier.size(size = TangemTheme.dimens.size46)
+    val iconModifier = modifier
+        .size(size = TangemTheme.dimens.size46)
+        .clip(TangemTheme.shapes.roundedCorners8)
     val screenBackgroundColor = TangemTheme.colors.background.primary.toArgb()
     val isDarkTheme = isSystemInDarkTheme()
     val coroutineScope = rememberCoroutineScope()

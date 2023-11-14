@@ -38,7 +38,7 @@ object OnboardingHelper {
                 }
             }
 
-            response.cardTypesResolver.isWallet2() -> {
+            response.cardTypesResolver.isWallet2() || response.cardTypesResolver.isShibaWallet() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
                 val activationInProgress = cardInfoStorage.isActivationInProgress(cardId)
                 val backupNotActive = response.card.backupStatus?.isActive != true
@@ -53,7 +53,10 @@ object OnboardingHelper {
     fun whereToNavigate(scanResponse: ScanResponse): AppScreen {
         return when (scanResponse.productType) {
             ProductType.Note -> AppScreen.OnboardingNote
-            ProductType.Wallet, ProductType.Wallet2 -> if (scanResponse.card.settings.isBackupAllowed) {
+            ProductType.Wallet,
+            ProductType.Wallet2,
+            ProductType.Ring,
+            -> if (scanResponse.card.settings.isBackupAllowed) {
                 AppScreen.OnboardingWallet
             } else {
                 AppScreen.OnboardingOther
