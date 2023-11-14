@@ -9,9 +9,7 @@ import java.math.BigDecimal
 
 interface SwapInteractor {
 
-    suspend fun getPairs(currency: Currency): List<SwapPair>
-
-    suspend fun getPairs(initialCurrency: LeastTokenInfo, currenciesList: List<CryptoCurrency>): List<SwapPairLeast>
+    suspend fun getTokensDataState(currency: Currency): TokensDataStateExpress
 
     fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?)
 

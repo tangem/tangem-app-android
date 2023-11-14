@@ -1,8 +1,11 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import arrow.core.getOrElse
+import com.tangem.domain.tokens.GetCardTokensListUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -21,7 +24,9 @@ import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.toFiatString
+import kotlinx.coroutines.flow.first
 import timber.log.Timber
+import java.lang.IllegalStateException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -37,7 +42,8 @@ internal class SwapInteractorImpl @Inject constructor(
     private val networksRepository: NetworksRepository,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusUseCase,
+    private val getCardTokensListUseCase: GetCardTokensListUseCase,
 ) : SwapInteractor {
 
     // TODO: Move to DI
@@ -50,26 +56,55 @@ internal class SwapInteractorImpl @Inject constructor(
     private var derivationPath: String? = null
     private var network: Network? = null
 
-    override suspend fun getPairs(currency: Currency): List<SwapPair> {
-        val currencies = getSelectedWalletSyncUseCase().fold(
-            ifLeft = { emptyList() },
-            ifRight = { selectedWallet ->
-                getCryptoCurrenciesUseCase(selectedWallet.walletId).fold(
-                    ifLeft = { emptyList() },
-                    ifRight = { it },
-                )
-            },
+    override suspend fun getTokensDataState(currency: Currency): TokensDataStateExpress {
+        val selectedWallet = getSelectedWalletSyncUseCase().fold(
+            ifLeft = { null },
+            ifRight = { it },
         )
 
-        val pairs = getPairs(
+        requireNotNull(selectedWallet)
+
+        val currencyStatuses = getMultiCryptoCurrencyStatusUseCase(selectedWallet.walletId)
+            .first()
+            .getOrElse { emptyList() }
+            // .filter { it.currency.network.backendId != currency.networkId }
+        val currencies = currencyStatuses.map { it.currency }
+
+        val pairsLeast = getPairs(
             initialCurrency = LeastTokenInfo(
                 contractAddress = (currency as? Currency.NonNativeToken)?.contractAddress ?: "0",
                 network = currency.networkId,
             ),
-            currenciesList = currencies,
+            currenciesList = currencyStatuses.map { it.currency },
         )
 
-        return createCryptoCurrencyPairs(pairs, currencies)
+        val pairs = createCryptoCurrencyPairs(pairsLeast, currencies)
+
+
+        return TokensDataStateExpress(
+            preselectTokens = getPreselectTokens(currency, currencyStatuses),
+            foundTokensState = FoundTokensStateExpress(emptyList(), emptyList()),
+            pairs = pairs,
+        )
+    }
+
+    private fun getPreselectTokens(currency: Currency, currencies: List<CryptoCurrencyStatus>): PreselectTokensExpress {
+        val from = currencies.map { it.currency }
+            .find { it.network.backendId == currency.networkId
+                && it.getContractAddress() == currency.getContractAddress() }
+
+        val to = currencies.firstOrNull()?.currency // TODO choose of 3 variants
+
+        if (from != null && to != null) {
+            return PreselectTokensExpress(
+                fromToken = from,
+                toToken = to
+            )
+        } else {
+            throw IllegalStateException("From and to currencies must not be null")
+        }
+
+
     }
 
     private fun createCryptoCurrencyPairs(
@@ -97,22 +132,38 @@ internal class SwapInteractorImpl @Inject constructor(
     ): CryptoCurrency? {
         return cryptoCurrenciesList.find {
             it.network.backendId == leastTokenInfo.network &&
-                (it as? CryptoCurrency.Token)?.contractAddress ?: "0" == leastTokenInfo.contractAddress
+                it.getContractAddress() == leastTokenInfo.contractAddress
         }
     }
 
-    override suspend fun getPairs(
+    private fun CryptoCurrency.getContractAddress() : String {
+        return when(this) {
+            is CryptoCurrency.Token -> this.contractAddress
+            is CryptoCurrency.Coin -> "0"
+        }
+    }
+
+    private fun Currency.getContractAddress() : String {
+        return when(this) {
+            is Currency.NativeToken -> "0"
+            is Currency.NonNativeToken -> this.contractAddress
+        }
+    }
+
+    suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
         currenciesList: List<CryptoCurrency>,
     ): List<SwapPairLeast> {
         return repository.getPairs(initialCurrency, currenciesList)
     }
 
+    @Deprecated("used in old swap mechanism")
     override fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?) {
         this.derivationPath = derivationPath
         this.network = network
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState {
         // TODO: refactor this function
         val networkId = initialCurrency.networkId
@@ -160,6 +211,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensState {
         val searchQueryLowerCase = searchQuery.lowercase()
         val tokensInWallet = cache.getInWalletTokens()
@@ -178,6 +230,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    @Deprecated("used in old swap mechanism")
     override fun findTokenById(id: String): Currency? {
         val tokensInWallet = cache.getInWalletTokens()
         val loadedTokens = cache.getLoadedTokens()
@@ -185,6 +238,7 @@ internal class SwapInteractorImpl @Inject constructor(
             ?: loadedTokens.firstOrNull { it.token.id == id }?.token
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): TxState {
         val dataToSign = if (permissionOptions.approveType == SwapApproveType.UNLIMITED) {
             getApproveData(
@@ -223,6 +277,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun findBestQuote(
         networkId: String,
         fromToken: Currency,
@@ -268,6 +323,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun onSwap(
         networkId: String,
         swapStateData: SwapStateData,
@@ -322,6 +378,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    @Deprecated("used in old swap mechanism")
     override fun getTokenBalance(networkId: String, token: Currency): SwapAmount {
         return cache.getBalanceForToken(
             networkId = networkId,
@@ -330,20 +387,24 @@ internal class SwapInteractorImpl @Inject constructor(
         ) ?: SwapAmount(BigDecimal.ZERO, getTokenDecimals(token))
     }
 
+    @Deprecated("used in old swap mechanism")
     override fun isAvailableToSwap(networkId: String): Boolean {
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
     }
 
+    @Deprecated("used in old swap mechanism")
     override fun getSwapAmountForToken(amount: String, token: Currency): SwapAmount {
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amount)) { "wrong amount format" }
         return SwapAmount(amountDecimal, getTokenDecimals(token))
     }
 
+    @Deprecated("used in old swap mechanism")
     private suspend fun onSuccessLegacyFlow(currency: Currency) {
         userWalletManager.addToken(swapCurrencyConverter.convert(currency), derivationPath)
         userWalletManager.refreshWallet()
     }
 
+    @Deprecated("used in old swap mechanism")
     private suspend fun onSuccessNewFlow(currency: Currency) {
         val network = network ?: return
         getSelectedWalletSyncUseCase().fold(
@@ -356,16 +417,19 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    @Deprecated("used in old swap mechanism")
     private suspend fun getAndAddCryptoCurrency(userWallet: UserWallet, currency: Currency, network: Network) {
         repository.getCryptoCurrency(userWallet, currency, network)?.let { cryptoCurrency ->
             addCryptoCurrenciesUseCase(userWallet.walletId, cryptoCurrency)
         }
     }
 
+    @Deprecated("used in old swap mechanism")
     private fun getTangemFee(): Double {
         return repository.getTangemFee()
     }
 
+    @Deprecated("used in old swap mechanism")
     private fun getTokenDecimals(token: Currency): Int {
         return if (token is Currency.NonNativeToken) {
             token.decimalCount
@@ -374,6 +438,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    @Deprecated("used in old swap mechanism")
     private fun selectToToken(
         initialToken: Currency,
         tokensInWallet: List<Currency>,
@@ -394,6 +459,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return toToken
     }
 
+    @Deprecated("used in old swap mechanism")
     private fun getTokensWithBalance(
         tokens: List<Currency>,
         balances: Map<String, SwapAmount>,

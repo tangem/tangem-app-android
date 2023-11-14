@@ -132,8 +132,15 @@ internal class SwapViewModel @Inject constructor(
         // new flow
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                val pairs = swapInteractor.getPairs(currency)
-                // TODO
+                swapInteractor.getTokensDataState(currency)
+            }.onSuccess { state ->
+                dataState = dataState.copy(
+                    fromCryptoCurrency = state.preselectTokens.fromToken,
+                    toCryptoCurrency = state.preselectTokens.toToken
+                )
+
+            }.onFailure {
+                Timber.tag(loggingTag).e(it)
             }
         }
 
@@ -155,7 +162,7 @@ internal class SwapViewModel @Inject constructor(
                     )
                 }
                 .onFailure {
-                    Timber.e(it)
+                    Timber.tag(loggingTag).e(it)
                 }
         }
     }
@@ -514,6 +521,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     companion object {
+        private const val loggingTag = "SwapViewModel"
         private const val INITIAL_AMOUNT = ""
         private const val UPDATE_DELAY = 10000L
         private const val DEBOUNCE_AMOUNT_DELAY = 1000L
