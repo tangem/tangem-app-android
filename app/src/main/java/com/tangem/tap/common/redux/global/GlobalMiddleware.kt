@@ -4,17 +4,18 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -25,17 +26,13 @@ import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
-import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
+import timber.log.Timber
 import java.util.Locale
 
 object GlobalMiddleware {
@@ -45,14 +42,14 @@ object GlobalMiddleware {
 private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState ->
     { nextDispatch ->
         { action ->
-            handleAction(action, appState, dispatch)
+            handleAction(action, appState)
             nextDispatch(action)
         }
     }
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-private fun handleAction(action: Action, appState: () -> AppState?, dispatch: DispatchFunction) {
+private fun handleAction(action: Action, appState: () -> AppState?) {
     when (action) {
         is GlobalAction.ScanFailsCounter.ChooseBehavior -> {
             when (action.result) {
@@ -61,7 +58,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     if (action.result.error is TangemSdkError.UserCancelled) {
                         store.dispatch(GlobalAction.ScanFailsCounter.Increment)
                         if (store.state.globalState.scanCardFailsCounter >= 2) {
-                            store.dispatchDialogShow(AppDialog.ScanFailsDialog)
+                            store.dispatchDialogShow(StateDialog.ScanFailsDialog)
                         }
                     } else {
                         store.dispatch(GlobalAction.ScanFailsCounter.Reset)
@@ -110,10 +107,10 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
 
             // if config not set -> try to get it based on a scanResponse.productType
-            val unsafeChatConfig = action.chatConfig ?: config.zendesk
+            val unsafeChatConfig = action.chatConfig ?: config.sprinklr
 
             val chatConfig = unsafeChatConfig.guard {
-                store.dispatchDebugErrorNotification("ZendeskConfig not initialized")
+                store.dispatchDebugErrorNotification("The chat config is not initialized")
                 return
             }
             feedbackManager.openChat(chatConfig, action.feedbackData)
@@ -131,8 +128,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
 
             scope.launch {
                 val scanResponseProvider: () -> ScanResponse? = {
-                    store.state.globalState.scanResponse
-                        ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                    userWalletsListManager.selectedUserWalletSync?.scanResponse
                 }
                 val cardProvider: () -> CardDTO? = { scanResponseProvider.invoke()?.card }
 
@@ -177,22 +173,26 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             walletCurrenciesManager.addListener(action.topUpController)
         }
         is GlobalAction.UpdateUserWalletsListManager -> {
+            val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
+
             /*
-             * If UserWalletsListManager's implementation is changed,
-             * then all selectedUserWallet's observers is became irrelevant
+             * If implementation of the UserWalletsListManager is changed,
+             * then all observers of selectedUserWallet become irrelevant.
              */
             action.manager.selectedUserWallet
                 .distinctUntilChanged()
                 .onEach { userWallet ->
-                    Analytics.send(event = Basic.WalletOpened())
+                    Analytics.send(Basic.WalletOpened())
 
                     store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
-                        infoHolder.setCardInfo(data = userWallet.scanResponse)
+                        infoHolder.setCardInfo(userWallet.scanResponse)
 
-                        store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
-                            .getAll(userWalletId = userWallet.walletId)
+                        walletManagersFacade
+                            .getAll(userWallet.walletId)
+                            .distinctUntilChanged()
                             .onEach(infoHolder::setWalletsInfo)
-                            .launchIn(scope)
+                            .catch { Timber.e(it) }
+                            .launchIn(mainScope)
                     }
                 }
                 .flowOn(Dispatchers.IO)

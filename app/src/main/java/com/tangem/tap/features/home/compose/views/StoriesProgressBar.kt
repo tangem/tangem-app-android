@@ -36,24 +36,26 @@ fun StoriesProgressBar(
     val animatorSpeed = Settings.Global.getFloat(
         context.contentResolver,
         Settings.Global.ANIMATOR_DURATION_SCALE,
-        0f,
+        1f,
     )
 
-    LaunchedEffect(paused, currentStep) {
+    LaunchedEffect(paused, currentStep, animatorSpeed) {
         if (paused) {
             progress.stop()
         } else {
             if (animatorSpeed == 0f) {
+                progress.snapTo(1f)
                 delay(STORIES_ANIMATION_SPEED_ZERO_DURATION)
+            } else {
+                progress.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(
+                        durationMillis = (stepDuration * (1f - progress.value)).toInt(),
+                        easing = LinearEasing,
+                    ),
+                )
+                progress.snapTo(0f)
             }
-            progress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = (stepDuration * (1f - progress.value)).toInt(),
-                    easing = LinearEasing,
-                ),
-            )
-            progress.snapTo(0f)
             onStepFinish()
         }
     }
