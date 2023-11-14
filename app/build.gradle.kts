@@ -9,16 +9,27 @@ plugins {
     id("configuration")
 }
 
-//conflict of dependencies when adding WalletConnectV2.0 library
-configurations {
-    all {
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
-        resolutionStrategy {
-            force("org.bouncycastle:bcpkix-jdk15on:1.70")
+configurations.all {
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    exclude(group = "com.github.komputing.kethereum")
+
+    resolutionStrategy {
+        dependencySubstitution {
+            substitute(module("com.facebook.react:react-native"))
+                .using(module("com.facebook.react:react-android:0.72.4"))
+
+            substitute(module("com.facebook.react:hermes-engine"))
+                .using(module("com.facebook.react:hermes-android:0.72.4"))
         }
-        exclude(group = "com.github.komputing.kethereum")
+
+        force(
+            "org.bouncycastle:bcpkix-jdk15on:1.70",
+            "com.facebook.react:react-android:0.72.4",
+            "com.facebook.react:hermes-android:0.72.4",
+        )
     }
 }
+
 
 dependencies {
     implementation(files("libs/walletconnect-1.5.6.aar"))
@@ -94,6 +105,7 @@ dependencies {
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.browser)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.androidx.swipeRefreshLayout)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
@@ -142,14 +154,11 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
-    implementation(deps.zxing.qrBarcodeScanner)
     implementation(deps.otaliastudiosCameraView)
     implementation(deps.coil)
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
-    implementation(deps.zendesk.chat)
-    implementation(deps.zendesk.messaging)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
     implementation(deps.shopify.buy) {
@@ -167,6 +176,10 @@ dependencies {
     implementation(deps.walletConnectCore)
     implementation(deps.walletConnectWeb3)
     implementation(deps.prettyLogger)
+    implementation("com.facebook.react:react-android:0.72.4")
+    implementation(deps.sprClient) {
+        exclude(group = "com.github.stephenc.jcip")
+    }
 
     /** Testing libraries */
     testImplementation(deps.test.junit)
@@ -179,4 +192,19 @@ dependencies {
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
+
+    /** Camera */
+    implementation(deps.camera.camera2)
+    implementation(deps.camera.lifecycle)
+    implementation(deps.camera.view)
+
+    implementation(deps.listenableFuture)
+    implementation(deps.mlKit.barcodeScanning)
+
+    /** Excluded dependencies */
+    implementation("com.google.guava:guava:30.0-android") {
+        // excludes version 9999.0-empty-to-avoid-conflict-with-guava
+        exclude(group="com.google.guava", module = "listenablefuture")
+    }
+
 }

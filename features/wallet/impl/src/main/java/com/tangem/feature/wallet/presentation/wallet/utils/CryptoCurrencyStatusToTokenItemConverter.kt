@@ -1,12 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
 import com.tangem.common.Provider
+import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.common.utils.CryptoCurrencyToIconStateConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -53,7 +53,7 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                 text = getFormattedFiatAmount(),
             ),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = getFormattedAmount()),
-            priceChangeState = getPriceChangeConfig(),
+            cryptoPriceState = getCryptoPriceState(),
             onItemClick = { clickIntents.onTokenItemClick(currency) },
             onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
         )
@@ -87,12 +87,14 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
         onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
     )
 
-    private fun CryptoCurrencyStatus.getPriceChangeConfig(): TokenItemState.PriceChangeState {
+    private fun CryptoCurrencyStatus.getCryptoPriceState(): TokenItemState.CryptoPriceState {
+        val fiatRate = value.fiatRate
         val priceChange = value.priceChange
 
-        return if (priceChange != null) {
-            TokenItemState.PriceChangeState.Content(
-                valueInPercent = BigDecimalFormatter.formatPercent(
+        return if (fiatRate != null && priceChange != null) {
+            TokenItemState.CryptoPriceState.Content(
+                price = fiatRate.getFormattedCryptoPrice(),
+                priceChangePercent = BigDecimalFormatter.formatPercent(
                     percent = priceChange,
                     useAbsoluteValue = true,
                     maxFractionDigits = 1,
@@ -101,8 +103,17 @@ internal class CryptoCurrencyStatusToTokenItemConverter(
                 type = priceChange.getPriceChangeType(),
             )
         } else {
-            TokenItemState.PriceChangeState.Unknown
+            TokenItemState.CryptoPriceState.Unknown
         }
+    }
+
+    private fun BigDecimal.getFormattedCryptoPrice(): String {
+        val appCurrency = appCurrencyProvider()
+        return BigDecimalFormatter.formatFiatAmount(
+            fiatAmount = this,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
+        )
     }
 
     private fun BigDecimal.getPriceChangeType(): PriceChangeType {
