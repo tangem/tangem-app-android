@@ -24,12 +24,13 @@ class ListenToFlipsUseCase(
                 },
             )
 
-            if (balanceHidingSettings.isHidingEnabledInSettings) {
+            if (balanceHidingSettings.isHidingEnabledInSettings && balanceHidingRepository.isUpdateEnabled) {
                 catch(
                     block = {
                         balanceHidingRepository.storeBalanceHidingSettings(
                             balanceHidingSettings.copy(
                                 isBalanceHidden = !balanceHidingSettings.isBalanceHidden,
+                                isUpdateFromToast = false,
                             ),
                         )
                     },
@@ -39,5 +40,9 @@ class ListenToFlipsUseCase(
                 send(HideBalancesError.HidingDisabled.left())
             }
         }
+    }
+
+    fun changeUpdateEnabled(isUpdateEnabled: Boolean) {
+        balanceHidingRepository.isUpdateEnabled = isUpdateEnabled
     }
 }
