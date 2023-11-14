@@ -19,5 +19,7 @@ interface WalletManagersStore {
 
     suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager)
 
+    suspend fun remove(userWalletId: UserWalletId, predicate: (WalletManager) -> Boolean)
+
     suspend fun clear()
 }
