@@ -26,10 +26,8 @@ import timber.log.Timber
         "or WalletCurrenciesManager.update(...) (to update only one user wallet blockchain and its tokens) instead",
 )
 @Suppress("MagicNumber")
-suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
-    val scanResponse = store.state.globalState.scanResponse
-
-    if (scanResponse?.isDemoCard() == true || TestActions.testAmountInjectionForWalletManagerEnabled) {
+suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try {
+    if (isDemoCard || TestActions.testAmountInjectionForWalletManagerEnabled) {
         delay(500)
         TestActions.testAmountInjectionForWalletManagerEnabled = false
         Result.Success(wallet)
