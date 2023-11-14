@@ -18,6 +18,7 @@ dependencies {
 
     /** Domain modules **/
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
