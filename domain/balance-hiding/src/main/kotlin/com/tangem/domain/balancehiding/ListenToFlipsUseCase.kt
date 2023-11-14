@@ -14,8 +14,6 @@ class ListenToFlipsUseCase(
     private val balanceHidingRepository: BalanceHidingRepository,
 ) {
 
-    var isEnabled: Boolean = true
-
     operator fun invoke(): Flow<Either<HideBalancesError, Unit>> = channelFlow {
         flipDetector.getDeviceFlipFlow().collectLatest {
             val balanceHidingSettings = catch(
@@ -26,7 +24,7 @@ class ListenToFlipsUseCase(
                 },
             )
 
-            if (balanceHidingSettings.isHidingEnabledInSettings && isEnabled) {
+            if (balanceHidingSettings.isHidingEnabledInSettings && balanceHidingRepository.isUpdateEnabled) {
                 catch(
                     block = {
                         balanceHidingRepository.storeBalanceHidingSettings(
@@ -42,5 +40,9 @@ class ListenToFlipsUseCase(
                 send(HideBalancesError.HidingDisabled.left())
             }
         }
+    }
+
+    fun changeUpdateEnabled(isUpdateEnabled: Boolean) {
+        balanceHidingRepository.isUpdateEnabled = isUpdateEnabled
     }
 }
