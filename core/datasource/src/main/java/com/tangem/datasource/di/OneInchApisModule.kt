@@ -61,7 +61,7 @@ class OneInchApisModule {
     }
 
     companion object {
-        private const val ONE_INCH_BASE_URL = "https://api-tangem.1inch.io/v5.0/"
+        private const val ONE_INCH_BASE_URL = "https://api-tangem.1inch.io/v5.2/"
         private const val ONE_INCH_ETH_PATH = "1/"
         private const val ONE_INCH_BSC_PATH = "56/"
         private const val ONE_INCH_POLYGON_PATH = "137/"
