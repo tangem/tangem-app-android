@@ -23,7 +23,7 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 fun TangemSwitch(
     onCheckedChange: (Boolean) -> Unit,
-    checkedColor: Color = TangemTheme.colors.icon.accent,
+    checkedColor: Color = TangemTheme.colors.control.checked,
     uncheckedColor: Color = TangemTheme.colors.icon.informative,
     size: Dp = 48.dp,
     checked: Boolean = false,
