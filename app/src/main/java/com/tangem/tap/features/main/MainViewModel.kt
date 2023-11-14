@@ -50,7 +50,7 @@ internal class MainViewModel @Inject constructor(
                 it.isBalanceHidingNotificationEnabled && it.isBalanceHidden
             }
             .onEach {
-                if (state.value.modalNotification?.isShow != true) {
+                if (state.value.modalNotification?.isShow != true && !it.isUpdateFromToast) {
                     listenToFlipsUseCase.isEnabled = false
                     stateHolder.updateWithHiddenBalancesNotification()
                     reduxNavController.navigate(NavigationAction.NavigateTo(AppScreen.ModalNotification))
@@ -101,7 +101,7 @@ internal class MainViewModel @Inject constructor(
             updateBalanceHidingSettingsUseCase.invoke {
                 copy(
                     isBalanceHidden = false,
-                    isUpdateFromToast = true
+                    isUpdateFromToast = true,
                 )
             }
         }
@@ -112,7 +112,7 @@ internal class MainViewModel @Inject constructor(
             updateBalanceHidingSettingsUseCase.invoke {
                 copy(
                     isBalanceHidden = true,
-                    isUpdateFromToast = true
+                    isUpdateFromToast = true,
                 )
             }
         }
