@@ -34,7 +34,10 @@ internal class TokenDetailsLoadedTxHistoryConverter(
     private fun convertError(error: TxHistoryListError): TxHistoryState {
         return when (error) {
             is TxHistoryListError.DataError -> {
-                TxHistoryState.Error(onReloadClick = clickIntents::onReloadClick)
+                TxHistoryState.Error(
+                    onReloadClick = clickIntents::onReloadClick,
+                    onExploreClick = clickIntents::onExploreClick,
+                )
             }
         }
     }

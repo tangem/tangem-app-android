@@ -30,10 +30,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBott
  */
 @Composable
 internal fun WalletBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet(config) { content ->
-        BottomSheetContent(
-            config = content as WalletBottomSheetConfig,
-        )
+    TangemBottomSheet(config) { content: WalletBottomSheetConfig ->
+        BottomSheetContent(config = content)
     }
 }
 
