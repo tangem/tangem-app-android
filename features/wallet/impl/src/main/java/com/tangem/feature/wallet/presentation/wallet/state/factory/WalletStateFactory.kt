@@ -48,7 +48,7 @@ internal class WalletStateFactory(
     private val clickIntents: WalletClickIntents,
 ) {
 
-    private val tokenActionsProvider by lazy { TokenActionsProvider(clickIntents) }
+    private val tokenActionsProvider by lazy { TokenActionsProvider(currentWalletProvider, clickIntents) }
 
     private val skeletonConverter by lazy {
         WalletSkeletonStateConverter(
@@ -92,6 +92,7 @@ internal class WalletStateFactory(
     private val loadingTransactionsStateConverter by lazy {
         WalletLoadingTxHistoryConverter(
             currentStateProvider = currentStateProvider,
+            currentCardTypeResolverProvider = currentCardTypeResolverProvider,
             clickIntents = clickIntents,
         )
     }
@@ -126,6 +127,7 @@ internal class WalletStateFactory(
 
     private val cryptoCurrencyActionsConverter by lazy {
         WalletCryptoCurrencyActionsConverter(
+            currentWalletProvider = currentWalletProvider,
             currentStateProvider = currentStateProvider,
             clickIntents = clickIntents,
         )
@@ -220,21 +222,20 @@ internal class WalletStateFactory(
     }
 
     fun getStateWithTokenActionBottomSheet(tokenActions: TokenActionsState): WalletState {
-        return when (val state = currentStateProvider() as WalletState.ContentState) {
-            is WalletMultiCurrencyState.Content -> state.copy(
-                tokenActionsBottomSheet = ActionsBottomSheetConfig(
-                    isShow = true,
-                    actions = tokenActionsProvider.provideActions(tokenActions),
-                    onDismissRequest = clickIntents::onDismissActionsBottomSheet,
-                ),
-            )
-            else -> state
-        }
+        return getStateWithOpenWalletBottomSheet(
+            content = ActionsBottomSheetConfig(actions = tokenActionsProvider.provideActions(tokenActions)),
+        )
     }
 
-    fun getLoadingTxHistoryState(itemsCountEither: Either<TxHistoryStateError, Int>): WalletState {
+    fun getLoadingTxHistoryState(
+        itemsCountEither: Either<TxHistoryStateError, Int>,
+        pendingTransactions: Set<TxHistoryItem>,
+    ): WalletState {
         return loadingTransactionsStateConverter.convert(
-            WalletLoadingTxHistoryConverter.WalletLoadingTxHistoryModel(historyLoadingState = itemsCountEither),
+            WalletLoadingTxHistoryConverter.WalletLoadingTxHistoryModel(
+                historyLoadingState = itemsCountEither,
+                pendingTransactions = pendingTransactions,
+            ),
         )
     }
 
