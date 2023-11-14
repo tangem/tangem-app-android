@@ -1,8 +1,8 @@
 package com.tangem.tap.features.wallet.redux.models
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.core.navigation.StateDialog
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.redux.StateDialog
 import com.tangem.wallet.R
 
 sealed interface WalletDialog : StateDialog {

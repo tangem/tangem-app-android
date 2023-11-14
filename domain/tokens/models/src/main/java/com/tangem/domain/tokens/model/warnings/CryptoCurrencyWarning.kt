@@ -11,9 +11,8 @@ sealed class CryptoCurrencyWarning {
     ) : CryptoCurrencyWarning()
 
     data class BalanceNotEnoughForFee(
-        val currency: CryptoCurrency,
-        val blockchainFullName: String,
-        val blockchainSymbol: String,
+        val tokenCurrency: CryptoCurrency,
+        val coinCurrency: CryptoCurrency,
     ) : CryptoCurrencyWarning()
 
     object SomeNetworksUnreachable : CryptoCurrencyWarning()
@@ -30,4 +29,6 @@ sealed class CryptoCurrencyWarning {
      * @param exemptionAmount Amount that should be on the blockchain balance not to pay rent
      */
     data class Rent(val rent: BigDecimal, val exemptionAmount: BigDecimal) : CryptoCurrencyWarning()
+
+    data class HasPendingTransactions(val blockchainSymbol: String) : CryptoCurrencyWarning()
 }
