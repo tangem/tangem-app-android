@@ -7,27 +7,29 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyS
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.persistentListOf
 
 internal class TokenListErrorConverter(
     private val currentStateProvider: Provider<WalletState>,
 ) : Converter<TokenListError, WalletState> {
 
     override fun convert(value: TokenListError): WalletState {
-        return when (val state = currentStateProvider()) {
-            is WalletMultiCurrencyState.Content -> {
-                state.copy(
-                    tokensListState = WalletTokensListState.Content(
-                        items = persistentListOf(),
-                        organizeTokensButton = WalletTokensListState.OrganizeTokensButtonState.Hidden,
-                    ),
-                )
-            }
+        val state = currentStateProvider()
+        return when (value) {
+            is TokenListError.EmptyTokens -> state.mapToEmptyTokensState()
+            is TokenListError.DataError,
+            is TokenListError.UnableToSortTokenList,
+            -> state
+        }
+    }
+
+    private fun WalletState.mapToEmptyTokensState(): WalletState {
+        return when (this) {
+            is WalletMultiCurrencyState.Content -> copy(tokensListState = WalletTokensListState.Empty)
             is WalletMultiCurrencyState.Locked,
             is WalletSingleCurrencyState.Content,
             is WalletSingleCurrencyState.Locked,
             is WalletState.Initial,
-            -> state
+            -> this
         }
     }
 }

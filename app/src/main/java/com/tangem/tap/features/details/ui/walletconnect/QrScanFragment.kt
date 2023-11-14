@@ -2,26 +2,33 @@ package com.tangem.tap.features.details.ui.walletconnect
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.activity.OnBackPressedCallback
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.Result
+import by.kirich1409.viewbindingdelegate.viewBinding
+import com.google.common.util.concurrent.ListenableFuture
 import com.otaliastudios.cameraview.CameraView
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder
 import com.tangem.tap.store
-import me.dm7.barcodescanner.zxing.ZXingScannerView
+import com.tangem.wallet.R
+import com.tangem.wallet.databinding.LayoutQrScanningBinding
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
-class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
+internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
-    private var scannerView: ZXingScannerView? = null
+    private val binding: LayoutQrScanningBinding by viewBinding(LayoutQrScanningBinding::bind)
+
+    private val binder = PreviewBinder()
+
+    private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
+    private var cameraExecutor: ExecutorService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,38 +43,43 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
         )
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         if (!permissionIsGranted()) requestPermission()
 
-        scannerView = ZXingScannerView(activity).apply {
-            setFormats(listOf(BarcodeFormat.QR_CODE))
+        cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
+        cameraProviderFuture?.addListener(
+            {
+                val cameraProvider = cameraProviderFuture?.get()
+                binder.bindPreview(
+                    context = requireContext(),
+                    binding = binding,
+                    lifecycleOwner = this,
+                    cameraProvider = requireNotNull(cameraProvider),
+                    cameraExecutor = requireNotNull(cameraExecutor),
+                    onScanned = { result ->
+                        store.dispatch(NavigationAction.PopBackTo())
+                        setFitSystemWindows(fit = false)
+                        if (result.isNotBlank()) {
+                            store.dispatch(WalletConnectAction.OpenSession(result))
+                        }
+                    },
+                )
+            },
+            ContextCompat.getMainExecutor(requireContext()),
+        )
+
+        binding.overlay.post {
+            binding.overlay.setViewFinder()
         }
-
-        return scannerView
-    }
-
-    override fun onResume() {
-        super.onResume()
-        scannerView?.setResultHandler(this)
-        scannerView?.startCamera()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        scannerView?.stopCamera()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         setFitSystemWindows(fit = false)
-    }
-
-    override fun handleResult(result: Result) {
-        store.dispatch(NavigationAction.PopBackTo())
-        setFitSystemWindows(fit = false)
-        if (!result.text.isNullOrBlank()) {
-            store.dispatch(WalletConnectAction.OpenSession(result.text))
-        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -80,13 +92,8 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
     }
 
     private fun permissionIsGranted(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val cameraPermission =
-                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-            cameraPermission == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
+        val cameraPermission = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+        return cameraPermission == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPermission() {
