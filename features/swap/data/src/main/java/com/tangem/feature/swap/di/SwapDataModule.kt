@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.di
 
+import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -22,6 +23,7 @@ class SwapDataModule {
     @Singleton
     fun provideSwapRepository(
         tangemTechApi: TangemTechApi,
+        tangemExpressApi: TangemExpressApi,
         oneInchApiFactory: OneInchApiFactory,
         oneInchErrorsHandler: OneInchErrorsHandler,
         coroutineDispatcher: CoroutineDispatcherProvider,
@@ -30,6 +32,7 @@ class SwapDataModule {
     ): SwapRepository {
         return SwapRepositoryImpl(
             tangemTechApi = tangemTechApi,
+            tangemExpressApi = tangemExpressApi,
             oneInchApiFactory = oneInchApiFactory,
             oneInchErrorsHandler = oneInchErrorsHandler,
             coroutineDispatcher = coroutineDispatcher,
