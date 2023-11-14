@@ -116,9 +116,9 @@ class WalletMiddleware {
             }
             is WalletAction.Scan -> {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                action.lifecycleScope.launch {
+                action.scope.launch {
                     delay(timeMillis = 700)
-                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent, action.lifecycleScope))
+                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent, action.scope))
                 }
             }
             is WalletAction.LoadData,
@@ -180,7 +180,7 @@ class WalletMiddleware {
                     }
 
                     if (walletState.isMultiwalletAllowed) {
-                        val amountToSend = sendableAmounts.find { it.currencySymbol == currency.currencySymbol }
+                        val amountToSend = findAmountToSend(currency = currency, amounts = sendableAmounts)
                         if (amountToSend == null) {
                             val error = TapError.UnsupportedState("WalletAction.Send: Amount to send is null")
                             FirebaseCrashlytics.getInstance().recordException(IllegalStateException(error.stateError))
@@ -227,7 +227,7 @@ class WalletMiddleware {
                 showSaveWalletIfNeeded()
             }
             is WalletAction.ChangeWallet -> {
-                changeWallet(walletState, action.lifecycleScope)
+                changeWallet(walletState, action.scope)
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
@@ -273,6 +273,18 @@ class WalletMiddleware {
                             )
                         }
                 }
+            }
+        }
+    }
+
+    private fun findAmountToSend(currency: Currency, amounts: List<Amount>): Amount? {
+        return amounts.find { amount ->
+            val amountType = amount.type
+            if (amountType is AmountType.Token && currency is Currency.Token) {
+                val token = amountType.token
+                token.symbol == currency.currencySymbol && token.contractAddress == currency.token.contractAddress
+            } else {
+                amount.currencySymbol == currency.currencySymbol
             }
         }
     }
@@ -391,7 +403,7 @@ class WalletMiddleware {
                 store.dispatch(
                     WalletAction.Scan(
                         onScanSuccessEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main),
-                        lifecycleScope = lifecycleScope,
+                        scope = lifecycleScope,
                     ),
                 )
             }
