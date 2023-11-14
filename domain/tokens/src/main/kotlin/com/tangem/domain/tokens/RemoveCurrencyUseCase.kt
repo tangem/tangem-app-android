@@ -6,12 +6,12 @@ import arrow.core.raise.either
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.remove.RemoveCurrencyError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
 class RemoveCurrencyUseCase(
-    internal val currenciesRepository: CurrenciesRepository,
-    internal val dispatchers: CoroutineDispatcherProvider,
+    private val currenciesRepository: CurrenciesRepository,
+    private val walletManagersFacade: WalletManagersFacade,
 ) {
 
     suspend operator fun invoke(
@@ -19,8 +19,23 @@ class RemoveCurrencyUseCase(
         currency: CryptoCurrency,
     ): Either<RemoveCurrencyError, Unit> {
         return either {
+            if (hasLinkedTokens(userWalletId, currency)) {
+                raise(RemoveCurrencyError.HasLinkedTokens)
+            }
+
             catch(
-                block = { currenciesRepository.removeCurrency(userWalletId, currency) },
+                block = {
+                    currenciesRepository.removeCurrency(userWalletId, currency)
+
+                    when (currency) {
+                        is CryptoCurrency.Coin -> {
+                            walletManagersFacade.remove(userWalletId, setOf(currency.network))
+                        }
+                        is CryptoCurrency.Token -> {
+                            walletManagersFacade.removeTokens(userWalletId, setOf(currency))
+                        }
+                    }
+                },
                 catch = { raise(RemoveCurrencyError.DataError(it)) },
             )
         }

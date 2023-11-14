@@ -2,7 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
 import android.net.Uri
-import com.tangem.tap.common.redux.StateDialog
+import com.tangem.core.navigation.StateDialog
 import org.rekotlin.StateType
 
 /**
@@ -14,6 +14,7 @@ data class OnboardingWalletState(
     val backupState: BackupState = BackupState(),
     val cardArtworkUri: Uri? = null,
     val showConfetti: Boolean = false,
+    val isRingOnboarding: Boolean = false,
 ) : StateType {
 
     @Suppress("MagicNumber")
