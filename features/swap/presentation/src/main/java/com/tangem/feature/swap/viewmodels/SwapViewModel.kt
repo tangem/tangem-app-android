@@ -127,6 +127,7 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun initTokens(currency: Currency) {
         // new flow
         viewModelScope.launch(dispatchers.main) {
