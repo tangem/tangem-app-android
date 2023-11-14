@@ -19,8 +19,8 @@ data class SwapPairProvider(
     @Json(name = "providerId")
     val providerId: Int,
 
-    @Json(name = "rateType")
-    val rateType: RateType,
+    @Json(name = "rateTypes")
+    val rateTypes: List<RateType>,
 )
 
 enum class RateType {
