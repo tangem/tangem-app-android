@@ -26,11 +26,11 @@ class DefaultTxHistoryRepository(
     private val txHistoryItemsStore: TxHistoryItemsStore,
 ) : TxHistoryRepository {
 
-    override suspend fun getTxHistoryItemsCount(userWalletId: UserWalletId, network: Network): Int {
+    override suspend fun getTxHistoryItemsCount(userWalletId: UserWalletId, currency: CryptoCurrency): Int {
         val userWallet = getUserWallet(userWalletId)
         val state = walletManagersFacade.getTxHistoryState(
             userWalletId = userWallet.walletId,
-            network = network,
+            currency = currency,
         )
         return when (state) {
             is TxHistoryState.Failed.FetchError -> throw TxHistoryStateError.DataError(state.exception)
