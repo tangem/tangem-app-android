@@ -112,6 +112,7 @@ internal class MainViewModel @Inject constructor(
     override fun onHiddenBalanceNotificationAction(isPermanent: Boolean) {
         onDismissBottomSheet()
 
+        stateHolder.updateWithHiddenBalancesToast(true)
         if (isPermanent) {
             viewModelScope.launch {
                 updateBalanceHidingSettingsUseCase.invoke {
@@ -123,5 +124,6 @@ internal class MainViewModel @Inject constructor(
 
     override fun onDismissBottomSheet() {
         stateHolder.updateWithoutModalNotification()
+        stateHolder.updateWithHiddenBalancesToast(true)
     }
 }
