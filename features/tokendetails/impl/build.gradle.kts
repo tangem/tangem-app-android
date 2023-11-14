@@ -52,6 +52,7 @@ dependencies {
     /** Domain modules */
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
@@ -62,6 +63,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
