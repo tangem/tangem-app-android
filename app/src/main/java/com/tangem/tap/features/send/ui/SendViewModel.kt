@@ -17,10 +17,10 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -44,13 +44,12 @@ internal class SendViewModel @Inject constructor(
         getBalanceHidingSettingsUseCase()
             .flowWithLifecycle(owner.lifecycle)
             .onEach {
-                withContext(dispatchers.main) {
-                    appStateHolder.mainStore?.dispatch(AmountAction.HideBalance(it.isBalanceHidden))
-                }
+                appStateHolder.mainStore?.dispatch(AmountAction.HideBalance(it.isBalanceHidden))
             }
+            .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             listenToFlipsUseCase()
                 .flowWithLifecycle(owner.lifecycle)
                 .collect()
