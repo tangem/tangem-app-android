@@ -10,6 +10,7 @@ import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -323,6 +324,10 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address> {
+        return getAddresses(userWalletId, network).sortedBy { it.type }
+    }
+
+    override suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address> {
         val blockchain = Blockchain.fromId(network.id.value)
 
         return getOrCreateWalletManager(
@@ -332,7 +337,6 @@ class DefaultWalletManagersFacade(
         )
             ?.wallet
             ?.addresses
-            ?.sortedBy { it.type }
             .orEmpty()
     }
 
@@ -406,6 +410,24 @@ class DefaultWalletManagersFacade(
                 is SimpleResult.Success -> Unit.right()
             }
         }
+    }
+
+    override suspend fun getFee(
+        amount: Amount,
+        destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Result<TransactionFee>? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+        return (walletManager as? TransactionSender)?.getFee(
+            amount = amount,
+            destination = destination,
+        )
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
