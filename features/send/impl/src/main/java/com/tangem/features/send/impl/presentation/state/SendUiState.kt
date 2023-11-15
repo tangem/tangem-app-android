@@ -8,6 +8,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
+import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.PersistentList
@@ -55,10 +56,13 @@ internal sealed class SendStates {
         val isPrimaryButtonEnabled: Boolean,
     ) : SendStates()
 
-    // todo [REDACTED_JIRA]
     /** Fee and speed state */
     data class FeeState(
         override val type: SendUiStateType = SendUiStateType.Fee,
+        val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        val feeSelectorState: MutableStateFlow<FeeSelectorState> = MutableStateFlow(FeeSelectorState.Empty),
+        val isSubtract: MutableStateFlow<Boolean> = MutableStateFlow(false),
+        val receivedAmount: MutableStateFlow<String> = MutableStateFlow(""),
     ) : SendStates()
 
     // todo [REDACTED_JIRA]
