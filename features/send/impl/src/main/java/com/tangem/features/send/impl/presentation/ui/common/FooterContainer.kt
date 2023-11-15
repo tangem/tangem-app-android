@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.common
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -25,9 +26,9 @@ internal fun FooterContainer(
 ) {
     Column(modifier = modifier) {
         content()
-        footer?.let {
+        AnimatedVisibility(visible = footer != null) {
             Text(
-                text = it,
+                text = footer.orEmpty(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
