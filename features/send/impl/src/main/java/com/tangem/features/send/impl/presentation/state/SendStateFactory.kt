@@ -2,6 +2,7 @@ package com.tangem.features.send.impl.presentation.state
 
 import androidx.paging.PagingData
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
@@ -12,6 +13,10 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
+import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.fee.SendFeeCustomFieldConverter
+import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientListConverter
@@ -35,8 +40,13 @@ internal class SendStateFactory(
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     private val amountFieldConverter by lazy { SendAmountFieldConverter(clickIntents) }
-
     private val amountFieldChangeConverter by lazy { SendAmountFieldChangeConverter(currentStateProvider) }
+    private val customFeeFieldConverter by lazy {
+        SendFeeCustomFieldConverter(
+            clickIntents = clickIntents,
+            appCurrencyProvider = appCurrencyProvider,
+        )
+    }
 
     private val amountStateConverter by lazy {
         SendAmountStateConverter(
@@ -47,10 +57,14 @@ internal class SendStateFactory(
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
-
     private val recipientStateConverter by lazy {
         SendRecipientStateConverter(
             clickIntents = clickIntents,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
+    private val feeStateConverter by lazy {
+        SendFeeStateConverter(
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
@@ -71,7 +85,7 @@ internal class SendStateFactory(
     fun getReadyState(): SendUiState = currentStateProvider().copy(
         amountState = amountStateConverter.convert(Unit),
         recipientState = recipientStateConverter.convert(Unit),
-        feeState = SendStates.FeeState(),
+        feeState = feeStateConverter.convert(Unit),
     )
     //endregion
 
@@ -163,6 +177,29 @@ internal class SendStateFactory(
                 isPrimaryButtonEnabled = isValidMemo && isValidAddress && isAddressInWallet,
             ),
         )
+    }
+
+    fun onFeeOnLoadingState() {
+        currentStateProvider().feeState?.feeSelectorState?.update {
+            FeeSelectorState.Loading
+        }
+    }
+
+    fun onFeeOnLoadedState(fees: TransactionFee) {
+        currentStateProvider().feeState?.feeSelectorState?.update {
+            FeeSelectorState.Content(
+                fees = fees,
+                customValues = customFeeFieldConverter.convert(fees.normal),
+            )
+        }
+    }
+    //endregion
+
+    //region fee
+    fun onFeeSelectedState(feeType: FeeType) {
+        currentStateProvider().feeState?.feeSelectorState?.update {
+            (it as? FeeSelectorState.Content)?.copy(selectedFee = feeType) ?: it
+        }
     }
     //endregion
 }
