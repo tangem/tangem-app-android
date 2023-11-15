@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Shape
@@ -108,7 +109,7 @@ private inline fun RowScope.ButtonContentContainer(
     if (showProgress) {
         progressIndicator()
     } else {
-        Column {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Row(horizontalArrangement = Arrangement.Center) {
                 if (buttonIcon is TangemButtonIconPosition.Start) {
                     icon(buttonIcon.iconResId)
