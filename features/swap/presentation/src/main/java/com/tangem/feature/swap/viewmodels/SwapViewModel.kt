@@ -8,6 +8,7 @@ import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
@@ -138,6 +139,12 @@ internal class SwapViewModel @Inject constructor(
                     fromCryptoCurrency = state.preselectTokens.fromToken,
                     toCryptoCurrency = state.preselectTokens.toToken
                 )
+                updateTokensState(dataState = state.foundTokensState)
+                startLoadingQuotes(
+                    fromToken = state.preselectTokens.fromToken,
+                    toToken = state.preselectTokens.toToken,
+                    amount = lastAmount.value,
+                )
 
             }.onFailure {
                 Timber.tag(loggingTag).e(it)
@@ -175,7 +182,7 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    private fun startLoadingQuotes(fromToken: Currency, toToken: Currency, amount: String) {
+    private fun startLoadingQuotes(fromToken: CryptoCurrency, toToken: CryptoCurrency, amount: String) {
         singleTaskScheduler.cancelTask()
         uiState = stateBuilder.createQuotesLoadingState(uiState, fromToken, toToken, currency.id)
         singleTaskScheduler.scheduleTask(
@@ -189,15 +196,19 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun startLoadingQuotesFromLastState() {
-        val fromCurrency = dataState.fromCurrency
-        val toCurrency = dataState.toCurrency
+        val fromCurrency = dataState.fromCryptoCurrency
+        val toCurrency = dataState.toCryptoCurrency
         val amount = dataState.amount
         if (fromCurrency != null && toCurrency != null && amount != null) {
             startLoadingQuotes(fromCurrency, toCurrency, amount)
         }
     }
 
-    private fun loadQuotesTask(fromToken: Currency, toToken: Currency, amount: String): PeriodicTask<SwapState> {
+    private fun loadQuotesTask(
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
+        amount: String,
+    ): PeriodicTask<SwapState> {
         return PeriodicTask(
             UPDATE_DELAY,
             task = {

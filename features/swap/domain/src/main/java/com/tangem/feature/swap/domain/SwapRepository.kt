@@ -46,7 +46,7 @@ interface SwapRepository {
      */
     fun getTangemFee(): Double
 
-    suspend fun getCryptoCurrency(userWallet: UserWallet, currency: Currency, network: Network): CryptoCurrency?
+    suspend fun getCryptoCurrency(userWallet: UserWallet, currency: CryptoCurrency, network: Network): CryptoCurrency?
 
     @Throws(IllegalStateException::class)
     suspend fun getAllowance(
@@ -62,7 +62,7 @@ interface SwapRepository {
         userWalletId: UserWalletId,
         networkId: String,
         derivationPath: String?,
-        currency: Currency,
+        currency: CryptoCurrency,
         amount: BigDecimal?,
     ): String
 }

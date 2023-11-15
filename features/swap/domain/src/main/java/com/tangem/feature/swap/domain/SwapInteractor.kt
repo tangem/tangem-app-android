@@ -64,8 +64,8 @@ interface SwapInteractor {
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         networkId: String,
-        fromToken: Currency,
-        toToken: Currency,
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
         amountToSwap: String,
         selectedFee: FeeType = FeeType.NORMAL,
     ): SwapState
@@ -86,8 +86,8 @@ interface SwapInteractor {
     suspend fun onSwap(
         networkId: String,
         swapStateData: SwapStateData,
-        currencyToSend: Currency,
-        currencyToGet: Currency,
+        currencyToSend: CryptoCurrency,
+        currencyToGet: CryptoCurrency,
         amountToSwap: String,
         fee: TxFee,
     ): TxState
@@ -98,16 +98,16 @@ interface SwapInteractor {
      * @param networkId
      * @param token
      */
-    fun getTokenBalance(networkId: String, token: Currency): SwapAmount
+    fun getTokenBalance(networkId: String, token: CryptoCurrency): SwapAmount
 
     fun isAvailableToSwap(networkId: String): Boolean
 
-    fun getSwapAmountForToken(amount: String, token: Currency): SwapAmount
+    fun getSwapAmountForToken(amount: String, token: CryptoCurrency): SwapAmount
 
     suspend fun checkFeeIsEnough(
         fee: BigDecimal?,
         spendAmount: SwapAmount,
         networkId: String,
-        fromToken: Currency,
+        fromToken: CryptoCurrency,
     ): Boolean
 }
