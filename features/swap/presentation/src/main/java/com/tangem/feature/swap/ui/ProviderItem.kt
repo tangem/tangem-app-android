@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,47 +24,58 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.states.ProviderState
 
 /**
- * UI Item for swap provider
+ * UI Item for swap provider wrapped in a [BaseContainer] with rounded corners
  *
  * https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?type=design&node-id=7856-41909&mode=design&t=vo7dyElitnzSPSW3-4
  */
+
+private const val GRAY_SCALE_SATURATION = 0f
+private const val GRAY_SCALE_ALPHA = 0.4f
+private val GrayscaleColorFilter: ColorFilter
+    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
+
 @Composable
-fun ProviderItem(state: ProviderState) {
+fun ProviderItemBlock(state: ProviderState) {
+    BaseContainer(state) {
+        ProviderItem(
+            state = state,
+            modifier = Modifier.align(Alignment.CenterStart),
+        )
+    }
+}
+
+@Composable
+fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected: Boolean = false) {
     when (state) {
         is ProviderState.Content -> {
-            ContentProviderState(state = state)
+            ProviderContentState(
+                state = state,
+                modifier = modifier,
+                isSelected = isSelected,
+            )
         }
         is ProviderState.Loading -> {
-            LoadingProviderState()
+            ProviderLoadingState(
+                modifier = modifier,
+            )
+        }
+        is ProviderState.Unavailable -> {
+            ProviderUnavailableState(
+                state = state,
+                modifier = modifier,
+            )
         }
     }
 }
 
 @Composable
-private fun BaseContainer(onClick: (() -> Unit)? = null, content: @Composable BoxScope.() -> Unit) {
-    Box(
-        modifier = Modifier
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
-            .clickable(
-                enabled = onClick != null,
-                onClick = { onClick?.invoke() },
-            )
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = TangemTheme.dimens.size68),
-    ) {
-        content()
-    }
-}
-
-@Composable
-private fun ContentProviderState(state: ProviderState.Content) {
-    BaseContainer(state.onProviderClick) {
-        Row(
-            modifier = Modifier.align(Alignment.CenterStart),
-        ) {
+private fun ProviderContentState(
+    state: ProviderState.Content,
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Row {
             SubcomposeAsyncImage(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing12)
@@ -99,38 +112,99 @@ private fun ContentProviderState(state: ProviderState.Content) {
                         color = TangemTheme.colors.text.tertiary,
                         modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
                     )
-                    if (state.isBestTrade) {
-                        BestTradeItem(Modifier.padding(start = TangemTheme.dimens.spacing4))
+                    when (state.additionalBadge) {
+                        ProviderState.AdditionalBadge.BestTrade ->
+                            BestTradeItem(Modifier.padding(start = TangemTheme.dimens.spacing4))
+                        ProviderState.AdditionalBadge.PermissionRequired ->
+                            PermissionBadgeItem(Modifier.padding(start = TangemTheme.dimens.spacing4))
+                        ProviderState.AdditionalBadge.Empty -> {
+                            // no-op
+                        }
                     }
                 }
+                Row(
+                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+                ) {
+                    Text(
+                        text = state.rate,
+                        style = TangemTheme.typography.body2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                    if (state.percentLowerThenBest != null) {
+                        Text(
+                            text = "${state.percentLowerThenBest}%", // todo add to strings
+                            style = TangemTheme.typography.body2,
+                            color = TangemTheme.colors.text.warning,
+                            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                        )
+                    }
+                }
+            }
+        }
+
+        ProviderChevron(state = state, isSelected = isSelected)
+    }
+}
+
+@Composable
+private fun ProviderUnavailableState(state: ProviderState.Unavailable, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Row {
+            val (alpha, colorFilter) = GRAY_SCALE_ALPHA to GrayscaleColorFilter
+            SubcomposeAsyncImage(
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing12)
+                    .size(size = TangemTheme.dimens.size40)
+                    .clip(TangemTheme.shapes.roundedCorners8),
+                model = ImageRequest.Builder(context = LocalContext.current)
+                    .data(state.iconUrl)
+                    .crossfade(enable = true)
+                    .allowHardware(false)
+                    .build(),
+                loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
+                error = {
+                    ErrorProviderIcon(
+                        Modifier.size(
+                            size = TangemTheme.dimens.size40,
+                        ),
+                    )
+                },
+                alpha = alpha,
+                colorFilter = colorFilter,
+                contentDescription = null,
+            )
+
+            Column(
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
+            ) {
+                Row {
+                    Text(
+                        text = state.name,
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                    Text(
+                        text = state.type,
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                    )
+                }
                 Text(
-                    text = state.rate,
+                    text = state.alertText,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
                 )
             }
         }
-
-        Icon(
-            painter = painterResource(id = R.drawable.ic_chevron_right_24),
-            contentDescription = null,
-            modifier = Modifier
-                .align(alignment = Alignment.CenterEnd)
-                .padding(end = TangemTheme.dimens.spacing12),
-            tint = TangemTheme.colors.icon.informative,
-        )
     }
 }
 
 @Composable
-private fun LoadingProviderState() {
-    BaseContainer {
-        Column(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(vertical = TangemTheme.dimens.spacing12),
-        ) {
+private fun ProviderLoadingState(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Column {
             Text(
                 text = "Provider",
                 style = TangemTheme.typography.caption2,
@@ -169,6 +243,56 @@ private fun LoadingProviderState() {
 }
 
 @Composable
+private fun BoxScope.ProviderChevron(state: ProviderState.Content, isSelected: Boolean) {
+    when (state.selectionType) {
+        ProviderState.SelectionType.NONE -> {
+            /* no-op */
+        }
+        ProviderState.SelectionType.CLICK -> {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_chevron_right_24),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterEnd)
+                    .padding(end = TangemTheme.dimens.spacing12),
+                tint = TangemTheme.colors.icon.informative,
+            )
+        }
+        ProviderState.SelectionType.SELECT -> {
+            if (isSelected) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_check_24),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterEnd)
+                        .padding(end = TangemTheme.dimens.spacing12),
+                    tint = TangemTheme.colors.icon.accent,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BaseContainer(state: ProviderState, content: @Composable BoxScope.() -> Unit) {
+    Box(
+        modifier = Modifier
+            .background(
+                color = TangemTheme.colors.background.action,
+                shape = TangemTheme.shapes.roundedCornersXMedium,
+            )
+            .clickable(
+                enabled = state.onProviderClick != null,
+                onClick = { state.onProviderClick?.invoke(state.id) },
+            )
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = TangemTheme.dimens.size68),
+    ) {
+        content()
+    }
+}
+
+@Composable
 private fun ErrorProviderIcon(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
@@ -203,18 +327,35 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(
+            color = TangemTheme.colors.background.secondary,
+            shape = TangemTheme.shapes.roundedCornersLarge,
+        ),
+    ) {
+        Text(
+            text = "Permission required",
+            style = TangemTheme.typography.caption1,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun ProviderItem_Loading_Preview() {
     Column {
         TangemTheme(isDark = false) {
-            ProviderItem(state = ProviderState.Loading)
+            ProviderItemBlock(state = ProviderState.Loading())
         }
 
         SpacerH24()
 
         TangemTheme(isDark = true) {
-            ProviderItem(state = ProviderState.Loading)
+            ProviderItemBlock(state = ProviderState.Loading())
         }
     }
 }
@@ -227,19 +368,44 @@ private fun ProviderItem_Content_Preview() {
         name = "1inch",
         type = "DEX",
         iconUrl = "",
-        isBestTrade = true,
         rate = "1 000 000",
+        additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
+        percentLowerThenBest = -1.0f,
+        selectionType = ProviderState.SelectionType.SELECT,
         onProviderClick = {},
     )
     Column {
         TangemTheme(isDark = false) {
-            ProviderItem(state = state)
+            ProviderItemBlock(state = state)
         }
 
         SpacerH24()
 
         TangemTheme(isDark = true) {
-            ProviderItem(state = state)
+            ProviderItemBlock(state = state)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ProviderItem_Unavailable_Preview() {
+    val state = ProviderState.Unavailable(
+        id = "1",
+        name = "1inch",
+        type = "DEX",
+        iconUrl = "",
+        alertText = "Unavailable",
+    )
+    Column {
+        TangemTheme(isDark = false) {
+            ProviderItemBlock(state = state)
+        }
+
+        SpacerH24()
+
+        TangemTheme(isDark = true) {
+            ProviderItemBlock(state = state)
         }
     }
 }
