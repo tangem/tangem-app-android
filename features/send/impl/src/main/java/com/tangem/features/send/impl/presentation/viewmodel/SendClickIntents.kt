@@ -1,5 +1,7 @@
 package com.tangem.features.send.impl.presentation.viewmodel
 
+import com.tangem.features.send.impl.presentation.state.fee.FeeType
+
 interface SendClickIntents {
 
     fun onBackClick()
@@ -22,5 +24,13 @@ interface SendClickIntents {
     fun onRecipientAddressValueChange(value: String)
 
     fun onRecipientMemoValueChange(value: String)
+    // endregion
+
+    // region Fee
+    fun onFeeSelectorClick(feeType: FeeType)
+
+    fun onCustomFeeValueChange(index: Int, value: String)
+
+    fun onSubtractSelect(value: Boolean)
     // endregion
 }
