@@ -1,43 +1,53 @@
 package com.tangem.features.send.impl.presentation
 
-import androidx.activity.compose.BackHandler
+import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.fragment.app.viewModels
 import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.screen.ComposeBottomSheetFragment
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
-import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.ui.SendScreen
 import com.tangem.features.send.impl.presentation.viewmodel.SendViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.lang.ref.WeakReference
 import javax.inject.Inject
 
 /**
  * Send fragment
  */
 @AndroidEntryPoint
-internal class SendFragment : ComposeBottomSheetFragment() {
+internal class SendFragment : ComposeFragment() {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
-    override val expandedHeightFraction: Float = 1f
+    private val viewModel by viewModels<SendViewModel>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycle.addObserver(viewModel)
+        viewModel.setRouter(
+            StateRouter(
+                fragmentManager = WeakReference(parentFragmentManager),
+            ),
+        )
+    }
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val viewModel = hiltViewModel<SendViewModel>()
-        LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
-
-        SystemBarsEffect { setSystemBarsColor(color = Color.Transparent) }
-        BackHandler { dismiss() }
-
-        when (val state = viewModel.uiState) {
-            is SendUiState.Content -> SendScreen(state)
-            SendUiState.Dismiss -> dismiss()
+        val systemBarsColor = TangemTheme.colors.background.tertiary
+        SystemBarsEffect {
+            setSystemBarsColor(systemBarsColor)
         }
+        SendScreen(viewModel.uiState)
+    }
+
+    override fun onDestroy() {
+        lifecycle.removeObserver(viewModel)
+        super.onDestroy()
     }
 
     companion object {
