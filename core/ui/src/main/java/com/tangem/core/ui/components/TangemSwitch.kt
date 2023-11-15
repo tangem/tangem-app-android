@@ -1,4 +1,4 @@
-package com.tangem.tap.features.details.ui.common
+package com.tangem.core.ui.components
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
