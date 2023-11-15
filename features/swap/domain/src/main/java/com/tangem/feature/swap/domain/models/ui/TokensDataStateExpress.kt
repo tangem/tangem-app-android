@@ -5,6 +5,7 @@ import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.SwapPair
 
 data class TokensDataStateExpress(
+    val initialCryptoCurrency: CryptoCurrency,
     val preselectTokens: PreselectTokensExpress,
     val foundTokensState: FoundTokensStateExpress,
     val pairs: List<SwapPair>

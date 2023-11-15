@@ -80,8 +80,11 @@ internal class SwapInteractorImpl @Inject constructor(
 
         val pairs = createCryptoCurrencyPairs(pairsLeast, currencies)
 
+        val initialCryptoCurrency = mapLegacyCurrencyToCryptoCurrency(currency, currencyStatuses)
+            ?: throw IllegalStateException("Initial crypto currency must not be null")
 
         return TokensDataStateExpress(
+            initialCryptoCurrency = initialCryptoCurrency,
             preselectTokens = getPreselectTokens(currency, currencyStatuses),
             foundTokensState = FoundTokensStateExpress(emptyList(), emptyList()),
             pairs = pairs,
@@ -89,11 +92,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private fun getPreselectTokens(currency: Currency, currencies: List<CryptoCurrencyStatus>): PreselectTokensExpress {
-        val from = currencies.map { it.currency }
-            .find {
-                it.network.backendId == currency.networkId
-                    && it.getContractAddress() == currency.getContractAddress()
-            }
+        val from = mapLegacyCurrencyToCryptoCurrency(currency, currencies)
 
         val to = currencies.firstOrNull()?.currency // TODO choose of 3 variants
 
@@ -105,6 +104,17 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             throw IllegalStateException("From and to currencies must not be null")
         }
+    }
+
+    private fun mapLegacyCurrencyToCryptoCurrency(
+        currency: Currency,
+        currencies: List<CryptoCurrencyStatus>,
+    ): CryptoCurrency? {
+        return currencies.map { it.currency }
+            .find {
+                it.network.backendId == currency.networkId
+                    && it.getContractAddress() == currency.getContractAddress()
+            }
     }
 
     private fun createCryptoCurrencyPairs(
@@ -421,7 +431,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun getAndAddCryptoCurrency(
         userWallet: UserWallet,
         currency: CryptoCurrency,
-        network: Network
+        network: Network,
     ) {
         repository.getCryptoCurrency(userWallet, currency, network)?.let { cryptoCurrency ->
             addCryptoCurrenciesUseCase(userWallet.walletId, cryptoCurrency)
