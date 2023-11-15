@@ -139,12 +139,12 @@ internal class SwapViewModel @Inject constructor(
                     fromCryptoCurrency = state.preselectTokens.fromToken,
                     toCryptoCurrency = state.preselectTokens.toToken
                 )
-                updateTokensState(dataState = state.foundTokensState)
-                startLoadingQuotes(
-                    fromToken = state.preselectTokens.fromToken,
-                    toToken = state.preselectTokens.toToken,
-                    amount = lastAmount.value,
-                )
+                // updateTokensState(dataState = state.foundTokensState)
+                // startLoadingQuotes(
+                //     fromToken = state.preselectTokens.fromToken,
+                //     toToken = state.preselectTokens.toToken,
+                //     amount = lastAmount.value,
+                // )
 
             }.onFailure {
                 Timber.tag(loggingTag).e(it)
@@ -157,16 +157,16 @@ internal class SwapViewModel @Inject constructor(
                 swapInteractor.initTokensToSwap(currency)
             }
                 .onSuccess { state ->
-                    dataState = dataState.copy(
-                        fromCurrency = state.preselectTokens.fromToken,
-                        toCurrency = state.preselectTokens.toToken,
-                    )
-                    updateTokensState(dataState = state.foundTokensState)
-                    startLoadingQuotes(
-                        fromToken = state.preselectTokens.fromToken,
-                        toToken = state.preselectTokens.toToken,
-                        amount = lastAmount.value,
-                    )
+                    // dataState = dataState.copy(
+                    //     fromCurrency = state.preselectTokens.fromToken,
+                    //     toCurrency = state.preselectTokens.toToken,
+                    // )
+                    // updateTokensState(dataState = state.foundTokensState)
+                    // startLoadingQuotes(
+                    //     fromToken = state.preselectTokens.fromToken,
+                    //     toToken = state.preselectTokens.toToken,
+                    //     amount = lastAmount.value,
+                    // )
                 }
                 .onFailure {
                     Timber.tag(loggingTag).e(it)
@@ -404,12 +404,12 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun onChangeCardsClicked() {
-        val newFromToken = dataState.toCurrency
-        val newToToken = dataState.fromCurrency
+        val newFromToken = dataState.toCryptoCurrency
+        val newToToken = dataState.fromCryptoCurrency
         if (newFromToken != null && newToToken != null) {
             dataState = dataState.copy(
-                fromCurrency = newFromToken,
-                toCurrency = newToToken,
+                fromCryptoCurrency = newFromToken,
+                toCryptoCurrency = newToToken,
             )
             isOrderReversed = !isOrderReversed
             val decimals = blockchainInteractor.getTokenDecimals(newFromToken)
@@ -423,8 +423,8 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun onAmountChanged(value: String) {
-        val fromToken = dataState.fromCurrency
-        val toToken = dataState.toCurrency
+        val fromToken = dataState.fromCryptoCurrency
+        val toToken = dataState.toCryptoCurrency
         if (fromToken != null && toToken != null) {
             val decimals = blockchainInteractor.getTokenDecimals(fromToken)
             val cutValue = cutAmountWithDecimals(decimals, value)
@@ -438,7 +438,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun onMaxAmountClicked() {
-        dataState.fromCurrency?.let {
+        dataState.fromCryptoCurrency?.let {
             val balance = swapInteractor.getTokenBalance(currency.networkId, it)
             onAmountChanged(balance.formatToUIRepresentation())
         }
@@ -513,11 +513,11 @@ internal class SwapViewModel @Inject constructor(
             onSelectItemFee = { feeItem ->
                 dataState = dataState.copy(selectedFee = feeItem.data)
                 val spendAmount = dataState.amount?.let { amount ->
-                    val fromToken = dataState.fromCurrency ?: return@let null
+                    val fromToken = dataState.fromCryptoCurrency ?: return@let null
                     swapInteractor.getSwapAmountForToken(amount, fromToken)
                 } ?: dataState.approveDataModel?.fromTokenAmount
                 spendAmount ?: return@UiActions
-                val fromToken = dataState.fromCurrency ?: return@UiActions
+                val fromToken = dataState.fromCryptoCurrency ?: return@UiActions
                 viewModelScope.launch(dispatchers.io) {
                     val isFeeEnough = swapInteractor.checkFeeIsEnough(
                         fee = feeItem.data.feeValue,

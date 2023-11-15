@@ -185,7 +185,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
                     loadedOnWalletsMap.add(it.symbol)
                     it
-                } ?: swapCurrencyConverter.convertBack(token)
+                } ?: TODO()
             }
             .filter { it.symbol != initialCurrency.symbol && allLoadedTokens.contains(it) }
         val loadedTokens = allLoadedTokens

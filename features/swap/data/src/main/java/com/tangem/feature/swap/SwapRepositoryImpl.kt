@@ -212,7 +212,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                     symbol = currency.symbol,
                     contractAddress = currency.contractAddress,
                     decimals = currency.decimals,
-                    id = currency.id,
+                    id = currency.id.value,
                 )
                 cryptoCurrencyFactory.createToken(
                     sdkToken = sdkToken,
