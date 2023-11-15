@@ -174,7 +174,7 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun updateTokensState(dataState: FoundTokensState) {
+    private fun updateTokensState(dataState: FoundTokensStateExpress) {
         uiState = stateBuilder.addTokensToState(
             uiState = uiState,
             dataState = dataState,
@@ -282,8 +282,8 @@ internal class SwapViewModel @Inject constructor(
                 swapInteractor.onSwap(
                     networkId = dataState.networkId,
                     swapStateData = requireNotNull(dataState.swapDataModel),
-                    currencyToSend = requireNotNull(dataState.fromCurrency),
-                    currencyToGet = requireNotNull(dataState.toCurrency),
+                    currencyToSend = requireNotNull(dataState.fromCryptoCurrency),
+                    currencyToGet = requireNotNull(dataState.toCryptoCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
                     fee = requireNotNull(dataState.selectedFee),
                 )
@@ -332,9 +332,9 @@ internal class SwapViewModel @Inject constructor(
                         approveData = requireNotNull(dataState.approveDataModel) {
                             "dataState.approveDataModel might not be null"
                         },
-                        forTokenContractAddress = (dataState.fromCurrency as? Currency.NonNativeToken)?.contractAddress
+                        forTokenContractAddress = (dataState.fromCryptoCurrency as? CryptoCurrency.Token)?.contractAddress
                             ?: "",
-                        fromToken = requireNotNull(dataState.fromCurrency) {
+                        fromToken = requireNotNull(dataState.fromCryptoCurrency) {
                             "dataState.fromCurrency might not be null"
                         },
                         approveType = requireNotNull(uiState.permissionState as? SwapPermissionState.ReadyForRequest) {

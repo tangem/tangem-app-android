@@ -239,7 +239,7 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
 
     fun addTokensToState(
         uiState: SwapStateHolder,
-        dataState: FoundTokensState,
+        dataState: FoundTokensStateExpress,
         networkInfo: NetworkInfo,
     ): SwapStateHolder {
         return uiState.copy(

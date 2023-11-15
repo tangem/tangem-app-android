@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.lib.crypto.TransactionManager
@@ -23,11 +24,11 @@ internal class BlockchainInteractorImpl @Inject constructor(
         return transactionManager.getExplorerTransactionLink(networkId, txAddress)
     }
 
-    override fun getTokenDecimals(token: Currency): Int {
-        return if (token is Currency.NonNativeToken) {
-            token.decimalCount
+    override fun getTokenDecimals(token: CryptoCurrency): Int {
+        return if (token is CryptoCurrency.Token) {
+            token.decimals
         } else {
-            transactionManager.getNativeTokenDecimals(token.networkId)
+            transactionManager.getNativeTokenDecimals(token.network.id.value)
         }
     }
 }
