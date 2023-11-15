@@ -197,22 +197,22 @@ internal class SwapInteractorImpl @Inject constructor(
         val appCurrency = userWalletManager.getUserAppCurrency()
         val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
         cache.cacheBalances(networkId, derivationPath, tokensBalance)
-        cache.cacheLoadedTokens(loadedTokens.map { TokenWithBalance(it) })
-        cache.cacheInWalletTokens(getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency))
+        // cache.cacheLoadedTokens(loadedTokens.map { TokenWithBalance(it) })
+        // cache.cacheInWalletTokens(getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency))
         return TokensDataState(
             preselectTokens = PreselectTokens(
                 fromToken = initialCurrency,
                 toToken = selectToToken(initialCurrency, tokensInWallet, loadedTokens),
             ),
             foundTokensState = FoundTokensState(
-                tokensInWallet = cache.getInWalletTokens(),
-                loadedTokens = cache.getLoadedTokens(),
+                tokensInWallet = emptyList(),// cache.getInWalletTokens(),
+                loadedTokens = emptyList() //cache.getLoadedTokens(),
             ),
         )
     }
 
     @Deprecated("used in old swap mechanism")
-    override suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensState {
+    override suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensStateExpress {
         val searchQueryLowerCase = searchQuery.lowercase()
         val tokensInWallet = cache.getInWalletTokens()
             .filter {
@@ -224,18 +224,18 @@ internal class SwapInteractorImpl @Inject constructor(
                 it.token.name.lowercase().contains(searchQueryLowerCase) ||
                     it.token.symbol.lowercase().contains(searchQueryLowerCase)
             }
-        return FoundTokensState(
+        return FoundTokensStateExpress(
             tokensInWallet = tokensInWallet,
             loadedTokens = loadedTokens,
         )
     }
 
     @Deprecated("used in old swap mechanism")
-    override fun findTokenById(id: String): Currency? {
+    override fun findTokenById(id: String): CryptoCurrency? {
         val tokensInWallet = cache.getInWalletTokens()
         val loadedTokens = cache.getLoadedTokens()
-        return tokensInWallet.firstOrNull { it.token.id == id }?.token
-            ?: loadedTokens.firstOrNull { it.token.id == id }?.token
+        return tokensInWallet.firstOrNull { it.token.id.value == id }?.token
+            ?: loadedTokens.firstOrNull { it.token.id.value == id }?.token
     }
 
     @Deprecated("used in old swap mechanism")

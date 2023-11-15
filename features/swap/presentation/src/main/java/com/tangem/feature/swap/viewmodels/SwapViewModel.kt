@@ -385,8 +385,8 @@ internal class SwapViewModel @Inject constructor(
         )
 
         if (foundToken != null) {
-            val fromToken: Currency
-            val toToken: Currency
+            val fromToken: CryptoCurrency
+            val toToken: CryptoCurrency
             if (isOrderReversed) {
                 fromToken = foundToken
                 toToken = currency

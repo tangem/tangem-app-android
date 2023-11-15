@@ -29,17 +29,17 @@ interface SwapInteractor {
      *
      * @param networkId networkId for tokens
      * @param searchQuery string query for search
-     * @return [FoundTokensState] that contains list of tokens matching condition query
+     * @return [FoundTokensStateExpress] that contains list of tokens matching condition query
      */
-    suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensState
+    suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensStateExpress
 
     /**
      * Find specific token by id, null if not found
      *
      * @param id token id
-     * @return [Currency] or null
+     * @return [CryptoCurrency] or null
      */
-    fun findTokenById(id: String): Currency?
+    fun findTokenById(id: String): CryptoCurrency?
 
     /**
      * Gives permission to swap, this starts scan card process
