@@ -16,15 +16,11 @@ internal class StateRouter(
 
     fun onNextClick() {
         when (currentState.value) {
-            SendUiStateType.Amount -> {
-                currentState.update { SendUiStateType.Recipient }
-            }
-            SendUiStateType.Recipient -> {
-                currentState.update { SendUiStateType.Fee }
-            }
-            else -> {
-                // todo implement
-            }
+            SendUiStateType.Amount -> currentState.update { SendUiStateType.Recipient }
+            SendUiStateType.Recipient -> currentState.update { SendUiStateType.Fee }
+            SendUiStateType.Fee -> currentState.update { SendUiStateType.Send }
+            SendUiStateType.Send -> currentState.update { SendUiStateType.Done }
+            SendUiStateType.Done -> onBackClick()
         }
     }
 
@@ -33,7 +29,8 @@ internal class StateRouter(
             SendUiStateType.Amount -> onBackClick()
             SendUiStateType.Recipient -> currentState.update { SendUiStateType.Amount }
             SendUiStateType.Fee -> currentState.update { SendUiStateType.Recipient }
-            else -> onBackClick()
+            SendUiStateType.Send -> currentState.update { SendUiStateType.Fee }
+            SendUiStateType.Done -> onBackClick()
         }
     }
 }
