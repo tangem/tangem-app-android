@@ -2,10 +2,13 @@ package com.tangem.domain.walletmanager
 
 import arrow.core.Either
 import com.tangem.blockchain.blockchains.solana.RentProvider
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -113,6 +116,13 @@ interface WalletManagersFacade {
      */
     suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address>
 
+    /** Returns list of all addresses for all currencies in selected wallet
+     *
+     * @param userWalletId selected wallet id
+     * @param network required to create wallet manager
+     */
+    suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address>
+
     /**
      * Returns info about rent if wallet manager implemented [RentProvider], otherwise null
      *
@@ -135,4 +145,19 @@ interface WalletManagersFacade {
         network: Network,
         signedHashes: Int,
     ): Either<Throwable, Unit>
+
+    /**
+     * Returns fee for transaction
+     *
+     * @param amount of transaction
+     * @param destination address
+     * @param userWalletId selected wallet id
+     * @param network network of currency
+     */
+    suspend fun getFee(
+        amount: Amount,
+        destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Result<TransactionFee>?
 }
