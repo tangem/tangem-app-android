@@ -421,7 +421,7 @@
     <string name="send_fee_picker_priority">Priority</string>
     <string name="send_fee_unreachable_error_text">Check your network connection</string>
     <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
-    <string name="send_from_wallet">From **%s**</string>
+    <string name="send_from_wallet_android">From</string>
     <string name="send_gas_limit">Gas limit</string>
     <string name="send_gas_limit_footer">Gas Limit is auto-calculated; raise it during network congestion</string>
     <string name="send_gas_price">Gas price</string>
