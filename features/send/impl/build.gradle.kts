@@ -57,6 +57,7 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.transaction)
 
     /** Feature modules */
     implementation(projects.features.send.api)

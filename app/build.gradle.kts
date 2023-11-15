@@ -50,6 +50,7 @@ dependencies {
     implementation(projects.domain.appTheme.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.transaction)
 
     implementation(projects.common)
     implementation(projects.core.analytics)

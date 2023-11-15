@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -175,7 +176,9 @@ internal fun TextFieldWithInfo(
     modifier: Modifier = Modifier,
     info: TextReference? = null,
     footer: String? = null,
+    isSingleLine: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     FooterContainer(
         footer = footer,
@@ -206,6 +209,8 @@ internal fun TextFieldWithInfo(
                     value = value,
                     onValueChange = onValueChange,
                     visualTransformation = visualTransformation,
+                    singleLine = isSingleLine,
+                    keyboardOptions = keyboardOptions,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing6)
                         .weight(1f),
@@ -284,15 +289,17 @@ private fun SimpleTextField(
     placeholder: TextReference? = null,
     singleLine: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     val focusRequester = remember { FocusRequester() }
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        textStyle = TangemTheme.typography.body2,
+        textStyle = TangemTheme.typography.body2.copy(color = TangemTheme.colors.text.primary1),
         cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
         singleLine = singleLine,
         visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
         decorationBox = { textValue ->
             Box {
                 if (value.isBlank() && placeholder != null) {
