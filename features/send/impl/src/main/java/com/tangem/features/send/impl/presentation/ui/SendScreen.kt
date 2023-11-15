@@ -20,6 +20,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.ui.amount.SendAmountContent
+import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
 
 @Composable
@@ -88,6 +89,10 @@ private fun SendScreenContent(
                 uiState.recipientState,
                 uiState.clickIntents,
                 recipientList,
+            )
+            SendUiStateType.Fee -> SendSpeedAndFeeContent(
+                uiState.feeState,
+                uiState.clickIntents,
             )
             else -> { /* [REDACTED_TODO_COMMENT]*/ }
         }
