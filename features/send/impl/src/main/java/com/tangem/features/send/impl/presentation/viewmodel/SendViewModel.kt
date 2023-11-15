@@ -9,13 +9,16 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.Provider
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -27,7 +30,10 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.SendStateFactory
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.StateRouter
+import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -37,6 +43,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -50,6 +57,7 @@ internal class SendViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
@@ -84,11 +92,13 @@ internal class SendViewModel @Inject constructor(
     private var balanceJobHolder = JobHolder()
     private var recipientsJobHolder = JobHolder()
     private var walletAddressesJobHolder = JobHolder()
+    private var feeJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
         getWalletAddresses()
         subscribeOnCurrencyStatusUpdates(owner)
         getWalletsAndRecent()
+        getFee()
     }
 
     fun setRouter(router: StateRouter) {
@@ -203,6 +213,38 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
+    private fun getFee() {
+        viewModelScope.launch(dispatchers.main) {
+            uiState.currentState
+                .filter { it == SendUiStateType.Fee }
+                .onEach {
+                    val amountState = uiState.amountState ?: return@onEach
+                    val recipientState = uiState.recipientState ?: return@onEach
+
+                    stateFactory.onFeeOnLoadingState()
+                    getFeeUseCase.invoke(
+                        amount = amountState.amountTextField.value.value.toBigDecimal(),
+                        destination = recipientState.addressTextField.value.value,
+                        userWalletId = userWalletId,
+                        cryptoCurrency = cryptoCurrency,
+                    )
+                        .conflate()
+                        .distinctUntilChanged()
+                        .onEach { maybeFee ->
+                            maybeFee.fold(
+                                ifRight = {
+                                    stateFactory.onFeeOnLoadedState(it)
+                                },
+                                ifLeft = {
+                                    // TODO add error handling
+                                },
+                            )
+                        }
+                        .launchIn(viewModelScope)
+                }.launchIn(viewModelScope)
+        }.saveIn(feeJobHolder)
+    }
+
     private fun getWalletAddresses() {
         viewModelScope.launch(dispatchers.io) {
             walletAddresses = walletManagersFacade.getAddresses(
@@ -267,6 +309,62 @@ internal class SendViewModel @Inject constructor(
         return false
     }
     // endregion
+
+    //region fee
+    override fun onFeeSelectorClick(feeType: FeeType) {
+        stateFactory.onFeeSelectedState(feeType)
+        updateReceiveAmount()
+    }
+
+    override fun onCustomFeeValueChange(index: Int, value: String) {
+        uiState.feeState?.apply {
+            (feeSelectorState.value as? FeeSelectorState.Content)?.let { feeSelector ->
+                feeSelector.customValues.update {
+                    it.toMutableList().apply {
+                        set(index, it[index].copy(value = value))
+                    }
+                }
+                updateReceiveAmount()
+            }
+        }
+    }
+
+    override fun onSubtractSelect(value: Boolean) {
+        uiState.feeState?.isSubtract?.update { value }
+        if (value) {
+            updateReceiveAmount()
+        }
+    }
+
+    private fun updateReceiveAmount() {
+        uiState.feeState?.receivedAmount?.update {
+            BigDecimalFormatter.formatCryptoAmount(
+                cryptoAmount = calculateReceiveAmount(),
+                cryptoCurrency = cryptoCurrency.symbol,
+                decimals = cryptoCurrency.decimals,
+            )
+        }
+    }
+
+    private fun calculateReceiveAmount(): BigDecimal {
+        val feeState = uiState.feeState?.feeSelectorState?.value as? FeeSelectorState.Content ?: return BigDecimal.ZERO
+        val amount = uiState.amountState?.amountTextField?.value ?: return BigDecimal.ZERO
+
+        val fee = when (val selectedFee = feeState.fees) {
+            is TransactionFee.Choosable -> {
+                when (feeState.selectedFee) {
+                    FeeType.SLOW -> selectedFee.minimum.amount.value
+                    FeeType.MARKET -> selectedFee.normal.amount.value
+                    FeeType.FAST -> selectedFee.priority.amount.value
+                    FeeType.CUSTOM -> feeState.customValues.value.firstOrNull()?.value?.let { BigDecimal(it) }
+                }
+            }
+            is TransactionFee.Single -> selectedFee.normal.amount.value
+        } ?: BigDecimal.ZERO
+
+        return BigDecimal(amount.value).minus(fee)
+    }
+    //endregion
 
     companion object {
         private const val XRP_X_ADDRESS = 'X'
