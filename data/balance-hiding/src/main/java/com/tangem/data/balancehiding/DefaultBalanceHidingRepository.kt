@@ -15,6 +15,8 @@ internal class DefaultBalanceHidingRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BalanceHidingRepository {
 
+    override var isUpdateEnabled: Boolean = true
+
     override fun getBalanceHidingSettingsFlow(): Flow<BalanceHidingSettings> {
         return balanceHidingSettingsStore.get()
             .onStart { emit(getBalanceHidingSettings()) }
