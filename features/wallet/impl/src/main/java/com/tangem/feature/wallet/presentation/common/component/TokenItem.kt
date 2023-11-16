@@ -45,13 +45,18 @@ internal fun TokenItem(
             .tokenClickable(state = state)
             .background(color = TangemTheme.colors.background.primary),
     ) {
-        TokenIcon(state = state.iconState, modifier = Modifier.layoutId(layoutId = LayoutId.ICON))
+        TokenIcon(
+            state = state.iconState,
+            modifier = Modifier
+                .layoutId(layoutId = LayoutId.ICON)
+                .padding(end = TangemTheme.dimens.spacing8),
+        )
 
         TokenTitle(
             state = state.titleState,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.TITLE)
-                .padding(horizontal = TangemTheme.dimens.spacing8)
+                .padding(end = TangemTheme.dimens.spacing8)
                 .padding(bottom = betweenRowsMargin),
         )
 
@@ -67,7 +72,7 @@ internal fun TokenItem(
             state = state.cryptoPriceState,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.CRYPTO_PRICE)
-                .padding(horizontal = TangemTheme.dimens.spacing8),
+                .padding(end = TangemTheme.dimens.spacing8),
         )
 
         TokenCryptoAmount(
@@ -233,7 +238,10 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
             )
 
             cryptoAmount?.placeRelative(
-                x = layoutWidth - cryptoAmount.width - layoutPadding,
+                x = when (state) {
+                    is TokenItemState.Draggable -> layoutPadding + icon.width
+                    else -> layoutWidth - cryptoAmount.width - layoutPadding
+                },
                 y = layoutHeight - cryptoAmount.height - layoutPadding,
             )
 
