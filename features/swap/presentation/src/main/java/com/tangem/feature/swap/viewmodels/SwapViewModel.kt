@@ -443,6 +443,7 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun createUiActions(): UiActions {
         return UiActions(
             onSearchEntered = { onSearchEntered(it) },
@@ -510,6 +511,8 @@ internal class SwapViewModel @Inject constructor(
                     uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem, isFeeEnough)
                 }
             },
+            onClickFee = {},
+            onSelectFeeType = {},
         )
     }
 
