@@ -2,10 +2,10 @@ package com.tangem.feature.swap.converters
 
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
-import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
-import com.tangem.feature.swap.domain.models.ui.FoundTokensState
-import com.tangem.feature.swap.domain.models.ui.TokenWithBalance
+import com.tangem.feature.swap.domain.models.ui.FoundTokensStateExpress
+import com.tangem.feature.swap.domain.models.ui.TokenWithBalanceExpress
 import com.tangem.feature.swap.models.Network
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
@@ -18,7 +18,7 @@ class TokensDataConverter(
     private val isBalanceHiddenProvider: Provider<Boolean>,
 ) {
 
-    fun convertWithNetwork(value: FoundTokensState, network: NetworkInfo): SwapSelectTokenStateHolder {
+    fun convertWithNetwork(value: FoundTokensStateExpress, network: NetworkInfo): SwapSelectTokenStateHolder {
         return SwapSelectTokenStateHolder(
             availableTokens = value.tokensInWallet.map { tokenWithBalanceToTokenToSelect(it) }.toImmutableList(),
             unavailableTokens = value.loadedTokens.map { tokenWithBalanceToTokenToSelect(it) }.toImmutableList(),
@@ -28,12 +28,14 @@ class TokensDataConverter(
         )
     }
 
-    private fun tokenWithBalanceToTokenToSelect(tokenWithBalance: TokenWithBalance): TokenToSelectState.TokenToSelect {
+    private fun tokenWithBalanceToTokenToSelect(
+        tokenWithBalance: TokenWithBalanceExpress,
+    ): TokenToSelectState.TokenToSelect {
         return TokenToSelectState.TokenToSelect(
-            id = tokenWithBalance.token.id,
+            id = tokenWithBalance.token.id.value,
             name = tokenWithBalance.token.name,
             symbol = tokenWithBalance.token.symbol,
-            isNative = tokenWithBalance.token is Currency.NativeToken,
+            isNative = tokenWithBalance.token is CryptoCurrency.Coin,
 // [REDACTED_TODO_COMMENT]
             tokenIcon = TokenIconState.CoinIcon(
                 url = "",
