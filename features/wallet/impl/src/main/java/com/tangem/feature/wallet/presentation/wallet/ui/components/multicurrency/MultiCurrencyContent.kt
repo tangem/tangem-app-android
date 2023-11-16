@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState.*
 import kotlinx.collections.immutable.ImmutableList
 
 private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
@@ -45,8 +47,46 @@ internal fun LazyListScope.tokensListItems(
     }
 }
 
+internal fun LazyListScope.tokensListItemsV2(
+    state: com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState,
+    modifier: Modifier = Modifier,
+    isBalanceHidden: Boolean,
+) {
+    when (state) {
+        is ContentState -> contentItemsV2(
+            items = state.items,
+            isBalanceHidden = isBalanceHidden,
+            modifier = modifier,
+        )
+        Empty ->
+            nonContentItem(modifier = modifier)
+    }
+}
+
 private fun LazyListScope.contentItems(
     items: ImmutableList<WalletTokensListState.TokensListItemState>,
+    modifier: Modifier = Modifier,
+    isBalanceHidden: Boolean,
+) {
+    itemsIndexed(
+        items = items,
+        key = { _, item -> item.id },
+        contentType = { _, item -> item::class.java },
+        itemContent = { index, item ->
+            MultiCurrencyContentItem(
+                state = item,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier.roundedShapeItemDecoration(
+                    currentIndex = index,
+                    lastIndex = items.lastIndex,
+                ),
+            )
+        },
+    )
+}
+
+private fun LazyListScope.contentItemsV2(
+    items: ImmutableList<TokensListItemState>,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
 ) {
@@ -73,6 +113,7 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
         key = NON_CONTENT_TOKENS_LIST_KEY,
         contentType = NON_CONTENT_TOKENS_LIST_KEY,
     ) {
+        Log.i("WalletContent", "nonContentItem")
         Column(
             modifier = modifier
                 .animateItemPlacement()

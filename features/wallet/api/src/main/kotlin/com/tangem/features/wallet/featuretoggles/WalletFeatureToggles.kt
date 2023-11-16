@@ -9,4 +9,6 @@ interface WalletFeatureToggles {
 
     /** Availability of redesigned screen */
     val isRedesignedScreenEnabled: Boolean
+
+    val isWalletsScrollingPreviewEnabled: Boolean
 }
