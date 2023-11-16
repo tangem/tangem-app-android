@@ -22,7 +22,7 @@ internal class SendRecipientListConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) {
 
-    fun convert(wallets: List<AvailableWallet?>, txHistory: PagingData<TxHistoryItem>) {
+    fun convert(wallets: List<AvailableWallet?>, txHistory: PagingData<TxHistoryItem>, txHistoryCount: Int) {
         val filteredWallets = wallets.filterNotNull()
             .groupBy { item -> item.name }
             .values.flatten()
@@ -32,47 +32,56 @@ internal class SendRecipientListConverter(
                 )
             }
 
+        val walletsItem = getWalletItems(filteredWallets, txHistoryCount)
+
         currentStateProvider().recipientList.update {
-            txHistory.filter { item ->
-                val isTransfer = item.type == TxHistoryItem.TransactionType.Transfer
-                val isNotContract = item.interactionAddressType is TxHistoryItem.InteractionAddressType.User
-                val isSingleAddress = if (item.isOutgoing) {
-                    item.destinationType is TxHistoryItem.DestinationType.Single
-                } else {
-                    item.sourceType is TxHistoryItem.SourceType.Single
-                }
-                isTransfer && isSingleAddress && isNotContract
-            }.map<TxHistoryItem, SendRecipientListContent> { tx ->
-                SendRecipientListContent.Item(
-                    id = tx.txHash,
-                    title = tx.extractAddress(),
-                    subtitle = TextReference.Str(tx.getAmount()),
-                    info = tx.extractTimestamp(),
-                    subtitleIconRes = tx.extractIconRes(),
-                )
-            }.insertWallets(filteredWallets)
+            if (txHistoryCount == 0) {
+                PagingData.from(listOf(walletsItem))
+            } else {
+                txHistory.filter { item ->
+                    val isTransfer = item.type == TxHistoryItem.TransactionType.Transfer
+                    val isNotContract = item.interactionAddressType is TxHistoryItem.InteractionAddressType.User
+                    val isSingleAddress = if (item.isOutgoing) {
+                        item.destinationType is TxHistoryItem.DestinationType.Single
+                    } else {
+                        item.sourceType is TxHistoryItem.SourceType.Single
+                    }
+                    isTransfer && isSingleAddress && isNotContract
+                }.map<TxHistoryItem, SendRecipientListContent> { tx ->
+                    SendRecipientListContent.Item(
+                        id = tx.txHash,
+                        title = tx.extractAddress(),
+                        subtitle = TextReference.Str(tx.getAmount()),
+                        info = tx.extractTimestamp(),
+                        subtitleIconRes = tx.extractIconRes(),
+                    )
+                }.insertWallets(walletsItem)
+            }
         }
     }
 
     private fun PagingData<SendRecipientListContent>.insertWallets(
-        wallets: List<AvailableWallet>,
+        wallets: SendRecipientListContent.Wallets,
     ): PagingData<SendRecipientListContent> {
         return insertSeparators(terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE) { before, after ->
             return@insertSeparators when {
-                before == null && after is SendRecipientListContent.Item -> {
-                    SendRecipientListContent.Wallets(
-                        wallets.map {
-                            SendRecipientListContent.Item(
-                                id = it.address,
-                                title = TextReference.Str(it.address),
-                                subtitle = TextReference.Str(it.name),
-                            )
-                        }.toPersistentList(),
-                    )
-                }
+                before == null && after is SendRecipientListContent.Item -> wallets
                 else -> null
             }
         }
+    }
+
+    private fun getWalletItems(wallets: List<AvailableWallet>, txHistoryCount: Int): SendRecipientListContent.Wallets {
+        return SendRecipientListContent.Wallets(
+            wallets.map {
+                SendRecipientListContent.Item(
+                    id = it.address,
+                    title = TextReference.Str(it.address),
+                    subtitle = TextReference.Str(it.name),
+                )
+            }.toPersistentList(),
+            isWalletsOnly = txHistoryCount == 0,
+        )
     }
 
     private fun TxHistoryItem.extractAddress(): TextReference = if (isOutgoing) {
