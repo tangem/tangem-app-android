@@ -1,8 +1,6 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
@@ -46,8 +44,6 @@ interface SwapRepository {
      */
     fun getTangemFee(): Double
 
-    suspend fun getCryptoCurrency(userWallet: UserWallet, currency: Currency, network: Network): CryptoCurrency?
-
     @Throws(IllegalStateException::class)
     suspend fun getAllowance(
         userWalletId: UserWalletId,
@@ -62,7 +58,7 @@ interface SwapRepository {
         userWalletId: UserWalletId,
         networkId: String,
         derivationPath: String?,
-        currency: Currency,
+        currency: CryptoCurrency,
         amount: BigDecimal?,
     ): String
 }
