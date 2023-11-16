@@ -37,7 +37,7 @@ data class SwapCardData(
     val amountEquivalent: String?,
     val coinId: String?,
     val amountTextFieldValue: TextFieldValue?,
-    val tokenIconUrl: String,
+    val tokenIconUrl: String?,
     val tokenCurrency: String,
     val balance: String,
     val isBalanceHidden: Boolean,
