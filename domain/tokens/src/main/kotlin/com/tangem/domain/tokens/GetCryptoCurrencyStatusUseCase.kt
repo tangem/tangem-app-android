@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
-import arrow.core.left
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -13,7 +12,6 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
 class GetCryptoCurrencyStatusUseCase(
@@ -23,9 +21,7 @@ class GetCryptoCurrencyStatusUseCase(
     internal val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    operator fun invoke(
-        userWalletId: UserWalletId,
-    ): Flow<Either<TokenListError, List<CryptoCurrencyStatus>>> {
+    operator fun invoke(userWalletId: UserWalletId,): Flow<Either<TokenListError, List<CryptoCurrencyStatus>>> {
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             currenciesRepository = currenciesRepository,
@@ -46,12 +42,11 @@ class GetCryptoCurrencyStatusUseCase(
         val operations = TokenListOperations(
             userWalletId = userWalletId,
             tokens = tokens,
-            currenciesRepository = currenciesRepository
+            currenciesRepository = currenciesRepository,
         )
 
         return operations.getTokenListFlow().map { maybeTokenList ->
             maybeTokenList.mapLeft(TokenListOperations.Error::mapToTokenListError)
         }
     }
-
 }

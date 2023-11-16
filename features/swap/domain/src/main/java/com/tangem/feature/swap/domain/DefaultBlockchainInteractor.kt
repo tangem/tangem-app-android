@@ -1,12 +1,11 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.lib.crypto.TransactionManager
 import javax.inject.Inject
 
-internal class BlockchainInteractorImpl @Inject constructor(
+internal class DefaultBlockchainInteractor @Inject constructor(
     private val transactionManager: TransactionManager,
 ) : BlockchainInteractor {
 

@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 
 interface BlockchainInteractor {

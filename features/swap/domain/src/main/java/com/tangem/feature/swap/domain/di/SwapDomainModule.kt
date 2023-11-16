@@ -57,7 +57,7 @@ class SwapDomainModule {
     @Provides
     @Singleton
     fun provideBlockchainInteractor(transactionManager: TransactionManager): BlockchainInteractor {
-        return BlockchainInteractorImpl(
+        return DefaultBlockchainInteractor(
             transactionManager = transactionManager,
         )
     }
@@ -89,7 +89,7 @@ class SwapDomainModule {
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
-            dispatchers = dispatchers
+            dispatchers = dispatchers,
         )
     }
 
@@ -101,12 +101,12 @@ class SwapDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ) : GetCardTokensListUseCase {
+    ): GetCardTokensListUseCase {
         return GetCardTokensListUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
-            dispatchers = dispatchers
+            dispatchers = dispatchers,
         )
     }
 }

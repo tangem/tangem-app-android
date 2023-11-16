@@ -28,6 +28,4 @@ class SwapCurrencyConverter : Converter<CryptoCurrency, Currency> {
             }
         }
     }
-
-
 }

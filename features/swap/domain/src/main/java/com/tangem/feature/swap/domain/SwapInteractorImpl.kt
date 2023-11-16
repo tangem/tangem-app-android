@@ -9,7 +9,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.cache.SwapDataCache
 import com.tangem.feature.swap.domain.converters.SwapCurrencyConverter
@@ -99,7 +98,7 @@ internal class SwapInteractorImpl @Inject constructor(
         if (from != null && to != null) {
             return PreselectTokensExpress(
                 fromToken = from,
-                toToken = to
+                toToken = to,
             )
         } else {
             throw IllegalStateException("From and to currencies must not be null")
@@ -112,8 +111,8 @@ internal class SwapInteractorImpl @Inject constructor(
     ): CryptoCurrency? {
         return currencies.map { it.currency }
             .find {
-                it.network.backendId == currency.networkId
-                    && it.getContractAddress() == currency.getContractAddress()
+                it.network.backendId == currency.networkId &&
+                    it.getContractAddress() == currency.getContractAddress()
             }
     }
 
@@ -160,10 +159,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    suspend fun getPairs(
-        initialCurrency: LeastTokenInfo,
-        currenciesList: List<CryptoCurrency>,
-    ): List<SwapPairLeast> {
+    suspend fun getPairs(initialCurrency: LeastTokenInfo, currenciesList: List<CryptoCurrency>): List<SwapPairLeast> {
         return repository.getPairs(initialCurrency, currenciesList)
     }
 
@@ -215,8 +211,8 @@ internal class SwapInteractorImpl @Inject constructor(
                 toToken = selectToToken(initialCurrency, tokensInWallet, loadedTokens),
             ),
             foundTokensState = FoundTokensState(
-                tokensInWallet = emptyList(),// cache.getInWalletTokens(),
-                loadedTokens = emptyList() //cache.getLoadedTokens(),
+                tokensInWallet = emptyList(), // cache.getInWalletTokens(),
+                loadedTokens = emptyList(), // cache.getLoadedTokens(),
             ),
         )
     }

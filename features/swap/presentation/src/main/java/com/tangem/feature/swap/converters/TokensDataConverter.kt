@@ -3,11 +3,8 @@ package com.tangem.feature.swap.converters
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
-import com.tangem.feature.swap.domain.models.ui.FoundTokensState
 import com.tangem.feature.swap.domain.models.ui.FoundTokensStateExpress
-import com.tangem.feature.swap.domain.models.ui.TokenWithBalance
 import com.tangem.feature.swap.domain.models.ui.TokenWithBalanceExpress
 import com.tangem.feature.swap.models.Network
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
@@ -31,7 +28,9 @@ class TokensDataConverter(
         )
     }
 
-    private fun tokenWithBalanceToTokenToSelect(tokenWithBalance: TokenWithBalanceExpress): TokenToSelectState.TokenToSelect {
+    private fun tokenWithBalanceToTokenToSelect(
+        tokenWithBalance: TokenWithBalanceExpress
+    ): TokenToSelectState.TokenToSelect {
         return TokenToSelectState.TokenToSelect(
             id = tokenWithBalance.token.id.value,
             name = tokenWithBalance.token.name,
