@@ -36,7 +36,6 @@ class SwapDomainModule {
         walletFeatureToggles: WalletFeatureToggles,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusUseCase,
-        @SwapScope getCardTokensListUseCase: GetCardTokensListUseCase,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -49,7 +48,6 @@ class SwapDomainModule {
             walletFeatureToggles = walletFeatureToggles,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
-            getCardTokensListUseCase = getCardTokensListUseCase,
         )
     }
 
