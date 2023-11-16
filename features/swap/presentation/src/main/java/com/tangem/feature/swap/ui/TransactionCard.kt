@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -292,8 +293,9 @@ private fun TokenIcon(
     @DrawableRes iconPlaceholder: Int? = null,
     @DrawableRes networkIconRes: Int? = null,
 ) {
-    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
     var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
+    var isBackgroundColorDefined by remember { mutableStateOf(false) }
+    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
     val isDarkTheme = isSystemInDarkTheme()
     val coroutineScope = rememberCoroutineScope()
 
@@ -310,13 +312,16 @@ private fun TokenIcon(
                 shape = TangemTheme.shapes.roundedCorners8,
             )
 
-        val data = tokenIconUrl.ifEmpty {
-            iconPlaceholder
-        }
+        val data = tokenIconUrl.ifEmpty { iconPlaceholder }
+
+        val pixelsSize = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() }
+
         SubcomposeAsyncImage(
             modifier = tokenImageModifier,
             model = ImageRequest.Builder(LocalContext.current)
                 .data(data)
+                .size(size = pixelsSize)
+                .memoryCacheKey(key = data.toString() + pixelsSize)
                 .crossfade(true)
                 .allowHardware(false)
                 .listener(
@@ -326,8 +331,10 @@ private fun TokenIcon(
                                 val color = ImageBackgroundContrastChecker(
                                     drawable = result.drawable,
                                     backgroundColor = itemBackgroundColor,
-                                ).getContrastColorIfNeeded(isDarkTheme)
+                                    size = pixelsSize,
+                                ).getContrastColor(true)
                                 iconBackgroundColor = color
+                                isBackgroundColorDefined = true
                             }
                         }
                     },
