@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -136,11 +137,13 @@ private inline fun DefaultCurrencyIcon(
     crossinline errorIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
     var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
+    var isBackgroundColorDefined by remember { mutableStateOf(false) }
+    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
     val isDarkTheme = isSystemInDarkTheme()
     val coroutineScope = rememberCoroutineScope()
 
+    val pixelsSize = with(LocalDensity.current) { TangemTheme.dimens.size48.roundToPx() }
     SubcomposeAsyncImage(
         modifier = modifier
             .background(
@@ -149,17 +152,21 @@ private inline fun DefaultCurrencyIcon(
             ),
         model = ImageRequest.Builder(context = LocalContext.current)
             .data(iconData)
+            .size(pixelsSize)
+            .memoryCacheKey(iconData.toString() + pixelsSize)
             .crossfade(enable = true)
             .allowHardware(false)
             .listener(
                 onSuccess = { _, result ->
-                    if (isDarkTheme) {
+                    if (!isBackgroundColorDefined && isDarkTheme) {
                         coroutineScope.launch {
                             val color = ImageBackgroundContrastChecker(
                                 drawable = result.drawable,
                                 backgroundColor = itemBackgroundColor,
-                            ).getContrastColorIfNeeded(isDarkTheme)
+                                size = pixelsSize,
+                            ).getContrastColor(isDarkTheme = true)
                             iconBackgroundColor = color
+                            isBackgroundColorDefined = true
                         }
                     }
                 },
