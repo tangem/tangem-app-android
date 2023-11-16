@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.models
 
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.feature.swap.domain.models.ui.TxFee
@@ -87,8 +88,9 @@ sealed interface TransactionCardType {
 }
 
 sealed interface SwapWarning {
-    data class PermissionNeeded(val tokenCurrency: String) : SwapWarning
+    data class PermissionNeeded(val notificationConfig: NotificationConfig) : SwapWarning
     object InsufficientFunds : SwapWarning
+    data class NoAvailableTokensToSwap(val notificationConfig: NotificationConfig) : SwapWarning
     data class GenericWarning(
         val message: String? = null,
         val type: GenericWarningType = GenericWarningType.OTHER,
@@ -101,7 +103,7 @@ sealed interface SwapWarning {
      *
      * @property priceImpact in format = 10 (means 10%)
      */
-    data class HighPriceImpact(val priceImpact: Int) : SwapWarning
+    data class HighPriceImpact(val priceImpact: Int, val notificationConfig: NotificationConfig) : SwapWarning
 }
 
 enum class GenericWarningType {
