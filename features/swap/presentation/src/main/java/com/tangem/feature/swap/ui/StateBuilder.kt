@@ -3,9 +3,12 @@ package com.tangem.feature.swap.ui
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.Provider
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
@@ -132,14 +135,23 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
             quoteModel.preparedSwapConfigState.isFeeEnough &&
             quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
         ) {
-            warnings.add(SwapWarning.PermissionNeeded(fromToken.symbol))
+            warnings.add(
+                SwapWarning.PermissionNeeded(
+                    createPermissionNotificationConfig(fromToken.symbol),
+                ),
+            )
         }
         if (!quoteModel.preparedSwapConfigState.isBalanceEnough) {
             warnings.add(SwapWarning.InsufficientFunds)
         }
 
         if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
-            warnings.add(SwapWarning.HighPriceImpact((quoteModel.priceImpact * HUNDRED_PERCENTS).toInt()))
+            warnings.add(
+                SwapWarning.HighPriceImpact(
+                    priceImpact = (quoteModel.priceImpact * HUNDRED_PERCENTS).toInt(),
+                    notificationConfig = highPriceImpactNotificationConfig(),
+                ),
+            )
         }
         val feeState = createFeeState(quoteModel, uiStateHolder, onFeeSetup)
         return uiStateHolder.copy(
@@ -624,6 +636,25 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
                 items = listOf(normalFeeItem, priorityFeeItem).toImmutableList(),
             )
         }
+    }
+
+    private fun createPermissionNotificationConfig(fromTokenSymbol: String): NotificationConfig {
+        return NotificationConfig(
+            title = resourceReference(R.string.swapping_permission_header),
+            subtitle = resourceReference(
+                id = R.string.swapping_permission_subheader,
+                formatArgs = wrappedList(fromTokenSymbol),
+            ),
+            iconResId = R.drawable.ic_locked_24,
+        )
+    }
+
+    private fun highPriceImpactNotificationConfig(): NotificationConfig {
+        return NotificationConfig(
+            title = resourceReference(R.string.swapping_high_price_impact),
+            subtitle = resourceReference(R.string.swapping_high_price_impact_description),
+            iconResId = R.drawable.ic_locked_24,
+        )
     }
 
     private fun getShortAddressValue(fullAddress: String): String {
