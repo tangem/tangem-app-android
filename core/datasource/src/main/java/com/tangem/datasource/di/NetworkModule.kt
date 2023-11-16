@@ -97,7 +97,7 @@ class NetworkModule {
     }
 
     private companion object {
-        const val PROD_EXPRESS_BASE_URL = "https://express.tangem.org/v1/"
+        const val PROD_EXPRESS_BASE_URL = "https://express.tangem.com/v1/"
         const val DEV_EXPRESS_BASE_URL = "https://express.tangem.org/v1/"
 
         const val PROD_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
