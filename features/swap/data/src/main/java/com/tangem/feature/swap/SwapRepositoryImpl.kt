@@ -191,39 +191,6 @@ internal class SwapRepositoryImpl @Inject constructor(
         return configManager.config.swapReferrerAccount?.fee?.toDoubleOrNull() ?: 0.0
     }
 
-    override suspend fun getCryptoCurrency(
-        userWallet: UserWallet,
-        currency: CryptoCurrency,
-        network: Network,
-    ): CryptoCurrency? {
-        val blockchain = Blockchain.fromNetworkId(currency.network.id.value) ?: return null
-        val cryptoCurrencyFactory = CryptoCurrencyFactory()
-        return when (currency) {
-            is CryptoCurrency.Coin -> {
-                cryptoCurrencyFactory.createCoin(
-                    blockchain = blockchain,
-                    extraDerivationPath = network.derivationPath.value,
-                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
-                )
-            }
-            is CryptoCurrency.Token -> {
-                val sdkToken = SdkToken(
-                    name = currency.name,
-                    symbol = currency.symbol,
-                    contractAddress = currency.contractAddress,
-                    decimals = currency.decimals,
-                    id = currency.id.value,
-                )
-                cryptoCurrencyFactory.createToken(
-                    sdkToken = sdkToken,
-                    blockchain = blockchain,
-                    extraDerivationPath = network.derivationPath.value,
-                    derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
-                )
-            }
-        } as CryptoCurrency
-    }
-
     override suspend fun getAllowance(
         userWalletId: UserWalletId,
         networkId: String,
