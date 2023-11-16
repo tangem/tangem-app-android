@@ -80,6 +80,7 @@ internal fun SendRecipientContent(
     }
 }
 
+@Suppress("LongMethod")
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.recipientListItem(
     recipientList: LazyPagingItems<SendRecipientListContent>,
@@ -106,10 +107,17 @@ private fun LazyListScope.recipientListItem(
                             .padding(top = TangemTheme.dimens.spacing20)
                             .then(
                                 if (index == 0) {
+                                    val bottomRadius = if (item.isWalletsOnly) {
+                                        TangemTheme.dimens.radius12
+                                    } else {
+                                        TangemTheme.dimens.radius0
+                                    }
                                     Modifier.clip(
                                         RoundedCornerShape(
                                             topEnd = TangemTheme.dimens.radius12,
                                             topStart = TangemTheme.dimens.radius12,
+                                            bottomStart = bottomRadius,
+                                            bottomEnd = bottomRadius,
                                         ),
                                     )
                                 } else {
@@ -182,18 +190,25 @@ private fun RecipientWalletListItem(
                 onClick = { clickIntents.onRecipientAddressValueChange(title) },
             )
         }
-        Text(
-            text = stringResource(R.string.send_recent_transactions),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    top = TangemTheme.dimens.spacing8,
-                    bottom = TangemTheme.dimens.spacing8,
-                    start = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing12,
-                ),
-        )
+        if (!item.isWalletsOnly) {
+            val topPadding = if (item.list.isNotEmpty()) {
+                TangemTheme.dimens.spacing8
+            } else {
+                TangemTheme.dimens.spacing0
+            }
+            Text(
+                text = stringResource(R.string.send_recent_transactions),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        top = topPadding,
+                        bottom = TangemTheme.dimens.spacing8,
+                        start = TangemTheme.dimens.spacing12,
+                        end = TangemTheme.dimens.spacing12,
+                    ),
+            )
+        }
     }
 }
