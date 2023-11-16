@@ -6,7 +6,6 @@ import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.ExpressApi
 import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.utils.RequestHeader
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
@@ -34,7 +33,6 @@ class NetworkModule {
         @ApplicationContext context: Context,
         expressAuthProvider: ExpressAuthProvider,
     ): ExpressApi {
-
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())

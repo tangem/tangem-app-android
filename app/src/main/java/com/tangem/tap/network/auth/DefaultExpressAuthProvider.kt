@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 internal class DefaultExpressAuthProvider(
     private val userWalletsStore: UserWalletsStore,
-    private val configManager: ConfigManager
+    private val configManager: ConfigManager,
 ) : ExpressAuthProvider, ExpressSessionIdGenerator {
 
     private var uuid = AtomicReference(UUID.randomUUID())
