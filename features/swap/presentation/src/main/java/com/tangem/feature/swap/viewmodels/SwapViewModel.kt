@@ -336,7 +336,8 @@ internal class SwapViewModel @Inject constructor(
                         approveData = requireNotNull(dataState.approveDataModel) {
                             "dataState.approveDataModel might not be null"
                         },
-                        forTokenContractAddress = (dataState.fromCryptoCurrency as? CryptoCurrency.Token)?.contractAddress
+                        forTokenContractAddress = (dataState.fromCryptoCurrency as? CryptoCurrency.Token)
+                            ?.contractAddress
                             ?: "",
                         fromToken = requireNotNull(dataState.fromCryptoCurrency) {
                             "dataState.fromCurrency might not be null"
