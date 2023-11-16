@@ -1,54 +1,29 @@
 package com.tangem.feature.swap.domain.converters
 
-import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.utils.converter.TwoWayConverter
-import com.tangem.lib.crypto.models.Currency as CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.lib.crypto.models.Currency
+import com.tangem.utils.converter.Converter
 
-class SwapCurrencyConverter : TwoWayConverter<Currency, CryptoCurrency> {
+class SwapCurrencyConverter : Converter<CryptoCurrency, Currency> {
 
-    override fun convert(value: Currency): CryptoCurrency {
+    override fun convert(value: CryptoCurrency): Currency {
         return when (value) {
-            is Currency.NonNativeToken -> {
-                CryptoCurrency.NonNativeToken(
-                    id = value.id,
-                    name = value.name,
-                    symbol = value.symbol,
-                    networkId = value.networkId,
-                    contractAddress = value.contractAddress,
-                    decimalCount = value.decimalCount,
-                )
-            }
-            is Currency.NativeToken -> {
-                CryptoCurrency.NativeToken(
-                    id = value.id,
-                    name = value.name,
-                    symbol = value.symbol,
-                    networkId = value.networkId,
-                )
-            }
-        }
-    }
-
-    override fun convertBack(value: CryptoCurrency): Currency {
-        return when (value) {
-            is CryptoCurrency.NonNativeToken -> {
+            is CryptoCurrency.Token -> {
                 Currency.NonNativeToken(
-                    id = value.id,
+                    id = value.id.value,
                     name = value.name,
                     symbol = value.symbol,
-                    networkId = value.networkId,
+                    networkId = value.network.id.value,
                     contractAddress = value.contractAddress,
-                    decimalCount = value.decimalCount,
-                    logoUrl = "",
+                    decimalCount = value.decimals,
                 )
             }
-            is CryptoCurrency.NativeToken -> {
+            is CryptoCurrency.Coin -> {
                 Currency.NativeToken(
-                    id = value.id,
+                    id = value.id.value,
                     name = value.name,
                     symbol = value.symbol,
-                    networkId = value.networkId,
-                    logoUrl = "",
+                    networkId = value.network.id.value,
                 )
             }
         }
