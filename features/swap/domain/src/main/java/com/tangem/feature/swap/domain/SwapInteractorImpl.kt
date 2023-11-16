@@ -453,6 +453,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return toToken
     }
 
+    @Suppress("UnusedPrivateMember")
     @Deprecated("used in old swap mechanism")
     private fun getTokensWithBalance(
         tokens: List<Currency>,
