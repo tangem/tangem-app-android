@@ -13,21 +13,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
+import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.token.*
-import com.tangem.feature.wallet.presentation.common.component.token.icon.TokenIcon
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import kotlin.math.max
 
-private const val TITLE_MIN_WIDTH_COEFFICIENT = 0.22
-private const val PRICE_CHANGE_MIN_WIDTH_COEFFICIENT = 0.16
+private const val TITLE_MIN_WIDTH_COEFFICIENT = 0.3
+private const val PRICE_MIN_WIDTH_COEFFICIENT = 0.32
 
 private enum class LayoutId {
-    ICON, TITLE, FIAT_AMOUNT, CRYPTO_AMOUNT, PRICE_CHANGE, NON_FIAT_CONTENT
+    ICON, TITLE, FIAT_AMOUNT, CRYPTO_AMOUNT, CRYPTO_PRICE, NON_FIAT_CONTENT
 }
 
 @Composable
@@ -37,6 +37,8 @@ internal fun TokenItem(
     modifier: Modifier = Modifier,
     reorderableTokenListState: ReorderableLazyListState? = null,
 ) {
+    val betweenRowsMargin = TangemTheme.dimens.spacing2
+
     CustomContainer(
         state = state,
         modifier = modifier
@@ -50,7 +52,7 @@ internal fun TokenItem(
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.TITLE)
                 .padding(horizontal = TangemTheme.dimens.spacing8)
-                .padding(bottom = TangemTheme.dimens.spacing2),
+                .padding(bottom = betweenRowsMargin),
         )
 
         TokenFiatAmount(
@@ -58,20 +60,20 @@ internal fun TokenItem(
             isBalanceHidden = isBalanceHidden,
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.FIAT_AMOUNT)
-                .padding(bottom = TangemTheme.dimens.spacing2),
+                .padding(bottom = betweenRowsMargin),
+        )
+
+        TokenPrice(
+            state = state.cryptoPriceState,
+            modifier = Modifier
+                .layoutId(layoutId = LayoutId.CRYPTO_PRICE)
+                .padding(horizontal = TangemTheme.dimens.spacing8),
         )
 
         TokenCryptoAmount(
             state = state.cryptoAmountState,
             isBalanceHidden = isBalanceHidden,
-            modifier = Modifier
-                .layoutId(layoutId = LayoutId.CRYPTO_AMOUNT)
-                .padding(horizontal = TangemTheme.dimens.spacing8),
-        )
-
-        TokenPriceChange(
-            state = state.priceChangeState,
-            modifier = Modifier.layoutId(layoutId = LayoutId.PRICE_CHANGE),
+            modifier = Modifier.layoutId(layoutId = LayoutId.CRYPTO_AMOUNT),
         )
 
         NonFiatContentBlock(
@@ -117,10 +119,10 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
         val layoutWidth = constraints.maxWidth
         val layoutPadding = with(density) { dimens.size14.roundToPx() }
-        val layoutWidthWithPaddings = layoutWidth - 2 * layoutPadding
+        val layoutWidthWithoutPaddings = layoutWidth - 2 * layoutPadding
 
         val titleMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
-        val priceChangeMinWidth = (layoutWidth * PRICE_CHANGE_MIN_WIDTH_COEFFICIENT).toInt()
+        val priceChangeMinWidth = (layoutWidth * PRICE_MIN_WIDTH_COEFFICIENT).toInt()
 
         val icon = measurables.measure(layoutId = LayoutId.ICON, constraints = constraints)
 
@@ -154,32 +156,32 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
             -> {
                 fiatAmount = measurables.measureFiatAmount(
                     state = state,
-                    maxWidth = layoutWidthWithPaddings - icon.width - titleMinWidth,
+                    maxWidth = layoutWidthWithoutPaddings - icon.width - titleMinWidth,
                     defaultConstraints = constraints,
                 )
 
                 cryptoAmount = measurables.measureCryptoAmount(
                     state = state,
-                    maxWidth = layoutWidthWithPaddings - icon.width - priceChangeMinWidth,
+                    maxWidth = layoutWidthWithoutPaddings - icon.width - priceChangeMinWidth,
                     defaultConstraints = constraints,
                 )
 
-                firstRowRemainingFreeSpace = layoutWidthWithPaddings - icon.width - fiatAmount.width
-                secondRowRemainingFreeSpace = layoutWidthWithPaddings - icon.width - cryptoAmount.width
+                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - fiatAmount.width
+                secondRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - cryptoAmount.width
             }
             is TokenItemState.Draggable -> {
                 cryptoAmount = measurables.measureCryptoAmount(
                     state = state,
-                    maxWidth = layoutWidthWithPaddings - icon.width - nonFiatContent.width,
+                    maxWidth = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width,
                     defaultConstraints = constraints,
                 )
 
-                firstRowRemainingFreeSpace = layoutWidthWithPaddings - icon.width - nonFiatContent.width
+                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width
             }
             is TokenItemState.NoAddress,
             is TokenItemState.Unreachable,
             -> {
-                firstRowRemainingFreeSpace = layoutWidthWithPaddings - icon.width - nonFiatContent.width
+                firstRowRemainingFreeSpace = layoutWidthWithoutPaddings - icon.width - nonFiatContent.width
             }
         }
 
@@ -223,16 +225,16 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
                 },
             )
 
-            cryptoAmount?.placeRelative(
-                x = layoutPadding + icon.width,
-                y = layoutHeight - cryptoAmount.height - layoutPadding,
-            )
-
             fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width - layoutPadding, y = layoutPadding)
 
             priceChange?.placeRelative(
-                x = layoutWidth - priceChange.width - layoutPadding,
+                x = layoutPadding + icon.width,
                 y = layoutHeight - priceChange.height - layoutPadding,
+            )
+
+            cryptoAmount?.placeRelative(
+                x = layoutWidth - cryptoAmount.width - layoutPadding,
+                y = layoutHeight - cryptoAmount.height - layoutPadding,
             )
 
             nonFiatContent.placeRelative(
@@ -301,7 +303,7 @@ private fun List<Measurable>.measurePriceChange(
     defaultConstraints: Constraints,
 ): Placeable {
     return measure(
-        layoutId = LayoutId.PRICE_CHANGE,
+        layoutId = LayoutId.CRYPTO_PRICE,
         constraints = when (state) {
             is TokenItemState.Content,
             -> createDynamicConstrains(minWidth = minWidth, remainingFreeSpace = remainingFreeSpace)
@@ -377,7 +379,7 @@ private fun calculateLayoutHeight(
 
 @Preview(widthDp = 360)
 @Composable
-private fun Preview_CustomTokenItem_InLight(@PreviewParameter(TokenItemStateProvider::class) state: TokenItemState) {
+private fun Preview_TokenItem_InLight(@PreviewParameter(TokenItemStateProvider::class) state: TokenItemState) {
     TangemTheme(isDark = false) {
         TokenItem(state = state, isBalanceHidden = false)
     }
@@ -393,8 +395,9 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             ),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3213123123321312312312312312 $"),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = "5,4123123213123123123123123123 MATIC"),
-            priceChangeState = TokenItemState.PriceChangeState.Content(
-                valueInPercent = "2365723643724723423742342374623642374723472342342.0%",
+            cryptoPriceState = TokenItemState.CryptoPriceState.Content(
+                price = "312 USD",
+                priceChangePercent = "42.0%",
                 type = PriceChangeType.UP,
             ),
         ),

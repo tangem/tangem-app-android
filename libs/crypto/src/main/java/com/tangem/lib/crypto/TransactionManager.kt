@@ -6,7 +6,6 @@ import java.math.BigDecimal
 
 interface TransactionManager {
 
-    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun sendApproveTransaction(
         txData: ApproveTxData,

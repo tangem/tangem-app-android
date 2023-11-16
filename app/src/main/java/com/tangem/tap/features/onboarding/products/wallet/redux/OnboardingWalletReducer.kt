@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -40,6 +41,7 @@ private object ReducerForGlobalAction {
                         maxBackupCards = MAX_BACKUP_CARDS,
                         canSkipBackup = action.canSkipBackup,
                     ),
+                    isRingOnboarding = action.scanResponse.cardTypesResolver.isRing(),
                 )
             }
             is GlobalAction.Onboarding.StartForUnfinishedBackup -> {

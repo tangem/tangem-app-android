@@ -35,14 +35,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
             title = resourceReference(id = R.string.warning_failed_to_verify_card_title),
             subtitle = resourceReference(id = R.string.warning_failed_to_verify_card_message),
         )
-
-        data class LowSignatures(val count: Int) : Critical(
-            title = resourceReference(id = R.string.warning_low_signatures_title),
-            subtitle = resourceReference(
-                id = R.string.warning_low_signatures_message,
-                formatArgs = wrappedList(count),
-            ),
-        )
     }
 
     sealed class Warning(
@@ -90,6 +82,14 @@ sealed class WalletNotification(val config: NotificationConfig) {
         object TestNetCard : Warning(
             title = resourceReference(id = R.string.warning_testnet_card_title),
             subtitle = resourceReference(id = R.string.warning_testnet_card_message),
+        )
+
+        data class LowSignatures(val count: Int) : Warning(
+            title = resourceReference(id = R.string.warning_low_signatures_title),
+            subtitle = resourceReference(
+                id = R.string.warning_low_signatures_message,
+                formatArgs = wrappedList(count),
+            ),
         )
     }
 
