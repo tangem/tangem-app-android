@@ -20,11 +20,14 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.TxFee
@@ -280,26 +283,13 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
         warnings.forEach { warning ->
             when (warning) {
                 is SwapWarning.HighPriceImpact -> {
-                    WarningCard(
-                        title = stringResource(id = R.string.swapping_high_price_impact),
-                        description = stringResource(id = R.string.swapping_high_price_impact_description),
+                    Notification(
+                        config = warning.notificationConfig,
                     )
                 }
                 is SwapWarning.PermissionNeeded -> {
-                    WarningCard(
-                        title = stringResource(id = R.string.swapping_permission_header),
-                        description = stringResource(
-                            id = R.string.swapping_permission_subheader,
-                            warning.tokenCurrency,
-                        ),
-                        icon = {
-                            Icon(
-                                painter = painterResource(id = com.tangem.core.ui.R.drawable.ic_locked_24),
-                                contentDescription = null,
-                                modifier = Modifier.size(TangemTheme.dimens.size20),
-                                tint = TangemTheme.colors.icon.primary1,
-                            )
-                        },
+                    Notification(
+                        config = warning.notificationConfig,
                     )
                 }
                 is SwapWarning.GenericWarning -> {
@@ -316,14 +306,12 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         onClick = warning.onClick,
                     )
                 }
+                is SwapWarning.NoAvailableTokensToSwap -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                    )
+                }
                 else -> {}
-                // is SwapWarning.RateExpired -> {
-                //     RefreshableWaringCard(
-                //         title = stringResource(id = R.string.),
-                //         description = stringResource(id = R.string.),
-                //         onClick = warning.onClick,
-                //     )
-                // }
             }
             SpacerH8()
         }
@@ -446,7 +434,22 @@ private val state = SwapStateHolder(
         state = stateSelectable,
         onSelectItem = {},
     ),
-    warnings = listOf(SwapWarning.PermissionNeeded("DAI")),
+    warnings = listOf(
+        SwapWarning.PermissionNeeded(
+            notificationConfig = NotificationConfig(
+                title = stringReference("Give Premission"),
+                subtitle = stringReference("To continue swapping you need to give permission to Tangem"),
+                iconResId = R.drawable.ic_locked_24,
+            ),
+        ),
+        SwapWarning.NoAvailableTokensToSwap(
+            notificationConfig = NotificationConfig(
+                title = stringReference("No tokens"),
+                subtitle = stringReference("Swap tokens not available"),
+                iconResId = R.drawable.ic_alert_24,
+            ),
+        ),
+    ),
     networkCurrency = "MATIC",
     swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
     onRefresh = {},
