@@ -1,11 +1,11 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 
 interface BlockchainInteractor {
 
-    fun getTokenDecimals(token: Currency): Int
+    fun getTokenDecimals(token: CryptoCurrency): Int
 
     /**
      * In app blockchain id, actual in blockchain sdk, not the same as networkId
