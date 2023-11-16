@@ -1,8 +1,11 @@
 package com.tangem.feature.swap.domain.di
 
+import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.*
@@ -10,6 +13,7 @@ import com.tangem.feature.swap.domain.cache.SwapDataCacheImpl
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,7 +35,8 @@ class SwapDomainModule {
         networksRepository: NetworksRepository,
         walletFeatureToggles: WalletFeatureToggles,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-        @SwapScope getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+        @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusUseCase,
+        @SwapScope getCardTokensListUseCase: GetCardTokensListUseCase,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -43,14 +48,15 @@ class SwapDomainModule {
             networksRepository = networksRepository,
             walletFeatureToggles = walletFeatureToggles,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            getCryptoCurrenciesUseCase = getCryptoCurrenciesUseCase,
+            getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
+            getCardTokensListUseCase = getCardTokensListUseCase,
         )
     }
 
     @Provides
     @Singleton
     fun provideBlockchainInteractor(transactionManager: TransactionManager): BlockchainInteractor {
-        return BlockchainInteractorImpl(
+        return DefaultBlockchainInteractor(
             transactionManager = transactionManager,
         )
     }
@@ -67,6 +73,40 @@ class SwapDomainModule {
     @Singleton
     fun providesGetCryptoCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
         return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
+    }
+
+    @SwapScope
+    @Provides
+    @Singleton
+    fun providesGetCryptoCurrencyStatusUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetCryptoCurrencyStatusUseCase {
+        return GetCryptoCurrencyStatusUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @SwapScope
+    @Provides
+    @Singleton
+    fun providesGetCardTokensListUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetCardTokensListUseCase {
+        return GetCardTokensListUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            dispatchers = dispatchers,
+        )
     }
 }
 
