@@ -1,12 +1,13 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import arrow.core.getOrElse
+import com.tangem.domain.tokens.GetCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.cache.SwapDataCache
 import com.tangem.feature.swap.domain.converters.SwapCurrencyConverter
@@ -21,6 +22,7 @@ import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.toFiatString
+import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -37,7 +39,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val networksRepository: NetworksRepository,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusUseCase,
 ) : SwapInteractor {
 
     // TODO: Move to DI
@@ -50,26 +52,65 @@ internal class SwapInteractorImpl @Inject constructor(
     private var derivationPath: String? = null
     private var network: Network? = null
 
-    override suspend fun getPairs(currency: Currency): List<SwapPair> {
-        val currencies = getSelectedWalletSyncUseCase().fold(
-            ifLeft = { emptyList() },
-            ifRight = { selectedWallet ->
-                getCryptoCurrenciesUseCase(selectedWallet.walletId).fold(
-                    ifLeft = { emptyList() },
-                    ifRight = { it },
-                )
-            },
+    override suspend fun getTokensDataState(currency: Currency): TokensDataStateExpress {
+        val selectedWallet = getSelectedWalletSyncUseCase().fold(
+            ifLeft = { null },
+            ifRight = { it },
         )
 
-        val pairs = getPairs(
+        requireNotNull(selectedWallet)
+
+        val currencyStatuses = getMultiCryptoCurrencyStatusUseCase(selectedWallet.walletId)
+            .first()
+            .getOrElse { emptyList() }
+        // .filter { it.currency.network.backendId != currency.networkId }
+        val currencies = currencyStatuses.map { it.currency }
+
+        val pairsLeast = getPairs(
             initialCurrency = LeastTokenInfo(
                 contractAddress = (currency as? Currency.NonNativeToken)?.contractAddress ?: "0",
                 network = currency.networkId,
             ),
-            currenciesList = currencies,
+            currenciesList = currencyStatuses.map { it.currency },
         )
 
-        return createCryptoCurrencyPairs(pairs, currencies)
+        val pairs = createCryptoCurrencyPairs(pairsLeast, currencies)
+
+        val initialCryptoCurrency = mapLegacyCurrencyToCryptoCurrency(currency, currencyStatuses)
+            ?: error("Initial crypto currency must not be null")
+
+        return TokensDataStateExpress(
+            initialCryptoCurrency = initialCryptoCurrency,
+            preselectTokens = getPreselectTokens(currency, currencyStatuses),
+            foundTokensState = FoundTokensStateExpress(emptyList(), emptyList()),
+            pairs = pairs,
+        )
+    }
+
+    private fun getPreselectTokens(currency: Currency, currencies: List<CryptoCurrencyStatus>): PreselectTokensExpress {
+        val from = mapLegacyCurrencyToCryptoCurrency(currency, currencies)
+
+        val to = currencies.firstOrNull()?.currency // TODO choose of 3 variants
+
+        if (from != null && to != null) {
+            return PreselectTokensExpress(
+                fromToken = from,
+                toToken = to,
+            )
+        } else {
+            error("From and to currencies must not be null")
+        }
+    }
+
+    private fun mapLegacyCurrencyToCryptoCurrency(
+        currency: Currency,
+        currencies: List<CryptoCurrencyStatus>,
+    ): CryptoCurrency? {
+        return currencies.map { it.currency }
+            .find {
+                it.network.backendId == currency.networkId &&
+                    it.getContractAddress() == currency.getContractAddress()
+            }
     }
 
     private fun createCryptoCurrencyPairs(
@@ -97,22 +138,35 @@ internal class SwapInteractorImpl @Inject constructor(
     ): CryptoCurrency? {
         return cryptoCurrenciesList.find {
             it.network.backendId == leastTokenInfo.network &&
-                (it as? CryptoCurrency.Token)?.contractAddress ?: "0" == leastTokenInfo.contractAddress
+                it.getContractAddress() == leastTokenInfo.contractAddress
         }
     }
 
-    override suspend fun getPairs(
-        initialCurrency: LeastTokenInfo,
-        currenciesList: List<CryptoCurrency>,
-    ): List<SwapPairLeast> {
+    private fun CryptoCurrency.getContractAddress(): String {
+        return when (this) {
+            is CryptoCurrency.Token -> this.contractAddress
+            is CryptoCurrency.Coin -> "0"
+        }
+    }
+
+    private fun Currency.getContractAddress(): String {
+        return when (this) {
+            is Currency.NativeToken -> "0"
+            is Currency.NonNativeToken -> this.contractAddress
+        }
+    }
+
+    suspend fun getPairs(initialCurrency: LeastTokenInfo, currenciesList: List<CryptoCurrency>): List<SwapPairLeast> {
         return repository.getPairs(initialCurrency, currenciesList)
     }
 
+    @Deprecated("used in old swap mechanism")
     override fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?) {
         this.derivationPath = derivationPath
         this.network = network
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState {
         // TODO: refactor this function
         val networkId = initialCurrency.networkId
@@ -134,7 +188,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 allLoadedTokens.firstOrNull { it.symbol == token.symbol }?.let {
                     loadedOnWalletsMap.add(it.symbol)
                     it
-                } ?: swapCurrencyConverter.convertBack(token)
+                } ?: TODO()
             }
             .filter { it.symbol != initialCurrency.symbol && allLoadedTokens.contains(it) }
         val loadedTokens = allLoadedTokens
@@ -146,21 +200,22 @@ internal class SwapInteractorImpl @Inject constructor(
         val appCurrency = userWalletManager.getUserAppCurrency()
         val rates = repository.getRates(appCurrency.code, tokensInWallet.map { it.id })
         cache.cacheBalances(networkId, derivationPath, tokensBalance)
-        cache.cacheLoadedTokens(loadedTokens.map { TokenWithBalance(it) })
-        cache.cacheInWalletTokens(getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency))
+        // cache.cacheLoadedTokens(loadedTokens.map { TokenWithBalance(it) })
+        // cache.cacheInWalletTokens(getTokensWithBalance(tokensInWallet, tokensBalance, rates, appCurrency))
         return TokensDataState(
             preselectTokens = PreselectTokens(
                 fromToken = initialCurrency,
                 toToken = selectToToken(initialCurrency, tokensInWallet, loadedTokens),
             ),
             foundTokensState = FoundTokensState(
-                tokensInWallet = cache.getInWalletTokens(),
-                loadedTokens = cache.getLoadedTokens(),
+                tokensInWallet = emptyList(), // cache.getInWalletTokens(),
+                loadedTokens = emptyList(), // cache.getLoadedTokens(),
             ),
         )
     }
 
-    override suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensState {
+    @Deprecated("used in old swap mechanism")
+    override suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensStateExpress {
         val searchQueryLowerCase = searchQuery.lowercase()
         val tokensInWallet = cache.getInWalletTokens()
             .filter {
@@ -172,19 +227,21 @@ internal class SwapInteractorImpl @Inject constructor(
                 it.token.name.lowercase().contains(searchQueryLowerCase) ||
                     it.token.symbol.lowercase().contains(searchQueryLowerCase)
             }
-        return FoundTokensState(
+        return FoundTokensStateExpress(
             tokensInWallet = tokensInWallet,
             loadedTokens = loadedTokens,
         )
     }
 
-    override fun findTokenById(id: String): Currency? {
+    @Deprecated("used in old swap mechanism")
+    override fun findTokenById(id: String): CryptoCurrency? {
         val tokensInWallet = cache.getInWalletTokens()
         val loadedTokens = cache.getLoadedTokens()
-        return tokensInWallet.firstOrNull { it.token.id == id }?.token
-            ?: loadedTokens.firstOrNull { it.token.id == id }?.token
+        return tokensInWallet.firstOrNull { it.token.id.value == id }?.token
+            ?: loadedTokens.firstOrNull { it.token.id.value == id }?.token
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): TxState {
         val dataToSign = if (permissionOptions.approveType == SwapApproveType.UNLIMITED) {
             getApproveData(
@@ -223,10 +280,11 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun findBestQuote(
         networkId: String,
-        fromToken: Currency,
-        toToken: Currency,
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
         amountToSwap: String,
         selectedFee: FeeType,
     ): SwapState {
@@ -268,11 +326,12 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    @Deprecated("used in old swap mechanism")
     override suspend fun onSwap(
         networkId: String,
         swapStateData: SwapStateData,
-        currencyToSend: Currency,
-        currencyToGet: Currency,
+        currencyToSend: CryptoCurrency,
+        currencyToGet: CryptoCurrency,
         amountToSwap: String,
         fee: TxFee,
     ): TxState {
@@ -322,7 +381,8 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    override fun getTokenBalance(networkId: String, token: Currency): SwapAmount {
+    @Deprecated("used in old swap mechanism")
+    override fun getTokenBalance(networkId: String, token: CryptoCurrency): SwapAmount {
         return cache.getBalanceForToken(
             networkId = networkId,
             derivationPath = derivationPath,
@@ -330,25 +390,28 @@ internal class SwapInteractorImpl @Inject constructor(
         ) ?: SwapAmount(BigDecimal.ZERO, getTokenDecimals(token))
     }
 
+    @Deprecated("used in old swap mechanism")
     override fun isAvailableToSwap(networkId: String): Boolean {
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
     }
 
-    override fun getSwapAmountForToken(amount: String, token: Currency): SwapAmount {
+    @Deprecated("used in old swap mechanism")
+    override fun getSwapAmountForToken(amount: String, token: CryptoCurrency): SwapAmount {
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amount)) { "wrong amount format" }
         return SwapAmount(amountDecimal, getTokenDecimals(token))
     }
 
-    private suspend fun onSuccessLegacyFlow(currency: Currency) {
+    @Deprecated("used in old swap mechanism")
+    private suspend fun onSuccessLegacyFlow(currency: CryptoCurrency) {
         userWalletManager.addToken(swapCurrencyConverter.convert(currency), derivationPath)
         userWalletManager.refreshWallet()
     }
 
-    private suspend fun onSuccessNewFlow(currency: Currency) {
-        val network = network ?: return
+    @Deprecated("used in old swap mechanism")
+    private suspend fun onSuccessNewFlow(currency: CryptoCurrency) {
         getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
-                getAndAddCryptoCurrency(userWallet, currency, network)
+                addCryptoCurrenciesUseCase(userWallet.walletId, currency)
             },
             ifLeft = {
                 Timber.e("Swap Error on getSelectedWalletUseCase")
@@ -356,24 +419,20 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun getAndAddCryptoCurrency(userWallet: UserWallet, currency: Currency, network: Network) {
-        repository.getCryptoCurrency(userWallet, currency, network)?.let { cryptoCurrency ->
-            addCryptoCurrenciesUseCase(userWallet.walletId, cryptoCurrency)
-        }
-    }
-
+    @Deprecated("used in old swap mechanism")
     private fun getTangemFee(): Double {
         return repository.getTangemFee()
     }
 
-    private fun getTokenDecimals(token: Currency): Int {
-        return if (token is Currency.NonNativeToken) {
-            token.decimalCount
+    private fun getTokenDecimals(token: CryptoCurrency): Int {
+        return if (token is CryptoCurrency.Token) {
+            token.decimals
         } else {
-            transactionManager.getNativeTokenDecimals(token.networkId)
+            transactionManager.getNativeTokenDecimals(token.network.id.value)
         }
     }
 
+    @Deprecated("used in old swap mechanism")
     private fun selectToToken(
         initialToken: Currency,
         tokensInWallet: List<Currency>,
@@ -394,6 +453,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return toToken
     }
 
+    @Deprecated("used in old swap mechanism")
     private fun getTokensWithBalance(
         tokens: List<Currency>,
         balances: Map<String, SwapAmount>,
@@ -418,8 +478,8 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private suspend fun isAllowedToSpend(networkId: String, fromToken: Currency, amount: SwapAmount): Boolean {
-        if (fromToken is Currency.NativeToken) return true
+    private suspend fun isAllowedToSpend(networkId: String, fromToken: CryptoCurrency, amount: SwapAmount): Boolean {
+        if (fromToken is CryptoCurrency.Coin) return true
         return getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
                 val allowance = repository.getAllowance(
@@ -438,7 +498,11 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun createEmptyAmountState(networkId: String, fromToken: Currency, toToken: Currency): SwapState {
+    private fun createEmptyAmountState(
+        networkId: String,
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
+    ): SwapState {
         val appCurrency = userWalletManager.getUserAppCurrency()
         val fromTokenBalance = cache.getBalanceForToken(networkId, derivationPath, fromToken.symbol)
         val toTokenBalance = cache.getBalanceForToken(networkId, derivationPath, toToken.symbol)
@@ -462,8 +526,8 @@ internal class SwapInteractorImpl @Inject constructor(
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: SwapAmount,
-        fromToken: Currency,
-        toToken: Currency,
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
     ): SwapState {
@@ -520,8 +584,8 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
         fromTokenAddress: String,
         toTokenAddress: String,
-        fromToken: Currency,
-        toToken: Currency,
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
         amount: SwapAmount,
         selectedFee: FeeType,
     ): SwapState {
@@ -585,45 +649,45 @@ internal class SwapInteractorImpl @Inject constructor(
     @Suppress("LongParameterList")
     private suspend fun updateBalances(
         networkId: String,
-        fromToken: Currency,
-        toToken: Currency,
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
         fromTokenAmount: SwapAmount,
         toTokenAmount: SwapAmount,
         swapStateData: SwapStateData?,
     ): SwapState.QuotesLoadedState {
         val appCurrency = userWalletManager.getUserAppCurrency()
         val nativeToken = userWalletManager.getNativeTokenForNetwork(networkId)
-        val rates = repository.getRates(appCurrency.code, listOf(fromToken.id, toToken.id, nativeToken.id))
+        val rates = repository.getRates(appCurrency.code, listOf(fromToken.id.value, toToken.id.value, nativeToken.id))
         val fromTokenBalance = cache.getBalanceForToken(networkId, derivationPath, fromToken.symbol)
         val toTokenBalance = cache.getBalanceForToken(networkId, derivationPath, toToken.symbol)
         return SwapState.QuotesLoadedState(
             fromTokenInfo = TokenSwapInfo(
                 tokenAmount = fromTokenAmount,
-                coinId = fromToken.id,
+                coinId = fromToken.id.value,
                 tokenWalletBalance = fromTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }
                     ?: ZERO_BALANCE,
                 tokenFiatBalance = fromTokenAmount.value.toFiatString(
-                    rateValue = rates[fromToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                    rateValue = rates[fromToken.id.value]?.toBigDecimal() ?: BigDecimal.ZERO,
                     fiatCurrencyName = appCurrency.symbol,
                     formatWithSpaces = true,
                 ),
             ),
             toTokenInfo = TokenSwapInfo(
                 tokenAmount = toTokenAmount,
-                coinId = toToken.id,
+                coinId = toToken.id.value,
                 tokenWalletBalance = toTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }
                     ?: ZERO_BALANCE,
                 tokenFiatBalance = toTokenAmount.value.toFiatString(
-                    rateValue = rates[toToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                    rateValue = rates[toToken.id.value]?.toBigDecimal() ?: BigDecimal.ZERO,
                     fiatCurrencyName = appCurrency.symbol,
                     formatWithSpaces = true,
                 ),
             ),
             priceImpact = calculatePriceImpact(
                 fromTokenAmount = fromTokenAmount.value,
-                fromRate = rates[fromToken.id] ?: 0.0,
+                fromRate = rates[fromToken.id.value] ?: 0.0,
                 toTokenAmount = toTokenAmount.value,
-                toRate = rates[toToken.id] ?: 0.0,
+                toRate = rates[toToken.id.value] ?: 0.0,
             ),
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             swapDataModel = swapStateData,
@@ -634,7 +698,7 @@ internal class SwapInteractorImpl @Inject constructor(
     @Suppress("LongParameterList")
     private suspend fun updatePermissionState(
         networkId: String,
-        fromToken: Currency,
+        fromToken: CryptoCurrency,
         swapAmount: SwapAmount,
         quotesLoadedState: SwapState.QuotesLoadedState,
     ): SwapState.QuotesLoadedState {
@@ -691,7 +755,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun syncWalletBalanceForTokens(networkId: String, tokens: List<Currency>) {
+    private suspend fun syncWalletBalanceForTokens(networkId: String, tokens: List<CryptoCurrency>) {
         val tokensToSync = tokens.filter { cache.getBalanceForToken(networkId, derivationPath, it.symbol) == null }
         if (tokensToSync.isNotEmpty()) {
             val tokensBalance =
@@ -746,12 +810,12 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private fun isBalanceEnough(
         networkId: String,
-        fromToken: Currency,
+        fromToken: CryptoCurrency,
         amount: SwapAmount,
         fee: BigDecimal?,
     ): Boolean {
         val tokenBalance = getTokenBalance(networkId, fromToken).value
-        return if (fromToken is Currency.NonNativeToken) {
+        return if (fromToken is CryptoCurrency.Token) {
             tokenBalance >= amount.value
         } else {
             tokenBalance > amount.value.plus(fee ?: BigDecimal.ZERO)
@@ -762,12 +826,12 @@ internal class SwapInteractorImpl @Inject constructor(
         return userWalletManager.getWalletAddress(networkId, derivationPath)
     }
 
-    private fun getTokenAddress(currency: Currency): String {
+    private fun getTokenAddress(currency: CryptoCurrency): String {
         return when (currency) {
-            is Currency.NativeToken -> {
+            is CryptoCurrency.Coin -> {
                 DEFAULT_BLOCKCHAIN_INCH_ADDRESS
             }
-            is Currency.NonNativeToken -> {
+            is CryptoCurrency.Token -> {
                 currency.contractAddress
             }
         }
@@ -777,7 +841,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fee: BigDecimal?,
         spendAmount: SwapAmount,
         networkId: String,
-        fromToken: Currency,
+        fromToken: CryptoCurrency,
     ): Boolean {
         if (fee == null) {
             return false
@@ -785,12 +849,12 @@ internal class SwapInteractorImpl @Inject constructor(
         val nativeTokenBalance = userWalletManager.getNativeTokenBalance(networkId, derivationPath)
         val percentsToFeeIncrease = BigDecimal.ONE
         return when (fromToken) {
-            is Currency.NativeToken -> {
+            is CryptoCurrency.Coin -> {
                 nativeTokenBalance?.let { balance ->
                     return balance.value.minus(spendAmount.value) > fee.multiply(percentsToFeeIncrease)
                 } ?: false
             }
-            is Currency.NonNativeToken -> {
+            is CryptoCurrency.Token -> {
                 nativeTokenBalance?.let { balance ->
                     return balance.value > fee.multiply(percentsToFeeIncrease)
                 } ?: false
@@ -816,7 +880,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun getApproveData(
         networkId: String,
         derivationPath: String?,
-        fromToken: Currency,
+        fromToken: CryptoCurrency,
         swapAmount: SwapAmount? = null,
     ): String {
         return getSelectedWalletSyncUseCase().fold(
