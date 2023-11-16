@@ -6,6 +6,7 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.Currency
@@ -73,21 +74,21 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
 
     fun createQuotesLoadingState(
         uiStateHolder: SwapStateHolder,
-        fromToken: Currency,
-        toToken: Currency,
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
         mainTokenId: String,
     ): SwapStateHolder {
-        val canSelectSendToken = mainTokenId != fromToken.id
-        val canSelectReceiveToken = mainTokenId != toToken.id
+        val canSelectSendToken = mainTokenId != fromToken.id.value // TODO look at id matching
+        val canSelectReceiveToken = mainTokenId != toToken.id.value // TODO look at id matching
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = null,
-                tokenIconUrl = fromToken.logoUrl,
+                tokenIconUrl = fromToken.iconUrl,
                 tokenCurrency = fromToken.symbol,
-                coinId = fromToken.id,
-                isNotNativeToken = fromToken.isNonNative(),
+                coinId = fromToken.id.value,
+                isNotNativeToken = fromToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectSendToken,
                 balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
                 isBalanceHidden = isBalanceHiddenProvider(),
@@ -96,10 +97,10 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = null,
                 amountEquivalent = null,
-                tokenIconUrl = toToken.logoUrl,
+                tokenIconUrl = toToken.iconUrl,
                 tokenCurrency = toToken.symbol,
-                coinId = toToken.id,
-                isNotNativeToken = toToken.isNonNative(),
+                coinId = toToken.id.value,
+                isNotNativeToken = toToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectReceiveToken,
                 balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
                 isBalanceHidden = isBalanceHiddenProvider(),
@@ -123,7 +124,7 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
     fun createQuotesLoadedState(
         uiStateHolder: SwapStateHolder,
         quoteModel: SwapState.QuotesLoadedState,
-        fromToken: Currency,
+        fromToken: CryptoCurrency,
         onFeeSetup: (TxFee) -> Unit,
     ): SwapStateHolder {
         val warnings = mutableListOf<SwapWarning>()
@@ -238,7 +239,7 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
 
     fun addTokensToState(
         uiState: SwapStateHolder,
-        dataState: FoundTokensState,
+        dataState: FoundTokensStateExpress,
         networkInfo: NetworkInfo,
     ): SwapStateHolder {
         return uiState.copy(
