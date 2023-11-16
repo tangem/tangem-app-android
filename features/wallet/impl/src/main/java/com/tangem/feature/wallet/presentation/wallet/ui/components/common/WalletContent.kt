@@ -9,6 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencySt
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems
+import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItemsV2
 
 /**
  * Wallet content
@@ -28,5 +29,19 @@ internal fun LazyListScope.contentItems(
     when (state) {
         is WalletMultiCurrencyState -> tokensListItems(state.tokensListState, modifier, isBalanceHidden)
         is WalletSingleCurrencyState -> txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
+    }
+}
+
+internal fun LazyListScope.contentItemsV2(
+    state: com.tangem.feature.wallet.presentation.wallet.state2.WalletState,
+    txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    when (state) {
+        is com.tangem.feature.wallet.presentation.wallet.state2.WalletState.MultiCurrency ->
+            tokensListItemsV2(state.tokensListState, modifier, isBalanceHidden)
+        is com.tangem.feature.wallet.presentation.wallet.state2.WalletState.SingleCurrency ->
+            txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
     }
 }
