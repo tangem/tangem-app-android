@@ -11,7 +11,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH28
-import com.tangem.core.ui.components.rows.states.ActionRowState
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -20,7 +19,7 @@ import com.tangem.core.ui.res.TangemTheme
  * https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-807&mode=design&t=Ygv5sohTTHYAQcBS-4
  */
 @Composable
-fun SimpleActionRow(state: ActionRowState, modifier: Modifier = Modifier) {
+fun SimpleActionRow(title: String, description: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .background(color = TangemTheme.colors.background.action)
@@ -34,12 +33,12 @@ fun SimpleActionRow(state: ActionRowState, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
             Text(
-                text = state.title,
+                text = title,
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.secondary,
             )
             Text(
-                text = state.description,
+                text = description,
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary1,
             )
@@ -59,20 +58,21 @@ fun SimpleActionRow(state: ActionRowState, modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun SimpleActionRowPreview() {
-    val state = ActionRowState(
-        title = "Title",
-        description = "Description",
-        onClick = {},
-    )
     Column {
         TangemTheme(isDark = false) {
-            SimpleActionRow(state)
+            SimpleActionRow(
+                title = "Title",
+                description = "Description",
+            )
         }
 
         SpacerH28()
 
         TangemTheme(isDark = false) {
-            SimpleActionRow(state)
+            SimpleActionRow(
+                title = "Title",
+                description = "Description",
+            )
         }
     }
 }
