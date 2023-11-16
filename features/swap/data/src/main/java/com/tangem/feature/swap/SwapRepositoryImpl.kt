@@ -193,26 +193,26 @@ internal class SwapRepositoryImpl @Inject constructor(
 
     override suspend fun getCryptoCurrency(
         userWallet: UserWallet,
-        currency: Currency,
+        currency: CryptoCurrency,
         network: Network,
     ): CryptoCurrency? {
-        val blockchain = Blockchain.fromNetworkId(currency.networkId) ?: return null
+        val blockchain = Blockchain.fromNetworkId(currency.network.id.value) ?: return null
         val cryptoCurrencyFactory = CryptoCurrencyFactory()
         return when (currency) {
-            is Currency.NativeToken -> {
+            is CryptoCurrency.Coin -> {
                 cryptoCurrencyFactory.createCoin(
                     blockchain = blockchain,
                     extraDerivationPath = network.derivationPath.value,
                     derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
                 )
             }
-            is Currency.NonNativeToken -> {
+            is CryptoCurrency.Token -> {
                 val sdkToken = SdkToken(
                     name = currency.name,
                     symbol = currency.symbol,
                     contractAddress = currency.contractAddress,
-                    decimals = currency.decimalCount,
-                    id = currency.id,
+                    decimals = currency.decimals,
+                    id = currency.id.value,
                 )
                 cryptoCurrencyFactory.createToken(
                     sdkToken = sdkToken,
@@ -258,7 +258,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         userWalletId: UserWalletId,
         networkId: String,
         derivationPath: String?,
-        currency: Currency,
+        currency: CryptoCurrency,
         amount: BigDecimal?,
     ): String {
         val blockchain =
@@ -276,16 +276,16 @@ internal class SwapRepositoryImpl @Inject constructor(
         ) ?: error("Cannot cast to Approver")
     }
 
-    private fun convertToAmount(amount: BigDecimal, currency: Currency, blockchain: Blockchain): Amount {
+    private fun convertToAmount(amount: BigDecimal, currency: CryptoCurrency, blockchain: Blockchain): Amount {
         return when (currency) {
-            is Currency.NativeToken -> {
+            is CryptoCurrency.Token -> {
                 Amount(value = amount, blockchain = blockchain)
             }
-            is Currency.NonNativeToken -> {
+            is CryptoCurrency.Coin -> {
                 Amount(
                     currencySymbol = currency.symbol,
                     value = amount,
-                    decimals = currency.decimalCount,
+                    decimals = currency.decimals,
                 )
             }
         }
