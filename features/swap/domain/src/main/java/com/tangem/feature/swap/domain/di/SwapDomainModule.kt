@@ -35,7 +35,6 @@ class SwapDomainModule {
         networksRepository: NetworksRepository,
         walletFeatureToggles: WalletFeatureToggles,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-        @SwapScope getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
         @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusUseCase,
         @SwapScope getCardTokensListUseCase: GetCardTokensListUseCase,
     ): SwapInteractor {

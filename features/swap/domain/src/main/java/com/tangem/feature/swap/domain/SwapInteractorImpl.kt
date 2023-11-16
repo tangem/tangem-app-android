@@ -2,7 +2,6 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import arrow.core.getOrElse
-import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -25,7 +24,6 @@ import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.toFiatString
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
-import java.lang.IllegalStateException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -42,7 +40,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusUseCase,
-    private val getCardTokensListUseCase: GetCardTokensListUseCase,
 ) : SwapInteractor {
 
     // TODO: Move to DI
@@ -80,7 +77,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val pairs = createCryptoCurrencyPairs(pairsLeast, currencies)
 
         val initialCryptoCurrency = mapLegacyCurrencyToCryptoCurrency(currency, currencyStatuses)
-            ?: throw IllegalStateException("Initial crypto currency must not be null")
+            ?: error("Initial crypto currency must not be null")
 
         return TokensDataStateExpress(
             initialCryptoCurrency = initialCryptoCurrency,
@@ -101,7 +98,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 toToken = to,
             )
         } else {
-            throw IllegalStateException("From and to currencies must not be null")
+            error("From and to currencies must not be null")
         }
     }
 

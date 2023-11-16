@@ -21,7 +21,7 @@ class GetCryptoCurrencyStatusUseCase(
     internal val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    operator fun invoke(userWalletId: UserWalletId,): Flow<Either<TokenListError, List<CryptoCurrencyStatus>>> {
+    operator fun invoke(userWalletId: UserWalletId): Flow<Either<TokenListError, List<CryptoCurrencyStatus>>> {
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             currenciesRepository = currenciesRepository,

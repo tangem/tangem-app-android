@@ -29,7 +29,7 @@ class TokensDataConverter(
     }
 
     private fun tokenWithBalanceToTokenToSelect(
-        tokenWithBalance: TokenWithBalanceExpress
+        tokenWithBalance: TokenWithBalanceExpress,
     ): TokenToSelectState.TokenToSelect {
         return TokenToSelectState.TokenToSelect(
             id = tokenWithBalance.token.id.value,
