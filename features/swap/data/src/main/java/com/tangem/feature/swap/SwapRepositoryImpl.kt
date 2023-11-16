@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
-import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
@@ -16,11 +15,8 @@ import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.SwapRepository
@@ -32,7 +28,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import javax.inject.Inject
-import com.tangem.blockchain.common.Token as SdkToken
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
 @Suppress("LongParameterList")
