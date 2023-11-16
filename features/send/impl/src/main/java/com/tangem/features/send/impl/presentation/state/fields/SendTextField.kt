@@ -16,20 +16,43 @@ internal sealed class SendTextField {
     /** Keyboard options */
     abstract val keyboardOptions: KeyboardOptions
 
-    /** Label */
-    abstract val label: TextReference
-
-    /** Placeholder (hint) */
-    abstract val placeholder: TextReference
+    // /** Placeholder (hint) */
+    // abstract val placeholder: TextReference
 
     data class Amount(
         override val value: String,
         override val onValueChange: (String) -> Unit,
         override val keyboardOptions: KeyboardOptions,
-        override val label: TextReference,
-        override val placeholder: TextReference,
+        val placeholder: TextReference,
         val fiatValue: String,
         val isError: Boolean,
         val error: TextReference,
+    ) : SendTextField()
+
+    data class RecipientAddress(
+        override val value: String,
+        override val onValueChange: (String) -> Unit,
+        override val keyboardOptions: KeyboardOptions,
+        val placeholder: TextReference,
+        val label: TextReference,
+        val isError: Boolean = false,
+        val error: TextReference? = null,
+    ) : SendTextField()
+
+    data class RecipientMemo(
+        override val value: String,
+        override val onValueChange: (String) -> Unit,
+        override val keyboardOptions: KeyboardOptions,
+        val placeholder: TextReference,
+        val label: TextReference,
+        val isError: Boolean = false,
+        val error: TextReference? = null,
+    ) : SendTextField()
+
+    data class CustomFee(
+        override val value: String,
+        override val onValueChange: (String) -> Unit,
+        override val keyboardOptions: KeyboardOptions,
+        val label: TextReference? = null,
     ) : SendTextField()
 }

@@ -22,7 +22,6 @@ internal class SendAmountFieldConverter(
                 imeAction = ImeAction.Next,
                 keyboardType = KeyboardType.Number,
             ),
-            label = TextReference.Str(""),
             placeholder = TextReference.Str(DEFAULT_VALUE),
             isError = false,
             error = TextReference.Res(R.string.send_insufficient_funds),

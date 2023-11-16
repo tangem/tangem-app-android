@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
@@ -19,9 +20,10 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.SendUiStateType
 
 @Composable
-internal fun SendNavigationButtons(uiState: SendUiState.Content) {
+internal fun SendNavigationButtons(uiState: SendUiState) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -38,9 +40,11 @@ internal fun SendNavigationButtons(uiState: SendUiState.Content) {
 }
 
 @Composable
-private fun SendSecondaryNavigationButton(uiState: SendUiState.Content) {
+private fun SendSecondaryNavigationButton(uiState: SendUiState) {
+    val currentState = uiState.currentState.collectAsState()
     AnimatedVisibility(
-        visible = uiState is SendUiState.Content.RecipientState || uiState is SendUiState.Content.FeeState,
+        visible = currentState.value == SendUiStateType.Recipient ||
+            currentState.value == SendUiStateType.Fee,
     ) {
         Icon(
             modifier = Modifier
@@ -48,46 +52,52 @@ private fun SendSecondaryNavigationButton(uiState: SendUiState.Content) {
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
                 .background(TangemTheme.colors.button.secondary)
                 .clickable {
-                    // todo add prev click
+                    uiState.clickIntents.onPrevClick()
                 }
                 .padding(TangemTheme.dimens.spacing12),
             painter = painterResource(R.drawable.ic_back_24),
+            tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
         )
     }
 }
 
 @Composable
-private fun SendPrimaryNavigationButton(uiState: SendUiState.Content, modifier: Modifier = Modifier) {
-    val buttonTextId = when (uiState) {
-        is SendUiState.Content.AmountState,
-        is SendUiState.Content.RecipientState,
-        is SendUiState.Content.FeeState,
+private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier = Modifier) {
+    val currentState = uiState.currentState.collectAsState()
+
+    val buttonTextId = when (currentState.value) {
+        SendUiStateType.Amount,
+        SendUiStateType.Recipient,
+        SendUiStateType.Fee,
         -> R.string.common_next
-        is SendUiState.Content.SendState -> R.string.common_send
+        SendUiStateType.Send -> R.string.common_send
         else -> R.string.common_close
     }
+
+    val isButtonEnabled = when (currentState.value) {
+        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
+        else -> true
+    }
+
     AnimatedContent(
         targetState = buttonTextId,
         label = "Update send screen state",
         modifier = modifier,
     ) { textId ->
-        if (uiState is SendUiState.Content.SendState) {
+        if (currentState.value == SendUiStateType.Send) {
             PrimaryButtonIconEnd(
                 text = stringResource(textId),
                 iconResId = R.drawable.ic_tangem_24,
-                enabled = uiState.isPrimaryButtonEnabled,
-                onClick = {
-                    // todo add next click
-                },
+                enabled = isButtonEnabled,
+                onClick = uiState.clickIntents::onNextClick,
             )
         } else {
             PrimaryButton(
                 text = stringResource(textId),
-                enabled = uiState.isPrimaryButtonEnabled,
-                onClick = {
-                    // todo add next click
-                },
+                enabled = isButtonEnabled,
+                onClick = uiState.clickIntents::onNextClick,
             )
         }
     }
