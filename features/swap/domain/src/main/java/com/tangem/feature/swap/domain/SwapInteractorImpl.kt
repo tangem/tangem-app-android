@@ -416,26 +416,14 @@ internal class SwapInteractorImpl @Inject constructor(
 
     @Deprecated("used in old swap mechanism")
     private suspend fun onSuccessNewFlow(currency: CryptoCurrency) {
-        val network = network ?: return
         getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
-                getAndAddCryptoCurrency(userWallet, currency, network)
+                addCryptoCurrenciesUseCase(userWallet.walletId, currency)
             },
             ifLeft = {
                 Timber.e("Swap Error on getSelectedWalletUseCase")
             },
         )
-    }
-
-    @Deprecated("used in old swap mechanism")
-    private suspend fun getAndAddCryptoCurrency(
-        userWallet: UserWallet,
-        currency: CryptoCurrency,
-        network: Network,
-    ) {
-        repository.getCryptoCurrency(userWallet, currency, network)?.let { cryptoCurrency ->
-            addCryptoCurrenciesUseCase(userWallet.walletId, cryptoCurrency)
-        }
     }
 
     @Deprecated("used in old swap mechanism")
