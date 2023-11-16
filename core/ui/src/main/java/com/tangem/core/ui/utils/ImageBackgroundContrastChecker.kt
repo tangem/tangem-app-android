@@ -13,12 +13,12 @@ class ImageBackgroundContrastChecker(
     private val image: Bitmap,
     private val backgroundColor: Int,
 ) {
-    constructor(drawable: Drawable, backgroundColor: Int) : this(
-        image = drawable.toBitmap(),
+    constructor(drawable: Drawable, backgroundColor: Int, size: Int) : this(
+        image = drawable.toBitmap(width = size, height = size),
         backgroundColor = backgroundColor,
     )
 
-    suspend fun getContrastColorIfNeeded(isDarkTheme: Boolean): Color {
+    suspend fun getContrastColor(isDarkTheme: Boolean): Color {
         return if (isLowContrast()) {
             if (isDarkTheme) Color.White else Color.Black
         } else {
@@ -26,7 +26,7 @@ class ImageBackgroundContrastChecker(
         }
     }
 
-    suspend fun isLowContrast(): Boolean {
+    private suspend fun isLowContrast(): Boolean {
         val palette = generatePaletteAsync(bitmap = image)
         val color = palette.getDominantColor(backgroundColor)
         val contrast = ColorUtils.calculateContrast(color, backgroundColor)
