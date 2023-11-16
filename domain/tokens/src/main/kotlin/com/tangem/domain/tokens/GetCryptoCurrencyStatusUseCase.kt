@@ -35,6 +35,7 @@ class GetCryptoCurrencyStatusUseCase(
             }
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun createTokenList(
         userWalletId: UserWalletId,
         tokens: List<CryptoCurrencyStatus>,
