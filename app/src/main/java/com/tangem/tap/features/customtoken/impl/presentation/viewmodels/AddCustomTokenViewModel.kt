@@ -606,7 +606,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 val savedTokenId = if (token.isCustom) null else token.id.rawCurrencyId
 
                 val sameId = foundToken?.id == savedTokenId
-                val sameAddress = contractAddress == token.contractAddress
+                val sameAddress = contractAddress.equals(token.contractAddress, ignoreCase = true)
                 val sameBlockchain = networkId == token.network.id.value
                 val isSameDerivationPath = getDerivationPath()?.rawPath == token.network.derivationPath.value
 
