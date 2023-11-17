@@ -73,9 +73,9 @@ private fun OrderCardButton(onClick: () -> Unit, modifier: Modifier = Modifier) 
 }
 
 private val LightBgScanCardButtonColors: ButtonColors = TangemButtonColors(
-    backgroundColor = TangemColorPalette.Light2,
+    backgroundColor = TangemColorPalette.Light4,
     contentColor = TangemColorPalette.Dark6,
-    disabledBackgroundColor = TangemColorPalette.Light2,
+    disabledBackgroundColor = TangemColorPalette.Dark5,
     disabledContentColor = TangemColorPalette.Dark6,
 )
 
