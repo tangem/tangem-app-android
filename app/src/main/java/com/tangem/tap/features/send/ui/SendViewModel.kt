@@ -2,7 +2,6 @@ package com.tangem.tap.features.send.ui
 
 import androidx.lifecycle.*
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -16,7 +15,6 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -30,7 +28,6 @@ internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val appStateHolder: AppStateHolder,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
@@ -48,12 +45,6 @@ internal class SendViewModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
-
-        viewModelScope.launch(dispatchers.main) {
-            listenToFlipsUseCase()
-                .flowWithLifecycle(owner.lifecycle)
-                .collect()
-        }
     }
 
     fun updateCurrencyDelayed() {
