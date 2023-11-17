@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
+import java.util.UUID
 
 internal class TokenDetailsTxHistoryItemFlowConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
@@ -75,7 +76,10 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
             // If [afterDate] is the first transaction in the flow, add the group title
             val afterDate = after.getTimestamp()?.toDateFormat() ?: return@insertSeparators null
             if (before is TxHistoryItemState.Title) {
-                return@insertSeparators TxHistoryItemState.GroupTitle(afterDate)
+                return@insertSeparators TxHistoryItemState.GroupTitle(
+                    title = afterDate,
+                    itemKey = UUID.randomUUID().toString(),
+                )
             }
 
             /*
@@ -84,7 +88,10 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
              */
             val beforeDate = before.getTimestamp()?.toDateFormat() ?: return@insertSeparators null
             return@insertSeparators if (beforeDate != afterDate) {
-                TxHistoryItemState.GroupTitle(afterDate)
+                TxHistoryItemState.GroupTitle(
+                    title = afterDate,
+                    itemKey = UUID.randomUUID().toString(),
+                )
             } else {
                 null
             }
