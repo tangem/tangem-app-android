@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.feature.swap.domain.models.domain.CryptoCurrencySwapInfo
 
 data class TokensDataStateExpress(
     val initialCryptoCurrency: CryptoCurrency,
@@ -10,8 +10,8 @@ data class TokensDataStateExpress(
 )
 
 data class CurrenciesGroup(
-    val available: List<CryptoCurrencyStatus>,
-    val unavailable: List<CryptoCurrencyStatus>,
+    val available: List<CryptoCurrencySwapInfo>,
+    val unavailable: List<CryptoCurrencySwapInfo>,
 )
 
 data class FoundTokensStateExpress(
