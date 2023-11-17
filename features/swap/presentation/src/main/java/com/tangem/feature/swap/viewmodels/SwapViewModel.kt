@@ -9,11 +9,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
@@ -52,16 +50,10 @@ internal class SwapViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
 
-    // try to get rid of this and use only CryptoCurrency
-    private val currency = Json.decodeFromString<Currency>(
+    private val initialCryptoCurrency = Json.decodeFromString<CryptoCurrency>(
         savedStateHandle[SwapFragment.CURRENCY_BUNDLE_KEY]
             ?: error("no expected parameter Currency found"),
     )
-
-    private var cryptoCurrency: CryptoCurrency by Delegates.notNull()
-
-    private val derivationPath = savedStateHandle.get<String>(SwapFragment.DERIVATION_PATH)
-    private val network = savedStateHandle.get<Network>(SwapFragment.NETWORK)
 
     private var isBalanceHidden = true
 
@@ -75,12 +67,12 @@ internal class SwapViewModel @Inject constructor(
     private val amountDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<SwapState>()
 
-    private var dataState by mutableStateOf(SwapProcessDataState(networkId = currency.networkId))
+    private var dataState by mutableStateOf(SwapProcessDataState(networkId = initialCryptoCurrency.network.backendId))
 
     var uiState: SwapStateHolder by mutableStateOf(
         stateBuilder.createInitialLoadingState(
-            initialCurrency = currency,
-            networkInfo = blockchainInteractor.getBlockchainInfo(currency.networkId),
+            initialCurrency = initialCryptoCurrency,
+            networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
         ),
     )
         private set
@@ -93,8 +85,11 @@ internal class SwapViewModel @Inject constructor(
         get() = swapRouter.currentScreen
 
     init {
-        swapInteractor.initDerivationPathAndNetwork(derivationPath, network)
-        initTokens(currency)
+        swapInteractor.initDerivationPathAndNetwork(
+            derivationPath = initialCryptoCurrency.network.derivationPath.value,
+            network = initialCryptoCurrency.network,
+        )
+        initTokens(initialCryptoCurrency)
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -115,7 +110,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     fun onScreenOpened() {
-        analyticsEventHandler.send(SwapEvents.SwapScreenOpened(currency.symbol))
+        analyticsEventHandler.send(SwapEvents.SwapScreenOpened(initialCryptoCurrency.symbol))
     }
 
     fun setRouter(router: SwapRouter) {
@@ -133,21 +128,20 @@ internal class SwapViewModel @Inject constructor(
     }
 
     @Suppress("UnusedPrivateMember")
-    private fun initTokens(currency: Currency) {
+    private fun initTokens(currency: CryptoCurrency) {
         // new flow
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                swapInteractor.getTokensDataState(currency)
+                swapInteractor.getTokensDataState(initialCryptoCurrency)
             }.onSuccess { state ->
                 dataState = dataState.copy(
-                    fromCryptoCurrency = state.initialCryptoCurrency,
+                    fromCryptoCurrency = initialCryptoCurrency,
                     toCryptoCurrency = state.toGroup.available.first().currencyStatus.currency
                 )
 
-                cryptoCurrency = state.initialCryptoCurrency
                 // updateTokensState(dataState = state.foundTokensState)
                 startLoadingQuotes(
-                    fromToken = state.initialCryptoCurrency,
+                    fromToken = initialCryptoCurrency,
                     toToken = state.toGroup.available.first().currencyStatus.currency,
                     amount = lastAmount.value,
                 )
@@ -157,39 +151,39 @@ internal class SwapViewModel @Inject constructor(
         }
 
         // old flow
-        viewModelScope.launch(dispatchers.main) {
-            runCatching(dispatchers.io) {
-                swapInteractor.initTokensToSwap(currency)
-            }
-                .onSuccess { state ->
-                    // dataState = dataState.copy(
-                    //     fromCurrency = state.preselectTokens.fromToken,
-                    //     toCurrency = state.preselectTokens.toToken,
-                    // )
-                    // updateTokensState(dataState = state.foundTokensState)
-                    // startLoadingQuotes(
-                    //     fromToken = state.preselectTokens.fromToken,
-                    //     toToken = state.preselectTokens.toToken,
-                    //     amount = lastAmount.value,
-                    // )
-                }
-                .onFailure {
-                    Timber.tag(loggingTag).e(it)
-                }
-        }
+        // viewModelScope.launch(dispatchers.main) {
+        //     runCatching(dispatchers.io) {
+        //         swapInteractor.initTokensToSwap(currency)
+        //     }
+        //         .onSuccess { state ->
+        //             // dataState = dataState.copy(
+        //             //     fromCurrency = state.preselectTokens.fromToken,
+        //             //     toCurrency = state.preselectTokens.toToken,
+        //             // )
+        //             // updateTokensState(dataState = state.foundTokensState)
+        //             // startLoadingQuotes(
+        //             //     fromToken = state.preselectTokens.fromToken,
+        //             //     toToken = state.preselectTokens.toToken,
+        //             //     amount = lastAmount.value,
+        //             // )
+        //         }
+        //         .onFailure {
+        //             Timber.tag(loggingTag).e(it)
+        //         }
+        // }
     }
 
     private fun updateTokensState(dataState: FoundTokensStateExpress) {
         uiState = stateBuilder.addTokensToState(
             uiState = uiState,
             dataState = dataState,
-            networkInfo = blockchainInteractor.getBlockchainInfo(currency.networkId),
+            networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
         )
     }
 
     private fun startLoadingQuotes(fromToken: CryptoCurrency, toToken: CryptoCurrency, amount: String) {
         singleTaskScheduler.cancelTask()
-        uiState = stateBuilder.createQuotesLoadingState(uiState, fromToken, toToken, cryptoCurrency.id.value)
+        uiState = stateBuilder.createQuotesLoadingState(uiState, fromToken, toToken, initialCryptoCurrency.id.value)
         singleTaskScheduler.scheduleTask(
             viewModelScope,
             loadQuotesTask(
@@ -395,9 +389,9 @@ internal class SwapViewModel @Inject constructor(
             val toToken: CryptoCurrency
             if (isOrderReversed) {
                 fromToken = foundToken
-                toToken = cryptoCurrency
+                toToken = initialCryptoCurrency
             } else {
-                fromToken = cryptoCurrency
+                fromToken = initialCryptoCurrency
                 toToken = foundToken
             }
             dataState = dataState.copy(
@@ -445,7 +439,7 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onMaxAmountClicked() {
         dataState.fromCryptoCurrency?.let {
-            val balance = swapInteractor.getTokenBalance(cryptoCurrency.network.id.value, it)
+            val balance = swapInteractor.getTokenBalance(initialCryptoCurrency.network.id.value, it)
             onAmountChanged(balance.formatToUIRepresentation())
         }
     }
