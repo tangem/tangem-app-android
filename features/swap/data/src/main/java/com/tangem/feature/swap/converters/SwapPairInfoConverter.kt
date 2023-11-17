@@ -5,7 +5,7 @@ import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairProvider
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast as SwapPairDomain
-import com.tangem.feature.swap.domain.models.domain.SwapPairProvider as SwapPairProviderDomain
+import com.tangem.feature.swap.domain.models.domain.SwapProvider as SwapPairProviderDomain
 import com.tangem.feature.swap.domain.models.domain.RateType as RateTypeDomain
 import com.tangem.utils.converter.Converter
 
