@@ -4,7 +4,6 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 
 data class TokensDataStateExpress(
-    val initialCryptoCurrency: CryptoCurrency,
     val fromGroup: CurrenciesGroup,
     val toGroup: CurrenciesGroup,
 )
