@@ -1,23 +1,22 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.feature.swap.domain.models.domain.SwapPair
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 
 data class TokensDataStateExpress(
     val initialCryptoCurrency: CryptoCurrency,
-    val preselectTokens: PreselectTokensExpress,
-    val foundTokensState: FoundTokensStateExpress,
-    val pairs: List<SwapPair>,
+    val fromGroup: CurrenciesGroup,
+    val toGroup: CurrenciesGroup,
+)
+
+data class CurrenciesGroup(
+    val available: List<CryptoCurrencyStatus>,
+    val unavailable: List<CryptoCurrencyStatus>,
 )
 
 data class FoundTokensStateExpress(
     val tokensInWallet: List<TokenWithBalanceExpress>,
     val loadedTokens: List<TokenWithBalanceExpress>,
-)
-
-data class PreselectTokensExpress(
-    val fromToken: CryptoCurrency,
-    val toToken: CryptoCurrency,
 )
 
 data class TokenWithBalanceExpress(
