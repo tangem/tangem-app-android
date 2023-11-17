@@ -12,9 +12,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
-import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
-import com.tangem.feature.swap.domain.models.domain.isNonNative
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
@@ -34,19 +32,19 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
         isBalanceHiddenProvider = isBalanceHiddenProvider,
     )
 
-    fun createInitialLoadingState(initialCurrency: Currency, networkInfo: NetworkInfo): SwapStateHolder {
+    fun createInitialLoadingState(initialCurrency: CryptoCurrency, networkInfo: NetworkInfo): SwapStateHolder {
         return SwapStateHolder(
-            networkId = initialCurrency.networkId,
+            networkId = initialCurrency.network.backendId,
             blockchainId = networkInfo.blockchainId,
             sendCardData = SwapCardData(
                 type = TransactionCardType.SendCard(actions.onAmountChanged, actions.onAmountSelected),
                 amountEquivalent = null,
                 amountTextFieldValue = null,
-                tokenIconUrl = initialCurrency.logoUrl,
+                tokenIconUrl = initialCurrency.iconUrl,
                 tokenCurrency = initialCurrency.symbol,
-                coinId = initialCurrency.id,
+                coinId = null,
                 canSelectAnotherToken = false,
-                isNotNativeToken = initialCurrency.isNonNative(),
+                isNotNativeToken = initialCurrency is CryptoCurrency.Token,
                 balance = "",
                 isBalanceHidden = true,
             ),
