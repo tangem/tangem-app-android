@@ -49,8 +49,12 @@ sealed interface TxHistoryState {
          * Group title item
          *
          * @property title title
+         * @property itemKey key to use in compose
          */
-        data class GroupTitle(val title: String) : TxHistoryItemState
+        data class GroupTitle(
+            val title: String,
+            val itemKey: String,
+        ) : TxHistoryItemState
 
         /**
          * Transaction item
