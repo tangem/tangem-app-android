@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import arrow.core.getOrElse
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -51,7 +51,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private var derivationPath: String? = null
     private var network: Network? = null
 
-    override suspend fun getTokensDataState(currency: Currency): TokensDataStateExpress {
+    override suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
         val selectedWallet = getSelectedWalletSyncUseCase().fold(
             ifLeft = { null },
             ifRight = { it },
@@ -64,36 +64,32 @@ internal class SwapInteractorImpl @Inject constructor(
             .getOrElse { emptyList() }
 
         val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses.filter {
-            it.currency.network.backendId != currency.networkId ||
+            it.currency.network.backendId != currency.network.backendId ||
                 it.currency.getContractAddress() != currency.getContractAddress()
         }
 
         val pairsLeast = getPairs(
             initialCurrency = LeastTokenInfo(
-                contractAddress = (currency as? Currency.NonNativeToken)?.contractAddress ?: "0",
-                network = currency.networkId,
+                contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
+                network = currency.network.backendId,
             ),
             currenciesList = walletCurrencyStatusesExceptInitial.map { it.currency },
         )
 
-        val initialCryptoCurrency = mapLegacyCurrencyToCryptoCurrency(currency, walletCurrencyStatuses)
-            ?: error("Initial crypto currency must not be null")
-
         return TokensDataStateExpress(
-            initialCryptoCurrency = initialCryptoCurrency,
             fromGroup = getToCurrenciesGroup(
-                currency = initialCryptoCurrency,
+                currency = currency,
                 leastPairs = pairsLeast,
                 cryptoCurrenciesList = walletCurrencyStatusesExceptInitial,
                 tokenInfoForFilter = { it.from },
-                tokenInfoForAvailable = { it.to }
+                tokenInfoForAvailable = { it.to },
             ),
             toGroup = getToCurrenciesGroup(
-                currency = initialCryptoCurrency,
+                currency = currency,
                 leastPairs = pairsLeast,
                 cryptoCurrenciesList = walletCurrencyStatusesExceptInitial,
                 tokenInfoForFilter = { it.to },
-                tokenInfoForAvailable = { it.from }
+                tokenInfoForAvailable = { it.from },
             ),
         )
     }
@@ -106,8 +102,8 @@ internal class SwapInteractorImpl @Inject constructor(
         tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
     ): CurrenciesGroup {
         val filteredPairs = leastPairs.filter {
-            tokenInfoForFilter(it).contractAddress == currency.getContractAddress()
-                && tokenInfoForFilter(it).network == currency.network.backendId
+            tokenInfoForFilter(it).contractAddress == currency.getContractAddress() &&
+                tokenInfoForFilter(it).network == currency.network.backendId
         }
 
         val availableCryptoCurrencies = filteredPairs.mapNotNull { pair ->
@@ -122,17 +118,6 @@ internal class SwapInteractorImpl @Inject constructor(
             available = availableCryptoCurrencies,
             unavailable = unavailableCryptoCurrencies.map { CryptoCurrencySwapInfo(it, emptyList()) }
         )
-    }
-
-    private fun mapLegacyCurrencyToCryptoCurrency(
-        currency: Currency,
-        currencies: List<CryptoCurrencyStatus>,
-    ): CryptoCurrency? {
-        return currencies.map { it.currency }
-            .find {
-                it.network.backendId == currency.networkId &&
-                    it.getContractAddress() == currency.getContractAddress()
-            }
     }
 
     private fun findCryptoCurrencyStatusByLeastInfo(
@@ -164,7 +149,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     @Deprecated("used in old swap mechanism")
-    override fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?) {
+    override fun initDerivationPathAndNetwork(derivationPath: String?, network: Network) {
         this.derivationPath = derivationPath
         this.network = network
     }

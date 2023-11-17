@@ -9,11 +9,8 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.extensions.toCoinId
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -25,7 +22,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.tokens.getIconUrl
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.send.redux.PrepareSendScreen
@@ -42,7 +38,6 @@ import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import com.tangem.feature.swap.domain.models.domain.Currency as SwapCurrency
 
 @Suppress("LargeClass")
 class TradeCryptoMiddleware {
@@ -57,17 +52,12 @@ class TradeCryptoMiddleware {
             is TradeCryptoAction.SendCrypto -> preconfigureAndOpenSendScreen(action)
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
             is TradeCryptoAction.Swap -> {
-                openSwap(
-                    currency = store.state.walletState.selectedWalletData?.currency?.toSwapCurrency(),
-                    derivationPath = store.state.walletState.selectedWalletData?.currency?.derivationPath,
-                )
+// [REDACTED_TODO_COMMENT]
             }
             is TradeCryptoAction.New.Buy -> proceedNewBuyAction(state, action)
             is TradeCryptoAction.New.Sell -> proceedNewSellAction(action)
             is TradeCryptoAction.New.Swap -> openSwap(
-                currency = action.cryptoCurrency.toSwapCurrency(),
-                derivationPath = action.cryptoCurrency.network.derivationPath.value,
-                network = action.cryptoCurrency.network,
+                currency = action.cryptoCurrency,
             )
             is TradeCryptoAction.New.SendToken -> handleNewSendToken(action = action)
             is TradeCryptoAction.New.SendCoin -> handleNewSendCoin(action = action)
@@ -267,68 +257,12 @@ class TradeCryptoMiddleware {
         )?.let { store.dispatchOpenUrl(it) }
     }
 
-    private fun openSwap(currency: SwapCurrency?, derivationPath: String?, network: Network? = null) {
+    private fun openSwap(currency: CryptoCurrency) {
         val bundle = bundleOf(
             SwapFragment.CURRENCY_BUNDLE_KEY to Json.encodeToString(currency),
-            SwapFragment.DERIVATION_PATH to derivationPath,
-            SwapFragment.NETWORK to network,
         )
 
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
-    }
-
-    private fun CryptoCurrency.toSwapCurrency(): SwapCurrency {
-        val blockchain = Blockchain.fromId(network.id.value)
-
-        return when (this) {
-            is CryptoCurrency.Coin -> {
-                SwapCurrency.NativeToken(
-                    id = blockchain.toCoinId(),
-                    name = name,
-                    symbol = symbol,
-                    networkId = blockchain.toNetworkId(),
-                    // no need to set logoUrl for blockchain cause
-                    // error when form url with coinId, coinId of eth and arbitrum the same
-                    logoUrl = "",
-                )
-            }
-            is CryptoCurrency.Token -> {
-                SwapCurrency.NonNativeToken(
-                    id = id.rawCurrencyId ?: "",
-                    name = name,
-                    symbol = symbol,
-                    networkId = blockchain.toNetworkId(),
-                    logoUrl = getIconUrl(id.rawCurrencyId ?: ""),
-                    contractAddress = contractAddress,
-                    decimalCount = decimals,
-                )
-            }
-        }
-    }
-
-    private fun Currency.toSwapCurrency(): SwapCurrency {
-        return when (this) {
-            is Currency.Blockchain -> {
-                SwapCurrency.NativeToken(
-                    id = blockchain.toCoinId(),
-                    name = this.currencyName,
-                    symbol = this.currencySymbol,
-                    networkId = this.blockchain.toNetworkId(),
-                    // no need to set logoUrl for blockchain cause
-                    // error when form url with coinId, coinId of eth and arbitrum the same
-                    logoUrl = "",
-                )
-            }
-            is Currency.Token -> SwapCurrency.NonNativeToken(
-                id = this.token.id ?: "",
-                name = this.currencyName,
-                symbol = this.currencySymbol,
-                networkId = this.blockchain.toNetworkId(),
-                logoUrl = getIconUrl(this.token.id ?: ""),
-                contractAddress = this.token.contractAddress,
-                decimalCount = decimals,
-            )
-        }
     }
 
     private fun handleNewSendToken(action: TradeCryptoAction.New.SendToken) {
