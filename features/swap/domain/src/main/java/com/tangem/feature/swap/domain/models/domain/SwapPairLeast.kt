@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.domain.models.domain
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 
 /**
  * Domain layer representation of SwapPair data network model.
@@ -12,20 +12,12 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 data class SwapPairLeast(
     val from: LeastTokenInfo,
     val to: LeastTokenInfo,
-    val providers: List<SwapPairProvider>,
+    val providers: List<SwapProvider>,
 )
 
-/**
- * Enriched model of swap pair data. Contains full CryptoCurrency models instead of least info.
- *
- * @property from CryptoCurrency we want to change
- * @property to CryptoCurrency we want to exchange for
- * @property providers Exchange providers
- */
-data class SwapPair(
-    val from: CryptoCurrency,
-    val to: CryptoCurrency,
-    val providers: List<SwapPairProvider>,
+data class CryptoCurrencySwapInfo(
+    val currencyStatus: CryptoCurrencyStatus,
+    val providers: List<SwapProvider>
 )
 
 /**
@@ -34,7 +26,7 @@ data class SwapPair(
  * @property providerId provider id
  * @property rateTypes supported rate types
  */
-data class SwapPairProvider(
+data class SwapProvider(
     val providerId: Int,
     val rateTypes: List<RateType>,
 )
