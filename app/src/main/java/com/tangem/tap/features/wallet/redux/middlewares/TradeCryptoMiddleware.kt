@@ -259,7 +259,7 @@ class TradeCryptoMiddleware {
 
     private fun openSwap(currency: CryptoCurrency) {
         val bundle = bundleOf(
-            SwapFragment.CURRENCY_BUNDLE_KEY to Json.encodeToString(currency),
+            SwapFragment.CURRENCY_BUNDLE_KEY to currency
         )
 
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
