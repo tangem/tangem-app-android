@@ -602,10 +602,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
                 val networkId = Blockchain.fromNetworkId(networkSelectorValue.toNetworkId())?.id
 
-                // todo after move foundToken to CryptoCurrency model, use only id
-                val savedTokenId = if (token.isCustom) null else token.id.rawCurrencyId
+                val sameId = if (!token.isCustom) {
+                    // todo after move foundToken to CryptoCurrency model, use only id
+                    foundToken?.id == token.id.rawCurrencyId
+                } else {
+                    true
+                }
 
-                val sameId = foundToken?.id == savedTokenId
                 val sameAddress = contractAddress.equals(token.contractAddress, ignoreCase = true)
                 val sameBlockchain = networkId == token.network.id.value
                 val isSameDerivationPath = getDerivationPath()?.rawPath == token.network.derivationPath.value
