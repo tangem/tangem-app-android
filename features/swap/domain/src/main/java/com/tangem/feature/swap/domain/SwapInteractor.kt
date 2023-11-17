@@ -9,9 +9,9 @@ import java.math.BigDecimal
 
 interface SwapInteractor {
 
-    suspend fun getTokensDataState(currency: Currency): TokensDataStateExpress
+    suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress
 
-    fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?)
+    fun initDerivationPathAndNetwork(derivationPath: String?, network: Network)
 
     /**
      * Init tokens to swap, load tokens list available to swap for given network
