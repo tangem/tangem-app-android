@@ -139,8 +139,10 @@ internal class SwapViewModel @Inject constructor(
             runCatching(dispatchers.io) {
                 swapInteractor.getTokensDataState(currency)
             }.onSuccess { state ->
-                // dataState = dataState.copy(
-                // )
+                dataState = dataState.copy(
+                    fromCryptoCurrency = state.initialCryptoCurrency,
+                    toCryptoCurrency = state.toGroup.available.first().currencyStatus.currency
+                )
                 cryptoCurrency = state.initialCryptoCurrency
                 // updateTokensState(dataState = state.foundTokensState)
                 // startLoadingQuotes(
