@@ -143,13 +143,14 @@ internal class SwapViewModel @Inject constructor(
                     fromCryptoCurrency = state.initialCryptoCurrency,
                     toCryptoCurrency = state.toGroup.available.first().currencyStatus.currency
                 )
+
                 cryptoCurrency = state.initialCryptoCurrency
                 // updateTokensState(dataState = state.foundTokensState)
-                // startLoadingQuotes(
-                //     fromToken = state.preselectTokens.fromToken,
-                //     toToken = state.preselectTokens.toToken,
-                //     amount = lastAmount.value,
-                // )
+                startLoadingQuotes(
+                    fromToken = state.initialCryptoCurrency,
+                    toToken = state.toGroup.available.first().currencyStatus.currency,
+                    amount = lastAmount.value,
+                )
             }.onFailure {
                 Timber.tag(loggingTag).e(it)
             }
