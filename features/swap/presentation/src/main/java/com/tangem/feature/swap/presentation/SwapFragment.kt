@@ -82,7 +82,5 @@ class SwapFragment : ComposeFragment() {
 
     companion object {
         const val CURRENCY_BUNDLE_KEY = "swap_currency"
-        const val DERIVATION_PATH = "DERIVATION_STYLE"
-        const val NETWORK = "NETWORK"
     }
 }
