@@ -61,4 +61,14 @@ interface SwapRepository {
         currency: CryptoCurrency,
         amount: BigDecimal?,
     ): String
+
+    suspend fun getExchangeQuote(
+        fromContractAddress: String,
+        fromNetwork: String,
+        toContractAddress: String,
+        toNetwork: String,
+        fromAmount: BigDecimal,
+        providerId: Int,
+        rateType: RateType,
+    ) : ExchangeQuote
 }
