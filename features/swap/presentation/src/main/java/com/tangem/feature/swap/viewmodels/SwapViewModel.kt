@@ -50,10 +50,8 @@ internal class SwapViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
 
-    private val initialCryptoCurrency = Json.decodeFromString<CryptoCurrency>(
-        savedStateHandle[SwapFragment.CURRENCY_BUNDLE_KEY]
-            ?: error("no expected parameter Currency found"),
-    )
+    private val initialCryptoCurrency: CryptoCurrency = savedStateHandle[SwapFragment.CURRENCY_BUNDLE_KEY]
+        ?: error("no expected parameter CryptoCurrency found`")
 
     private var isBalanceHidden = true
 
