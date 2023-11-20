@@ -8,6 +8,7 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.extensions.setStatusBarColor
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -17,7 +18,6 @@ import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.disclaimer.Disclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerState
-import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentDisclaimerBinding
