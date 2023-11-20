@@ -2,7 +2,7 @@ package com.tangem.feature.swap.domain
 
 import arrow.core.getOrElse
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyStatusesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
@@ -39,7 +39,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val networksRepository: NetworksRepository,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusUseCase,
+    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesUseCase,
 ) : SwapInteractor {
 // [REDACTED_TODO_COMMENT]
     private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -57,7 +57,7 @@ internal class SwapInteractorImpl @Inject constructor(
             ifRight = { it },
         )
 
-        requireNotNull(selectedWallet)
+        requireNotNull(selectedWallet) { "No selected wallet" }
 
         val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase(selectedWallet.walletId)
             .first()
@@ -111,12 +111,13 @@ internal class SwapInteractorImpl @Inject constructor(
             status?.let { CryptoCurrencySwapInfo(it, pair.providers) }
         }
 
-        val unavailableCryptoCurrencies =
-            (cryptoCurrenciesList - availableCryptoCurrencies.map { it.currencyStatus }.toSet())
+        val unavailableCryptoCurrencies = cryptoCurrenciesList - availableCryptoCurrencies
+            .map { it.currencyStatus }
+            .toSet()
 
         return CurrenciesGroup(
             available = availableCryptoCurrencies,
-            unavailable = unavailableCryptoCurrencies.map { CryptoCurrencySwapInfo(it, emptyList()) }
+            unavailable = unavailableCryptoCurrencies.map { CryptoCurrencySwapInfo(it, emptyList()) },
         )
     }
 
@@ -137,14 +138,10 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private fun Currency.getContractAddress(): String {
-        return when (this) {
-            is Currency.NativeToken -> "0"
-            is Currency.NonNativeToken -> this.contractAddress
-        }
-    }
-
-    suspend fun getPairs(initialCurrency: LeastTokenInfo, currenciesList: List<CryptoCurrency>): List<SwapPairLeast> {
+    private suspend fun getPairs(
+        initialCurrency: LeastTokenInfo,
+        currenciesList: List<CryptoCurrency>,
+    ): List<SwapPairLeast> {
         return repository.getPairs(initialCurrency, currenciesList)
     }
 
