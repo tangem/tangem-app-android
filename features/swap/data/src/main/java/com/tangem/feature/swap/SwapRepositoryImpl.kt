@@ -46,6 +46,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val swapConverter = SwapConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
+    private val rateTypeConverter = RateTypeConverter()
 
     override suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
@@ -255,6 +256,31 @@ internal class SwapRepositoryImpl @Inject constructor(
 
     private fun getOneInchApi(networkId: String): OneInchApi {
         return oneInchApiFactory.getApi(networkId)
+    }
+
+    override suspend fun getExchangeQuote(
+        fromContractAddress: String,
+        fromNetwork: String,
+        toContractAddress: String,
+        toNetwork: String,
+        fromAmount: BigDecimal,
+        providerId: Int,
+        rateType: RateType
+    ): ExchangeQuote {
+        val response = tangemExpressApi.getExchangeQuote(
+            fromContractAddress,
+            fromNetwork,
+            toContractAddress,
+            toNetwork,
+            fromAmount,
+            providerId,
+            rateTypeConverter.convertBack(rateType)
+        ).getOrThrow()
+
+        return ExchangeQuote(
+            toAmount = response.toAmount,
+            allowanceContract = response.allowanceContract
+        )
     }
 
     companion object {
