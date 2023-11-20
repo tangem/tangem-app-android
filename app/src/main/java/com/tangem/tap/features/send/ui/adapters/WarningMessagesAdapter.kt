@@ -1,4 +1,4 @@
-package com.tangem.tap.features.wallet.ui.adapters
+package com.tangem.tap.features.send.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -13,14 +13,13 @@ import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutWarningCardActionBinding
 import timber.log.Timber
 
-// TODO: Delete with WalletFeatureToggles
-@Deprecated(message = "Used only in old wallet screen")
+// TODO: Delete with SendFeatureToggles
+@Deprecated(message = "Used only in old send screen")
 class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WarningMessageVH {
@@ -81,11 +80,9 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
     private fun setupControlButtons(warning: WarningMessage) = when (warning.type) {
         WarningMessage.Type.Permanent, WarningMessage.Type.TestCard -> {
             binding.groupControlsTemporary.hide()
-            binding.groupControlsRating.hide()
             binding.btnClose.hide()
         }
         WarningMessage.Type.Temporary -> {
-            binding.groupControlsRating.hide()
             binding.groupControlsTemporary.show()
             binding.btnClose.hide()
 
@@ -115,7 +112,6 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnClose.setOnClickListener {
                 Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Closed))
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
-                store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
             }
             // binding.btnCanBeBetter.setOnClickListener {
             //     Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
@@ -127,7 +123,6 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
 
                 Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
-                store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 val reviewManager = ReviewManagerFactory.create(activity)
                 val task = reviewManager.requestReviewFlow()
                 task.addOnCompleteListener {

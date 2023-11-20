@@ -17,7 +17,6 @@ import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.tap.features.details.redux.AppSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -106,13 +105,7 @@ internal class AppSettingsViewModel(
     }
 
     private fun showAppCurrencySelector() {
-        val action = if (detailsFeatureToggles.isRedesignedAppCurrencySelectorEnabled) {
-            NavigationAction.NavigateTo(AppScreen.AppCurrencySelector)
-        } else {
-            WalletAction.AppCurrencyAction.ChooseAppCurrency
-        }
-
-        store.dispatchOnMain(action)
+        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.AppCurrencySelector))
     }
 
     private fun showThemeModeSelector(selectedMode: AppThemeMode) {
