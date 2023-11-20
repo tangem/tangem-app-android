@@ -17,7 +17,7 @@ data class SwapPairLeast(
 
 data class CryptoCurrencySwapInfo(
     val currencyStatus: CryptoCurrencyStatus,
-    val providers: List<SwapProvider>
+    val providers: List<SwapProvider>,
 )
 
 /**
