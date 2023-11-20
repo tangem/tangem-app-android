@@ -1,13 +1,9 @@
 package com.tangem.tap.features.disclaimer.ui
 
 import android.graphics.Bitmap
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import com.tangem.common.extensions.ifNotNull
-import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.common.entities.ProgressState
 
 class DisclaimerWebViewClient : WebViewClient() {
 
