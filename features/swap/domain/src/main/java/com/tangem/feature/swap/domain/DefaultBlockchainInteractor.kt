@@ -27,7 +27,7 @@ internal class DefaultBlockchainInteractor @Inject constructor(
         return if (token is CryptoCurrency.Token) {
             token.decimals
         } else {
-            transactionManager.getNativeTokenDecimals(token.network.id.value)
+            transactionManager.getNativeTokenDecimals(token.network.backendId)
         }
     }
 }
