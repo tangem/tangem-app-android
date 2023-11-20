@@ -4,6 +4,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
 import com.tangem.feature.swap.domain.models.ui.SwapStateData
+import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 import com.tangem.feature.swap.domain.models.ui.TxFee
 
 data class SwapProcessDataState(
@@ -20,4 +21,5 @@ data class SwapProcessDataState(
     val approveDataModel: RequestApproveStateData? = null,
     val swapDataModel: SwapStateData? = null,
     val selectedFee: TxFee? = null,
+    val tokensDataState: TokensDataStateExpress? = null,
 )
