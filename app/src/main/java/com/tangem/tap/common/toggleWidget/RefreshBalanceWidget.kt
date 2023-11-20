@@ -2,25 +2,16 @@ package com.tangem.tap.common.toggleWidget
 
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AccelerateInterpolator
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.view.animation.AnimationSet
-import android.view.animation.AnticipateOvershootInterpolator
-import android.view.animation.LinearInterpolator
-import android.view.animation.RotateAnimation
-import android.view.animation.ScaleAnimation
+import android.view.animation.*
 import android.widget.ViewSwitcher
-import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.wallet.R
 
 /**
 [REDACTED_AUTHOR]
  */
 @Suppress("MagicNumber")
-class RefreshBalanceWidget(
-    private val root: ViewGroup,
-) : ViewStateWidget {
+class RefreshBalanceWidget(root: ViewGroup) : ViewStateWidget {
 
     var isShowing: Boolean? = null
         private set

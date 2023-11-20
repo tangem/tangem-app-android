@@ -2,7 +2,6 @@ package com.tangem.tap.network.exchangeServices
 
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.tap.features.wallet.converters.CryptoCurrencyConverter
 
 class DefaultRampManager(private val exchangeService: ExchangeService?) : RampStateManager {
 

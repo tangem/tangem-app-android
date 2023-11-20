@@ -12,11 +12,9 @@ import com.tangem.domain.common.getTwinCardIdForUser
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.rekotlin.StoreSubscriber
@@ -37,15 +35,12 @@ internal class CardSettingsViewModel @Inject constructor(
             is Either.Left -> {
                 Timber.e(selectedWalletEither.value.toString())
             }
-            is Either.Right -> {
-                store.dispatchOnMain(WalletAction.UpdateUserWalletArtwork(selectedWalletEither.value.walletId))
-            }
+            is Either.Right -> Unit
         }
 
         store.subscribe(this) { state ->
             state.skipRepeats { oldState, newState ->
-                oldState.detailsState == newState.detailsState &&
-                    oldState.walletState == newState.walletState
+                oldState.detailsState == newState.detailsState
             }.select { it.detailsState }
         }
     }
@@ -67,7 +62,6 @@ internal class CardSettingsViewModel @Inject constructor(
                 onScanCardClick = {
                     store.dispatch(DetailsAction.ScanCard)
                 },
-                cardImage = store.state.walletState.cardImage,
             )
         } else {
             val cardId = if (state.card.isTangemTwins) {
@@ -105,7 +99,6 @@ internal class CardSettingsViewModel @Inject constructor(
                 onElementClick = {
                     handleClickingItem(it)
                 },
-                cardImage = store.state.walletState.cardImage,
             )
         }
     }

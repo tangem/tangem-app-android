@@ -11,15 +11,12 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.Currency.NativeToken
 import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
 import com.tangem.tap.walletStoresManager
@@ -31,7 +28,6 @@ import com.tangem.tap.features.wallet.models.Currency as WalletCurrency
 class UserWalletManagerImpl(
     private val appStateHolder: AppStateHolder,
     private val walletManagersFacade: WalletManagersFacade,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : UserWalletManager {
 
     override suspend fun getUserTokens(
@@ -216,28 +212,17 @@ class UserWalletManagerImpl(
         )
     }
 
-    override fun refreshWallet() {
-        // workaround, should update wallet after transaction
-        appStateHolder.mainStore?.dispatchOnMain(WalletAction.LoadData.Refresh)
-    }
-
     @Throws(IllegalArgumentException::class)
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
-        val walletManager = if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            val selectedUserWallet = requireNotNull(
-                userWalletsListManager.selectedUserWalletSync,
-            ) { "userWallet or userWalletsListManager is null" }
-            walletManagersFacade.getOrCreateWalletManager(
-                selectedUserWallet.walletId,
-                blockchain,
-                derivationPath,
-            )
-        } else {
-            val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
-            return requireNotNull(appStateHolder.walletState?.getWalletManager(blockchainNetwork)) {
-                "No wallet manager found"
-            }
-        }
+        val selectedUserWallet = requireNotNull(
+            userWalletsListManager.selectedUserWalletSync,
+        ) { "userWallet or userWalletsListManager is null" }
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            selectedUserWallet.walletId,
+            blockchain,
+            derivationPath,
+        )
+
         return requireNotNull(walletManager) {
             "No wallet manager found"
         }

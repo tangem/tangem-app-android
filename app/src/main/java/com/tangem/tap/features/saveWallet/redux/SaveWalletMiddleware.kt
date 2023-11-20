@@ -21,7 +21,6 @@ import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -119,16 +118,8 @@ internal class SaveWalletMiddleware {
                             )
                     }
 
-                    val savedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
-                        Timber.e("User wallet is not saved")
-                        return@launch
-                    }
                     store.dispatchWithMain(SaveWalletAction.Save.Success)
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                    store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
-                    store.dispatchWithMain(
-                        action = WalletAction.MultiWallet.CheckForBackupWarning(savedUserWallet.scanResponse.card),
-                    )
                 }
         }
     }
