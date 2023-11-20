@@ -1,7 +1,7 @@
 package com.tangem.tap.features.walletSelector.ui.model
 
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
 
 internal sealed interface UserWalletItem {
     val id: UserWalletId
@@ -11,7 +11,7 @@ internal sealed interface UserWalletItem {
     val isLocked: Boolean
 
     sealed class Balance {
-        open val amount: String = UNKNOWN_AMOUNT_SIGN
+        open val amount: String = BigDecimalFormatter.EMPTY_BALANCE_SIGN
         open val showWarning: Boolean = false
 
         object Loading : Balance()
