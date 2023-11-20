@@ -8,6 +8,7 @@ import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
@@ -19,7 +20,6 @@ import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.scope
