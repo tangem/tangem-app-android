@@ -42,8 +42,6 @@ interface UserWalletManager {
 
     suspend fun hideAllTokens()
 
-    fun refreshWallet()
-
     /**
      * Returns wallet public address for token
      *
