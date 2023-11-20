@@ -1,4 +1,4 @@
-package com.tangem.tap.features.wallet.converters
+package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
