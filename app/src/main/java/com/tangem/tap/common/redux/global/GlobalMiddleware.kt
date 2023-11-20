@@ -18,7 +18,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.exchangeServices.BuyExchangeService
 import com.tangem.tap.network.exchangeServices.CardExchangeRules
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -87,7 +86,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                     //     store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                     // }
 
-                    store.dispatch(WalletAction.Warnings.Update)
                     store.dispatch(SendAction.Warnings.Update)
                 }
             }
@@ -114,9 +112,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                 return
             }
             feedbackManager.openChat(chatConfig, action.feedbackData)
-        }
-        is GlobalAction.UpdateWalletSignedHashes -> {
-            store.dispatch(WalletAction.Warnings.CheckRemainingSignatures(action.remainingSignatures))
         }
         is GlobalAction.UpdateFeedbackInfo -> {
             store.state.globalState.feedbackManager?.infoHolder
