@@ -107,15 +107,17 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenInfoForFilter(it).network == currency.network.backendId
         }
 
-        val availableCryptoCurrencies = filteredPairs.mapNotNull {
-            findCryptoCurrencyStatusByLeastInfo(tokenInfoForAvailable(it), cryptoCurrenciesList)
+        val availableCryptoCurrencies = filteredPairs.mapNotNull { pair ->
+            val status = findCryptoCurrencyStatusByLeastInfo(tokenInfoForAvailable(pair), cryptoCurrenciesList)
+            status?.let { CryptoCurrencySwapInfo(it, pair.providers) }
         }
 
-        val unavailableCryptoCurrencies = cryptoCurrenciesList - availableCryptoCurrencies.toSet()
+        val unavailableCryptoCurrencies =
+            (cryptoCurrenciesList - availableCryptoCurrencies.map { it.currencyStatus }.toSet())
 
         return CurrenciesGroup(
             available = availableCryptoCurrencies,
-            unavailable = unavailableCryptoCurrencies,
+            unavailable = unavailableCryptoCurrencies.map { CryptoCurrencySwapInfo(it, emptyList()) }
         )
     }
 
@@ -415,7 +417,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return if (token is CryptoCurrency.Token) {
             token.decimals
         } else {
-            transactionManager.getNativeTokenDecimals(token.network.id.value)
+            transactionManager.getNativeTokenDecimals(token.network.backendId)
         }
     }
 
