@@ -3,9 +3,9 @@ package com.tangem.tap.common.toggleWidget
 import android.graphics.drawable.Drawable
 import android.view.View
 import com.google.android.material.button.MaterialButton
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.features.wallet.redux.ProgressState
 
 /**
 [REDACTED_AUTHOR]
