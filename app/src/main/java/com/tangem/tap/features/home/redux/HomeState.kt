@@ -3,8 +3,8 @@ package com.tangem.tap.features.home.redux
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.tangem.tap.common.entities.IndeterminateProgressButton
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.features.send.redux.states.ButtonState
-import com.tangem.tap.features.wallet.redux.ProgressState
 import org.rekotlin.StateType
 import java.util.Locale
 
