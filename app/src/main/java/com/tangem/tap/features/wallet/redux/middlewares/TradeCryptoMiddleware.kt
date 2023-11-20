@@ -36,8 +36,6 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 @Suppress("LargeClass")
 class TradeCryptoMiddleware {
@@ -259,7 +257,7 @@ class TradeCryptoMiddleware {
 
     private fun openSwap(currency: CryptoCurrency) {
         val bundle = bundleOf(
-            SwapFragment.CURRENCY_BUNDLE_KEY to currency
+            SwapFragment.CURRENCY_BUNDLE_KEY to currency,
         )
 
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
