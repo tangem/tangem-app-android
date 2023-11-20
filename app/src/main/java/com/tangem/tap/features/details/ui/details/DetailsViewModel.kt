@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.ui.details
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -12,6 +13,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.feedback.FeedbackEmail
@@ -24,7 +26,6 @@ import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.userWalletsListManager
 import com.tangem.wallet.BuildConfig
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.rekotlin.Store
+import timber.log.Timber
 // [REDACTED_TODO_COMMENT]
 internal class DetailsViewModel(
     private val store: Store<AppState>,
@@ -157,7 +159,15 @@ internal class DetailsViewModel(
 
     private fun linkMoreCards() {
         Analytics.send(Settings.ButtonCreateBackup())
-        store.dispatchOnMain(WalletAction.MultiWallet.BackupWallet)
+
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            Timber.e("Unable to backup wallet, no user wallet selected")
+            return
+        }
+        val scanResponse = selectedUserWallet.scanResponse
+        Analytics.addContext(scanResponse)
+        store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
+        store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
     }
 
     private fun scanAndSaveUserWallet() {
