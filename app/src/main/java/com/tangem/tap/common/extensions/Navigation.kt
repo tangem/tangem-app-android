@@ -27,8 +27,6 @@ import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.impl.presentation.TokensListFragment
-import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
-import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -132,16 +130,9 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.OnboardingTwins -> TwinsCardsFragment()
         AppScreen.OnboardingOther -> OnboardingOtherCardsFragment()
         AppScreen.Wallet -> {
-            val featureToggles = store.state.daggerGraphState.get(
-                getDependency = DaggerGraphState::walletFeatureToggles,
-            )
-            if (featureToggles.isRedesignedScreenEnabled) {
-                store.state.daggerGraphState
-                    .get(getDependency = DaggerGraphState::walletRouter)
-                    .getEntryFragment()
-            } else {
-                WalletFragment()
-            }
+            store.state.daggerGraphState
+                .get(getDependency = DaggerGraphState::walletRouter)
+                .getEntryFragment()
         }
         AppScreen.Send -> {
             val featureToggles = store.state.daggerGraphState.get(
@@ -176,16 +167,9 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         }
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> {
-            val featureToggles = store.state.daggerGraphState.get(
-                getDependency = DaggerGraphState::walletFeatureToggles,
-            )
-            if (featureToggles.isRedesignedScreenEnabled) {
-                store.state.daggerGraphState
-                    .get(getDependency = DaggerGraphState::tokenDetailsRouter)
-                    .getEntryFragment()
-            } else {
-                WalletDetailsFragment()
-            }
+            store.state.daggerGraphState
+                .get(getDependency = DaggerGraphState::tokenDetailsRouter)
+                .getEntryFragment()
         }
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()

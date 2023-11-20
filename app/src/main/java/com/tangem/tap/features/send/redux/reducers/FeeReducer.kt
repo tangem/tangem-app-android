@@ -2,13 +2,13 @@ package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
 import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.FeeState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.wallet.redux.ProgressState
 
 /**
 [REDACTED_AUTHOR]

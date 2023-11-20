@@ -4,7 +4,6 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.res.stringResource
-import com.tangem.domain.userwallets.Artwork
 import com.tangem.tap.features.details.redux.AccessCodeRecoveryState
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.securitymode.toTitleRes
@@ -17,7 +16,6 @@ internal data class CardSettingsScreenState(
     val accessCodeRecoveryState: AccessCodeRecoveryState? = null,
     val onScanCardClick: () -> Unit,
     val onElementClick: (CardInfo) -> Unit,
-    val cardImage: Artwork? = null,
 )
 
 internal sealed class CardInfo(
