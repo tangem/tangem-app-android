@@ -2,52 +2,80 @@ package com.tangem.feature.swap.converters
 
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.feature.swap.domain.models.domain.NetworkInfo
-import com.tangem.feature.swap.domain.models.ui.FoundTokensStateExpress
-import com.tangem.feature.swap.domain.models.ui.TokenWithBalanceExpress
-import com.tangem.feature.swap.models.Network
+import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.feature.swap.domain.models.domain.CryptoCurrencySwapInfo
+import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelectState
+import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
 class TokensDataConverter(
     private val onSearchEntered: (String) -> Unit,
     private val onTokenSelected: (String) -> Unit,
     private val isBalanceHiddenProvider: Provider<Boolean>,
-) {
+    private val appCurrencyProvider: Provider<AppCurrency>,
+) : Converter<CurrenciesGroup, SwapSelectTokenStateHolder> {
 
-    fun convertWithNetwork(value: FoundTokensStateExpress, network: NetworkInfo): SwapSelectTokenStateHolder {
+    override fun convert(value: CurrenciesGroup): SwapSelectTokenStateHolder {
+        val availableTitle = TokenToSelectState.Title(stringReference("My tokens")) // todo replace with resource
+        val unavailableTitle = TokenToSelectState.Title(stringReference("My tokens")) // todo replace with resource
         return SwapSelectTokenStateHolder(
-            availableTokens = value.tokensInWallet.map { tokenWithBalanceToTokenToSelect(it) }.toImmutableList(),
-            unavailableTokens = value.loadedTokens.map { tokenWithBalanceToTokenToSelect(it) }.toImmutableList(),
+            availableTokens = value.available.map { tokenWithBalanceToTokenToSelect(it) }
+                .toMutableList()
+                .apply {
+                    this.add(0, availableTitle)
+                }
+                .toImmutableList(),
+            unavailableTokens = value.unavailable.map { tokenWithBalanceToTokenToSelect(it) }
+                .toMutableList()
+                .apply {
+                    this.add(0, unavailableTitle)
+                }
+                .toImmutableList(),
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,
-            network = Network(network.name, network.blockchainId),
         )
     }
 
-    private fun tokenWithBalanceToTokenToSelect(
-        tokenWithBalance: TokenWithBalanceExpress,
-    ): TokenToSelectState.TokenToSelect {
+    private fun tokenWithBalanceToTokenToSelect(cryptoCurrencySwapInfo: CryptoCurrencySwapInfo): TokenToSelectState {
+        val cryptoCurrencyStatus = cryptoCurrencySwapInfo.currencyStatus
         return TokenToSelectState.TokenToSelect(
-            id = tokenWithBalance.token.id.value,
-            name = tokenWithBalance.token.name,
-            symbol = tokenWithBalance.token.symbol,
-            isNative = tokenWithBalance.token is CryptoCurrency.Coin,
-            // todo replace converting
+            id = cryptoCurrencyStatus.currency.id.value,
+            name = cryptoCurrencyStatus.currency.name,
+            symbol = cryptoCurrencyStatus.currency.symbol,
             tokenIcon = TokenIconState.CoinIcon(
-                url = "",
-                fallbackResId = 0,
+                url = cryptoCurrencyStatus.currency.iconUrl,
+                fallbackResId = cryptoCurrencyStatus.currency.networkIconResId,
                 isGrayscale = false,
-                showCustomBadge = false,
+                showCustomBadge = cryptoCurrencyStatus.currency.isCustom,
             ),
             addedTokenBalanceData = TokenBalanceData(
-                amount = tokenWithBalance.tokenBalanceData?.amount,
-                amountEquivalent = tokenWithBalance.tokenBalanceData?.amountEquivalent,
+                amount = formatCryptoAmount(cryptoCurrencyStatus),
+                amountEquivalent = formatFiatAmount(cryptoCurrencyStatus, appCurrencyProvider.invoke()),
                 isBalanceHidden = isBalanceHiddenProvider.invoke(),
             ),
+        )
+    }
+
+    private fun formatCryptoAmount(cryptoCurrencyStatus: CryptoCurrencyStatus): String {
+        return BigDecimalFormatter.formatCryptoAmount(
+            cryptoCurrencyStatus.value.amount,
+            cryptoCurrencyStatus.currency.symbol,
+            cryptoCurrencyStatus.currency.decimals,
+        )
+    }
+
+    private fun formatFiatAmount(cryptoCurrencyStatus: CryptoCurrencyStatus, appCurrency: AppCurrency): String {
+        return BigDecimalFormatter.formatFiatAmount(
+            fiatAmount = cryptoCurrencyStatus.value.fiatAmount,
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
         )
     }
 }
