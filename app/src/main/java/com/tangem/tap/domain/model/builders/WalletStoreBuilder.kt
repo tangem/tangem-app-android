@@ -11,10 +11,10 @@ import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.tap.common.extensions.createAddressesData
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
 import java.math.BigDecimal
 
 interface WalletStoreBuilder {
