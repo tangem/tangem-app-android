@@ -10,7 +10,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
@@ -39,12 +38,10 @@ class ProxyModule {
     fun provideUserWalletManager(
         appStateHolder: AppStateHolder,
         walletManagersFacade: WalletManagersFacade,
-        walletFeatureToggles: WalletFeatureToggles,
     ): UserWalletManager {
         return UserWalletManagerImpl(
             appStateHolder = appStateHolder,
             walletManagersFacade = walletManagersFacade,
-            walletFeatureToggles = walletFeatureToggles,
         )
     }
 
@@ -55,14 +52,12 @@ class ProxyModule {
         analytics: AnalyticsEventHandler,
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
-        walletFeatureToggles: WalletFeatureToggles,
     ): TransactionManager {
         return TransactionManagerImpl(
             appStateHolder = appStateHolder,
             analytics = analytics,
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
-            walletFeatureToggles = walletFeatureToggles,
         )
     }
 
