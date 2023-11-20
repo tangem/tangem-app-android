@@ -288,7 +288,6 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private suspend fun onSuccessLegacyFlow(currency: Currency) {
         userWalletManager.addToken(swapCurrencyConverter.convert(currency), derivationPath)
-        userWalletManager.refreshWallet()
     }
 
     private suspend fun onSuccessNewFlow(currency: Currency) {
