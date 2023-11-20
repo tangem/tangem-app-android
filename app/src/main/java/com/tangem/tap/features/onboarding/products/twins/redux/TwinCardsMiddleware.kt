@@ -26,8 +26,6 @@ import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -285,8 +283,8 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
 
             if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
-                val dialogData = WalletDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
-                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(dialogData))
+                val dialogData = AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
+                store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(dialogData))
             } else {
                 store.dispatchOpenUrl(topUpUrl)
             }
