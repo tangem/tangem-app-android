@@ -36,7 +36,6 @@ import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.JobHolder
@@ -381,8 +380,6 @@ class DetailsMiddleware {
                     preferencesStorage.shouldShowSaveUserWalletScreen = false
                     store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
                         .saveShouldSaveUserWallets(item = true)
-
-                    store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
@@ -399,7 +396,6 @@ class DetailsMiddleware {
                     store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
                         .saveShouldSaveUserWallets(item = false)
 
-                    store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
                 }
                 .doOnFailure { error ->
