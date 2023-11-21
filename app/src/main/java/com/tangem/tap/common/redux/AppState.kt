@@ -66,7 +66,7 @@ data class AppState(
     private val domainState: DomainState
         get() = domainStore.state
 
-    val domainNetworks: NetworkServices
+    private val domainNetworks: NetworkServices
         get() = domainState.globalState.networkServices
 
     val featureRepositoryProvider: FeatureRepositoryProvider
