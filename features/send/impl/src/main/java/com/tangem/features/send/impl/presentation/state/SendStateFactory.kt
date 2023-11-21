@@ -105,10 +105,15 @@ internal class SendStateFactory(
     //endregion
 
     //region recipient
-    fun onLoadedRecipientList(wallets: List<AvailableWallet?>, txHistory: PagingData<TxHistoryItem>) {
+    fun onLoadedRecipientList(
+        wallets: List<AvailableWallet?>,
+        txHistory: PagingData<TxHistoryItem>,
+        txHistoryCount: Int,
+    ) {
         recipientListStateConverter.convert(
             wallets = wallets,
             txHistory = txHistory,
+            txHistoryCount = txHistoryCount,
         )
     }
 
