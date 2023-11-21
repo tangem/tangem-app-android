@@ -27,7 +27,6 @@ import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.impl.presentation.TokensListFragment
-import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -177,7 +176,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Swap -> SwapFragment()
         AppScreen.Welcome -> WelcomeFragment()
         AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
-        AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
         AppScreen.AppCurrencySelector -> AppCurrencySelectorFragment()
         AppScreen.ModalNotification -> ModalNotificationBottomSheetFragment()
     }
