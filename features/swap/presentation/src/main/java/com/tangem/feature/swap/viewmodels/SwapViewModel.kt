@@ -13,6 +13,8 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
+import com.tangem.feature.swap.domain.models.domain.RateType
+import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.SwapPermissionState
@@ -138,10 +140,12 @@ internal class SwapViewModel @Inject constructor(
                 )
 
                 // updateTokensState(dataState = state.foundTokensState)
+                val toToken = state.toGroup.available.first()
                 startLoadingQuotes(
                     fromToken = initialCryptoCurrency,
-                    toToken = state.toGroup.available.first().currencyStatus.currency,
+                    toToken = toToken.currencyStatus.currency,
                     amount = lastAmount.value,
+                    toProvidersList = toToken.providers
                 )
             }.onFailure {
                 Timber.tag(loggingTag).e(it)
@@ -179,7 +183,12 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    private fun startLoadingQuotes(fromToken: CryptoCurrency, toToken: CryptoCurrency, amount: String) {
+    private fun startLoadingQuotes(
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
+        amount: String,
+        toProvidersList: List<SwapProvider> = listOf(SwapProvider(1, listOf(RateType.FLOAT))),
+    ) {
         singleTaskScheduler.cancelTask()
         uiState = stateBuilder.createQuotesLoadingState(uiState, fromToken, toToken, initialCryptoCurrency.id.value)
         singleTaskScheduler.scheduleTask(
@@ -188,6 +197,7 @@ internal class SwapViewModel @Inject constructor(
                 fromToken = fromToken,
                 toToken = toToken,
                 amount = amount,
+                toProvidersList = toProvidersList
             ),
         )
     }
@@ -205,6 +215,7 @@ internal class SwapViewModel @Inject constructor(
         fromToken: CryptoCurrency,
         toToken: CryptoCurrency,
         amount: String,
+        toProvidersList: List<SwapProvider>,
     ): PeriodicTask<SwapState> {
         return PeriodicTask(
             UPDATE_DELAY,
@@ -220,6 +231,7 @@ internal class SwapViewModel @Inject constructor(
                         networkId = dataState.networkId,
                         fromToken = fromToken,
                         toToken = toToken,
+                        providers = toProvidersList,
                         amountToSwap = amount,
                         selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     )
