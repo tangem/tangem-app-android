@@ -7,10 +7,6 @@ import android.net.*
 import androidx.annotation.*
 import androidx.core.content.*
 
-fun Context.isPermissionGranted(permission: String): Boolean {
-    return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
-}
-
 /**
  * Get uri to any resource type via given Resource Instance
  * @param resId - resource id

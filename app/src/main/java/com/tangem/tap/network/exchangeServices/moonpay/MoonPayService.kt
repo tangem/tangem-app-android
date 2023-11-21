@@ -8,7 +8,7 @@ import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.createRetrofitInstance
 import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.SCHEME

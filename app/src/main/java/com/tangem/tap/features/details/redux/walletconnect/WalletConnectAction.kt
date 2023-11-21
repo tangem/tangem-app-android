@@ -74,8 +74,6 @@ sealed class WalletConnectAction : Action {
     ) :
         WalletConnectAction()
 
-    data class SetDataToSend(val transactionData: WcTransactionData) : WalletConnectAction()
-
     data class HandlePersonalSignRequest(
         val message: WCEthereumSignMessage,
         val session: WalletConnectSession,
