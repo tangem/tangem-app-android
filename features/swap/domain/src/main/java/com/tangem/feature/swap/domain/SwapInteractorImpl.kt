@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.cache.SwapDataCache
 import com.tangem.feature.swap.domain.converters.SwapCurrencyConverter
@@ -94,6 +95,10 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenInfoForAvailable = { it.from },
             ),
         )
+    }
+
+    override fun getSelectedWallet(): UserWallet? {
+        return getSelectedWalletSyncUseCase().getOrNull()
     }
 
     private fun getToCurrenciesGroup(

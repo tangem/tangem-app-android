@@ -2,6 +2,7 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
@@ -111,4 +112,6 @@ interface SwapInteractor {
         networkId: String,
         fromToken: CryptoCurrency,
     ): Boolean
+
+    fun getSelectedWallet(): UserWallet?
 }
