@@ -102,7 +102,6 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                             val updatedResponse = scanResponse.copy(card = result.data.card)
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
-                            store.state.globalState.topUpController?.registerEmptyWallet(updatedResponse)
                             store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.TopUpWallet))
                         }
                         is CompletionResult.Failure -> Unit
@@ -151,8 +150,6 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         is OnboardingNoteAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
                 OnboardingHelper.sendToppedUpEvent(scanResponse)
-
-                store.state.globalState.topUpController?.send(scanResponse, AnalyticsParam.CardBalanceState.Full)
                 store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.Done))
             }
         }
