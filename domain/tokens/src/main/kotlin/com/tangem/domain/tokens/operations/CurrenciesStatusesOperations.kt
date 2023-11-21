@@ -67,6 +67,24 @@ internal class CurrenciesStatusesOperations(
         }
     }
 
+    suspend fun getCurrenciesStatusesSync(): Either<Error, List<CryptoCurrencyStatus>> {
+        return either {
+            catch(
+                block = {
+                    val nonEmptyCurrencies =
+                        currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId).toNonEmptyListOrNull()
+                            ?: return emptyList<CryptoCurrencyStatus>().right()
+                    val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
+                    val quotes = quotesRepository.getQuotesSync(currenciesIds, false).right()
+                    val networkStatuses =
+                        networksRepository.getNetworkStatusesSync(userWalletId, networks, false).right()
+                    return createCurrenciesStatuses(nonEmptyCurrencies, quotes, networkStatuses)
+                },
+                catch = { raise(Error.DataError(it)) },
+            )
+        }
+    }
+
     fun getCardCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
         return flow {
             val nonEmptyCurrencies = recover(
