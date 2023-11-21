@@ -145,7 +145,7 @@ internal class SwapViewModel @Inject constructor(
                     tokensDataState = state,
                 )
 
-                //updateTokensState(state)
+                // updateTokensState(state)
 
                 val toToken = state.toGroup.available.first()
                 startLoadingQuotes(
@@ -204,7 +204,7 @@ internal class SwapViewModel @Inject constructor(
                 fromToken = fromToken,
                 toToken = toToken,
                 amount = amount,
-                toProvidersList = toProvidersList
+                toProvidersList = toProvidersList,
             ),
         )
     }
