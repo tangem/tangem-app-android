@@ -5,7 +5,6 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.tap.common.analytics.topup.TopUpController
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.domain.TapWalletManager
@@ -29,7 +28,6 @@ data class GlobalState(
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
     val userCountryCode: String? = null,
     val userWalletsListManager: UserWalletsListManager? = null,
-    val topUpController: TopUpController? = null,
     val appThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
 ) : StateType
 
