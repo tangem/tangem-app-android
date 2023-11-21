@@ -7,8 +7,8 @@ import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.feature.swap.domain.models.ui.TxFee
 
 data class SwapStateHolder(
-    val sendCardData: SwapCardData,
-    val receiveCardData: SwapCardData,
+    val sendCardData: SwapCardState,
+    val receiveCardData: SwapCardState,
     val networkCurrency: String,
     val networkId: String,
     val blockchainId: String, // not the same as networkId, its local id in app
@@ -33,18 +33,28 @@ data class SwapStateHolder(
     val onCancelPermissionBottomSheet: () -> Unit = {},
 )
 
-data class SwapCardData(
-    val type: TransactionCardType,
-    val amountEquivalent: String?,
-    val coinId: String?,
-    val amountTextFieldValue: TextFieldValue?,
-    val tokenIconUrl: String?,
-    val tokenCurrency: String,
-    val balance: String,
-    val isBalanceHidden: Boolean,
-    val isNotNativeToken: Boolean,
-    val canSelectAnotherToken: Boolean = false,
-)
+sealed class SwapCardState {
+
+    data class SwapCardData(
+        val type: TransactionCardType,
+        val amountEquivalent: String?,
+        val coinId: String?,
+        val amountTextFieldValue: TextFieldValue?,
+        val tokenIconUrl: String?,
+        val tokenCurrency: String,
+        val balance: String,
+        val isBalanceHidden: Boolean,
+        val isNotNativeToken: Boolean,
+        val canSelectAnotherToken: Boolean = false,
+    ) : SwapCardState()
+
+    data class Empty(
+        val type: TransactionCardType,
+        val amountEquivalent: String?,
+        val amountTextFieldValue: TextFieldValue?,
+        val canSelectAnotherToken: Boolean = false,
+    ) : SwapCardState()
+}
 
 data class SwapButton(
     val enabled: Boolean,
