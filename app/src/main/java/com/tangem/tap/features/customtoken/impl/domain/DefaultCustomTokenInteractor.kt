@@ -23,9 +23,9 @@ import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
