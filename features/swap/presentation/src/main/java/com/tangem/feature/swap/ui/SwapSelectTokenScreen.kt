@@ -111,7 +111,7 @@ private fun TitleHeader(item: TokenToSelectState.Title, modifier: Modifier = Mod
             .background(TangemTheme.colors.background.action),
     ) {
         Text(
-            text = item.title.resolveReference(),
+            text = item.title.resolveReference().uppercase(),
             style = TangemTheme.typography.overline,
             modifier = Modifier
                 .padding(
@@ -133,7 +133,10 @@ private fun TokenItem(
         modifier = modifier
             .fillMaxWidth()
             .height(TangemTheme.dimens.size72)
-            .clickable(onClick = onTokenClick)
+            .clickable(
+                enabled = token.available,
+                onClick = onTokenClick,
+            )
             .padding(
                 vertical = TangemTheme.dimens.spacing14,
                 horizontal = TangemTheme.dimens.spacing16,
@@ -169,13 +172,7 @@ private fun TokenItem(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        if (!token.available) {
-            Text(
-                text = stringResource(id = R.string.swapping_token_not_available),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-        } else if (token.addedTokenBalanceData != null) {
+        if (token.addedTokenBalanceData != null) {
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.Center,
@@ -190,7 +187,11 @@ private fun TokenItem(
                         token.addedTokenBalanceData.amountEquivalent.orEmpty()
                     },
                     style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = if (token.available) {
+                        TangemTheme.colors.text.primary1
+                    } else {
+                        TangemTheme.colors.text.tertiary
+                    },
                 )
                 SpacerW2()
                 Text(
