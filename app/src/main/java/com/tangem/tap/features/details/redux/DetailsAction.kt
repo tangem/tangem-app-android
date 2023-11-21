@@ -13,7 +13,6 @@ sealed class DetailsAction : Action {
 
     data class PrepareScreen(
         val scanResponse: ScanResponse,
-        val darkThemeSwitchEnabled: Boolean,
         val shouldSaveUserWallets: Boolean,
     ) : DetailsAction()
 
