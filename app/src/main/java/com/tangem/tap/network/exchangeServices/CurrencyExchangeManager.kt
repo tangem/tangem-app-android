@@ -1,22 +1,8 @@
 package com.tangem.tap.network.exchangeServices
 
-import com.tangem.Message
-import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchain.extensions.Result
-import com.tangem.domain.models.scan.CardDTO
-import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.store
-import java.math.BigDecimal
+import com.tangem.tap.domain.model.Currency
 
 /**
 [REDACTED_AUTHOR]
@@ -87,42 +73,4 @@ class CurrencyExchangeManager(
             primaryRules = ExchangeRules.dummy(),
         )
     }
-}
-
-suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, destinationAddress: String) {
-    walletManager.safeUpdate(card.isDemoCard())
-
-    val amountToSend = Amount(walletManager.wallet.blockchain)
-
-    val feeResult = walletManager.getFee(amountToSend, destinationAddress) as? Result.Success ?: return
-    val fee = when (val feeForTx = feeResult.data) {
-        is TransactionFee.Choosable -> feeForTx.minimum
-        is TransactionFee.Single -> feeForTx.normal
-    }
-
-    val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
-    if (coinValue < fee.amount.value) return
-
-    val signer = TangemSigner(
-        card = card,
-        tangemSdk = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk,
-        initialMessage = Message(),
-    ) { signResponse ->
-        store.dispatch(
-            GlobalAction.UpdateWalletSignedHashes(
-                walletSignedHashes = signResponse.totalSignedHashes,
-                walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                remainingSignatures = signResponse.remainingSignatures,
-            ),
-        )
-    }
-
-    walletManager.send(
-        transactionData = walletManager.createTransaction(
-            amount = amountToSend,
-            fee = fee,
-            destination = destinationAddress,
-        ),
-        signer = signer,
-    )
 }

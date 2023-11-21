@@ -20,7 +20,7 @@ class GlobalLayoutStateHandler<T : View>(
         if (attachImmediately) attach()
     }
 
-    fun attach() {
+    private fun attach() {
         if (isAttached) {
             Timber.d("Already attached")
             return
