@@ -89,7 +89,6 @@ private fun handleOtherCardsAction(action: Action) {
                             val updatedCard = updatedResponse.card
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedCard.cardId)
-                            store.state.globalState.topUpController?.registerEmptyWallet(updatedResponse)
 
                             val primaryBlockchain = updatedResponse.cardTypesResolver.getBlockchain()
                             val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
