@@ -1,10 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
-import com.tangem.common.Converter
 import com.tangem.common.Provider
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
+import com.tangem.utils.converter.Converter
 
 internal class HiddenStateConverter(
     private val currentStateProvider: Provider<WalletState>,
