@@ -615,10 +615,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
             }
     }
 
-    private fun DerivationPath?.isSameDerivationPath(rawDerivationPath: String?): Boolean {
-        return this == rawDerivationPath?.let { DerivationPath(it) }
-    }
-
     private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
         when {
             isNetworkSelected() && type == AddCustomTokenError.InvalidContractAddress -> {
