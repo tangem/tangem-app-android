@@ -15,7 +15,6 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,7 +44,6 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, ReduxNavControl
     var userTokensRepository: UserTokensRepository? = null
     var mainStore: Store<AppState>? = null
     var tangemSdkManager: TangemSdkManager? = null
-    var walletStoresManager: WalletStoresManager? = null
     var appFiatCurrency: FiatCurrency = FiatCurrency.Default
     var exchangeService: ExchangeService? = null
 
