@@ -39,7 +39,7 @@ import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
-import com.tangem.tap.features.wallet.models.Currency as WalletModelCurrency
+import com.tangem.tap.domain.model.Currency as WalletModelCurrency
 
 class DerivationManagerImpl(
     private val appStateHolder: AppStateHolder,
@@ -60,7 +60,7 @@ class DerivationManagerImpl(
             val scanResponse = appStateHolder.scanResponse
             if (scanResponse != null) {
                 val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
-                val appCurrency = WalletModelCurrency.fromBlockchainNetwork(
+                val appCurrency = com.tangem.tap.domain.model.Currency.fromBlockchainNetwork(
                     blockchainNetwork,
                     appToken,
                 )
@@ -106,7 +106,7 @@ class DerivationManagerImpl(
             }
         } else {
             val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
-            val appCurrency = WalletModelCurrency.fromBlockchainNetwork(
+            val appCurrency = com.tangem.tap.domain.model.Currency.fromBlockchainNetwork(
                 blockchainNetwork,
                 getAppToken(currency),
             )
@@ -284,7 +284,7 @@ class DerivationManagerImpl(
     private fun getDerivations(
         curve: EllipticCurve,
         scanResponse: ScanResponse,
-        currency: com.tangem.tap.features.wallet.models.Currency,
+        currency: com.tangem.tap.domain.model.Currency,
     ): TokensMiddleware.DerivationData? {
         val wallet = scanResponse.card.wallets.firstOrNull { it.curve == curve } ?: return null
 
@@ -341,8 +341,4 @@ class DerivationManagerImpl(
         }
         return IllegalStateException(error.customMessage)
     }
-
-    private class DerivationData(
-        val derivations: Pair<ByteArrayKey, List<DerivationPath>>,
-    )
 }

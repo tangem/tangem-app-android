@@ -3,7 +3,6 @@ package com.tangem.tap.features.home.redux
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.features.send.redux.states.ButtonState
 import org.rekotlin.StateType
 import java.util.Locale
@@ -16,9 +15,6 @@ data class HomeState(
 
     val firstStory: Stories
         get() = stories[0]
-
-    val btnScanStateInProgress: Boolean
-        get() = btnScanState.progressState == ProgressState.Loading
 
     fun stepOf(story: Stories): Int = stories.indexOf(story)
 
