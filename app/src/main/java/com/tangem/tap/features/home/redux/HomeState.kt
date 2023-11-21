@@ -52,7 +52,6 @@ sealed class Stories(
     val duration: Int,
     val isNewWalletAvailable: MutableState<Boolean> = mutableStateOf(HomeState.isNewWalletAvailableInit()),
 ) {
-    object OneInchPromo : Stories(duration = 8000)
     object TangemIntro : Stories(duration = 6000)
     object RevolutionaryWallet : Stories(duration = 6000)
     object UltraSecureBackup : Stories(duration = 6000)
