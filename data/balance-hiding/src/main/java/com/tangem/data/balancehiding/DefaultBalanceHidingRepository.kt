@@ -1,36 +1,41 @@
 package com.tangem.data.balancehiding
 
-import com.tangem.datasource.local.appcurrency.BalanceHidingSettingsStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObject
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.withContext
 
 internal class DefaultBalanceHidingRepository(
-    private val balanceHidingSettingsStore: BalanceHidingSettingsStore,
-    private val dispatchers: CoroutineDispatcherProvider,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : BalanceHidingRepository {
 
     override fun getBalanceHidingSettingsFlow(): Flow<BalanceHidingSettings> {
-        return balanceHidingSettingsStore.get()
-            .onStart { emit(getBalanceHidingSettings()) }
-            .flowOn(dispatchers.io)
-            .distinctUntilChanged()
+        return appPreferencesStore.getObject(
+            key = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY,
+            default = DEFAULT_HIDING_SETTINGS,
+        )
     }
 
-    override suspend fun storeBalanceHidingSettings(balanceHidingSettings: BalanceHidingSettings) {
-        withContext(dispatchers.io) {
-            balanceHidingSettingsStore.store(balanceHidingSettings)
-        }
+    override suspend fun storeBalanceHidingSettings(isBalanceHidden: BalanceHidingSettings) {
+        appPreferencesStore.storeObject(key = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY, value = isBalanceHidden)
     }
 
     override suspend fun getBalanceHidingSettings(): BalanceHidingSettings {
-        return withContext(dispatchers.io) {
-            balanceHidingSettingsStore.getSyncOrDefault()
-        }
+        return appPreferencesStore.getObjectSyncOrDefault(
+            key = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY,
+            default = DEFAULT_HIDING_SETTINGS,
+        )
+    }
+
+    private companion object {
+        val DEFAULT_HIDING_SETTINGS = BalanceHidingSettings(
+            isHidingEnabledInSettings = false,
+            isBalanceHidden = false,
+            isBalanceHidingNotificationEnabled = true,
+        )
     }
 }
