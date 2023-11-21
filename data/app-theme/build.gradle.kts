@@ -27,4 +27,7 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.coroutines)
+
+    /** Local storages */
+    implementation(deps.androidx.datastore)
 }
