@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.tap.features.details.redux.SecurityOption
 
 sealed class AnalyticsParam {
@@ -9,7 +10,7 @@ sealed class AnalyticsParam {
         class Currency(currency: com.tangem.tap.features.wallet.models.Currency) : CurrencyType(currency.currencySymbol)
         class Blockchain(blockchain: com.tangem.blockchain.common.Blockchain) : CurrencyType(blockchain.currency)
         class Token(token: com.tangem.blockchain.common.Token) : CurrencyType(token.symbol)
-        class FiatCurrency(fiatCurrency: com.tangem.tap.common.entities.FiatCurrency) : CurrencyType(fiatCurrency.code)
+        class FiatCurrency(fiatCurrency: AppCurrency) : CurrencyType(fiatCurrency.code)
         class Amount(amount: com.tangem.blockchain.common.Amount) : CurrencyType(amount.currencySymbol)
     }
 
