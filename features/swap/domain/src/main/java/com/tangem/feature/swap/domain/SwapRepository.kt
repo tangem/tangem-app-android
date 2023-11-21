@@ -65,6 +65,7 @@ interface SwapRepository {
         amount: BigDecimal?,
     ): String
 
+    @Suppress("LongParameterList")
     suspend fun getExchangeQuote(
         fromContractAddress: String,
         fromNetwork: String,
