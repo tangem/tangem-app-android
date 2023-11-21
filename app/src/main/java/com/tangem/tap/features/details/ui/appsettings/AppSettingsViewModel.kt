@@ -8,7 +8,6 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppState
@@ -60,7 +59,7 @@ internal class AppSettingsViewModel(
             }
 
             itemsFactory.createSelectAppCurrencyButton(
-                currentAppCurrencyName = state.selectedFiatCurrency.name,
+                currentAppCurrencyName = state.selectedAppCurrency.name,
                 onClick = ::showAppCurrencySelector,
             ).let(::add)
 
@@ -171,8 +170,7 @@ internal class AppSettingsViewModel(
             .onEach {
                 if (it.code == store.state.globalState.appCurrency.code) return@onEach
 
-                val fiatCurrency = with(it) { FiatCurrency(code, name, symbol) }
-                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(fiatCurrency))
+                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(it))
             }
             .launchIn(scope)
             .saveIn(appCurrencyUpdatesJobHolder)
