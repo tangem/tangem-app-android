@@ -7,8 +7,6 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.data.source.preferences.adapters.BigDecimalAdapter
 import com.tangem.data.source.preferences.adapters.CardBalanceStateAdapter
 import com.tangem.data.source.preferences.storage.DisclaimerPrefStorage
-import com.tangem.data.source.preferences.storage.FiatCurrenciesPrefStorage
-import com.tangem.data.source.preferences.storage.ToppedUpWalletStorage
 import com.tangem.data.source.preferences.storage.UsedCardsPrefStorage
 import javax.inject.Inject
 
@@ -17,11 +15,8 @@ import javax.inject.Inject
 @Deprecated("Create repository instead")
 class PreferencesDataSource @Inject internal constructor(applicationContext: Context) {
 
-    val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
-    val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage
     val disclaimerPrefStorage: DisclaimerPrefStorage
-    val toppedUpWalletStorage: ToppedUpWalletStorage
 
     private val preferences: SharedPreferences =
         applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -33,18 +28,10 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
 
     init {
         incrementLaunchCounter()
-        appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
         usedCardsPrefStorage = UsedCardsPrefStorage(preferences, moshiConverter)
         usedCardsPrefStorage.migrate()
-        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, moshiConverter)
-        fiatCurrenciesPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
-        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, moshiConverter)
     }
-
-    var sprinklrFirstLaunchTime: Long?
-        get() = preferences.getLong(SPRINKLR_FIRST_LAUNCH_KEY, 0).takeIf { it != 0L }
-        set(value) = preferences.edit { putLong(SPRINKLR_FIRST_LAUNCH_KEY, value ?: 0) }
 
     var shouldShowSaveUserWalletScreen: Boolean
         get() = preferences.getBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, true)
@@ -78,8 +65,6 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
         return preferences.getBoolean(TWINS_ONBOARDING_SHOWN_KEY, false)
     }
 
-    private fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
-
     private fun incrementLaunchCounter() {
         var count = preferences.getInt(APP_LAUNCH_COUNT_KEY, 0)
         preferences.edit { putInt(APP_LAUNCH_COUNT_KEY, ++count) }
@@ -89,7 +74,6 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
-        private const val SPRINKLR_FIRST_LAUNCH_KEY = "sprinklrFirstLaunch"
         private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
         private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
         private const val APPLICATION_STOPPED_KEY = "applicationStopped"
