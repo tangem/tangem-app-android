@@ -1,35 +1,25 @@
 package com.tangem.data.apptheme
 
-import com.tangem.datasource.local.apptheme.AppThemeModeStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObject
+import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.Flow
 
 internal class DefaultAppThemeModeRepository(
-    private val appThemeModeStore: AppThemeModeStore,
-    private val dispatchers: CoroutineDispatcherProvider,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : AppThemeModeRepository {
 
     override fun getAppThemeMode(): Flow<AppThemeMode> {
-        return channelFlow {
-            launch(dispatchers.io) {
-                if (appThemeModeStore.isEmpty()) {
-                    appThemeModeStore.store(AppThemeMode.DEFAULT)
-                }
-            }
-
-            launch(dispatchers.io) {
-                appThemeModeStore.get().collect(::send)
-            }
-        }
+        return appPreferencesStore.getObject(
+            key = PreferencesKeys.APP_THEME_MODE_KEY,
+            default = AppThemeMode.DEFAULT,
+        )
     }
 
     override suspend fun changeAppThemeMode(mode: AppThemeMode) {
-        withContext(dispatchers.io) {
-            appThemeModeStore.store(mode)
-        }
+        appPreferencesStore.storeObject(key = PreferencesKeys.APP_THEME_MODE_KEY, value = mode)
     }
 }
