@@ -2,7 +2,6 @@ package com.tangem.tap.proxy.di
 
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
@@ -13,7 +12,6 @@ import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
-import com.tangem.tap.features.details.DarkThemeFeatureToggle
 import com.tangem.tap.proxy.*
 import dagger.Module
 import dagger.Provides
@@ -73,12 +71,6 @@ class ProxyModule {
             currenciesRepository = currenciesRepository,
             networksRepository = networksRepository,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideDarkThemeFeatureToggle(featureTogglesManager: FeatureTogglesManager): DarkThemeFeatureToggle {
-        return DarkThemeFeatureToggle(featureTogglesManager)
     }
 
     // regions FeatureConsumers
