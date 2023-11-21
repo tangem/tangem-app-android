@@ -110,9 +110,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepository
 
-    // @Inject
-    // lateinit var learn2earnInteractor: Learn2earnInteractor
-
     @Inject
     lateinit var manageTokensFeatureToggles: ManageTokensFeatureToggles
 
@@ -184,7 +181,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         runBlocking {
             initUserWalletsListManager()
             featureTogglesManager.init()
-            // learn2earnInteractor.init()
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
