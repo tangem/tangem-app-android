@@ -83,7 +83,6 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
                 store.state.daggerGraphState
                     .get { balanceHidingRepository }.getBalanceHidingSettings().isHidingEnabledInSettings
             },
-            darkThemeSwitchEnabled = action.darkThemeSwitchEnabled,
         ),
     )
 }
