@@ -22,6 +22,9 @@ sealed class TapError(
 
     object UnknownError : TapError(R.string.send_error_unknown)
     open class CustomError(val customMessage: String) : TapError(R.string.common_custom_string, listOf(customMessage))
+    data class UnsupportedState(
+        val stateError: String,
+    ) : TapError(R.string.common_custom_string, listOf("Unsupported state: $stateError"))
 
     object NoInternetConnection : TapError(R.string.wallet_notification_no_internet)
     object AmountExceedsBalance : TapError(R.string.send_validation_amount_exceeds_balance)
