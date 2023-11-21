@@ -20,13 +20,16 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import retrofit2.http.Query
 import java.math.BigDecimal
+import java.util.Locale
 import javax.inject.Inject
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
@@ -127,21 +130,33 @@ internal class SwapRepositoryImpl @Inject constructor(
     }
 
     override suspend fun findBestQuote(
-        networkId: String,
-        fromTokenAddress: String,
-        toTokenAddress: String,
-        amount: String,
+        fromContractAddress: String,
+        fromNetwork: String,
+        toContractAddress: String,
+        toNetwork: String,
+        fromAmount: String,
+        providerId: Int,
+        rateType: RateType,
     ): AggregatedSwapDataModel<QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
-                val response = oneInchErrorsHandler.handleOneInchResponse(
-                    getOneInchApi(networkId).quote(
-                        fromTokenAddress = fromTokenAddress,
-                        toTokenAddress = toTokenAddress,
-                        amount = amount,
-                    ),
+                val response = tangemExpressApi.getExchangeQuote(
+                    fromContractAddress = fromContractAddress,
+                    fromNetwork = fromNetwork,
+                    toContractAddress = toContractAddress,
+                    toNetwork = toNetwork,
+                    fromAmount = fromAmount,
+                    providerId = providerId,
+                    rateType = rateType.name.lowercase()
+                ).getOrThrow()
+                AggregatedSwapDataModel(
+                    dataModel = QuoteModel(
+                        SwapAmount(
+                            value = response.toAmount,
+                            decimals = response.toDecimals
+                        )
+                    )
                 )
-                AggregatedSwapDataModel(dataModel = quotesConverter.convert(response))
             } catch (ex: OneIncResponseException) {
                 AggregatedSwapDataModel(null, mapErrors(ex.data.description))
             }
@@ -263,7 +278,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         fromNetwork: String,
         toContractAddress: String,
         toNetwork: String,
-        fromAmount: BigDecimal,
+        fromAmount: String,
         providerId: Int,
         rateType: RateType
     ): ExchangeQuote {
@@ -274,7 +289,7 @@ internal class SwapRepositoryImpl @Inject constructor(
             toNetwork,
             fromAmount,
             providerId,
-            rateTypeConverter.convertBack(rateType)
+            rateType.name.lowercase()
         ).getOrThrow()
 
         return ExchangeQuote(
