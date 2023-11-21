@@ -3,10 +3,10 @@ package com.tangem.domain.common
 import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.calculateHashCode
 
 @JsonClass(generateAdapter = true)
+@Deprecated("Use Network model")
 data class BlockchainNetwork(
     val blockchain: Blockchain,
     val derivationPath: String?,
@@ -19,12 +19,6 @@ data class BlockchainNetwork(
         tokens = emptyList(),
     )
 
-    fun updateTokens(tokens: List<Token>): BlockchainNetwork {
-        return copy(
-            tokens = (this.tokens + tokens).distinct(),
-        )
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -32,23 +26,11 @@ data class BlockchainNetwork(
         other as BlockchainNetwork
 
         if (blockchain != other.blockchain) return false
-        if (derivationPath != other.derivationPath) return false
-
-        return true
+        return derivationPath == other.derivationPath
     }
 
     override fun hashCode(): Int = calculateHashCode(
         blockchain.hashCode(),
         derivationPath?.hashCode() ?: 0,
     )
-
-    companion object {
-        fun fromWalletManager(walletManager: WalletManager): BlockchainNetwork {
-            return BlockchainNetwork(
-                walletManager.wallet.blockchain,
-                walletManager.wallet.publicKey.derivationPath?.rawPath,
-                walletManager.cardTokens.toList(),
-            )
-        }
-    }
 }
