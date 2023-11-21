@@ -15,10 +15,13 @@ interface SwapRepository {
     suspend fun getExchangeableTokens(networkId: String): List<Currency>
 
     suspend fun findBestQuote(
-        networkId: String,
-        fromTokenAddress: String,
-        toTokenAddress: String,
-        amount: String,
+        fromContractAddress: String,
+        fromNetwork: String,
+        toContractAddress: String,
+        toNetwork: String,
+        fromAmount: String,
+        providerId: Int,
+        rateType: RateType,
     ): AggregatedSwapDataModel<QuoteModel>
 
     /**
@@ -67,7 +70,7 @@ interface SwapRepository {
         fromNetwork: String,
         toContractAddress: String,
         toNetwork: String,
-        fromAmount: BigDecimal,
+        fromAmount: String,
         providerId: Int,
         rateType: RateType,
     ) : ExchangeQuote
