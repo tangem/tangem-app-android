@@ -54,8 +54,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.shop.TangemShopService
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.tokens.UserTokensStorageService
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
@@ -79,7 +77,6 @@ lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
-internal lateinit var userTokensRepository: UserTokensRepository
 internal lateinit var derivationsFinder: DerivationsFinder
 
 @HiltAndroidApp
@@ -203,18 +200,11 @@ internal class TapApplication : Application(), ImageLoaderFactory {
             )
         }
 
-        val userTokensStorageService = UserTokensStorageService.init(context = this)
-        userTokensRepository = UserTokensRepository.init(
-            tangemTechService = store.state.domainNetworks.tangemTechService,
-            networkConnectionManager = networkConnectionManager,
-            storageService = userTokensStorageService,
-        )
         derivationsFinder = DerivationsFinder(
             newTokensStore = userTokensStore,
             dispatchers = AppCoroutineDispatcherProvider(),
         )
         appStateHolder.mainStore = store
-        appStateHolder.userTokensRepository = userTokensRepository
 
         walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
     }
