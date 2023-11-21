@@ -17,5 +17,6 @@ internal sealed class SendRecipientListContent {
 
     data class Wallets(
         val list: PersistentList<Item>,
+        val isWalletsOnly: Boolean,
     ) : SendRecipientListContent()
 }
