@@ -11,7 +11,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.Strings
@@ -20,7 +19,8 @@ import com.tangem.core.ui.components.appbar.ExpandableSearchView
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.R
@@ -43,8 +43,7 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
                 placeholderSearchText = stringResource(id = R.string.common_search_tokens),
                 onSearchChange = state.onSearchEntered,
                 onSearchDisplayClose = { state.onSearchEntered("") },
-                subtitle = state.network.name,
-                icon = painterResource(id = getActiveIconRes(state.network.blockchainId)),
+                subtitle = "", // todo add title
             )
         },
     )
@@ -112,7 +111,7 @@ private fun TitleHeader(item: TokenToSelectState.Title, modifier: Modifier = Mod
             .background(TangemTheme.colors.background.action),
     ) {
         Text(
-            text = item.title,
+            text = item.title.resolveReference().uppercase(),
             style = TangemTheme.typography.overline,
             modifier = Modifier
                 .padding(
@@ -134,7 +133,10 @@ private fun TokenItem(
         modifier = modifier
             .fillMaxWidth()
             .height(TangemTheme.dimens.size72)
-            .clickable(onClick = onTokenClick)
+            .clickable(
+                enabled = token.available,
+                onClick = onTokenClick,
+            )
             .padding(
                 vertical = TangemTheme.dimens.spacing14,
                 horizontal = TangemTheme.dimens.spacing16,
@@ -170,13 +172,7 @@ private fun TokenItem(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        if (!token.available) {
-            Text(
-                text = stringResource(id = R.string.swapping_token_not_available),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-        } else if (token.addedTokenBalanceData != null) {
+        if (token.addedTokenBalanceData != null) {
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.Center,
@@ -191,7 +187,11 @@ private fun TokenItem(
                         token.addedTokenBalanceData.amountEquivalent.orEmpty()
                     },
                     style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = if (token.available) {
+                        TangemTheme.colors.text.primary1
+                    } else {
+                        TangemTheme.colors.text.tertiary
+                    },
                 )
                 SpacerW2()
                 Text(
@@ -220,7 +220,6 @@ private val token = TokenToSelectState.TokenToSelect(
     id = "",
     name = "USDC",
     symbol = "USDC",
-    isNative = false,
     addedTokenBalanceData = TokenBalanceData(
         amount = "15 000 $",
         amountEquivalent = "15 000 " +
@@ -230,7 +229,7 @@ private val token = TokenToSelectState.TokenToSelect(
 )
 
 private val title = TokenToSelectState.Title(
-    title = "MY TOKENS",
+    title = stringReference("MY TOKENS"),
 )
 
 @Preview
@@ -243,7 +242,6 @@ private fun TokenScreenPreview() {
                 unavailableTokens = listOf(title, token, token, token).toImmutableList(),
                 onSearchEntered = {},
                 onTokenSelected = {},
-                network = Network("Ethereum", "ETH"),
             ),
             onBack = {},
         )
