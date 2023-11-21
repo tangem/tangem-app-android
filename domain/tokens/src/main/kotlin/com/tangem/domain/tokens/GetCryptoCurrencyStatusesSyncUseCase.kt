@@ -10,16 +10,15 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.*
 
-class GetCryptoCurrencyStatusesUseCase(
+class GetCryptoCurrencyStatusesSyncUseCase(
     internal val currenciesRepository: CurrenciesRepository,
     internal val quotesRepository: QuotesRepository,
     internal val networksRepository: NetworksRepository,
     internal val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    operator fun invoke(userWalletId: UserWalletId): Flow<Either<TokenListError, List<CryptoCurrencyStatus>>> {
+    suspend operator fun invoke(userWalletId: UserWalletId): Either<TokenListError, List<CryptoCurrencyStatus>> {
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             currenciesRepository = currenciesRepository,
@@ -27,9 +26,7 @@ class GetCryptoCurrencyStatusesUseCase(
             networksRepository = networksRepository,
         )
 
-        return operations.getCurrenciesStatusesMergedFlow()
-            .map { maybeCurrenciesStatuses ->
-                maybeCurrenciesStatuses.mapLeft(CurrenciesStatusesOperations.Error::mapToTokenListError)
-            }
+        return operations.getCurrenciesStatusesSync()
+            .mapLeft { error -> error.mapToTokenListError() }
     }
 }
