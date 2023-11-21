@@ -102,10 +102,6 @@ class UserWalletManagerImpl(
         }
     }
 
-    override suspend fun addToken(currency: Currency, derivationPath: String?) {
-        // FIXME: Can be removed, used only in learn2earn
-    }
-
     override suspend fun hideAllTokens() {
         // FIXME: Used only in Tester Actions
         Timber.w("Not implemented")
