@@ -4,10 +4,9 @@ import com.tangem.data.card.DefaultCardRepository
 import com.tangem.data.card.DefaultCardSdkConfigRepository
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.data.source.preferences.PreferencesDataSource
-import com.tangem.datasource.local.card.UsedCardsStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,10 +31,7 @@ internal object CardDataModule {
 
     @Provides
     @Singleton
-    fun provideCardRepository(
-        usedCardsStore: UsedCardsStore,
-        dispatchers: CoroutineDispatcherProvider,
-    ): CardRepository {
-        return DefaultCardRepository(usedCardsStore = usedCardsStore, dispatchers = dispatchers)
+    fun provideCardRepository(appPreferencesStore: AppPreferencesStore): CardRepository {
+        return DefaultCardRepository(appPreferencesStore = appPreferencesStore)
     }
 }

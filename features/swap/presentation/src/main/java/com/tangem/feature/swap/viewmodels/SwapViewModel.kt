@@ -4,9 +4,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
+import arrow.core.getOrElse
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.analytics.SwapEvents
@@ -29,11 +32,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.runCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -49,6 +50,7 @@ internal class SwapViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
 
@@ -57,9 +59,12 @@ internal class SwapViewModel @Inject constructor(
 
     private var isBalanceHidden = true
 
+    private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
+
     private val stateBuilder = StateBuilder(
         actions = createUiActions(),
         isBalanceHiddenProvider = Provider { isBalanceHidden },
+        appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
     )
 
     private val inputNumberFormatter =
@@ -89,7 +94,7 @@ internal class SwapViewModel @Inject constructor(
             derivationPath = initialCryptoCurrency.network.derivationPath.value,
             network = initialCryptoCurrency.network,
         )
-        initTokens(initialCryptoCurrency)
+        initTokens()
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -128,7 +133,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     @Suppress("UnusedPrivateMember")
-    private fun initTokens(currency: CryptoCurrency) {
+    private fun initTokens() {
         // new flow
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
@@ -136,16 +141,18 @@ internal class SwapViewModel @Inject constructor(
             }.onSuccess { state ->
                 dataState = dataState.copy(
                     fromCryptoCurrency = initialCryptoCurrency,
-                    toCryptoCurrency = state.toGroup.available.first().currencyStatus.currency
+                    toCryptoCurrency = state.toGroup.available.first().currencyStatus.currency,
+                    tokensDataState = state,
                 )
 
-                // updateTokensState(dataState = state.foundTokensState)
+                //updateTokensState(state)
+
                 val toToken = state.toGroup.available.first()
                 startLoadingQuotes(
                     fromToken = initialCryptoCurrency,
-                    toToken = toToken.currencyStatus.currency,
+                    toToken = state.toGroup.available.first().currencyStatus.currency,
                     amount = lastAmount.value,
-                    toProvidersList = toToken.providers
+                    toProvidersList = toToken.providers,
                 )
             }.onFailure {
                 Timber.tag(loggingTag).e(it)
@@ -175,11 +182,11 @@ internal class SwapViewModel @Inject constructor(
         // }
     }
 
-    private fun updateTokensState(dataState: FoundTokensStateExpress) {
+    private fun updateTokensState(dataState: TokensDataStateExpress) {
+        val tokensDataState = if (!isOrderReversed) dataState.toGroup else dataState.fromGroup
         uiState = stateBuilder.addTokensToState(
             uiState = uiState,
-            dataState = dataState,
-            networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
+            tokensDataState = tokensDataState,
         )
     }
 
@@ -381,28 +388,31 @@ internal class SwapViewModel @Inject constructor(
                 swapInteractor.searchTokens(dataState.networkId, searchQuery)
             }
                 .onSuccess {
-                    updateTokensState(it)
+                    // updateTokensState(it)
                 }
                 .onFailure { }
         }
     }
 
     private fun onTokenSelect(id: String) {
-        val foundToken = swapInteractor.findTokenById(id)
+        val tokens = dataState.tokensDataState ?: return
 
+        val foundToken = tokens.toGroup.available.firstOrNull {
+            it.currencyStatus.currency.id.value == id
+        }
         analyticsEventHandler.send(
-            event = SwapEvents.SearchTokenClicked(currencySymbol = foundToken?.symbol),
+            event = SwapEvents.SearchTokenClicked(currencySymbol = foundToken?.currencyStatus?.currency?.symbol),
         )
 
         if (foundToken != null) {
             val fromToken: CryptoCurrency
             val toToken: CryptoCurrency
             if (isOrderReversed) {
-                fromToken = foundToken
+                fromToken = foundToken.currencyStatus.currency
                 toToken = initialCryptoCurrency
             } else {
                 fromToken = initialCryptoCurrency
-                toToken = foundToken
+                toToken = foundToken.currencyStatus.currency
             }
             dataState = dataState.copy(
                 fromCryptoCurrency = fromToken,
@@ -542,6 +552,18 @@ internal class SwapViewModel @Inject constructor(
             onClickFee = {},
             onSelectFeeType = {},
         )
+    }
+
+    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
+        return getSelectedAppCurrencyUseCase()
+            .map { maybeAppCurrency ->
+                maybeAppCurrency.getOrElse { AppCurrency.Default }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = AppCurrency.Default,
+            )
     }
 
     companion object {
