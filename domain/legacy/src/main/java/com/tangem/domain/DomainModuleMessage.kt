@@ -36,13 +36,4 @@ sealed class AddCustomTokenError(
 
     object FieldIsEmpty : AddCustomTokenError()
     object InvalidContractAddress : AddCustomTokenError()
-    object NetworkIsNotSelected : AddCustomTokenError()
-    object InvalidDecimalsCount : AddCustomTokenError()
-    object InvalidDerivationPath : AddCustomTokenError()
-
-    sealed class Warning : AddCustomTokenError() {
-        object PotentialScamToken : Warning()
-        object TokenAlreadyAdded : Warning()
-        object UnsupportedSolanaToken : Warning()
-    }
 }

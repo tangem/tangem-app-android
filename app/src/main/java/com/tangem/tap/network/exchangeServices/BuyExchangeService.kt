@@ -1,7 +1,7 @@
 package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.scope
 import kotlinx.coroutines.launch

@@ -46,10 +46,6 @@ suspend fun Store<AppState>.onUserWalletSelected(userWallet: UserWallet, sendAna
     state.globalState.tapWalletManager.onWalletSelected(userWallet, sendAnalyticsEvent)
 }
 
-fun Store<*>.dispatchToastNotification(resId: Int) {
-    dispatchOnMain(GlobalAction.ShowToastNotification(resId))
-}
-
 fun Store<*>.dispatchErrorNotification(error: TapError) {
     dispatchOnMain(GlobalAction.ShowErrorNotification(error))
 }
