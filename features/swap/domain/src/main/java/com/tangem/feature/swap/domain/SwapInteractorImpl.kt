@@ -13,7 +13,6 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
@@ -34,7 +33,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) : SwapInteractor {
 
@@ -244,11 +242,8 @@ internal class SwapInteractorImpl @Inject constructor(
         )
         return when (result) {
             is SendTxResult.Success -> {
-                if (walletFeatureToggles.isRedesignedScreenEnabled) {
-                    onSuccessNewFlow(currencyToGet)
-                } else {
-                    onSuccessLegacyFlow(currencyToGet)
-                }
+                onSuccess(currencyToGet)
+
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -286,11 +281,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return SwapAmount(amountDecimal, getTokenDecimals(token))
     }
 
-    private suspend fun onSuccessLegacyFlow(currency: Currency) {
-        userWalletManager.addToken(swapCurrencyConverter.convert(currency), derivationPath)
-    }
-
-    private suspend fun onSuccessNewFlow(currency: Currency) {
+    private suspend fun onSuccess(currency: Currency) {
         val network = network ?: return
         getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
