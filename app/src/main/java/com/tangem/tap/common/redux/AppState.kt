@@ -35,6 +35,7 @@ import com.tangem.tap.features.signin.redux.SignInMiddleware
 import com.tangem.tap.features.signin.redux.SignInState
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.legacy.redux.TokensState
+import com.tangem.tap.features.wallet.redux.middlewares.TradeCryptoMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeState
 import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
@@ -101,6 +102,7 @@ data class AppState(
                 SignInMiddleware.middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,
                 LegacyMiddleware.legacyMiddleware,
+                TradeCryptoMiddleware.middleware,
             )
         }
     }
