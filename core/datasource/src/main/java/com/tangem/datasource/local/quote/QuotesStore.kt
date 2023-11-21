@@ -9,5 +9,7 @@ interface QuotesStore {
 
     fun get(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<StoredQuote>>
 
+    suspend fun getSync(currenciesIds: Set<CryptoCurrency.ID>): Set<StoredQuote>
+
     suspend fun store(response: QuotesResponse)
 }
