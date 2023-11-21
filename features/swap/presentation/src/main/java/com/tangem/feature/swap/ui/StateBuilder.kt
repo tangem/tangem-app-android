@@ -9,6 +9,7 @@ import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
@@ -24,12 +25,17 @@ import kotlinx.collections.immutable.toImmutableList
  * State builder creates a specific states for SwapScreen
  */
 @Suppress("LargeClass")
-internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider: Provider<Boolean>) {
+internal class StateBuilder(
+    private val actions: UiActions,
+    private val isBalanceHiddenProvider: Provider<Boolean>,
+    appCurrencyProvider: Provider<AppCurrency>,
+) {
 
     private val tokensDataConverter = TokensDataConverter(
         onSearchEntered = actions.onSearchEntered,
         onTokenSelected = actions.onTokenSelected,
         isBalanceHiddenProvider = isBalanceHiddenProvider,
+        appCurrencyProvider = appCurrencyProvider,
     )
 
     fun createInitialLoadingState(initialCurrency: CryptoCurrency, networkInfo: NetworkInfo): SwapStateHolder {
@@ -247,15 +253,10 @@ internal class StateBuilder(val actions: UiActions, val isBalanceHiddenProvider:
         )
     }
 
-    fun addTokensToState(
-        uiState: SwapStateHolder,
-        dataState: FoundTokensStateExpress,
-        networkInfo: NetworkInfo,
-    ): SwapStateHolder {
+    fun addTokensToState(uiState: SwapStateHolder, tokensDataState: CurrenciesGroup): SwapStateHolder {
         return uiState.copy(
-            selectTokenState = tokensDataConverter.convertWithNetwork(
-                value = dataState,
-                network = networkInfo,
+            selectTokenState = tokensDataConverter.convert(
+                value = tokensDataState,
             ),
         )
     }
