@@ -69,13 +69,6 @@ class SwapDomainModule {
     @SwapScope
     @Provides
     @Singleton
-    fun providesGetCryptoCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
-        return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
-    }
-
-    @SwapScope
-    @Provides
-    @Singleton
     fun providesGetCryptoCurrencyStatusUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
