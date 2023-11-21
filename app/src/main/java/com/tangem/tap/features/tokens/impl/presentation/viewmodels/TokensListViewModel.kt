@@ -4,7 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.*
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -19,7 +22,6 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getNetworkName
 import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
@@ -37,7 +39,9 @@ import com.tangem.utils.coroutines.Debouncer
 import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import timber.log.Timber
@@ -65,7 +69,6 @@ internal class TokensListViewModel @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     analyticsEventHandler: AnalyticsEventHandler,
     getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
-    walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val isManageAccess = store.state.tokensState.isManageAccess
@@ -83,7 +86,6 @@ internal class TokensListViewModel @Inject constructor(
     private var changedBlockchainList: MutableList<Blockchain> = mutableListOf()
 
     private val tokensListMigration = TokensListMigration(
-        walletFeatureToggles = walletFeatureToggles,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getCurrenciesUseCase = getCurrenciesUseCase,
     )
@@ -302,8 +304,6 @@ internal class TokensListViewModel @Inject constructor(
         fun onSaveButtonClick() {
             analyticsSender.sendWhenSaveButtonClicked()
             tokensListMigration.onSaveButtonClick(
-                currentTokensList = currentTokensList,
-                currentBlockchainList = currentBlockchainList,
                 changedTokensList = changedTokensList,
                 changedBlockchainList = changedBlockchainList,
             )

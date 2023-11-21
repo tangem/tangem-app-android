@@ -61,8 +61,6 @@ import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.UserTokensStorageService
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
-import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
-import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.domain.walletStores.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
@@ -112,15 +110,6 @@ private val walletAmountsRepository by lazy {
 }
 val walletStoresManager by lazy {
     WalletStoresManager.provideDefaultImplementation(
-        userTokensRepository = userTokensRepository,
-        walletStoresRepository = walletStoresRepository,
-        walletManagersRepository = walletManagersRepository,
-        walletAmountsRepository = walletAmountsRepository,
-        appCurrencyProvider = { store.state.globalState.appCurrency },
-    )
-}
-val walletCurrenciesManager by lazy {
-    WalletCurrenciesManager.provideDefaultImplementation(
         userTokensRepository = userTokensRepository,
         walletStoresRepository = walletStoresRepository,
         walletManagersRepository = walletManagersRepository,
