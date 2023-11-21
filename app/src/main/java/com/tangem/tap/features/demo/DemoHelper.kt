@@ -2,7 +2,6 @@ package com.tangem.tap.features.demo
 
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -21,8 +20,6 @@ object DemoHelper {
 
     private val disabledActionFeatures = listOf(
         WalletConnectAction.StartWalletConnect::class.java,
-        TradeCryptoAction.Buy::class.java,
-        TradeCryptoAction.Sell::class.java,
         BackupAction.StartBackup::class.java,
         DetailsAction.ResetToFactory.Start::class.java,
     )
