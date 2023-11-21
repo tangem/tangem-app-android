@@ -96,9 +96,6 @@ include(":features:wallet:impl")
 include(":features:tokendetails:api")
 include(":features:tokendetails:impl")
 
-include(":features:learn2earn:api")
-include(":features:learn2earn:impl")
-
 include(":features:send:api")
 include(":features:send:impl")
 
