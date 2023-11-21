@@ -12,6 +12,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.cache.SwapDataCache
 import com.tangem.feature.swap.domain.converters.SwapCurrencyConverter
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
@@ -26,6 +27,9 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 @Suppress("LargeClass", "LongParameterList")
 internal class SwapInteractorImpl @Inject constructor(
@@ -306,7 +310,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
                 providers = providers,
-            )
+            ).entries.first().value // TODO
         }
     }
 
@@ -514,46 +518,70 @@ internal class SwapInteractorImpl @Inject constructor(
         providers: List<SwapProvider>,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
-    ): SwapState {
-        repository.findBestQuote(
-            fromContractAddress = fromToken.getContractAddress(),
-            fromNetwork = fromToken.network.backendId,
-            toContractAddress = toToken.getContractAddress(),
-            toNetwork = toToken.network.backendId,
-            fromAmount = amount.toStringWithRightOffset(),
-            providerId = providers[0].providerId,
-            rateType = RateType.FLOAT,
-
-            // networkId = networkId,
-            // fromTokenAddress = fromTokenAddress,
-            // toTokenAddress = toTokenAddress,
-            // amount = amount.toStringWithRightOffset(),
-        ).let { quotes ->
-            val quoteDataModel = quotes.dataModel
-            if (quoteDataModel != null) {
-                val swapState = updateBalances(
-                    networkId = networkId,
-                    fromToken = fromToken,
-                    toToken = toToken,
-                    fromTokenAmount = amount,
-                    toTokenAmount = quoteDataModel.toTokenAmount,
-                    swapStateData = null,
-                )
-                val quotesState = updatePermissionState(
-                    networkId = networkId,
-                    fromToken = fromToken,
-                    swapAmount = amount,
-                    quotesLoadedState = swapState,
-                )
-                return quotesState.copy(
-                    preparedSwapConfigState = quotesState.preparedSwapConfigState.copy(
-                        isAllowedToSpend = isAllowedToSpend,
-                        isBalanceEnough = isBalanceWithoutFeeEnough,
-                    ),
-                )
-            } else {
-                return SwapState.SwapError(quotes.error)
+    ): Map<SwapProvider, SwapState> {
+        return coroutineScope {
+            val quoteRequests = providers.map { provider ->
+                async {
+                    provider to repository.findBestQuote(
+                        fromContractAddress = fromToken.getContractAddress(),
+                        fromNetwork = fromToken.network.backendId,
+                        toContractAddress = toToken.getContractAddress(),
+                        toNetwork = toToken.network.backendId,
+                        fromAmount = amount.toStringWithRightOffset(),
+                        providerId = provider.providerId,
+                        rateType = RateType.FLOAT,
+                    )
+                }
             }
+
+            quoteRequests.awaitAll().map {
+                it.first to
+                    getState(
+                        quoteDataModel = it.second,
+                        amount = amount,
+                        fromToken = fromToken,
+                        toToken = toToken,
+                        networkId = networkId,
+                        isAllowedToSpend = isAllowedToSpend,
+                        isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough
+                    )
+            }.associate { it.first to it.second }
+        }
+    }
+
+    private suspend fun getState(
+        quoteDataModel: AggregatedSwapDataModel<QuoteModel>,
+        amount: SwapAmount,
+        fromToken: CryptoCurrency,
+        toToken: CryptoCurrency,
+        networkId: String,
+        isAllowedToSpend: Boolean,
+        isBalanceWithoutFeeEnough: Boolean,
+    ): SwapState {
+        val quoteModel = quoteDataModel.dataModel
+        if (quoteModel != null) {
+            val swapState = updateBalances(
+                networkId = networkId,
+                fromToken = fromToken,
+                toToken = toToken,
+                fromTokenAmount = amount,
+                toTokenAmount = quoteModel.toTokenAmount,
+                swapStateData = null,
+            )
+            val quotesState = updatePermissionState(
+                networkId = networkId,
+                fromToken = fromToken,
+                swapAmount = amount,
+                quotesLoadedState = swapState,
+            )
+            return quotesState.copy(
+                preparedSwapConfigState = quotesState.preparedSwapConfigState.copy(
+                    isAllowedToSpend = isAllowedToSpend,
+                    isBalanceEnough = isBalanceWithoutFeeEnough,
+                ),
+            )
+        } else {
+            return SwapState.SwapError(quoteDataModel.error)
         }
     }
 
