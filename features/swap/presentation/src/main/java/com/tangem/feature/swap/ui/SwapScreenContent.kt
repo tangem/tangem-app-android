@@ -145,48 +145,24 @@ private fun MainInfo(state: SwapStateHolder) {
         }
         val (topCard, bottomCard, button) = createRefs()
         val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
-        TransactionCard(
-            type = state.sendCardData.type,
-            balance = if (state.sendCardData.isBalanceHidden) {
-                STARS
-            } else {
-                state.sendCardData.balance
-            },
-            textFieldValue = state.sendCardData.amountTextFieldValue,
-            amountEquivalent = state.sendCardData.amountEquivalent,
-            tokenIconUrl = state.sendCardData.tokenIconUrl ?: "",
-            tokenCurrency = state.sendCardData.tokenCurrency,
-            priceImpact = priceImpactWarning,
-            networkIconRes = if (state.sendCardData.isNotNativeToken) networkIconRes else null,
-            iconPlaceholder = state.sendCardData.coinId?.let {
-                getActiveIconResByCoinId(it)
-            },
-            onChangeTokenClick = if (state.sendCardData.canSelectAnotherToken) state.onSelectTokenClick else null,
+        TransactionCardData(
+            priceImpactWarning = priceImpactWarning,
+            networkIconRes = networkIconRes,
+            swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
             },
+            onSelectTokenClick = state.onSelectTokenClick,
         )
         val marginCard = TangemTheme.dimens.spacing16
-        TransactionCard(
-            type = state.receiveCardData.type,
-            balance = if (state.receiveCardData.isBalanceHidden) STARS else state.receiveCardData.balance,
-            textFieldValue = state.receiveCardData.amountTextFieldValue,
-            amountEquivalent = state.receiveCardData.amountEquivalent,
-            tokenIconUrl = state.receiveCardData.tokenIconUrl ?: "",
-            tokenCurrency = state.receiveCardData.tokenCurrency,
-            priceImpact = priceImpactWarning,
-            networkIconRes = if (state.receiveCardData.isNotNativeToken) networkIconRes else null,
-            iconPlaceholder = state.receiveCardData.coinId?.let {
-                getActiveIconResByCoinId(it)
-            },
-            onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) {
-                state.onSelectTokenClick
-            } else {
-                null
-            },
+        TransactionCardData(
+            priceImpactWarning = priceImpactWarning,
+            networkIconRes = networkIconRes,
+            swapCardState = state.receiveCardData,
             modifier = Modifier.constrainAs(bottomCard) {
                 top.linkTo(topCard.bottom, margin = marginCard)
             },
+            onSelectTokenClick = state.onSelectTokenClick,
         )
         val marginButton = TangemTheme.dimens.spacing32
         SwapButton(
@@ -197,6 +173,48 @@ private fun MainInfo(state: SwapStateHolder) {
                 end.linkTo(topCard.end)
             },
         )
+    }
+}
+
+@Composable
+private fun TransactionCardData(
+    priceImpactWarning: SwapWarning.HighPriceImpact?,
+    networkIconRes: Int?,
+    swapCardState: SwapCardState,
+    onSelectTokenClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    when (swapCardState) {
+        is SwapCardState.Empty -> {
+            TransactionCardEmpty(
+                type = swapCardState.type,
+                amountEquivalent = swapCardState.amountEquivalent,
+                textFieldValue = swapCardState.amountTextFieldValue,
+                onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
+                modifier = modifier,
+            )
+        }
+        is SwapCardState.SwapCardData -> {
+            TransactionCard(
+                type = swapCardState.type,
+                balance = if (swapCardState.isBalanceHidden) {
+                    STARS
+                } else {
+                    swapCardState.balance
+                },
+                textFieldValue = swapCardState.amountTextFieldValue,
+                amountEquivalent = swapCardState.amountEquivalent,
+                tokenIconUrl = swapCardState.tokenIconUrl ?: "",
+                tokenCurrency = swapCardState.tokenCurrency,
+                priceImpact = priceImpactWarning,
+                networkIconRes = if (swapCardState.isNotNativeToken) networkIconRes else null,
+                iconPlaceholder = swapCardState.coinId?.let {
+                    getActiveIconResByCoinId(it)
+                },
+                onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
+                modifier = modifier,
+            )
+        }
     }
 }
 
@@ -268,7 +286,8 @@ private fun FeeItem(feeState: FeeState, currency: String) {
             }
         }
         is FeeState.Empty -> {
-            SmallInfoCard(startText = titleString, endText = "")
+            // show nothing
+            // SmallInfoCard(startText = titleString, endText = "")
         }
     }
 }
@@ -355,7 +374,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
 
 // region preview
 
-private val sendCard = SwapCardData(
+private val sendCard = SwapCardState.SwapCardData(
     type = TransactionCardType.SendCard({}) {},
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
@@ -368,7 +387,7 @@ private val sendCard = SwapCardData(
     isBalanceHidden = false,
 )
 
-private val receiveCard = SwapCardData(
+private val receiveCard = SwapCardState.SwapCardData(
     type = TransactionCardType.ReceiveCard(),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
