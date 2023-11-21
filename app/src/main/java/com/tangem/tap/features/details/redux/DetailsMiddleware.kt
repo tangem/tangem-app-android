@@ -36,7 +36,6 @@ import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
-import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -234,7 +233,6 @@ class DetailsMiddleware {
                 is DetailsAction.AppSettings.ChangeAppCurrency -> {
                     store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
                     store.dispatch(DetailsAction.ChangeAppCurrency(action.fiatCurrency))
-                    store.dispatch(WalletSelectorAction.ChangeAppCurrency(action.fiatCurrency))
                 }
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
