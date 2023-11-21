@@ -3,13 +3,13 @@ package com.tangem.tap.proxy
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -42,7 +42,7 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, ReduxNavControl
     var scanResponse: ScanResponse? = null
     var mainStore: Store<AppState>? = null
     var tangemSdkManager: TangemSdkManager? = null
-    var appFiatCurrency: FiatCurrency = FiatCurrency.Default
+    var appFiatCurrency: AppCurrency = AppCurrency.Default
     var exchangeService: ExchangeService? = null
 
     fun getActualCard(): CardDTO? {
