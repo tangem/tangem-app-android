@@ -67,33 +67,21 @@ internal class CurrenciesStatusesOperations(
         }
     }
 
-    fun getCurrenciesStatusesMergedFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
-        return getMultiCurrencyWalletCurrencies().transformLatest { maybeCurrencies ->
-            val nonEmptyCurrencies = maybeCurrencies.fold(
-                ifLeft = { error ->
-                    emit(error.left())
-                    return@transformLatest
+    suspend fun getCurrenciesStatusesSync(): Either<Error, List<CryptoCurrencyStatus>> {
+        return either {
+            catch(
+                block = {
+                    val nonEmptyCurrencies =
+                        currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId).toNonEmptyListOrNull()
+                            ?: return emptyList<CryptoCurrencyStatus>().right()
+                    val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
+                    val quotes = quotesRepository.getQuotesSync(currenciesIds, false).right()
+                    val networkStatuses =
+                        networksRepository.getNetworkStatusesSync(userWalletId, networks, false).right()
+                    return createCurrenciesStatuses(nonEmptyCurrencies, quotes, networkStatuses)
                 },
-                ifRight = List<CryptoCurrency>::toNonEmptyListOrNull,
+                catch = { raise(Error.DataError(it)) },
             )
-
-            if (nonEmptyCurrencies == null) {
-                val emptyCurrenciesStatuses = emptyList<CryptoCurrencyStatus>()
-
-                emit(emptyCurrenciesStatuses.right())
-                return@transformLatest
-            }
-
-            val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
-
-            val currenciesFlow = combine(
-                getQuotes(currenciesIds),
-                getNetworksStatuses(networks),
-            ) { maybeQuotes, maybeNetworksStatuses ->
-                createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses)
-            }
-
-            emitAll(currenciesFlow)
         }
     }
 

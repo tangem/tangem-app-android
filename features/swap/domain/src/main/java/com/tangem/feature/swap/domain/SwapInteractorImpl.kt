@@ -2,7 +2,7 @@ package com.tangem.feature.swap.domain
 
 import arrow.core.getOrElse
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCryptoCurrencyStatusesUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
@@ -22,7 +22,6 @@ import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.toFiatString
-import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -39,7 +38,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val networksRepository: NetworksRepository,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesUseCase,
+    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
 ) : SwapInteractor {
 // [REDACTED_TODO_COMMENT]
     private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -60,7 +59,6 @@ internal class SwapInteractorImpl @Inject constructor(
         requireNotNull(selectedWallet) { "No selected wallet" }
 
         val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase(selectedWallet.walletId)
-            .first()
             .getOrElse { emptyList() }
 
         val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses.filter {
