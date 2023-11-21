@@ -1,7 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
@@ -11,11 +10,9 @@ import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.Artwork
@@ -36,7 +33,6 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.wallet.R
 import kotlinx.coroutines.launch
@@ -143,24 +139,6 @@ private fun handleWalletAction(action: Action) {
                     )
                     onboardingManager.scanResponse = updatedResponse
 
-                    val blockchainNetworks = if (DemoHelper.isDemoCardId(result.data.card.cardId)) {
-                        DemoHelper.config.demoBlockchains
-                    } else {
-                        listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-                    }.map { blockchain ->
-                        BlockchainNetwork(
-                            blockchain = blockchain,
-                            derivationStyleProvider = updatedResponse.derivationStyleProvider,
-                        )
-                    }
-
-                    scope.launch {
-                        // TODO: Use new repo [REDACTED_JIRA]
-                        userTokensRepository.saveUserTokens(
-                            card = result.data.card,
-                            tokens = blockchainNetworks.toCurrencies(),
-                        )
-                    }
                     startCardActivation(updatedResponse)
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
