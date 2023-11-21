@@ -9,17 +9,6 @@ import com.tangem.domain.userwallets.Artwork
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 
-val CardDTO.remainingSignatures: Int?
-    get() = this.wallets.firstOrNull()?.remainingSignatures
-
-val CardDTO.isHdWalletAllowedByApp: Boolean
-    get() = settings.isHDWalletAllowed
-
-@Suppress("UnnecessaryParentheses")
-fun CardDTO.hasSignedHashes(): Boolean {
-    return wallets.any { (it.totalSignedHashes ?: 0) > 0 }
-}
-
 fun CardDTO.signedHashesCount(): Int {
     return wallets.sumOf { it.totalSignedHashes ?: 0 }
 }

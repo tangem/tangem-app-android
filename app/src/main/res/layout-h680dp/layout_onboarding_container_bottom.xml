@@ -31,7 +31,6 @@
             tools:text="One wallet. Two cards." />
 
         <TextView
-            android:id="@+id/tv_body"
             style="@style/TextViewOnboarding.Body"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -48,7 +47,6 @@
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <androidx.appcompat.widget.AppCompatCheckBox
-        android:id="@+id/chb_understand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/common_understand"
@@ -73,7 +71,6 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_main_action"
             style="@style/TapPrimaryIconButton"
             tools:icon="@drawable/ic_tangem_24"
             tools:text="@string/welcome_unlock_card" />
@@ -91,7 +88,6 @@
     </FrameLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_alternative_action"
         style="@style/TapTextButton"
         android:layout_width="match_parent"
         android:layout_marginStart="@dimen/dimen16"

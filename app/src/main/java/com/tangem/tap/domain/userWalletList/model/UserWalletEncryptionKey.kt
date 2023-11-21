@@ -13,9 +13,7 @@ internal data class UserWalletEncryptionKey(
         if (other !is UserWalletEncryptionKey) return false
 
         if (walletId != other.walletId) return false
-        if (!encryptionKey.contentEquals(other.encryptionKey)) return false
-
-        return true
+        return encryptionKey.contentEquals(other.encryptionKey)
     }
 
     override fun hashCode(): Int {

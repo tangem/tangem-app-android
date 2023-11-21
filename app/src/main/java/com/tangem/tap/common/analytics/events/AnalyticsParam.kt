@@ -1,16 +1,14 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.tap.features.details.redux.SecurityOption
 
 sealed class AnalyticsParam {
 
     sealed class CurrencyType(val value: String) {
-        class Currency(currency: com.tangem.tap.features.wallet.models.Currency) : CurrencyType(currency.currencySymbol)
+        class Currency(currency: com.tangem.tap.domain.model.Currency) : CurrencyType(currency.currencySymbol)
         class Blockchain(blockchain: com.tangem.blockchain.common.Blockchain) : CurrencyType(blockchain.currency)
         class Token(token: com.tangem.blockchain.common.Token) : CurrencyType(token.symbol)
-        class FiatCurrency(fiatCurrency: AppCurrency) : CurrencyType(fiatCurrency.code)
         class Amount(amount: com.tangem.blockchain.common.Amount) : CurrencyType(amount.currencySymbol)
     }
 
@@ -23,15 +21,11 @@ sealed class AnalyticsParam {
     sealed class CardBalanceState(val value: String) {
         object Empty : CardBalanceState("Empty")
         object Full : CardBalanceState("Full")
-        object CustomToken : CardBalanceState("Custom Token")
-        object BlockchainError : CardBalanceState("Blockchain Error")
-        object NoRate : CardBalanceState("No Rate")
         companion object
     }
 
     sealed class RateApp(val value: String) {
         object Liked : RateApp("Liked")
-        object Disliked : RateApp("Disliked")
         object Closed : RateApp("Close")
     }
 
@@ -42,7 +36,6 @@ sealed class AnalyticsParam {
 
     sealed class UserCode(val value: String) {
         object AccessCode : UserCode("Access Code")
-        object Passcode : UserCode("Passcode")
     }
 
     sealed class SecurityMode(val value: String) {
