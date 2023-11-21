@@ -1,22 +1,16 @@
 package com.tangem.tap.features.onboarding.products.otherCards.redux
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userTokensRepository
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -89,39 +83,6 @@ private fun handleOtherCardsAction(action: Action) {
                             val updatedCard = updatedResponse.card
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedCard.cardId)
-
-                            val primaryBlockchain = updatedResponse.cardTypesResolver.getBlockchain()
-                            val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
-                                val primaryToken = updatedResponse.cardTypesResolver.getPrimaryToken()
-                                val blockchainNetwork =
-                                    BlockchainNetwork(
-                                        blockchain = primaryBlockchain,
-                                        derivationStyleProvider = updatedResponse.derivationStyleProvider,
-                                    )
-                                        .updateTokens(
-                                            listOfNotNull(primaryToken),
-                                        )
-                                listOf(blockchainNetwork)
-                            } else {
-                                listOf(
-                                    BlockchainNetwork(
-                                        blockchain = Blockchain.Bitcoin,
-                                        derivationStyleProvider = updatedResponse.derivationStyleProvider,
-                                    ),
-                                    BlockchainNetwork(
-                                        blockchain = Blockchain.Ethereum,
-                                        derivationStyleProvider = updatedResponse.derivationStyleProvider,
-                                    ),
-                                )
-                            }
-
-                            scope.launch {
-                                // TODO: Use new repo [REDACTED_JIRA]
-                                userTokensRepository.saveUserTokens(
-                                    card = result.data.card,
-                                    tokens = blockchainNetworks.toCurrencies(),
-                                )
-                            }
 
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))

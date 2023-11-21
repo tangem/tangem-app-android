@@ -4,9 +4,12 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
@@ -21,6 +24,8 @@ import java.math.BigDecimal
 class UserWalletManagerImpl(
     private val appStateHolder: AppStateHolder,
     private val walletManagersFacade: WalletManagersFacade,
+    private val currenciesRepository: CurrenciesRepository,
+    private val userWalletsStore: UserWalletsStore,
 ) : UserWalletManager {
 
     override suspend fun getUserTokens(
@@ -28,43 +33,44 @@ class UserWalletManagerImpl(
         derivationPath: String?,
         isExcludeCustom: Boolean,
     ): List<Currency> {
-        val card = appStateHolder.getActualCard()
-        val userTokensRepository =
-            requireNotNull(appStateHolder.userTokensRepository) { "userTokensRepository is null" }
-        return if (card != null) {
-            userTokensRepository.getUserTokens(card, null) // refactor in [REDACTED_JIRA]
-                .filter {
-                    val checkCustom = if (isExcludeCustom) {
-                        !it.isCustomCurrency(null)
-                    } else {
-                        true
-                    }
-                    it.blockchain.toNetworkId() == networkId &&
-                        checkCustom &&
-                        it.derivationPath == derivationPath
-                }
-                .map {
-                    if (it is com.tangem.tap.features.wallet.models.Currency.Token) {
-                        NonNativeToken(
-                            id = it.coinId ?: "",
-                            name = it.currencyName,
-                            symbol = it.currencySymbol,
-                            networkId = it.blockchain.toNetworkId(),
-                            contractAddress = it.token.contractAddress,
-                            decimalCount = it.token.decimals,
-                        )
-                    } else {
-                        NativeToken(
-                            id = it.coinId ?: "",
-                            name = it.currencyName,
-                            symbol = it.currencySymbol,
-                            networkId = it.blockchain.toNetworkId(),
-                        )
-                    }
-                }
-        } else {
-            emptyList()
+        // FIXME: Find user wallet by ID
+        val userWallet = requireNotNull(userWalletsStore.selectedUserWalletOrNull) {
+            "No user wallet selected"
         }
+        return currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWallet.walletId)
+            .filter {
+                val checkCustom = if (isExcludeCustom) {
+                    !it.isCustom
+                } else {
+                    true
+                }
+                val blockchain = Blockchain.fromId(it.network.id.value)
+
+                blockchain.toNetworkId() == networkId &&
+                    checkCustom &&
+                    it.network.derivationPath.value == derivationPath
+            }
+            .map {
+                val blockchain = Blockchain.fromId(it.network.id.value)
+
+                if (it is CryptoCurrency.Token) {
+                    NonNativeToken(
+                        id = it.id.rawCurrencyId ?: "",
+                        name = it.name,
+                        symbol = it.symbol,
+                        networkId = blockchain.toNetworkId(),
+                        contractAddress = it.contractAddress,
+                        decimalCount = it.decimals,
+                    )
+                } else {
+                    NativeToken(
+                        id = it.id.rawCurrencyId ?: "",
+                        name = it.name,
+                        symbol = it.symbol,
+                        networkId = blockchain.toNetworkId(),
+                    )
+                }
+            }
     }
 
     override fun getNativeTokenForNetwork(networkId: String): Currency {
