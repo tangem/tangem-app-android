@@ -386,7 +386,6 @@ class DetailsMiddleware {
 
         private suspend fun deleteSavedWalletsAndAccessCodes(): CompletionResult<Unit> {
             return userWalletsListManager.clear()
-                .flatMap { walletStoresManager.clear() }
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
                     deleteSavedAccessCodes()
