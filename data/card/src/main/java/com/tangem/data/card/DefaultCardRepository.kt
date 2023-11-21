@@ -1,43 +1,37 @@
 package com.tangem.data.card
 
 import com.tangem.datasource.local.card.UsedCardInfo
-import com.tangem.datasource.local.card.UsedCardsStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.map
 
 internal class DefaultCardRepository(
-    private val usedCardsStore: UsedCardsStore,
-    private val dispatchers: CoroutineDispatcherProvider,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : CardRepository {
 
     override fun wasCardScanned(cardId: String): Flow<Boolean> {
-        return channelFlow {
-            launch(dispatchers.io) {
-                usedCardsStore.get()
-                    .collect { savedCards ->
-                        send(element = savedCards.any { it.cardId == cardId })
-                    }
+        return appPreferencesStore.getObject<List<UsedCardInfo>>(key = PreferencesKeys.USED_CARDS_INFO_KEY)
+            .map { savedCards ->
+                savedCards?.any { it.cardId == cardId } ?: false
             }
-
-            withContext(dispatchers.io) {
-                if (usedCardsStore.getSyncOrNull() == null) {
-                    send(element = false)
-                }
-            }
-        }
     }
 
     override suspend fun setCardWasScanned(cardId: String) {
-        withContext(dispatchers.io) {
-            usedCardsStore.store(
-                item = usedCardsStore.getSyncOrNull()
-                    ?.updateCard(cardId)
-                    ?: listOf(UsedCardInfo(cardId = cardId, isScanned = true)),
+        appPreferencesStore.editData { mutablePreferences ->
+            val usedCards: List<UsedCardInfo>? = mutablePreferences.getObject(
+                key = PreferencesKeys.USED_CARDS_INFO_KEY,
+            )
+
+            val updatedUsedCards = usedCards?.updateCard(cardId)
+                ?: listOf(UsedCardInfo(cardId = cardId, isScanned = true))
+
+            mutablePreferences.setObject(
+                key = PreferencesKeys.USED_CARDS_INFO_KEY,
+                value = updatedUsedCards,
             )
         }
     }
