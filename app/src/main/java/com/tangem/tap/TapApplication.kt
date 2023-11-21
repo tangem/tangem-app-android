@@ -46,7 +46,6 @@ import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.analytics.topup.TopUpController
 import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
@@ -61,8 +60,6 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.UserTokensStorageService
-import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
-import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
@@ -131,9 +128,6 @@ val walletCurrenciesManager by lazy {
         walletAmountsRepository = walletAmountsRepository,
         appCurrencyProvider = { store.state.globalState.appCurrency },
     )
-}
-val totalFiatBalanceCalculator by lazy {
-    TotalFiatBalanceCalculator.provideDefaultImplementation()
 }
 
 @HiltAndroidApp
@@ -282,7 +276,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.userTokensRepository = userTokensRepository
         appStateHolder.walletStoresManager = walletStoresManager
 
-        initTopUpController()
         walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
     }
 
@@ -313,18 +306,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                 ),
             ),
         )
-    }
-
-    private fun initTopUpController() {
-        val topUpController = TopUpController(
-            scanResponseProvider = {
-                store.state.globalState.scanResponse
-                    ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
-            },
-            walletStoresManagerProvider = { walletStoresManager },
-            topupWalletStorage = preferencesStorage.toppedUpWalletStorage,
-        )
-        store.dispatch(GlobalAction.SetTopUpController(topUpController))
     }
 
     override fun newImageLoader(): ImageLoader {
