@@ -2,6 +2,7 @@ package com.tangem.tap.proxy.di
 
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
@@ -23,7 +24,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class ProxyModule {
+internal object ProxyModule {
 
     @Provides
     @Singleton
@@ -36,10 +37,14 @@ class ProxyModule {
     fun provideUserWalletManager(
         appStateHolder: AppStateHolder,
         walletManagersFacade: WalletManagersFacade,
+        currenciesRepository: CurrenciesRepository,
+        userWalletsStore: UserWalletsStore,
     ): UserWalletManager {
         return UserWalletManagerImpl(
             appStateHolder = appStateHolder,
             walletManagersFacade = walletManagersFacade,
+            currenciesRepository = currenciesRepository,
+            userWalletsStore = userWalletsStore,
         )
     }
 
