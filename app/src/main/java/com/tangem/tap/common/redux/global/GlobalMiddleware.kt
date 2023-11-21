@@ -164,9 +164,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                     }
             }
         }
-        is GlobalAction.SetTopUpController -> {
-            walletCurrenciesManager.addListener(action.topUpController)
-        }
         is GlobalAction.UpdateUserWalletsListManager -> {
             val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
 
