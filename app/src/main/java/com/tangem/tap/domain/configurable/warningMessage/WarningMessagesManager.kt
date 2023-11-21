@@ -8,8 +8,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
 [REDACTED_AUTHOR]
  */
-// TODO: Delete with WalletFeatureToggles
-@Deprecated(message = "Used only in old wallet screen")
+// TODO: Delete with SendFeatureToggles
+@Deprecated(message = "Used only in old send screen")
 class WarningMessagesManager {
 
     private val warningsList = CopyOnWriteArrayList<WarningMessage>()

@@ -12,7 +12,6 @@ import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.tap.features.details.redux.AppSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -28,7 +27,6 @@ import org.rekotlin.Store
 
 internal class AppSettingsViewModel(
     private val store: Store<AppState>,
-    private val detailsFeatureToggles: DetailsFeatureToggles,
     private val appCurrencyRepository: AppCurrencyRepository,
 ) {
 
@@ -41,9 +39,7 @@ internal class AppSettingsViewModel(
         private set
 
     init {
-        if (detailsFeatureToggles.isRedesignedAppCurrencySelectorEnabled) {
-            bootstrapAppCurrencyUpdates()
-        }
+        bootstrapAppCurrencyUpdates()
     }
 
     fun updateState(state: DetailsState) {
@@ -90,11 +86,9 @@ internal class AppSettingsViewModel(
                 onCheckedChange = ::onFlipToHideBalanceToggled,
             ).let(::add)
 
-            if (state.darkThemeSwitchEnabled) {
-                itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
-                    showThemeModeSelector(state.selectedThemeMode)
-                }.let(::add)
-            }
+            itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
+                showThemeModeSelector(state.selectedThemeMode)
+            }.let(::add)
         }
 
         return items.toImmutableList()
