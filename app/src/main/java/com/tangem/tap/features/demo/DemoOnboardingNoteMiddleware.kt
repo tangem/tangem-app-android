@@ -6,8 +6,8 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.ProgressState
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.launch

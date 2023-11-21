@@ -2,8 +2,7 @@ package com.tangem.feature.swap.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
-import androidx.compose.material3.*
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.res.TangemTheme
