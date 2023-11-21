@@ -158,7 +158,6 @@ internal class WelcomeMiddleware {
 
     private suspend fun disableUserWalletsSaving() {
         userWalletsListManager.clear()
-            .flatMap { walletStoresManager.clear() }
             .flatMap { tangemSdkManager.clearSavedUserCodes() }
             .doOnFailure { e ->
                 Timber.e(e, "Unable to clear user wallets")
