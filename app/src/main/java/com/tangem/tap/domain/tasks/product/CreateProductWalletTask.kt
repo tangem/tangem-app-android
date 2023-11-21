@@ -309,7 +309,5 @@ private class CreateWalletTangemWallet(
         }
     }
 
-    private companion object {
-        val CURVES_FOR_WALLETS = listOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519)
-    }
+    private companion object
 }
