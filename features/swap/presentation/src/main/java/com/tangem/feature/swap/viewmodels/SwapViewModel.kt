@@ -177,6 +177,7 @@ internal class SwapViewModel @Inject constructor(
                 fromToken = fromCurrencyStatus.currency,
                 toToken = selectedCurrency.currency,
                 amount = lastAmount.value,
+                toProvidersList = findSwapProviders(fromCurrencyStatus, selectedCurrency)
             )
         }
     }
@@ -198,7 +199,7 @@ internal class SwapViewModel @Inject constructor(
         fromToken: CryptoCurrency,
         toToken: CryptoCurrency,
         amount: String,
-        toProvidersList: List<SwapProvider> = listOf(SwapProvider(1, listOf(RateType.FLOAT))),
+        toProvidersList: List<SwapProvider>,
     ) {
         singleTaskScheduler.cancelTask()
         uiState = stateBuilder.createQuotesLoadingState(uiState, fromToken, toToken, initialCryptoCurrency.id.value)
@@ -218,7 +219,12 @@ internal class SwapViewModel @Inject constructor(
         val toCurrency = dataState.toCryptoCurrency
         val amount = dataState.amount
         if (fromCurrency != null && toCurrency != null && amount != null) {
-            startLoadingQuotes(fromCurrency.currency, toCurrency.currency, amount)
+            startLoadingQuotes(
+                fromToken = fromCurrency.currency,
+                toToken = toCurrency.currency,
+                amount = amount,
+                toProvidersList = findSwapProviders(fromCurrency, toCurrency)
+            )
         }
     }
 
@@ -428,7 +434,12 @@ internal class SwapViewModel @Inject constructor(
                 fromCryptoCurrency = fromToken,
                 toCryptoCurrency = toToken,
             )
-            startLoadingQuotes(fromToken.currency, toToken.currency, lastAmount.value)
+            startLoadingQuotes(
+                fromToken = fromToken.currency,
+                toToken = toToken.currency,
+                amount = lastAmount.value,
+                toProvidersList = findSwapProviders(fromToken, toToken)
+            )
             swapRouter.openScreen(SwapNavScreen.Main)
         }
     }
@@ -448,7 +459,12 @@ internal class SwapViewModel @Inject constructor(
                 uiState,
                 inputNumberFormatter.formatWithThousands(lastAmount.value, decimals),
             )
-            startLoadingQuotes(newFromToken.currency, newToToken.currency, lastAmount.value)
+            startLoadingQuotes(
+                fromToken = newFromToken.currency,
+                toToken = newToToken.currency,
+                amount = lastAmount.value,
+                toProvidersList = findSwapProviders(newFromToken, newToToken)
+            )
         }
     }
 
@@ -462,7 +478,12 @@ internal class SwapViewModel @Inject constructor(
             uiState =
                 stateBuilder.updateSwapAmount(uiState, inputNumberFormatter.formatWithThousands(cutValue, decimals))
             amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
-                startLoadingQuotes(fromToken.currency, toToken.currency, lastAmount.value)
+                startLoadingQuotes(
+                    fromToken = fromToken.currency,
+                    toToken = toToken.currency,
+                    amount = lastAmount.value,
+                    toProvidersList = findSwapProviders(fromToken, toToken)
+                )
             }
         }
     }
@@ -574,6 +595,22 @@ internal class SwapViewModel @Inject constructor(
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
+    }
+
+    private fun findSwapProviders(fromToken: CryptoCurrencyStatus, toToken: CryptoCurrencyStatus): List<SwapProvider> {
+        val groupToFind = if (isOrderReversed) {
+            dataState.tokensDataState?.fromGroup
+        } else {
+            dataState.tokensDataState?.toGroup
+        } ?: return emptyList()
+
+        val idToFind = if (isOrderReversed) {
+            fromToken.currency.id.value
+        } else {
+            toToken.currency.id.value
+        }
+
+        return groupToFind.available.find { idToFind == it.currencyStatus.currency.id.value }?.providers ?: emptyList()
     }
 
     companion object {
