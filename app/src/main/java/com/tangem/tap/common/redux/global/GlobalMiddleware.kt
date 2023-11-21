@@ -6,11 +6,11 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.models.Config
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -191,8 +191,7 @@ private fun restoreAppCurrency() {
         val currency = store.state.daggerGraphState.get(DaggerGraphState::appCurrencyRepository)
             .getSelectedAppCurrency()
             .firstOrNull()
-            ?.run { FiatCurrency(code, name, symbol) }
-            ?: FiatCurrency.Default
+            ?: AppCurrency.Default
 
         store.dispatchWithMain(GlobalAction.RestoreAppCurrency.Success(currency))
     }
