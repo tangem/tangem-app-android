@@ -265,7 +265,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         toNetwork: String,
         fromAmount: BigDecimal,
         providerId: Int,
-        rateType: RateType
+        rateType: RateType,
     ): ExchangeQuote {
         val response = tangemExpressApi.getExchangeQuote(
             fromContractAddress,
@@ -274,12 +274,12 @@ internal class SwapRepositoryImpl @Inject constructor(
             toNetwork,
             fromAmount,
             providerId,
-            rateTypeConverter.convertBack(rateType)
+            rateTypeConverter.convertBack(rateType),
         ).getOrThrow()
 
         return ExchangeQuote(
             toAmount = response.toAmount,
-            allowanceContract = response.allowanceContract
+            allowanceContract = response.allowanceContract,
         )
     }
 
