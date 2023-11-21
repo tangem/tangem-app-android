@@ -9,7 +9,6 @@ import java.math.BigDecimal
 sealed interface SwapState {
 
     data class QuotesLoadedState(
-        // add map < Provider ID, Swap state data>
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
         val priceImpact: Float,
