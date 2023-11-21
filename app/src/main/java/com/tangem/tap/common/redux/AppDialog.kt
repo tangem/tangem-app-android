@@ -3,8 +3,8 @@ package com.tangem.tap.common.redux
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.core.navigation.StateDialog
 import com.tangem.tap.common.TestAction
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.domain.model.WalletAddressData
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.R
 
 /**
