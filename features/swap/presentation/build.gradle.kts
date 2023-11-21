@@ -17,6 +17,8 @@ dependencies {
     implementation(projects.common)
 
     /** Domain modules **/
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
 
@@ -28,6 +30,7 @@ dependencies {
     implementation(deps.androidx.browser)
 
     /** Compose */
+    implementation(deps.arrow.core)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material)
     implementation(deps.compose.ui.tooling)
