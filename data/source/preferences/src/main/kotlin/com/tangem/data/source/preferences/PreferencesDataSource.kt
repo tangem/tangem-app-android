@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.data.source.preferences.adapters.BigDecimalAdapter
-import com.tangem.data.source.preferences.adapters.CardBalanceStateAdapter
 import com.tangem.data.source.preferences.storage.DisclaimerPrefStorage
 import com.tangem.data.source.preferences.storage.UsedCardsPrefStorage
 import javax.inject.Inject
@@ -22,7 +21,7 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
         applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     private val moshiConverter = MoshiJsonConverter(
-        adapters = listOf(BigDecimalAdapter(), CardBalanceStateAdapter()) + MoshiJsonConverter.getTangemSdkAdapters(),
+        adapters = listOf(BigDecimalAdapter()) + MoshiJsonConverter.getTangemSdkAdapters(),
         typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
     )
 
