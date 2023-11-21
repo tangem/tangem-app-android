@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.viewmodels
 
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
 import com.tangem.feature.swap.domain.models.ui.SwapStateData
@@ -14,8 +14,8 @@ data class SwapProcessDataState(
     val fromCurrency: Currency? = null,
     @Deprecated("used in old swap mechanism")
     val toCurrency: Currency? = null,
-    val fromCryptoCurrency: CryptoCurrency? = null,
-    val toCryptoCurrency: CryptoCurrency? = null,
+    val fromCryptoCurrency: CryptoCurrencyStatus? = null,
+    val toCryptoCurrency: CryptoCurrencyStatus? = null,
     // Amount from input
     val amount: String? = null,
     val approveDataModel: RequestApproveStateData? = null,

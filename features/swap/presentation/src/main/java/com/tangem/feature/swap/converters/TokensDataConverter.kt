@@ -32,13 +32,17 @@ class TokensDataConverter(
             availableTokens = value.available.map { tokenWithBalanceToTokenToSelect(it, true) }
                 .toMutableList()
                 .apply {
-                    this.add(0, availableTitle)
+                    if (this.isNotEmpty()) {
+                        this.add(0, availableTitle)
+                    }
                 }
                 .toImmutableList(),
             unavailableTokens = value.unavailable.map { tokenWithBalanceToTokenToSelect(it, false) }
                 .toMutableList()
                 .apply {
-                    this.add(0, unavailableTitle)
+                    if (this.isNotEmpty()) {
+                        this.add(0, unavailableTitle)
+                    }
                 }
                 .toImmutableList(),
             onSearchEntered = onSearchEntered,
