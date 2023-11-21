@@ -8,9 +8,12 @@ import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
@@ -28,7 +31,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal class StateBuilder(
     private val actions: UiActions,
     private val isBalanceHiddenProvider: Provider<Boolean>,
-    appCurrencyProvider: Provider<AppCurrency>,
+    private val appCurrencyProvider: Provider<AppCurrency>,
 ) {
 
     private val tokensDataConverter = TokensDataConverter(
@@ -42,7 +45,7 @@ internal class StateBuilder(
         return SwapStateHolder(
             networkId = initialCurrency.network.backendId,
             blockchainId = networkInfo.blockchainId,
-            sendCardData = SwapCardData(
+            sendCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.SendCard(actions.onAmountChanged, actions.onAmountSelected),
                 amountEquivalent = null,
                 amountTextFieldValue = null,
@@ -54,7 +57,7 @@ internal class StateBuilder(
                 balance = "",
                 isBalanceHidden = true,
             ),
-            receiveCardData = SwapCardData(
+            receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amountEquivalent = null,
                 tokenIconUrl = "",
@@ -79,6 +82,53 @@ internal class StateBuilder(
         )
     }
 
+    fun createNoAvailableTokensToSwapState(
+        uiStateHolder: SwapStateHolder,
+        fromToken: CryptoCurrencyStatus,
+    ): SwapStateHolder {
+        if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        return uiStateHolder.copy(
+            sendCardData = SwapCardState.SwapCardData(
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
+                amountTextFieldValue = TextFieldValue(
+                    text = "0",
+                ),
+                amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
+                tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
+                coinId = uiStateHolder.sendCardData.coinId,
+                isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
+                tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
+                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                balance = fromToken.getFormattedAmount(),
+                isBalanceHidden = isBalanceHiddenProvider(),
+            ),
+            receiveCardData = SwapCardState.Empty(
+                type = TransactionCardType.ReceiveCard(),
+                amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
+                amountTextFieldValue = TextFieldValue(
+                    text = "0",
+                ),
+                canSelectAnotherToken = true,
+            ),
+            warnings = listOf(
+                SwapWarning.NoAvailableTokensToSwap(
+                    notificationConfig = NotificationConfig(
+                        title = stringReference("No tokens"),
+                        subtitle = stringReference("Swap tokens not available"),
+                        iconResId = R.drawable.ic_alert_24,
+                    ),
+                ),
+            ),
+            fee = FeeState.Empty,
+            swapButton = SwapButton(
+                enabled = false,
+                loading = false,
+                onClick = { },
+            ),
+            updateInProgress = false,
+        )
+    }
+
     fun createQuotesLoadingState(
         uiStateHolder: SwapStateHolder,
         fromToken: CryptoCurrency,
@@ -87,8 +137,10 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val canSelectSendToken = mainTokenId != fromToken.id.value // TODO look at id matching
         val canSelectReceiveToken = mainTokenId != toToken.id.value // TODO look at id matching
+        if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
-            sendCardData = SwapCardData(
+            sendCardData = SwapCardState.SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = null,
@@ -100,7 +152,7 @@ internal class StateBuilder(
                 balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
-            receiveCardData = SwapCardData(
+            receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = null,
                 amountEquivalent = null,
@@ -128,12 +180,15 @@ internal class StateBuilder(
      * @param onFeeSetup callback for reset fee after auto update
      * @return updated whole screen state
      */
+    @Suppress("LongMethod")
     fun createQuotesLoadedState(
         uiStateHolder: SwapStateHolder,
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
         onFeeSetup: (TxFee) -> Unit,
     ): SwapStateHolder {
+        if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         val warnings = mutableListOf<SwapWarning>()
         if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
             quoteModel.preparedSwapConfigState.isFeeEnough &&
@@ -159,7 +214,7 @@ internal class StateBuilder(
         }
         val feeState = createFeeState(quoteModel, uiStateHolder, onFeeSetup)
         return uiStateHolder.copy(
-            sendCardData = SwapCardData(
+            sendCardData = SwapCardState.SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = quoteModel.fromTokenInfo.tokenFiatBalance,
@@ -171,7 +226,7 @@ internal class StateBuilder(
                 balance = quoteModel.fromTokenInfo.tokenWalletBalance,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
-            receiveCardData = SwapCardData(
+            receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = quoteModel.toTokenInfo.tokenFiatBalance,
@@ -208,8 +263,10 @@ internal class StateBuilder(
         uiStateHolder: SwapStateHolder,
         emptyAmountState: SwapState.EmptyAmountState,
     ): SwapStateHolder {
+        if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
-            sendCardData = SwapCardData(
+            sendCardData = SwapCardState.SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
@@ -221,7 +278,7 @@ internal class StateBuilder(
                 balance = emptyAmountState.fromTokenWalletBalance,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
-            receiveCardData = SwapCardData(
+            receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = TextFieldValue("0"),
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
@@ -268,6 +325,7 @@ internal class StateBuilder(
     }
 
     fun updateSwapAmount(uiState: SwapStateHolder, amount: String): SwapStateHolder {
+        if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
         return uiState.copy(
             sendCardData = uiState.sendCardData.copy(
                 amountTextFieldValue = TextFieldValue(
@@ -279,6 +337,8 @@ internal class StateBuilder(
     }
 
     fun updateBalanceHiddenState(uiState: SwapStateHolder, isBalanceHidden: Boolean): SwapStateHolder {
+        if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
+        if (uiState.receiveCardData !is SwapCardState.SwapCardData) return uiState
         val patchedSendCardData = uiState.sendCardData.copy(
             isBalanceHidden = isBalanceHidden,
         )
@@ -666,11 +726,26 @@ internal class StateBuilder(
         return "$firstAddressPart...$secondAddressPart"
     }
 
+    private fun CryptoCurrencyStatus.getFormattedAmount(): String {
+        val amount = value.amount ?: return UNKNOWN_AMOUNT_SIGN
+
+        return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
+    }
+
+    @Suppress("UnusedPrivateMember")
+    private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
+        val fiatAmount = value.fiatAmount ?: return UNKNOWN_AMOUNT_SIGN
+        val appCurrency = appCurrencyProvider()
+
+        return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
+    }
+
     private companion object {
         const val ADDRESS_MIN_LENGTH = 11
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val PRICE_IMPACT_THRESHOLD = 0.1
         private const val HUNDRED_PERCENTS = 100
+        private const val UNKNOWN_AMOUNT_SIGN = "—"
     }
 }
