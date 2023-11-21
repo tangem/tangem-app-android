@@ -102,10 +102,6 @@ class UserWalletManagerImpl(
         }
     }
 
-    override suspend fun addToken(currency: Currency, derivationPath: String?) {
-// [REDACTED_TODO_COMMENT]
-    }
-
     override suspend fun hideAllTokens() {
 // [REDACTED_TODO_COMMENT]
         Timber.w("Not implemented")
