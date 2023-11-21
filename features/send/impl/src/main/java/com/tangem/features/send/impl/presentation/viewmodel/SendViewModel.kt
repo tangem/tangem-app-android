@@ -20,6 +20,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
@@ -57,6 +58,7 @@ internal class SendViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
+    private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     savedStateHandle: SavedStateHandle,
@@ -97,7 +99,6 @@ internal class SendViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         getWalletAddresses()
         subscribeOnCurrencyStatusUpdates(owner)
-        getWalletsAndRecent()
         getFee()
     }
 
@@ -134,6 +135,7 @@ internal class SendViewModel @Inject constructor(
             .onEach { either ->
                 either.onRight {
                     cryptoCurrencyStatus = it
+                    getWalletsAndRecent()
                     uiState = stateFactory.getReadyState()
                 }
             }
@@ -158,10 +160,12 @@ internal class SendViewModel @Inject constructor(
         combine(
             flow = getUserWallets().conflate(),
             flow2 = getTxHistory().conflate(),
-        ) { wallets, txHistory ->
+            flow3 = getTxHistoryCount().conflate(),
+        ) { wallets, txHistory, txHistoryCount ->
             stateFactory.onLoadedRecipientList(
                 wallets = wallets,
                 txHistory = txHistory,
+                txHistoryCount = txHistoryCount,
             )
         }
             .flowOn(dispatchers.io)
@@ -209,6 +213,18 @@ internal class SendViewModel @Inject constructor(
             ).fold(
                 ifRight = { emitAll(it.distinctUntilChanged()) },
                 ifLeft = {},
+            )
+        }
+    }
+
+    private fun getTxHistoryCount(): Flow<Int> {
+        return flow {
+            txHistoryItemsCountUseCase(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ).fold(
+                ifRight = { emit(it) },
+                ifLeft = { emit(0) },
             )
         }
     }
