@@ -2,7 +2,7 @@ package com.tangem.feature.swap.domain.di
 
 import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
@@ -35,7 +35,7 @@ class SwapDomainModule {
         networksRepository: NetworksRepository,
         walletFeatureToggles: WalletFeatureToggles,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-        @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusUseCase,
+        @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -81,8 +81,8 @@ class SwapDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetCryptoCurrencyStatusUseCase {
-        return GetCryptoCurrencyStatusUseCase(
+    ): GetCryptoCurrencyStatusesSyncUseCase {
+        return GetCryptoCurrencyStatusesSyncUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
