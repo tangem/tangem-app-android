@@ -2,11 +2,11 @@ package com.tangem.tap.features.details.redux
 
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.common.entities.FiatCurrency
 import org.rekotlin.Action
 
 sealed class DetailsAction : Action {
@@ -91,9 +91,9 @@ sealed class DetailsAction : Action {
         ) : AppSettings()
 
         data class ChangeAppCurrency(
-            val fiatCurrency: FiatCurrency,
+            val currency: AppCurrency,
         ) : AppSettings()
     }
 
-    data class ChangeAppCurrency(val fiatCurrency: FiatCurrency) : DetailsAction()
+    data class ChangeAppCurrency(val currency: AppCurrency) : DetailsAction()
 }
