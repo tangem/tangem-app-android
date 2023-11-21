@@ -294,7 +294,7 @@ internal class SwapRepositoryImpl @Inject constructor(
 
         return ExchangeQuote(
             toAmount = response.toAmount,
-            allowanceContract = response.allowanceContract
+            allowanceContract = response.allowanceContract,
         )
     }
 
