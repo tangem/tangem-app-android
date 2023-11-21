@@ -86,19 +86,9 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.groupControlsTemporary.show()
             binding.btnClose.hide()
 
-            val buttonAction =
-                when (warning.titleResId) {
-                    // R.string.warning_important_security_info -> {
-                    //     View.OnClickListener {
-                    //         store.dispatch(WalletAction.DialogAction.SignedHashesMultiWalletDialog)
-                    //     }
-                    // }
-                    else -> {
-                        View.OnClickListener {
-                            store.dispatch(GlobalAction.HideWarningMessage(warning))
-                        }
-                    }
-                }
+            val buttonAction = View.OnClickListener {
+                store.dispatch(GlobalAction.HideWarningMessage(warning))
+            }
             val buttonTitle = binding.root.getString(
                 warning.buttonTextId ?: R.string.how_to_got_it_button,
             )
@@ -107,18 +97,11 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
         }
         WarningMessage.Type.AppRating -> {
             binding.groupControlsTemporary.hide()
-            binding.groupControlsRating.show()
             binding.btnClose.show()
             binding.btnClose.setOnClickListener {
                 Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Closed))
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
             }
-            // binding.btnCanBeBetter.setOnClickListener {
-            //     Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
-            //     store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
-            //     store.dispatch(GlobalAction.HideWarningMessage(warning))
-            //     store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
-            // }
             binding.btnReallyCool.setOnClickListener {
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
 
@@ -126,16 +109,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                 val reviewManager = ReviewManagerFactory.create(activity)
                 val task = reviewManager.requestReviewFlow()
                 task.addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        val reviewFlow = reviewManager.launchReviewFlow(activity, it.result)
-                        reviewFlow.addOnCompleteListener {
-                            if (it.isSuccessful) {
-                                // send review was succeed
-                            } else {
-                                // send fails
-                            }
-                        }
-                    } else {
+                    if (!it.isSuccessful) {
                         Timber.e(task.exception)
                     }
                 }.addOnFailureListener {
