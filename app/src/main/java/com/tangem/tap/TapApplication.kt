@@ -10,8 +10,6 @@ import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
-import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
@@ -35,7 +33,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
@@ -62,11 +59,6 @@ import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.UserTokensStorageService
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
-import com.tangem.tap.domain.walletStores.WalletStoresManager
-import com.tangem.tap.domain.walletStores.di.provideDefaultImplementation
-import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
-import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
-import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
@@ -92,32 +84,6 @@ lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
 internal lateinit var userTokensRepository: UserTokensRepository
 internal lateinit var derivationsFinder: DerivationsFinder
-
-private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
-private val walletManagersRepository by lazy {
-    WalletManagersRepository.provideDefaultImplementation(
-        walletManagerFactory = WalletManagerFactory(
-            config = store.state.globalState.configManager
-                ?.config
-                ?.blockchainSdkConfig
-                ?: BlockchainSdkConfig(),
-        ),
-    )
-}
-private val walletAmountsRepository by lazy {
-    WalletAmountsRepository.provideDefaultImplementation(
-        tangemTechService = store.state.domainNetworks.tangemTechService,
-    )
-}
-val walletStoresManager by lazy {
-    WalletStoresManager.provideDefaultImplementation(
-        userTokensRepository = userTokensRepository,
-        walletStoresRepository = walletStoresRepository,
-        walletManagersRepository = walletManagersRepository,
-        walletAmountsRepository = walletAmountsRepository,
-        appCurrencyProvider = { store.state.globalState.appCurrency },
-    )
-}
 
 @HiltAndroidApp
 internal class TapApplication : Application(), ImageLoaderFactory {
@@ -263,7 +229,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         )
         appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
-        appStateHolder.walletStoresManager = walletStoresManager
 
         walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
     }
