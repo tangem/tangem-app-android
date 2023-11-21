@@ -169,7 +169,7 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
         return Result.success(products)
     }
 
-    suspend fun applyPromoCode(promoCode: String, productType: ProductType): Result<TangemProduct> {
+    private suspend fun applyPromoCode(promoCode: String, productType: ProductType): Result<TangemProduct> {
         val checkout = checkouts[productType] ?: return Result.failure(Exception("No checkout"))
 
         val result = if (promoCode.isBlank()) {
