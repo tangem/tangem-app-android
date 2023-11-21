@@ -2,7 +2,7 @@ package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.feature.Feature
-import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.domain.model.Currency
 
 interface Exchanger {
     fun isBuyAllowed(): Boolean

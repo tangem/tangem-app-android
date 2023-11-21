@@ -14,7 +14,6 @@ import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.redux.DebugErrorAction
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
@@ -25,7 +24,6 @@ sealed class GlobalAction : Action {
 
     // notifications
     data class ShowNotification(override val messageResource: Int) : GlobalAction(), NotificationAction
-    data class ShowToastNotification(override val messageResource: Int) : GlobalAction(), ToastNotificationAction
     data class ShowErrorNotification(override val error: TapError) : GlobalAction(), ErrorAction
     data class DebugShowErrorNotification(override val error: TapError) : GlobalAction(), DebugErrorAction
 

@@ -58,14 +58,4 @@ data class NetworkStatus(
         val amountToCreateAccount: BigDecimal,
         val errorMessage: String,
     ) : Status()
-
-    /**
-     * Represents possible statuses of amount.
-     *
-     * This sealed class includes states as LoadedAmount, UnreachableAmount.
-     */
-    sealed class AmountStatus
-
-    data class LoadedAmount(val value: BigDecimal) : AmountStatus()
-    object UnreachableAmount : AmountStatus()
 }
