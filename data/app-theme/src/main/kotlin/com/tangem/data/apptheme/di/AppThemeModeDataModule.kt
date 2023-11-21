@@ -1,9 +1,8 @@
 package com.tangem.data.apptheme.di
 
 import com.tangem.data.apptheme.DefaultAppThemeModeRepository
-import com.tangem.datasource.local.apptheme.AppThemeModeStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,10 +15,7 @@ internal object AppThemeModeDataModule {
 
     @Provides
     @Singleton
-    fun provideAppThemeModeRepository(
-        appThemeModeStore: AppThemeModeStore,
-        dispatchers: CoroutineDispatcherProvider,
-    ): AppThemeModeRepository {
-        return DefaultAppThemeModeRepository(appThemeModeStore, dispatchers)
+    fun provideAppThemeModeRepository(appPreferencesStore: AppPreferencesStore): AppThemeModeRepository {
+        return DefaultAppThemeModeRepository(appPreferencesStore = appPreferencesStore)
     }
 }
