@@ -9,7 +9,6 @@ import com.tangem.datasource.config.models.Config
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -18,6 +17,7 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.mainScope
 import com.tangem.tap.network.exchangeServices.BuyExchangeService
 import com.tangem.tap.network.exchangeServices.CardExchangeRules
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -26,6 +26,9 @@ import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoEnvironment
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -66,17 +69,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             }
         }
         is GlobalAction.RestoreAppCurrency -> {
-            val daggerGraphState = store.state.daggerGraphState
-            val walletFeatureToggles = daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
-            val detailsFeatureToggles = daggerGraphState.get(DaggerGraphState::detailsFeatureToggles)
-
-            if (walletFeatureToggles.isRedesignedScreenEnabled ||
-                detailsFeatureToggles.isRedesignedAppCurrencySelectorEnabled
-            ) {
-                restoreAppCurrencyNew()
-            } else {
-                restoreAppCurrencyLegacy()
-            }
+            restoreAppCurrency()
         }
         is GlobalAction.HideWarningMessage -> {
             store.state.globalState.warningManager?.let {
@@ -193,17 +186,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
     }
 }
 
-private fun restoreAppCurrencyLegacy() {
-    store.dispatch(
-        GlobalAction.RestoreAppCurrency.Success(
-            preferencesStorage.fiatCurrenciesPrefStorage.getAppCurrency()
-                ?.run { FiatCurrency(code, name, symbol) }
-                ?: FiatCurrency.Default,
-        ),
-    )
-}
-
-private fun restoreAppCurrencyNew() {
+private fun restoreAppCurrency() {
     scope.launch {
         val currency = store.state.daggerGraphState.get(DaggerGraphState::appCurrencyRepository)
             .getSelectedAppCurrency()

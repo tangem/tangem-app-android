@@ -64,7 +64,6 @@ data class AppSettingsState(
     val isInProgress: Boolean = false,
     val selectedFiatCurrency: FiatCurrency = FiatCurrency.Default,
     val selectedThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
-    val darkThemeSwitchEnabled: Boolean = false,
 )
 
 enum class SecurityOption { LongTap, PassCode, AccessCode }
