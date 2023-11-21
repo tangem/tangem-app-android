@@ -12,18 +12,19 @@ android {
 
 dependencies {
 
+    implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+
+    implementation(projects.data.source.preferences)
+
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.settings)
+
+    implementation(deps.androidx.datastore)
+
     /** DI */
     implementation(deps.hilt.android)
-
     kapt(deps.hilt.kapt)
 
     implementation(deps.kotlin.coroutines)
-
-    implementation(projects.core.utils)
-    implementation(projects.core.datasource)
-
-    implementation(projects.domain.settings)
-    implementation(projects.domain.balanceHiding.models)
-
-    implementation(projects.data.source.preferences)
 }
