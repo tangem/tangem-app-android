@@ -4,5 +4,5 @@ import java.math.BigDecimal
 
 data class ExchangeQuote(
     val toAmount: BigDecimal,
-    val allowanceContract: String?
+    val allowanceContract: String?,
 )
