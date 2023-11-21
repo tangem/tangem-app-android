@@ -231,8 +231,8 @@ class DetailsMiddleware {
                     changeBalanceHiding(action.hideBalance)
                 }
                 is DetailsAction.AppSettings.ChangeAppCurrency -> {
-                    store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
-                    store.dispatch(DetailsAction.ChangeAppCurrency(action.fiatCurrency))
+                    store.dispatch(GlobalAction.ChangeAppCurrency(action.currency))
+                    store.dispatch(DetailsAction.ChangeAppCurrency(action.currency))
                 }
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
