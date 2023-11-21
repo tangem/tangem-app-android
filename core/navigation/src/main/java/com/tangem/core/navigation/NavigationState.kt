@@ -34,7 +34,6 @@ enum class AppScreen(val isDialogFragment: Boolean = false) {
     Swap,
     Welcome,
     SaveWallet(isDialogFragment = true),
-    WalletSelector(isDialogFragment = true),
     AppCurrencySelector,
     ModalNotification(isDialogFragment = true),
 }
