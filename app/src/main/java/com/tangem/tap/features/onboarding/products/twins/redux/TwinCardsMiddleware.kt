@@ -21,11 +21,11 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
