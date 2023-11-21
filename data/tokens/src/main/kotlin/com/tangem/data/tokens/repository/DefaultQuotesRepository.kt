@@ -6,7 +6,6 @@ import com.tangem.data.tokens.utils.QuotesConverter
 import com.tangem.data.tokens.utils.QuotesUnsupportedCurrenciesIdAdapter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
-import com.tangem.datasource.local.*
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
