@@ -1,7 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.tap.common.analytics.events.AnalyticsParam.CurrencyType
 
 /**
 [REDACTED_AUTHOR]
@@ -12,50 +11,6 @@ sealed class Token(
     params: Map<String, String> = mapOf(),
     error: Throwable? = null,
 ) : AnalyticsEvent(category, event, params, error) {
-
-    class Refreshed : Token("Token", "Refreshed")
-    class ButtonExplore : Token("Token", "Button - Explore")
-
-    class ButtonRemoveToken(type: CurrencyType) : Token(
-        "Token",
-        "Button - Remove Token",
-        params = mapOf("Token" to type.value),
-    )
-
-    class ButtonBuy(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Button - Buy",
-        params = mapOf("Token" to type.value),
-    )
-
-    class ButtonSell(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Button - Sell",
-        params = mapOf("Token" to type.value),
-    )
-
-    class ButtonExchange(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Button - Exchange",
-        params = mapOf("Token" to type.value),
-    )
-
-    class ButtonSend(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Button - Send",
-        params = mapOf("Token" to type.value),
-    )
-
-    class Bought(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Token Bought",
-        params = mapOf("Token" to type.value),
-    )
-
-    object ShowWalletAddress : Token(
-        category = "Token",
-        event = "Button - Show the Wallet Address",
-    )
 
     sealed class Receive(
         event: String,
