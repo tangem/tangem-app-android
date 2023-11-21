@@ -273,6 +273,7 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
         fromToken: CryptoCurrency,
         toToken: CryptoCurrency,
+        providers: List<SwapProvider>,
         amountToSwap: String,
         selectedFee: FeeType,
     ): SwapState {
@@ -310,6 +311,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 toToken = toToken,
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                providers = providers
             )
         }
     }
@@ -517,14 +519,23 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         fromToken: CryptoCurrency,
         toToken: CryptoCurrency,
+        providers: List<SwapProvider>,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
     ): SwapState {
         repository.findBestQuote(
-            networkId = networkId,
-            fromTokenAddress = fromTokenAddress,
-            toTokenAddress = toTokenAddress,
-            amount = amount.toStringWithRightOffset(),
+            fromContractAddress =  fromToken.getContractAddress(),
+            fromNetwork = fromToken.network.backendId,
+            toContractAddress = toToken.getContractAddress(),
+            toNetwork = toToken.network.backendId,
+            fromAmount = amount.toStringWithRightOffset(),
+            providerId = providers[0].providerId,
+            rateType = RateType.FLOAT
+
+            // networkId = networkId,
+            // fromTokenAddress = fromTokenAddress,
+            // toTokenAddress = toTokenAddress,
+            // amount = amount.toStringWithRightOffset(),
         ).let { quotes ->
             val quoteDataModel = quotes.dataModel
             if (quoteDataModel != null) {
@@ -667,16 +678,16 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenWalletBalance = toTokenBalance?.let { amountFormatter.formatSwapAmountToUI(it, "") }
                     ?: ZERO_BALANCE,
                 tokenFiatBalance = toTokenAmount.value.toFiatString(
-                    rateValue = rates[toToken.id.value]?.toBigDecimal() ?: BigDecimal.ZERO,
+                    rateValue = rates[toToken.network.backendId]?.toBigDecimal() ?: BigDecimal.ZERO,
                     fiatCurrencyName = appCurrency.symbol,
                     formatWithSpaces = true,
                 ),
             ),
             priceImpact = calculatePriceImpact(
                 fromTokenAmount = fromTokenAmount.value,
-                fromRate = rates[fromToken.id.value] ?: 0.0,
+                fromRate = rates[fromToken.network.backendId] ?: 0.0,
                 toTokenAmount = toTokenAmount.value,
-                toRate = rates[toToken.id.value] ?: 0.0,
+                toRate = rates[toToken.network.backendId] ?: 0.0,
             ),
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             swapDataModel = swapStateData,
@@ -818,7 +829,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private fun getTokenAddress(currency: CryptoCurrency): String {
         return when (currency) {
             is CryptoCurrency.Coin -> {
-                DEFAULT_BLOCKCHAIN_INCH_ADDRESS
+                "0"
             }
             is CryptoCurrency.Token -> {
                 currency.contractAddress
