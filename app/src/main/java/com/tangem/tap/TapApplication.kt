@@ -36,7 +36,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
@@ -62,8 +61,6 @@ import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
-import com.tangem.tap.features.details.DarkThemeFeatureToggle
-import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -111,9 +108,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var preferencesDataSource: PreferencesDataSource
 
     @Inject
-    lateinit var walletFeatureToggles: WalletFeatureToggles
-
-    @Inject
     lateinit var walletConnect2Repository: WalletConnect2Repository
 
     @Inject
@@ -148,12 +142,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var balanceHidingRepository: BalanceHidingRepository
-
-    @Inject
-    lateinit var detailsFeatureToggles: DetailsFeatureToggles
-
-    @Inject
-    lateinit var darkThemeFeatureToggle: DarkThemeFeatureToggle
 
     @Inject
     lateinit var userTokensStore: UserTokensStore
@@ -221,9 +209,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
             storageService = userTokensStorageService,
         )
         derivationsFinder = DerivationsFinder(
-            legacyTokensStore = userTokensStorageService,
             newTokensStore = userTokensStore,
-            walletFeatureToggles = walletFeatureToggles,
             dispatchers = AppCoroutineDispatcherProvider(),
         )
         appStateHolder.mainStore = store
@@ -241,7 +227,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     assetReader = assetReader,
                     networkConnectionManager = networkConnectionManager,
                     customTokenFeatureToggles = customTokenFeatureToggles,
-                    walletFeatureToggles = walletFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     manageTokensFeatureToggles = manageTokensFeatureToggles,
@@ -253,7 +238,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     currenciesRepository = currenciesRepository,
                     appThemeModeRepository = appThemeModeRepository,
                     balanceHidingRepository = balanceHidingRepository,
-                    detailsFeatureToggles = detailsFeatureToggles,
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
                 ),

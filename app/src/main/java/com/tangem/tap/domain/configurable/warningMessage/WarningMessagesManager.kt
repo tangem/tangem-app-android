@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 * [REDACTED_AUTHOR]
  */
 // [REDACTED_TODO_COMMENT]
-@Deprecated(message = "Used only in old wallet screen")
+@Deprecated(message = "Used only in old send screen")
 class WarningMessagesManager {
 
     private val warningsList = CopyOnWriteArrayList<WarningMessage>()

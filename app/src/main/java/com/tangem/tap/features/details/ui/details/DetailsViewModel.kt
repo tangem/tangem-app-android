@@ -20,7 +20,6 @@ import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.details.DarkThemeFeatureToggle
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -42,7 +41,6 @@ import timber.log.Timber
 // [REDACTED_TODO_COMMENT]
 internal class DetailsViewModel(
     private val store: Store<AppState>,
-    private val darkThemeFeatureToggle: DarkThemeFeatureToggle,
     private val walletsRepository: WalletsRepository,
 ) {
 
@@ -201,7 +199,6 @@ internal class DetailsViewModel(
                 store.dispatchWithMain(
                     DetailsAction.PrepareScreen(
                         scanResponse = selectedUserWallet.scanResponse,
-                        darkThemeSwitchEnabled = darkThemeFeatureToggle.isDarkThemeEnabled,
                         shouldSaveUserWallets = walletsRepository.shouldSaveUserWalletsSync(),
                     ),
                 )
