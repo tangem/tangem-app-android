@@ -9,7 +9,7 @@ import com.tangem.tap.features.intentHandler.IntentHandler
 class BuyCurrencyIntentHandler : IntentHandler {
 
     override fun handleIntent(intent: Intent?): Boolean {
-        // FIXME: It hasn't worked since the redesign
+        // FIXME: [REDACTED_JIRA]
         // val data = intent?.data ?: return false
         // val currency = store.state.walletState.selectedCurrency ?: return false
         //
