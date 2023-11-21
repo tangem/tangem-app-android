@@ -68,7 +68,7 @@ fun TransactionCard(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start,
             ) {
-                Header(balance = balance, type = type)
+                Header(balance = stringResource(R.string.common_balance, balance), type = type)
 
                 Content(
                     type = type,
@@ -84,6 +84,67 @@ fun TransactionCard(
                     tokenCurrency = tokenCurrency,
                     networkIconRes = networkIconRes,
                     iconPlaceholder = iconPlaceholder,
+                )
+            }
+
+            if (onChangeTokenClick != null) {
+                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                    ChangeTokenSelector()
+                }
+                Box(
+                    Modifier
+                        .align(Alignment.CenterEnd)
+                        .height(TangemTheme.dimens.size116)
+                        .width(TangemTheme.dimens.size102)
+                        .clickable(
+                            indication = rememberRipple(bounded = false),
+                            interactionSource = remember { MutableInteractionSource() },
+                        ) { onChangeTokenClick() },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TransactionCardEmpty(
+    type: TransactionCardType,
+    amountEquivalent: String?,
+    textFieldValue: TextFieldValue?,
+    modifier: Modifier = Modifier,
+    onChangeTokenClick: (() -> Unit)? = null,
+) {
+    Card(
+        shape = RoundedCornerShape(TangemTheme.dimens.radius12),
+        backgroundColor = TangemTheme.colors.background.primary,
+        elevation = TangemTheme.dimens.elevation2,
+        modifier = modifier,
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start,
+            ) {
+                Header(
+                    balance = stringResource(id = R.string.swapping_token_not_available),
+                    type = type,
+                )
+
+                Content(
+                    type = type,
+                    amountEquivalent = amountEquivalent,
+                    textFieldValue = textFieldValue,
+                    priceImpact = null,
+                )
+            }
+
+            Box(modifier = Modifier.align(Alignment.BottomEnd)) {
+                Token(
+                    tokenIconUrl = "",
+                    tokenCurrency = "",
+                    iconPlaceholder = R.drawable.ic_no_token_44,
                 )
             }
 
@@ -134,7 +195,7 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         SpacerW16()
         if (balance.isNotBlank()) {
             Text(
-                text = stringResource(R.string.common_balance, balance),
+                text = balance,
                 color = TangemTheme.colors.text.tertiary,
                 style = MaterialTheme.typography.body2,
                 modifier = Modifier
