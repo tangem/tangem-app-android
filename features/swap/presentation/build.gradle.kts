@@ -21,6 +21,10 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
