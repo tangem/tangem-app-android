@@ -4,10 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.components.states.Item
-import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -69,29 +66,6 @@ data class SwapButton(
     val loading: Boolean = false,
     val onClick: () -> Unit,
 )
-
-sealed class FeeState(open val tangemFee: Double) {
-
-    object Empty : FeeState(0.0)
-
-    data class Loaded(
-        override val tangemFee: Double,
-        override val state: SelectableItemsState<TxFee>?,
-        val onSelectItem: (Item<TxFee>) -> Unit,
-    ) : FeeState(tangemFee), FeeSelectState
-
-    object Loading : FeeState(0.0)
-
-    data class NotEnoughFundsWarning(
-        override val tangemFee: Double,
-        override val state: SelectableItemsState<TxFee>?,
-        val onSelectItem: (Item<TxFee>) -> Unit,
-    ) : FeeState(tangemFee), FeeSelectState
-}
-
-sealed interface FeeSelectState {
-    val state: SelectableItemsState<TxFee>?
-}
 
 sealed interface TransactionCardType {
 
