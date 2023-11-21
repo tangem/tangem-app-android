@@ -25,7 +25,6 @@ import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
 import com.tangem.tap.features.customtoken.impl.presentation.models.*
@@ -68,7 +67,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val featureInteractor: CustomTokenInteractor,
     private val dispatchers: AppCoroutineDispatcherProvider,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val analyticsSender = AddCustomTokenAnalyticsSender(analyticsEventHandler)
@@ -85,18 +83,16 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private var foundToken: FoundToken? = null
 
     init {
-        if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            viewModelScope.launch(dispatchers.main) {
-                currentCryptoCurrencies = getSelectedWalletSyncUseCase().fold(
-                    ifLeft = { emptyList() },
-                    ifRight = { selectedWallet ->
-                        getCurrenciesUseCase(selectedWallet.walletId).fold(
-                            ifLeft = { emptyList() },
-                            ifRight = { it },
-                        )
-                    },
-                )
-            }
+        viewModelScope.launch(dispatchers.main) {
+            currentCryptoCurrencies = getSelectedWalletSyncUseCase().fold(
+                ifLeft = { emptyList() },
+                ifRight = { selectedWallet ->
+                    getCurrenciesUseCase(selectedWallet.walletId).fold(
+                        ifLeft = { emptyList() },
+                        ifRight = { it },
+                    )
+                },
+            )
         }
     }
 
