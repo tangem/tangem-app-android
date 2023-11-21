@@ -2,7 +2,6 @@
 <resources>
 
     <color name="colorPrimary">#0029FF</color>
-    <color name="colorSecondary">#0022D4</color>
     <color name="accent">#0099FF</color>
 
     <color name="menu_accent_color">@color/accent</color>
@@ -15,16 +14,10 @@
 
     <color name="white">#FFFFFF</color>
     <color name="lightGray0">#F3F3F3</color>
-    <color name="lightGray1">#F8F8FB</color>
-    <color name="lightGray5">#D1D1D6</color>
-    <color name="darkGray1">#8E8E90</color>
     <color name="darkGray2">#666668</color>
 
     <color name="darkGray4">#3A3A3C</color>
     <color name="darkGray6">#1C1C1E</color>
-
-    <color name="buttonGray">#F4F5F6</color>
-    <color name="textGray">#DE000000</color>
 
     <color name="textBlack">#060606</color>
     <color name="iconGray">#686868</color>
@@ -32,9 +25,6 @@
     <color name="chipBlack">#090E13</color>
 
     <color name="separatorGrey2">#14212121</color>
-
-    <color name="blue">@color/colorSecondary</color>
-    <color name="blue_pale">#E0E6FA</color>
 
     <color name="onboarding_card_background">#F3F3F3</color>
     <color name="onboarding_twin_wave_1">#DDDEE0</color>
@@ -46,9 +36,6 @@
     <color name="warning_warning">#FFB71B</color>
     <color name="warning_critical">#CA0F03</color>
 
-    <color name="all_colors_azure">#007AFF</color>
-
-    <color name="background_action">#FFFFFF</color>
     <color name="background_primary">#FFFFFF</color>
     <color name="background_secondary">#F5F5F5</color>
 
@@ -58,20 +45,12 @@
     <color name="button_secondary">#EBEBEB</color>
 
 
-    <color name="control_checked">#1ACE80</color>
-
-
-    <color name="icon_accent">#1ACE80</color>
-    <color name="icon_attention">#FFB71B</color>
-    <color name="icon_inactive">#C9C9C9</color>
     <color name="icon_informative">#B0B0B0</color>
     <color name="icon_primary_1">#1E1E1E</color>
     <color name="icon_primary_2">#FFFFFF</color>
-    <color name="icon_secondary">#656565</color>
     <color name="icon_warning">#FF3333</color>
 
 
-    <color name="text_attention">#FFB71B</color>
     <color name="text_disabled">#C9C9C9</color>
     <color name="text_primary_1">#1E1E1E</color>
     <color name="text_primary_2">#FFFFFF</color>
@@ -81,7 +60,6 @@
     <color name="background_splash">#000000</color>
     <color name="transparent">#00000000</color>
     d
-    <color name="card_background">#1B1D1C</color>
 
     <color name="gradient_start_color">#FFFFFF</color>
     <color name="gradient_center_color">#F0FFFF</color>

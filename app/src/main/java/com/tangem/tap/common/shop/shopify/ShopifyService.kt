@@ -19,26 +19,7 @@ import kotlin.coroutines.suspendCoroutine
 
 @Suppress("LargeClass")
 class ShopifyService(private val application: Application, val shop: ShopifyShop) {
-    val client: GraphClient by lazy { initClient() }
-
-    suspend fun getShopName(): Result<String> {
-        val query = query { rootQuery: QueryRootQuery ->
-            rootQuery
-                .shop { shopQuery: ShopQuery ->
-                    shopQuery
-                        .name()
-                }
-        }
-        return when (val result = queryAsync(query)) {
-            is GraphCallResult.Success -> {
-                val name = result.response.data!!.shop.name
-                Result.success(name)
-            }
-            is GraphCallResult.Failure -> {
-                Result.failure(result.error)
-            }
-        }
-    }
+    private val client: GraphClient by lazy { initClient() }
 
     @Suppress("MagicNumber")
     suspend fun getProducts(collectionTitleFilter: String? = null): Result<List<Product>> {
