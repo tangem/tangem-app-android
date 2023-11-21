@@ -4,9 +4,6 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.common.doOnFailure
-import com.tangem.common.extensions.guard
-import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
@@ -18,12 +15,8 @@ import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
 import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletCurrenciesManager
-import com.tangem.tap.walletStoresManager
-import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 import java.math.BigDecimal
-import com.tangem.tap.features.wallet.models.Currency as WalletCurrency
 
 class UserWalletManagerImpl(
     private val appStateHolder: AppStateHolder,
@@ -104,39 +97,12 @@ class UserWalletManagerImpl(
     }
 
     override suspend fun addToken(currency: Currency, derivationPath: String?) {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(currency.networkId)) { "blockchain not found" }
-        val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
-
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
-            Timber.e("Unable to add token, no user wallet selected")
-            return
-        }
-        walletCurrenciesManager.addCurrencies(
-            userWallet = selectedUserWallet,
-            currenciesToAdd = listOf(currency.toWalletCurrency(blockchainNetwork)),
-        )
+        // FIXME: Can be removed, used only in learn2earn
     }
 
     override suspend fun hideAllTokens() {
-        val userWallet = userWalletsListManager.selectedUserWalletSync.guard {
-            Timber.e("No user wallets selected")
-            return
-        }
-
-        val currencies = walletStoresManager.get(userWallet.walletId)
-            .firstOrNull()
-            ?.flatMap { walletStore ->
-                walletStore.walletsData.map { it.currency }
-            }
-            .guard {
-                Timber.d("No currencies found")
-                return
-            }
-
-        walletCurrenciesManager.removeCurrencies(userWallet, currenciesToRemove = currencies)
-            .doOnFailure { e ->
-                Timber.e(e, "Unable to delete all currencies")
-            }
+        // FIXME: Used only in Tester Actions
+        Timber.w("Not implemented")
     }
 
     override suspend fun getWalletAddress(networkId: String, derivationPath: String?): String {
@@ -237,18 +203,4 @@ private fun NonNativeToken.toSdkToken(): Token {
         contractAddress = this.contractAddress,
         decimals = this.decimalCount,
     )
-}
-
-private fun Currency.toWalletCurrency(network: BlockchainNetwork): WalletCurrency {
-    return when (this) {
-        is NativeToken -> WalletCurrency.Blockchain(
-            blockchain = network.blockchain,
-            derivationPath = network.derivationPath,
-        )
-        is NonNativeToken -> WalletCurrency.Token(
-            token = this.toSdkToken(),
-            blockchain = network.blockchain,
-            derivationPath = network.derivationPath,
-        )
-    }
 }
