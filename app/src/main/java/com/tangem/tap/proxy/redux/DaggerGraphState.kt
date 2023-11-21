@@ -18,13 +18,11 @@ import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
-import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -34,7 +32,6 @@ data class DaggerGraphState(
     val networkConnectionManager: NetworkConnectionManager? = null,
     val customTokenFeatureToggles: CustomTokenFeatureToggles? = null,
     val scanCardUseCase: ScanCardUseCase? = null,
-    val walletFeatureToggles: WalletFeatureToggles? = null,
     val walletRouter: WalletRouter? = null,
     val walletConnectRepository: WalletConnectRepository? = null,
     val walletConnectSessionsRepository: WalletConnectSessionsRepository? = null,
@@ -49,7 +46,6 @@ data class DaggerGraphState(
     val appStateHolder: AppStateHolder? = null,
     val appThemeModeRepository: AppThemeModeRepository? = null,
     val balanceHidingRepository: BalanceHidingRepository? = null,
-    val detailsFeatureToggles: DetailsFeatureToggles? = null,
     val walletsRepository: WalletsRepository? = null,
     val networksRepository: NetworksRepository? = null,
     val sendFeatureToggles: SendFeatureToggles? = null,
