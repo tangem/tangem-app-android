@@ -9,7 +9,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
-import com.tangem.tap.domain.model.WalletDataModel
+import com.tangem.tap.domain.model.WalletAddressData
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.DialogOnboardingAddressInfoBinding
@@ -42,7 +42,7 @@ internal class AddressInfoBottomSheetDialog(
         showData(data = stateDialog.addressData)
     }
 
-    private fun showData(data: WalletDataModel.AddressData) = with(binding!!) {
+    private fun showData(data: WalletAddressData) = with(binding!!) {
         pseudoToolbar.imvClose.setOnClickListener {
             dismissWithAnimation = true
             cancel()
