@@ -73,9 +73,7 @@ data class WalletForSession(
         } else if (other.derivedPublicKey != null) return false
         if (derivationPath != other.derivationPath) return false
         if (isTestNet != other.isTestNet) return false
-        if (blockchain != other.blockchain) return false
-
-        return true
+        return blockchain == other.blockchain
     }
 
     override fun hashCode(): Int {

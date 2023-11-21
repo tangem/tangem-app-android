@@ -6,7 +6,7 @@ import com.tangem.tap.features.details.redux.SecurityOption
 sealed class AnalyticsParam {
 
     sealed class CurrencyType(val value: String) {
-        class Currency(currency: com.tangem.tap.features.wallet.models.Currency) : CurrencyType(currency.currencySymbol)
+        class Currency(currency: com.tangem.tap.domain.model.Currency) : CurrencyType(currency.currencySymbol)
         class Blockchain(blockchain: com.tangem.blockchain.common.Blockchain) : CurrencyType(blockchain.currency)
         class Token(token: com.tangem.blockchain.common.Token) : CurrencyType(token.symbol)
         class FiatCurrency(fiatCurrency: AppCurrency) : CurrencyType(fiatCurrency.code)
