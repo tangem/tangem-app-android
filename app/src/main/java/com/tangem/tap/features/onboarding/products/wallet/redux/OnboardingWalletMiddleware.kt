@@ -142,7 +142,6 @@ private fun handleWalletAction(action: Action) {
                         primaryCard = result.data.primaryCard,
                     )
                     onboardingManager.scanResponse = updatedResponse
-                    store.state.globalState.topUpController?.registerEmptyWallet(updatedResponse)
 
                     val blockchainNetworks = if (DemoHelper.isDemoCardId(result.data.card.cardId)) {
                         DemoHelper.config.demoBlockchains
