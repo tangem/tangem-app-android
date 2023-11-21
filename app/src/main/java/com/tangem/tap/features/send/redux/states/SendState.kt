@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.tap.common.CurrencyConverter
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.TapError
@@ -128,7 +128,7 @@ data class AmountState(
     val typeOfAmount: AmountType = AmountType.Coin,
     val viewAmountValue: InputViewValue = InputViewValue(BigDecimal.ZERO.toPlainString()),
     val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
-    val mainCurrency: MainCurrency = MainCurrency(MainCurrencyType.FIAT, FiatCurrency.Default.code),
+    val mainCurrency: MainCurrency = MainCurrency(MainCurrencyType.FIAT, AppCurrency.Default.code),
     val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
     val balanceCrypto: BigDecimal = BigDecimal.ZERO,
     val hideBalance: Boolean = false,
