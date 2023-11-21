@@ -34,8 +34,6 @@ class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
 
-    // private val learn2earnViewModel by activityViewModels<Learn2earnViewModel>()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store.dispatch(HomeAction.OnCreate)
@@ -44,11 +42,6 @@ class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        // sync adding story before screen creation
-        // if (learn2earnViewModel.uiState.storyScreenState.isVisible) {
-        //     store.dispatch(HomeAction.InsertStory(position = 0, Stories.OneInchPromo))
-        //     homeState.value = store.state.homeState
-        // }
         BackHandler(onBack = requireActivity()::finish)
         SystemBarsEffect {
             setSystemBarsColor(color = Color.Transparent, darkIcons = false)
@@ -83,7 +76,6 @@ class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
     private fun ScreenContent() {
         StoriesScreen(
             homeState = homeState,
-            onLearn2earnClick = {}, // learn2earnViewModel.uiState.storyScreenState.onClick,
             onScanButtonClick = {
                 Analytics.send(IntroductionProcess.ButtonScanCard())
                 store.dispatch(action = HomeAction.ReadCard(scope = requireActivity().lifecycleScope))
