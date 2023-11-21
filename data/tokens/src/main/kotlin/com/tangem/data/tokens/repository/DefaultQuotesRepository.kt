@@ -61,7 +61,7 @@ internal class DefaultQuotesRepository(
 
             fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, refresh)
 
-            val quotes = quotesStore.get(currenciesIds).first()
+            val quotes = quotesStore.getSync(currenciesIds)
 
             quotesConverter.convertSet(quotes)
         }
