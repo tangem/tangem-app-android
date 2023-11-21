@@ -6,7 +6,6 @@ import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.*
 import com.tangem.feature.swap.domain.cache.SwapDataCacheImpl
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import dagger.Module
@@ -28,7 +27,6 @@ class SwapDomainModule {
         transactionManager: TransactionManager,
         currenciesRepository: CurrenciesRepository,
         networksRepository: NetworksRepository,
-        walletFeatureToggles: WalletFeatureToggles,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     ): SwapInteractor {
         return SwapInteractorImpl(
@@ -39,7 +37,6 @@ class SwapDomainModule {
             allowPermissionsHandler = AllowPermissionsHandlerImpl(),
             currenciesRepository = currenciesRepository,
             networksRepository = networksRepository,
-            walletFeatureToggles = walletFeatureToggles,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         )
     }
