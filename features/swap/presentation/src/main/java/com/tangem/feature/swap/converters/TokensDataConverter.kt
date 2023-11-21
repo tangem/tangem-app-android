@@ -2,10 +2,13 @@ package com.tangem.feature.swap.converters
 
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.CryptoCurrencySwapInfo
 import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
@@ -26,13 +29,13 @@ class TokensDataConverter(
         val availableTitle = TokenToSelectState.Title(stringReference("My tokens")) // todo replace with resource
         val unavailableTitle = TokenToSelectState.Title(stringReference("My tokens")) // todo replace with resource
         return SwapSelectTokenStateHolder(
-            availableTokens = value.available.map { tokenWithBalanceToTokenToSelect(it) }
+            availableTokens = value.available.map { tokenWithBalanceToTokenToSelect(it, true) }
                 .toMutableList()
                 .apply {
                     this.add(0, availableTitle)
                 }
                 .toImmutableList(),
-            unavailableTokens = value.unavailable.map { tokenWithBalanceToTokenToSelect(it) }
+            unavailableTokens = value.unavailable.map { tokenWithBalanceToTokenToSelect(it, false) }
                 .toMutableList()
                 .apply {
                     this.add(0, unavailableTitle)
@@ -43,24 +46,49 @@ class TokensDataConverter(
         )
     }
 
-    private fun tokenWithBalanceToTokenToSelect(cryptoCurrencySwapInfo: CryptoCurrencySwapInfo): TokenToSelectState {
+    private fun tokenWithBalanceToTokenToSelect(
+        cryptoCurrencySwapInfo: CryptoCurrencySwapInfo,
+        isAvailable: Boolean,
+    ): TokenToSelectState {
         val cryptoCurrencyStatus = cryptoCurrencySwapInfo.currencyStatus
         return TokenToSelectState.TokenToSelect(
             id = cryptoCurrencyStatus.currency.id.value,
             name = cryptoCurrencyStatus.currency.name,
             symbol = cryptoCurrencyStatus.currency.symbol,
-            tokenIcon = TokenIconState.CoinIcon(
-                url = cryptoCurrencyStatus.currency.iconUrl,
-                fallbackResId = cryptoCurrencyStatus.currency.networkIconResId,
-                isGrayscale = false,
-                showCustomBadge = cryptoCurrencyStatus.currency.isCustom,
-            ),
+            available = isAvailable,
+            tokenIcon = convertIcon(cryptoCurrencyStatus.currency, isAvailable),
             addedTokenBalanceData = TokenBalanceData(
                 amount = formatCryptoAmount(cryptoCurrencyStatus),
                 amountEquivalent = formatFiatAmount(cryptoCurrencyStatus, appCurrencyProvider.invoke()),
                 isBalanceHidden = isBalanceHiddenProvider.invoke(),
             ),
         )
+    }
+
+    private fun convertIcon(currency: CryptoCurrency, isAvailable: Boolean): TokenIconState {
+        return when (currency) {
+            is CryptoCurrency.Coin -> {
+                TokenIconState.CoinIcon(
+                    url = currency.iconUrl,
+                    fallbackResId = currency.networkIconResId,
+                    isGrayscale = !isAvailable,
+                    showCustomBadge = currency.isCustom,
+                )
+            }
+            is CryptoCurrency.Token -> {
+                val isGrayscale = currency.network.isTestnet
+                val background = currency.tryGetBackgroundForTokenIcon(isGrayscale)
+                val tint = getTintForTokenIcon(background)
+                TokenIconState.TokenIcon(
+                    url = currency.iconUrl,
+                    isGrayscale = !isAvailable,
+                    showCustomBadge = currency.isCustom,
+                    networkBadgeIconResId = currency.networkIconResId,
+                    fallbackTint = tint,
+                    fallbackBackground = background,
+                )
+            }
+        }
     }
 
     private fun formatCryptoAmount(cryptoCurrencyStatus: CryptoCurrencyStatus): String {
