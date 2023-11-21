@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -40,9 +39,8 @@ class RussianCardholdersWarningBottomSheetDialog(
             if (dialogData != null) {
                 store.dispatchOpenUrl(dialogData.topUpUrl)
                 Analytics.send(Token.Topup.ScreenOpened())
-            } else {
-                store.dispatch(TradeCryptoAction.Buy(checkUserLocation = false))
             }
+
             dismiss()
         }
         binding?.btnNo?.setOnClickListener {
