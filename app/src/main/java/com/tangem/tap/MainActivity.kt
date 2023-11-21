@@ -247,20 +247,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode?> {
         val tapApplication = application as TapApplication
-        val featureToggle = tapApplication.darkThemeFeatureToggle
 
-        return if (featureToggle.isDarkThemeEnabled) {
-            tapApplication.getAppThemeModeUseCase()
-                .map { maybeMode ->
-                    maybeMode.getOrElse { AppThemeMode.DEFAULT }
-                }
-                .shareIn(
-                    scope = lifecycleScope + Dispatchers.IO,
-                    started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-                )
-        } else {
-            MutableStateFlow(AppThemeMode.FORCE_LIGHT)
-        }
+        return tapApplication.getAppThemeModeUseCase()
+            .map { maybeMode ->
+                maybeMode.getOrElse { AppThemeMode.DEFAULT }
+            }
+            .shareIn(
+                scope = lifecycleScope + Dispatchers.IO,
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+            )
     }
 
     override fun onStart() {
