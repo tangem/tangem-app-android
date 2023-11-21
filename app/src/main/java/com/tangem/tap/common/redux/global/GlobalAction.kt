@@ -5,10 +5,10 @@ import com.tangem.common.CompletionResult
 import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.models.ChatConfig
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.redux.DebugErrorAction
@@ -60,9 +60,9 @@ sealed class GlobalAction : Action {
 
     data class SetIfCardVerifiedOnline(val verified: Boolean) : GlobalAction()
 
-    data class ChangeAppCurrency(val appCurrency: FiatCurrency) : GlobalAction()
+    data class ChangeAppCurrency(val appCurrency: AppCurrency) : GlobalAction()
     object RestoreAppCurrency : GlobalAction() {
-        data class Success(val appCurrency: FiatCurrency) : GlobalAction()
+        data class Success(val appCurrency: AppCurrency) : GlobalAction()
     }
 
     data class UpdateWalletSignedHashes(
