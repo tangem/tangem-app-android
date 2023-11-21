@@ -14,6 +14,7 @@ interface SwapRepository {
 
     suspend fun getExchangeableTokens(networkId: String): List<Currency>
 
+    @Suppress("LongParameterList")
     suspend fun findBestQuote(
         fromContractAddress: String,
         fromNetwork: String,
@@ -74,5 +75,5 @@ interface SwapRepository {
         fromAmount: String,
         providerId: Int,
         rateType: RateType,
-    ) : ExchangeQuote
+    ): ExchangeQuote
 }
