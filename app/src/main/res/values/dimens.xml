@@ -1,8 +1,6 @@
 <resources>
 
     <dimen name="btn_corner_radius">4dp</dimen>
-    <dimen name="btn_corner_radius_medium">8dp</dimen>
-    <dimen name="btn_corner_radius_large">12dp</dimen>
     <dimen name="btn_rounded_size">44dp</dimen>
 
     <dimen name="text_size_amount_to_send">32sp</dimen>
@@ -37,10 +35,6 @@
     <dimen name="access_code_info_protect_margin_top">8dp</dimen>
     <dimen name="access_code_info_items_space">16dp</dimen>
     <dimen name="access_code_btn_continue_margin_bottom">38dp</dimen>
-    <dimen name="access_code_btn_continue_margin_start">78dp</dimen>
-    <dimen name="access_code_btn_continue_margin_end">78dp</dimen>
-
-    <dimen name="layout_address_info_margin">16dp</dimen>
 
     <dimen name="qr_border_stroke_width">4dp</dimen>
     <dimen name="qr_border_corner_radius">8dp</dimen>

@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.store
 import com.tangem.utils.converter.TwoWayConverter
 
