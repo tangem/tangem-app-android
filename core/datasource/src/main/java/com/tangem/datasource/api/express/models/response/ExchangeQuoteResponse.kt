@@ -6,13 +6,13 @@ import java.math.BigDecimal
 data class ExchangeQuoteResponse(
 
     @Json(name = "fromAmount")
-    val fromAmount: BigDecimal,
+    val fromAmount: String,
 
     @Json(name = "fromDecimals")
     val fromDecimals: Int,
 
     @Json(name = "toAmount")
-    val toAmount: BigDecimal,
+    val toAmount: String,
 
     @Json(name = "toDecimals")
     val toDecimals: Int,
