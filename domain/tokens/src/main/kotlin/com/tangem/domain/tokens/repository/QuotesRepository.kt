@@ -29,4 +29,6 @@ interface QuotesRepository {
      * @return A [Flow] emitting a set of quotes corresponding to the specified cryptocurrencies.
      */
     suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote>
+
+    suspend fun getQuoteSync(currencyId: CryptoCurrency.ID): Quote
 }
