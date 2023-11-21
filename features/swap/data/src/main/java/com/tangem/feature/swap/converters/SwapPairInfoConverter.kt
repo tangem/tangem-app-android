@@ -33,5 +33,4 @@ class SwapPairInfoConverter : Converter<SwapPair, SwapPairDomain> {
             rateTypes = swapPairProvider.rateTypes.map { rateTypeConverter.convert(it) },
         )
     }
-
 }
