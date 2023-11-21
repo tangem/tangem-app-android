@@ -10,7 +10,7 @@ import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.getFirstToken
-import com.tangem.tap.domain.model.WalletDataModel
+import com.tangem.tap.domain.model.WalletAddressData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -58,7 +58,7 @@ suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try 
     }
 }
 
-fun WalletManager.getTopUpUrl(): String? {
+internal fun WalletManager.getTopUpUrl(): String? {
     val globalState = store.state.globalState
     val defaultAddress = wallet.address
 
@@ -72,18 +72,18 @@ fun WalletManager.getTopUpUrl(): String? {
     )
 }
 
-fun WalletManager?.getAddressData(): WalletDataModel.AddressData? {
+internal fun WalletManager?.getAddressData(): WalletAddressData? {
     val wallet = this?.wallet ?: return null
 
     val addressDataList = wallet.createAddressesData()
     return if (addressDataList.isEmpty()) null else addressDataList[0]
 }
 
-fun Wallet.createAddressesData(): List<WalletDataModel.AddressData> {
-    val listOfAddressData = mutableListOf<WalletDataModel.AddressData>()
+private fun Wallet.createAddressesData(): List<WalletAddressData> {
+    val listOfAddressData = mutableListOf<WalletAddressData>()
     // put a defaultAddress at the first place
     addresses.forEach {
-        val addressData = WalletDataModel.AddressData(
+        val addressData = WalletAddressData(
             it.value,
             it.type,
             getShareUri(it.value),
