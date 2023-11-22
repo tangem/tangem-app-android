@@ -6,8 +6,10 @@ import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.cache.SwapDataCache
@@ -44,6 +46,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val quotesRepository: QuotesRepository,
 ) : SwapInteractor {
 // [REDACTED_TODO_COMMENT]
     private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -388,32 +391,6 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    @Suppress("UnusedPrivateMember")
-    @Deprecated("used in old swap mechanism")
-    private fun getTokensWithBalance(
-        tokens: List<Currency>,
-        balances: Map<String, SwapAmount>,
-        rates: Map<String, Double>,
-        appCurrency: ProxyFiatCurrency,
-    ): List<TokenWithBalance> {
-        return tokens.map {
-            val balance = balances[it.symbol]
-            TokenWithBalance(
-                token = it,
-                tokenBalanceData = TokenBalanceData(
-                    amount = balance?.let { amount ->
-                        amountFormatter.formatSwapAmountToUI(amount, it.symbol)
-                    },
-                    amountEquivalent = balance?.value?.toFiatString(
-                        rateValue = rates[it.id]?.toBigDecimal() ?: BigDecimal.ZERO,
-                        fiatCurrencyName = appCurrency.symbol,
-                        formatWithSpaces = true,
-                    ),
-                ),
-            )
-        }
-    }
-
     private suspend fun isAllowedToSpend(networkId: String, fromToken: CryptoCurrency, amount: SwapAmount): Boolean {
         if (fromToken is CryptoCurrency.Coin) return true
         return getSelectedWalletSyncUseCase().fold(
@@ -537,8 +514,8 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun getFormattedFiatFees(networkId: String, vararg fees: BigDecimal): List<String> {
         val appCurrency = userWalletManager.getUserAppCurrency()
         val nativeToken = userWalletManager.getNativeTokenForNetwork(networkId)
-        val rates = repository.getRates(appCurrency.code, listOf(nativeToken.id))
-        return rates[nativeToken.id]?.toBigDecimal()?.let { rate ->
+        val rates = getQuotes(nativeToken.id)
+        return rates[nativeToken.id]?.fiatRate?.let { rate ->
             fees.map { fee ->
                 " (${fee.toFiatString(rate, appCurrency.symbol, true)})"
             }
@@ -628,28 +605,26 @@ internal class SwapInteractorImpl @Inject constructor(
         val toToken = toTokenStatus.currency
         val appCurrency = userWalletManager.getUserAppCurrency()
         val nativeToken = userWalletManager.getNativeTokenForNetwork(networkId)
-        val rates = repository.getRates(
-            appCurrency.code,
-            listOf(fromToken.network.backendId, toToken.network.backendId, nativeToken.id),
-        )
+    
+        val rates = getQuotes(fromToken.id, toToken.id, nativeToken.id)
         return SwapState.QuotesLoadedState(
             fromTokenInfo = TokenSwapInfo(
                 tokenAmount = fromTokenAmount,
                 cryptoCurrencyStatus = fromTokenStatus,
-                amountFiat = rates[fromToken.network.backendId]?.toBigDecimal()?.multiply(fromTokenAmount.value)
+                amountFiat = rates[fromToken.id]?.fiatRate?.multiply(fromTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
             toTokenInfo = TokenSwapInfo(
                 tokenAmount = toTokenAmount,
                 cryptoCurrencyStatus = toTokenStatus,
-                amountFiat = rates[toToken.network.backendId]?.toBigDecimal()?.multiply(toTokenAmount.value)
+                amountFiat = rates[toToken.id]?.fiatRate?.multiply(toTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
             priceImpact = calculatePriceImpact(
                 fromTokenAmount = fromTokenAmount.value,
-                fromRate = rates[fromToken.network.backendId] ?: 0.0,
+                fromRate = rates[fromToken.id]?.fiatRate?.toDouble() ?: 0.0,
                 toTokenAmount = toTokenAmount.value,
-                toRate = rates[toToken.network.backendId] ?: 0.0,
+                toRate = rates[toToken.id]?.fiatRate?.toDouble() ?: 0.0,
             ),
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             swapDataModel = swapStateData,
@@ -686,7 +661,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val feeData = transactionManager.getFee(
             networkId = networkId,
             amountToSend = BigDecimal.ZERO,
-            currencyToSend = userWalletManager.getNativeTokenForNetwork(networkId),
+            currencyToSend = swapCurrencyConverter.convert(userWalletManager.getNativeTokenForNetwork(networkId)),
             destinationAddress = getTokenAddress(fromToken),
             increaseBy = INCREASE_GAS_LIMIT_BY,
             data = transactionData,
@@ -861,6 +836,15 @@ internal class SwapInteractorImpl @Inject constructor(
             },
         )
     }
+
+    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID) : Map<CryptoCurrency.ID, Quote> {
+        val set = quotesRepository.getQuotesSync(ids.toSet(), false)
+
+        return ids
+            .mapNotNull { id -> set.find { it.rawCurrencyId == id.rawCurrencyId }?.let { id to it } }
+            .toMap()
+    }
+
 
     companion object {
         private const val DEFAULT_SLIPPAGE = 2
