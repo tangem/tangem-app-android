@@ -389,27 +389,6 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    @Deprecated("used in old swap mechanism")
-    private fun selectToToken(
-        initialToken: Currency,
-        tokensInWallet: List<Currency>,
-        loadedTokens: List<Currency>,
-    ): Currency {
-        val toToken = if (tokensInWallet.isNotEmpty()) {
-            tokensInWallet.firstOrNull { it.symbol != initialToken.symbol }
-                ?: loadedTokens.first { it.symbol != initialToken.symbol }
-        } else {
-            val findUsdt = loadedTokens.firstOrNull { it.symbol == USDT_SYMBOL && it.symbol != initialToken.symbol }
-            if (findUsdt == null) {
-                val findUsdc = loadedTokens.firstOrNull { it.symbol == USDC_SYMBOL && it.symbol != initialToken.symbol }
-                findUsdc ?: loadedTokens.first { it.symbol != initialToken.symbol }
-            } else {
-                findUsdt
-            }
-        }
-        return toToken
-    }
-
     @Suppress("UnusedPrivateMember")
     @Deprecated("used in old swap mechanism")
     private fun getTokensWithBalance(
@@ -890,8 +869,6 @@ internal class SwapInteractorImpl @Inject constructor(
         @Suppress("UnusedPrivateMember")
         private const val INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT = 1.0 // if need to increase fee when check isEnough
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
-        private const val USDT_SYMBOL = "USDT"
-        private const val USDC_SYMBOL = "USDC"
         private const val INFINITY_SYMBOL = "∞"
 
         private val ONE_INCH_SUPPORTED_NETWORKS = listOf(
