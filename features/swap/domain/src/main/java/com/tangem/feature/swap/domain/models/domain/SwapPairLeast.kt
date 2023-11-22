@@ -27,9 +27,17 @@ data class CryptoCurrencySwapInfo(
  * @property rateTypes supported rate types
  */
 data class SwapProvider(
-    val providerId: Int,
-    val rateTypes: List<RateType>,
+    val providerId: String,
+    val rateTypes: List<RateType> = emptyList(),
+    val name: String? = null,
+    val type: ExchangeProviderType? = null,
+    val imageLarge: String? = null,
 )
+
+enum class ExchangeProviderType {
+    DEX,
+    CEX,
+}
 
 /**
  * Rate type.

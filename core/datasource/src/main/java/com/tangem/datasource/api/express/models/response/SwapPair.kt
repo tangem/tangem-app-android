@@ -17,7 +17,7 @@ data class SwapPair(
 
 data class SwapPairProvider(
     @Json(name = "providerId")
-    val providerId: Int,
+    val providerId: String,
 
     @Json(name = "rateTypes")
     val rateTypes: List<RateType>,
