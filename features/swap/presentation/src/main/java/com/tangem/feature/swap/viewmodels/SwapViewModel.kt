@@ -133,7 +133,6 @@ internal class SwapViewModel @Inject constructor(
     fun setRouter(router: SwapRouter) {
         swapRouter = router
         uiState = uiState.copy(
-            onBackClicked = router::back,
             onSelectTokenClick = {
                 router.openScreen(SwapNavScreen.SelectToken)
                 analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened)
@@ -260,37 +259,41 @@ internal class SwapViewModel @Inject constructor(
             },
             onSuccess = { providersState ->
                 val (provider, state) = updateLoadedQuotes(providersState)
-                when (state) {
-                    is SwapState.QuotesLoadedState -> {
-                        fillDataState(state.permissionState, state.swapDataModel)
-                        uiState = stateBuilder.createQuotesLoadedState(
-                            uiStateHolder = uiState,
-                            quoteModel = state,
-                            fromToken = fromToken.currency,
-                            swapProvider = provider,
-                        ) { updatedFee ->
-                            dataState = dataState.copy(
-                                selectedFee = updatedFee,
-                            )
-                        }
-                    }
-                    is SwapState.EmptyAmountState -> {
-                        uiState = stateBuilder.createQuotesEmptyAmountState(
-                            uiStateHolder = uiState,
-                            emptyAmountState = state,
-                        )
-                    }
-                    is SwapState.SwapError -> {
-                        Timber.e("SwapError when loading quotes ${state.error}")
-                        uiState = stateBuilder.mapError(uiState, state.error) { startLoadingQuotesFromLastState() }
-                    }
-                }
+                setupLoadedState(provider, state, fromToken)
             },
             onError = {
                 Timber.e("Error when loading quotes: $it")
                 uiState = stateBuilder.addWarning(uiState, null) { startLoadingQuotesFromLastState() }
             },
         )
+    }
+
+    private fun setupLoadedState(provider: SwapProvider, state: SwapState, fromToken: CryptoCurrencyStatus) {
+        when (state) {
+            is SwapState.QuotesLoadedState -> {
+                fillDataState(state.permissionState, state.swapDataModel)
+                uiState = stateBuilder.createQuotesLoadedState(
+                    uiStateHolder = uiState,
+                    quoteModel = state,
+                    fromToken = fromToken.currency,
+                    swapProvider = provider,
+                ) { updatedFee ->
+                    dataState = dataState.copy(
+                        selectedFee = updatedFee,
+                    )
+                }
+            }
+            is SwapState.EmptyAmountState -> {
+                uiState = stateBuilder.createQuotesEmptyAmountState(
+                    uiStateHolder = uiState,
+                    emptyAmountState = state,
+                )
+            }
+            is SwapState.SwapError -> {
+                Timber.e("SwapError when loading quotes ${state.error}")
+                uiState = stateBuilder.mapError(uiState, state.error) { startLoadingQuotesFromLastState() }
+            }
+        }
     }
 
     private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {
@@ -563,11 +566,20 @@ internal class SwapViewModel @Inject constructor(
                 onChangeCardsClicked()
                 analyticsEventHandler.send(SwapEvents.ButtonSwipeClicked)
             },
-            onBackClicked = { onSearchEntered("") },
+            onBackClicked = {
+                val bottomSheet = uiState.bottomSheetConfig
+                if (bottomSheet != null && bottomSheet.isShow) {
+                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                } else {
+                    swapRouter.back()
+                }
+                onSearchEntered("")
+            },
             onMaxAmountSelected = { onMaxAmountClicked() },
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
+                uiState = stateBuilder.showPermissionBottomSheet(uiState) { stateBuilder.dismissBottomSheet(uiState) }
             },
             hidePermissionBottomSheet = {
                 startLoadingQuotesFromLastState()
@@ -597,7 +609,36 @@ internal class SwapViewModel @Inject constructor(
             },
             onClickFee = {},
             onSelectFeeType = {},
+            onProviderClick = {
+                uiState = stateBuilder.showSelectProviderBottomSheet(
+                    uiState = uiState,
+                    selectedProviderId = it,
+                    providersStates = dataState.lastLoadedSwapStates,
+                ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
+            },
+            onProviderSelect = {
+                val provider = findAndSelectProvider(it)
+                val swapState = dataState.lastLoadedSwapStates[provider]
+                val fromToken = dataState.fromCryptoCurrency
+                if (provider != null && swapState != null && fromToken != null) {
+                    setupLoadedState(
+                        provider = provider,
+                        state = swapState,
+                        fromToken = fromToken,
+                    )
+                }
+            },
         )
+    }
+
+    private fun findAndSelectProvider(providerId: String): SwapProvider? {
+        val selectedProvider = dataState.lastLoadedSwapStates.keys.firstOrNull { it.providerId == providerId }
+        if (selectedProvider != null) {
+            dataState = dataState.copy(
+                selectedProvider = selectedProvider,
+            )
+        }
+        return selectedProvider
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
