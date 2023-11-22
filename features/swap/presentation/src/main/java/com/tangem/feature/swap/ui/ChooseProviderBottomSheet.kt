@@ -26,7 +26,7 @@ fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetConfig) {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.secondary),
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
     ) {
         Text(
             text = "Choose provider",
