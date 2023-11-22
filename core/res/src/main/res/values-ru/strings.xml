@@ -86,6 +86,7 @@
     <string name="common_error">Ошибка</string>
     <string name="common_exchange">Обменять</string>
     <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
+    <string name="common_explore">Обозреватель</string>
     <string name="common_explorer">Обозреватель</string>
     <string name="common_fee_selector_footer">Сетевые комиссии за транзакции используются для поддержки безопасности сети, поощрения валидаторов, выделения ресурсов и определения приоритета транзакции.</string>
     <string name="common_fee_selector_option_custom">Свое</string>
