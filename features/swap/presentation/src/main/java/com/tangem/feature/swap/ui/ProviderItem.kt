@@ -324,7 +324,7 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
         ),
     ) {
         Text(
-            text = "Best trade",
+            text = "Best rate",
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
