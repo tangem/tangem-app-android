@@ -18,7 +18,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
-import com.tangem.tap.features.details.ui.common.TangemSwitch
+import com.tangem.core.ui.components.TangemSwitch
 
 @Composable
 internal fun SettingsSwitchItem(item: Item.Switch, modifier: Modifier = Modifier) {

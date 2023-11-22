@@ -6,7 +6,6 @@ import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.*
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 import java.math.BigDecimal
@@ -16,14 +15,9 @@ import java.math.BigDecimal
  */
 @Suppress("LongParameterList")
 interface ExpressApi {
-// [REDACTED_TODO_COMMENT]
+
     @POST("assets")
-    suspend fun getAssets(
-        @Header("api-key") apiKey: String,
-        @Header("user-id") userId: String,
-        @Header("session-id") sessionId: String,
-        @Body body: AssetsRequestBody,
-    ): ApiResponse<List<Asset>>
+    suspend fun getAssets(@Body body: AssetsRequestBody): ApiResponse<List<Asset>>
 
     @POST("pairs")
     suspend fun getPairs(@Body body: PairsRequestBody): ApiResponse<List<SwapPair>>
@@ -54,6 +48,6 @@ interface ExpressApi {
         @Query("toAddress") toAddress: String,
     ): ApiResponse<ExchangeDataResponse>
 
-    @GET("exchange-results")
+    @GET("exchange-result")
     suspend fun getExchangeResults(@Query("txId") txId: String): ApiResponse<ExchangeResultsResponse>
 }
