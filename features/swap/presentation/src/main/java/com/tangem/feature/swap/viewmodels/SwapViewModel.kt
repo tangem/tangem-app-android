@@ -251,7 +251,7 @@ internal class SwapViewModel @Inject constructor(
                         providers = toProvidersList,
                         amountToSwap = amount,
                         selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
-                    )
+                    ).entries.first().value// TODO
                 }
             },
             onSuccess = { swapState ->

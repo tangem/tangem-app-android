@@ -70,7 +70,7 @@ interface SwapInteractor {
         providers: List<SwapProvider>,
         amountToSwap: String,
         selectedFee: FeeType = FeeType.NORMAL,
-    ): SwapState
+    ): Map<SwapProvider, SwapState>
 
     /**
      * Starts swap transaction, perform sign transaction
