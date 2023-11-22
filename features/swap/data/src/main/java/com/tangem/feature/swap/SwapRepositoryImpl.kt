@@ -48,6 +48,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
     private val rateTypeConverter = RateTypeConverter()
+    private val swapProviderConverter = SwapProviderConverter()
 
     override suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
@@ -75,6 +76,18 @@ internal class SwapRepositoryImpl @Inject constructor(
             }
 
             pairs.await() + reversedPairs.await()
+        }
+    }
+
+    override suspend fun getProvidersDetails(providers: Set<SwapProvider>): List<SwapProvider> {
+        val providersMap = providers.associateBy { it.providerId }
+        return tangemExpressApi.getProviders().getOrThrow().mapNotNull {
+            val provider = providersMap[it.id]
+            if (provider != null) {
+                swapProviderConverter.convert(it).copy(rateTypes = provider.rateTypes)
+            } else {
+                null
+            }
         }
     }
 
@@ -133,7 +146,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         toContractAddress: String,
         toNetwork: String,
         fromAmount: String,
-        providerId: Int,
+        providerId: String,
         rateType: RateType,
     ): AggregatedSwapDataModel<QuoteModel> {
         return withContext(coroutineDispatcher.io) {
@@ -274,7 +287,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         toContractAddress: String,
         toNetwork: String,
         fromAmount: String,
-        providerId: Int,
+        providerId: String,
         rateType: RateType,
     ): ExchangeQuote {
         val response = tangemExpressApi.getExchangeQuote(
