@@ -21,4 +21,6 @@ data class UiActions(
     // region new actions
     val onClickFee: () -> Unit,
     val onSelectFeeType: (FeeType) -> Unit,
+    val onProviderClick: (String) -> Unit,
+    val onProviderSelect: (String) -> Unit,
 )
