@@ -7,15 +7,9 @@ import java.math.BigDecimal
 
 class SwapDataCacheImpl : SwapDataCache {
 
-    private val availableTokensForNetwork: MutableMap<String, List<Currency>> = mutableMapOf()
-    private val feesForNetworks: MutableMap<String, BigDecimal> = mutableMapOf()
     private val tokensBalances: MutableMap<String, Map<String, SwapAmount>> = mutableMapOf()
     private val lastInWalletTokens = mutableListOf<TokenWithBalanceExpress>()
     private val lastLoadedTokens = mutableListOf<TokenWithBalanceExpress>()
-
-    override fun cacheLastFeeForNetwork(fee: BigDecimal, networkId: String) {
-        feesForNetworks[networkId] = fee
-    }
 
     override fun cacheInWalletTokens(tokens: List<TokenWithBalanceExpress>) {
         lastInWalletTokens.clear()
@@ -41,18 +35,6 @@ class SwapDataCacheImpl : SwapDataCache {
 
     override fun cacheBalances(networkId: String, derivationPath: String?, balances: Map<String, SwapAmount>) {
         tokensBalances[createKeyFrom(networkId, derivationPath)] = balances
-    }
-
-    override fun cacheAvailableToSwapTokens(networkId: String, tokens: List<Currency>) {
-        availableTokensForNetwork[networkId] = tokens
-    }
-
-    override fun getLastFeeForNetwork(networkId: String): BigDecimal? {
-        return feesForNetworks[networkId]
-    }
-
-    override fun getAvailableTokens(networkId: String): List<Currency> {
-        return availableTokensForNetwork.getOrElse(networkId) { emptyList() }
     }
 
     private fun createKeyFrom(networkId: String, derivationPath: String?): String {
