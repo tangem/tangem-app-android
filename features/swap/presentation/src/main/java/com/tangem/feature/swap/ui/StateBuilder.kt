@@ -17,12 +17,15 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
+import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
 
 /**
  * State builder creates a specific states for SwapScreen
@@ -51,7 +54,7 @@ internal class StateBuilder(
                 amountTextFieldValue = null,
                 tokenIconUrl = initialCurrency.iconUrl,
                 tokenCurrency = initialCurrency.symbol,
-                coinId = null,
+                coinId = initialCurrency.network.backendId,
                 canSelectAnotherToken = false,
                 isNotNativeToken = initialCurrency is CryptoCurrency.Token,
                 balance = "",
@@ -79,6 +82,7 @@ internal class StateBuilder(
             updateInProgress = true,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             onCancelPermissionBottomSheet = actions.hidePermissionBottomSheet,
+            providerState = ProviderState.Loading(),
         )
     }
 
@@ -146,7 +150,7 @@ internal class StateBuilder(
                 amountEquivalent = null,
                 tokenIconUrl = fromToken.iconUrl,
                 tokenCurrency = fromToken.symbol,
-                coinId = fromToken.id.value,
+                coinId = fromToken.network.backendId,
                 isNotNativeToken = fromToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectSendToken,
                 balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
@@ -158,7 +162,7 @@ internal class StateBuilder(
                 amountEquivalent = null,
                 tokenIconUrl = toToken.iconUrl,
                 tokenCurrency = toToken.symbol,
-                coinId = toToken.id.value,
+                coinId = toToken.network.backendId,
                 isNotNativeToken = toToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectReceiveToken,
                 balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
@@ -185,6 +189,7 @@ internal class StateBuilder(
         uiStateHolder: SwapStateHolder,
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
+        swapProvider: SwapProvider,
         onFeeSetup: (TxFee) -> Unit,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -213,29 +218,31 @@ internal class StateBuilder(
             )
         }
         val feeState = createFeeState(quoteModel, uiStateHolder, onFeeSetup)
+        val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
+        val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
-                amountEquivalent = quoteModel.fromTokenInfo.tokenFiatBalance,
+                amountEquivalent = fromCurrencyStatus.getFormattedAmount(quoteModel.fromTokenInfo.amountFiat),
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
-                coinId = quoteModel.fromTokenInfo.coinId,
+                coinId = fromCurrencyStatus.currency.network.backendId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
-                balance = quoteModel.fromTokenInfo.tokenWalletBalance,
+                balance = fromCurrencyStatus.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
-                amountEquivalent = quoteModel.toTokenInfo.tokenFiatBalance,
+                amountEquivalent = toCurrencyStatus.getFormattedAmount(quoteModel.toTokenInfo.amountFiat),
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
-                coinId = quoteModel.toTokenInfo.coinId,
+                coinId = toCurrencyStatus.currency.network.backendId,
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
-                balance = quoteModel.toTokenInfo.tokenWalletBalance,
+                balance = toCurrencyStatus.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             networkCurrency = quoteModel.networkCurrency,
@@ -256,6 +263,10 @@ internal class StateBuilder(
                 onClick = actions.onSwapClick,
             ),
             updateInProgress = false,
+            providerState = swapProvider.convertToContentClickableProviderState(
+                fromTokenInfo = quoteModel.fromTokenInfo,
+                toTokenInfo = quoteModel.toTokenInfo,
+            ),
         )
     }
 
@@ -298,6 +309,7 @@ internal class StateBuilder(
                 onClick = { },
             ),
             updateInProgress = false,
+            providerState = ProviderState.Empty(),
         )
     }
 
@@ -726,9 +738,34 @@ internal class StateBuilder(
         return "$firstAddressPart...$secondAddressPart"
     }
 
+    private fun SwapProvider.convertToContentClickableProviderState(
+        fromTokenInfo: TokenSwapInfo,
+        toTokenInfo: TokenSwapInfo,
+    ): ProviderState {
+        val rate = fromTokenInfo.tokenAmount.value / toTokenInfo.tokenAmount.value
+        val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
+        val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
+        val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
+        return ProviderState.Content(
+            id = this.providerId,
+            name = this.name ?: "",
+            iconUrl = this.imageLarge ?: "",
+            type = this.type.toString(),
+            rate = rateString,
+            additionalBadge = ProviderState.AdditionalBadge.BestTrade,
+            selectionType = ProviderState.SelectionType.CLICK,
+            percentLowerThenBest = null,
+            onProviderClick = {},
+        )
+    }
+
     private fun CryptoCurrencyStatus.getFormattedAmount(): String {
         val amount = value.amount ?: return UNKNOWN_AMOUNT_SIGN
 
+        return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
+    }
+
+    private fun CryptoCurrencyStatus.getFormattedAmount(amount: BigDecimal): String {
         return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
     }
 
