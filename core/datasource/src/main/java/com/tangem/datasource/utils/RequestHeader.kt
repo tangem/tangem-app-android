@@ -1,6 +1,7 @@
 package com.tangem.datasource.utils
 
 import com.tangem.lib.auth.AuthProvider
+import com.tangem.lib.auth.ExpressAuthProvider
 
 /**
  * Presentation of request header
@@ -17,5 +18,11 @@ sealed class RequestHeader(vararg pairs: Pair<String, () -> String>) {
     class AuthenticationHeader(authProvider: AuthProvider) : RequestHeader(
         "card_id" to { authProvider.getCardId() },
         "card_public_key" to { authProvider.getCardPublicKey() },
+    )
+
+    class Express(expressAuthProvider: ExpressAuthProvider) : RequestHeader(
+        "api-key" to { expressAuthProvider.getApiKey() },
+        "user-id" to { expressAuthProvider.getUserId() },
+        "session-id" to { expressAuthProvider.getSessionId() },
     )
 }
