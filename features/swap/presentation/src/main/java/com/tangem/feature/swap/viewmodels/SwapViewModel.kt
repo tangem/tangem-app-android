@@ -18,7 +18,6 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
-import com.tangem.feature.swap.domain.models.domain.RateType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
@@ -74,7 +73,7 @@ internal class SwapViewModel @Inject constructor(
     private val inputNumberFormatter =
         InputNumberFormatter(NumberFormat.getInstance(Locale.getDefault()) as DecimalFormat)
     private val amountDebouncer = Debouncer()
-    private val singleTaskScheduler = SingleTaskScheduler<SwapState>()
+    private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
 
     private var dataState by mutableStateOf(SwapProcessDataState(networkId = initialCryptoCurrency.network.backendId))
 
@@ -174,10 +173,10 @@ internal class SwapViewModel @Inject constructor(
             )
         } else {
             startLoadingQuotes(
-                fromToken = fromCurrencyStatus.currency,
-                toToken = selectedCurrency.currency,
+                fromToken = fromCurrencyStatus,
+                toToken = selectedCurrency,
                 amount = lastAmount.value,
-                toProvidersList = findSwapProviders(fromCurrencyStatus, selectedCurrency)
+                toProvidersList = findSwapProviders(fromCurrencyStatus, selectedCurrency),
             )
         }
     }
@@ -196,13 +195,18 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun startLoadingQuotes(
-        fromToken: CryptoCurrency,
-        toToken: CryptoCurrency,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus,
         amount: String,
         toProvidersList: List<SwapProvider>,
     ) {
         singleTaskScheduler.cancelTask()
-        uiState = stateBuilder.createQuotesLoadingState(uiState, fromToken, toToken, initialCryptoCurrency.id.value)
+        uiState = stateBuilder.createQuotesLoadingState(
+            uiState,
+            fromToken.currency,
+            toToken.currency,
+            initialCryptoCurrency.id.value,
+        )
         singleTaskScheduler.scheduleTask(
             viewModelScope,
             loadQuotesTask(
@@ -220,20 +224,20 @@ internal class SwapViewModel @Inject constructor(
         val amount = dataState.amount
         if (fromCurrency != null && toCurrency != null && amount != null) {
             startLoadingQuotes(
-                fromToken = fromCurrency.currency,
-                toToken = toCurrency.currency,
+                fromToken = fromCurrency,
+                toToken = toCurrency,
                 amount = amount,
-                toProvidersList = findSwapProviders(fromCurrency, toCurrency)
+                toProvidersList = findSwapProviders(fromCurrency, toCurrency),
             )
         }
     }
 
     private fun loadQuotesTask(
-        fromToken: CryptoCurrency,
-        toToken: CryptoCurrency,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus,
         amount: String,
         toProvidersList: List<SwapProvider>,
-    ): PeriodicTask<SwapState> {
+    ): PeriodicTask<Map<SwapProvider, SwapState>> {
         return PeriodicTask(
             UPDATE_DELAY,
             task = {
@@ -251,17 +255,19 @@ internal class SwapViewModel @Inject constructor(
                         providers = toProvidersList,
                         amountToSwap = amount,
                         selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
-                    ).entries.first().value// TODO
+                    )
                 }
             },
-            onSuccess = { swapState ->
-                when (swapState) {
+            onSuccess = { providersState ->
+                val (provider, state) = updateLoadedQuotes(providersState)
+                when (state) {
                     is SwapState.QuotesLoadedState -> {
-                        fillDataState(swapState.permissionState, swapState.swapDataModel)
+                        fillDataState(state.permissionState, state.swapDataModel)
                         uiState = stateBuilder.createQuotesLoadedState(
                             uiStateHolder = uiState,
-                            quoteModel = swapState,
-                            fromToken = fromToken,
+                            quoteModel = state,
+                            fromToken = fromToken.currency,
+                            swapProvider = provider,
                         ) { updatedFee ->
                             dataState = dataState.copy(
                                 selectedFee = updatedFee,
@@ -271,12 +277,12 @@ internal class SwapViewModel @Inject constructor(
                     is SwapState.EmptyAmountState -> {
                         uiState = stateBuilder.createQuotesEmptyAmountState(
                             uiStateHolder = uiState,
-                            emptyAmountState = swapState,
+                            emptyAmountState = state,
                         )
                     }
                     is SwapState.SwapError -> {
-                        Timber.e("SwapError when loading quotes ${swapState.error}")
-                        uiState = stateBuilder.mapError(uiState, swapState.error) { startLoadingQuotesFromLastState() }
+                        Timber.e("SwapError when loading quotes ${state.error}")
+                        uiState = stateBuilder.mapError(uiState, state.error) { startLoadingQuotesFromLastState() }
                     }
                 }
             },
@@ -285,6 +291,15 @@ internal class SwapViewModel @Inject constructor(
                 uiState = stateBuilder.addWarning(uiState, null) { startLoadingQuotesFromLastState() }
             },
         )
+    }
+
+    private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {
+        val selectedSwapProvider = dataState.selectedProvider ?: state.keys.first()
+        dataState = dataState.copy(
+            selectedProvider = selectedSwapProvider,
+            lastLoadedSwapStates = state,
+        )
+        return state.entries.first { it.key == selectedSwapProvider }.toPair()
     }
 
     private fun fillDataState(permissionState: PermissionDataState, swapDataModel: SwapStateData?) {
@@ -435,10 +450,10 @@ internal class SwapViewModel @Inject constructor(
                 toCryptoCurrency = toToken,
             )
             startLoadingQuotes(
-                fromToken = fromToken.currency,
-                toToken = toToken.currency,
+                fromToken = fromToken,
+                toToken = toToken,
                 amount = lastAmount.value,
-                toProvidersList = findSwapProviders(fromToken, toToken)
+                toProvidersList = findSwapProviders(fromToken, toToken),
             )
             swapRouter.openScreen(SwapNavScreen.Main)
         }
@@ -460,10 +475,10 @@ internal class SwapViewModel @Inject constructor(
                 inputNumberFormatter.formatWithThousands(lastAmount.value, decimals),
             )
             startLoadingQuotes(
-                fromToken = newFromToken.currency,
-                toToken = newToToken.currency,
+                fromToken = newFromToken,
+                toToken = newToToken,
                 amount = lastAmount.value,
-                toProvidersList = findSwapProviders(newFromToken, newToToken)
+                toProvidersList = findSwapProviders(newFromToken, newToToken),
             )
         }
     }
@@ -479,10 +494,10 @@ internal class SwapViewModel @Inject constructor(
                 stateBuilder.updateSwapAmount(uiState, inputNumberFormatter.formatWithThousands(cutValue, decimals))
             amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
                 startLoadingQuotes(
-                    fromToken = fromToken.currency,
-                    toToken = toToken.currency,
+                    fromToken = fromToken,
+                    toToken = toToken,
                     amount = lastAmount.value,
-                    toProvidersList = findSwapProviders(fromToken, toToken)
+                    toProvidersList = findSwapProviders(fromToken, toToken),
                 )
             }
         }

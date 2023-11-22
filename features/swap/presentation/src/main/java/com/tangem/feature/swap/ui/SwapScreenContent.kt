@@ -32,6 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -76,6 +77,8 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
             ) {
                 MainInfo(state)
+
+                ProviderItemBlock(state = state.providerState)
 
                 FeeItem(feeState = state.fee, currency = state.networkCurrency)
 
@@ -476,6 +479,7 @@ private val state = SwapStateHolder(
     onChangeCardsClicked = {},
     permissionState = SwapPermissionState.InProgress,
     blockchainId = "POLYGON",
+    providerState = ProviderState.Loading(),
 )
 
 @Preview

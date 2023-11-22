@@ -36,11 +36,13 @@ private val GrayscaleColorFilter: ColorFilter
 
 @Composable
 fun ProviderItemBlock(state: ProviderState) {
-    BaseContainer(state) {
-        ProviderItem(
-            state = state,
-            modifier = Modifier.align(Alignment.CenterStart),
-        )
+    if (state !is ProviderState.Empty) {
+        BaseContainer(state) {
+            ProviderItem(
+                state = state,
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
+        }
     }
 }
 
@@ -64,6 +66,9 @@ fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected
                 state = state,
                 modifier = modifier,
             )
+        }
+        is ProviderState.Empty -> {
+            // do nothing
         }
     }
 }
