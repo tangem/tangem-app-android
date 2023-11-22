@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.Provider
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
@@ -21,11 +22,14 @@ import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
+import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * State builder creates a specific states for SwapScreen
@@ -224,7 +228,7 @@ internal class StateBuilder(
             sendCardData = SwapCardState.SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
-                amountEquivalent = fromCurrencyStatus.getFormattedAmount(quoteModel.fromTokenInfo.amountFiat),
+                amountEquivalent = getFormattedFiatAmount(quoteModel.fromTokenInfo.amountFiat),
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = fromCurrencyStatus.currency.network.backendId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
@@ -236,7 +240,7 @@ internal class StateBuilder(
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
-                amountEquivalent = toCurrencyStatus.getFormattedAmount(quoteModel.toTokenInfo.amountFiat),
+                amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = toCurrencyStatus.currency.network.backendId,
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
@@ -266,6 +270,7 @@ internal class StateBuilder(
             providerState = swapProvider.convertToContentClickableProviderState(
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
+                onProviderClick = actions.onProviderClick,
             ),
         )
     }
@@ -709,6 +714,66 @@ internal class StateBuilder(
         }
     }
 
+    fun showPermissionBottomSheet(uiState: SwapStateHolder, onDismiss: () -> Unit): SwapStateHolder {
+        val permissionState = uiState.permissionState
+        if (permissionState is SwapPermissionState.ReadyForRequest) {
+            val config = GivePermissionBottomSheetConfig(
+                data = permissionState,
+                onCancel = onDismiss,
+            )
+            return uiState.copy(
+                bottomSheetConfig = TangemBottomSheetConfig(
+                    isShow = true,
+                    onDismissRequest = onDismiss,
+                    content = config,
+                ),
+            )
+        }
+        return uiState
+    }
+
+    fun dismissBottomSheet(uiState: SwapStateHolder): SwapStateHolder {
+        return uiState.copy(
+            bottomSheetConfig = uiState.bottomSheetConfig?.copy(isShow = false),
+        )
+    }
+
+    fun showSelectProviderBottomSheet(
+        uiState: SwapStateHolder,
+        selectedProviderId: String,
+        providersStates: Map<SwapProvider, SwapState>,
+        onDismiss: () -> Unit,
+    ): SwapStateHolder {
+        val config = ChooseProviderBottomSheetConfig(
+            selectedProviderId = selectedProviderId,
+            providers = providersStates.entries
+                .mapNotNull { it.convertToProviderState(actions.onProviderSelect) }
+                .toImmutableList(),
+        )
+        return uiState.copy(
+            bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = onDismiss,
+                content = config,
+            ),
+        )
+    }
+
+    private fun Map.Entry<SwapProvider, SwapState>.convertToProviderState(
+        onProviderSelect: (String) -> Unit,
+    ): ProviderState? {
+        val provider = this.key
+        return when (val state = this.value) {
+            is SwapState.EmptyAmountState -> null
+            is SwapState.QuotesLoadedState -> provider.convertToContentClickableProviderState(
+                state.fromTokenInfo,
+                state.toTokenInfo,
+                onProviderClick = onProviderSelect,
+            )
+            is SwapState.SwapError -> null
+        }
+    }
+
     private fun createPermissionNotificationConfig(fromTokenSymbol: String): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.swapping_permission_header),
@@ -724,7 +789,7 @@ internal class StateBuilder(
         return NotificationConfig(
             title = resourceReference(R.string.swapping_high_price_impact),
             subtitle = resourceReference(R.string.swapping_high_price_impact_description),
-            iconResId = R.drawable.ic_locked_24,
+            iconResId = R.drawable.ic_alert_circle_24,
         )
     }
 
@@ -741,8 +806,13 @@ internal class StateBuilder(
     private fun SwapProvider.convertToContentClickableProviderState(
         fromTokenInfo: TokenSwapInfo,
         toTokenInfo: TokenSwapInfo,
+        onProviderClick: (String) -> Unit,
     ): ProviderState {
-        val rate = fromTokenInfo.tokenAmount.value / toTokenInfo.tokenAmount.value
+        val rate = toTokenInfo.tokenAmount.value.divide(
+            fromTokenInfo.tokenAmount.value,
+            toTokenInfo.cryptoCurrencyStatus.currency.decimals,
+            RoundingMode.HALF_UP,
+        )
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
         val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
@@ -755,7 +825,7 @@ internal class StateBuilder(
             additionalBadge = ProviderState.AdditionalBadge.BestTrade,
             selectionType = ProviderState.SelectionType.CLICK,
             percentLowerThenBest = null,
-            onProviderClick = {},
+            onProviderClick = onProviderClick,
         )
     }
 
@@ -765,16 +835,18 @@ internal class StateBuilder(
         return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
     }
 
-    private fun CryptoCurrencyStatus.getFormattedAmount(amount: BigDecimal): String {
-        return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
-    }
-
     @Suppress("UnusedPrivateMember")
     private fun CryptoCurrencyStatus.getFormattedFiatAmount(): String {
         val fiatAmount = value.fiatAmount ?: return UNKNOWN_AMOUNT_SIGN
         val appCurrency = appCurrencyProvider()
 
         return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
+    }
+
+    private fun getFormattedFiatAmount(amount: BigDecimal): String {
+        val appCurrency = appCurrencyProvider()
+
+        return BigDecimalFormatter.formatFiatAmount(amount, appCurrency.code, appCurrency.symbol)
     }
 
     private companion object {
