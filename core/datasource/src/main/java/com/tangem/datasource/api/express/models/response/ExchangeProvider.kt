@@ -4,19 +4,19 @@ import com.squareup.moshi.Json
 
 data class ExchangeProvider(
     @Json(name = "id")
-    val id: Int,
+    val id: String,
 
     @Json(name = "name")
     val name: String,
 
-    @Json(name = "id")
+    @Json(name = "type")
     val type: ExchangeProviderType,
 
     @Json(name = "imageLarge")
-    val imageLargeUrl: Int,
+    val imageLargeUrl: String,
 
     @Json(name = "imageSmall")
-    val imageSmallUrl: Int,
+    val imageSmallUrl: String,
 )
 
 enum class ExchangeProviderType {
