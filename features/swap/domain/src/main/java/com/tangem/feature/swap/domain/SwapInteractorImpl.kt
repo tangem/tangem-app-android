@@ -281,11 +281,11 @@ internal class SwapInteractorImpl @Inject constructor(
         providers: List<SwapProvider>,
         amountToSwap: String,
         selectedFee: FeeType,
-    ): SwapState {
+    ): Map<SwapProvider, SwapState> {
         syncWalletBalanceForTokens(networkId, listOf(fromToken, toToken))
         val amountDecimal = toBigDecimalOrNull(amountToSwap)
         if (amountDecimal == null || amountDecimal.signum() == 0) {
-            return createEmptyAmountState(networkId, fromToken, toToken)
+            return providers.associateWith { createEmptyAmountState(networkId, fromToken, toToken) }
         }
         val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken))
         val fromTokenAddress = getTokenAddress(fromToken)
@@ -297,15 +297,18 @@ internal class SwapInteractorImpl @Inject constructor(
         }
         val isBalanceWithoutFeeEnough = isBalanceEnough(networkId, fromToken, amount, null)
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
-            loadSwapData(
-                networkId = networkId,
-                fromTokenAddress = fromTokenAddress,
-                toTokenAddress = toTokenAddress,
-                fromToken = fromToken,
-                toToken = toToken,
-                amount = amount,
-                selectedFee = selectedFee,
-            )
+            // TODO
+            providers.associateWith {
+                loadSwapData(
+                    networkId = networkId,
+                    fromTokenAddress = fromTokenAddress,
+                    toTokenAddress = toTokenAddress,
+                    fromToken = fromToken,
+                    toToken = toToken,
+                    amount = amount,
+                    selectedFee = selectedFee,
+                )
+            }
         } else {
             loadQuoteData(
                 networkId = networkId,
@@ -315,7 +318,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
                 providers = providers,
-            ).entries.first().value // TODO
+            )
         }
     }
 
