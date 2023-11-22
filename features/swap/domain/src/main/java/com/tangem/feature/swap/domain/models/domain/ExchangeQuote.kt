@@ -1,8 +1,6 @@
 package com.tangem.feature.swap.domain.models.domain
 
-import java.math.BigDecimal
-
 data class ExchangeQuote(
-    val toAmount: BigDecimal,
+    val toAmount: String,
     val allowanceContract: String?,
 )
