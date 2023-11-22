@@ -10,6 +10,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.res.TangemTheme
+import java.util.UUID
 
 /**
  * Transactions block group title
@@ -38,7 +39,9 @@ internal fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier
 @Composable
 private fun Preview_TransactionsBlockGroupTitle_Light() {
     TangemTheme(isDark = false) {
-        TxHistoryGroupTitle(config = TxHistoryItemState.GroupTitle(title = "Today"))
+        TxHistoryGroupTitle(
+            config = TxHistoryItemState.GroupTitle(title = "Today", itemKey = UUID.randomUUID().toString()),
+        )
     }
 }
 
@@ -46,6 +49,8 @@ private fun Preview_TransactionsBlockGroupTitle_Light() {
 @Composable
 private fun Preview_TransactionsBlockGroupTitle_Dark() {
     TangemTheme(isDark = true) {
-        TxHistoryGroupTitle(config = TxHistoryItemState.GroupTitle(title = "Today"))
+        TxHistoryGroupTitle(
+            config = TxHistoryItemState.GroupTitle(title = "Today", itemKey = UUID.randomUUID().toString()),
+        )
     }
 }
