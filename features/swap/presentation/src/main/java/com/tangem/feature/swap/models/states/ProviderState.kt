@@ -5,6 +5,11 @@ sealed class ProviderState {
     abstract val onProviderClick: ((String) -> Unit)?
     abstract val id: String
 
+    data class Empty(
+        override val id: String = "",
+        override val onProviderClick: ((String) -> Unit)? = null,
+    ) : ProviderState()
+
     data class Loading(
         override val id: String = "",
         override val onProviderClick: ((String) -> Unit)? = null,
