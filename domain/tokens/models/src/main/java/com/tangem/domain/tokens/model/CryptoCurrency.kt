@@ -94,6 +94,8 @@ sealed class CryptoCurrency : Parcelable {
         /** Represents a raw cryptocurrency ID. If it is a custom token, the value will be `null`. */
         val rawCurrencyId: String? get() = (suffix as? Suffix.RawID)?.rawId
 
+        val contractAddress: String? get() = (suffix as? Suffix.RawID)?.contractAddress
+
         /** Represents a raw cryptocurrency's network ID. */
         val rawNetworkId: String
             get() = when (body) {
