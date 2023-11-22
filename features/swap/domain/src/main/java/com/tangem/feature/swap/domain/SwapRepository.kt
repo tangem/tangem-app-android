@@ -10,6 +10,8 @@ interface SwapRepository {
 
     suspend fun getPairs(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): List<SwapPairLeast>
 
+    suspend fun getProvidersDetails(providers: Set<SwapProvider>): List<SwapProvider>
+
     suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
 
     suspend fun getExchangeableTokens(networkId: String): List<Currency>
@@ -21,7 +23,7 @@ interface SwapRepository {
         toContractAddress: String,
         toNetwork: String,
         fromAmount: String,
-        providerId: Int,
+        providerId: String,
         rateType: RateType,
     ): AggregatedSwapDataModel<QuoteModel>
 
@@ -73,7 +75,7 @@ interface SwapRepository {
         toContractAddress: String,
         toNetwork: String,
         fromAmount: String,
-        providerId: Int,
+        providerId: String,
         rateType: RateType,
     ): ExchangeQuote
 }
