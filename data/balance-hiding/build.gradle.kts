@@ -11,10 +11,10 @@ android {
 }
 
 dependencies {
+    implementation(deps.androidx.datastore)
 
     /** DI */
     implementation(deps.hilt.android)
-
     kapt(deps.hilt.kapt)
 
     implementation(deps.kotlin.coroutines)
