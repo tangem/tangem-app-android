@@ -1,5 +1,6 @@
 package com.tangem.lib.crypto
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
@@ -16,7 +17,7 @@ interface UserWalletManager {
     suspend fun getUserTokens(networkId: String, derivationPath: String?, isExcludeCustom: Boolean): List<Currency>
 
     @Throws(IllegalStateException::class)
-    fun getNativeTokenForNetwork(networkId: String): Currency
+    fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 
     /**
      * Returns user walletId or empty string
