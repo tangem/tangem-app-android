@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.models
 
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
@@ -22,6 +23,7 @@ data class SwapStateHolder(
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
     val successState: SwapSuccessStateHolder? = null,
     val selectTokenState: SwapSelectTokenStateHolder? = null,
+    val bottomSheetConfig: TangemBottomSheetConfig? = null,
 
     val swapButton: SwapButton,
 
