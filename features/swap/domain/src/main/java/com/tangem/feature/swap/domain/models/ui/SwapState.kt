@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.models.ui
 
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
@@ -51,9 +52,8 @@ sealed class PermissionDataState {
 
 data class TokenSwapInfo(
     val tokenAmount: SwapAmount,
-    val coinId: String,
-    val tokenWalletBalance: String,
-    val tokenFiatBalance: String,
+    val amountFiat: BigDecimal,
+    val cryptoCurrencyStatus: CryptoCurrencyStatus,
 )
 
 data class RequestApproveStateData(

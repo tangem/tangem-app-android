@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -13,16 +14,6 @@ interface SwapInteractor {
     suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress
 
     fun initDerivationPathAndNetwork(derivationPath: String?, network: Network)
-
-    /**
-     * Init tokens to swap, load tokens list available to swap for given network
-     *
-     * @param initialCurrency currency which to swap or receive
-     * @return [TokensDataState] that contains info about all available to swap tokens for networkId
-     * and preselected tokens which initially select to swap
-     */
-    @Deprecated("method is used in the old swap mechanism")
-    suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState
 
     /**
      * On search token, locally search tokens in previously loaded list to swap
@@ -65,8 +56,8 @@ interface SwapInteractor {
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         networkId: String,
-        fromToken: CryptoCurrency,
-        toToken: CryptoCurrency,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus,
         providers: List<SwapProvider>,
         amountToSwap: String,
         selectedFee: FeeType = FeeType.NORMAL,

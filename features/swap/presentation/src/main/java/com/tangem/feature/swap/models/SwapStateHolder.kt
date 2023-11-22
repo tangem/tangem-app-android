@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.feature.swap.domain.models.ui.TxFee
+import com.tangem.feature.swap.models.states.ProviderState
 
 data class SwapStateHolder(
     val sendCardData: SwapCardState,
@@ -16,6 +17,7 @@ data class SwapStateHolder(
     val warnings: List<SwapWarning> = emptyList(),
     val alert: SwapWarning.GenericWarning? = null,
     val updateInProgress: Boolean = false,
+    val providerState: ProviderState,
 
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
     val successState: SwapSuccessStateHolder? = null,
