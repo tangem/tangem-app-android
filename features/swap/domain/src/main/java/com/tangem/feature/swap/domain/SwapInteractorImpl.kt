@@ -190,14 +190,6 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     @Deprecated("used in old swap mechanism")
-    override fun findTokenById(id: String): CryptoCurrency? {
-        val tokensInWallet = cache.getInWalletTokens()
-        val loadedTokens = cache.getLoadedTokens()
-        return tokensInWallet.firstOrNull { it.token.id.value == id }?.token
-            ?: loadedTokens.firstOrNull { it.token.id.value == id }?.token
-    }
-
-    @Deprecated("used in old swap mechanism")
     override suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): TxState {
         val dataToSign = if (permissionOptions.approveType == SwapApproveType.UNLIMITED) {
             getApproveData(
