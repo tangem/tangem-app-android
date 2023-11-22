@@ -10,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -39,30 +38,21 @@ import java.math.BigDecimal
 
 @Suppress("LongMethod")
 @Composable
-internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick: () -> Unit) {
+internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modifier) {
     val keyboard by keyboardAsState()
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-        Image(
-            modifier = Modifier
-                .size(width = TangemTheme.dimens.size164, height = TangemTheme.dimens.size80)
-                .align(Alignment.BottomCenter)
-                .padding(bottom = TangemTheme.dimens.spacing28),
-            painter = painterResource(id = R.drawable.ill_one_inch_powered),
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-        )
-
         Column {
             AppBarWithBackButton(
                 text = stringResource(R.string.common_swap),
                 onBackClick = state.onBackClicked,
                 iconRes = R.drawable.ic_close_24,
             )
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,7 +88,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                         },
                     )
                 }
-                MainButton(state = state, onPermissionWarningClick = onPermissionWarningClick)
+                MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
             }
         }
 
@@ -486,7 +476,7 @@ private val state = SwapStateHolder(
 @Composable
 private fun SwapScreenContentPreview() {
     TangemTheme(isDark = false) {
-        SwapScreenContent(state = state) {}
+        SwapScreenContent(state = state, modifier = Modifier)
     }
 }
 

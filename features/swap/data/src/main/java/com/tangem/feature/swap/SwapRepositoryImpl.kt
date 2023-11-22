@@ -43,11 +43,9 @@ internal class SwapRepositoryImpl @Inject constructor(
 ) : SwapRepository {
 
     private val tokensConverter = TokensConverter()
-    private val quotesConverter = QuotesConverter()
     private val swapConverter = SwapConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
-    private val rateTypeConverter = RateTypeConverter()
     private val swapProviderConverter = SwapProviderConverter()
 
     override suspend fun getPairs(
