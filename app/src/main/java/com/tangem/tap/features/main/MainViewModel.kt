@@ -50,7 +50,8 @@ internal class MainViewModel @Inject constructor(
                 it.isBalanceHidingNotificationEnabled && it.isBalanceHidden
             }
             .onEach {
-                if (state.value.modalNotification?.isShow != true) {
+                if (state.value.modalNotification?.isShow != true && !it.isUpdateFromToast) {
+                    listenToFlipsUseCase.changeUpdateEnabled(false)
                     stateHolder.updateWithHiddenBalancesNotification()
                     reduxNavController.navigate(NavigationAction.NavigateTo(AppScreen.ModalNotification))
                 }
@@ -79,7 +80,9 @@ internal class MainViewModel @Inject constructor(
                     return@onEach
                 }
 
-                displayBalancesHiddenStatusToast(settings)
+                if (!settings.isUpdateFromToast) {
+                    displayBalancesHiddenStatusToast(settings)
+                }
 
                 previousSettings = settings
             }
@@ -96,7 +99,10 @@ internal class MainViewModel @Inject constructor(
     override fun onHiddenBalanceToastAction() {
         viewModelScope.launch {
             updateBalanceHidingSettingsUseCase.invoke {
-                copy(isBalanceHidden = false)
+                copy(
+                    isBalanceHidden = false,
+                    isUpdateFromToast = true,
+                )
             }
         }
     }
@@ -104,7 +110,10 @@ internal class MainViewModel @Inject constructor(
     override fun onShownBalanceToastAction() {
         viewModelScope.launch {
             updateBalanceHidingSettingsUseCase.invoke {
-                copy(isBalanceHidden = true)
+                copy(
+                    isBalanceHidden = true,
+                    isUpdateFromToast = true,
+                )
             }
         }
     }
@@ -112,6 +121,7 @@ internal class MainViewModel @Inject constructor(
     override fun onHiddenBalanceNotificationAction(isPermanent: Boolean) {
         onDismissBottomSheet()
 
+        stateHolder.updateWithHiddenBalancesToast(true)
         if (isPermanent) {
             viewModelScope.launch {
                 updateBalanceHidingSettingsUseCase.invoke {
@@ -122,6 +132,8 @@ internal class MainViewModel @Inject constructor(
     }
 
     override fun onDismissBottomSheet() {
+        listenToFlipsUseCase.changeUpdateEnabled(true)
         stateHolder.updateWithoutModalNotification()
+        stateHolder.updateWithHiddenBalancesToast(true)
     }
 }
