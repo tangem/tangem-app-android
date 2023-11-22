@@ -32,7 +32,7 @@ interface TangemExpressApi {
         @Query("toContractAddress") toContractAddress: String,
         @Query("toNetwork") toNetwork: String,
         @Query("fromAmount") fromAmount: String,
-        @Query("providerId") providerId: Int,
+        @Query("providerId") providerId: String,
         @Query("rateType") rateType: String,
     ): ApiResponse<ExchangeQuoteResponse>
 
