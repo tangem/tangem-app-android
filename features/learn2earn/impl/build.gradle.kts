@@ -22,6 +22,7 @@ dependencies {
     implementation(project(":data:common"))
     implementation(project(":libs:auth"))
     implementation(project(":libs:crypto"))
+    implementation(projects.domain.tokens.models)
 
     implementation(deps.material)
 
