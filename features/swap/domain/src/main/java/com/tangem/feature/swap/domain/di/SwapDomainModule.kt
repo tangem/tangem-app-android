@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain.di
 
 import com.tangem.domain.tokens.GetCardTokensListUseCase
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
