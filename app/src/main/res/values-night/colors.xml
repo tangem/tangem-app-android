@@ -10,7 +10,7 @@
     <color name="button_disabled">#303030</color>
     <!--<color name="button_positive">#1ACE80</color>-->
     <!--<color name="button_positive_disabled">#06311F</color>-->
-    <color name="button_primary">#F5F5F5</color>
+    <color name="button_primary">#FFC9C9C9</color>
     <color name="button_secondary">#303030</color>
 
     <color name="control_checked">#1ACE80</color>
