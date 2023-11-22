@@ -17,6 +17,12 @@ class DefaultMarketCryptoCurrencyRepository(
         return userMarketCoinsStore.getSyncOrNull(userWalletId)?.coins
             ?.firstOrNull { it.id == cryptoCurrencyId.rawCurrencyId }
             ?.networks
-            ?.firstOrNull { it.networkId == apiNetworkId }?.exchangeable ?: false
+            ?.firstOrNull {
+                if (it.contractAddress != null) {
+                    it.networkId == apiNetworkId && it.contractAddress == cryptoCurrencyId.contractAddress
+                } else {
+                    it.networkId == apiNetworkId
+                }
+            }?.exchangeable ?: false
     }
 }
