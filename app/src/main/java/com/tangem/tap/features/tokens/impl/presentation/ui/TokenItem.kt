@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -25,7 +26,6 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
-import com.tangem.tap.common.compose.extensions.toPx
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
 import com.tangem.wallet.R
 import kotlinx.coroutines.launch
@@ -126,29 +126,37 @@ internal fun TokenItem(model: TokenItemState) {
 
 @Composable
 private fun Icon(name: String, iconUrl: String, onContrastCalculate: (Color) -> Unit, modifier: Modifier = Modifier) {
+    val pixelsSize = with(LocalDensity.current) { TangemTheme.dimens.size46.roundToPx() }
     val iconModifier = modifier
         .size(size = TangemTheme.dimens.size46)
         .clip(TangemTheme.shapes.roundedCorners8)
-    val screenBackgroundColor = TangemTheme.colors.background.primary.toArgb()
+
+    var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
+    var isBackgroundColorDefined by remember { mutableStateOf(false) }
+    val itemBackgroundColor = TangemTheme.colors.background.primary.toArgb()
     val isDarkTheme = isSystemInDarkTheme()
     val coroutineScope = rememberCoroutineScope()
 
     SubcomposeAsyncImage(
         modifier = iconModifier,
         model = ImageRequest.Builder(context = LocalContext.current)
-            .size(size = TangemTheme.dimens.size46.toPx().toInt())
             .data(data = iconUrl)
+            .size(size = pixelsSize)
+            .memoryCacheKey(key = iconUrl + pixelsSize)
             .crossfade(enable = true)
             .allowHardware(false)
             .listener(
                 onSuccess = { _, result ->
-                    if (isDarkTheme) {
+                    if (!isBackgroundColorDefined && isDarkTheme) {
                         coroutineScope.launch {
                             val color = ImageBackgroundContrastChecker(
                                 drawable = result.drawable,
-                                backgroundColor = screenBackgroundColor,
-                            ).getContrastColorIfNeeded(isDarkTheme)
+                                backgroundColor = itemBackgroundColor,
+                                size = pixelsSize,
+                            ).getContrastColor(isDarkTheme = true)
                             onContrastCalculate(color)
+                            iconBackgroundColor = color
+                            isBackgroundColorDefined = true
                         }
                     }
                 },
@@ -189,13 +197,12 @@ private fun Subtitle(isExpanded: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun ChangeNetworksViewButton(isExpanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     IconButton(onClick = onClick, modifier = modifier.size(size = TangemTheme.dimens.size46)) {
         AnimatedContent(
             targetState = isExpanded,
-            transitionSpec = { fadeIn() + scaleIn() with scaleOut() + fadeOut() },
+            transitionSpec = { (fadeIn() + scaleIn()).togetherWith(scaleOut() + fadeOut()) },
         ) { isExpanded ->
             Icon(
                 painter = painterResource(
