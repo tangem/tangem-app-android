@@ -38,8 +38,6 @@ class UserWalletManagerImpl(
     private val walletFeatureToggles: WalletFeatureToggles,
 ) : UserWalletManager {
 
-    val cryptoCurrencyFactory = CryptoCurrencyFactory()
-
     override suspend fun getUserTokens(
         networkId: String,
         derivationPath: String?,
@@ -84,21 +82,13 @@ class UserWalletManagerImpl(
         }
     }
 
-    override fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
+    override fun getNativeTokenForNetwork(networkId: String): Currency {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-
-        return requireNotNull(
-            cryptoCurrencyFactory.createCoin(
-                blockchain = blockchain,
-                extraDerivationPath = null,
-                derivationStyleProvider = requireNotNull(
-                    store.state.globalState
-                        .userWalletsListManager
-                        ?.selectedUserWalletSync
-                        ?.scanResponse
-                        ?.derivationStyleProvider,
-                ),
-            )
+        return NativeToken(
+            id = blockchain.toCoinId(),
+            name = blockchain.fullName,
+            symbol = blockchain.currency,
+            networkId = networkId,
         )
     }
 
