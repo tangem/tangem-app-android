@@ -1,9 +1,7 @@
 package com.tangem.feature.swap.domain.cache
 
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.ui.TokenWithBalanceExpress
-import java.math.BigDecimal
 
 class SwapDataCacheImpl : SwapDataCache {
 
