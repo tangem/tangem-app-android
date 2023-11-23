@@ -78,4 +78,6 @@ interface SwapRepository {
         providerId: String,
         rateType: RateType,
     ): ExchangeQuote
+
+    fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 }
