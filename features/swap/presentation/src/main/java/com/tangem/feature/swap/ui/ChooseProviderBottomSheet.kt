@@ -1,12 +1,15 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
@@ -52,17 +55,24 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                 .background(
                     color = TangemTheme.colors.background.action,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
-                ),
+                )
+                .clip(shape = TangemTheme.shapes.roundedCornersXMedium),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
-            content.providers.forEach {
-                val isSelected = it.id == content.selectedProviderId
+            content.providers.forEach { provider ->
+                val isSelected = provider.id == content.selectedProviderId
                 ProviderItem(
-                    state = it,
+                    state = provider,
                     isSelected = isSelected,
-                    modifier = Modifier.padding(
-                        horizontal = TangemTheme.dimens.spacing12,
-                        vertical = TangemTheme.dimens.spacing12,
-                    ),
+                    modifier = Modifier
+                        .clickable(
+                            enabled = provider.onProviderClick != null,
+                            onClick = { provider.onProviderClick?.invoke(provider.id) },
+                        )
+                        .padding(
+                            horizontal = TangemTheme.dimens.spacing12,
+                            vertical = TangemTheme.dimens.spacing12,
+                        ),
                 )
             }
         }
