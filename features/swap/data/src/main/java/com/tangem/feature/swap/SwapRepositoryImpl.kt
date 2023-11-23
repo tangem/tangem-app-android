@@ -19,7 +19,6 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
@@ -323,7 +322,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                         ?.scanResponse
                         ?.derivationStyleProvider,
                 ),
-            )
+            ),
         )
     }
 
