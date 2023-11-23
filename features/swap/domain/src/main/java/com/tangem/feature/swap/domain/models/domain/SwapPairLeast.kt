@@ -29,9 +29,9 @@ data class CryptoCurrencySwapInfo(
 data class SwapProvider(
     val providerId: String,
     val rateTypes: List<RateType> = emptyList(),
-    val name: String? = null,
-    val type: ExchangeProviderType? = null,
-    val imageLarge: String? = null,
+    val name: String,
+    val type: ExchangeProviderType,
+    val imageLarge: String,
 )
 
 enum class ExchangeProviderType {
