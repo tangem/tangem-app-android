@@ -530,7 +530,7 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun createUiActions(): UiActions {
         return UiActions(
             onSearchEntered = { onSearchEntered(it) },
