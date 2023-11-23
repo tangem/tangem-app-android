@@ -17,7 +17,7 @@ interface UserWalletManager {
     suspend fun getUserTokens(networkId: String, derivationPath: String?, isExcludeCustom: Boolean): List<Currency>
 
     @Throws(IllegalStateException::class)
-    fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
+    fun getNativeTokenForNetwork(networkId: String): Currency
 
     /**
      * Returns user walletId or empty string
