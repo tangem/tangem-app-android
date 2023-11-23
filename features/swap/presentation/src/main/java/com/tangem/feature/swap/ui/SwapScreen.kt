@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material3.*
@@ -12,7 +11,6 @@ import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SwapScreen(stateHolder: SwapStateHolder) {
     BackHandler(onBack = stateHolder.onBackClicked)
