@@ -6,13 +6,10 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnFailure
 import com.tangem.common.extensions.guard
-import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.common.util.derivationStyleProvider
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.UserWalletManager
@@ -23,7 +20,6 @@ import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
 import com.tangem.tap.walletStoresManager
