@@ -133,19 +133,19 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 luna = GetBlockAccessToken(rest = accessTokens.luna?.rest),
                 dogecoin = GetBlockAccessToken(
                     jsonRpc = accessTokens.dogecoin?.jsonRPC,
-                    blockBookRest = accessTokens.dogecoin?.blockBookRest
+                    blockBookRest = accessTokens.dogecoin?.blockBookRest,
                 ),
                 litecoin = GetBlockAccessToken(
                     jsonRpc = accessTokens.litecoin?.jsonRPC,
-                    blockBookRest = accessTokens.litecoin?.blockBookRest
+                    blockBookRest = accessTokens.litecoin?.blockBookRest,
                 ),
                 dash = GetBlockAccessToken(
                     jsonRpc = accessTokens.dash?.jsonRPC,
-                    blockBookRest = accessTokens.dash?.blockBookRest
+                    blockBookRest = accessTokens.dash?.blockBookRest,
                 ),
                 bitcoin = GetBlockAccessToken(
                     jsonRpc = accessTokens.bitcoin?.jsonRPC,
-                    blockBookRest = accessTokens.bitcoin?.blockBookRest
+                    blockBookRest = accessTokens.bitcoin?.blockBookRest,
                 ),
             )
         }
