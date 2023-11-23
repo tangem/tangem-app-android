@@ -621,6 +621,7 @@ internal class SwapViewModel @Inject constructor(
                 val swapState = dataState.lastLoadedSwapStates[provider]
                 val fromToken = dataState.fromCryptoCurrency
                 if (provider != null && swapState != null && fromToken != null) {
+                    uiState = stateBuilder.updateSelectedProvider(uiState, provider.providerId)
                     setupLoadedState(
                         provider = provider,
                         state = swapState,
