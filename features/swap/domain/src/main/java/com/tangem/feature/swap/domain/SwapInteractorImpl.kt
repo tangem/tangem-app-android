@@ -505,7 +505,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private suspend fun getFormattedFiatFees(networkId: String, vararg fees: BigDecimal): List<String> {
         val appCurrency = userWalletManager.getUserAppCurrency()
-        val nativeToken = userWalletManager.getNativeTokenForNetwork(networkId)
+        val nativeToken = repository.getNativeTokenForNetwork(networkId)
         val rates = getQuotes(nativeToken.id)
         return rates[nativeToken.id]?.fiatRate?.let { rate ->
             fees.map { fee ->
@@ -595,8 +595,7 @@ internal class SwapInteractorImpl @Inject constructor(
     ): SwapState.QuotesLoadedState {
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
-        val appCurrency = userWalletManager.getUserAppCurrency()
-        val nativeToken = userWalletManager.getNativeTokenForNetwork(networkId)
+        val nativeToken = repository.getNativeTokenForNetwork(networkId)
     
         val rates = getQuotes(fromToken.id, toToken.id, nativeToken.id)
         return SwapState.QuotesLoadedState(
@@ -653,7 +652,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val feeData = transactionManager.getFee(
             networkId = networkId,
             amountToSend = BigDecimal.ZERO,
-            currencyToSend = swapCurrencyConverter.convert(userWalletManager.getNativeTokenForNetwork(networkId)),
+            currencyToSend = swapCurrencyConverter.convert(repository.getNativeTokenForNetwork(networkId)),
             destinationAddress = getTokenAddress(fromToken),
             increaseBy = INCREASE_GAS_LIMIT_BY,
             data = transactionData,
