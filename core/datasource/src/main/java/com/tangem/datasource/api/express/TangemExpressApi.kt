@@ -42,9 +42,9 @@ interface TangemExpressApi {
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
         @Query("toNetwork") toNetwork: String,
-        @Query("fromAmount") fromAmount: BigDecimal,
-        @Query("providerId") providerId: Int,
-        @Query("rateType") rateType: RateType,
+        @Query("fromAmount") fromAmount: String,
+        @Query("providerId") providerId: String,
+        @Query("rateType") rateType: String,
         @Query("toAddress") toAddress: String,
     ): ApiResponse<ExchangeDataResponse>
 
