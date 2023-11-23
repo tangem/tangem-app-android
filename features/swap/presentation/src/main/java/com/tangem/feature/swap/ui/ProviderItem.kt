@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -35,9 +34,9 @@ private val GrayscaleColorFilter: ColorFilter
     get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
 
 @Composable
-fun ProviderItemBlock(state: ProviderState) {
+fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier) {
     if (state !is ProviderState.Empty) {
-        BaseContainer(state) {
+        BaseContainer(modifier = modifier) {
             ProviderItem(
                 state = state,
                 modifier = Modifier.align(Alignment.CenterStart),
@@ -279,17 +278,14 @@ private fun BoxScope.ProviderChevron(state: ProviderState.Content, isSelected: B
 }
 
 @Composable
-private fun BaseContainer(state: ProviderState, content: @Composable BoxScope.() -> Unit) {
+private fun BaseContainer(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .background(
                 color = TangemTheme.colors.background.action,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
-            .clickable(
-                enabled = state.onProviderClick != null,
-                onClick = { state.onProviderClick?.invoke(state.id) },
-            )
+            .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
             .fillMaxWidth()
             .defaultMinSize(minHeight = TangemTheme.dimens.size68),
     ) {
