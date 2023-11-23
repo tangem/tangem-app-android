@@ -9,6 +9,8 @@ import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
+import com.tangem.datasource.api.express.models.response.SwapPair
+import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
@@ -50,7 +52,6 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val swapConverter = SwapConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
-    private val swapProviderConverter = SwapProviderConverter()
     private val cryptoCurrencyFactory = CryptoCurrencyFactory()
 
     override suspend fun getPairs(
@@ -78,34 +79,29 @@ internal class SwapRepositoryImpl @Inject constructor(
                 )
             }
 
-            pairs.await() + reversedPairs.await()
-        }
-    }
+            val allPairs = pairs.await() + reversedPairs.await()
 
-    override suspend fun getProvidersDetails(providers: Set<SwapProvider>): List<SwapProvider> {
-        val providersMap = providers.associateBy { it.providerId }
-        return tangemExpressApi.getProviders().getOrThrow().mapNotNull {
-            val provider = providersMap[it.id]
-            if (provider != null) {
-                swapProviderConverter.convert(it).copy(rateTypes = provider.rateTypes)
-            } else {
-                null
-            }
+            val providers = tangemExpressApi.getProviders().getOrThrow()
+
+            return@withContext swapPairInfoConverter.convert(
+                SwapPairsWithProviders(
+                    swapPair = allPairs,
+                    providers = providers,
+                ),
+            )
         }
     }
 
     private suspend fun getPairsInternal(
         from: List<NetworkLeastTokenInfo>,
         to: List<NetworkLeastTokenInfo>,
-    ): List<SwapPairLeast> {
+    ): List<SwapPair> {
         return tangemExpressApi.getPairs(
             PairsRequestBody(
                 from = from,
                 to = to,
             ),
-        )
-            .getOrThrow()
-            .map { swapPairInfoConverter.convert(it) }
+        ).getOrThrow()
     }
 
     override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
