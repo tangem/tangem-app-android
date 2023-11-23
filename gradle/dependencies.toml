@@ -88,8 +88,8 @@ spr-client = "3.6.2"
 # region Tangem
 tangemBlockchainSdk = "develop-411"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-312"
-#tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
+#tangemCardSdk = "develop-312"
+tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
 # region Tools

@@ -76,8 +76,14 @@ internal class BiometricUserWalletsListManager(
 
                 val selectedUserWallet = selectedUserWalletSync
                 if (selectedUserWallet == null || selectedUserWallet.isLocked) {
-                    findAndSetUnlockedUserWallet(userWallets)
-                        ?: throw UserWalletsListError.NoUserWalletSelected
+                    val foundUserWallet = findAndSetUnlockedUserWallet(userWallets)
+
+                    if (foundUserWallet != null) {
+                        foundUserWallet
+                    } else {
+                        Timber.e("Unable to find selected user wallet")
+                        throw UserWalletsListError.NoUserWalletSelected
+                    }
                 } else {
                     selectedUserWallet
                 }
@@ -210,8 +216,10 @@ internal class BiometricUserWalletsListManager(
     }
 
     private suspend fun unlockWithBiometryInternal(): CompletionResult<Unit> {
+        Timber.d("unlockWithBiometryInternal")
         return keysRepository.getAll()
             .map { keys ->
+                Timber.d("keysRepository.getAll() keys: $keys")
                 state.update { prevState ->
                     prevState.copy(
                         encryptionKeys = (keys + prevState.encryptionKeys).distinctBy { it.walletId },
@@ -251,6 +259,7 @@ internal class BiometricUserWalletsListManager(
     private suspend fun loadModels(): CompletionResult<Unit> {
         return getSavedUserWallets()
             .map { userWallets ->
+                Timber.d("loadModels getSavedUserWallets $userWallets")
                 if (userWallets.isNotEmpty()) {
                     state.update { prevState ->
                         val wallets = (userWallets + prevState.userWallets).distinctBy { it.walletId }

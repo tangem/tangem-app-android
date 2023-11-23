@@ -304,6 +304,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                 Log.Level.View,
                 Log.Level.Network,
                 Log.Level.Error,
+                Log.Level.Biometric,
             )
             return TangemLogCollector(logLevels, LogFormat.StairsFormatter())
         }
@@ -316,6 +317,18 @@ internal class TapApplication : Application(), ImageLoaderFactory {
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
             chatManager = ChatManager(foregroundActivityObserver),
+        )
+        Timber.plant(
+            object : Timber.DebugTree() {
+                override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                    tangemLogCollector.log(
+                        {
+                            "$tag: $message ${t?.let { ", error: $it" }}"
+                        },
+                        Log.Level.Error
+                    )
+                }
+            },
         )
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }

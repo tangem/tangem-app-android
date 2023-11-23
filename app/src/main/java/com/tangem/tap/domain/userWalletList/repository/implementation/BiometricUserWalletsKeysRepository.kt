@@ -14,6 +14,7 @@ import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 internal class BiometricUserWalletsKeysRepository(
     moshi: Moshi,
@@ -82,6 +83,14 @@ internal class BiometricUserWalletsKeysRepository(
 
     private suspend fun getAllInternal(): CompletionResult<List<UserWalletEncryptionKey>> {
         return getUserWalletsIds()
+            .also {
+                Timber.d(
+                    """
+                        Receiving encryption keys
+                        |- User wallet IDs: $it
+                    """.trimIndent()
+                )
+            }
             .map { userWalletId ->
                 getEncryptionKey(userWalletId)
                     .doOnFailure { error ->
@@ -102,17 +111,58 @@ internal class BiometricUserWalletsKeysRepository(
                         }
                     }
             }
-            .fold(listOf()) { acc, data ->
+            .fold<UserWalletEncryptionKey?, List<UserWalletEncryptionKey>>(listOf()) { acc, data ->
                 if (data != null) acc + data else acc
+            }
+            .doOnFailure {
+                Timber.e(it, "Unable to receive encryption keys")
+            }
+            .doOnSuccess {
+                Timber.d(
+                    """
+                        Encryption keys received
+                        |- Keys: $it
+                    """.trimIndent()
+                )
             }
     }
 
     private suspend fun getEncryptionKey(userWalletId: UserWalletId): CompletionResult<UserWalletEncryptionKey?> {
+        Timber.d(
+            """
+            Get encryption key
+            |- User wallet ID: $userWalletId
+            """.trimIndent()
+        )
+
         return catching { authenticatedStorage.get(StorageKey.UserWalletEncryptionKey(userWalletId).name) }
             .map { it.decodeToKey() }
+            .doOnFailure {
+                Timber.e(
+                    """
+                        Unable to get encryption key
+                        |- Error: $it
+                    """.trimIndent()
+                )
+            }
+            .doOnSuccess {
+                Timber.d(
+                    """
+                        Encryption key received
+                        |- Key: $it
+                    """.trimIndent()
+                )
+            }
     }
 
     private suspend fun storeEncryptionKey(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit> {
+        Timber.d(
+            """
+                Save encryption key
+                |- Key: $encryptionKey
+            """.trimIndent()
+        )
+
         return catching {
             authenticatedStorage.store(
                 key = StorageKey.UserWalletEncryptionKey(encryptionKey.walletId).name,
@@ -120,9 +170,27 @@ internal class BiometricUserWalletsKeysRepository(
             )
         }
             .map { storeUserWalletId(encryptionKey.walletId) }
+            .doOnFailure {
+                Timber.e(
+                    """
+                        Unable to save encryption key
+                        |- Error: $it
+                    """.trimIndent()
+                )
+            }
+            .doOnSuccess {
+                Timber.d("Encryption key saved")
+            }
     }
 
     private fun deleteEncryptionKey(userWalletId: UserWalletId) {
+        Timber.d(
+            """
+                Delete encryption key
+                |- User wallet ID: $userWalletId
+            """.trimIndent()
+        )
+
         return authenticatedStorage.delete(StorageKey.UserWalletEncryptionKey(userWalletId).name)
     }
 
@@ -158,32 +226,128 @@ internal class BiometricUserWalletsKeysRepository(
     private suspend fun UserWalletEncryptionKey.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
             this@encode
+                .also {
+                    Timber.d(
+                        """
+                            Encoding encryption key
+                            |- Key: $encryptionKey
+                        """.trimIndent()
+                    )
+                }
                 .let(encryptionKeyAdapter::toJson)
-                .encodeToByteArray(throwOnInvalidSequence = true)
+                .also {
+                    Timber.d(
+                        """
+                            Encryption key converted to JSON
+                            |- JSON: $it
+                        """.trimIndent()
+                    )
+                }
+                .encodeToByteArray(throwOnInvalidSequence = false)
+                .also {
+                    Timber.d(
+                        """
+                            Encryption key JSON encoded to bytes
+                            |- Key bytes: $it
+                        """.trimIndent()
+                    )
+                }
         }
     }
 
     private suspend fun ByteArray?.decodeToKey(): UserWalletEncryptionKey? {
         return withContext(Dispatchers.Default) {
             this@decodeToKey
-                ?.decodeToString(throwOnInvalidSequence = true)
+                .also {
+                    Timber.d(
+                        """
+                            Decoding encryption key bytes
+                            |- Key bytes: $it
+                        """.trimIndent()
+                    )
+                }
+                ?.decodeToString(throwOnInvalidSequence = false)
+                .also {
+                    Timber.d(
+                        """
+                            Decoded encryption key bytes
+                            |- Decoded key: $it
+                        """.trimIndent()
+                    )
+                }
                 ?.let(encryptionKeyAdapter::fromJson)
+                .also {
+                    Timber.d(
+                        """
+                            Converted encryption key from JSON
+                            |- Key: $it
+                        """.trimIndent()
+                    )
+                }
         }
     }
 
     private suspend fun List<UserWalletId>.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
             this@encode
+                .also {
+                    Timber.d(
+                        """
+                            Encoding list of saved IDs
+                            |- List: $it
+                        """.trimIndent()
+                    )
+                }
                 .let(userWalletsIdsListAdapter::toJson)
-                .encodeToByteArray(throwOnInvalidSequence = true)
+                .also {
+                    Timber.d(
+                        """
+                            List of IDs converted to JSON
+                            |- JSON: $it
+                        """.trimIndent()
+                    )
+                }
+                .encodeToByteArray(throwOnInvalidSequence = false)
+                .also {
+                    Timber.d(
+                        """
+                            List of IDs in JSON encoded to bytes
+                            |- IDs bytes: $it
+                        """.trimIndent()
+                    )
+                }
         }
     }
 
     private suspend fun ByteArray?.decodeToUserWalletsIds(): List<UserWalletId> {
         return withContext(Dispatchers.Default) {
             this@decodeToUserWalletsIds
-                ?.decodeToString(throwOnInvalidSequence = true)
+                .also {
+                    Timber.d(
+                        """
+                            Decoding saved IDs bytes
+                            |- Bytes: $it
+                        """.trimIndent()
+                    )
+                }
+                ?.decodeToString(throwOnInvalidSequence = false)
+                .also {
+                    Timber.d(
+                        """
+                            Saved IDs decoded
+                            |- IDs: $it
+                        """.trimIndent()
+                    )
+                }
                 ?.let(userWalletsIdsListAdapter::fromJson)
+                .also {
+                    Timber.d(
+                        """
+                            Saved IDs converted from JSON
+                            |- IDs: $it
+                        """.trimIndent()
+                    )
+                }
                 .orEmpty()
         }
     }
