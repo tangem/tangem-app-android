@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
     /** Data */
@@ -32,5 +33,6 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+
     kapt(deps.hilt.kapt)
 }
