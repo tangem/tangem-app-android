@@ -17,7 +17,6 @@ import com.tangem.feature.swap.domain.converters.SwapCurrencyConverter
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
-import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -597,7 +596,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
         val nativeToken = repository.getNativeTokenForNetwork(networkId)
-    
+
         val rates = getQuotes(fromToken.id, toToken.id, nativeToken.id)
         return SwapState.QuotesLoadedState(
             fromTokenInfo = TokenSwapInfo(
@@ -829,14 +828,13 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID) : Map<CryptoCurrency.ID, Quote> {
+    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote> {
         val set = quotesRepository.getQuotesSync(ids.toSet(), false)
 
         return ids
             .mapNotNull { id -> set.find { it.rawCurrencyId == id.rawCurrencyId }?.let { id to it } }
             .toMap()
     }
-
 
     companion object {
         private const val DEFAULT_SLIPPAGE = 2
