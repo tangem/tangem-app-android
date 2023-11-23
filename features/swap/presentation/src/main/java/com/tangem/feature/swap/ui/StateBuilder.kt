@@ -270,6 +270,7 @@ internal class StateBuilder(
             providerState = swapProvider.convertToContentClickableProviderState(
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
+                selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
             ),
         )
@@ -759,6 +760,21 @@ internal class StateBuilder(
         )
     }
 
+    fun updateSelectedProvider(uiState: SwapStateHolder, selectedProviderId: String): SwapStateHolder {
+        val config = uiState.bottomSheetConfig?.content as? ChooseProviderBottomSheetConfig
+        return if (config != null) {
+            uiState.copy(
+                bottomSheetConfig = uiState.bottomSheetConfig.copy(
+                    content = config.copy(
+                        selectedProviderId = selectedProviderId,
+                    ),
+                ),
+            )
+        } else {
+            uiState
+        }
+    }
+
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderState(
         onProviderSelect: (String) -> Unit,
     ): ProviderState? {
@@ -766,9 +782,10 @@ internal class StateBuilder(
         return when (val state = this.value) {
             is SwapState.EmptyAmountState -> null
             is SwapState.QuotesLoadedState -> provider.convertToContentClickableProviderState(
-                state.fromTokenInfo,
-                state.toTokenInfo,
+                fromTokenInfo = state.fromTokenInfo,
+                toTokenInfo = state.toTokenInfo,
                 onProviderClick = onProviderSelect,
+                selectionType = ProviderState.SelectionType.SELECT,
             )
             is SwapState.SwapError -> null
         }
@@ -806,6 +823,7 @@ internal class StateBuilder(
     private fun SwapProvider.convertToContentClickableProviderState(
         fromTokenInfo: TokenSwapInfo,
         toTokenInfo: TokenSwapInfo,
+        selectionType: ProviderState.SelectionType,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
         val rate = toTokenInfo.tokenAmount.value.divide(
@@ -818,12 +836,12 @@ internal class StateBuilder(
         val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
         return ProviderState.Content(
             id = this.providerId,
-            name = this.name ?: "",
-            iconUrl = this.imageLarge ?: "",
+            name = this.name,
+            iconUrl = this.imageLarge,
             type = this.type.toString(),
             rate = rateString,
             additionalBadge = ProviderState.AdditionalBadge.BestTrade,
-            selectionType = ProviderState.SelectionType.CLICK,
+            selectionType = selectionType,
             percentLowerThenBest = null,
             onProviderClick = onProviderClick,
         )
