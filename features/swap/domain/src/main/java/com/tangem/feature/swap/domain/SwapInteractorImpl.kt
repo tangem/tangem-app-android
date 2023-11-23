@@ -286,8 +286,8 @@ internal class SwapInteractorImpl @Inject constructor(
                 currencyToSend = swapCurrencyConverter.convert(currencyToSend),
                 feeAmount = fee.feeValue,
                 gasLimit = fee.gasLimit,
-                destinationAddress = swapStateData.swapModel.transaction.toWalletAddress,
-                dataToSign = swapStateData.swapModel.transaction.data,
+                destinationAddress = swapStateData.swapModel.transaction.txTo,
+                dataToSign = (swapStateData.swapModel.transaction as ExpressTransactionModel.DEX).txData,
             ),
             isSwap = true,
             derivationPath = derivationPath,
@@ -518,13 +518,21 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         selectedFee: FeeType,
     ): SwapState {
-        repository.prepareSwapTransaction(
-            networkId = networkId,
-            fromTokenAddress = fromTokenAddress,
-            toTokenAddress = toTokenAddress,
-            amount = amount.toStringWithRightOffset(),
-            slippage = DEFAULT_SLIPPAGE,
-            fromWalletAddress = getWalletAddress(networkId),
+        repository.getExchangeData(
+            fromContractAddress = fromToken.currency.getContractAddress(),
+            fromNetwork = fromToken.currency.network.backendId,
+            toContractAddress = toToken.currency.getContractAddress(),
+            toNetwork = toToken.currency.network.backendId,
+            fromAmount = amount.toStringWithRightOffset(),
+            providerId = "1", //TODO
+            rateType = RateType.FLOAT,
+            toAddress = toToken.value.networkAddress?.defaultAddress ?: ""
+            // networkId = networkId,
+            // fromTokenAddress = fromTokenAddress,
+            // toTokenAddress = toTokenAddress,
+            // amount = amount.toStringWithRightOffset(),
+            // slippage = DEFAULT_SLIPPAGE,
+            // fromWalletAddress = getWalletAddress(networkId),
         ).let {
             val swapData = it.dataModel
             if (swapData != null) {
@@ -532,9 +540,9 @@ internal class SwapInteractorImpl @Inject constructor(
                     networkId = networkId,
                     amountToSend = amount.value,
                     currencyToSend = swapCurrencyConverter.convert(fromToken.currency),
-                    destinationAddress = swapData.transaction.toWalletAddress,
+                    destinationAddress = swapData.transaction.txTo,
                     increaseBy = INCREASE_GAS_LIMIT_BY,
-                    data = swapData.transaction.data,
+                    data = (swapData.transaction as ExpressTransactionModel.DEX).txData,
                     derivationPath = derivationPath,
                 )
                 val txFeeState = proxyFeesToFeeState(networkId, feeData)
