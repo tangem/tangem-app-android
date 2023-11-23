@@ -1,6 +1,5 @@
 package com.tangem.lib.crypto
 
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
