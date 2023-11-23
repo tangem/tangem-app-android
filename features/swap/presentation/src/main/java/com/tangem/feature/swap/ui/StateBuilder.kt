@@ -34,7 +34,7 @@ import java.math.RoundingMode
 /**
  * State builder creates a specific states for SwapScreen
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 internal class StateBuilder(
     private val actions: UiActions,
     private val isBalanceHiddenProvider: Provider<Boolean>,
