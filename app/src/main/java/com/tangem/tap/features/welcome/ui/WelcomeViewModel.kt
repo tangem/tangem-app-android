@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.rekotlin.StoreSubscriber
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -94,9 +95,12 @@ internal class WelcomeViewModel @Inject constructor(
             )
             is UserWalletsListError.AllKeysInvalidated,
             is UserWalletsListError.NoUserWalletSelected,
-            -> WarningModel.KeyInvalidatedWarning(
-                onDismiss = this::dismissWarning,
-            )
+            -> {
+                Timber.e("Key invalidated", "Error: $error")
+                WarningModel.KeyInvalidatedWarning(
+                    onDismiss = this::dismissWarning,
+                )
+            }
             is UserWalletsListError.BiometricsAuthenticationDisabled -> WarningModel.BiometricsDisabledWarning(
                 onDismiss = this::clearUserWallets,
             )

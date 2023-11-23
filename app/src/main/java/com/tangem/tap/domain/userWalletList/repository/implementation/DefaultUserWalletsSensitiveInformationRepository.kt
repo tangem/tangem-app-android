@@ -6,6 +6,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
+import com.tangem.common.doOnFailure
+import com.tangem.common.doOnSuccess
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -16,6 +18,7 @@ import com.tangem.tap.domain.userWalletList.repository.UserWalletsSensitiveInfor
 import com.tangem.tap.domain.userWalletList.utils.sensitiveInformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -36,6 +39,14 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     }
 
     override suspend fun save(userWallet: UserWallet, encryptionKey: ByteArray?): CompletionResult<Unit> {
+        Timber.d(
+            """
+                Saving sensitive info
+                |- User wallet ID: ${userWallet.walletId}
+                |- Encryption key: $encryptionKey
+            """.trimIndent()
+        )
+
         if (encryptionKey == null) return CompletionResult.Success(Unit) // Encryption key is null, do nothing
         return catching {
             val encryptedSensitiveInformation = userWallet.sensitiveInformation
@@ -46,6 +57,12 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
                 .apply { set(userWallet.walletId.stringValue, encryptedSensitiveInformation) }
                 .let { saveInternal(it) }
         }
+            .doOnFailure {
+                Timber.e(it, "Unable to save sensitive info")
+            }
+            .doOnSuccess {
+                Timber.d("Sensitive info saved")
+            }
     }
 
     override suspend fun getAll(
@@ -61,9 +78,30 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
             encryptionKeys
                 .associateBy { it.walletId }
                 .mapValues { (userWalletId, encryptionKey) ->
-                    encryptedSensitiveInformation[userWalletId.stringValue]
-                        ?.getIvAndDecrypt(userWalletId.stringValue, encryptionKey.encryptionKey)
-                        .decodeToSensitiveInformation()
+                    Timber.d(
+                        """
+                            Receiving sensitive info
+                            |- User wallet ID: $userWalletId
+                            |- Encryption key: $encryptionKey
+                        """.trimIndent()
+                    )
+
+                    try {
+                        encryptedSensitiveInformation[userWalletId.stringValue]
+                            ?.getIvAndDecrypt(userWalletId.stringValue, encryptionKey.encryptionKey)
+                            .decodeToSensitiveInformation()
+                            .also {
+                                Timber.d(
+                                    """
+                                    Sensitive info received
+                                    |- Info: $it
+                                """.trimIndent()
+                                )
+                            }
+                    } catch (e: Throwable) {
+                        Timber.e(e, "Unable to receive sensitive info")
+                        throw e
+                    }
                 }
                 .filterNotNull()
         }
@@ -85,6 +123,13 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     }
 
     private suspend fun saveInternal(sensitiveInformation: Map<String, ByteArray>) {
+        Timber.d(
+            """
+                Saving sensitive information
+                |- Info: $sensitiveInformation
+            """.trimIndent()
+        )
+
         return withContext(Dispatchers.IO) {
             secureStorage.store(
                 account = StorageKey.UserWalletsSensitiveInformation.name,
@@ -108,8 +153,32 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     private suspend fun ByteArray?.decodeToEncryptedSensitiveInformation(): Map<String, ByteArray> {
         return withContext(Dispatchers.Default) {
             this@decodeToEncryptedSensitiveInformation
-                ?.decodeToString(throwOnInvalidSequence = true)
+                .also {
+                    Timber.d(
+                        """
+                            Decoding encrypted user wallets sensitive info
+                            |- Info bytes: $it
+                        """.trimIndent()
+                    )
+                }
+                ?.decodeToString(throwOnInvalidSequence = false)
+                .also {
+                    Timber.d(
+                        """
+                            Encrypted user wallets sensitive info were decoded to string
+                            |- Info string: $it
+                        """.trimIndent()
+                    )
+                }
                 ?.let(encryptedSensitiveInformationMapAdapter::fromJson)
+                .also {
+                    Timber.d(
+                        """
+                            User wallets sensitive info were converted from JSON
+                            |- Encrypted info: $it
+                        """.trimIndent()
+                    )
+                }
                 .orEmpty()
         }
     }
@@ -117,46 +186,195 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     private suspend fun ByteArray?.decodeToSensitiveInformation(): UserWalletSensitiveInformation? {
         return withContext(Dispatchers.Default) {
             this@decodeToSensitiveInformation
-                ?.decodeToString(throwOnInvalidSequence = true)
+                .also {
+                    Timber.d(
+                        """
+                            Decoding decrypted user wallet sensitive info
+                            |- Info bytes: $it
+                        """.trimIndent()
+                    )
+                }
+                ?.decodeToString(throwOnInvalidSequence = false)
+                .also {
+                    Timber.d(
+                        """
+                            User wallet sensitive info was decoded to string
+                            |- Info string: $it
+                        """.trimIndent()
+                    )
+                }
                 ?.let(sensitiveInformationAdapter::fromJson)
+                .also {
+                    Timber.d(
+                        """
+                            User wallet sensitive info was converted from JSON
+                            |- Info: $it
+                        """.trimIndent()
+                    )
+                }
         }
     }
 
     private suspend fun UserWalletSensitiveInformation.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
             this@encode
+                .also {
+                    Timber.d(
+                        """
+                            Encoding decrypted user wallet sensitive info
+                            |- Info: $it
+                        """.trimIndent()
+                    )
+                }
                 .let(sensitiveInformationAdapter::toJson)
-                .encodeToByteArray(throwOnInvalidSequence = true)
+                .also {
+                    Timber.d(
+                        """
+                            User wallet sensitive info was converted to JSON
+                            |- JSON: $it
+                        """.trimIndent()
+                    )
+                }
+                ?.encodeToByteArray(throwOnInvalidSequence = false)
+                .also {
+                    Timber.d(
+                        """
+                            User wallet sensitive info JSON was encoded to bytes
+                            |- Info bytes: $it
+                        """.trimIndent()
+                    )
+                }
+                .let {
+                    it ?: error("User wallet sensitive info is null after encoding")
+                }
         }
     }
 
     private suspend fun Map<String, ByteArray>.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
             this@encode
+                .also {
+                    Timber.d(
+                        """
+                            Encoding encrypted user wallets sensitive information
+                            |- Info: $it
+                        """.trimIndent()
+                    )
+                }
                 .let(encryptedSensitiveInformationMapAdapter::toJson)
-                .encodeToByteArray(throwOnInvalidSequence = true)
+                .also {
+                    Timber.d(
+                        """
+                            User wallets sensitive info were converted to JSON
+                            |- JSON: $it
+                        """.trimIndent()
+                    )
+                }
+                ?.encodeToByteArray(throwOnInvalidSequence = false)
+                .also {
+                    Timber.d(
+                        """
+                            JSON with user wallets sensitive info was encoded to bytes
+                            |- Info bytes: $it
+                        """.trimIndent()
+                    )
+                }
+                .let {
+                    it ?: error("User wallets sensitive info is null after encoding")
+                }
         }
     }
 
     private suspend fun ByteArray.encryptAndStoreIv(userWalletId: String, encryptionKey: ByteArray): ByteArray {
+        Timber.d(
+            """
+                Encrypting sensitive info
+                |- User wallet ID: $userWalletId
+                |- Encoded info bytes: $this
+                |- Key: $encryptionKey
+            """.trimIndent()
+        )
+
         return withContext(Dispatchers.Default) {
             val secretKey = SecretKeySpec(encryptionKey, algorithm)
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey)
-            val encryptedData = cipher.doFinal(this@encryptAndStoreIv)
+            try {
+                cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+            } catch (e: Throwable) {
+                Timber.e(e, "Unable to init cipher for sensitive info encryption")
+                throw e
+            }
+            val encryptedData = try {
+                cipher.doFinal(this@encryptAndStoreIv)
+            } catch (e: Throwable) {
+                Timber.e(e, "Unable to encrypt sensitive info")
+                throw e
+            }
+
+            Timber.d(
+                """
+                    Sensitive info was encrypted
+                    |- Encrypted info bytes: $encryptedData
+                    |- IV: ${cipher.iv}
+                    |- IV storage key: ${StorageKey.SensitiveInformationIv(userWalletId).name}
+                """.trimIndent()
+            )
+
             secureStorage.store(data = cipher.iv, account = StorageKey.SensitiveInformationIv(userWalletId).name)
             encryptedData
         }
     }
 
     private suspend fun ByteArray.getIvAndDecrypt(userWalletId: String, encryptionKey: ByteArray): ByteArray? {
+        Timber.d(
+            """
+                Decrypting sensitive info
+                |- User wallet ID: $userWalletId
+                |- Encoded info bytes: $this
+                |- Key: $encryptionKey
+            """.trimIndent()
+        )
+
         return withContext(Dispatchers.Default) {
             val iv = secureStorage.get(StorageKey.SensitiveInformationIv(userWalletId).name)
-                ?: error("IV not found")
+            if (iv == null) {
+                Timber.e("Unable to find IV for sensitive info decryption")
+                error("IV not found")
+            } else {
+                Timber.d(
+                    """
+                        IV for sensitive info decryption was found
+                        |- IV: $iv
+                        |- IV storage key: ${StorageKey.SensitiveInformationIv(userWalletId).name}
+                    """.trimIndent()
+                )
+            }
+
             val ivParam = IvParameterSpec(iv)
             val secretKeySpec = SecretKeySpec(encryptionKey, algorithm)
-            cipher
-                .also { it.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParam) }
-                .doFinal(this@getIvAndDecrypt)
+
+            try {
+                cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParam)
+            } catch (e: Throwable) {
+                Timber.e(e, "Unable to init cipher for sensitive info decryption")
+                throw e
+            }
+
+            val decryptedInfo = try {
+                cipher.doFinal(this@getIvAndDecrypt)
+            } catch (e: Throwable) {
+                Timber.e(e, "Unable to decrypt sensitive info")
+                throw e
+            }
+
+            Timber.d(
+                """
+                    Sensitive info decrypted
+                    |- Decrypted info bytes: $decryptedInfo
+                """.trimIndent()
+            )
+
+
+            decryptedInfo
         }
     }
 
