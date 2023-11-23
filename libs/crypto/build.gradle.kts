@@ -1,10 +1,12 @@
 plugins {
-    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
     id("configuration")
 }
 
 dependencies {
 
-    /** Coroutines */
     implementation(deps.kotlin.coroutines)
+    implementation(projects.domain.tokens.models)
+
 }
