@@ -151,16 +151,7 @@ internal class SwapInteractorImpl @Inject constructor(
         initialCurrency: LeastTokenInfo,
         currenciesList: List<CryptoCurrency>,
     ): List<SwapPairLeast> {
-        val pairs = repository.getPairs(initialCurrency, currenciesList)
-        val providers = pairs.flatMap { it.providers }.toSet()
-        val updatedProviders = repository.getProvidersDetails(providers).associateBy { it.providerId }
-        return pairs.map { pair ->
-            pair.copy(
-                providers = pair.providers.mapNotNull { currentProvider ->
-                    updatedProviders[currentProvider.providerId]
-                },
-            )
-        }
+        return repository.getPairs(initialCurrency, currenciesList)
     }
 
     @Deprecated("used in old swap mechanism")
