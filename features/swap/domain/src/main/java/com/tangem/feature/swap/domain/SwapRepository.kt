@@ -32,16 +32,6 @@ interface SwapRepository {
      */
     suspend fun addressForTrust(networkId: String): String
 
-    @Suppress("LongParameterList")
-    suspend fun prepareSwapTransaction(
-        networkId: String,
-        fromTokenAddress: String,
-        toTokenAddress: String,
-        amount: String,
-        fromWalletAddress: String,
-        slippage: Int,
-    ): AggregatedSwapDataModel<SwapDataModel>
-
     /**
      * Returns a tangem fee for swap in percents
      * Example: 0.35%
@@ -67,7 +57,7 @@ interface SwapRepository {
     ): String
 
     @Suppress("LongParameterList")
-    suspend fun getExchangeQuote(
+    suspend fun getExchangeData(
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
@@ -75,7 +65,8 @@ interface SwapRepository {
         fromAmount: String,
         providerId: String,
         rateType: RateType,
-    ): ExchangeQuote
+        toAddress: String,
+    ): AggregatedSwapDataModel<SwapDataModel>
 
     fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 }

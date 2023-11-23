@@ -49,7 +49,7 @@ internal class SwapRepositoryImpl @Inject constructor(
 ) : SwapRepository {
 
     private val tokensConverter = TokensConverter()
-    private val swapConverter = SwapConverter()
+    private val expressDataConverter = ExpressDataConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
     private val cryptoCurrencyFactory = CryptoCurrencyFactory()
@@ -164,8 +164,8 @@ internal class SwapRepositoryImpl @Inject constructor(
                         toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
                     ),
                 )
-            } catch (ex: OneIncResponseException) {
-                AggregatedSwapDataModel(null, mapErrors(ex.data.description))
+            } catch (ex: Exception) {
+                AggregatedSwapDataModel(null, mapErrors(ex.message))
             }
         }
     }
@@ -176,31 +176,33 @@ internal class SwapRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun prepareSwapTransaction(
-        networkId: String,
-        fromTokenAddress: String,
-        toTokenAddress: String,
-        amount: String,
-        fromWalletAddress: String,
-        slippage: Int,
+    override suspend fun getExchangeData(
+        fromContractAddress: String,
+        fromNetwork: String,
+        toContractAddress: String,
+        toNetwork: String,
+        fromAmount: String,
+        providerId: String,
+        rateType: RateType,
+        toAddress: String,
     ): AggregatedSwapDataModel<SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
-                val swapResponse = oneInchErrorsHandler.handleOneInchResponse(
-                    getOneInchApi(networkId).swap(
-                        fromTokenAddress = fromTokenAddress,
-                        toTokenAddress = toTokenAddress,
-                        amount = amount,
-                        fromAddress = fromWalletAddress,
-                        slippage = slippage,
-                        referrerAddress = configManager.config.swapReferrerAccount?.address,
-                        fee = configManager.config.swapReferrerAccount?.fee,
-                    ),
+                val response = tangemExpressApi.getExchangeData(
+                    fromContractAddress = fromContractAddress,
+                    fromNetwork = fromNetwork,
+                    toContractAddress = toContractAddress,
+                    toNetwork = toNetwork,
+                    fromAmount = fromAmount,
+                    providerId = providerId,
+                    rateType = rateType.name.lowercase(),
+                    toAddress = toAddress
+                ).getOrThrow()
+                AggregatedSwapDataModel(
+                    dataModel = expressDataConverter.convert(response)
                 )
-
-                AggregatedSwapDataModel(swapConverter.convert(swapResponse))
-            } catch (ex: OneIncResponseException) {
-                AggregatedSwapDataModel(null, mapErrors(ex.data.description))
+            } catch (ex: Exception) {
+                AggregatedSwapDataModel(null, mapErrors(ex.message))
             }
         }
     }
@@ -278,31 +280,6 @@ internal class SwapRepositoryImpl @Inject constructor(
 
     private fun getOneInchApi(networkId: String): OneInchApi {
         return oneInchApiFactory.getApi(networkId)
-    }
-
-    override suspend fun getExchangeQuote(
-        fromContractAddress: String,
-        fromNetwork: String,
-        toContractAddress: String,
-        toNetwork: String,
-        fromAmount: String,
-        providerId: String,
-        rateType: RateType,
-    ): ExchangeQuote {
-        val response = tangemExpressApi.getExchangeQuote(
-            fromContractAddress,
-            fromNetwork,
-            toContractAddress,
-            toNetwork,
-            fromAmount,
-            providerId,
-            rateType.name.lowercase(),
-        ).getOrThrow()
-
-        return ExchangeQuote(
-            toAmount = response.toAmount,
-            allowanceContract = response.allowanceContract,
-        )
     }
 
     override fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
