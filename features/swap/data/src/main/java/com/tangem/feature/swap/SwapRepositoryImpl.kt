@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
@@ -15,8 +16,10 @@ import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.SwapRepository
@@ -40,6 +43,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val configManager: ConfigManager,
     private val walletManagersFacade: WalletManagersFacade,
+    private val walletsStateHolder: WalletsStateHolder,
 ) : SwapRepository {
 
     private val tokensConverter = TokensConverter()
@@ -47,6 +51,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
     private val swapProviderConverter = SwapProviderConverter()
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
 
     override suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
@@ -301,6 +306,23 @@ internal class SwapRepositoryImpl @Inject constructor(
         return ExchangeQuote(
             toAmount = response.toAmount,
             allowanceContract = response.allowanceContract,
+        )
+    }
+
+    override fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+
+        return requireNotNull(
+            cryptoCurrencyFactory.createCoin(
+                blockchain = blockchain,
+                extraDerivationPath = null,
+                derivationStyleProvider = requireNotNull(
+                    walletsStateHolder.userWalletsListManager
+                        ?.selectedUserWalletSync
+                        ?.scanResponse
+                        ?.derivationStyleProvider,
+                ),
+            ),
         )
     }
 
