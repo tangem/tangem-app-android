@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
-import com.tangem.common.Provider
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
@@ -8,6 +7,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletMana
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopBarConfig
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList

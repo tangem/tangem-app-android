@@ -1,4 +1,4 @@
-package com.tangem.common
+package com.tangem.utils
 
 /**
  * Provider for lazy initialization

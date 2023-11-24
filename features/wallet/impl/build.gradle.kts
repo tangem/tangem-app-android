@@ -48,9 +48,9 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.common)
 
     /** Domain modules */
-    implementation(projects.common)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)

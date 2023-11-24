@@ -3,7 +3,6 @@ package com.tangem.tap.domain.userWalletList.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.common.Provider
 import com.tangem.common.authentication.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
@@ -20,6 +19,7 @@ import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUse
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
 import com.tangem.tap.domain.userWalletList.utils.json.*
 import com.tangem.tap.tangemSdkManager
+import com.tangem.utils.Provider
 
 private const val USER_WALLETS_STORAGE_NAME = "user_wallets_storage"
 
