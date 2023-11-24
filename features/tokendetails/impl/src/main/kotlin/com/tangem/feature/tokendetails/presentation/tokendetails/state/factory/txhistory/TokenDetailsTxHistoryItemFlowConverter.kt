@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory
 
 import androidx.paging.*
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
@@ -10,6 +9,7 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -1,9 +1,9 @@
 package com.tangem.features.send.impl.presentation.state.recipient
 
-import com.tangem.common.Provider
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
 internal class SendRecipientStateConverter(

@@ -38,9 +38,6 @@ dependencies {
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
 
-    /** Common */
-    implementation(projects.common)
-
     /** Core modules */
     implementation(projects.core.featuretoggles)
     implementation(projects.core.ui)

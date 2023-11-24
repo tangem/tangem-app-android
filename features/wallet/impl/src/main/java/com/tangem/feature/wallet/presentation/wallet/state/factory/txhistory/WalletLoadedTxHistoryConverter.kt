@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory.txhistory
 
 import androidx.paging.PagingData
 import arrow.core.Either
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -11,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencySt
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.flow.Flow
 

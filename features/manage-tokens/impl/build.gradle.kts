@@ -51,7 +51,6 @@ dependencies {
     implementation(projects.data.tokens)
 
     /** Domain modules */
-    implementation(projects.common)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
