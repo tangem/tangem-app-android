@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
-import com.tangem.common.Provider
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -8,6 +7,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.WalletLockedState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
+import com.tangem.utils.Provider
 
 /**
  * Resolver that determines which update action will be performed
