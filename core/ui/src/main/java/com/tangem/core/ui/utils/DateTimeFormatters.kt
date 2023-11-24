@@ -9,12 +9,14 @@ import java.util.Locale
 @Suppress("MagicNumber")
 object DateTimeFormatters {
 
+    private const val DDMMYYYY = "dd.MM.yyyy"
+
     /**
      * Two SS means, SHORT style for date and time.
      * If pattern contains "a", it means time is in 12 hour format.
      * [Documentation](https://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html)
      */
-    val timeFormatter by lazy {
+    val timeFormatter: DateTimeFormatter by lazy {
         val is12HourFormat = DateTimeFormat.patternForStyle("SS", Locale.getDefault()).contains("a")
         if (is12HourFormat) {
             DateTimeFormatterBuilder()
@@ -35,13 +37,20 @@ object DateTimeFormatters {
         }
     }
 
-    val dateFormatter by lazy {
+    val dateFormatter: DateTimeFormatter by lazy {
         DateTimeFormatterBuilder()
             .appendDayOfMonth(1)
             .appendLiteral(' ')
             .appendMonthOfYearShortText()
             .appendLiteral(", ")
             .appendYear(4, 4)
+            .toFormatter()
+            .withLocale(Locale.getDefault())
+    }
+
+    val dateDDMMYYYY: DateTimeFormatter by lazy {
+        DateTimeFormatterBuilder()
+            .appendPattern(DDMMYYYY)
             .toFormatter()
             .withLocale(Locale.getDefault())
     }

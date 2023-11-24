@@ -5,6 +5,7 @@ package com.tangem.datasource.local
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated(message = "Use AppPreferencesStore", level = DeprecationLevel.WARNING)
 interface AppPreferenceStorage {
 
     /** Json config with feature toggles 'ToggleName: String - Availability: Boolean' */
