@@ -11,7 +11,10 @@ import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.*
+import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.extensions.removeContext
@@ -115,6 +118,15 @@ object OnboardingHelper {
 
     fun onInterrupted() {
         Analytics.removeContext()
+    }
+
+    fun sendToppedUpEvent(scanResponse: ScanResponse) {
+        val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+        val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
+
+        if (userWalletId != null && currency != null) {
+            Analytics.send(Basic.ToppedUp(userWalletId, currency))
+        }
     }
 
     private suspend fun proceedWithScanResponse(scanResponse: ScanResponse, backupCardsIds: List<String>?) {

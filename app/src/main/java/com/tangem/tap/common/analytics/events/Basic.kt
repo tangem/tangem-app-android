@@ -1,6 +1,8 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.OneTimeAnalyticsEvent
+import com.tangem.domain.wallets.models.UserWalletId
 
 /**
 [REDACTED_AUTHOR]
@@ -50,10 +52,15 @@ sealed class Basic(
         }
     }
 
-    class ToppedUp(currency: AnalyticsParam.CardCurrency) : Basic(
-        event = "Topped up",
-        params = mapOf(AnalyticsParam.CURRENCY to currency.value),
-    )
+    class ToppedUp(userWalletId: UserWalletId, currency: AnalyticsParam.CardCurrency) :
+        Basic(
+            event = "Topped up",
+            params = mapOf(AnalyticsParam.CURRENCY to currency.value),
+        ),
+        OneTimeAnalyticsEvent {
+
+        override val oneTimeEventId: String = (id + userWalletId.stringValue).hashCode().toString()
+    }
 
     class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom, memoType: MemoType) : Basic(
         event = "Transaction sent",
