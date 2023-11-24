@@ -588,13 +588,8 @@ internal class SwapInteractorImpl @Inject constructor(
             fromAmount = amount.toStringWithRightOffset(),
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
-            toAddress = toToken.value.networkAddress?.defaultAddress ?: ""
-            // networkId = networkId,
-            // fromTokenAddress = fromTokenAddress,
-            // toTokenAddress = toTokenAddress,
-            // amount = amount.toStringWithRightOffset(),
-            // slippage = DEFAULT_SLIPPAGE,
-            // fromWalletAddress = getWalletAddress(networkId),
+            toAddress = toToken.value.networkAddress?.defaultAddress ?: "",
+            refundAddress = fromToken.value.networkAddress?.defaultAddress ?: "",
         ).let {
             val swapData = it.dataModel
             if (swapData != null) {
