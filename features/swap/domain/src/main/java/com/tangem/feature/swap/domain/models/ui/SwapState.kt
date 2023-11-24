@@ -21,6 +21,7 @@ sealed interface SwapState {
         ),
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapStateData? = null,
+        val txFee: TxFeeState? = null,
         val tangemFee: Double,
     ) : SwapState
 
@@ -77,6 +78,7 @@ data class TxFee(
     val gasLimit: Int,
     val feeFiatFormatted: String,
     val feeCryptoFormatted: String,
+    val cryptoSymbol: String,
     val feeType: FeeType,
 )
 

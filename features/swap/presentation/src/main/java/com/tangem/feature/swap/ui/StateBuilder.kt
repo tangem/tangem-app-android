@@ -23,6 +23,7 @@ import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
+import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
@@ -76,7 +77,7 @@ internal class StateBuilder(
                 coinId = null,
                 isBalanceHidden = true,
             ),
-            fee = FeeState.Loading,
+            fee = FeeItemState.Empty,
             networkCurrency = networkInfo.blockchainCurrency,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             onRefresh = {},
@@ -86,7 +87,7 @@ internal class StateBuilder(
             updateInProgress = true,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             onCancelPermissionBottomSheet = actions.hidePermissionBottomSheet,
-            providerState = ProviderState.Loading(),
+            providerState = ProviderState.Empty(),
         )
     }
 
@@ -127,7 +128,7 @@ internal class StateBuilder(
                     ),
                 ),
             ),
-            fee = FeeState.Empty,
+            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 enabled = false,
                 loading = false,
@@ -172,8 +173,9 @@ internal class StateBuilder(
                 balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
-            fee = FeeState.Loading,
+            fee = FeeItemState.Empty,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
+            providerState = ProviderState.Loading(),
             permissionState = uiStateHolder.permissionState,
             updateInProgress = true,
         )
@@ -185,7 +187,6 @@ internal class StateBuilder(
      * @param uiStateHolder whole screen state
      * @param quoteModel data model
      * @param fromToken token data to swap
-     * @param onFeeSetup callback for reset fee after auto update
      * @return updated whole screen state
      */
     @Suppress("LongMethod")
@@ -194,7 +195,7 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
         swapProvider: SwapProvider,
-        onFeeSetup: (TxFee) -> Unit,
+        selectedFeeType: FeeType,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -221,7 +222,7 @@ internal class StateBuilder(
                 ),
             )
         }
-        val feeState = createFeeState(quoteModel, uiStateHolder, onFeeSetup)
+        val feeState = createFeeState(quoteModel, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
         return uiStateHolder.copy(
@@ -254,7 +255,6 @@ internal class StateBuilder(
             permissionState = convertPermissionState(
                 lastPermissionState = uiStateHolder.permissionState,
                 permissionDataState = quoteModel.permissionState,
-                feeState = feeState,
                 onGivePermissionClick = actions.onGivePermissionClick,
                 onChangeApproveType = actions.onChangeApproveType,
             ),
@@ -308,7 +308,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             warnings = emptyList(),
-            fee = FeeState.Empty,
+            fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 enabled = false,
                 loading = false,
@@ -397,134 +397,28 @@ internal class StateBuilder(
         }
     }
 
-    fun updateFeeSelectedItem(uiState: SwapStateHolder, item: Item<TxFee>, isFeeEnough: Boolean): SwapStateHolder {
-        val newSelectedItem = item.copy(
-            startText = TextReference.Res(R.string.send_network_fee_title),
-        )
-        val permissionState = uiState.permissionState
-        val newPermissionState = if (permissionState is SwapPermissionState.ReadyForRequest) {
-            permissionState.copy(
-                fee = newSelectedItem.endText,
-            )
-        } else {
-            permissionState
-        }
-        val updateState = when (val fee = uiState.fee) {
-            is FeeState.Loaded -> {
-                getUpdatedFeeStateForEnoughFee(uiState, fee, item, newSelectedItem, newPermissionState, isFeeEnough)
-            }
-            is FeeState.NotEnoughFundsWarning -> {
-                getUpdatedFeeStateForNotEnoughFee(uiState, fee, item, newSelectedItem, newPermissionState, isFeeEnough)
-            }
-            else -> uiState
-        }
-        return if (isFeeEnough) {
-            updateState.copy(
-                warnings = uiState.warnings.filterNot { it is SwapWarning.InsufficientFunds },
-            )
-        } else {
-            updateState.copy(
-                warnings = uiState.warnings.plus(SwapWarning.InsufficientFunds),
-            )
-        }
-    }
-
-    @Suppress("LongParameterList")
-    private fun getUpdatedFeeStateForEnoughFee(
-        uiState: SwapStateHolder,
-        fee: FeeState.Loaded,
-        itemToSelect: Item<TxFee>,
-        newSelectedItem: Item<TxFee>,
-        newPermissionState: SwapPermissionState,
-        isFeeEnough: Boolean,
-    ): SwapStateHolder {
-        val newState = fee.state?.copy(
-            selectedItem = newSelectedItem,
-            items = selectNewItem(fee.state.items, itemToSelect),
-        )
-        val newFeeState = if (isFeeEnough) {
-            fee.copy(state = newState)
-        } else {
-            FeeState.NotEnoughFundsWarning(
-                tangemFee = fee.tangemFee,
-                state = newState,
-                onSelectItem = fee.onSelectItem,
-            )
-        }
-        return uiState.copy(
-            fee = newFeeState,
-            permissionState = newPermissionState,
-            swapButton = uiState.swapButton.copy(
-                enabled = isFeeEnough,
-            ),
-        )
-    }
-
-    @Suppress("LongParameterList")
-    private fun getUpdatedFeeStateForNotEnoughFee(
-        uiState: SwapStateHolder,
-        fee: FeeState.NotEnoughFundsWarning,
-        itemToSelect: Item<TxFee>,
-        newSelectedItem: Item<TxFee>,
-        newPermissionState: SwapPermissionState,
-        isFeeEnough: Boolean,
-    ): SwapStateHolder {
-        val newState = fee.state?.copy(
-            selectedItem = newSelectedItem,
-            items = selectNewItem(fee.state.items, itemToSelect),
-        )
-        val newFeeState = if (isFeeEnough) {
-            FeeState.Loaded(
-                tangemFee = fee.tangemFee,
-                state = newState,
-                onSelectItem = fee.onSelectItem,
-            )
-        } else {
-            fee.copy(state = newState)
-        }
-        return uiState.copy(
-            fee = newFeeState,
-            permissionState = newPermissionState,
-            swapButton = uiState.swapButton.copy(
-                enabled = isFeeEnough,
-            ),
-        )
-    }
-
     private fun createFeeState(
         quoteModel: SwapState.QuotesLoadedState,
-        uiStateHolder: SwapStateHolder,
-        onFeeSetup: (TxFee) -> Unit,
-    ): FeeState {
-        val previousFeeState = when (val stateFee = uiStateHolder.fee) {
-            is FeeState.Loaded -> stateFee.state
-            is FeeState.NotEnoughFundsWarning -> stateFee.state
-            else -> null
+        feeType: FeeType,
+    ): FeeItemState {
+        val swapDataModel = quoteModel.swapDataModel ?: return FeeItemState.Empty
+        val fee = when (feeType) {
+            FeeType.NORMAL -> {
+                swapDataModel.fee.normalFee
+            }
+            FeeType.PRIORITY -> {
+                swapDataModel.fee.priorityFee
+            }
         }
-        val permissionState = quoteModel.permissionState
-        val feeState = if (permissionState is PermissionDataState.PermissionReadyForRequest) {
-            permissionState.requestApproveData.fee
-        } else {
-            quoteModel.swapDataModel?.fee
-        }
-        val selectFeeState = createSelectFeeState(
-            fee = feeState,
-            previousState = previousFeeState,
-            onFeeSetup = onFeeSetup,
+        return FeeItemState.Content(
+            feeType = feeType,
+            title = stringReference("Fee"), //todo replace with string
+            amountCrypto = fee.feeCryptoFormatted,
+            symbolCrypto = fee.cryptoSymbol,
+            amountFiatFormatted = fee.feeFiatFormatted,
+            isClickable = false,
+            onClick = actions.onClickFee,
         )
-        return if (quoteModel.preparedSwapConfigState.isFeeEnough) {
-            FeeState.Loaded(
-                tangemFee = quoteModel.tangemFee,
-                state = selectFeeState,
-                onSelectItem = actions.onSelectItemFee,
-            )
-        } else {
-            FeeState.NotEnoughFundsWarning(
-                tangemFee = quoteModel.tangemFee,
-                state = selectFeeState,
-                onSelectItem = actions.onSelectItemFee,
-            )
-        }
     }
 
     private fun selectNewItem(items: ImmutableList<Item<TxFee>>, selectItem: Item<TxFee>): ImmutableList<Item<TxFee>> {
@@ -612,7 +506,6 @@ internal class StateBuilder(
     private fun convertPermissionState(
         lastPermissionState: SwapPermissionState,
         permissionDataState: PermissionDataState,
-        feeState: FeeState,
         onGivePermissionClick: () -> Unit,
         onChangeApproveType: (ApproveType) -> Unit,
     ): SwapPermissionState {
@@ -621,30 +514,29 @@ internal class StateBuilder(
         } else {
             ApproveType.UNLIMITED
         }
-        val fee = when (feeState) {
-            is FeeSelectState -> feeState.state?.selectedItem?.endText
-            else -> null
-        }
         return when (permissionDataState) {
             PermissionDataState.Empty -> SwapPermissionState.Empty
             PermissionDataState.PermissionFailed -> SwapPermissionState.Empty
             PermissionDataState.PermissionLoading -> SwapPermissionState.InProgress
-            is PermissionDataState.PermissionReadyForRequest -> SwapPermissionState.ReadyForRequest(
-                currency = permissionDataState.currency,
-                amount = permissionDataState.amount,
-                approveType = approveType,
-                walletAddress = getShortAddressValue(permissionDataState.walletAddress),
-                spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
-                fee = fee ?: TextReference.Str(""),
-                approveButton = ApprovePermissionButton(
-                    enabled = true,
-                    onClick = onGivePermissionClick,
-                ),
-                cancelButton = CancelPermissionButton(
-                    enabled = true,
-                ),
-                onChangeApproveType = onChangeApproveType,
-            )
+            is PermissionDataState.PermissionReadyForRequest -> {
+                val fee = permissionDataState.requestApproveData.fee.priorityFee
+                SwapPermissionState.ReadyForRequest(
+                    currency = permissionDataState.currency,
+                    amount = permissionDataState.amount,
+                    approveType = approveType,
+                    walletAddress = getShortAddressValue(permissionDataState.walletAddress),
+                    spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
+                    fee = TextReference.Str("${fee.feeCryptoFormatted} (${fee.feeFiatFormatted})"),
+                    approveButton = ApprovePermissionButton(
+                        enabled = true,
+                        onClick = onGivePermissionClick,
+                    ),
+                    cancelButton = CancelPermissionButton(
+                        enabled = true,
+                    ),
+                    onChangeApproveType = onChangeApproveType,
+                )
+            }
         }
     }
 

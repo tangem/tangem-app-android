@@ -18,7 +18,7 @@ data class SwapProcessDataState(
     val amount: String? = null,
     val approveDataModel: RequestApproveStateData? = null,
     val swapDataModel: SwapStateData? = null,
-    val selectedFee: TxFee? = null,
+    val selectedFee: TxFee? = null, // todo
     val tokensDataState: TokensDataStateExpress? = null,
     val selectedProvider: SwapProvider? = null,
     val lastLoadedSwapStates: Map<SwapProvider, SwapState> = emptyMap(),

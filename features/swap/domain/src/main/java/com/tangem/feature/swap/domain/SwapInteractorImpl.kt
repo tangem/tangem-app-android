@@ -10,6 +10,8 @@ import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.cache.SwapDataCache
@@ -24,10 +26,12 @@ import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.toFiatString
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -45,12 +49,18 @@ internal class SwapInteractorImpl @Inject constructor(
     private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val walletManagersFacade: WalletManagersFacade,
     private val quotesRepository: QuotesRepository,
+    private val dispatcher: CoroutineDispatcherProvider,
 ) : SwapInteractor {
 
     // TODO: Move to DI
     private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
         AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
+    }
+
+    private val getFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        GetFeeUseCase(walletManagersFacade, dispatcher)
     }
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
@@ -253,6 +263,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     toToken = toToken,
                     amount = amount,
                     selectedFee = selectedFee,
+                    providerType = it.type,
                 )
             }
         } else {
@@ -453,6 +464,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         networkId = networkId,
                         isAllowedToSpend = isAllowedToSpend,
                         isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                        providerType = it.first.type,
                     )
             }.associate { it.first to it.second }
         }
@@ -466,6 +478,7 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
+        providerType: ExchangeProviderType,
     ): SwapState {
         val quoteModel = quoteDataModel.dataModel
         if (quoteModel != null) {
@@ -476,6 +489,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromTokenAmount = amount,
                 toTokenAmount = quoteModel.toTokenAmount,
                 swapStateData = null,
+                providerType = providerType,
             )
             val quotesState = updatePermissionState(
                 networkId = networkId,
@@ -517,6 +531,7 @@ internal class SwapInteractorImpl @Inject constructor(
         toToken: CryptoCurrencyStatus,
         amount: SwapAmount,
         selectedFee: FeeType,
+        providerType: ExchangeProviderType,
     ): SwapState {
         repository.prepareSwapTransaction(
             networkId = networkId,
@@ -560,6 +575,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         fee = txFeeState,
                         swapModel = swapData,
                     ),
+                    providerType = providerType,
                 )
                 return swapState.copy(
                     permissionState = PermissionDataState.Empty,
@@ -583,6 +599,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fromTokenAmount: SwapAmount,
         toTokenAmount: SwapAmount,
         swapStateData: SwapStateData?,
+        providerType: ExchangeProviderType,
     ): SwapState.QuotesLoadedState {
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
@@ -611,7 +628,49 @@ internal class SwapInteractorImpl @Inject constructor(
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             swapDataModel = swapStateData,
             tangemFee = getTangemFee(),
+            txFee = if (providerType == ExchangeProviderType.CEX) {
+                getFeeForCex(providerType, fromTokenAmount, fromTokenStatus)
+            } else {
+                null
+            },
         )
+    }
+
+    private suspend fun getFeeForCex(
+        providerType: ExchangeProviderType,
+        amount: SwapAmount,
+        fromToken: CryptoCurrencyStatus,
+    ): TxFeeState? {
+        getSelectedWalletSyncUseCase().getOrNull()?.walletId?.let { userWalletId ->
+            val txFee = getFeeUseCase(
+                amount = amount.value.movePointRight(amount.decimals),
+                destination = fromToken.value.networkAddress?.defaultAddress ?: "",
+                userWalletId = userWalletId,
+                cryptoCurrency = fromToken.currency,
+            ).firstOrNull()
+            txFee?.getOrNull()?.let {
+                return null
+                // TxFeeState(
+                //     normalFee = TxFee(
+                //         feeValue = ,
+                //         gasLimit =,
+                //         feeFiatFormatted =,
+                //         feeCryptoFormatted =,
+                //         cryptoSymbol =,
+                //         feeType =,
+                //     ),
+                //     priorityFee = TxFee(
+                //         feeValue =,
+                //         gasLimit =,
+                //         feeFiatFormatted =,
+                //         feeCryptoFormatted =,
+                //         cryptoSymbol =,
+                //         feeType =,
+                //     )
+                // )
+            }
+        }
+        return null
     }
 
     @Suppress("LongParameterList")
@@ -699,15 +758,14 @@ internal class SwapInteractorImpl @Inject constructor(
         val feesFiat = getFormattedFiatFees(networkId, normalFeeValue, priorityFeeValue)
         val normalFiatFee = requireNotNull(feesFiat.getOrNull(0)) { "feesFiat item 0 couldn't be null" }
         val priorityFiatFee = requireNotNull(feesFiat.getOrNull(1)) { "feesFiat item 1 couldn't be null" }
+        val networkCurrency = userWalletManager.getNetworkCurrency(networkId)
         val normalCryptoFee = amountFormatter.formatBigDecimalAmountToUI(
             amount = normalFeeValue,
             decimals = transactionManager.getNativeTokenDecimals(networkId),
-            currency = userWalletManager.getNetworkCurrency(networkId),
         )
         val priorityCryptoFee = amountFormatter.formatBigDecimalAmountToUI(
             amount = priorityFeeValue,
             decimals = transactionManager.getNativeTokenDecimals(networkId),
-            currency = userWalletManager.getNetworkCurrency(networkId),
         )
         return TxFeeState(
             normalFee = TxFee(
@@ -715,6 +773,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 gasLimit = normalFeeGas,
                 feeFiatFormatted = normalFiatFee,
                 feeCryptoFormatted = normalCryptoFee,
+                cryptoSymbol = networkCurrency,
                 feeType = FeeType.NORMAL,
             ),
             priorityFee = TxFee(
@@ -722,6 +781,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 gasLimit = priorityFeeGas,
                 feeFiatFormatted = priorityFiatFee,
                 feeCryptoFormatted = priorityCryptoFee,
+                cryptoSymbol = networkCurrency,
                 feeType = FeeType.PRIORITY,
             ),
         )

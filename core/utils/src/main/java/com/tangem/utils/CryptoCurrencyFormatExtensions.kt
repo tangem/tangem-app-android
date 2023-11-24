@@ -25,7 +25,7 @@ fun BigDecimal.toFormattedString(
 @Suppress("MagicNumber")
 fun BigDecimal.toFormattedCurrencyString(
     decimals: Int,
-    currency: String,
+    currency: String? = null,
     roundingMode: RoundingMode = RoundingMode.DOWN,
     limitNumberOfDecimals: Boolean = true,
 ): String {
@@ -38,7 +38,8 @@ fun BigDecimal.toFormattedCurrencyString(
         decimals = decimalsForRounding,
         roundingMode = roundingMode,
     )
-    return "$formattedAmount $currency"
+    val formattedCurrency = currency?.let { " $it " } ?: ""
+    return "$formattedAmount$formattedCurrency"
 }
 
 fun BigDecimal.toFiatString(

@@ -7,5 +7,5 @@ import kotlinx.collections.immutable.ImmutableList
 class ChooseFeeBottomSheetConfig(
     val selectedFee: FeeType,
     val onSelectFeeType: (FeeType) -> Unit,
-    val feeItems: ImmutableList<FeeItemState>,
+    val feeItems: ImmutableList<FeeItemState.Content>,
 ) : TangemBottomSheetConfigContent

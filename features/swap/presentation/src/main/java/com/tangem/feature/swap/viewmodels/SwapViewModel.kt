@@ -277,11 +277,8 @@ internal class SwapViewModel @Inject constructor(
                     quoteModel = state,
                     fromToken = fromToken.currency,
                     swapProvider = provider,
-                ) { updatedFee ->
-                    dataState = dataState.copy(
-                        selectedFee = updatedFee,
-                    )
-                }
+                    selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
+                )
             }
             is SwapState.EmptyAmountState -> {
                 uiState = stateBuilder.createQuotesEmptyAmountState(
@@ -588,24 +585,6 @@ internal class SwapViewModel @Inject constructor(
             onAmountSelected = { onAmountSelected(it) },
             onChangeApproveType = { approveType ->
                 uiState = stateBuilder.updateApproveType(uiState, approveType)
-            },
-            onSelectItemFee = { feeItem ->
-                dataState = dataState.copy(selectedFee = feeItem.data)
-                val spendAmount = dataState.amount?.let { amount ->
-                    val fromToken = dataState.fromCryptoCurrency ?: return@let null
-                    swapInteractor.getSwapAmountForToken(amount, fromToken.currency)
-                } ?: dataState.approveDataModel?.fromTokenAmount
-                spendAmount ?: return@UiActions
-                val fromToken = dataState.fromCryptoCurrency ?: return@UiActions
-                viewModelScope.launch(dispatchers.io) {
-                    val isFeeEnough = swapInteractor.checkFeeIsEnough(
-                        fee = feeItem.data.feeValue,
-                        spendAmount = spendAmount,
-                        networkId = dataState.networkId,
-                        fromToken = fromToken.currency,
-                    )
-                    uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem, isFeeEnough)
-                }
             },
             onClickFee = {},
             onSelectFeeType = {},

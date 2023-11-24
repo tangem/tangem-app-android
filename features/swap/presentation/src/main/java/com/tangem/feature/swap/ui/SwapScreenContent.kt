@@ -31,6 +31,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.toImmutableList
@@ -77,7 +78,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
                         ),
                 )
 
-                FeeItem(feeState = state.fee, currency = state.networkCurrency)
+                FeeItemBlock(state = state.fee)
 
                 if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
 
@@ -400,58 +401,17 @@ private val receiveCard = SwapCardState.SwapCardData(
     isBalanceHidden = false,
 )
 
-val stateSelectable = SelectableItemsState(
-    selectedItem = Item(
-        0,
-        TextReference.Str("Balance"),
-        TextReference.Str("0.4405434 BTC"),
-        true,
-        TxFee(
-            feeValue = BigDecimal.ZERO,
-            gasLimit = 0,
-            feeFiatFormatted = "",
-            feeCryptoFormatted = "",
-            feeType = FeeType.NORMAL,
-        ),
-    ),
-    items = listOf(
-        Item(
-            0,
-            TextReference.Str("Normal"),
-            TextReference.Str("0.4405434 BTC"),
-            true,
-            TxFee(
-                feeValue = BigDecimal.ZERO,
-                gasLimit = 0,
-                feeFiatFormatted = "",
-                feeCryptoFormatted = "",
-                feeType = FeeType.NORMAL,
-            ),
-        ),
-        Item(
-            1,
-            TextReference.Str("Priority"),
-            TextReference.Str("0.46 BTC"),
-            false,
-            TxFee(
-                feeValue = BigDecimal.ZERO,
-                gasLimit = 0,
-                feeFiatFormatted = "",
-                feeCryptoFormatted = "",
-                feeType = FeeType.NORMAL,
-            ),
-        ),
-    ).toImmutableList(),
-)
-
 private val state = SwapStateHolder(
     networkId = "ethereum",
     sendCardData = sendCard,
     receiveCardData = receiveCard,
-    fee = FeeState.Loaded(
-        tangemFee = 0.0,
-        state = stateSelectable,
-        onSelectItem = {},
+    fee = FeeItemState.Content(
+        feeType = FeeType.NORMAL,
+        title = stringReference("Fee"),
+        amountCrypto = "100",
+        symbolCrypto = "1000",
+        amountFiatFormatted = "(100)",
+        onClick = {},
     ),
     warnings = listOf(
         SwapWarning.PermissionNeeded(
