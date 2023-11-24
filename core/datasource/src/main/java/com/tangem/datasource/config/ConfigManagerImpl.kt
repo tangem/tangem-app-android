@@ -90,7 +90,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 infuraProjectId = configValues.infuraProjectId,
                 tronGridApiKey = configValues.tronGridApiKey,
                 nowNodeCredentials = NowNodeCredentials(configValues.nowNodesApiKey),
-                getBlockCredentials = GetBlockCredentials(configValues.getBlockApiKey),
+                getBlockCredentials = createGetBlockCredentials(configValues),
                 kaspaSecondaryApiUrl = configValues.kaspaSecondaryApiUrl,
                 tonCenterCredentials = TonCenterCredentials(
                     mainnetApiKey = configValues.tonCenterKeys.mainnet,
@@ -108,5 +108,46 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             tangemComAuthorization = configValues.tangemComAuthorization,
             tangemExpressApiKey = configValues.tangemExpressApiKey,
         )
+    }
+
+    private fun createGetBlockCredentials(configValues: ConfigValueModel): GetBlockCredentials? {
+        return configValues.getBlockAccessTokens?.let { accessTokens ->
+            GetBlockCredentials(
+                xrp = GetBlockAccessToken(jsonRpc = accessTokens.xrp?.jsonRPC),
+                cardano = GetBlockAccessToken(rosetta = accessTokens.cardano?.rosetta),
+                avalanche = GetBlockAccessToken(jsonRpc = accessTokens.avalanche?.jsonRPC),
+                eth = GetBlockAccessToken(jsonRpc = accessTokens.eth?.jsonRPC),
+                etc = GetBlockAccessToken(jsonRpc = accessTokens.etc?.jsonRPC),
+                fantom = GetBlockAccessToken(jsonRpc = accessTokens.fantom?.jsonRPC),
+                rsk = GetBlockAccessToken(jsonRpc = accessTokens.rsk?.jsonRPC),
+                bsc = GetBlockAccessToken(jsonRpc = accessTokens.bsc?.jsonRPC),
+                polygon = GetBlockAccessToken(jsonRpc = accessTokens.polygon?.jsonRPC),
+                gnosis = GetBlockAccessToken(jsonRpc = accessTokens.gnosis?.jsonRPC),
+                cronos = GetBlockAccessToken(jsonRpc = accessTokens.cronos?.jsonRPC),
+                solana = GetBlockAccessToken(jsonRpc = accessTokens.solana?.jsonRPC),
+                stellar = GetBlockAccessToken(rest = accessTokens.stellar?.rest),
+                ton = GetBlockAccessToken(jsonRpc = accessTokens.ton?.jsonRPC),
+                tron = GetBlockAccessToken(rest = accessTokens.tron?.rest),
+                cosmos = GetBlockAccessToken(rest = accessTokens.cosmos?.rest),
+                near = GetBlockAccessToken(jsonRpc = accessTokens.near?.jsonRPC),
+                luna = GetBlockAccessToken(rest = accessTokens.luna?.rest),
+                dogecoin = GetBlockAccessToken(
+                    jsonRpc = accessTokens.dogecoin?.jsonRPC,
+                    blockBookRest = accessTokens.dogecoin?.blockBookRest,
+                ),
+                litecoin = GetBlockAccessToken(
+                    jsonRpc = accessTokens.litecoin?.jsonRPC,
+                    blockBookRest = accessTokens.litecoin?.blockBookRest,
+                ),
+                dash = GetBlockAccessToken(
+                    jsonRpc = accessTokens.dash?.jsonRPC,
+                    blockBookRest = accessTokens.dash?.blockBookRest,
+                ),
+                bitcoin = GetBlockAccessToken(
+                    jsonRpc = accessTokens.bitcoin?.jsonRPC,
+                    blockBookRest = accessTokens.bitcoin?.blockBookRest,
+                ),
+            )
+        }
     }
 }
