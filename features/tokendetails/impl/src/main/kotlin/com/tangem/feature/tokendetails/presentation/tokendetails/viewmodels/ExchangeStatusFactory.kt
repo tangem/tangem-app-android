@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
 import arrow.core.getOrElse
-import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swaptx.ExchangeAnalyticsStatus
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
@@ -19,6 +18,7 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
