@@ -1,12 +1,12 @@
 package com.tangem.feature.wallet.presentation.organizetokens.utils.dnd
 
-import com.tangem.common.Provider
 import com.tangem.feature.wallet.presentation.organizetokens.DragAndDropIntents
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.divideMovingItem
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.uniteItems
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.updateItems
+import com.tangem.utils.Provider
 import kotlinx.collections.immutable.mutate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

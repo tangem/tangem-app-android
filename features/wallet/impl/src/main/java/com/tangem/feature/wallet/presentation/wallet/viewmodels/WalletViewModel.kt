@@ -8,7 +8,6 @@ import arrow.core.right
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.Provider
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.isZero
@@ -69,6 +68,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCard
 import com.tangem.feature.wallet.presentation.wallet.state.factory.TokenListWithWallet
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn

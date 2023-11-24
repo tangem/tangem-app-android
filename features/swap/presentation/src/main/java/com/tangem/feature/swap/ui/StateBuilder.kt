@@ -2,7 +2,6 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
@@ -15,6 +14,7 @@ import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.R
+import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 

@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import androidx.paging.PagingData
 import arrow.core.Either
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
@@ -26,6 +25,7 @@ import com.tangem.feature.wallet.presentation.wallet.utils.HiddenStateConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletsUpdateActionResolver
+import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
