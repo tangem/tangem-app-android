@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
-import com.tangem.common.Provider
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.TokenList.FiatBalance
@@ -8,6 +7,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
 internal class FiatBalanceToWalletCardConverter(

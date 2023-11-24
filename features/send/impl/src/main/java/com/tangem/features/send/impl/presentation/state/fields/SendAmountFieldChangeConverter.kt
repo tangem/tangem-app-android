@@ -1,9 +1,9 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
-import com.tangem.common.Provider
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.flow.update
 import java.text.DecimalFormatSymbols
