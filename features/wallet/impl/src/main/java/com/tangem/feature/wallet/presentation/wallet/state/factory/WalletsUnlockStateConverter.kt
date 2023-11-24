@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
@@ -12,6 +11,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyS
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.*
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
