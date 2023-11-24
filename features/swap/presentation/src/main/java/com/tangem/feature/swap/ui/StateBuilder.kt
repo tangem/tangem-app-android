@@ -574,7 +574,7 @@ internal class StateBuilder(
 // [REDACTED_TODO_COMMENT]
             // DataError.InsufficientLiquidity -> TODO()
             // DataError.NoError -> TODO()
-            is DataError.UnknownError -> addWarning(uiState, error.message, true, onClick)
+            is DataError.Error -> addWarning(uiState, error.message, true, onClick)
             else -> addWarning(uiState, null, false) {}
         }
     }
