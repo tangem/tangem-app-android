@@ -1,11 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
-import com.tangem.common.Provider
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
 internal class TokenListErrorConverter(
