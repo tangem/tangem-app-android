@@ -5,7 +5,12 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.QuotesConverter
 import com.tangem.data.tokens.utils.QuotesUnsupportedCurrenciesIdAdapter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.appcurrency.SelectedAppCurrencyStore
+import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
+import com.tangem.datasource.local.*
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObject
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
@@ -17,8 +22,8 @@ import kotlinx.coroutines.withContext
 
 internal class DefaultQuotesRepository(
     private val tangemTechApi: TangemTechApi,
+    private val appPreferencesStore: AppPreferencesStore,
     private val quotesStore: QuotesStore,
-    private val selectedAppCurrencyStore: SelectedAppCurrencyStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : QuotesRepository {
@@ -31,8 +36,11 @@ internal class DefaultQuotesRepository(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<Quote>> {
-        return selectedAppCurrencyStore.get()
+        return appPreferencesStore.getObject<CurrenciesResponse.Currency>(
+            key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+        )
             .distinctUntilChanged()
+            .filterNotNull()
             .flatMapLatest { appCurrency ->
                 fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
 
@@ -44,13 +52,16 @@ internal class DefaultQuotesRepository(
 
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote> {
         return withContext(dispatchers.io) {
-            val selectedAppCurrency = requireNotNull(selectedAppCurrencyStore.getSyncOrNull()) {
-                "Unable to get selected application currency to update quotes"
-            }
+            val selectedAppCurrency = requireNotNull(
+                value = appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
+                    key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+                ),
+                lazyMessage = { "Unable to get selected application currency to update quotes" },
+            )
 
             fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, refresh)
 
-            val quotes = quotesStore.get(currenciesIds).first()
+            val quotes = quotesStore.getSync(currenciesIds)
 
             quotesConverter.convertSet(quotes)
         }
