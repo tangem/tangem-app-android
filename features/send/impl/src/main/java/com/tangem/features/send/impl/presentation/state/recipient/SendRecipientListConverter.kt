@@ -1,7 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.recipient
 
 import androidx.paging.*
-import com.tangem.common.Provider
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -15,6 +14,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.utils.Provider
 import com.tangem.utils.toFormattedCurrencyString
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.update
