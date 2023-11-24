@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.userWalletList.repository
 
-import com.tangem.common.Provider
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.utils.Provider
 
 /**
  * A decorator for [SecureStorage] that facilitates data migration between two storages.
