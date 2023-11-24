@@ -12,13 +12,11 @@ interface AnalyticsEventHandler {
 interface AnalyticsHandler : AnalyticsEventHandler {
     fun id(): String
 
-    fun send(event: String, params: Map<String, String> = emptyMap())
+    fun send(eventId: String, params: Map<String, String> = emptyMap())
 
     override fun send(event: AnalyticsEvent) {
-        send(prepareEventString(event), event.params)
+        send(event.id, event.params)
     }
-
-    fun prepareEventString(event: AnalyticsEvent): String = "[${event.category}] ${event.event}"
 }
 
 interface ErrorEventHandler {
