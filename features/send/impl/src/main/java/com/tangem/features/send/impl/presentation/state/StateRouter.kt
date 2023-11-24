@@ -9,28 +9,61 @@ internal class StateRouter(
     private val fragmentManager: WeakReference<FragmentManager>,
 ) {
     var currentState: MutableStateFlow<SendUiStateType> = MutableStateFlow(SendUiStateType.Amount)
+        private set
+
+    private var isFromSend: Boolean = false
+
+    fun popBackStack() {
+        fragmentManager.get()?.popBackStack()
+    }
 
     fun onBackClick() {
-        fragmentManager.get()?.popBackStack()
+        if (isFromSend) {
+            showSend()
+        } else {
+            when (currentState.value) {
+                SendUiStateType.Amount -> popBackStack()
+                SendUiStateType.Recipient -> showAmount()
+                SendUiStateType.Fee -> showRecipient()
+                SendUiStateType.Send -> showFee()
+            }
+        }
     }
 
     fun onNextClick() {
         when (currentState.value) {
-            SendUiStateType.Amount -> currentState.update { SendUiStateType.Recipient }
-            SendUiStateType.Recipient -> currentState.update { SendUiStateType.Fee }
-            SendUiStateType.Fee -> currentState.update { SendUiStateType.Send }
-            SendUiStateType.Send -> currentState.update { SendUiStateType.Done }
-            SendUiStateType.Done -> onBackClick()
+            SendUiStateType.Amount -> showRecipient()
+            SendUiStateType.Recipient -> showFee()
+            SendUiStateType.Fee -> showSend()
+            SendUiStateType.Send -> onBackClick()
         }
     }
 
     fun onPrevClick() {
         when (currentState.value) {
-            SendUiStateType.Amount -> onBackClick()
-            SendUiStateType.Recipient -> currentState.update { SendUiStateType.Amount }
-            SendUiStateType.Fee -> currentState.update { SendUiStateType.Recipient }
-            SendUiStateType.Send -> currentState.update { SendUiStateType.Fee }
-            SendUiStateType.Done -> onBackClick()
+            SendUiStateType.Amount -> popBackStack()
+            SendUiStateType.Recipient -> showAmount()
+            SendUiStateType.Fee -> showRecipient()
+            SendUiStateType.Send -> popBackStack()
         }
+    }
+
+    fun showAmount(isFromSend: Boolean = false) {
+        this.isFromSend = isFromSend
+        currentState.update { SendUiStateType.Amount }
+    }
+
+    fun showRecipient(isFromSend: Boolean = false) {
+        this.isFromSend = isFromSend
+        currentState.update { SendUiStateType.Recipient }
+    }
+
+    fun showFee(isFromSend: Boolean = false) {
+        this.isFromSend = isFromSend
+        currentState.update { SendUiStateType.Fee }
+    }
+
+    fun showSend() {
+        currentState.update { SendUiStateType.Send }
     }
 }
