@@ -192,6 +192,11 @@
     <string name="exchange_tokens_unavailable_tokens_header">Недоступен для обмена с %s</string>
     <string name="express_choose_providers_subtitle">Провайдеры проводят транзакции, обеспечивая плавный и эффективный обмен токенами</string>
     <string name="express_choose_providers_title">Выберите провайдера</string>
+    <string name="express_exchange_notification_failed_text">Чтобы узнать причину, посетите сайт провайдера</string>
+    <string name="express_exchange_notification_failed_title">Операция не выполнена провайдером</string>
+    <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
+    <string name="express_exchange_notification_verification_title">Провайдер: требуется верификация</string>
+    <string name="express_provider">Провайдер</string>
     <string name="express_provider_best_rate">Лучший курс</string>
     <string name="express_provider_permission_needed">Требуется разрешение</string>
     <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
@@ -266,7 +271,7 @@
     <string name="onboarding_access_codes_doesnt_match">Введенные коды доступа не совпадают</string>
     <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту. После того, как процесс будет завершен, Вы больше не сможете добавить карт. Если у Вас есть еще одна карта, добавьте ее в резервную копию. Хотите продолжить?</string>
     <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
-    <string name="onboarding_balance_title">Баланс</string>
+    <string name="common_balance_title">Баланс</string>
     <string name="onboarding_button_add_backup_card">Добавить резервную карту</string>
     <string name="onboarding_button_backup_card_format">Сканировать карту #%d</string>
     <string name="onboarding_button_backup_now">Создать резервную копию</string>
