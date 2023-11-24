@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.converters
 
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.networkIconResId
@@ -15,6 +14,7 @@ import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelectState
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
