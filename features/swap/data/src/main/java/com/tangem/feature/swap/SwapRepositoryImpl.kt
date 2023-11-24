@@ -185,6 +185,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         providerId: String,
         rateType: RateType,
         toAddress: String,
+        refundAddress: String
     ): AggregatedSwapDataModel<SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
@@ -196,7 +197,8 @@ internal class SwapRepositoryImpl @Inject constructor(
                     fromAmount = fromAmount,
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
-                    toAddress = toAddress
+                    toAddress = toAddress,
+                    refundAddress = refundAddress
                 ).getOrThrow()
                 AggregatedSwapDataModel(
                     dataModel = expressDataConverter.convert(response)
