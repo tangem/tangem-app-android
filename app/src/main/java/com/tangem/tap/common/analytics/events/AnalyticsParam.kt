@@ -15,7 +15,7 @@ sealed class AnalyticsParam {
 
     // MultiCurrency or CurrencyType
     sealed class CardCurrency(val value: String) {
-        object MultiCurrency : CardCurrency("Multicurrency")
+        object MultiCurrency : CardCurrency(value = "Multicurrency")
         class SingleCurrency(type: CurrencyType) : CardCurrency(type.value)
     }
 

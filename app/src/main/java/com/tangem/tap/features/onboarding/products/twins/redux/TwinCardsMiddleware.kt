@@ -257,6 +257,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
         is TwinCardsAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
+                OnboardingHelper.sendToppedUpEvent(getScanResponse())
                 store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done))
             }
         }
