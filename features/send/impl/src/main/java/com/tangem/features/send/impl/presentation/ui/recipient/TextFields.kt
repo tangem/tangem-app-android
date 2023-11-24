@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -23,14 +24,15 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 
 @Composable
 internal fun TextFieldWithPasteAndIcon(
@@ -42,7 +44,14 @@ internal fun TextFieldWithPasteAndIcon(
     modifier: Modifier = Modifier,
     footer: String? = null,
     singleLine: Boolean = false,
+    error: TextReference? = null,
+    isError: Boolean = false,
 ) {
+    val (title, color) = if (isError && error != null) {
+        error to TangemTheme.colors.text.warning
+    } else {
+        label to TangemTheme.colors.text.secondary
+    }
     FooterContainer(modifier, footer) {
         Column(
             modifier = Modifier
@@ -53,9 +62,9 @@ internal fun TextFieldWithPasteAndIcon(
                 ),
         ) {
             Text(
-                text = label.resolveReference(),
+                text = title.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = color,
                 modifier = Modifier
                     .padding(
                         start = TangemTheme.dimens.spacing12,
@@ -114,7 +123,14 @@ internal fun TextFieldWithPaste(
     onPasteClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     footer: String? = null,
+    error: TextReference? = null,
+    isError: Boolean = false,
 ) {
+    val (title, color) = if (isError && error != null) {
+        error to TangemTheme.colors.text.warning
+    } else {
+        label to TangemTheme.colors.text.secondary
+    }
     FooterContainer(modifier, footer) {
         Row(
             modifier = Modifier
@@ -129,9 +145,9 @@ internal fun TextFieldWithPaste(
                     .padding(TangemTheme.dimens.spacing12),
             ) {
                 Text(
-                    text = label.resolveReference(),
+                    text = title.resolveReference(),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = color,
                 )
                 SimpleTextField(
                     value = value,
@@ -160,6 +176,9 @@ internal fun TextFieldWithInfo(
     modifier: Modifier = Modifier,
     info: TextReference? = null,
     footer: String? = null,
+    isSingleLine: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     FooterContainer(
         footer = footer,
@@ -189,6 +208,9 @@ internal fun TextFieldWithInfo(
                 SimpleTextField(
                     value = value,
                     onValueChange = onValueChange,
+                    visualTransformation = visualTransformation,
+                    singleLine = isSingleLine,
+                    keyboardOptions = keyboardOptions,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing6)
                         .weight(1f),
@@ -204,27 +226,6 @@ internal fun TextFieldWithInfo(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun FooterContainer(
-    modifier: Modifier = Modifier,
-    footer: String? = null,
-    footerTopPadding: Dp = TangemTheme.dimens.spacing8,
-    content: @Composable () -> Unit,
-) {
-    Column(modifier = modifier) {
-        content()
-        footer?.let {
-            Text(
-                text = it,
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier
-                    .padding(top = footerTopPadding),
-            )
         }
     }
 }
@@ -287,14 +288,18 @@ private fun SimpleTextField(
     modifier: Modifier = Modifier,
     placeholder: TextReference? = null,
     singleLine: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     val focusRequester = remember { FocusRequester() }
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        textStyle = TangemTheme.typography.body2,
+        textStyle = TangemTheme.typography.body2.copy(color = TangemTheme.colors.text.primary1),
         cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
         singleLine = singleLine,
+        visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
         decorationBox = { textValue ->
             Box {
                 if (value.isBlank() && placeholder != null) {
