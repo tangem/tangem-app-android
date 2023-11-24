@@ -18,7 +18,6 @@ import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.Provider
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -47,6 +46,7 @@ import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
