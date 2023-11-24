@@ -3,7 +3,6 @@ package com.tangem.features.send.impl.presentation.state
 import androidx.paging.PagingData
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -25,6 +24,7 @@ import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.features.send.impl.presentation.viewmodel.isNotAddressInWallet
 import com.tangem.features.send.impl.presentation.viewmodel.validateMemo
 import com.tangem.features.send.impl.presentation.viewmodel.verifyAddress
+import com.tangem.utils.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 

@@ -3,7 +3,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.blockchain.common.address.Address
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
@@ -28,6 +27,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.t
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
