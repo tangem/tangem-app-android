@@ -83,6 +83,7 @@ private fun handleOtherCardsAction(action: Action) {
                             val updatedCard = updatedResponse.card
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedCard.cardId)
+                            OnboardingHelper.sendToppedUpEvent(updatedResponse)
 
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
