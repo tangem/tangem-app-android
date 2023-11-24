@@ -28,6 +28,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
+    implementation(deps.compose.constraintLayout)
 
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
@@ -68,4 +69,5 @@ dependencies {
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.send.api)
+    implementation(projects.features.swap.domain)
 }
