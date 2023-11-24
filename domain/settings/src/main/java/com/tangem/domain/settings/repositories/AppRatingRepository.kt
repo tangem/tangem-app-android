@@ -3,8 +3,6 @@ package com.tangem.domain.settings.repositories
 import kotlinx.coroutines.flow.Flow
 
 interface AppRatingRepository {
-// [REDACTED_TODO_COMMENT]
-    suspend fun initialize()
 
     suspend fun setWalletWithFundsFound()
 

@@ -1,68 +1,80 @@
 package com.tangem.features.send.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+import androidx.paging.PagingData
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
+import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * Ui states of the send screen
  */
 @Immutable
-internal sealed class SendUiState {
+internal data class SendUiState(
+    val clickIntents: SendClickIntents,
+    val amountState: SendStates.AmountState? = null,
+    val recipientState: SendStates.RecipientState? = null,
+    val feeState: SendStates.FeeState? = null,
+    val recipientList: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
+    val currentState: MutableStateFlow<SendUiStateType>,
+)
 
-    /** States with content */
-    sealed class Content : SendUiState() {
+@Stable
+internal sealed class SendStates {
 
-        /** Is primary button enabled */
-        abstract val isPrimaryButtonEnabled: Boolean
+    abstract val type: SendUiStateType
 
-        /** Click intents */
-        abstract val clickIntents: SendClickIntents
+    /** Amount state */
+    data class AmountState(
+        override val type: SendUiStateType = SendUiStateType.Amount,
+        val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        val appCurrency: AppCurrency,
+        val walletName: String,
+        val walletBalance: String,
+        val tokenIconState: TokenIconState,
+        val isFiatValue: Boolean,
+        val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
+        val amountTextField: MutableStateFlow<SendTextField.Amount>,
+        val isPrimaryButtonEnabled: Boolean,
+    ) : SendStates()
 
-        /** Initial state */
-        data class Initial(
-            override val isPrimaryButtonEnabled: Boolean = false,
-            override val clickIntents: SendClickIntents,
-        ) : Content()
+    /** Recipient state */
+    data class RecipientState(
+        override val type: SendUiStateType = SendUiStateType.Recipient,
+        val addressTextField: MutableStateFlow<SendTextField.RecipientAddress>,
+        val memoTextField: MutableStateFlow<SendTextField.RecipientMemo>?,
+        val recipients: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
+        val network: String,
+        val isPrimaryButtonEnabled: Boolean,
+    ) : SendStates()
 
-        /** Amount state */
-        data class AmountState(
-            override val isPrimaryButtonEnabled: Boolean = false,
-            override val clickIntents: SendClickIntents,
-            val walletName: String,
-            val walletBalance: String,
-            val tokenIconState: TokenIconState,
-            val cryptoCurrencyStatus: CryptoCurrencyStatus,
-            val appCurrency: AppCurrency,
-            val isFiatValue: Boolean,
-            val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
-            val amountTextField: SendTextField.Amount,
-        ) : Content()
+    /** Fee and speed state */
+    data class FeeState(
+        override val type: SendUiStateType = SendUiStateType.Fee,
+        val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        val feeSelectorState: MutableStateFlow<FeeSelectorState> = MutableStateFlow(FeeSelectorState.Empty),
+        val isSubtract: MutableStateFlow<Boolean> = MutableStateFlow(false),
+        val receivedAmount: MutableStateFlow<String> = MutableStateFlow(""),
+    ) : SendStates()
 // [REDACTED_TODO_COMMENT]
-        /** Recipient state */
-        data class RecipientState(
-            override val isPrimaryButtonEnabled: Boolean = false,
-            override val clickIntents: SendClickIntents,
-        ) : Content()
-// [REDACTED_TODO_COMMENT]
-        /** Fee and speed state */
-        data class FeeState(
-            override val isPrimaryButtonEnabled: Boolean = false,
-            override val clickIntents: SendClickIntents,
-        ) : Content()
-// [REDACTED_TODO_COMMENT]
-        /** Send state */
-        data class SendState(
-            override val isPrimaryButtonEnabled: Boolean = true,
-            override val clickIntents: SendClickIntents,
-        ) : Content()
-    }
+    /** Send state */
+    data class SendState(
+        val isSuccess: Boolean,
+    )
+}
 
-    /** Dismiss screen */
-    object Dismiss : SendUiState()
+enum class SendUiStateType {
+    Amount,
+    Recipient,
+    Fee,
+    Send,
+    Done,
 }

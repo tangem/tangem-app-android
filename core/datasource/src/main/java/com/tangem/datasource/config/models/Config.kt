@@ -19,4 +19,5 @@ data class Config(
     val swapReferrerAccount: SwapReferrerAccount? = null,
     val walletConnectProjectId: String = "",
     val tangemComAuthorization: String? = null,
+    val tangemExpressApiKey: String = "",
 )
