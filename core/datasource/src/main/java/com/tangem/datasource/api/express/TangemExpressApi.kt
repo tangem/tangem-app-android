@@ -46,6 +46,7 @@ interface TangemExpressApi {
         @Query("providerId") providerId: String,
         @Query("rateType") rateType: String,
         @Query("toAddress") toAddress: String,
+        @Query("refundAddress") refundAddress: String,
     ): ApiResponse<ExchangeDataResponse>
 
     @GET("exchange-result")
