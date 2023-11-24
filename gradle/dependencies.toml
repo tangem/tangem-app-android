@@ -34,7 +34,7 @@ compose-navigation = "2.7.4"
 compose-accompanist = "0.30.1"
 compose-paging = "3.2.1"
 compose-reorderable = "0.9.6"
-compoese-lifecycle-runtime = "2.6.2"
+compose-lifecycle-runtime = "2.6.2"
 # endregion Compose
 
 # region Other libraries
@@ -88,9 +88,9 @@ spr-client = "3.6.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.2-395"
+tangemBlockchainSdk = "release-app_5.3-398"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.2-311"
+tangemCardSdk = "release-app_5.3-313"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds
 # endregion Tangem
 
@@ -142,7 +142,7 @@ androidx-palette = { module = "androidx.palette:palette", version.ref = "android
 lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref = "androidxLifecycle" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
 lifecycle-viewModel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
-lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compoese-lifecycle-runtime" }
+lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compose-lifecycle-runtime" }
 androidx-datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
 # region AndroidX
 
