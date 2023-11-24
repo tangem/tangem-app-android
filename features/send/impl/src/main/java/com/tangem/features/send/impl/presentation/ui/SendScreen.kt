@@ -22,11 +22,13 @@ import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.ui.amount.SendAmountContent
 import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
+import com.tangem.features.send.impl.presentation.ui.send.SendContent
 
 @Composable
 internal fun SendScreen(uiState: SendUiState) {
     val currentState = uiState.currentState.collectAsStateWithLifecycle()
-    BackHandler { uiState.clickIntents.onPrevClick() }
+    val isSuccess = uiState.sendState?.isSuccess?.collectAsStateWithLifecycle()
+    BackHandler { uiState.clickIntents.onBackClick() }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -36,12 +38,10 @@ internal fun SendScreen(uiState: SendUiState) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val titleRes = when (currentState.value) {
-            SendUiStateType.Amount,
-            SendUiStateType.Send,
-            -> R.string.common_send
+            SendUiStateType.Amount -> R.string.common_send
             SendUiStateType.Recipient -> R.string.send_recipient
             SendUiStateType.Fee -> R.string.common_fee_selector_title
-            SendUiStateType.Done -> null
+            SendUiStateType.Send -> if (isSuccess?.value == false) R.string.common_send else null
         }
         val iconRes = when (currentState.value) {
             SendUiStateType.Amount,
@@ -52,7 +52,7 @@ internal fun SendScreen(uiState: SendUiState) {
 
         AppBarWithBackButtonAndIcon(
             text = titleRes?.let { stringResource(it) },
-            onBackClick = uiState.clickIntents::onBackClick,
+            onBackClick = uiState.clickIntents::popBackStack,
             onIconClick = uiState.clickIntents::onQrCodeScanClick,
             backIconRes = R.drawable.ic_close_24,
             iconRes = iconRes,
@@ -94,7 +94,7 @@ private fun SendScreenContent(
                 uiState.feeState,
                 uiState.clickIntents,
             )
-            else -> { /* [REDACTED_TODO_COMMENT]*/ }
+            SendUiStateType.Send -> SendContent(uiState)
         }
     }
 }
