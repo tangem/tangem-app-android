@@ -12,8 +12,8 @@ class AppsFlyerAnalyticsHandler(
 
     override fun id(): String = ID
 
-    override fun send(event: String, params: Map<String, String>) {
-        client.logEvent(event, params)
+    override fun send(eventId: String, params: Map<String, String>) {
+        client.logEvent(eventId, params)
     }
 
     override fun send(event: AnalyticsEvent) {

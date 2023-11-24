@@ -18,6 +18,10 @@ class AnalyticsFactory {
         builders.add(builder)
     }
 
+    fun addFilter(filter: AnalyticsEventFilter) {
+        filters.add(filter)
+    }
+
     fun build(analytics: Analytics, data: AnalyticsHandlerBuilder.Data) {
         builders.mapNotNull { it.build(data) }.forEach { analytics.addHandler(it.id(), it) }
         filters.forEach { analytics.addFilter(it) }
