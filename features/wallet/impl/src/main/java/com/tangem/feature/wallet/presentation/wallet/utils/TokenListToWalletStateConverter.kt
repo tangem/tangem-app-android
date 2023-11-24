@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.utils
 
-import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
@@ -11,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.state.factory.TokenListWithWallet
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 
