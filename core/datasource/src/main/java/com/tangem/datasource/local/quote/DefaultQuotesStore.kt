@@ -30,6 +30,14 @@ internal class DefaultQuotesStore(
         }
     }
 
+    override suspend fun getSync(currenciesIds: Set<CryptoCurrency.ID>): Set<StoredQuote> {
+        return currenciesIds.mapNotNull { currencyId ->
+            currencyId.rawCurrencyId?.let {
+                dataStore.getSyncOrNull(it)
+            }
+        }.toSet()
+    }
+
     override suspend fun store(response: QuotesResponse) {
         val quotes = response.quotes.mapValues { (id, quote) ->
             StoredQuote(id, quote)
