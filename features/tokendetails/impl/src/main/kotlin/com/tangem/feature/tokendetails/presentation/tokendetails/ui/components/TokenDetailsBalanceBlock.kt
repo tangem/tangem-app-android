@@ -39,7 +39,7 @@ internal fun TokenDetailsBalanceBlock(
                         start = TangemTheme.dimens.spacing12,
                         end = TangemTheme.dimens.spacing12,
                     ),
-                text = stringResource(id = R.string.onboarding_balance_title),
+                text = stringResource(id = R.string.common_balance_title),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.subtitle2,
                 maxLines = 1,
