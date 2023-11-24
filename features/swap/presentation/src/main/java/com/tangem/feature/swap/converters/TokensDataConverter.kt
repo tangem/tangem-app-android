@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.converters
 
-import com.tangem.common.Provider
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.feature.swap.domain.models.ui.FoundTokensState
@@ -9,6 +8,7 @@ import com.tangem.feature.swap.models.Network
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelect
+import com.tangem.utils.Provider
 
 class TokensDataConverter(
     private val onSearchEntered: (String) -> Unit,
