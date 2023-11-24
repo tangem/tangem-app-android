@@ -4,12 +4,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.Provider
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.flow.MutableStateFlow
 
