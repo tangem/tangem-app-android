@@ -18,12 +18,8 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import com.tangem.core.ui.components.fields.AmountVisualTransformation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -138,31 +134,6 @@ private fun AmountFieldError(isError: Boolean, error: TextReference, modifier: M
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.warning,
             textAlign = TextAlign.Center,
-        )
-    }
-}
-
-private class AmountVisualTransformation(
-    private val symbol: String,
-) : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        return TransformedText(
-            buildAnnotatedString {
-                append(text)
-                if (text.isNotBlank()) {
-                    append(" ")
-                    append(symbol)
-                }
-            },
-            object : OffsetMapping {
-                override fun originalToTransformed(offset: Int): Int {
-                    return text.length
-                }
-
-                override fun transformedToOriginal(offset: Int): Int {
-                    return text.length
-                }
-            },
         )
     }
 }
