@@ -178,7 +178,7 @@
     <string name="onboarding_access_codes_doesnt_match">輸入的訪問密碼與初始訪問密碼不匹配</string>
     <string name="onboarding_alert_message_not_max_backup_cards_added">您已添加一張備用卡。備份過程完成後，您將無法添加更多備份卡。如果您還有一張卡，請將其添加到備份中。您想繼續備份過程嗎？</string>
     <string name="onboarding_backup_exit_warning">備份過程已部分完成。你現在不能退出</string>
-    <string name="onboarding_balance_title">餘額</string>
+    <string name="common_balance_title">餘額</string>
     <string name="onboarding_button_add_backup_card">添加備用卡</string>
     <string name="onboarding_button_backup_card_format">掃描卡片 #%d</string>
     <string name="onboarding_button_backup_now">立即備份</string>

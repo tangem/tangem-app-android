@@ -476,3 +476,34 @@ internal class TokenDetailsViewModel @Inject constructor(
         uiState = stateFactory.getStateWithRemovedRentNotification()
     }
 }
+
+//
+// val text = when (stepStatus.status) {
+//     ExchangeStatus.Failed -> stringResource(id = R.string.express_exchange_status_failed)
+//     ExchangeStatus.Verifying -> if (stepStatus.isDone) {
+//         stringResource(id = R.string.express_exchange_status_verified)
+//     } else {
+//         stringResource(id = R.string.express_exchange_status_verifying)
+//     }
+//     ExchangeStatus.New, ExchangeStatus.Waiting -> if (stepStatus.isDone) {
+//         stringResource(id = R.string.express_exchange_status_received)
+//     } else {
+//         stringResource(id = R.string.express_exchange_status_receiving)
+//     }
+//     ExchangeStatus.Confirming -> if (stepStatus.isDone) {
+//         stringResource(id = R.string.express_exchange_status_confirmed)
+//     } else {
+//         stringResource(id = R.string.express_exchange_status_confirming)
+//     }
+//     ExchangeStatus.Exchanging -> if (stepStatus.isDone) {
+//         stringResource(id = R.string.express_exchange_status_exchanged)
+//     } else {
+//         stringResource(id = R.string.express_exchange_status_exchanging)
+//     }
+//     ExchangeStatus.Sending -> if (stepStatus.isDone) {
+//         stringResource(id = R.string.express_exchange_status_sent)
+//     } else {
+//         stringResource(id = R.string.express_exchange_status_sending)
+//     }
+//     else -> ""
+// }
