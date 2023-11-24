@@ -4,10 +4,13 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,7 +42,10 @@ fun AppBarWithBackButtonAndIcon(
             contentDescription = null,
             modifier = Modifier
                 .size(size = TangemTheme.dimens.size24)
-                .clickable { onBackClick() },
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(bounded = false),
+                ) { onBackClick() },
             tint = TangemTheme.colors.icon.primary1,
         )
         AnimatedContent(
