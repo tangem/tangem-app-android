@@ -224,4 +224,6 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
+    Blockchain.Decimal,
+    Blockchain.DecimalTestnet,
 )
