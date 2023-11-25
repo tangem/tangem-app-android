@@ -21,6 +21,7 @@ interface SwapRepository {
         toContractAddress: String,
         toNetwork: String,
         fromAmount: String,
+        fromDecimals: Int,
         providerId: String,
         rateType: RateType,
     ): AggregatedSwapDataModel<QuoteModel>
@@ -63,6 +64,7 @@ interface SwapRepository {
         toContractAddress: String,
         toNetwork: String,
         fromAmount: String,
+        fromDecimals: Int,
         providerId: String,
         rateType: RateType,
         toAddress: String,
