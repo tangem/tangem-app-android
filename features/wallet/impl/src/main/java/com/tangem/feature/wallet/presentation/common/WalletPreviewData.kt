@@ -418,7 +418,10 @@ internal object WalletPreviewData {
                 contentItems = MutableStateFlow(
                     PagingData.from(
                         listOf(
-                            TxHistoryState.TxHistoryItemState.GroupTitle("Today"),
+                            TxHistoryState.TxHistoryItemState.GroupTitle(
+                                title = "Today",
+                                itemKey = UUID.randomUUID().toString(),
+                            ),
                             TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Content(
                                     txHash = UUID.randomUUID().toString(),
@@ -432,7 +435,10 @@ internal object WalletPreviewData {
                                     onClick = {},
                                 ),
                             ),
-                            TxHistoryState.TxHistoryItemState.GroupTitle("Yesterday"),
+                            TxHistoryState.TxHistoryItemState.GroupTitle(
+                                title = "Yesterday",
+                                itemKey = UUID.randomUUID().toString(),
+                            ),
                             TxHistoryState.TxHistoryItemState.Transaction(
                                 TransactionState.Content(
                                     txHash = UUID.randomUUID().toString(),
