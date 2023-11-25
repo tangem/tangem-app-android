@@ -634,7 +634,6 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
             toAddress = toToken.value.networkAddress?.defaultAddress ?: "",
-            refundAddress = fromToken.value.networkAddress?.defaultAddress ?: "",
         ).let {
             val swapData = it.dataModel
             if (swapData != null) {
