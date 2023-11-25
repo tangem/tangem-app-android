@@ -5,8 +5,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.components.states.Item
-import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -27,7 +25,6 @@ import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -397,38 +394,36 @@ internal class StateBuilder(
         }
     }
 
-    private fun createFeeState(
-        quoteModel: SwapState.QuotesLoadedState,
-        feeType: FeeType,
-    ): FeeItemState {
-        val swapDataModel = quoteModel.swapDataModel ?: return FeeItemState.Empty
-        val fee = when (feeType) {
-            FeeType.NORMAL -> {
-                swapDataModel.fee.normalFee
+    private fun createFeeState(quoteModel: SwapState.QuotesLoadedState, feeType: FeeType): FeeItemState {
+        val isClickable: Boolean
+        val fee = when (val txFee = quoteModel.txFee) {
+            TxFeeState.Empty -> return FeeItemState.Empty
+            is TxFeeState.SingleFeeState -> {
+                isClickable = false
+                txFee.fee
             }
-            FeeType.PRIORITY -> {
-                swapDataModel.fee.priorityFee
+            is TxFeeState.MultipleFeeState -> {
+                isClickable = false
+                when (feeType) {
+                    FeeType.NORMAL -> {
+                        txFee.normalFee
+                    }
+                    FeeType.PRIORITY -> {
+                        txFee.priorityFee
+                    }
+                }
             }
         }
+
         return FeeItemState.Content(
             feeType = feeType,
-            title = stringReference("Fee"), //todo replace with string
+            title = stringReference("Fee"), // todo replace with string
             amountCrypto = fee.feeCryptoFormatted,
             symbolCrypto = fee.cryptoSymbol,
             amountFiatFormatted = fee.feeFiatFormatted,
-            isClickable = false,
+            isClickable = isClickable,
             onClick = actions.onClickFee,
         )
-    }
-
-    private fun selectNewItem(items: ImmutableList<Item<TxFee>>, selectItem: Item<TxFee>): ImmutableList<Item<TxFee>> {
-        return items.map {
-            if (it.id == selectItem.id) {
-                it.copy(isSelected = true)
-            } else {
-                it.copy(isSelected = false)
-            }
-        }.toImmutableList()
     }
 
     fun loadingPermissionState(uiState: SwapStateHolder): SwapStateHolder {
@@ -519,14 +514,18 @@ internal class StateBuilder(
             PermissionDataState.PermissionFailed -> SwapPermissionState.Empty
             PermissionDataState.PermissionLoading -> SwapPermissionState.InProgress
             is PermissionDataState.PermissionReadyForRequest -> {
-                val fee = permissionDataState.requestApproveData.fee.priorityFee
+                val permissionFee = when (val fee = permissionDataState.requestApproveData.fee) {
+                    TxFeeState.Empty -> error("Fee shouldn't be empty")
+                    is TxFeeState.MultipleFeeState -> fee.priorityFee
+                    is TxFeeState.SingleFeeState -> fee.fee
+                }
                 SwapPermissionState.ReadyForRequest(
                     currency = permissionDataState.currency,
                     amount = permissionDataState.amount,
                     approveType = approveType,
                     walletAddress = getShortAddressValue(permissionDataState.walletAddress),
                     spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
-                    fee = TextReference.Str("${fee.feeCryptoFormatted} (${fee.feeFiatFormatted})"),
+                    fee = TextReference.Str("${permissionFee.feeCryptoFormatted} (${permissionFee.feeFiatFormatted})"),
                     approveButton = ApprovePermissionButton(
                         enabled = true,
                         onClick = onGivePermissionClick,
@@ -537,73 +536,6 @@ internal class StateBuilder(
                     onChangeApproveType = onChangeApproveType,
                 )
             }
-        }
-    }
-
-    private fun createSelectFeeState(
-        fee: TxFeeState?,
-        previousState: SelectableItemsState<TxFee>?,
-        onFeeSetup: (TxFee) -> Unit,
-    ): SelectableItemsState<TxFee>? {
-        if (fee == null) return null
-        if (previousState == null) {
-            onFeeSetup.invoke(fee.normalFee) // if there is no previous state, setup normal fee by default
-            val selectedItemId = 0
-            // by default preselect normal
-            val preselectedItem = Item(
-                id = selectedItemId,
-                startText = TextReference.Res(R.string.send_network_fee_title),
-                endText = TextReference.Str(fee.normalFee.feeCryptoFormatted + fee.normalFee.feeFiatFormatted),
-                isSelected = true,
-                data = fee.normalFee,
-            )
-            val feeItems = mutableListOf<Item<TxFee>>()
-            val normalFeeItem = Item(
-                id = selectedItemId,
-                startText = TextReference.Res(R.string.send_fee_picker_normal),
-                endText = TextReference.Str(fee.normalFee.feeCryptoFormatted + fee.normalFee.feeFiatFormatted),
-                isSelected = true,
-                data = fee.normalFee,
-            )
-            val priorityFeeItem = Item(
-                id = 1,
-                startText = TextReference.Res(R.string.send_fee_picker_priority),
-                endText = TextReference.Str(fee.priorityFee.feeCryptoFormatted + fee.priorityFee.feeFiatFormatted),
-                isSelected = false,
-                data = fee.priorityFee,
-            )
-            feeItems.add(normalFeeItem)
-            feeItems.add(priorityFeeItem)
-            return SelectableItemsState(
-                selectedItem = preselectedItem,
-                items = feeItems.toImmutableList(),
-            )
-        } else {
-            val normalFeeItem =
-                requireNotNull(previousState.items.firstOrNull()) { "in previousState there are 2 items" }
-                    .copy(
-                        endText = TextReference.Str(fee.normalFee.feeCryptoFormatted + fee.normalFee.feeFiatFormatted),
-                    )
-            val priorityFeeItem =
-                requireNotNull(previousState.items.getOrNull(1)) { "in previousState there are 2 items" }
-                    .copy(
-                        endText = TextReference.Str(
-                            fee.priorityFee.feeCryptoFormatted + fee.priorityFee.feeFiatFormatted,
-                        ),
-                    )
-            val selectedEndText = if (normalFeeItem.isSelected) {
-                onFeeSetup.invoke(fee.normalFee)
-                normalFeeItem.endText
-            } else {
-                onFeeSetup.invoke(fee.priorityFee)
-                priorityFeeItem.endText
-            }
-            return previousState.copy(
-                selectedItem = previousState.selectedItem.copy(
-                    endText = selectedEndText,
-                ),
-                items = listOf(normalFeeItem, priorityFeeItem).toImmutableList(),
-            )
         }
     }
 

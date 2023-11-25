@@ -71,7 +71,7 @@ interface SwapInteractor {
     suspend fun onSwap(
         exchangeProviderType: ExchangeProviderType,
         networkId: String,
-        swapStateData: SwapStateData,
+        swapData: SwapDataModel,
         currencyToSend: CryptoCurrency,
         currencyToGet: CryptoCurrency,
         amountToSwap: String,

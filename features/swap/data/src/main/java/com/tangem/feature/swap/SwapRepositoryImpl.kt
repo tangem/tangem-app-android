@@ -14,7 +14,6 @@ import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
-import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.fromNetworkId
@@ -203,7 +202,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                     toAddress = toAddress,
                 ).getOrThrow()
                 AggregatedSwapDataModel(
-                    dataModel = expressDataConverter.convert(response)
+                    dataModel = expressDataConverter.convert(response),
                 )
             } catch (ex: Exception) {
                 AggregatedSwapDataModel(null, mapErrors(ex.message))

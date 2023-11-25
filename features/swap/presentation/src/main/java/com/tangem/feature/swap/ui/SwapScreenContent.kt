@@ -21,21 +21,15 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.components.states.Item
-import com.tangem.core.ui.components.states.SelectableItemsState
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
-import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
-import kotlinx.collections.immutable.toImmutableList
-import java.math.BigDecimal
 
 @Suppress("LongMethod")
 @Composable
@@ -411,6 +405,7 @@ private val state = SwapStateHolder(
         amountCrypto = "100",
         symbolCrypto = "1000",
         amountFiatFormatted = "(100)",
+        isClickable = true,
         onClick = {},
     ),
     warnings = listOf(
