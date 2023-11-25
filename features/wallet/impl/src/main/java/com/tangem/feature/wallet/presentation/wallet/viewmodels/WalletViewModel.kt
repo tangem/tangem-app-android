@@ -430,6 +430,12 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onBackupCardClick() {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.NoticeBackupYourWalletTapped)
+        reduxStateHolder.dispatch(
+            LegacyAction.StartOnboardingProcess(
+                scanResponse = getSelectedWallet().scanResponse,
+                canSkipBackup = false,
+            ),
+        )
         router.openOnboardingScreen()
     }
 
