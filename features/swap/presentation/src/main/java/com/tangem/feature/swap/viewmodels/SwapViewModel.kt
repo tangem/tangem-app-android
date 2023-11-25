@@ -324,6 +324,7 @@ internal class SwapViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
+                    exchangeProviderType = requireNotNull(dataState.selectedProvider?.type),
                     networkId = dataState.networkId,
                     swapStateData = requireNotNull(dataState.swapDataModel),
                     currencyToSend = requireNotNull(dataState.fromCryptoCurrency?.currency),
