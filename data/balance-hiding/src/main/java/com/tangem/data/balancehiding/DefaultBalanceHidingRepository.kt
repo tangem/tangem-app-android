@@ -13,6 +13,8 @@ internal class DefaultBalanceHidingRepository(
     private val appPreferencesStore: AppPreferencesStore,
 ) : BalanceHidingRepository {
 
+    override var isUpdateEnabled: Boolean = true
+
     override fun getBalanceHidingSettingsFlow(): Flow<BalanceHidingSettings> {
         return appPreferencesStore.getObject(
             key = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY,

@@ -201,6 +201,7 @@ class DefaultWalletManagersFacade(
         val itemsResult = walletManager.getTransactionsHistory(
             request = TransactionHistoryRequest(
                 address = walletManager.wallet.address,
+                decimals = currency.decimals,
                 page = TransactionHistoryRequest.Page(number = page, size = pageSize),
                 filterType = when (currency) {
                     is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
