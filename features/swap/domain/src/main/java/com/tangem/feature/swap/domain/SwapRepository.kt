@@ -68,7 +68,6 @@ interface SwapRepository {
         providerId: String,
         rateType: RateType,
         toAddress: String,
-        refundAddress: String,
     ): AggregatedSwapDataModel<SwapDataModel>
 
     fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
