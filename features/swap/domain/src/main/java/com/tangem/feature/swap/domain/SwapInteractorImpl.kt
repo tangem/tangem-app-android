@@ -305,6 +305,7 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         } else {
             provider to loadQuoteData(
+                exchangeProviderType = ExchangeProviderType.DEX,
                 networkId = networkId,
                 amount = amount,
                 fromTokenStatus = fromToken,
@@ -326,6 +327,7 @@ internal class SwapInteractorImpl @Inject constructor(
         isBalanceWithoutFeeEnough: Boolean,
     ): Pair<SwapProvider, SwapState> {
         return provider to loadQuoteData(
+            exchangeProviderType = ExchangeProviderType.CEX,
             networkId = networkId,
             amount = amount,
             fromTokenStatus = fromToken,
@@ -338,6 +340,32 @@ internal class SwapInteractorImpl @Inject constructor(
 
     @Deprecated("used in old swap mechanism")
     override suspend fun onSwap(
+        exchangeProviderType: ExchangeProviderType,
+        networkId: String,
+        swapStateData: SwapStateData,
+        currencyToSend: CryptoCurrency,
+        currencyToGet: CryptoCurrency,
+        amountToSwap: String,
+        fee: TxFee,
+    ): TxState {
+        return when (exchangeProviderType) {
+            ExchangeProviderType.CEX -> {
+                onSwapCex()
+            }
+            ExchangeProviderType.DEX -> {
+                onSwapDex(
+                    networkId = networkId,
+                    swapStateData = swapStateData,
+                    currencyToSend = currencyToSend,
+                    currencyToGet = currencyToGet,
+                    amountToSwap = amountToSwap,
+                    fee = fee,
+                )
+            }
+        }
+    }
+
+    private suspend fun onSwapDex(
         networkId: String,
         swapStateData: SwapStateData,
         currencyToSend: CryptoCurrency,
@@ -389,6 +417,10 @@ internal class SwapInteractorImpl @Inject constructor(
             is SendTxResult.NetworkError -> TxState.NetworkError
             is SendTxResult.UnknownError -> TxState.UnknownError
         }
+    }
+
+    private fun onSwapCex(): TxState {
+        TODO()
     }
 
     @Deprecated("used in old swap mechanism")
@@ -486,6 +518,7 @@ internal class SwapInteractorImpl @Inject constructor(
      */
     @Suppress("LongParameterList")
     private suspend fun loadQuoteData(
+        exchangeProviderType: ExchangeProviderType,
         networkId: String,
         amount: SwapAmount,
         fromTokenStatus: CryptoCurrencyStatus,
@@ -503,12 +536,13 @@ internal class SwapInteractorImpl @Inject constructor(
                 toContractAddress = toToken.getContractAddress(),
                 toNetwork = toToken.network.backendId,
                 fromAmount = amount.toStringWithRightOffset(),
+                fromDecimals = amount.decimals,
                 providerId = provider.providerId,
                 rateType = RateType.FLOAT,
             )
 
-
             getState(
+                exchangeProviderType = exchangeProviderType,
                 quoteDataModel = quotes,
                 amount = amount,
                 fromToken = fromTokenStatus,
@@ -521,6 +555,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun getState(
+        exchangeProviderType: ExchangeProviderType,
         quoteDataModel: AggregatedSwapDataModel<QuoteModel>,
         amount: SwapAmount,
         fromToken: CryptoCurrencyStatus,
@@ -539,12 +574,21 @@ internal class SwapInteractorImpl @Inject constructor(
                 toTokenAmount = quoteModel.toTokenAmount,
                 swapStateData = null,
             )
-            val quotesState = updatePermissionState(
-                networkId = networkId,
-                fromToken = fromToken.currency,
-                swapAmount = amount,
-                quotesLoadedState = swapState,
-            )
+
+            val quotesState = when (exchangeProviderType) {
+                ExchangeProviderType.DEX -> {
+                    updatePermissionState(
+                        networkId = networkId,
+                        fromToken = fromToken.currency,
+                        swapAmount = amount,
+                        quotesLoadedState = swapState
+                    )
+                }
+                ExchangeProviderType.CEX -> {
+                    swapState.copy(permissionState = PermissionDataState.Empty)
+                }
+            }
+
             return quotesState.copy(
                 preparedSwapConfigState = quotesState.preparedSwapConfigState.copy(
                     isAllowedToSpend = isAllowedToSpend,
@@ -587,10 +631,10 @@ internal class SwapInteractorImpl @Inject constructor(
             toContractAddress = toToken.currency.getContractAddress(),
             toNetwork = toToken.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
+            fromDecimals = amount.decimals,
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
             toAddress = toToken.value.networkAddress?.defaultAddress ?: "",
-            refundAddress = fromToken.value.networkAddress?.defaultAddress ?: "",
         ).let {
             val swapData = it.dataModel
             if (swapData != null) {
