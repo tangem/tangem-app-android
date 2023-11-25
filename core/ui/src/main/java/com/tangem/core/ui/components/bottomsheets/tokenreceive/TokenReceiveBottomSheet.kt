@@ -2,9 +2,7 @@ package com.tangem.core.ui.components.bottomsheets.tokenreceive
 
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -43,6 +41,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
     var selectedAddress by remember { mutableStateOf(content.addresses.first()) }
     Column(
         modifier = Modifier
+            .verticalScroll(state = rememberScrollState())
             .padding(
                 start = TangemTheme.dimens.spacing24,
                 top = TangemTheme.dimens.spacing24,
