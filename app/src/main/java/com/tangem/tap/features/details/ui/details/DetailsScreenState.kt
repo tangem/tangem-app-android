@@ -143,9 +143,9 @@ internal object TangemSocialAccounts {
         SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_chat"),
         SocialNetworkLink(SocialNetwork.Discord, "https://discord.gg/tangem"),
         SocialNetworkLink(SocialNetwork.Reddit, "https://www.reddit.com/r/Tangem/"),
-        SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
+        SocialNetworkLink(SocialNetwork.Instagram, "https://www.instagram.com/tangemwallet"),
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
-        SocialNetworkLink(SocialNetwork.Facebook, "https://facebook.com/TangemCards/"),
+        SocialNetworkLink(SocialNetwork.Facebook, "https://www.facebook.com/tangemwallet"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
         SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/@tangem3890"),
     )
@@ -154,9 +154,9 @@ internal object TangemSocialAccounts {
         SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_chat_ru"),
         SocialNetworkLink(SocialNetwork.Discord, "https://discord.gg/tangem"),
         SocialNetworkLink(SocialNetwork.Reddit, "https://www.reddit.com/r/Tangem/"),
-        SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
+        SocialNetworkLink(SocialNetwork.Instagram, "https://www.instagram.com/tangemwallet"),
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
-        SocialNetworkLink(SocialNetwork.Facebook, "https://facebook.com/TangemCards/"),
+        SocialNetworkLink(SocialNetwork.Facebook, "https://www.facebook.com/tangemwallet"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
         SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/@tangem3890"),
     )

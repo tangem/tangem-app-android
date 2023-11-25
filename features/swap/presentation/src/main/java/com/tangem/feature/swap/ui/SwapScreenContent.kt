@@ -245,49 +245,6 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun FeeItem(feeState: FeeState, currency: String) {
-    val titleString = stringResource(id = R.string.send_network_fee_title)
-    val disclaimer = stringResource(id = R.string.swapping_tangem_fee_disclaimer, "${feeState.tangemFee}%")
-    when (feeState) {
-        is FeeState.Loaded -> {
-            if (feeState.state != null) {
-                SelectableInfoCard(
-                    state = feeState.state,
-                    disclaimer = disclaimer,
-                    onSelect = feeState.onSelectItem,
-                )
-            }
-        }
-        FeeState.Loading -> {
-            SmallInfoCardWithDisclaimer(
-                startText = titleString,
-                endText = "",
-                disclaimer = disclaimer,
-                isLoading = true,
-            )
-        }
-        is FeeState.NotEnoughFundsWarning -> {
-            if (feeState.state != null) {
-                SelectableInfoCardWithWarning(
-                    state = feeState.state,
-                    warningText = stringResource(
-                        id = R.string.swapping_not_enough_funds_for_fee,
-                        currency,
-                        currency,
-                    ),
-                    disclaimer = disclaimer,
-                    onSelect = feeState.onSelectItem,
-                )
-            }
-        }
-        is FeeState.Empty -> {
-            // show nothing
-            // SmallInfoCard(startText = titleString, endText = "")
-        }
-    }
-}
-
-@Composable
 private fun SwapWarnings(warnings: List<SwapWarning>) {
     Column(
         modifier = Modifier

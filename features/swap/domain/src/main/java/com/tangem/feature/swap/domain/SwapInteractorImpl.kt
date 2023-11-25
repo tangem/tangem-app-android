@@ -252,7 +252,6 @@ internal class SwapInteractorImpl @Inject constructor(
             }
             val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken.currency))
             val fromTokenAddress = getTokenAddress(fromToken.currency)
-            val toTokenAddress = getTokenAddress(toToken.currency)
             val isAllowedToSpend = isAllowedToSpend(networkId, fromToken.currency, amount)
             if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
                 allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
@@ -266,8 +265,6 @@ internal class SwapInteractorImpl @Inject constructor(
                         networkId = networkId,
                         fromToken = fromToken,
                         toToken = toToken,
-                        fromTokenAddress = fromTokenAddress,
-                        toTokenAddress = toTokenAddress,
                         provider = provider,
                         selectedFee = selectedFee,
                         amount = amount,
@@ -294,8 +291,6 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
-        fromTokenAddress: String,
-        toTokenAddress: String,
         provider: SwapProvider,
         selectedFee: FeeType,
         amount: SwapAmount,
@@ -306,8 +301,6 @@ internal class SwapInteractorImpl @Inject constructor(
             provider to loadSwapData(
                 provider = provider,
                 networkId = networkId,
-                fromTokenAddress = fromTokenAddress,
-                toTokenAddress = toTokenAddress,
                 fromToken = fromToken,
                 toToken = toToken,
                 amount = amount,
@@ -624,7 +617,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val rates = getQuotes(nativeToken.id)
         return rates[nativeToken.id]?.fiatRate?.let { rate ->
             fees.map { fee ->
-                " (${fee.toFiatString(rate, appCurrency.symbol, true)})"
+                fee.toFiatString(rate, appCurrency.symbol, true)
             }
         }.orEmpty()
     }
@@ -636,8 +629,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun loadSwapData(
         provider: SwapProvider,
         networkId: String,
-        fromTokenAddress: String,
-        toTokenAddress: String,
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
         amount: SwapAmount,
@@ -749,7 +740,7 @@ internal class SwapInteractorImpl @Inject constructor(
     ): TxFeeState {
         getSelectedWalletSyncUseCase().getOrNull()?.walletId?.let { userWalletId ->
             val txFeeResult = getFeeUseCase(
-                amount = amount.value.movePointRight(amount.decimals),
+                amount = amount.value,
                 destination = fromToken.value.networkAddress?.defaultAddress ?: "",
                 userWalletId = userWalletId,
                 cryptoCurrency = fromToken.currency,
@@ -1080,10 +1071,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     companion object {
-        private const val DEFAULT_SLIPPAGE = 2
-
         @Suppress("UnusedPrivateMember")
-        private const val INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT = 1.0 // if need to increase fee when check isEnough
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val INFINITY_SYMBOL = "∞"
 

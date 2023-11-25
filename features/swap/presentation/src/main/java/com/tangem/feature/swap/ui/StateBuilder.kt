@@ -403,7 +403,7 @@ internal class StateBuilder(
                 txFee.fee
             }
             is TxFeeState.MultipleFeeState -> {
-                isClickable = false
+                isClickable = true
                 when (feeType) {
                     FeeType.NORMAL -> {
                         txFee.normalFee

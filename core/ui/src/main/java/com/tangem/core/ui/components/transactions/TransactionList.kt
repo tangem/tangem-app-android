@@ -81,7 +81,7 @@ private fun LazyListScope.contentItems(
         count = txHistoryItems.itemCount,
         key = txHistoryItems.itemKey { item ->
             when (item) {
-                is TxHistoryState.TxHistoryItemState.GroupTitle -> item.title
+                is TxHistoryState.TxHistoryItemState.GroupTitle -> item.itemKey
                 is TxHistoryState.TxHistoryItemState.Title -> item.onExploreClick.hashCode()
                 is TxHistoryState.TxHistoryItemState.Transaction -> item.state.txHash
             }
