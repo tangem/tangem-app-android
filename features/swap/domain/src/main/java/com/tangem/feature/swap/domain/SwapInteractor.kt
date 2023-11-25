@@ -69,6 +69,7 @@ interface SwapInteractor {
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun onSwap(
+        exchangeProviderType: ExchangeProviderType,
         networkId: String,
         swapStateData: SwapStateData,
         currencyToSend: CryptoCurrency,
