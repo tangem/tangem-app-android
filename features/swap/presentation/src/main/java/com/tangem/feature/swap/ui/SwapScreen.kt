@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.SwapStateHolder
+import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
 
@@ -31,6 +32,9 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                 }
                 is ChooseProviderBottomSheetConfig -> {
                     ChooseProviderBottomSheet(config = config)
+                }
+                is ChooseFeeBottomSheetConfig -> {
+                    ChooseFeeBottomSheet(config = config)
                 }
             }
         }

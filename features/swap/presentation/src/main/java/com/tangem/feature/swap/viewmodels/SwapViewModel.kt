@@ -18,6 +18,7 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
+import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
@@ -271,17 +272,14 @@ internal class SwapViewModel @Inject constructor(
     private fun setupLoadedState(provider: SwapProvider, state: SwapState, fromToken: CryptoCurrencyStatus) {
         when (state) {
             is SwapState.QuotesLoadedState -> {
-                fillDataState(state.permissionState, state.swapDataModel)
+                fillLoadedDataState(state, state.permissionState, state.swapDataModel)
                 uiState = stateBuilder.createQuotesLoadedState(
                     uiStateHolder = uiState,
                     quoteModel = state,
                     fromToken = fromToken.currency,
                     swapProvider = provider,
-                ) { updatedFee ->
-                    dataState = dataState.copy(
-                        selectedFee = updatedFee,
-                    )
-                }
+                    selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
+                )
             }
             is SwapState.EmptyAmountState -> {
                 uiState = stateBuilder.createQuotesEmptyAmountState(
@@ -305,7 +303,11 @@ internal class SwapViewModel @Inject constructor(
         return state.entries.first { it.key == selectedSwapProvider }.toPair()
     }
 
-    private fun fillDataState(permissionState: PermissionDataState, swapDataModel: SwapStateData?) {
+    private fun fillLoadedDataState(
+        state: SwapState.QuotesLoadedState,
+        permissionState: PermissionDataState,
+        swapDataModel: SwapDataModel?,
+    ) {
         dataState = if (permissionState is PermissionDataState.PermissionReadyForRequest) {
             dataState.copy(
                 approveDataModel = permissionState.requestApproveData,
@@ -313,9 +315,22 @@ internal class SwapViewModel @Inject constructor(
         } else {
             dataState.copy(
                 swapDataModel = swapDataModel,
-                selectedFee = swapDataModel?.fee?.normalFee,
+                selectedFee = selectDefaultFee(state),
             )
         }
+    }
+
+    private fun selectDefaultFee(state: SwapState.QuotesLoadedState): TxFee? {
+        return dataState.selectedFee
+            ?: when (val txFee = state.txFee) {
+                TxFeeState.Empty -> null
+                is TxFeeState.MultipleFeeState -> {
+                    txFee.normalFee
+                }
+                is TxFeeState.SingleFeeState -> {
+                    txFee.fee
+                }
+            }
     }
 
     private fun onSwapClick() {
@@ -326,7 +341,7 @@ internal class SwapViewModel @Inject constructor(
                 swapInteractor.onSwap(
                     exchangeProviderType = requireNotNull(dataState.selectedProvider?.type),
                     networkId = dataState.networkId,
-                    swapStateData = requireNotNull(dataState.swapDataModel),
+                    swapData = requireNotNull(dataState.swapDataModel),
                     currencyToSend = requireNotNull(dataState.fromCryptoCurrency?.currency),
                     currencyToGet = requireNotNull(dataState.toCryptoCurrency?.currency),
                     amountToSwap = requireNotNull(dataState.amount),
@@ -539,8 +554,8 @@ internal class SwapViewModel @Inject constructor(
             onAmountChanged = { onAmountChanged(it) },
             onSwapClick = {
                 onSwapClick()
-                val sendTokenSymbol = dataState.fromCurrency?.symbol
-                val receiveTokenSymbol = dataState.toCurrency?.symbol
+                val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol
+                val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol
                 if (sendTokenSymbol != null && receiveTokenSymbol != null) {
                     analyticsEventHandler.send(
                         SwapEvents.ButtonSwapClicked(
@@ -552,8 +567,8 @@ internal class SwapViewModel @Inject constructor(
             },
             onGivePermissionClick = {
                 givePermissionsToSwap()
-                val sendTokenSymbol = dataState.fromCurrency?.symbol
-                val receiveTokenSymbol = dataState.toCurrency?.symbol
+                val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol
+                val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol
                 if (sendTokenSymbol != null && receiveTokenSymbol != null) {
                     analyticsEventHandler.send(
                         SwapEvents.ButtonPermissionApproveClicked(
@@ -590,26 +605,36 @@ internal class SwapViewModel @Inject constructor(
             onChangeApproveType = { approveType ->
                 uiState = stateBuilder.updateApproveType(uiState, approveType)
             },
-            onSelectItemFee = { feeItem ->
-                dataState = dataState.copy(selectedFee = feeItem.data)
-                val spendAmount = dataState.amount?.let { amount ->
-                    val fromToken = dataState.fromCryptoCurrency ?: return@let null
-                    swapInteractor.getSwapAmountForToken(amount, fromToken.currency)
-                } ?: dataState.approveDataModel?.fromTokenAmount
-                spendAmount ?: return@UiActions
-                val fromToken = dataState.fromCryptoCurrency ?: return@UiActions
-                viewModelScope.launch(dispatchers.io) {
-                    val isFeeEnough = swapInteractor.checkFeeIsEnough(
-                        fee = feeItem.data.feeValue,
-                        spendAmount = spendAmount,
-                        networkId = dataState.networkId,
-                        fromToken = fromToken.currency,
-                    )
-                    uiState = stateBuilder.updateFeeSelectedItem(uiState, feeItem, isFeeEnough)
+            onClickFee = {
+                val selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL
+                val txFeeState = dataState.getCurrentLoadedSwapState()?.txFee as? TxFeeState.MultipleFeeState
+                    ?: return@UiActions
+                uiState = stateBuilder.showSelectFeeBottomSheet(
+                    uiState = uiState,
+                    selectedFee = selectedFee,
+                    txFeeState = txFeeState,
+                ) {
+                    uiState = stateBuilder.dismissBottomSheet(uiState)
                 }
             },
-            onClickFee = {},
-            onSelectFeeType = {},
+            onSelectFeeType = {
+                val state = dataState.getCurrentLoadedSwapState() ?: return@UiActions
+                val fromToken = dataState.fromCryptoCurrency ?: return@UiActions
+                val amountToSwap = dataState.amount ?: return@UiActions
+                val selectedProvider = dataState.selectedProvider ?: return@UiActions
+                uiState = stateBuilder.updateSelectedFee(uiState, it.feeType)
+                dataState = dataState.copy(selectedFee = it)
+                viewModelScope.launch(dispatchers.io) {
+                    val updatedState = swapInteractor.updateQuotesStateWithSelectedFee(
+                        state = state,
+                        selectedFee = it.feeType,
+                        fromToken = fromToken,
+                        amountToSwap = amountToSwap,
+                        networkId = dataState.networkId,
+                    )
+                    setupLoadedState(selectedProvider, updatedState, fromToken)
+                }
+            },
             onProviderClick = {
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
