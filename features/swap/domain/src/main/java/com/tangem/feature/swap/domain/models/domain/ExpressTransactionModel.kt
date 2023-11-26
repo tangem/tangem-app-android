@@ -16,7 +16,7 @@ sealed class ExpressTransactionModel {
         override val txTo: String,
         val txFrom: String,
         val txData: String,
-    ): ExpressTransactionModel()
+    ) : ExpressTransactionModel()
 
     data class CEX(
         override val fromAmount: SwapAmount,
@@ -25,6 +25,5 @@ sealed class ExpressTransactionModel {
         override val txTo: String,
         val externalTxId: String,
         val externalTxUrl: String,
-    ): ExpressTransactionModel()
-
+    ) : ExpressTransactionModel()
 }
