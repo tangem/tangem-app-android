@@ -5,6 +5,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.*
@@ -36,6 +37,8 @@ class SwapDomainModule {
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         quotesRepository: QuotesRepository,
+        walletManagersFacade: WalletManagersFacade,
+        coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -49,6 +52,8 @@ class SwapDomainModule {
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
             quotesRepository = quotesRepository,
+            walletManagersFacade = walletManagersFacade,
+            dispatcher = coroutineDispatcherProvider,
         )
     }
 

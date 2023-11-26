@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.feature.swap.domain.models.ui.TxFee
+import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 
 data class SwapStateHolder(
@@ -14,13 +15,14 @@ data class SwapStateHolder(
     val networkCurrency: String,
     val networkId: String,
     val blockchainId: String, // not the same as networkId, its local id in app
-    val fee: FeeState = FeeState.Empty,
     val warnings: List<SwapWarning> = emptyList(),
     val alert: SwapWarning.GenericWarning? = null,
     val updateInProgress: Boolean = false,
     val providerState: ProviderState,
 
+    val fee: FeeItemState = FeeItemState.Empty,
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
+
     val successState: SwapSuccessStateHolder? = null,
     val selectTokenState: SwapSelectTokenStateHolder? = null,
     val bottomSheetConfig: TangemBottomSheetConfig? = null,
