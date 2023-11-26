@@ -2,7 +2,6 @@ package com.tangem.feature.swap.di
 
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
-import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -26,7 +25,6 @@ class SwapDataModule {
         tangemTechApi: TangemTechApi,
         tangemExpressApi: TangemExpressApi,
         oneInchApiFactory: OneInchApiFactory,
-        oneInchErrorsHandler: OneInchErrorsHandler,
         coroutineDispatcher: CoroutineDispatcherProvider,
         configManager: ConfigManager,
         walletManagerFacade: WalletManagersFacade,
@@ -36,7 +34,6 @@ class SwapDataModule {
             tangemTechApi = tangemTechApi,
             tangemExpressApi = tangemExpressApi,
             oneInchApiFactory = oneInchApiFactory,
-            oneInchErrorsHandler = oneInchErrorsHandler,
             coroutineDispatcher = coroutineDispatcher,
             configManager = configManager,
             walletManagersFacade = walletManagerFacade,
