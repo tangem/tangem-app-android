@@ -8,7 +8,6 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
-import java.math.BigDecimal
 
 /**
  * Interface of Tangem Express API (new swap mechanism)
