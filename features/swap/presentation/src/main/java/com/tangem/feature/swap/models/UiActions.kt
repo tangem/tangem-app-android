@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.models
 
-import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.domain.models.ui.TxFee
 
 data class UiActions(
     val onSearchEntered: (String) -> Unit,
@@ -17,7 +17,7 @@ data class UiActions(
     val onChangeApproveType: (ApproveType) -> Unit,
     // region new actions
     val onClickFee: () -> Unit,
-    val onSelectFeeType: (FeeType) -> Unit,
+    val onSelectFeeType: (TxFee) -> Unit,
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
 )

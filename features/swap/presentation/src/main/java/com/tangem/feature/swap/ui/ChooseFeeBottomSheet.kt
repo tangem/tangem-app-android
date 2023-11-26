@@ -32,7 +32,7 @@ fun ChooseFeeBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.secondary),
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
     ) {
         Text(
             text = "Choose fee", // todo replace with strings

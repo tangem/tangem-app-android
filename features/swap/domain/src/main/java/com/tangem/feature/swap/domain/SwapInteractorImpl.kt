@@ -251,12 +251,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 }
             }
             val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken.currency))
-            val fromTokenAddress = getTokenAddress(fromToken.currency)
-            val isAllowedToSpend = isAllowedToSpend(networkId, fromToken.currency, amount)
-            if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
-                allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
-                transactionManager.updateWalletManager(networkId, derivationPath)
-            }
             val isBalanceWithoutFeeEnough = isBalanceEnough(networkId, fromToken.currency, amount, null)
 
             when (provider.type) {
@@ -268,7 +262,6 @@ internal class SwapInteractorImpl @Inject constructor(
                         provider = provider,
                         selectedFee = selectedFee,
                         amount = amount,
-                        isAllowedToSpend = isAllowedToSpend,
                         isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
                     )
                 }
@@ -279,8 +272,8 @@ internal class SwapInteractorImpl @Inject constructor(
                         toToken = toToken,
                         provider = provider,
                         amount = amount,
-                        isAllowedToSpend = isAllowedToSpend,
                         isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                        selectedFee = selectedFee,
                     )
                 }
             }
@@ -294,9 +287,14 @@ internal class SwapInteractorImpl @Inject constructor(
         provider: SwapProvider,
         selectedFee: FeeType,
         amount: SwapAmount,
-        isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
     ): Pair<SwapProvider, SwapState> {
+        val fromTokenAddress = getTokenAddress(fromToken.currency)
+        val isAllowedToSpend = isAllowedToSpend(networkId, fromToken.currency, amount)
+        if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
+            allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
+            transactionManager.updateWalletManager(networkId, derivationPath)
+        }
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
             provider to loadSwapData(
                 provider = provider,
@@ -316,6 +314,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
                 provider = provider,
+                selectedFee = selectedFee,
             )
         }
     }
@@ -326,8 +325,8 @@ internal class SwapInteractorImpl @Inject constructor(
         toToken: CryptoCurrencyStatus,
         provider: SwapProvider,
         amount: SwapAmount,
-        isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
+        selectedFee: FeeType,
     ): Pair<SwapProvider, SwapState> {
         return provider to loadQuoteData(
             exchangeProviderType = ExchangeProviderType.CEX,
@@ -335,9 +334,10 @@ internal class SwapInteractorImpl @Inject constructor(
             amount = amount,
             fromTokenStatus = fromToken,
             toTokenStatus = toToken,
-            isAllowedToSpend = isAllowedToSpend,
+            isAllowedToSpend = true,
             isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
             provider = provider,
+            selectedFee = selectedFee,
         )
     }
 
@@ -366,6 +366,36 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
             }
         }
+    }
+
+    override suspend fun updateQuotesStateWithSelectedFee(
+        state: SwapState.QuotesLoadedState,
+        selectedFee: FeeType,
+        fromToken: CryptoCurrencyStatus,
+        amountToSwap: String,
+        networkId: String,
+    ): SwapState.QuotesLoadedState {
+        val amountDecimal = toBigDecimalOrNull(amountToSwap)
+        if (amountDecimal == null || amountDecimal.signum() == 0) {
+            return state
+        }
+        val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken.currency))
+        val feeByPriority = selectFeeByType(feeType = selectedFee, txFeeState = state.txFee)
+        val isBalanceIncludeFeeEnough =
+            isBalanceEnough(networkId, fromToken.currency, amount, feeByPriority)
+        val isFeeEnough = checkFeeIsEnough(
+            fee = feeByPriority,
+            spendAmount = amount,
+            networkId = networkId,
+            fromToken = fromToken.currency,
+        )
+        return state.copy(
+            permissionState = PermissionDataState.Empty,
+            preparedSwapConfigState = state.preparedSwapConfigState.copy(
+                isBalanceEnough = isBalanceIncludeFeeEnough,
+                isFeeEnough = isFeeEnough,
+            ),
+        )
     }
 
     private suspend fun onSwapDex(
@@ -438,12 +468,6 @@ internal class SwapInteractorImpl @Inject constructor(
     @Deprecated("used in old swap mechanism")
     override fun isAvailableToSwap(networkId: String): Boolean {
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
-    }
-
-    @Deprecated("used in old swap mechanism")
-    override fun getSwapAmountForToken(amount: String, token: CryptoCurrency): SwapAmount {
-        val amountDecimal = requireNotNull(toBigDecimalOrNull(amount)) { "wrong amount format" }
-        return SwapAmount(amountDecimal, getTokenDecimals(token))
     }
 
     @Deprecated("used in old swap mechanism")
@@ -529,6 +553,7 @@ internal class SwapInteractorImpl @Inject constructor(
         provider: SwapProvider,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
+        selectedFee: FeeType,
     ): SwapState {
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
@@ -554,6 +579,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
                 providerType = provider.type,
+                selectedFee = selectedFee,
             )
         }
     }
@@ -568,6 +594,7 @@ internal class SwapInteractorImpl @Inject constructor(
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
         providerType: ExchangeProviderType,
+        selectedFee: FeeType,
     ): SwapState {
         val quoteModel = quoteDataModel.dataModel
         if (quoteModel != null) {
@@ -586,26 +613,39 @@ internal class SwapInteractorImpl @Inject constructor(
                 txFeeState = txFee,
             )
 
-            val quotesState = when (exchangeProviderType) {
+            return when (exchangeProviderType) {
                 ExchangeProviderType.DEX -> {
-                    updatePermissionState(
+                    val state = updatePermissionState(
                         networkId = networkId,
                         fromToken = fromToken.currency,
                         swapAmount = amount,
                         quotesLoadedState = swapState,
                     )
+                    state.copy(
+                        preparedSwapConfigState = state.preparedSwapConfigState.copy(
+                            isAllowedToSpend = isAllowedToSpend,
+                            isBalanceEnough = isBalanceWithoutFeeEnough,
+                        ),
+                    )
                 }
                 ExchangeProviderType.CEX -> {
-                    swapState.copy(permissionState = PermissionDataState.Empty)
+                    val feeByPriority = selectFeeByType(feeType = selectedFee, txFeeState = txFee)
+                    val isFeeEnough = checkFeeIsEnough(
+                        fee = feeByPriority,
+                        spendAmount = amount,
+                        networkId = networkId,
+                        fromToken = fromToken.currency,
+                    )
+                    swapState.copy(
+                        permissionState = PermissionDataState.Empty,
+                        preparedSwapConfigState = PreparedSwapConfigState(
+                            isFeeEnough = isFeeEnough,
+                            isAllowedToSpend = isAllowedToSpend,
+                            isBalanceEnough = isBalanceWithoutFeeEnough,
+                        ),
+                    )
                 }
             }
-
-            return quotesState.copy(
-                preparedSwapConfigState = quotesState.preparedSwapConfigState.copy(
-                    isAllowedToSpend = isAllowedToSpend,
-                    isBalanceEnough = isBalanceWithoutFeeEnough,
-                ),
-            )
         } else {
             return SwapState.SwapError(quoteDataModel.error)
         }
@@ -999,7 +1039,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    override suspend fun checkFeeIsEnough(
+    private suspend fun checkFeeIsEnough(
         fee: BigDecimal?,
         spendAmount: SwapAmount,
         networkId: String,

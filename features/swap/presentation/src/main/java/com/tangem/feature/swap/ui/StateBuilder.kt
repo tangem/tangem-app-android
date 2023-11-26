@@ -20,11 +20,9 @@ import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
-import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
-import com.tangem.feature.swap.models.states.FeeItemState
-import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
-import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -141,8 +139,8 @@ internal class StateBuilder(
         toToken: CryptoCurrency,
         mainTokenId: String,
     ): SwapStateHolder {
-        val canSelectSendToken = mainTokenId != fromToken.id.value // TODO look at id matching
-        val canSelectReceiveToken = mainTokenId != toToken.id.value // TODO look at id matching
+        val canSelectSendToken = mainTokenId != fromToken.id.value
+        val canSelectReceiveToken = mainTokenId != toToken.id.value
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
@@ -219,7 +217,7 @@ internal class StateBuilder(
                 ),
             )
         }
-        val feeState = createFeeState(quoteModel, selectedFeeType)
+        val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
         return uiStateHolder.copy(
@@ -394,22 +392,22 @@ internal class StateBuilder(
         }
     }
 
-    private fun createFeeState(quoteModel: SwapState.QuotesLoadedState, feeType: FeeType): FeeItemState {
+    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType): FeeItemState {
         val isClickable: Boolean
-        val fee = when (val txFee = quoteModel.txFee) {
+        val fee = when (txFeeState) {
             TxFeeState.Empty -> return FeeItemState.Empty
             is TxFeeState.SingleFeeState -> {
                 isClickable = false
-                txFee.fee
+                txFeeState.fee
             }
             is TxFeeState.MultipleFeeState -> {
                 isClickable = true
                 when (feeType) {
                     FeeType.NORMAL -> {
-                        txFee.normalFee
+                        txFeeState.normalFee
                     }
                     FeeType.PRIORITY -> {
-                        txFee.priorityFee
+                        txFeeState.priorityFee
                     }
                 }
             }
@@ -597,6 +595,70 @@ internal class StateBuilder(
         } else {
             uiState
         }
+    }
+
+    fun showSelectFeeBottomSheet(
+        uiState: SwapStateHolder,
+        selectedFee: FeeType,
+        txFeeState: TxFeeState.MultipleFeeState,
+        onDismiss: () -> Unit,
+    ): SwapStateHolder {
+        val config = ChooseFeeBottomSheetConfig(
+            selectedFee = selectedFee,
+            onSelectFeeType = {
+                val selectedItem = when (it) {
+                    FeeType.NORMAL -> txFeeState.normalFee
+                    FeeType.PRIORITY -> txFeeState.priorityFee
+                }
+                actions.onSelectFeeType.invoke(selectedItem)
+            },
+            feeItems = txFeeState.toFeeItemState(),
+        )
+        return uiState.copy(
+            bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = onDismiss,
+                content = config,
+            ),
+        )
+    }
+
+    fun updateSelectedFee(uiState: SwapStateHolder, selectedFee: FeeType): SwapStateHolder {
+        val config = uiState.bottomSheetConfig?.content as? ChooseFeeBottomSheetConfig
+        return if (config != null) {
+            uiState.copy(
+                bottomSheetConfig = uiState.bottomSheetConfig.copy(
+                    content = config.copy(
+                        selectedFee = selectedFee,
+                    ),
+                ),
+            )
+        } else {
+            uiState
+        }
+    }
+
+    private fun TxFeeState.MultipleFeeState.toFeeItemState(): ImmutableList<FeeItemState.Content> {
+        return listOf(
+            FeeItemState.Content(
+                feeType = this.normalFee.feeType,
+                title = stringReference("Fee"), // todo replace with string
+                amountCrypto = this.normalFee.feeCryptoFormatted,
+                symbolCrypto = this.normalFee.cryptoSymbol,
+                amountFiatFormatted = this.normalFee.feeFiatFormatted,
+                isClickable = true,
+                onClick = {},
+            ),
+            FeeItemState.Content(
+                feeType = this.priorityFee.feeType,
+                title = stringReference("Fee"), // todo replace with string
+                amountCrypto = this.priorityFee.feeCryptoFormatted,
+                symbolCrypto = this.priorityFee.cryptoSymbol,
+                amountFiatFormatted = this.priorityFee.feeFiatFormatted,
+                isClickable = true,
+                onClick = {},
+            ),
+        ).toImmutableList()
     }
 
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderState(
