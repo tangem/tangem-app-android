@@ -24,7 +24,7 @@ class ExpressDataConverter : Converter<ExchangeDataResponse, SwapDataModel> {
                 txId = transactionDto.txId,
                 txTo = transactionDto.txTo,
                 txFrom = requireNotNull(transactionDto.txFrom),
-                txData = requireNotNull(transactionDto.txData)
+                txData = requireNotNull(transactionDto.txData),
             )
         } else {
             ExpressTransactionModel.CEX(
@@ -37,5 +37,4 @@ class ExpressDataConverter : Converter<ExchangeDataResponse, SwapDataModel> {
             )
         }
     }
-
 }
