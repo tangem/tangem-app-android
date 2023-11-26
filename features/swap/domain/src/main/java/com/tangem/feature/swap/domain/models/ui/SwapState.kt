@@ -20,7 +20,8 @@ sealed interface SwapState {
             isFeeEnough = false,
         ),
         val permissionState: PermissionDataState = PermissionDataState.Empty,
-        val swapDataModel: SwapStateData? = null,
+        val swapDataModel: SwapDataModel? = null,
+        val txFee: TxFeeState,
         val tangemFee: Double,
     ) : SwapState
 
@@ -62,21 +63,30 @@ data class RequestApproveStateData(
     val fromTokenAmount: SwapAmount,
 )
 
-data class SwapStateData(
-    val fee: TxFeeState,
-    val swapModel: SwapDataModel,
-)
+// data class SwapStateData(
+//     val fee: TxFeeState,
+//     val swapModel: SwapDataModel,
+// )
 
-data class TxFeeState(
-    val normalFee: TxFee,
-    val priorityFee: TxFee,
-)
+sealed class TxFeeState {
+    data class MultipleFeeState(
+        val normalFee: TxFee,
+        val priorityFee: TxFee,
+    ) : TxFeeState()
+
+    data class SingleFeeState(
+        val fee: TxFee,
+    ) : TxFeeState()
+
+    object Empty : TxFeeState()
+}
 
 data class TxFee(
     val feeValue: BigDecimal,
     val gasLimit: Int,
     val feeFiatFormatted: String,
     val feeCryptoFormatted: String,
+    val cryptoSymbol: String,
     val feeType: FeeType,
 )
 

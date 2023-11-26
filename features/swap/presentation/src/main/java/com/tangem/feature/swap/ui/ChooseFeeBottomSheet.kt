@@ -14,6 +14,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
@@ -31,7 +32,7 @@ fun ChooseFeeBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.secondary),
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
     ) {
         Text(
             text = "Choose fee", // todo replace with strings
@@ -73,7 +74,7 @@ private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
     content.feeItems.forEach { feeItem ->
         val isSelected = feeItem.feeType == content.selectedFee
         val preEllipsizeText = feeItem.amountCrypto
-        val postEllipsizeText = " ${feeItem.symbolCrypto} (${feeItem.amountFiat} ${feeItem.symbolFiat})"
+        val postEllipsizeText = " ${feeItem.symbolCrypto} (${feeItem.amountFiatFormatted})"
         when (feeItem.feeType) {
             FeeType.NORMAL -> {
                 SelectorRowItem(
@@ -103,22 +104,22 @@ private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
 @Composable
 private fun ChooseFeeBottomSheetContent_Preview() {
     val feeItems = listOf(
-        FeeItemState(
+        FeeItemState.Content(
             feeType = FeeType.NORMAL,
-            title = "Fee",
+            title = stringReference("Fee"),
             amountCrypto = "1000",
             symbolCrypto = "MATIC",
-            amountFiat = "10",
-            symbolFiat = "$",
+            amountFiatFormatted = "(10$)",
+            isClickable = false,
             onClick = {},
         ),
-        FeeItemState(
+        FeeItemState.Content(
             feeType = FeeType.PRIORITY,
-            title = "Fee",
+            title = stringReference("Fee"),
             amountCrypto = "2000",
             symbolCrypto = "MATIC",
-            amountFiat = "20",
-            symbolFiat = "$",
+            amountFiatFormatted = "(10$)",
+            isClickable = false,
             onClick = {},
         ),
     ).toImmutableList()
