@@ -7,7 +7,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
-import java.math.BigDecimal
 
 interface SwapInteractor {
 
@@ -71,12 +70,20 @@ interface SwapInteractor {
     suspend fun onSwap(
         exchangeProviderType: ExchangeProviderType,
         networkId: String,
-        swapStateData: SwapStateData,
+        swapData: SwapDataModel,
         currencyToSend: CryptoCurrency,
         currencyToGet: CryptoCurrency,
         amountToSwap: String,
         fee: TxFee,
     ): TxState
+
+    suspend fun updateQuotesStateWithSelectedFee(
+        state: SwapState.QuotesLoadedState,
+        selectedFee: FeeType,
+        fromToken: CryptoCurrencyStatus,
+        amountToSwap: String,
+        networkId: String,
+    ): SwapState.QuotesLoadedState
 
     /**
      * Returns token in wallet balance
@@ -87,15 +94,6 @@ interface SwapInteractor {
     fun getTokenBalance(networkId: String, token: CryptoCurrency): SwapAmount
 
     fun isAvailableToSwap(networkId: String): Boolean
-
-    fun getSwapAmountForToken(amount: String, token: CryptoCurrency): SwapAmount
-
-    suspend fun checkFeeIsEnough(
-        fee: BigDecimal?,
-        spendAmount: SwapAmount,
-        networkId: String,
-        fromToken: CryptoCurrency,
-    ): Boolean
 
     fun getSelectedWallet(): UserWallet?
 }
