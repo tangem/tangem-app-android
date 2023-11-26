@@ -19,7 +19,7 @@ import com.tangem.core.ui.res.TangemTheme
  * https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-807&mode=design&t=Ygv5sohTTHYAQcBS-4
  */
 @Composable
-fun SimpleActionRow(title: String, description: String, modifier: Modifier = Modifier) {
+fun SimpleActionRow(title: String, description: String, modifier: Modifier = Modifier, isClickable: Boolean = true) {
     Box(
         modifier = modifier
             .background(color = TangemTheme.colors.background.action)
@@ -44,14 +44,16 @@ fun SimpleActionRow(title: String, description: String, modifier: Modifier = Mod
             )
         }
 
-        Icon(
-            painter = painterResource(id = R.drawable.ic_chevron_right_24),
-            contentDescription = null,
-            modifier = Modifier
-                .align(alignment = Alignment.CenterEnd)
-                .padding(end = TangemTheme.dimens.spacing12),
-            tint = TangemTheme.colors.icon.informative,
-        )
+        if (isClickable) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_chevron_right_24),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterEnd)
+                    .padding(end = TangemTheme.dimens.spacing12),
+                tint = TangemTheme.colors.icon.informative,
+            )
+        }
     }
 }
 
