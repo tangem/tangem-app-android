@@ -38,6 +38,7 @@ import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBot
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -63,6 +64,7 @@ internal interface WalletWarningsClickIntents {
 }
 
 @Suppress("LongParameterList")
+@ViewModelScoped
 internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     private val stateHolder: WalletStateHolderV2,
     private val walletEventSender: WalletEventSender,
