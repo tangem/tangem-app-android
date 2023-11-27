@@ -1,11 +1,20 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
+import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
+import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
+import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
-/**
-* [REDACTED_AUTHOR]
- */
 internal interface WalletCardClickIntents {
 
     fun onRenameClick(userWalletId: UserWalletId, name: String)
@@ -15,17 +24,48 @@ internal interface WalletCardClickIntents {
     fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId)
 }
 
-internal class WalletCardClickIntentsImplementor @Inject constructor() : WalletCardClickIntents {
+internal class WalletCardClickIntentsImplementor @Inject constructor(
+    private val stateHolder: WalletStateHolderV2,
+    private val walletEventSender: WalletEventSender,
+// [REDACTED_TODO_COMMENT]
+    private val updateWalletUseCase: UpdateWalletUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
+    private val dispatchers: CoroutineDispatcherProvider,
+) : BaseWalletClickIntents(), WalletCardClickIntents {
 
     override fun onRenameClick(userWalletId: UserWalletId, name: String) {
-// [REDACTED_TODO_COMMENT]
+        viewModelScope.launch(dispatchers.main) {
+            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name) })
+        }
     }
 
     override fun onDeleteBeforeConfirmationClick(userWalletId: UserWalletId) {
-// [REDACTED_TODO_COMMENT]
+        walletEventSender.send(
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.RemoveWalletAlert(
+                    onConfirmClick = { onDeleteAfterConfirmationClick(userWalletId) },
+                ),
+            ),
+        )
     }
 
     override fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId) {
+        viewModelScope.launch(dispatchers.main) {
 // [REDACTED_TODO_COMMENT]
+            deleteWalletUseCase(userWalletId)
+                .onRight { popBackIfAllWalletsIsLocked() }
+                .onLeft { Timber.e(it.toString()) }
+        }
+    }
+
+    private fun popBackIfAllWalletsIsLocked() {
+        val wallets = stateHolder.value.wallets.map(WalletState::walletCardState)
+        val unlockedWallet = wallets.count { it !is WalletCardState.LockedContent }
+
+        if (unlockedWallet == 1) {
+            router.popBackStack(
+                screen = if (wallets.size > 1) AppScreen.Welcome else AppScreen.Home,
+            )
+        }
     }
 }
