@@ -336,6 +336,7 @@ private val sendCard = SwapCardState.SwapCardData(
     canSelectAnotherToken = false,
     balance = "123",
     coinId = "",
+    token = null,
     isBalanceHidden = false,
 )
 
@@ -349,6 +350,7 @@ private val receiveCard = SwapCardState.SwapCardData(
     canSelectAnotherToken = true,
     balance = "33333",
     coinId = "",
+    token = null,
     isBalanceHidden = false,
 )
 

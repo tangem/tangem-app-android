@@ -13,6 +13,7 @@
     <string name="common_save_changes">Änderungen speichern</string>
     <string name="common_send">Absenden</string>
     <string name="common_success">Erfolg</string>
+    <string name="common_fee_label">Gebühr</string>
     <string name="details_manage_security_access_code">Zugangscode</string>
     <string name="details_manage_security_access_code_description">Sie müssen den richtigen Zugangscode eingeben, bevor Sie die Karte scannen.</string>
     <string name="details_manage_security_long_tap">Langes Tippen</string>
@@ -40,7 +41,6 @@
     <string name="send_extras_hint_destination_tag">Tag</string>
     <string name="send_extras_hint_memo">Memo</string>
     <string name="send_fee_include_description">inkl. Gebühr</string>
-    <string name="send_fee_label">Gebühr</string>
     <string name="send_fee_picker_low">Niedrig</string>
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priorität</string>
