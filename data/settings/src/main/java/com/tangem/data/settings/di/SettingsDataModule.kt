@@ -21,10 +21,12 @@ internal object SettingsDataModule {
     @Singleton
     fun provideSettingsRepository(
         preferencesDataSource: PreferencesDataSource,
+        appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): SettingsRepository {
         return DefaultSettingsRepository(
             preferencesDataSource = preferencesDataSource,
+            appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
         )
     }

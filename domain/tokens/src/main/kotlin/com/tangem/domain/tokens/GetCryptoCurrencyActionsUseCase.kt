@@ -32,10 +32,7 @@ class GetCryptoCurrencyActionsUseCase(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    suspend operator fun invoke(
-        userWallet: UserWallet,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): Flow<TokenActionsState> {
+    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Flow<TokenActionsState> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
@@ -43,19 +40,25 @@ class GetCryptoCurrencyActionsUseCase(
             userWalletId = userWallet.walletId,
         )
         val networkId = cryptoCurrencyStatus.currency.network.id
-        val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
-            operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
-        } else if (!userWallet.isMultiCurrency) {
-            operations.getPrimaryCurrencyStatusFlow()
-        } else {
-            operations.getNetworkCoinFlow(networkId, cryptoCurrencyStatus.currency.network.derivationPath)
-        }
-        return networkFlow.mapLatest { maybeCoinStatus ->
-            createTokenActionsState(
-                userWalletId = userWallet.walletId,
-                coinStatus = maybeCoinStatus.getOrNull(),
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-            )
+
+        return flow {
+            val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+                operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+            } else if (!userWallet.isMultiCurrency) {
+                operations.getPrimaryCurrencyStatusFlow()
+            } else {
+                operations.getNetworkCoinFlow(networkId, cryptoCurrencyStatus.currency.network.derivationPath)
+            }
+
+            val flow = networkFlow.mapLatest { maybeCoinStatus ->
+                createTokenActionsState(
+                    userWalletId = userWallet.walletId,
+                    coinStatus = maybeCoinStatus.getOrNull(),
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                )
+            }
+
+            emitAll(flow)
         }.flowOn(dispatchers.io)
     }
 
