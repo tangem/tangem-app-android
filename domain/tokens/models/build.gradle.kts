@@ -12,4 +12,7 @@ android {
 dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.core.analytics.models)
+    implementation(deps.tangem.blockchain) {
+        exclude(module = "joda-time")
+    }
 }
