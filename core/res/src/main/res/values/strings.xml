@@ -125,6 +125,7 @@
     <string name="common_submit">Submit</string>
     <string name="common_success">Success</string>
     <string name="common_swap">Swap</string>
+    <string name="common_fee_label">Fee</string>
     <string name="common_terms_and_conditions">terms and conditions</string>
     <string name="common_transaction_failed">Transaction failed</string>
     <string name="common_transactions">Transactions</string>
@@ -438,7 +439,6 @@
     <string name="send_extras_hint_memo">Memo</string>
     <string name="send_insufficient_funds">Insufficient funds for transfer</string>
     <string name="send_fee_include_description">Include fee</string>
-    <string name="send_fee_label">Fee</string>
     <string name="send_fee_picker_low">Low</string>
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priority</string>
@@ -536,6 +536,8 @@
     <string name="swapping_permission_unlimited">Unlimited</string>
     <string name="swapping_success_view_explorer_button_title">View in Explorer</string>
     <string name="swapping_success_view_title">In progress</string>
+    <string name="swapping_success_from_title">You swap</string>
+    <string name="swapping_success_to_title">You receive</string>
     <string name="swapping_swap_action">Swap</string>
     <string name="swapping_swap_of_to">Swap of %s to</string>
     <string name="swapping_tangem_fee_disclaimer">Quotes include an additional Tangem commission of %s. This helps us deliver a top-of-the-line product.</string>
