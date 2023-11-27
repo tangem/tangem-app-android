@@ -3,7 +3,7 @@ package com.tangem.data.card
 import com.tangem.datasource.local.card.UsedCardInfo
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObject
+import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +14,7 @@ internal class DefaultCardRepository(
 ) : CardRepository {
 
     override fun wasCardScanned(cardId: String): Flow<Boolean> {
-        return appPreferencesStore.getObject<List<UsedCardInfo>>(key = PreferencesKeys.USED_CARDS_INFO_KEY)
+        return appPreferencesStore.getObjectList<UsedCardInfo>(key = PreferencesKeys.USED_CARDS_INFO_KEY)
             .map { savedCards ->
                 savedCards?.any { it.cardId == cardId } ?: false
             }
@@ -22,14 +22,14 @@ internal class DefaultCardRepository(
 
     override suspend fun setCardWasScanned(cardId: String) {
         appPreferencesStore.editData { mutablePreferences ->
-            val usedCards: List<UsedCardInfo>? = mutablePreferences.getObject(
+            val usedCards: List<UsedCardInfo>? = mutablePreferences.getObjectList(
                 key = PreferencesKeys.USED_CARDS_INFO_KEY,
             )
 
             val updatedUsedCards = usedCards?.updateCard(cardId)
                 ?: listOf(UsedCardInfo(cardId = cardId, isScanned = true))
 
-            mutablePreferences.setObject(
+            mutablePreferences.setObjectList(
                 key = PreferencesKeys.USED_CARDS_INFO_KEY,
                 value = updatedUsedCards,
             )
