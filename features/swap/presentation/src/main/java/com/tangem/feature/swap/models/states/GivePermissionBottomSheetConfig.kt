@@ -3,7 +3,7 @@ package com.tangem.feature.swap.models.states
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.feature.swap.models.SwapPermissionState
 
-class GivePermissionBottomSheetConfig(
+data class GivePermissionBottomSheetConfig(
     val data: SwapPermissionState.ReadyForRequest,
     val onCancel: () -> Unit,
 ) : TangemBottomSheetConfigContent
