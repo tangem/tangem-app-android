@@ -45,6 +45,7 @@ internal class SendRecipientMemoFieldConverter(
                 ),
                 placeholder = TextReference.Res(R.string.send_optional_field),
                 label = TextReference.Res(value),
+                error = TextReference.Res(R.string.send_memo_destination_tag_error),
             ),
         )
     }
