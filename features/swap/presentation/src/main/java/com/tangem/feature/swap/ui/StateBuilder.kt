@@ -81,7 +81,6 @@ internal class StateBuilder(
             onMaxAmountSelected = actions.onMaxAmountSelected,
             updateInProgress = true,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
-            onCancelPermissionBottomSheet = actions.hidePermissionBottomSheet,
             providerState = ProviderState.Empty(),
         )
     }
@@ -381,10 +380,13 @@ internal class StateBuilder(
     }
 
     fun updateApproveType(uiState: SwapStateHolder, approveType: ApproveType): SwapStateHolder {
-        return if (uiState.permissionState is SwapPermissionState.ReadyForRequest) {
+        val config = uiState.bottomSheetConfig?.content as? GivePermissionBottomSheetConfig
+        return if (config != null) {
             uiState.copy(
-                permissionState = uiState.permissionState.copy(
-                    approveType = approveType,
+                bottomSheetConfig = uiState.bottomSheetConfig.copy(
+                    content = config.copy(
+                        data = config.data.copy(approveType = approveType),
+                    ),
                 ),
             )
         } else {
