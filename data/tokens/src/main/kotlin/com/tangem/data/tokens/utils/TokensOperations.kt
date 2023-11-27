@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toCoinId
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency.ID
 import com.tangem.domain.tokens.model.Network
@@ -55,8 +54,7 @@ internal fun getTokenIconUrl(blockchain: Blockchain, token: SdkToken): String? {
 internal fun getCoinIconUrl(blockchain: Blockchain): String? {
     val coinId = when (blockchain) {
         Blockchain.Unknown -> null
-        Blockchain.TerraV1, Blockchain.TerraV2, Blockchain.Near -> blockchain.toCoinId()
-        else -> blockchain.toNetworkId()
+        else -> blockchain.toCoinId()
     }
 
     return coinId?.let(::getTokenIconUrlFromDefaultHost)
