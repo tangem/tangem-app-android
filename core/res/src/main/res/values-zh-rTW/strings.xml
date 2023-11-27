@@ -90,6 +90,7 @@
     <string name="common_submit">提交</string>
     <string name="common_success">成功</string>
     <string name="common_swap">交換</string>
+    <string name="common_fee_label">費用</string>
     <string name="common_terms_and_conditions">條款和條件</string>
     <string name="common_transactions">交易</string>
     <string name="common_understand">我了解</string>
@@ -294,7 +295,6 @@
     <string name="send_extras_hint_destination_tag">Tag</string>
     <string name="send_extras_hint_memo">Memo</string>
     <string name="send_fee_include_description">包含費用</string>
-    <string name="send_fee_label">費用</string>
     <string name="send_fee_picker_low">低</string>
     <string name="send_fee_picker_normal">正常</string>
     <string name="send_fee_picker_priority">優先</string>
