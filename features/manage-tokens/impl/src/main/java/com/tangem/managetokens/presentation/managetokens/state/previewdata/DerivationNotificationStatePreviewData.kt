@@ -4,8 +4,9 @@ import com.tangem.managetokens.presentation.managetokens.state.DerivationNotific
 
 object DerivationNotificationStatePreviewData {
     val state = DerivationNotificationState(
-        totalNeeded = 3,
-        missingAddressesCount = 2,
+        totalNeeded = 5,
+        totalWallets = 3,
+        walletsToDerive = 2,
         onGenerateClick = {},
     )
 }
