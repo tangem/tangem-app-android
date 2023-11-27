@@ -36,7 +36,6 @@ data class SwapStateHolder(
     val onSuccess: (() -> Unit)? = null,
     val onMaxAmountSelected: (() -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
-    val onCancelPermissionBottomSheet: () -> Unit = {},
 )
 
 sealed class SwapCardState {
