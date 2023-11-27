@@ -4,5 +4,4 @@ import com.squareup.moshi.Json
 
 data class AssetsRequestBody(
     @Json(name = "tokensList") val tokensList: List<LeastTokenInfo>?,
-    @Json(name = "onlyActive") val onlyActive: Boolean,
 )
