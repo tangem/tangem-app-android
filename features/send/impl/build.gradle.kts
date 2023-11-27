@@ -45,6 +45,7 @@ dependencies {
     implementation(projects.core.featuretoggles)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.navigation)
 
     /** Domain modules */
     implementation(projects.domain.models)
@@ -58,6 +59,8 @@ dependencies {
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.card)
+    implementation(projects.domain.demo)
 
     /** Feature modules */
     implementation(projects.features.send.api)
