@@ -437,14 +437,35 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun onSearchEntered(searchQuery: String) {
-        viewModelScope.launch(dispatchers.main) {
-            runCatching(dispatchers.io) {
-                swapInteractor.searchTokens(dataState.networkId, searchQuery)
+        viewModelScope.launch(dispatchers.io) {
+            val tokenDataState = dataState.tokensDataState ?: return@launch
+            val group = if (isOrderReversed) {
+                tokenDataState.fromGroup
+            } else {
+                tokenDataState.toGroup
             }
-                .onSuccess {
-                    // updateTokensState(it)
-                }
-                .onFailure { }
+            val available = group.available.filter {
+                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true)
+            }
+            val unavailable = group.unavailable.filter {
+                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true)
+            }
+            val filteredTokenDataState = if (isOrderReversed) {
+                tokenDataState.copy(
+                    fromGroup = tokenDataState.fromGroup.copy(
+                        available = available,
+                        unavailable = unavailable,
+                    ),
+                )
+            } else {
+                tokenDataState.copy(
+                    toGroup = tokenDataState.toGroup.copy(
+                        available = available,
+                        unavailable = unavailable,
+                    ),
+                )
+            }
+            updateTokensState(filteredTokenDataState)
         }
     }
 
@@ -485,6 +506,7 @@ internal class SwapViewModel @Inject constructor(
                 toProvidersList = findSwapProviders(fromToken, toToken),
             )
             swapRouter.openScreen(SwapNavScreen.Main)
+            updateTokensState(tokens)
         }
     }
 
