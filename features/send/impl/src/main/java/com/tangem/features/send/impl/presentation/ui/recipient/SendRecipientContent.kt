@@ -18,11 +18,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.SendStates
+import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
@@ -45,18 +47,26 @@ internal fun SendRecipientContent(
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         item(key = ADDRESS_FIELD_KEY) {
-            TextFieldWithPasteAndIcon(
-                value = address.value,
-                label = address.label,
-                placeholder = address.placeholder,
+            FooterContainer(
                 footer = stringResource(R.string.send_recipient_address_footer, uiState.network),
-                onValueChange = address.onValueChange,
-                onPasteClick = clickIntents::onRecipientAddressValueChange,
-                singleLine = true,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing4),
-                isError = address.isError,
-                error = address.error,
-            )
+            ) {
+                InputRowRecipient(
+                    value = address.value,
+                    title = address.label,
+                    placeholder = address.placeholder,
+                    onValueChange = address.onValueChange,
+                    onPasteClick = clickIntents::onRecipientAddressValueChange,
+                    singleLine = true,
+                    isError = address.isError,
+                    error = address.error,
+                    modifier = Modifier
+                        .padding(top = TangemTheme.dimens.spacing4)
+                        .background(
+                            color = TangemTheme.colors.background.action,
+                            shape = TangemTheme.shapes.roundedCornersXMedium,
+                        ),
+                )
+            }
         }
         memo?.let { memoField ->
             item(key = MEMO_FIELD_KEY) {
