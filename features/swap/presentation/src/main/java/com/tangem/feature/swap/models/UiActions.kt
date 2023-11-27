@@ -13,7 +13,6 @@ data class UiActions(
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
     val openPermissionBottomSheet: () -> Unit,
-    val hidePermissionBottomSheet: () -> Unit,
     val onChangeApproveType: (ApproveType) -> Unit,
     // region new actions
     val onClickFee: () -> Unit,
