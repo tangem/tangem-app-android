@@ -126,6 +126,7 @@
     <string name="common_submit">Отправить</string>
     <string name="common_success">Успешно</string>
     <string name="common_swap">Обмен</string>
+    <string name="common_fee_label">Комиссия</string>
     <string name="common_terms_and_conditions">условия участия</string>
     <string name="common_transaction_failed">Ошибка транзакции</string>
     <string name="common_transactions">Транзакции</string>
@@ -423,7 +424,6 @@
     <string name="send_extras_hint_destination_tag">Tag</string>
     <string name="send_extras_hint_memo">Memo</string>
     <string name="send_fee_include_description">Включая комиссию</string>
-    <string name="send_fee_label">Комиссия</string>
     <string name="send_fee_picker_low">Низкая</string>
     <string name="send_fee_picker_normal">Нормальная</string>
     <string name="send_fee_picker_priority">Приоритетная</string>
