@@ -12,7 +12,7 @@
         android:elevation="0dp"
         android:fontFamily="sans-serif-medium"
         android:letterSpacing="0.036"
-        android:text="@string/onboarding_balance_title"
+        android:text="@string/common_balance_title"
         android:textAllCaps="true"
         android:textColor="@color/text_secondary"
         android:textSize="14sp"
