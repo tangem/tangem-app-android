@@ -272,7 +272,7 @@ private fun DropdownSelector(
 @Composable
 private fun FeeItem(fee: String) {
     InformationItem(
-        subtitle = stringResource(id = R.string.send_fee_label),
+        subtitle = stringResource(id = R.string.common_fee_label),
         value = fee,
     )
 }
