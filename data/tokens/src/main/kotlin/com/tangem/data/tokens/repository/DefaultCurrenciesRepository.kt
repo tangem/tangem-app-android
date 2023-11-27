@@ -392,7 +392,6 @@ internal class DefaultCurrenciesRepository(
             val response = tangemExpressApi.getAssets(
                 AssetsRequestBody(
                     tokensList = tokensList,
-                    onlyActive = true,
                 ),
             )
 
