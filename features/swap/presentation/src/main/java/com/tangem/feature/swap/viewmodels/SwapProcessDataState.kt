@@ -7,6 +7,7 @@ import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 import com.tangem.feature.swap.domain.models.ui.TxFee
+import com.tangem.feature.swap.models.ApproveType
 
 data class SwapProcessDataState(
     // Initial network id
@@ -16,6 +17,7 @@ data class SwapProcessDataState(
     // Amount from input
     val amount: String? = null,
     val approveDataModel: RequestApproveStateData? = null,
+    val approveType: ApproveType? = null,
     val swapDataModel: SwapDataModel? = null,
     val selectedFee: TxFee? = null, // todo
     val tokensDataState: TokensDataStateExpress? = null,
