@@ -1,6 +1,7 @@
 package com.tangem.data.card
 
 import com.tangem.TangemSdk
+import com.tangem.blockchain.common.CommonSigner
 import com.tangem.common.UserCodeType
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.UserCodeRequestPolicy
@@ -57,4 +58,16 @@ internal class DefaultCardSdkConfigRepository(
     }
 
     override fun isAccessCodeSavingEnabled(): Boolean = preferencesDataSource.shouldSaveAccessCodes
+
+    override fun getCommonSigner(cardId: String?) = CommonSigner(
+        tangemSdk = sdk,
+        cardId = cardId,
+        initialMessage = null,
+    )
+
+    override fun isLinkedTerminal() = sdk.config.linkedTerminal
+
+    override fun setLinkedTerminal(isLinked: Boolean?) {
+        sdk.config.linkedTerminal = isLinked
+    }
 }
