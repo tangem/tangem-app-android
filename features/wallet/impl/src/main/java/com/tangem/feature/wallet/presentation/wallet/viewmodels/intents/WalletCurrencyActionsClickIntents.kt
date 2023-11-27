@@ -1,6 +1,46 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
+import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.address.AddressType
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.extensions.WrappedList
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
+import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
+import com.tangem.domain.tokens.RemoveCurrencyUseCase
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
+import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
+import com.tangem.domain.walletconnect.WalletConnectActions
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
+import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
+import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
+import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface WalletCurrencyActionsClickIntents {
@@ -24,41 +64,353 @@ interface WalletCurrencyActionsClickIntents {
     fun onExploreClick()
 }
 
-internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor() : WalletCurrencyActionsClickIntents {
+@Suppress("LongParameterList", "LargeClass")
+internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
+    private val stateHolder: WalletStateHolderV2,
+    private val walletEventSender: WalletEventSender,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val walletManagersFacade: WalletManagersFacade,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
+    private val removeCurrencyUseCase: RemoveCurrencyUseCase,
+    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
+    private val getExploreUrlUseCase: GetExploreUrlUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val dispatchers: CoroutineDispatcherProvider,
+    private val reduxStateHolder: ReduxStateHolder,
+) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO
+        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
+
+        analyticsEventHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
+        )
+
+        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
+
+        when (val currency = cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> sendCoin(cryptoCurrencyStatus, userWallet)
+            is CryptoCurrency.Token -> sendToken(currency, cryptoCurrencyStatus.value, userWallet)
+        }
+    }
+
+    private fun sendCoin(cryptoCurrencyStatus: CryptoCurrencyStatus, userWallet: UserWallet) {
+        reduxStateHolder.dispatch(
+            action = TradeCryptoAction.New.SendCoin(userWallet = userWallet, coinStatus = cryptoCurrencyStatus),
+        )
+    }
+
+    private fun sendToken(
+        cryptoCurrency: CryptoCurrency.Token,
+        cryptoCurrencyStatus: CryptoCurrencyStatus.Status,
+        userWallet: UserWallet,
+    ) {
+        viewModelScope.launch(dispatchers.main) {
+            getNetworkCoinStatusUseCase(
+                userWalletId = userWallet.walletId,
+                networkId = cryptoCurrency.network.id,
+                derivationPath = cryptoCurrency.network.derivationPath,
+                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+            )
+                .take(count = 1)
+                .collectLatest {
+                    it.onRight { coinStatus ->
+                        reduxStateHolder.dispatch(
+                            action = TradeCryptoAction.New.SendToken(
+                                userWallet = userWallet,
+                                tokenCurrency = cryptoCurrency,
+                                tokenFiatRate = cryptoCurrencyStatus.fiatRate,
+                                coinFiatRate = coinStatus.value.fiatRate,
+                            ),
+                        )
+                    }
+                }
+        }
     }
 
     override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO
+        val userWalletId = stateHolder.getSelectedWalletId()
+
+        analyticsEventHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrencyStatus.currency.symbol),
+        )
+
+        viewModelScope.launch(dispatchers.main) {
+            val currency = cryptoCurrencyStatus.currency
+            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currency.network)
+
+            analyticsEventHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
+
+            stateHolder.update(
+                OpenBottomSheetTransformer(
+                    userWalletId = userWalletId,
+                    content = createReceiveBottomSheetContent(currency, addresses),
+                    onDismissBottomSheet = {
+                        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
+                    },
+                ),
+            )
+        }
+    }
+
+    private fun createReceiveBottomSheetContent(
+        currency: CryptoCurrency,
+        addresses: List<Address>,
+    ): TangemBottomSheetConfigContent {
+        return TokenReceiveBottomSheetConfig(
+            name = currency.name,
+            symbol = currency.symbol,
+            network = currency.network.name,
+            addresses = addresses.map { address ->
+                AddressModel(
+                    value = address.value,
+                    type = AddressModel.Type.valueOf(address.type.name),
+                )
+            },
+            onCopyClick = {
+                analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
+            },
+            onShareClick = {
+                analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
+            },
+        )
     }
 
     override fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO
+        analyticsEventHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonCopyAddress(cryptoCurrencyStatus.currency.symbol),
+        )
+
+        viewModelScope.launch(dispatchers.main) {
+            walletManagersFacade.getAddress(
+                userWalletId = stateHolder.getSelectedWalletId(),
+                network = cryptoCurrencyStatus.currency.network,
+            )
+                .find { it.type == AddressType.Default }
+                ?.value
+                ?.let {
+                    walletEventSender.send(
+                        event = WalletEvent.CopyAddress(
+                            address = it,
+                            toast = resourceReference(R.string.wallet_notification_address_copied),
+                        ),
+                    )
+                }
+        }
     }
 
     override fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO
+        analyticsEventHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrencyStatus.currency.symbol),
+        )
+
+        viewModelScope.launch(dispatchers.main) {
+            walletEventSender.send(
+                event = WalletEvent.ShowAlert(
+                    state = getHideTokeAlertConfig(stateHolder.getSelectedWalletId(), cryptoCurrencyStatus),
+                ),
+            )
+        }
+    }
+
+    private suspend fun getHideTokeAlertConfig(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): WalletAlertState.DefaultAlert {
+        val currency = cryptoCurrencyStatus.currency
+        return if (currency is CryptoCurrency.Coin && !isCryptoCurrencyCoinCouldHide(userWalletId, currency)) {
+            WalletAlertState.DefaultAlert(
+                title = resourceReference(
+                    id = R.string.token_details_unable_hide_alert_title,
+                    formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
+                ),
+                message = resourceReference(
+                    id = R.string.token_details_unable_hide_alert_message,
+                    formatArgs = WrappedList(
+                        listOf(
+                            cryptoCurrencyStatus.currency.name,
+                            cryptoCurrencyStatus.currency.network.name,
+                        ),
+                    ),
+                ),
+                onConfirmClick = null,
+            )
+        } else {
+            WalletAlertState.DefaultAlert(
+                title = resourceReference(
+                    id = R.string.token_details_hide_alert_title,
+                    formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
+                ),
+                message = resourceReference(R.string.token_details_hide_alert_message),
+                onConfirmClick = { onPerformHideToken(cryptoCurrencyStatus) },
+            )
+        }
     }
 
     override fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO
+        val userWalletId = stateHolder.getSelectedWalletId()
+
+        viewModelScope.launch(dispatchers.io) {
+            removeCurrencyUseCase(userWalletId, cryptoCurrencyStatus.currency)
+                .fold(
+                    ifLeft = {
+                        walletEventSender.send(
+                            event = WalletEvent.ShowToast(text = resourceReference(R.string.common_error)),
+                        )
+                    },
+                    ifRight = {
+                        getSelectedWalletSyncUseCase.unwrap()?.let { userWallet ->
+                            reduxStateHolder.dispatch(
+                                action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet),
+                            )
+                        }
+
+                        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
+                    },
+                )
+        }
     }
 
     override fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO
+        analyticsEventHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrencyStatus.currency.symbol),
+        )
+
+        showErrorIfDemoModeOrElse {
+            viewModelScope.launch(dispatchers.main) {
+                reduxStateHolder.dispatch(
+                    action = TradeCryptoAction.New.Sell(
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
+                    ),
+                )
+            }
+        }
     }
 
     override fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO
+        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
+
+        analyticsEventHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrencyStatus.currency.symbol),
+        )
+
+        showErrorIfDemoModeOrElse {
+            viewModelScope.launch(dispatchers.main) {
+                reduxStateHolder.dispatch(
+                    TradeCryptoAction.New.Buy(
+                        userWallet = userWallet,
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
+                    ),
+                )
+            }
+        }
     }
 
     override fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        // TODO
+        analyticsEventHandler.send(
+            event = TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrencyStatus.currency.symbol),
+        )
+
+        reduxStateHolder.dispatch(TradeCryptoAction.New.Swap(cryptoCurrencyStatus.currency))
     }
 
     override fun onExploreClick() {
-        // TODO
+        showErrorIfDemoModeOrElse(action = ::openExplorer)
+    }
+
+    private fun openExplorer() {
+        val userWalletId = stateHolder.getSelectedWalletId()
+
+        viewModelScope.launch(dispatchers.main) {
+            val currency = getPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId)?.currency ?: return@launch
+            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currency.network)
+
+            if (addresses.size == 1) {
+                router.openUrl(
+                    url = getExploreUrlUseCase(
+                        userWalletId = userWalletId,
+                        currency = currency,
+                        addressType = AddressType.Default,
+                    ),
+                )
+            } else {
+                showChooseAddressBottomSheet(userWalletId, addresses, currency)
+            }
+        }
+    }
+
+    private fun showChooseAddressBottomSheet(
+        userWalletId: UserWalletId,
+        addresses: List<Address>,
+        currency: CryptoCurrency,
+    ) {
+        stateHolder.update(
+            OpenBottomSheetTransformer(
+                userWalletId = userWalletId,
+                content = ChooseAddressBottomSheetConfig(
+                    addressModels = addresses
+                        .map { address ->
+                            AddressModel(
+                                value = address.value,
+                                type = AddressModel.Type.valueOf(address.type.name),
+                            )
+                        }
+                        .toImmutableList(),
+                    onClick = {
+                        onAddressTypeSelected(
+                            userWalletId = userWalletId,
+                            currency = currency,
+                            addressModel = it,
+                        )
+                    },
+                ),
+                onDismissBottomSheet = {
+                    stateHolder.update(
+                        CloseBottomSheetTransformer(userWalletId = userWalletId),
+                    )
+                },
+            ),
+        )
+    }
+
+    private fun onAddressTypeSelected(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        addressModel: AddressModel,
+    ) {
+        viewModelScope.launch(dispatchers.main) {
+            router.openUrl(
+                url = getExploreUrlUseCase(
+                    userWalletId = userWalletId,
+                    currency = currency,
+                    addressType = AddressType.valueOf(addressModel.type.name),
+                ),
+            )
+
+            stateHolder.update(
+                CloseBottomSheetTransformer(userWalletId = userWalletId),
+            )
+        }
+    }
+
+    private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
+        val cardId = getSelectedWalletSyncUseCase.unwrap()?.cardId ?: return
+
+        if (isDemoCardUseCase(cardId = cardId)) {
+            stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
+
+            walletEventSender.send(
+                event = WalletEvent.ShowError(
+                    text = resourceReference(id = R.string.alert_demo_feature_disabled),
+                ),
+            )
+        } else {
+            action()
+        }
     }
 }
