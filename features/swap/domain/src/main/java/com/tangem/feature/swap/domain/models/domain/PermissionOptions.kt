@@ -17,6 +17,7 @@ data class PermissionOptions(
     val approveData: RequestApproveStateData,
     val forTokenContractAddress: String,
     val fromToken: CryptoCurrency,
+    val spenderAddress: String,
     val approveType: SwapApproveType,
     val txFee: TxFee,
 )
