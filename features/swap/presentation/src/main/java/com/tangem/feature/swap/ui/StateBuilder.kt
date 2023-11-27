@@ -4,6 +4,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -22,6 +23,7 @@ import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.viewmodels.SwapProcessDataState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -36,6 +38,8 @@ internal class StateBuilder(
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
 ) {
+
+    private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     private val tokensDataConverter = TokensDataConverter(
         onSearchEntered = actions.onSearchEntered,
@@ -52,6 +56,7 @@ internal class StateBuilder(
                 type = TransactionCardType.SendCard(actions.onAmountChanged, actions.onAmountSelected),
                 amountEquivalent = null,
                 amountTextFieldValue = null,
+                token = null,
                 tokenIconUrl = initialCurrency.iconUrl,
                 tokenCurrency = initialCurrency.symbol,
                 coinId = initialCurrency.network.backendId,
@@ -65,6 +70,7 @@ internal class StateBuilder(
                 amountEquivalent = null,
                 tokenIconUrl = "",
                 tokenCurrency = "",
+                token = null,
                 amountTextFieldValue = null,
                 canSelectAnotherToken = false,
                 balance = "",
@@ -98,6 +104,7 @@ internal class StateBuilder(
                     text = "0",
                 ),
                 amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
+                token = fromToken,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = uiStateHolder.sendCardData.coinId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
@@ -148,6 +155,7 @@ internal class StateBuilder(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = null,
+                token = uiStateHolder.sendCardData.token,
                 tokenIconUrl = fromToken.iconUrl,
                 tokenCurrency = fromToken.symbol,
                 coinId = fromToken.network.backendId,
@@ -160,6 +168,7 @@ internal class StateBuilder(
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = null,
                 amountEquivalent = null,
+                token = uiStateHolder.receiveCardData.token,
                 tokenIconUrl = toToken.iconUrl,
                 tokenCurrency = toToken.symbol,
                 coinId = toToken.network.backendId,
@@ -225,6 +234,7 @@ internal class StateBuilder(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = getFormattedFiatAmount(quoteModel.fromTokenInfo.amountFiat),
+                token = fromCurrencyStatus,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = fromCurrencyStatus.currency.network.backendId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
@@ -237,6 +247,7 @@ internal class StateBuilder(
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
+                token = toCurrencyStatus,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = toCurrencyStatus.currency.network.backendId,
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
@@ -282,6 +293,7 @@ internal class StateBuilder(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
+                token = uiStateHolder.sendCardData.token,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = uiStateHolder.sendCardData.coinId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
@@ -294,6 +306,7 @@ internal class StateBuilder(
                 type = TransactionCardType.ReceiveCard(),
                 amountTextFieldValue = TextFieldValue("0"),
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
+                token = uiStateHolder.receiveCardData.token,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = uiStateHolder.receiveCardData.coinId,
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
@@ -434,12 +447,38 @@ internal class StateBuilder(
     fun createSuccessState(
         uiState: SwapStateHolder,
         txState: TxState.TxSent,
+        dataState: SwapProcessDataState,
+        txUrl: String,
         onSecondaryBtnClick: () -> Unit,
     ): SwapStateHolder {
+        val fromToken = requireNotNull(uiState.sendCardData as? SwapCardState.SwapCardData)
+        val toToken = requireNotNull(uiState.receiveCardData as? SwapCardState.SwapCardData)
+        val fromTokenIconState = fromToken.token?.let(iconStateConverter::convert)
+        val toTokenIconState = toToken.token?.let(iconStateConverter::convert)
+        val fee = uiState.fee as? FeeItemState.Content ?: return uiState
+        val fromCryptoCurrencyStatus = requireNotNull(fromToken.token)
+        val toCryptoCurrencyStatus = requireNotNull(toToken.token)
+        val rate = txState.toAmount?.toBigDecimal()?.divide(
+            txState.fromAmount?.toBigDecimal(),
+            toCryptoCurrencyStatus.currency.decimals,
+            RoundingMode.HALF_UP,
+        )
+        val fromCurrencySymbol = fromCryptoCurrencyStatus.currency.symbol
+        val toCurrencySymbol = toCryptoCurrencyStatus.currency.symbol
+
         return uiState.copy(
             successState = SwapSuccessStateHolder(
-                fromTokenAmount = txState.fromAmount ?: "",
-                toTokenAmount = txState.toAmount ?: "",
+                timestamp = System.currentTimeMillis(),
+                txUrl = txUrl,
+                selectedProvider = requireNotNull(dataState.selectedProvider),
+                fee = TextReference.Str("${fee.amountCrypto} ${fee.symbolCrypto} (${fee.amountFiatFormatted})"),
+                rate = TextReference.Str("1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"),
+                fromTokenAmount = TextReference.Str("${txState.fromAmount.orEmpty()} ${fromToken.tokenCurrency}}"),
+                toTokenAmount = TextReference.Str("${txState.toAmount.orEmpty()} ${toToken.tokenCurrency}}"),
+                fromTokenFiatAmount = TextReference.Str(fromToken.amountEquivalent.orEmpty()),
+                toTokenFiatAmount = TextReference.Str(toToken.amountEquivalent.orEmpty()),
+                fromTokenIconState = fromTokenIconState,
+                toTokenIconState = toTokenIconState,
                 onSecondaryButtonClick = onSecondaryBtnClick,
             ),
         )
