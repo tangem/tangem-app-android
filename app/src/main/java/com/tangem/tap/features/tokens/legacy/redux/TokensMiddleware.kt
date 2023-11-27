@@ -20,6 +20,8 @@ import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.walletconnect.WalletConnectActions
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
@@ -90,13 +92,17 @@ object TokensMiddleware {
             if (scanResponse.supportsHdWallet()) {
                 deriveMissingCoins(scanResponse = scanResponse, currencyList = currencyList) {
                     submitNewAdd(
-                        userWalletId = action.userWallet.walletId,
+                        userWallet = action.userWallet,
                         updatedScanResponse = it,
                         currencyList = currencyList,
                     )
                 }
             } else {
-                submitNewAdd(userWalletId = action.userWallet.walletId, scanResponse, currencyList = currencyList)
+                submitNewAdd(
+                    userWallet = action.userWallet,
+                    updatedScanResponse = scanResponse,
+                    currencyList = currencyList,
+                )
             }
         }
     }
@@ -375,16 +381,18 @@ object TokensMiddleware {
     }
 
     private fun submitNewAdd(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         updatedScanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
     ) {
         scope.launch {
             userWalletsListManager.update(
-                userWalletId = userWalletId,
+                userWalletId = userWallet.walletId,
                 update = { it.copy(scanResponse = updatedScanResponse) },
             ).doOnSuccess {
-                addCryptoCurrenciesUseCase(userWalletId, currencyList)
+                addCryptoCurrenciesUseCase(userWallet.walletId, currencyList).onRight {
+                    store.dispatch(action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet))
+                }
             }
         }
         store.dispatchOnMain(NavigationAction.PopBackTo())
