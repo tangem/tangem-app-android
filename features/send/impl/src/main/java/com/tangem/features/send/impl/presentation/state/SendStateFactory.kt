@@ -86,6 +86,7 @@ internal class SendStateFactory(
         amountState = amountStateConverter.convert(Unit),
         recipientState = recipientStateConverter.convert(Unit),
         feeState = feeStateConverter.convert(Unit),
+        sendState = SendStates.SendState(),
     )
     //endregion
 
@@ -122,15 +123,15 @@ internal class SendStateFactory(
         val recipientState = state.recipientState ?: return state
 
         val isValidMemo = validateMemo(
-            memo = value,
+            memo = recipientState.addressTextField.value.value,
             cryptoCurrency = cryptoCurrencyStatusProvider().currency,
         )
         val isAddressInWallet = isNotAddressInWallet(
+            address = value,
             walletAddresses = walletAddressesProvider(),
-            address = recipientState.addressTextField.value.value,
         )
         val isValidAddress = verifyAddress(
-            address = recipientState.addressTextField.value.value,
+            address = value,
             cryptoCurrency = cryptoCurrencyStatusProvider().currency,
         )
 
@@ -138,8 +139,7 @@ internal class SendStateFactory(
             it.copy(
                 value = value,
                 error = when {
-                    !isValidAddress -> TextReference.Res(R.string.send_recipient_address_error)
-                    !isAddressInWallet -> TextReference.Res(R.string.send_recipient_address_error)
+                    !isValidAddress || !isAddressInWallet -> TextReference.Res(R.string.send_recipient_address_error)
                     else -> null
                 },
                 isError = !isValidAddress || !isAddressInWallet,
@@ -168,11 +168,10 @@ internal class SendStateFactory(
             address = recipientState.addressTextField.value.value,
             cryptoCurrency = cryptoCurrencyStatusProvider().currency,
         )
-// [REDACTED_TODO_COMMENT]
+
         recipientState.memoTextField?.update {
             it.copy(
                 value = value,
-                error = TextReference.Res(R.string.send_memo_destination_tag_error),
                 isError = !isValidMemo,
             )
         }
