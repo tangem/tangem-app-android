@@ -197,6 +197,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 networkId = networkId,
                 derivationPath = derivationPath,
                 fromToken = permissionOptions.fromToken,
+                spenderAddress = permissionOptions.spenderAddress,
             )
         } else {
             permissionOptions.approveData.approveData
@@ -289,8 +290,22 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         isBalanceWithoutFeeEnough: Boolean,
     ): Pair<SwapProvider, SwapState> {
+        val quotes = repository.findBestQuote(
+            fromContractAddress = fromToken.currency.getContractAddress(),
+            fromNetwork = fromToken.currency.network.backendId,
+            toContractAddress = toToken.currency.getContractAddress(),
+            toNetwork = toToken.currency.network.backendId,
+            fromAmount = amount.toStringWithRightOffset(),
+            fromDecimals = amount.decimals,
+            providerId = provider.providerId,
+            rateType = RateType.FLOAT,
+        )
+
         val fromTokenAddress = getTokenAddress(fromToken.currency)
-        val isAllowedToSpend = isAllowedToSpend(networkId, fromToken.currency, amount)
+        val isAllowedToSpend = quotes.dataModel?.allowanceContract?.let {
+            isAllowedToSpend(networkId, fromToken.currency, amount, it)
+        } ?: false
+
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
             transactionManager.updateWalletManager(networkId, derivationPath)
@@ -305,15 +320,16 @@ internal class SwapInteractorImpl @Inject constructor(
                 selectedFee = selectedFee,
             )
         } else {
-            provider to loadQuoteData(
+            provider to getQuotesState(
                 exchangeProviderType = ExchangeProviderType.DEX,
-                networkId = networkId,
+                quoteDataModel = quotes,
                 amount = amount,
-                fromTokenStatus = fromToken,
-                toTokenStatus = toToken,
+                fromToken = fromToken,
+                toToken = toToken,
+                networkId = networkId,
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
-                provider = provider,
+                providerType = provider.type,
                 selectedFee = selectedFee,
             )
         }
@@ -501,16 +517,22 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private suspend fun isAllowedToSpend(networkId: String, fromToken: CryptoCurrency, amount: SwapAmount): Boolean {
+    private suspend fun isAllowedToSpend(
+        networkId: String,
+        fromToken: CryptoCurrency,
+        amount: SwapAmount,
+        spenderAddress: String,
+    ): Boolean {
         if (fromToken is CryptoCurrency.Coin) return true
         return getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
                 val allowance = repository.getAllowance(
-                    userWallet.walletId,
-                    networkId,
-                    derivationPath,
-                    getTokenDecimals(fromToken),
-                    getTokenAddress(fromToken),
+                    userWalletId = userWallet.walletId,
+                    networkId = networkId,
+                    derivationPath = derivationPath,
+                    tokenDecimalCount = getTokenDecimals(fromToken),
+                    tokenAddress = getTokenAddress(fromToken),
+                    spenderAddress = spenderAddress,
                 )
                 allowance >= amount.value
             },
@@ -620,6 +642,8 @@ internal class SwapInteractorImpl @Inject constructor(
                         fromToken = fromToken.currency,
                         swapAmount = amount,
                         quotesLoadedState = swapState,
+                        isAllowedToSpend = isAllowedToSpend,
+                        spenderAddress = requireNotNull(quoteModel.allowanceContract) { "Allowance contract is null" },
                     )
                     state.copy(
                         preparedSwapConfigState = state.preparedSwapConfigState.copy(
@@ -791,19 +815,26 @@ internal class SwapInteractorImpl @Inject constructor(
                 },
                 ifRight = { txFee ->
                     txFee.toTxFeeState(networkId)
-                }
+                },
             ) ?: TxFeeState.Empty
         }
         return TxFeeState.Empty
     }
 
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod")
     private suspend fun updatePermissionState(
         networkId: String,
         fromToken: CryptoCurrency,
         swapAmount: SwapAmount,
         quotesLoadedState: SwapState.QuotesLoadedState,
+        spenderAddress: String,
+        isAllowedToSpend: Boolean,
     ): SwapState.QuotesLoadedState {
+        if (isAllowedToSpend) {
+            return quotesLoadedState.copy(
+                permissionState = PermissionDataState.Empty,
+            )
+        }
         // if token balance ZERO not show permission state to avoid user to spend money for fee
         val isTokenZeroBalance = getTokenBalance(networkId, fromToken).value.signum() == 0
         if (isTokenZeroBalance) {
@@ -822,20 +853,28 @@ internal class SwapInteractorImpl @Inject constructor(
             derivationPath = derivationPath,
             fromToken = fromToken,
             swapAmount = swapAmount,
+            spenderAddress = spenderAddress,
         )
-        val feeData = transactionManager.getFee(
-            networkId = networkId,
-            amountToSend = BigDecimal.ZERO,
-            currencyToSend = swapCurrencyConverter.convert(repository.getNativeTokenForNetwork(networkId)),
-            destinationAddress = getTokenAddress(fromToken),
-            increaseBy = INCREASE_GAS_LIMIT_BY,
-            data = transactionData,
-            derivationPath = derivationPath,
-        )
-        val feeState = when (feeData) {
-            is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(networkId)
-            is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(networkId)
+        val feeData = try {
+            transactionManager.getFee(
+                networkId = networkId,
+                amountToSend = BigDecimal.ZERO,
+                currencyToSend = swapCurrencyConverter.convert(repository.getNativeTokenForNetwork(networkId)),
+                destinationAddress = fromToken.getContractAddress(),
+                increaseBy = INCREASE_GAS_LIMIT_BY,
+                data = transactionData,
+                derivationPath = derivationPath,
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get fee")
+            null
         }
+        val feeState = feeData?.let {
+            when (feeData) {
+                is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(networkId)
+                is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(networkId)
+            }
+        } ?: TxFeeState.Empty
         val fee = when (feeState) {
             TxFeeState.Empty -> BigDecimal.ZERO
             is TxFeeState.MultipleFeeState -> feeState.normalFee.feeValue
@@ -857,6 +896,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     fee = feeState,
                     approveData = transactionData,
                     fromTokenAmount = swapAmount,
+                    spenderAddress = spenderAddress,
                 ),
             ),
             preparedSwapConfigState = quotesLoadedState.preparedSwapConfigState.copy(
@@ -1089,6 +1129,7 @@ internal class SwapInteractorImpl @Inject constructor(
         derivationPath: String?,
         fromToken: CryptoCurrency,
         swapAmount: SwapAmount? = null,
+        spenderAddress: String,
     ): String {
         return getSelectedWalletSyncUseCase().fold(
             ifRight = { userWallet ->
@@ -1098,6 +1139,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     derivationPath = derivationPath,
                     currency = fromToken,
                     amount = swapAmount?.value,
+                    spenderAddress = spenderAddress,
                 )
             },
             ifLeft = {
