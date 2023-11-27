@@ -22,10 +22,7 @@ import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.feature.swap.models.SwapPermissionState
-import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.UiActions
-import com.tangem.feature.swap.models.toDomainApproveType
+import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -320,6 +317,7 @@ internal class SwapViewModel @Inject constructor(
         dataState = if (permissionState is PermissionDataState.PermissionReadyForRequest) {
             dataState.copy(
                 approveDataModel = permissionState.requestApproveData,
+                approveType = dataState.approveType ?: ApproveType.UNLIMITED,
             )
         } else {
             dataState.copy(
@@ -407,11 +405,14 @@ internal class SwapViewModel @Inject constructor(
                         fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
                             "dataState.fromCurrency might not be null"
                         },
-                        approveType = requireNotNull(uiState.permissionState as? SwapPermissionState.ReadyForRequest) {
-                            "uiState.permissionState should be SwapPermissionState.ReadyForRequest"
-                        }.approveType.toDomainApproveType(),
+                        approveType = requireNotNull(dataState.approveType) {
+                            "uiState.permissionState should not be null"
+                        }.toDomainApproveType(),
                         txFee = requireNotNull(dataState.selectedFee) {
                             "dataState.selectedFee shouldn't be null"
+                        },
+                        spenderAddress = requireNotNull(dataState.approveDataModel?.spenderAddress) {
+                            "dataState.approveDataModel.spenderAddress shouldn't be null"
                         },
                     ),
                 )
@@ -604,15 +605,16 @@ internal class SwapViewModel @Inject constructor(
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
-                uiState = stateBuilder.showPermissionBottomSheet(uiState) { stateBuilder.dismissBottomSheet(uiState) }
-            },
-            hidePermissionBottomSheet = {
-                startLoadingQuotesFromLastState()
-                analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
+                uiState = stateBuilder.showPermissionBottomSheet(uiState) {
+                    startLoadingQuotesFromLastState()
+                    analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
+                    stateBuilder.dismissBottomSheet(uiState)
+                }
             },
             onAmountSelected = { onAmountSelected(it) },
             onChangeApproveType = { approveType ->
                 uiState = stateBuilder.updateApproveType(uiState, approveType)
+                dataState = dataState.copy(approveType = approveType)
             },
             onClickFee = {
                 val selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL
