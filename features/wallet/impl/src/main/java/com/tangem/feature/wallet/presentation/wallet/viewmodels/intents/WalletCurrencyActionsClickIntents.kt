@@ -37,6 +37,7 @@ import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBo
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
@@ -65,6 +66,7 @@ interface WalletCurrencyActionsClickIntents {
 }
 
 @Suppress("LongParameterList", "LargeClass")
+@ViewModelScoped
 internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateHolderV2,
     private val walletEventSender: WalletEventSender,
