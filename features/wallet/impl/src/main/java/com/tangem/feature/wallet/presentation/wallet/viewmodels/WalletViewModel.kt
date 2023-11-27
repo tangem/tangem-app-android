@@ -68,6 +68,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.*
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.TokenListWithWallet
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
+import com.tangem.feature.wallet.presentation.wallet.subscribers.MaybeTokenListFlow
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -129,10 +130,10 @@ internal class WalletViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val scanCardToUnlockWalletUseCase: ScanCardToUnlockWalletClickHandler,
-    hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isNeedToBackupUseCase: IsNeedToBackupUseCase,
     getMissedAddressesCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
+    hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
     // endregion Parameters
 ) : ViewModel(), DefaultLifecycleObserver, WalletClickIntents {
 
@@ -1352,7 +1353,7 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private suspend fun updateButtons(userWallet: UserWallet, currencyStatus: CryptoCurrencyStatus) {
+    private fun updateButtons(userWallet: UserWallet, currencyStatus: CryptoCurrencyStatus) {
         getCryptoCurrencyActionsUseCase(
             userWallet = userWallet,
             cryptoCurrencyStatus = currencyStatus,
@@ -1417,5 +1418,3 @@ internal class WalletViewModel @Inject constructor(
 
     private fun getCardTypeResolver(index: Int): CardTypesResolver = getWallet(index).scanResponse.cardTypesResolver
 }
-
-typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
