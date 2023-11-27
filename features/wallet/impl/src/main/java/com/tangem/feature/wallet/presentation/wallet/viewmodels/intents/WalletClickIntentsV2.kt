@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
@@ -11,29 +12,29 @@ import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
+import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetRefreshStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListErrorTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
-* [REDACTED_AUTHOR]
- */
 @Suppress("LongParameterList")
+@ViewModelScoped
 internal class WalletClickIntentsV2 @Inject constructor(
     private val walletCardClickIntentsImplementor: WalletCardClickIntentsImplementor,
     private val warningsClickIntentsImplementer: WalletWarningsClickIntentsImplementer,
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
     private val contentClickIntentsImplementor: WalletContentClickIntentsImplementor,
     private val stateHolder: WalletStateHolderV2,
-// [REDACTED_TODO_COMMENT]
+    private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
-// [REDACTED_TODO_COMMENT]
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val fetchCardTokenListUseCase: FetchCardTokenListUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
@@ -66,13 +67,12 @@ internal class WalletClickIntentsV2 @Inject constructor(
             stateHolder.update { it.copy(selectedWalletIndex = index) }
 
             maybeUserWallet.onRight {
-// [REDACTED_TODO_COMMENT]
-                //  walletScreenContentLoader.load(
-                //     userWallet = it,
-                //     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
-                //     clickIntents = this@WalletClickIntentsV2,
-                //     coroutineScope = viewModelScope,
-                // )
+                walletScreenContentLoader.load(
+                    userWallet = it,
+                    appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
+                    clickIntents = this@WalletClickIntentsV2,
+                    coroutineScope = viewModelScope,
+                )
             }
         }
     }
@@ -131,14 +131,14 @@ internal class WalletClickIntentsV2 @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) {
             fetchCurrencyStatusUseCase(userWallet.walletId, refresh = true)
-// [REDACTED_TODO_COMMENT]
-            //  walletScreenContentLoader.load(
-            //     userWallet = userWallet,
-            //     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
-            //     clickIntents = this@WalletClickIntentsV2,
-            //     coroutineScope = viewModelScope,
-            //     isRefresh = true,
-            // )
+
+            walletScreenContentLoader.load(
+                userWallet = userWallet,
+                appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
+                clickIntents = this@WalletClickIntentsV2,
+                coroutineScope = viewModelScope,
+                isRefresh = true,
+            )
 
             stateHolder.update(
                 SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = false),

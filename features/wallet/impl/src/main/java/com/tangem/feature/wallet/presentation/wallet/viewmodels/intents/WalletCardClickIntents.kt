@@ -4,6 +4,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
+import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
@@ -27,7 +28,7 @@ internal interface WalletCardClickIntents {
 internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateHolderV2,
     private val walletEventSender: WalletEventSender,
-// [REDACTED_TODO_COMMENT]
+    private val walletScreenContentLoader: WalletScreenContentLoader,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -51,7 +52,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
 
     override fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId) {
         viewModelScope.launch(dispatchers.main) {
-// [REDACTED_TODO_COMMENT]
+            walletScreenContentLoader.cancel(userWalletId)
             deleteWalletUseCase(userWalletId)
                 .onRight { popBackIfAllWalletsIsLocked() }
                 .onLeft { Timber.e(it.toString()) }
