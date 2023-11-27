@@ -7,18 +7,34 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import com.tangem.core.ui.res.TangemTheme
 
-fun Modifier.roundedShapeItemDecoration(currentIndex: Int, lastIndex: Int): Modifier = composed {
-    val modifierWithHorizontalPadding = this.padding(horizontal = TangemTheme.dimens.spacing16)
+fun Modifier.roundedShapeItemDecoration(
+    currentIndex: Int,
+    lastIndex: Int,
+    addDefaultPadding: Boolean = true,
+): Modifier = composed {
+    val modifier = if (addDefaultPadding) this.padding(horizontal = TangemTheme.dimens.spacing16) else this
     val isSingleItem = currentIndex == 0 && lastIndex == 0
     when {
         isSingleItem -> {
-            modifierWithHorizontalPadding
-                .padding(top = TangemTheme.dimens.spacing14)
+            modifier
+                .then(
+                    if (addDefaultPadding) {
+                        Modifier.padding(top = TangemTheme.dimens.spacing14)
+                    } else {
+                        Modifier
+                    },
+                )
                 .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
         }
         currentIndex == 0 -> {
-            modifierWithHorizontalPadding
-                .padding(top = TangemTheme.dimens.spacing14)
+            modifier
+                .then(
+                    if (addDefaultPadding) {
+                        Modifier.padding(top = TangemTheme.dimens.spacing14)
+                    } else {
+                        Modifier
+                    },
+                )
                 .clip(
                     shape = RoundedCornerShape(
                         topStart = TangemTheme.dimens.radius16,
@@ -27,7 +43,7 @@ fun Modifier.roundedShapeItemDecoration(currentIndex: Int, lastIndex: Int): Modi
                 )
         }
         currentIndex == lastIndex -> {
-            modifierWithHorizontalPadding
+            modifier
                 .clip(
                     shape = RoundedCornerShape(
                         bottomStart = TangemTheme.dimens.radius16,
@@ -35,6 +51,6 @@ fun Modifier.roundedShapeItemDecoration(currentIndex: Int, lastIndex: Int): Modi
                     ),
                 )
         }
-        else -> modifierWithHorizontalPadding
+        else -> modifier
     }
 }
