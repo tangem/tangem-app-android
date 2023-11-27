@@ -784,9 +784,14 @@ internal class SwapInteractorImpl @Inject constructor(
                 userWalletId = userWalletId,
                 cryptoCurrency = fromToken.currency,
             ).firstOrNull()
-            txFeeResult?.getOrNull()?.let { txFee ->
-                return txFee.toTxFeeState(networkId)
-            }
+            return txFeeResult?.fold(
+                ifLeft = {
+                    TxFeeState.Empty
+                },
+                ifRight = { txFee ->
+                    txFee.toTxFeeState(networkId)
+                }
+            ) ?: TxFeeState.Empty
         }
         return TxFeeState.Empty
     }
