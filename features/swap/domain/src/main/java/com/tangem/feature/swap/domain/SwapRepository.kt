@@ -39,6 +39,7 @@ interface SwapRepository {
      */
     fun getTangemFee(): Double
 
+    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun getAllowance(
         userWalletId: UserWalletId,
@@ -46,8 +47,10 @@ interface SwapRepository {
         derivationPath: String?,
         tokenDecimalCount: Int,
         tokenAddress: String,
+        spenderAddress: String,
     ): BigDecimal
 
+    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun getApproveData(
         userWalletId: UserWalletId,
@@ -55,6 +58,7 @@ interface SwapRepository {
         derivationPath: String?,
         currency: CryptoCurrency,
         amount: BigDecimal?,
+        spenderAddress: String,
     ): String
 
     @Suppress("LongParameterList")
