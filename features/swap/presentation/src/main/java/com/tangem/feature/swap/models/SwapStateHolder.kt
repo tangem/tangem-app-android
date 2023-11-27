@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
@@ -44,6 +45,7 @@ sealed class SwapCardState {
     data class SwapCardData(
         val type: TransactionCardType,
         val amountEquivalent: String?,
+        val token: CryptoCurrencyStatus?,
         val coinId: String?,
         val amountTextFieldValue: TextFieldValue?,
         val tokenIconUrl: String?,
