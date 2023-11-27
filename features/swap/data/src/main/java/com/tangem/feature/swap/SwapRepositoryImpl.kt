@@ -161,6 +161,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                 AggregatedSwapDataModel(
                     dataModel = QuoteModel(
                         toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
+                        allowanceContract = response.allowanceContract,
                     ),
                 )
             } catch (ex: Exception) {
@@ -218,6 +219,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         derivationPath: String?,
         tokenDecimalCount: Int,
         tokenAddress: String,
+        spenderAddress: String,
     ): BigDecimal {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
@@ -225,7 +227,6 @@ internal class SwapRepositoryImpl @Inject constructor(
             blockchain = blockchain,
             derivationPath = derivationPath,
         )
-        val spenderAddress = addressForTrust(networkId)
 
         val result = (walletManager as? Approver)?.getAllowance(
             spenderAddress,
@@ -248,6 +249,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         derivationPath: String?,
         currency: CryptoCurrency,
         amount: BigDecimal?,
+        spenderAddress: String,
     ): String {
         val blockchain =
             requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
@@ -256,7 +258,6 @@ internal class SwapRepositoryImpl @Inject constructor(
             blockchain = blockchain,
             derivationPath = derivationPath,
         )
-        val spenderAddress = addressForTrust(networkId)
 
         return (walletManager as? Approver)?.getApproveData(
             spenderAddress,
