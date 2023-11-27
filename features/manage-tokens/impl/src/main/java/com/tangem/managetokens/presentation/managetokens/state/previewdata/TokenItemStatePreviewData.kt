@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.state.previewdata
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import com.tangem.managetokens.presentation.managetokens.state.*
 import kotlinx.collections.immutable.persistentListOf
@@ -13,7 +14,8 @@ internal object TokenItemStatePreviewData {
         get() = TokenItemState.Loaded(
             id = "BTC",
             name = "Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin",
-            currencyId = "BTC",
+            tokenId = "BTC",
+            currencySymbol = "BTC",
             tokenIcon = tokenIconState,
             quotes = QuotesState.Content(
                 priceChange = "0.43%",
@@ -21,15 +23,17 @@ internal object TokenItemStatePreviewData {
                 chartData = persistentListOf(10f, 2f, 5f, 3f, 4f, 8f, 9f, 7f, 4f),
             ),
             rate = "31 285.72$",
-            availableAction = TokenButtonType.ADD,
+            availableAction = mutableStateOf(TokenButtonType.ADD),
             onButtonClick = {},
+            chooseNetworkState = ChooseNetworkStatePreviewData.state,
         )
 
     val loadedPriceUp: TokenItemState
         get() = TokenItemState.Loaded(
             id = "BTC",
             name = "Bitcoin",
-            currencyId = "BTC",
+            tokenId = "BTC",
+            currencySymbol = "BTC",
             tokenIcon = tokenIconState,
             quotes = QuotesState.Content(
                 priceChange = "0.43%",
@@ -37,8 +41,9 @@ internal object TokenItemStatePreviewData {
                 chartData = persistentListOf(1f, 3f, 4f, 8f, 12f, 10f, 8f, 3f, 5f, 7f),
             ),
             rate = "31 285.72$",
-            availableAction = TokenButtonType.NOT_AVAILABLE,
+            availableAction = mutableStateOf(TokenButtonType.NOT_AVAILABLE),
             onButtonClick = {},
+            chooseNetworkState = ChooseNetworkStatePreviewData.state,
         )
 
     private val tokenIconState: TokenIconState
