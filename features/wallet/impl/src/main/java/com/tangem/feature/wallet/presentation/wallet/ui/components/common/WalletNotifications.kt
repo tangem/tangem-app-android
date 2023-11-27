@@ -22,7 +22,7 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
     items(
         items = configs,
         key = { it::class.java },
-        contentType = { it.config::class.java },
+        contentType = { it::class.java },
         itemContent = {
             Notification(
                 config = it.config,
