@@ -1,24 +1,20 @@
 package com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter
 
-import android.text.format.DateUtils
 import androidx.paging.*
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
-import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.core.ui.utils.toDateFormat
+import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.isToday
-import com.tangem.utils.extensions.isYesterday
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
 import java.util.UUID
 
 private val scope = CoroutineScope(Dispatchers.IO)
@@ -102,7 +98,7 @@ internal class TxHistoryItemFlowConverter(
             ) {
                 val txContent = txHistoryItemState.state as TransactionState.Content
                 txHistoryItemState.copy(
-                    state = txContent.copy(timestamp = txContent.timestamp.toTimeFormat()),
+                    state = txContent.copy(timestamp = txContent.timestamp.toLong().toTimeFormat()),
                 )
             } else {
                 txHistoryItemState
@@ -117,27 +113,5 @@ internal class TxHistoryItemFlowConverter(
         } else {
             null
         }
-    }
-
-    /**
-     * If [this] timestamp is today or yesterday, returns relative date,
-     * otherwise returns formatting date.
-     */
-    private fun Long.toDateFormat(): String {
-        val localDate = DateTime(this, DateTimeZone.getDefault())
-        return if (localDate.isToday() || localDate.isYesterday()) {
-            DateUtils.getRelativeTimeSpanString(
-                this,
-                DateTime.now().millis,
-                DateUtils.DAY_IN_MILLIS,
-                DateUtils.FORMAT_ABBREV_RELATIVE,
-            ).toString()
-        } else {
-            DateTimeFormatters.formatDate(date = localDate)
-        }
-    }
-
-    private fun String.toTimeFormat(): String {
-        return DateTimeFormatters.formatTime(time = DateTime(this.toLong(), DateTimeZone.getDefault()))
     }
 }
