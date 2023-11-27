@@ -295,12 +295,21 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {
-        val selectedSwapProvider = dataState.selectedProvider ?: state.keys.first()
+        val selectedSwapProvider = selectProvider(state)
         dataState = dataState.copy(
             selectedProvider = selectedSwapProvider,
             lastLoadedSwapStates = state,
         )
         return state.entries.first { it.key == selectedSwapProvider }.toPair()
+    }
+
+    private fun selectProvider(state: Map<SwapProvider, SwapState>): SwapProvider {
+        val currentSelected = dataState.selectedProvider
+        return if (currentSelected != null && state.keys.contains(currentSelected)) {
+            currentSelected
+        } else {
+            state.keys.first()
+        }
     }
 
     private fun fillLoadedDataState(
