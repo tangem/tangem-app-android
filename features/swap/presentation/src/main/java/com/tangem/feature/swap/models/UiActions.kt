@@ -19,4 +19,5 @@ data class UiActions(
     val onSelectFeeType: (TxFee) -> Unit,
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
+    val onBuyClick: () -> Unit,
 )
