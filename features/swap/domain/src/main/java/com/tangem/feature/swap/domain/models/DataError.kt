@@ -30,5 +30,7 @@ sealed class DataError {
         val expressFromDecimals: Int,
     ) : DataError()
 
-    data class UnknownError(override val code: Int = -1) : DataError()
+    object UnknownError : DataError() {
+        override val code: Int = -1
+    }
 }
