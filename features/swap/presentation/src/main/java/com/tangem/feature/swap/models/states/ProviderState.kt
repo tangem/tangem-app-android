@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.models.states
 
+import com.tangem.core.ui.extensions.TextReference
+
 sealed class ProviderState {
 
     abstract val onProviderClick: ((String) -> Unit)?
@@ -32,7 +34,8 @@ sealed class ProviderState {
         val name: String,
         val type: String,
         val iconUrl: String,
-        val alertText: String,
+        val alertText: TextReference,
+        val selectionType: SelectionType,
         override val onProviderClick: ((String) -> Unit)? = null,
     ) : ProviderState()
 

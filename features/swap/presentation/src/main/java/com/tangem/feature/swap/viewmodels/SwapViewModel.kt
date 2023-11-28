@@ -17,7 +17,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -31,11 +30,14 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.isNullOrZero
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
@@ -287,27 +289,60 @@ internal class SwapViewModel @Inject constructor(
             }
             is SwapState.SwapError -> {
                 Timber.e("SwapError when loading quotes ${state.error}")
+                // todo handle when change token and error
                 uiState = stateBuilder.mapError(uiState, state.error) { startLoadingQuotesFromLastState() }
             }
         }
     }
 
     private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {
-        val selectedSwapProvider = selectProvider(state)
+        val nonEmptyStates = state.filter { it.value !is SwapState.EmptyAmountState }
+        val selectedSwapProvider = if (nonEmptyStates.isNotEmpty()) {
+            selectProvider(state)
+        } else {
+            null
+        }
         dataState = dataState.copy(
             selectedProvider = selectedSwapProvider,
             lastLoadedSwapStates = state,
         )
-        return state.entries.first { it.key == selectedSwapProvider }.toPair()
+        selectedSwapProvider?.let {
+            return state.entries.first { it.key == selectedSwapProvider }.toPair()
+        }
+        return state.entries.first().toPair()
     }
 
     private fun selectProvider(state: Map<SwapProvider, SwapState>): SwapProvider {
-        val currentSelected = dataState.selectedProvider
-        return if (currentSelected != null && state.keys.contains(currentSelected)) {
-            currentSelected
+        val stateSuccess = state
+            .filter { it.value is SwapState.QuotesLoadedState }
+            .mapValues { it.value as SwapState.QuotesLoadedState }
+        return if (stateSuccess.isNotEmpty()) {
+            val currentSelected = dataState.selectedProvider
+            if (currentSelected != null && state.keys.contains(currentSelected)) {
+                currentSelected
+            } else {
+                findBestQuoteProvider(stateSuccess) ?: stateSuccess.keys.first()
+            }
         } else {
             state.keys.first()
         }
+    }
+
+    private fun findBestQuoteProvider(state: Map<SwapProvider, SwapState.QuotesLoadedState>): SwapProvider? {
+        // finding best quotes
+        return state.mapValues {
+            if (!it.value.fromTokenInfo.amountFiat.isNullOrZero() &&
+                !it.value.toTokenInfo.amountFiat.isNullOrZero()
+            ) {
+                it.value.fromTokenInfo.amountFiat.divide(
+                    it.value.toTokenInfo.amountFiat,
+                    it.value.toTokenInfo.cryptoCurrencyStatus.currency.decimals,
+                    RoundingMode.HALF_UP,
+                )
+            } else {
+                BigDecimal.ZERO
+            }
+        }.minByOrNull { it.value }?.key
     }
 
     private fun fillLoadedDataState(
@@ -478,7 +513,6 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onTokenSelect(id: String) {
         val tokens = dataState.tokensDataState ?: return
-
         val foundToken = if (isOrderReversed) {
             tokens.fromGroup.available.firstOrNull {
                 it.currencyStatus.currency.id.value == id
@@ -505,6 +539,7 @@ internal class SwapViewModel @Inject constructor(
             dataState = dataState.copy(
                 fromCryptoCurrency = fromToken,
                 toCryptoCurrency = toToken,
+                selectedProvider = null,
             )
             startLoadingQuotes(
                 fromToken = fromToken,
@@ -675,10 +710,17 @@ internal class SwapViewModel @Inject constructor(
                     setupLoadedState(selectedProvider, updatedState, fromToken)
                 }
             },
-            onProviderClick = {
+            onProviderClick = { providerId ->
+                val states = dataState.lastLoadedSwapStates
+                    .filter { it.value is SwapState.QuotesLoadedState }
+                    .mapValues { it.value as SwapState.QuotesLoadedState }
+                val bestRatedProviderId = findBestQuoteProvider(states)?.providerId ?: providerId
+                val unavailableProviders = getUnavailableProvidersFor(dataState.lastLoadedSwapStates)
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
-                    selectedProviderId = it,
+                    selectedProviderId = providerId,
+                    bestRatedProviderId = bestRatedProviderId,
+                    unavailableProviders = unavailableProviders,
                     providersStates = dataState.lastLoadedSwapStates,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
@@ -695,6 +737,7 @@ internal class SwapViewModel @Inject constructor(
                     )
                 }
             },
+            onBuyClick = {},
         )
     }
 
@@ -734,6 +777,25 @@ internal class SwapViewModel @Inject constructor(
         }
 
         return groupToFind.available.find { idToFind == it.currencyStatus.currency.id.value }?.providers ?: emptyList()
+    }
+
+    private fun getAllProviders(): List<SwapProvider> {
+        dataState.tokensDataState?.let { data ->
+            val allProviders =
+                data.fromGroup.available.flatMap { it.providers } + data.toGroup.available.flatMap { it.providers }
+            return allProviders.distinct()
+        } ?: return emptyList()
+    }
+
+    private fun getUnavailableProvidersFor(state: Map<SwapProvider, SwapState>): List<SwapProvider> {
+        return getAllProviders()
+            .mapNotNull {
+                if (state.containsKey(it)) {
+                    null
+                } else {
+                    it
+                }
+            }
     }
 
     companion object {
