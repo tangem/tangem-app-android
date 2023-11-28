@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.domain
 
 import arrow.core.getOrElse
-import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
@@ -383,7 +382,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     amount = amount,
                     fee = fee,
                     providerId = swapProvider.providerId,
-                    userWalletId = requireNotNull(getSelectedWallet()).walletId
+                    userWalletId = requireNotNull(getSelectedWallet()).walletId,
                 )
             }
             ExchangeProviderType.DEX -> {
@@ -484,7 +483,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         fee: TxFee,
         providerId: String,
-        userWalletId: UserWalletId
+        userWalletId: UserWalletId,
     ): TxState {
         val exchangeData = repository.getExchangeData(
             fromContractAddress = currencyToSend.currency.getContractAddress(),
@@ -510,37 +509,38 @@ internal class SwapInteractorImpl @Inject constructor(
         val result = sendTransactionUseCase(
             requireNotNull(txData),
             userWallet = requireNotNull(getSelectedWallet()),
-            network = currencyToSend.currency.network
+            network = currencyToSend.currency.network,
         )
 
-
         return result.fold(ifLeft = {
-            when(it){
+            when (it) {
                 is SendTransactionError.NetworkError -> TxState.NetworkError
                 is SendTransactionError.DataError -> TxState.BlockchainError
                 SendTransactionError.DemoCardError -> TxState.UnknownError
                 else -> TxState.UnknownError
             }
-
         }, ifRight = {
-            TxState.TxSent(
-                fromAmount = amountFormatter.formatSwapAmountToUI(
-                    amount,
-                    currencyToSend.currency.symbol,
-                ),
-                toAmount = amountFormatter.formatSwapAmountToUI(
-                    exchangeData.dataModel.toTokenAmount,
-                    currencyToGet.currency.symbol,
-                ),
-                txAddress = userWalletManager.getLastTransactionHash(currencyToSend.currency.network.backendId, derivationPath) ?: "",
-            )
-            TxState.TxSent(
-                txAddress = userWalletManager.getLastTransactionHash(
-                    networkId = currencyToSend.currency.network.backendId,
-                    derivationPath = derivationPath
-                ) ?: ""
-            )
-        })
+                TxState.TxSent(
+                    fromAmount = amountFormatter.formatSwapAmountToUI(
+                        amount,
+                        currencyToSend.currency.symbol,
+                    ),
+                    toAmount = amountFormatter.formatSwapAmountToUI(
+                        exchangeData.dataModel.toTokenAmount,
+                        currencyToGet.currency.symbol,
+                    ),
+                    txAddress = userWalletManager.getLastTransactionHash(
+                        currencyToSend.currency.network.backendId,
+                        derivationPath,
+                    ) ?: "",
+                )
+                TxState.TxSent(
+                    txAddress = userWalletManager.getLastTransactionHash(
+                        networkId = currencyToSend.currency.network.backendId,
+                        derivationPath = derivationPath,
+                    ) ?: "",
+                )
+            },)
     }
 
     @Deprecated("used in old swap mechanism")
