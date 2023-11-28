@@ -4,6 +4,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
@@ -68,11 +69,11 @@ interface SwapInteractor {
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun onSwap(
-        exchangeProviderType: ExchangeProviderType,
+        swapProvider: SwapProvider,
         networkId: String,
-        swapData: SwapDataModel,
-        currencyToSend: CryptoCurrency,
-        currencyToGet: CryptoCurrency,
+        swapData: SwapDataModel?,
+        currencyToSend: CryptoCurrencyStatus,
+        currencyToGet: CryptoCurrencyStatus,
         amountToSwap: String,
         fee: TxFee,
     ): TxState
