@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
@@ -18,6 +19,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -33,7 +35,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
         modifier = Modifier.background(TangemTheme.colors.background.primary),
     ) {
         Text(
-            text = "Choose provider",
+            text = stringResource(R.string.express_choose_providers_title),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier
@@ -41,7 +43,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                 .align(Alignment.CenterHorizontally),
         )
         Text(
-            text = "Providers facilitate transactions, ensuring smooth and efficient token exchanges",
+            text = stringResource(R.string.express_choose_providers_subtitle),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             modifier = Modifier
