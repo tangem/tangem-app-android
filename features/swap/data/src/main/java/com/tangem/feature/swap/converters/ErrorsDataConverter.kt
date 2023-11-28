@@ -11,13 +11,11 @@ internal class ErrorsDataConverter(
 ) : Converter<String, DataError> {
 
     @Suppress("MagicNumber")
-    override fun convert(errorBody: String): DataError {
+    override fun convert(value: String): DataError {
         try {
-            val errorResponse = jsonAdapter.fromJson(errorBody)
+            val error = jsonAdapter.fromJson(value)?.error ?: return DataError.UnknownError
 
-            val error = errorResponse?.error ?: return DataError.UnknownError()
-
-            val dataError = when (error.code) {
+            return when (error.code) {
                 2010 -> DataError.BadRequest(code = error.code)
                 2210 -> DataError.ExchangeProviderNotFoundError(code = error.code)
                 2220 -> DataError.ExchangeProviderNotActiveError(code = error.code)
@@ -41,12 +39,10 @@ internal class ErrorsDataConverter(
                     receivedFromDecimals = requireNotNull(error.value?.receivedFromDecimals),
                     expressFromDecimals = requireNotNull(error.value?.expressFromDecimals),
                 )
-                else -> DataError.UnknownError()
+                else -> DataError.UnknownError
             }
-
-            return dataError
         } catch (e: Exception) {
-            return DataError.UnknownError()
+            return DataError.UnknownError
         }
     }
 }
