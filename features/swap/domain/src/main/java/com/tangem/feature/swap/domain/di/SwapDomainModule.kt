@@ -35,9 +35,6 @@ class SwapDomainModule {
         swapRepository: SwapRepository,
         userWalletManager: UserWalletManager,
         transactionManager: TransactionManager,
-        currenciesRepository: CurrenciesRepository,
-        networksRepository: NetworksRepository,
-        walletFeatureToggles: WalletFeatureToggles,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
@@ -51,9 +48,6 @@ class SwapDomainModule {
             repository = swapRepository,
             cache = SwapDataCacheImpl(),
             allowPermissionsHandler = AllowPermissionsHandlerImpl(),
-            currenciesRepository = currenciesRepository,
-            networksRepository = networksRepository,
-            walletFeatureToggles = walletFeatureToggles,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
@@ -114,7 +108,7 @@ class SwapDomainModule {
 
     @SwapScope
     @Provides
-    fun provideDemoCardUseCase() : IsDemoCardUseCase {
+    fun provideDemoCardUseCase(): IsDemoCardUseCase {
         return IsDemoCardUseCase(config = DemoConfig())
     }
 
@@ -129,10 +123,9 @@ class SwapDomainModule {
         return SendTransactionUseCase(
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
-            walletManagersFacade = walletManagersFacade
+            walletManagersFacade = walletManagersFacade,
         )
     }
-
 }
 
 @Qualifier
