@@ -195,8 +195,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Chia, Blockchain.ChiaTestnet -> "chia"
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
-        Blockchain.Decimal -> "decimal"
-        Blockchain.DecimalTestnet -> "decimal/test"
+        Blockchain.Decimal, Blockchain.DecimalTestnet -> "decimal"
         Blockchain.Unknown -> "unknown"
     }
 }

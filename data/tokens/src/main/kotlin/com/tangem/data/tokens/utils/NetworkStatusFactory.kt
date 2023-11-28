@@ -2,6 +2,7 @@ package com.tangem.data.tokens.utils
 
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
@@ -20,12 +21,12 @@ internal class NetworkStatusFactory {
                 is UpdateWalletManagerResult.MissedDerivation -> NetworkStatus.MissedDerivation
                 is UpdateWalletManagerResult.Unreachable -> NetworkStatus.Unreachable
                 is UpdateWalletManagerResult.NoAccount -> NetworkStatus.NoAccount(
-                    address = getNetworkAddress(result.defaultAddress, result.addresses),
+                    address = getNetworkAddress(result.selectedAddress, result.addresses),
                     amountToCreateAccount = result.amountToCreateAccount,
                     errorMessage = result.errorMessage,
                 )
                 is UpdateWalletManagerResult.Verified -> NetworkStatus.Verified(
-                    address = getNetworkAddress(result.defaultAddress, result.addresses),
+                    address = getNetworkAddress(result.selectedAddress, result.addresses),
                     amounts = formatAmounts(result.currenciesAmounts, currencies),
                     pendingTransactions = formatTransactions(
                         transactions = result.currentTransactions,
@@ -92,11 +93,26 @@ internal class NetworkStatusFactory {
         return transactions.mapTo(hashSetOf()) { it.txHistoryItem }
     }
 
-    private fun getNetworkAddress(defaultAddress: String, availableAddresses: Set<String>): NetworkAddress {
+    private fun getNetworkAddress(selectedAddress: String, availableAddresses: Set<Address>): NetworkAddress {
+        val defaultAddress = availableAddresses
+            .firstOrNull { it.value == selectedAddress }
+            ?.let(::mapToDomainAddress)
+
+        requireNotNull(defaultAddress) { "Selected address must not be null" }
+
         return if (availableAddresses.size != 1) {
-            NetworkAddress.Selectable(defaultAddress, availableAddresses)
+            NetworkAddress.Selectable(defaultAddress, availableAddresses.mapTo(hashSetOf(), ::mapToDomainAddress))
         } else {
             NetworkAddress.Single(defaultAddress)
         }
+    }
+
+    private fun mapToDomainAddress(address: Address): NetworkAddress.Address {
+        val type = when (address.type) {
+            Address.Type.Primary -> NetworkAddress.Address.Type.Primary
+            Address.Type.Secondary -> NetworkAddress.Address.Type.Secondary
+        }
+
+        return NetworkAddress.Address(address.value, type)
     }
 }
