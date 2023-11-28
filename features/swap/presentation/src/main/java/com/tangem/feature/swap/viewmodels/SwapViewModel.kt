@@ -17,6 +17,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -346,11 +347,11 @@ internal class SwapViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
-                    exchangeProviderType = requireNotNull(dataState.selectedProvider?.type),
+                    swapProvider = requireNotNull(dataState.selectedProvider),
                     networkId = dataState.networkId,
-                    swapData = requireNotNull(dataState.swapDataModel),
-                    currencyToSend = requireNotNull(dataState.fromCryptoCurrency?.currency),
-                    currencyToGet = requireNotNull(dataState.toCryptoCurrency?.currency),
+                    swapData = dataState.swapDataModel,
+                    currencyToSend = requireNotNull(dataState.fromCryptoCurrency),
+                    currencyToGet = requireNotNull(dataState.toCryptoCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
                     fee = requireNotNull(dataState.selectedFee),
                 )
@@ -389,6 +390,7 @@ internal class SwapViewModel @Inject constructor(
                     }
                 }
                 .onFailure {
+                    Timber.e(it)
                     startLoadingQuotesFromLastState()
                     makeDefaultAlert()
                 }
