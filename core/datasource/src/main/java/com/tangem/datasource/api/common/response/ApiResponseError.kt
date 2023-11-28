@@ -15,7 +15,7 @@ sealed class ApiResponseError : Exception() {
     data class HttpException(
         val code: Code,
         override val message: String?,
-        val errorBody: String?
+        val errorBody: String?,
     ) : ApiResponseError() {
 
         // region Error Codes
