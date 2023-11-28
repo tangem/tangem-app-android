@@ -36,7 +36,6 @@ internal object TransactionDomainModule {
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
-
         )
     }
 }
