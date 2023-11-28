@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 
 /**
  * Application preferences store.
@@ -31,15 +32,39 @@ class AppPreferencesStore(
         return edit { transform(it) }
     }
 
-    /** Get nullable data [T] by string [key] from [MutablePreferences] */
+    /**
+     * Get nullable data [T] by string [key] from [MutablePreferences]
+     *
+     * Warning: This method cannot be used for T with parameterized types (e.g. List, Set, etc.).
+     *
+     * @see getObjectList
+     *  */
     inline fun <reified T> MutablePreferences.getObject(key: Preferences.Key<String>): T? {
-        val adapter = moshi.adapter(T::class.java)
+        val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
         return this[key]?.let(adapter::fromJson)
     }
 
-    /** Set data [T] by string [key] to [MutablePreferences] */
+    /** Get nullable list of data [T] by string [key] */
+    inline fun <reified T> MutablePreferences.getObjectList(key: Preferences.Key<String>): List<T>? {
+        val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
+        return this[key]?.let(adapter::fromJson)
+    }
+
+    /**
+     * Set data [T] by string [key] to [MutablePreferences]
+     *
+     * Warning: This method cannot be used for T with parameterized types (e.g. List, Set, etc.).
+     *
+     * @see setObjectList
+     * */
     inline fun <reified T> MutablePreferences.setObject(key: Preferences.Key<String>, value: T) {
-        val adapter = moshi.adapter(T::class.java)
+        val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
+        this[key] = adapter.toJson(value)
+    }
+
+    /** Set list of data [T] by string [key] to [MutablePreferences] */
+    inline fun <reified T> MutablePreferences.setObjectList(key: Preferences.Key<String>, value: List<T>) {
+        val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
         this[key] = adapter.toJson(value)
     }
 }
