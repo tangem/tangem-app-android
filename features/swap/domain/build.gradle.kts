@@ -25,6 +25,8 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.demo)
+    implementation(projects.domain.card)
 
     /** Core modules */
     implementation(projects.core.utils)
