@@ -50,7 +50,7 @@ private fun getNetworkDerivationPath(
     }
 }
 
-private fun getNetworkStandardType(blockchain: Blockchain): Network.StandardType {
+internal fun getNetworkStandardType(blockchain: Blockchain): Network.StandardType {
     return when (blockchain) {
         Blockchain.Ethereum, Blockchain.EthereumTestnet -> Network.StandardType.ERC20
         Blockchain.BSC, Blockchain.BSCTestnet -> Network.StandardType.BEP20
