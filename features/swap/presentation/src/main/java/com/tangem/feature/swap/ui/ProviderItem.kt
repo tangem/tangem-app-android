@@ -76,6 +76,7 @@ fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun ProviderContentState(
     state: ProviderState.Content,
