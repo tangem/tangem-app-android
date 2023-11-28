@@ -1,11 +1,13 @@
 package com.tangem.feature.swap
 
+import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
@@ -23,10 +25,10 @@ import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
-import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -43,6 +45,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val configManager: ConfigManager,
     private val walletManagersFacade: WalletManagersFacade,
     private val walletsStateHolder: WalletsStateHolder,
+    private val errorsDataConverter: ErrorsDataConverter,
 ) : SwapRepository {
 
     private val tokensConverter = TokensConverter()
@@ -165,7 +168,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                     ),
                 )
             } catch (ex: Exception) {
-                AggregatedSwapDataModel(null, mapErrors(ex.message))
+                AggregatedSwapDataModel(null, getDataError(ex))
             }
         }
     }
@@ -204,7 +207,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                     dataModel = expressDataConverter.convert(response),
                 )
             } catch (ex: Exception) {
-                AggregatedSwapDataModel(null, mapErrors(ex.message))
+                AggregatedSwapDataModel(null, getDataError(ex))
             }
         }
     }
@@ -299,6 +302,14 @@ internal class SwapRepositoryImpl @Inject constructor(
                 ),
             ),
         )
+    }
+
+    private fun getDataError(ex: Exception) : DataError {
+        return if (ex is ApiResponseError.HttpException) {
+            errorsDataConverter.convert(ex.errorBody ?: "")
+        } else {
+            DataError.UnknownError()
+        }
     }
 
     companion object {
