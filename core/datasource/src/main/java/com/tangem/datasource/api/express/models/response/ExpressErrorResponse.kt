@@ -2,7 +2,6 @@ package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
 import java.math.BigDecimal
-import java.math.BigInteger
 
 data class ExpressErrorResponse(
     @Json(name = "error")
