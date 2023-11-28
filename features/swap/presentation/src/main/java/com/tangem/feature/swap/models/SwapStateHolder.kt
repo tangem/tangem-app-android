@@ -121,6 +121,8 @@ sealed interface SwapWarning {
      * @property priceImpact in format = 10 (means 10%)
      */
     data class HighPriceImpact(val priceImpact: Int, val notificationConfig: NotificationConfig) : SwapWarning
+    data class TooSmallAmountWarning(val notificationConfig: NotificationConfig) : SwapWarning
+    data class UnableToCoverFeeWarning(val notificationConfig: NotificationConfig) : SwapWarning
 }
 
 enum class GenericWarningType {
