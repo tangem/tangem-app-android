@@ -11,7 +11,6 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.feature.swap.SwapRepositoryImpl
 import com.tangem.feature.swap.converters.ErrorsDataConverter
-import com.tangem.feature.swap.converters.ExpressDataConverter
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -50,9 +49,7 @@ internal class SwapDataModule {
 
     @Provides
     @Singleton
-    internal fun provideErrorsConverter(
-        @NetworkMoshi moshi: Moshi
-    ) : ErrorsDataConverter {
+    internal fun provideErrorsConverter(@NetworkMoshi moshi: Moshi): ErrorsDataConverter {
         val jsonAdapter = moshi.adapter(ExpressErrorResponse::class.java)
         return ErrorsDataConverter(jsonAdapter)
     }
