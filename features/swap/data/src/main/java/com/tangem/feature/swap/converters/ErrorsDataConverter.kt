@@ -10,6 +10,7 @@ internal class ErrorsDataConverter(
     private val jsonAdapter: JsonAdapter<ExpressErrorResponse>,
 ) : Converter<String, DataError> {
 
+    @Suppress("MagicNumber")
     override fun convert(errorBody: String): DataError {
         try {
             val errorResponse = jsonAdapter.fromJson(errorBody)
@@ -26,18 +27,19 @@ internal class ErrorsDataConverter(
                     code = error.code,
                     amount = SwapAmount(
                         requireNotNull(error.value?.minAmount),
-                        requireNotNull(error.value?.decimals)
-                    )
+                        requireNotNull(error.value?.decimals),
+                    ),
                 )
                 2260 -> DataError.ExchangeNotEnoughAllowanceError(
                     code = error.code,
-                    currentAllowance = requireNotNull(error.value?.currentAllowance)
+                    currentAllowance = requireNotNull(error.value?.currentAllowance),
                 )
                 2270 -> DataError.ExchangeNotEnoughBalanceError(code = error.code)
                 2280 -> DataError.ExchangeInvalidAddressError(code = error.code)
-                2290 -> DataError.ExchangeInvalidFromDecimalsError(code = error.code,
+                2290 -> DataError.ExchangeInvalidFromDecimalsError(
+                    code = error.code,
                     receivedFromDecimals = requireNotNull(error.value?.receivedFromDecimals),
-                    expressFromDecimals = requireNotNull(error.value?.expressFromDecimals)
+                    expressFromDecimals = requireNotNull(error.value?.expressFromDecimals),
                 )
                 else -> DataError.UnknownError()
             }
