@@ -12,7 +12,11 @@ sealed class ApiResponseError : Exception() {
      * @property code The HTTP status code.
      * @property message A human-readable message describing the error.
      */
-    data class HttpException(val code: Code, override val message: String?) : ApiResponseError() {
+    data class HttpException(
+        val code: Code,
+        override val message: String?,
+        val errorBody: String?
+    ) : ApiResponseError() {
 
         // region Error Codes
         enum class Code(val code: Int) {
