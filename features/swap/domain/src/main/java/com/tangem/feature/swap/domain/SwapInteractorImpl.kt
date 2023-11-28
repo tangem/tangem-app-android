@@ -535,12 +535,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 ),
                 txAddress = userWalletManager.getLastTransactionHash(currencyToSend.currency.network.backendId, derivationPath) ?: "",
             )
-            TxState.TxSent(
-                txAddress = userWalletManager.getLastTransactionHash(
-                    networkId = currencyToSend.currency.network.backendId,
-                    derivationPath = derivationPath
-                ) ?: ""
-            )
         })
     }
 

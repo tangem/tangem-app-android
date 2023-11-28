@@ -381,7 +381,6 @@ internal class DefaultCurrenciesRepository(
     ) {
         try {
             val tokensList = userTokens.tokens
-                .distinctBy { it.networkId }
                 .map {
                     LeastTokenInfo(
                         contractAddress = it.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
