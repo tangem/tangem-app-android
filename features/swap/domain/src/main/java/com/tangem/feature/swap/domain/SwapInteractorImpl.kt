@@ -3,14 +3,11 @@ package com.tangem.feature.swap.domain
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.Quote
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -27,7 +24,6 @@ import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
@@ -48,9 +44,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val repository: SwapRepository,
     private val cache: SwapDataCache,
     private val allowPermissionsHandler: AllowPermissionsHandler,
-    private val currenciesRepository: CurrenciesRepository,
-    private val networksRepository: NetworksRepository,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val walletManagersFacade: WalletManagersFacade,
@@ -58,11 +51,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val quotesRepository: QuotesRepository,
     private val dispatcher: CoroutineDispatcherProvider,
 ) : SwapInteractor {
-
-    // TODO: Move to DI
-    private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
-        AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
-    }
 
     private val getFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
         GetFeeUseCase(walletManagersFacade, dispatcher)
@@ -533,12 +521,6 @@ internal class SwapInteractorImpl @Inject constructor(
                     txAddress = userWalletManager.getLastTransactionHash(
                         currencyToSend.currency.network.backendId,
                         derivationPath,
-                    ) ?: "",
-                )
-                TxState.TxSent(
-                    txAddress = userWalletManager.getLastTransactionHash(
-                        networkId = currencyToSend.currency.network.backendId,
-                        derivationPath = derivationPath,
                     ) ?: "",
                 )
             },)
