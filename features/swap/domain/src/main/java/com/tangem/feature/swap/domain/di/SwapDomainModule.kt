@@ -1,10 +1,14 @@
 package com.tangem.feature.swap.domain.di
 
+import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -36,6 +40,7 @@ class SwapDomainModule {
         walletFeatureToggles: WalletFeatureToggles,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+        @SwapScope sendTransactionUseCase: SendTransactionUseCase,
         quotesRepository: QuotesRepository,
         walletManagersFacade: WalletManagersFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
@@ -51,6 +56,7 @@ class SwapDomainModule {
             walletFeatureToggles = walletFeatureToggles,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
+            sendTransactionUseCase = sendTransactionUseCase,
             quotesRepository = quotesRepository,
             walletManagersFacade = walletManagersFacade,
             dispatcher = coroutineDispatcherProvider,
@@ -105,6 +111,28 @@ class SwapDomainModule {
             dispatchers = dispatchers,
         )
     }
+
+    @SwapScope
+    @Provides
+    fun provideDemoCardUseCase() : IsDemoCardUseCase {
+        return IsDemoCardUseCase(config = DemoConfig())
+    }
+
+    @SwapScope
+    @Provides
+    @Singleton
+    fun provideSendTransactionUseCase(
+        @SwapScope isDemoCardUseCase: IsDemoCardUseCase,
+        walletManagersFacade: WalletManagersFacade,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): SendTransactionUseCase {
+        return SendTransactionUseCase(
+            isDemoCardUseCase = isDemoCardUseCase,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            walletManagersFacade = walletManagersFacade
+        )
+    }
+
 }
 
 @Qualifier
