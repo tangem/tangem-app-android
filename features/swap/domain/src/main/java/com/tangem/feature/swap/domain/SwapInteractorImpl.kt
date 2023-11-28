@@ -503,8 +503,6 @@ internal class SwapInteractorImpl @Inject constructor(
             toAddress = currencyToGet.value.networkAddress?.defaultAddress ?: "",
         )
 
-        // val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
-
         val txData = walletManagersFacade.createTransaction(
             amount = amount.value.convertToAmount(currencyToSend.currency),
             fee = Fee.Common(fee.feeValue.convertToAmount(currencyToSend.currency)),
@@ -520,9 +518,32 @@ internal class SwapInteractorImpl @Inject constructor(
             network = currencyToSend.currency.network
         )
 
+
         return result.fold(ifLeft = {
-            TxState.UnknownError
+            when(it){
+                is SendTransactionError.NetworkError -> TxState.NetworkError
+                is SendTransactionError.DataError -> TxState.BlockchainError
+                SendTransactionError.DemoCardError -> TxState.UnknownError
+                else -> TxState.UnknownError
+            }
+
         }, ifRight = {
+            if (walletFeatureToggles.isRedesignedScreenEnabled) {
+                onSuccessNewFlow(currencyToGet.currency)
+            } else {
+                onSuccessLegacyFlow(currencyToGet.currency)
+            }
+            TxState.TxSent(
+                fromAmount = amountFormatter.formatSwapAmountToUI(
+                    amount,
+                    currencyToSend.currency.symbol,
+                ),
+                toAmount = amountFormatter.formatSwapAmountToUI(
+                    exchangeData.dataModel.toTokenAmount,
+                    currencyToGet.currency.symbol,
+                ),
+                txAddress = userWalletManager.getLastTransactionHash(currencyToSend.currency.network.backendId, derivationPath) ?: "",
+            )
             TxState.TxSent(
                 txAddress = userWalletManager.getLastTransactionHash(
                     networkId = currencyToSend.currency.network.backendId,
