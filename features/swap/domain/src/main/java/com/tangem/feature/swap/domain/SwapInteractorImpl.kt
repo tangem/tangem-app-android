@@ -458,11 +458,6 @@ internal class SwapInteractorImpl @Inject constructor(
         )
         return when (result) {
             is SendTxResult.Success -> {
-                if (walletFeatureToggles.isRedesignedScreenEnabled) {
-                    onSuccessNewFlow(currencyToGet)
-                } else {
-                    onSuccessLegacyFlow(currencyToGet)
-                }
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -528,11 +523,6 @@ internal class SwapInteractorImpl @Inject constructor(
             }
 
         }, ifRight = {
-            if (walletFeatureToggles.isRedesignedScreenEnabled) {
-                onSuccessNewFlow(currencyToGet.currency)
-            } else {
-                onSuccessLegacyFlow(currencyToGet.currency)
-            }
             TxState.TxSent(
                 fromAmount = amountFormatter.formatSwapAmountToUI(
                     amount,
@@ -565,24 +555,6 @@ internal class SwapInteractorImpl @Inject constructor(
     @Deprecated("used in old swap mechanism")
     override fun isAvailableToSwap(networkId: String): Boolean {
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
-    }
-
-    @Deprecated("used in old swap mechanism")
-    private suspend fun onSuccessLegacyFlow(currency: CryptoCurrency) {
-        userWalletManager.addToken(swapCurrencyConverter.convert(currency), derivationPath)
-        userWalletManager.refreshWallet()
-    }
-
-    @Deprecated("used in old swap mechanism")
-    private suspend fun onSuccessNewFlow(currency: CryptoCurrency) {
-        getSelectedWalletSyncUseCase().fold(
-            ifRight = { userWallet ->
-                addCryptoCurrenciesUseCase(userWallet.walletId, currency)
-            },
-            ifLeft = {
-                Timber.e("Swap Error on getSelectedWalletUseCase")
-            },
-        )
     }
 
     @Deprecated("used in old swap mechanism")
