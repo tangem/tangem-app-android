@@ -120,8 +120,11 @@ internal class StateBuilder(
             warnings = listOf(
                 SwapWarning.NoAvailableTokensToSwap(
                     notificationConfig = NotificationConfig(
-                        title = stringReference("No tokens"),
-                        subtitle = stringReference("Swap tokens not available"),
+                        title = resourceReference(R.string.warning_express_no_exchangeable_coins_title),
+                        subtitle = resourceReference(
+                            id = R.string.warning_express_no_exchangeable_coins_description,
+                            formatArgs = wrappedList(fromToken.currency.name),
+                        ),
                         iconResId = R.drawable.img_attention_20,
                     ),
                 ),
@@ -210,8 +213,9 @@ internal class StateBuilder(
                 ),
             )
         }
-        if (quoteModel.permissionState !is PermissionDataState.PermissionReadyForRequest &&
-            !quoteModel.preparedSwapConfigState.isFeeEnough
+        if (quoteModel.preparedSwapConfigState.isAllowedToSpend &&
+            !quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.preparedSwapConfigState.isBalanceEnough
         ) {
             warnings.add(
                 SwapWarning.UnableToCoverFeeWarning(
@@ -439,7 +443,7 @@ internal class StateBuilder(
 
         return FeeItemState.Content(
             feeType = feeType,
-            title = stringReference("Fee"), // todo replace with string
+            title = resourceReference(R.string.common_fee_label),
             amountCrypto = fee.feeCryptoFormatted,
             symbolCrypto = fee.cryptoSymbol,
             amountFiatFormatted = fee.feeFiatFormatted,
@@ -611,6 +615,7 @@ internal class StateBuilder(
         )
     }
 
+    @Suppress("LongParameterList")
     fun showSelectProviderBottomSheet(
         uiState: SwapStateHolder,
         selectedProviderId: String,
@@ -624,7 +629,7 @@ internal class StateBuilder(
         }
         val unavailableProviderStates = unavailableProviders.map {
             it.convertToUnavailableProviderState(
-                alertText = stringReference("Unavailable for pair"),
+                alertText = resourceReference(R.string.express_provider_not_available),
                 selectionType = ProviderState.SelectionType.NONE,
             )
         }
@@ -701,7 +706,7 @@ internal class StateBuilder(
         return listOf(
             FeeItemState.Content(
                 feeType = this.normalFee.feeType,
-                title = stringReference("Fee"), // todo replace with string
+                title = resourceReference(R.string.common_fee_label),
                 amountCrypto = this.normalFee.feeCryptoFormatted,
                 symbolCrypto = this.normalFee.cryptoSymbol,
                 amountFiatFormatted = this.normalFee.feeFiatFormatted,
@@ -710,7 +715,7 @@ internal class StateBuilder(
             ),
             FeeItemState.Content(
                 feeType = this.priorityFee.feeType,
-                title = stringReference("Fee"), // todo replace with string
+                title = resourceReference(R.string.common_fee_label),
                 amountCrypto = this.priorityFee.feeCryptoFormatted,
                 symbolCrypto = this.priorityFee.cryptoSymbol,
                 amountFiatFormatted = this.priorityFee.feeFiatFormatted,
@@ -733,8 +738,9 @@ internal class StateBuilder(
                 onProviderClick = onProviderSelect,
                 selectionType = ProviderState.SelectionType.SELECT,
             )
+// [REDACTED_TODO_COMMENT]
             is SwapState.SwapError -> provider.convertToUnavailableProviderState(
-                alertText = stringReference("Available from"),
+                alertText = resourceReference(R.string.express_provider_min_amount, wrappedList("10")),
                 selectionType = ProviderState.SelectionType.NONE,
                 onProviderClick = onProviderSelect,
             )
@@ -765,15 +771,18 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         onBuyClick: () -> Unit,
     ): NotificationConfig {
-// [REDACTED_TODO_COMMENT]
         return NotificationConfig(
-            title = stringReference("Unable to cover ${fromToken.name} fee"),
-            subtitle = stringReference(
-                "To make transaction you need to deposit some ${fromToken.name} ${fromToken.symbol}",
+            title = resourceReference(
+                R.string.warning_express_not_enough_fee_for_token_tx_title,
+                wrappedList(fromToken.network.name),
+            ),
+            subtitle = resourceReference(
+                R.string.warning_express_not_enough_fee_for_token_tx_description,
+                wrappedList(fromToken.network.name, fromToken.network.currencySymbol),
             ),
             iconResId = fromToken.networkIconResId,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = stringReference("Buy ${fromToken.name}"),
+                text = resourceReference(R.string.common_buy_currency, wrappedList(fromToken.name)),
                 onClick = onBuyClick,
             ),
         )
