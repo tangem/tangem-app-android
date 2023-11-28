@@ -114,7 +114,7 @@ class SwapDomainModule {
 
     @SwapScope
     @Provides
-    fun provideDemoCardUseCase() : IsDemoCardUseCase {
+    fun provideDemoCardUseCase(): IsDemoCardUseCase {
         return IsDemoCardUseCase(config = DemoConfig())
     }
 
@@ -129,10 +129,9 @@ class SwapDomainModule {
         return SendTransactionUseCase(
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
-            walletManagersFacade = walletManagersFacade
+            walletManagersFacade = walletManagersFacade,
         )
     }
-
 }
 
 @Qualifier
