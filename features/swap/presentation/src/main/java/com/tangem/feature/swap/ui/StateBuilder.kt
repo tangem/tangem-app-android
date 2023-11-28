@@ -502,7 +502,7 @@ internal class StateBuilder(
             // todo use if needed later
             // DataError.InsufficientLiquidity -> TODO()
             // DataError.NoError -> TODO()
-            is DataError.Error -> addWarning(uiState, error.message, true, onClick)
+            is DataError.ExchangeTooSmallAmountError -> addWarning(uiState, error.amount.toString(), true, onClick)
             else -> addWarning(uiState, null, false) {}
         }
     }
