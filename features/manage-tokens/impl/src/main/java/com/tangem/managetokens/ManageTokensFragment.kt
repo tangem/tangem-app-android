@@ -2,11 +2,15 @@ package com.tangem.managetokens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
+import com.tangem.managetokens.presentation.managetokens.ui.ManageTokensScreen
+import com.tangem.managetokens.presentation.managetokens.viewmodels.ManageTokensViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -26,16 +30,16 @@ internal class ManageTokensFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        // val viewModel = hiltViewModel<ManageTokensViewModel>()
+        val viewModel = hiltViewModel<ManageTokensViewModel>()
         // viewModel.router = [REDACTED_EMAIL]
         //
-        // LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
+        LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
 
         val systemBarsColor = TangemTheme.colors.background.secondary
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
 
-        // ManageTokensScreen(state = viewModel.uiState)
+        ManageTokensScreen(state = viewModel.uiState)
     }
 }
