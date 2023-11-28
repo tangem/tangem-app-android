@@ -13,12 +13,15 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -64,6 +67,7 @@ fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected
             ProviderUnavailableState(
                 state = state,
                 modifier = modifier,
+                isSelected = isSelected,
             )
         }
         is ProviderState.Empty -> {
@@ -127,31 +131,42 @@ private fun ProviderContentState(
                     }
                 }
                 Row(
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+                    modifier = Modifier.padding(
+                        top = TangemTheme.dimens.spacing8,
+                        end = TangemTheme.dimens.spacing56,
+                    ),
                 ) {
                     Text(
                         text = state.rate,
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
                     )
                     if (state.percentLowerThenBest != null) {
                         Text(
-                            text = "${state.percentLowerThenBest}%", // todo add to strings
+                            text = "${state.percentLowerThenBest}%",
                             style = TangemTheme.typography.body2,
                             color = TangemTheme.colors.text.warning,
                             modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
                         )
                     }
                 }
             }
         }
 
-        ProviderChevron(state = state, isSelected = isSelected)
+        ProviderChevron(selectionType = state.selectionType, isSelected = isSelected)
     }
 }
 
 @Composable
-private fun ProviderUnavailableState(state: ProviderState.Unavailable, modifier: Modifier = Modifier) {
+private fun ProviderUnavailableState(
+    state: ProviderState.Unavailable,
+    isSelected: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier = modifier.fillMaxWidth()) {
         Row {
             val (alpha, colorFilter) = GRAY_SCALE_ALPHA to GrayscaleColorFilter
@@ -195,13 +210,15 @@ private fun ProviderUnavailableState(state: ProviderState.Unavailable, modifier:
                     )
                 }
                 Text(
-                    text = state.alertText,
+                    text = state.alertText.resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
                 )
             }
         }
+
+        ProviderChevron(selectionType = state.selectionType, isSelected = isSelected)
     }
 }
 
@@ -247,8 +264,8 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun BoxScope.ProviderChevron(state: ProviderState.Content, isSelected: Boolean) {
-    when (state.selectionType) {
+private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType, isSelected: Boolean) {
+    when (selectionType) {
         ProviderState.SelectionType.NONE -> {
             /* no-op */
         }
@@ -396,7 +413,8 @@ private fun ProviderItem_Unavailable_Preview() {
         name = "1inch",
         type = "DEX",
         iconUrl = "",
-        alertText = "Unavailable",
+        selectionType = ProviderState.SelectionType.SELECT,
+        alertText = stringReference("Unavailable"),
     )
     Column {
         TangemTheme(isDark = false) {
@@ -407,6 +425,12 @@ private fun ProviderItem_Unavailable_Preview() {
 
         TangemTheme(isDark = true) {
             ProviderItemBlock(state = state)
+        }
+
+        SpacerH24()
+
+        TangemTheme(isDark = true) {
+            ProviderItem(state = state, isSelected = true)
         }
     }
 }
