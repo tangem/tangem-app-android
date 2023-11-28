@@ -788,14 +788,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun getUnavailableProvidersFor(state: Map<SwapProvider, SwapState>): List<SwapProvider> {
-        return getAllProviders()
-            .mapNotNull {
-                if (state.containsKey(it)) {
-                    null
-                } else {
-                    it
-                }
-            }
+        return getAllProviders().filterNot { it in state }
     }
 
     companion object {
