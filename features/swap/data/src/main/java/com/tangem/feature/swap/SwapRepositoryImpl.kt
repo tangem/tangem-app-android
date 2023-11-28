@@ -307,7 +307,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         return if (ex is ApiResponseError.HttpException) {
             errorsDataConverter.convert(ex.errorBody ?: "")
         } else {
-            DataError.UnknownError()
+            DataError.UnknownError
         }
     }
 
