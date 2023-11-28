@@ -1,6 +1,5 @@
 package com.tangem.feature.swap
 
-import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
@@ -304,7 +303,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun getDataError(ex: Exception) : DataError {
+    private fun getDataError(ex: Exception): DataError {
         return if (ex is ApiResponseError.HttpException) {
             errorsDataConverter.convert(ex.errorBody ?: "")
         } else {
