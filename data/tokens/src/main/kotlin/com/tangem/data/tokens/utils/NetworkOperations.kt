@@ -26,6 +26,7 @@ internal fun getNetwork(
         name = blockchain.fullName,
         isTestnet = blockchain.isTestnet(),
         derivationPath = getNetworkDerivationPath(blockchain, extraDerivationPath, derivationStyleProvider),
+        currencySymbol = blockchain.currency,
         standardType = getNetworkStandardType(blockchain),
     )
 }
