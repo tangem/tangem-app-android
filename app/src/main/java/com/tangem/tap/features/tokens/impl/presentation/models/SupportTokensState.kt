@@ -5,7 +5,7 @@ package com.tangem.tap.features.tokens.impl.presentation.models
  */
 sealed class SupportTokensState {
 
-    object SolanaNetworkUnsupported : SupportTokensState()
+    object NetworkTokensUnsupported : SupportTokensState()
     object UnsupportedCurve : SupportTokensState()
     object SupportedToken : SupportTokensState()
 }
