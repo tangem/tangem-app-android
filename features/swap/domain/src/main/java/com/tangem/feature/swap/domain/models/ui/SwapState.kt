@@ -31,7 +31,10 @@ sealed interface SwapState {
         val zeroAmountEquivalent: String,
     ) : SwapState
 
-    data class SwapError(val error: DataError) : SwapState
+    data class SwapError(
+        val fromTokenInfo: TokenSwapInfo,
+        val error: DataError,
+    ) : SwapState
 }
 
 sealed class PermissionDataState {

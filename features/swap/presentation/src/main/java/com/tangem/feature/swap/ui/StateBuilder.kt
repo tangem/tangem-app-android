@@ -13,6 +13,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
@@ -24,6 +25,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.min
 
 /**
  * State builder creates a specific states for SwapScreen
@@ -175,6 +177,7 @@ internal class StateBuilder(
                 balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
+            warnings = emptyList(),
             fee = FeeItemState.Empty,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             providerState = ProviderState.Loading(),
@@ -291,6 +294,109 @@ internal class StateBuilder(
                 onProviderClick = actions.onProviderClick,
             ),
         )
+    }
+
+    fun createQuotesErrorState(
+        uiStateHolder: SwapStateHolder,
+        swapProvider: SwapProvider,
+        fromToken: TokenSwapInfo,
+        toToken: CryptoCurrencyStatus?,
+        dataError: DataError,
+    ): SwapStateHolder {
+        if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        val warning = getWarningForError(dataError, fromToken.cryptoCurrencyStatus.currency)
+        val providerState = getProviderStateForError(
+            swapProvider = swapProvider,
+            fromToken = fromToken.cryptoCurrencyStatus.currency,
+            dataError = dataError,
+            selectionType = ProviderState.SelectionType.CLICK,
+        )
+        val receiveCardData = toToken?.let {
+            SwapCardState.SwapCardData(
+                type = TransactionCardType.ReceiveCard(),
+                amountTextFieldValue = TextFieldValue(
+                    text = "0",
+                ),
+                amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
+                token = toToken,
+                tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
+                coinId = toToken.currency.network.backendId,
+                isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
+                tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
+                canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
+                balance = toToken.getFormattedAmount(),
+                isBalanceHidden = isBalanceHiddenProvider(),
+            )
+        } ?: SwapCardState.Empty(
+            type = TransactionCardType.ReceiveCard(),
+            amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
+            amountTextFieldValue = TextFieldValue(
+                text = "0",
+            ),
+            canSelectAnotherToken = true,
+        )
+        return uiStateHolder.copy(
+            sendCardData = uiStateHolder.sendCardData.copy(
+                amountEquivalent = getFormattedFiatAmount(fromToken.amountFiat),
+            ),
+            receiveCardData = receiveCardData,
+            warnings = listOf(warning),
+            permissionState = SwapPermissionState.Empty,
+            fee = FeeItemState.Empty,
+            swapButton = SwapButton(
+                enabled = false,
+                loading = false,
+                onClick = actions.onSwapClick,
+            ),
+            updateInProgress = false,
+            providerState = providerState,
+        )
+    }
+
+    private fun getProviderStateForError(
+        swapProvider: SwapProvider,
+        fromToken: CryptoCurrency,
+        dataError: DataError,
+        selectionType: ProviderState.SelectionType,
+    ): ProviderState {
+        return when (dataError) {
+            is DataError.ExchangeTooSmallAmountError -> {
+                swapProvider.convertToUnavailableProviderState(
+                    alertText = resourceReference(
+                        R.string.express_provider_min_amount,
+                        wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                    ),
+                    selectionType = selectionType,
+                    onProviderClick = actions.onProviderClick,
+                )
+            }
+            else -> {
+                ProviderState.Empty()
+            }
+        }
+    }
+
+    private fun getWarningForError(dataError: DataError, fromToken: CryptoCurrency): SwapWarning {
+        return when (dataError) {
+            is DataError.ExchangeTooSmallAmountError -> SwapWarning.TooSmallAmountWarning(
+                notificationConfig = NotificationConfig(
+                    title = resourceReference(
+                        id = R.string.warning_express_too_minimal_amount_title,
+                        formatArgs = wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                    ),
+                    subtitle = resourceReference(R.string.warning_express_too_minimal_amount_description),
+                    iconResId = R.drawable.ic_alert_circle_24,
+                ),
+            )
+            else -> SwapWarning.GeneralWarning(
+                notificationConfig = NotificationConfig(
+                    title = resourceReference(R.string.common_error),
+                    subtitle = resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString())),
+                    iconResId = R.drawable.ic_alert_circle_24,
+                ),
+            )
+        }
     }
 
     fun createQuotesEmptyAmountState(
@@ -505,16 +611,6 @@ internal class StateBuilder(
             ),
             updateInProgress = false,
         )
-    }
-
-    fun mapError(uiState: SwapStateHolder, error: DataError, onClick: () -> Unit): SwapStateHolder {
-        return when (error) {
-// [REDACTED_TODO_COMMENT]
-            // DataError.InsufficientLiquidity -> TODO()
-            // DataError.NoError -> TODO()
-            is DataError.ExchangeTooSmallAmountError -> addWarning(uiState, error.amount.toString(), true, onClick)
-            else -> addWarning(uiState, null, false) {}
-        }
     }
 
     fun addAlert(uiState: SwapStateHolder, onClick: () -> Unit): SwapStateHolder {
@@ -735,11 +831,11 @@ internal class StateBuilder(
                 onProviderClick = onProviderSelect,
                 selectionType = ProviderState.SelectionType.SELECT,
             )
-// [REDACTED_TODO_COMMENT]
-            is SwapState.SwapError -> provider.convertToUnavailableProviderState(
-                alertText = resourceReference(R.string.express_provider_min_amount, wrappedList("10")),
-                selectionType = ProviderState.SelectionType.NONE,
-                onProviderClick = onProviderSelect,
+            is SwapState.SwapError -> getProviderStateForError(
+                swapProvider = provider,
+                fromToken = state.fromTokenInfo.cryptoCurrencyStatus.currency,
+                dataError = state.error,
+                selectionType = ProviderState.SelectionType.SELECT,
             )
         }
     }
@@ -802,10 +898,9 @@ internal class StateBuilder(
         selectionType: ProviderState.SelectionType,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
-        val rate = toTokenInfo.tokenAmount.value.divide(
+        val rate = toTokenInfo.tokenAmount.value.calculateRate(
             fromTokenInfo.tokenAmount.value,
             toTokenInfo.cryptoCurrencyStatus.currency.decimals,
-            RoundingMode.HALF_UP,
         )
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
@@ -831,10 +926,9 @@ internal class StateBuilder(
     ): ProviderState {
         val fromTokenInfo = state.fromTokenInfo
         val toTokenInfo = state.toTokenInfo
-        val rate = toTokenInfo.tokenAmount.value.divide(
+        val rate = toTokenInfo.tokenAmount.value.calculateRate(
             fromTokenInfo.tokenAmount.value,
             toTokenInfo.cryptoCurrencyStatus.currency.decimals,
-            RoundingMode.HALF_UP,
         )
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
@@ -895,6 +989,14 @@ internal class StateBuilder(
         return BigDecimalFormatter.formatFiatAmount(amount, appCurrency.code, appCurrency.symbol)
     }
 
+    private fun SwapAmount.getFormattedCryptoAmount(token: CryptoCurrency): String {
+        return "${this.formatToUIRepresentation()} ${token.network.currencySymbol}"
+    }
+
+    private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
+        return this.divide(to, min(decimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
+    }
+
     private companion object {
         const val ADDRESS_MIN_LENGTH = 11
         const val ADDRESS_FIRST_PART_LENGTH = 7
@@ -902,5 +1004,6 @@ internal class StateBuilder(
         private const val PRICE_IMPACT_THRESHOLD = 0.1
         private const val HUNDRED_PERCENTS = 100
         private const val UNKNOWN_AMOUNT_SIGN = "—"
+        private const val MAX_DECIMALS_TO_SHOW = 8
     }
 }
