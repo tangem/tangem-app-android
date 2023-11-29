@@ -49,6 +49,6 @@ interface TangemExpressApi {
         @Query("toAddress") toAddress: String,
     ): ApiResponse<ExchangeDataResponse>
 
-    @GET("exchange-result")
-    suspend fun getExchangeResults(@Query("txId") txId: String): ApiResponse<ExchangeResultsResponse>
+    @GET("exchange-status")
+    suspend fun getExchangeStatus(@Query("txId") txId: String): ApiResponse<ExchangeStatusResponse>
 }
