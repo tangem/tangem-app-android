@@ -256,6 +256,7 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                 is SwapWarning.HighPriceImpact -> {
                     Notification(
                         config = warning.notificationConfig,
+                        iconTint = TangemTheme.colors.icon.warning,
                     )
                 }
                 is SwapWarning.PermissionNeeded -> {
@@ -278,6 +279,17 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                     )
                 }
                 is SwapWarning.NoAvailableTokensToSwap -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                    )
+                }
+                is SwapWarning.TooSmallAmountWarning -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                        iconTint = TangemTheme.colors.icon.warning,
+                    )
+                }
+                is SwapWarning.UnableToCoverFeeWarning -> {
                     Notification(
                         config = warning.notificationConfig,
                     )
@@ -379,7 +391,7 @@ private val state = SwapStateHolder(
             notificationConfig = NotificationConfig(
                 title = stringReference("No tokens"),
                 subtitle = stringReference("Swap tokens not available"),
-                iconResId = R.drawable.ic_alert_24,
+                iconResId = R.drawable.img_attention_20,
             ),
         ),
     ),
