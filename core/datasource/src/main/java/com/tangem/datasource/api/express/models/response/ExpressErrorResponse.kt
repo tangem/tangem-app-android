@@ -21,7 +21,7 @@ data class ExpressError(
 
 data class ExpressErrorValue(
     @Json(name = "minAmount")
-    val minAmount: BigDecimal?,
+    val minAmount: String?,
 
     @Json(name = "decimals")
     val decimals: Int?,
