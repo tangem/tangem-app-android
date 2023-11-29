@@ -1,12 +1,16 @@
 package com.tangem.feature.swap.di
 
+import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.feature.swap.SwapRepositoryImpl
+import com.tangem.feature.swap.converters.ErrorsDataConverter
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -17,11 +21,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class SwapDataModule {
+internal class SwapDataModule {
 
     @Provides
     @Singleton
-    fun provideSwapRepository(
+    internal fun provideSwapRepository(
         tangemTechApi: TangemTechApi,
         tangemExpressApi: TangemExpressApi,
         oneInchApiFactory: OneInchApiFactory,
@@ -29,6 +33,7 @@ class SwapDataModule {
         configManager: ConfigManager,
         walletManagerFacade: WalletManagersFacade,
         walletsStateHolder: WalletsStateHolder,
+        errorsDataConverter: ErrorsDataConverter,
     ): SwapRepository {
         return SwapRepositoryImpl(
             tangemTechApi = tangemTechApi,
@@ -38,6 +43,14 @@ class SwapDataModule {
             configManager = configManager,
             walletManagersFacade = walletManagerFacade,
             walletsStateHolder = walletsStateHolder,
+            errorsDataConverter = errorsDataConverter,
         )
+    }
+
+    @Provides
+    @Singleton
+    internal fun provideErrorsConverter(@NetworkMoshi moshi: Moshi): ErrorsDataConverter {
+        val jsonAdapter = moshi.adapter(ExpressErrorResponse::class.java)
+        return ErrorsDataConverter(jsonAdapter)
     }
 }
