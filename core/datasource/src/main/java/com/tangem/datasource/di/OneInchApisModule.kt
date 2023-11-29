@@ -4,7 +4,10 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchApiFactory
+import com.tangem.datasource.utils.RequestHeader
+import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
+import com.tangem.lib.auth.AuthBearerProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +24,11 @@ class OneInchApisModule {
 
     @Provides
     @Singleton
-    fun provideOneInchApiFactory(@NetworkMoshi moshi: Moshi, @ApplicationContext context: Context): OneInchApiFactory {
+    fun provideOneInchApiFactory(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        auth1Inch: AuthBearerProvider,
+    ): OneInchApiFactory {
         val networks = mapOf(
             ETH_NETWORK to ONE_INCH_ETH_PATH,
             BSC_NETWORK to ONE_INCH_BSC_PATH,
@@ -38,14 +45,19 @@ class OneInchApisModule {
         for ((network, path) in networks) {
             apiFactory.putApi(
                 networkId = network,
-                api = createOneInchApiWithUrl("$ONE_INCH_BASE_URL$path", moshi, context),
+                api = createOneInchApiWithUrl("$ONE_INCH_BASE_URL$path", moshi, context, auth1Inch),
             )
         }
 
         return apiFactory
     }
 
-    private fun createOneInchApiWithUrl(url: String, moshi: Moshi, context: Context): OneInchApi {
+    private fun createOneInchApiWithUrl(
+        url: String,
+        moshi: Moshi,
+        context: Context,
+        auth1Inch: AuthBearerProvider,
+    ): OneInchApi {
         return Retrofit.Builder()
             .addConverterFactory(
                 MoshiConverterFactory.create(moshi),
@@ -53,6 +65,7 @@ class OneInchApisModule {
             .baseUrl(url)
             .client(
                 OkHttpClient.Builder()
+                    .addHeaders(RequestHeader.AuthBearerHeader(auth1Inch))
                     .addLoggers(context)
                     .build(),
             )
@@ -61,7 +74,7 @@ class OneInchApisModule {
     }
 
     companion object {
-        private const val ONE_INCH_BASE_URL = "https://api-tangem.1inch.io/v5.2/"
+        private const val ONE_INCH_BASE_URL = "https://api.1inch.dev/swap/v5.2/"
         private const val ONE_INCH_ETH_PATH = "1/"
         private const val ONE_INCH_BSC_PATH = "56/"
         private const val ONE_INCH_POLYGON_PATH = "137/"
