@@ -23,8 +23,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletCard
+import kotlinx.collections.immutable.ImmutableList
 
 private const val SHORT_SNAP_ELEMENT_COUNT = 50
 
@@ -54,6 +56,40 @@ internal fun WalletsList(config: WalletsListConfig, lazyListState: LazyListState
             items = config.wallets,
             key = { it.id.stringValue },
             contentType = { it::class.java },
+        ) { state ->
+            WalletCard(
+                state = state,
+                isBalanceHidden = isBalanceHidden,
+                modifier = Modifier
+                    .animateItemPlacement()
+                    .width(itemWidth),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun WalletsList(
+    lazyListState: LazyListState,
+    wallets: ImmutableList<WalletCardState>,
+    isBalanceHidden: Boolean,
+) {
+    val horizontalCardPadding = TangemTheme.dimens.spacing16
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val itemWidth by remember(screenWidth) { derivedStateOf { screenWidth - horizontalCardPadding * 2 } }
+
+    LazyRow(
+        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        state = lazyListState,
+        contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        flingBehavior = rememberWalletsFlingBehaviour(lazyListState = lazyListState, itemWidth = itemWidth),
+    ) {
+        items(
+            items = wallets,
+            key = { it.id.stringValue },
+            contentType = { it.id.stringValue },
         ) { state ->
             WalletCard(
                 state = state,
