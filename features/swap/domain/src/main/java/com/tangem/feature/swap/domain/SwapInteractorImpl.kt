@@ -501,14 +501,16 @@ internal class SwapInteractorImpl @Inject constructor(
             network = currencyToSend.currency.network,
         )
 
-        return result.fold(ifLeft = {
-            when (it) {
-                is SendTransactionError.NetworkError -> TxState.NetworkError
-                is SendTransactionError.DataError -> TxState.BlockchainError
-                SendTransactionError.DemoCardError -> TxState.UnknownError
-                else -> TxState.UnknownError
-            }
-        }, ifRight = {
+        return result.fold(
+            ifLeft = {
+                when (it) {
+                    is SendTransactionError.NetworkError -> TxState.NetworkError
+                    is SendTransactionError.DataError -> TxState.BlockchainError
+                    SendTransactionError.DemoCardError -> TxState.UnknownError
+                    else -> TxState.UnknownError
+                }
+            },
+            ifRight = {
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -523,7 +525,8 @@ internal class SwapInteractorImpl @Inject constructor(
                         derivationPath,
                     ) ?: "",
                 )
-            },)
+            },
+        )
     }
 
     @Deprecated("used in old swap mechanism")
@@ -707,7 +710,14 @@ internal class SwapInteractorImpl @Inject constructor(
                 }
             }
         } else {
-            return SwapState.SwapError(quoteDataModel.error)
+            val rates = getQuotes(fromToken.currency.id)
+            val fromTokenSwapInfo = TokenSwapInfo(
+                tokenAmount = amount,
+                amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
+                    ?: BigDecimal.ZERO,
+                cryptoCurrencyStatus = fromToken,
+            )
+            return SwapState.SwapError(fromTokenSwapInfo, quoteDataModel.error)
         }
     }
 
@@ -787,7 +797,17 @@ internal class SwapInteractorImpl @Inject constructor(
                     ),
                 )
             } else {
-                return SwapState.SwapError(it.error)
+                val rates = getQuotes(fromToken.currency.id)
+                val fromTokenSwapInfo = TokenSwapInfo(
+                    tokenAmount = amount,
+                    amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
+                        ?: BigDecimal.ZERO,
+                    cryptoCurrencyStatus = fromToken,
+                )
+                return SwapState.SwapError(
+                    fromTokenSwapInfo,
+                    it.error,
+                )
             }
         }
     }
