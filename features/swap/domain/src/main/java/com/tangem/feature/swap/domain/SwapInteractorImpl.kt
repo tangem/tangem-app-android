@@ -716,7 +716,14 @@ internal class SwapInteractorImpl @Inject constructor(
                 }
             }
         } else {
-            return SwapState.SwapError(quoteDataModel.error)
+            val rates = getQuotes(fromToken.currency.id)
+            val fromTokenSwapInfo = TokenSwapInfo(
+                tokenAmount = amount,
+                amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
+                    ?: BigDecimal.ZERO,
+                cryptoCurrencyStatus = fromToken,
+            )
+            return SwapState.SwapError(fromTokenSwapInfo, quoteDataModel.error)
         }
     }
 
@@ -796,7 +803,17 @@ internal class SwapInteractorImpl @Inject constructor(
                     ),
                 )
             } else {
-                return SwapState.SwapError(it.error)
+                val rates = getQuotes(fromToken.currency.id)
+                val fromTokenSwapInfo = TokenSwapInfo(
+                    tokenAmount = amount,
+                    amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
+                        ?: BigDecimal.ZERO,
+                    cryptoCurrencyStatus = fromToken,
+                )
+                return SwapState.SwapError(
+                    fromTokenSwapInfo,
+                    it.error,
+                )
             }
         }
     }
