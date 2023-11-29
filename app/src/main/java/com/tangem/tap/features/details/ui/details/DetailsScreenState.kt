@@ -147,7 +147,7 @@ internal object TangemSocialAccounts {
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
         SocialNetworkLink(SocialNetwork.Facebook, "https://www.facebook.com/tangemwallet"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
-        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/@tangem3890"),
+        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/@tangem_official"),
     )
     val accountsRu: ImmutableList<SocialNetworkLink> = persistentListOf(
         SocialNetworkLink(SocialNetwork.Twitter, "https://x.com/tangem"),
@@ -158,6 +158,6 @@ internal object TangemSocialAccounts {
         SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
         SocialNetworkLink(SocialNetwork.Facebook, "https://www.facebook.com/tangemwallet"),
         SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
-        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/@tangem3890"),
+        SocialNetworkLink(SocialNetwork.YouTube, "https://youtube.com/@tangem_official"),
     )
 }
