@@ -8,15 +8,19 @@ plugins {
 
 dependencies {
 
+    /** AndroidX */
+    implementation(deps.androidx.datastore)
+
     /** Project*/
-    implementation(project(":core:datasource"))
-    implementation(project(":core:utils"))
-    implementation(project(":features:swap:domain"))
+    implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+    implementation(projects.features.swap.domain)
 
     /** Network */
     implementation(deps.retrofit)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
+    implementation(deps.arrow.core)
 
     /** Domain */
     implementation(projects.domain.tokens.models)
