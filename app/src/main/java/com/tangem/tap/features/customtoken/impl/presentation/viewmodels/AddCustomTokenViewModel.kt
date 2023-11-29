@@ -486,8 +486,12 @@ internal class AddCustomTokenViewModel @Inject constructor(
         }
 
         return buildSet {
-            if (!isSupportedToken && !isContractAddressFieldEmpty) add(AddCustomTokenWarning.UnsupportedSolanaToken)
-            if (isCustomTokenAlreadyAdded()) add(AddCustomTokenWarning.TokenAlreadyAdded)
+            if (!isSupportedToken && !isContractAddressFieldEmpty) {
+                add(AddCustomTokenWarning.UnsupportedToken(networkSelectorValue.fullName))
+            }
+            if (isCustomTokenAlreadyAdded()) {
+                add(AddCustomTokenWarning.TokenAlreadyAdded)
+            }
             if (foundToken == null && isAnyTokenFieldsFilled() || foundToken?.isActive == false) {
                 add(AddCustomTokenWarning.PotentialScamToken)
             }
