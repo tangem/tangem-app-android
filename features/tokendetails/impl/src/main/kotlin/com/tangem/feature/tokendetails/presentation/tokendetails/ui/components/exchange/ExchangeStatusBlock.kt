@@ -26,7 +26,7 @@ import kotlinx.collections.immutable.PersistentList
 
 @Composable
 internal fun ExchangeStatusBlock(
-    status: PersistentList<ExchangeStatusState>,
+    statuses: PersistentList<ExchangeStatusState>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -70,10 +70,10 @@ internal fun ExchangeStatusBlock(
             }
         }
 
-        status.forEachIndexed { index, item ->
+        statuses.forEachIndexed { index, item ->
             ExchangeStatusStep(
                 stepStatus = item,
-                isLast = index == status.lastIndex,
+                isLast = index == statuses.lastIndex,
             )
         }
     }
@@ -128,7 +128,7 @@ private fun ExchangeStatusStepText(stepStatus: ExchangeStatusState) {
     }
 
     Text(
-        text = stepStatus.text,
+        text = getStatusText(stepStatus)?.let { stringResource(it) }.orEmpty(),
         style = TangemTheme.typography.body2,
         color = textColor,
         modifier = Modifier
@@ -206,4 +206,34 @@ private fun ExchangeStepSeparator() {
                 shape = CircleShape,
             ),
     )
+}
+
+private fun getStatusText(stepStatus: ExchangeStatusState) = when (stepStatus.status) {
+    ExchangeStatus.Failed -> R.string.express_exchange_status_failed
+    ExchangeStatus.Verifying -> if (stepStatus.isDone) {
+        R.string.express_exchange_status_verified
+    } else {
+        R.string.express_exchange_status_verifying
+    }
+    ExchangeStatus.New, ExchangeStatus.Waiting -> if (stepStatus.isDone) {
+        R.string.express_exchange_status_received
+    } else {
+        R.string.express_exchange_status_receiving
+    }
+    ExchangeStatus.Confirming -> if (stepStatus.isDone) {
+        R.string.express_exchange_status_confirmed
+    } else {
+        R.string.express_exchange_status_confirming
+    }
+    ExchangeStatus.Exchanging -> if (stepStatus.isDone) {
+        R.string.express_exchange_status_exchanged
+    } else {
+        R.string.express_exchange_status_exchanging
+    }
+    ExchangeStatus.Sending -> if (stepStatus.isDone) {
+        R.string.express_exchange_status_sent
+    } else {
+        R.string.express_exchange_status_sending
+    }
+    else -> null
 }
