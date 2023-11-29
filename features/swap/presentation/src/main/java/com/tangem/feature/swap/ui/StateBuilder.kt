@@ -473,6 +473,7 @@ internal class StateBuilder(
         val fee = uiState.fee as? FeeItemState.Content ?: return uiState
         val fromCryptoCurrencyStatus = requireNotNull(fromToken.token)
         val toCryptoCurrencyStatus = requireNotNull(toToken.token)
+        // TODO fix format here
         val rate = txState.toAmount?.toBigDecimal()?.divide(
             txState.fromAmount?.toBigDecimal(),
             toCryptoCurrencyStatus.currency.decimals,
