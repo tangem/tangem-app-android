@@ -6,10 +6,7 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -123,9 +120,12 @@ internal class StateBuilder(
             warnings = listOf(
                 SwapWarning.NoAvailableTokensToSwap(
                     notificationConfig = NotificationConfig(
-                        title = stringReference("No tokens"),
-                        subtitle = stringReference("Swap tokens not available"),
-                        iconResId = R.drawable.ic_alert_24,
+                        title = resourceReference(R.string.warning_express_no_exchangeable_coins_title),
+                        subtitle = resourceReference(
+                            id = R.string.warning_express_no_exchangeable_coins_description,
+                            formatArgs = wrappedList(fromToken.currency.name),
+                        ),
+                        iconResId = R.drawable.img_attention_20,
                     ),
                 ),
             ),
@@ -210,6 +210,19 @@ internal class StateBuilder(
             warnings.add(
                 SwapWarning.PermissionNeeded(
                     createPermissionNotificationConfig(fromToken.symbol),
+                ),
+            )
+        }
+        if (quoteModel.preparedSwapConfigState.isAllowedToSpend &&
+            !quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.preparedSwapConfigState.isBalanceEnough
+        ) {
+            warnings.add(
+                SwapWarning.UnableToCoverFeeWarning(
+                    createUnableToCoverFeeNotificationConfig(
+                        fromToken = fromToken,
+                        onBuyClick = actions.onBuyClick,
+                    ),
                 ),
             )
         }
@@ -430,7 +443,7 @@ internal class StateBuilder(
 
         return FeeItemState.Content(
             feeType = feeType,
-            title = stringReference("Fee"), // todo replace with string
+            title = resourceReference(R.string.common_fee_label),
             amountCrypto = fee.feeCryptoFormatted,
             symbolCrypto = fee.cryptoSymbol,
             amountFiatFormatted = fee.feeFiatFormatted,
@@ -602,17 +615,27 @@ internal class StateBuilder(
         )
     }
 
+    @Suppress("LongParameterList")
     fun showSelectProviderBottomSheet(
         uiState: SwapStateHolder,
         selectedProviderId: String,
+        bestRatedProviderId: String,
         providersStates: Map<SwapProvider, SwapState>,
+        unavailableProviders: List<SwapProvider>,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
+        val availableProvidersStates = providersStates.entries.mapNotNull {
+            it.convertToProviderState(bestRatedProviderId, actions.onProviderSelect)
+        }
+        val unavailableProviderStates = unavailableProviders.map {
+            it.convertToUnavailableProviderState(
+                alertText = resourceReference(R.string.express_provider_not_available),
+                selectionType = ProviderState.SelectionType.NONE,
+            )
+        }
         val config = ChooseProviderBottomSheetConfig(
             selectedProviderId = selectedProviderId,
-            providers = providersStates.entries
-                .mapNotNull { it.convertToProviderState(actions.onProviderSelect) }
-                .toImmutableList(),
+            providers = (availableProvidersStates + unavailableProviderStates).toImmutableList(),
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
@@ -683,7 +706,7 @@ internal class StateBuilder(
         return listOf(
             FeeItemState.Content(
                 feeType = this.normalFee.feeType,
-                title = stringReference("Fee"), // todo replace with string
+                title = resourceReference(R.string.common_fee_label),
                 amountCrypto = this.normalFee.feeCryptoFormatted,
                 symbolCrypto = this.normalFee.cryptoSymbol,
                 amountFiatFormatted = this.normalFee.feeFiatFormatted,
@@ -692,7 +715,7 @@ internal class StateBuilder(
             ),
             FeeItemState.Content(
                 feeType = this.priorityFee.feeType,
-                title = stringReference("Fee"), // todo replace with string
+                title = resourceReference(R.string.common_fee_label),
                 amountCrypto = this.priorityFee.feeCryptoFormatted,
                 symbolCrypto = this.priorityFee.cryptoSymbol,
                 amountFiatFormatted = this.priorityFee.feeFiatFormatted,
@@ -703,21 +726,28 @@ internal class StateBuilder(
     }
 
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderState(
+        bestRatedProviderId: String,
         onProviderSelect: (String) -> Unit,
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
             is SwapState.EmptyAmountState -> null
-            is SwapState.QuotesLoadedState -> provider.convertToContentClickableProviderState(
-                fromTokenInfo = state.fromTokenInfo,
-                toTokenInfo = state.toTokenInfo,
+            is SwapState.QuotesLoadedState -> provider.convertToContentSelectableProviderState(
+                isBestRate = provider.providerId == bestRatedProviderId,
+                state = state,
                 onProviderClick = onProviderSelect,
                 selectionType = ProviderState.SelectionType.SELECT,
             )
-            is SwapState.SwapError -> null
+// [REDACTED_TODO_COMMENT]
+            is SwapState.SwapError -> provider.convertToUnavailableProviderState(
+                alertText = resourceReference(R.string.express_provider_min_amount, wrappedList("10")),
+                selectionType = ProviderState.SelectionType.NONE,
+                onProviderClick = onProviderSelect,
+            )
         }
     }
 
+    // region warnings
     private fun createPermissionNotificationConfig(fromTokenSymbol: String): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.swapping_permission_header),
@@ -736,6 +766,28 @@ internal class StateBuilder(
             iconResId = R.drawable.ic_alert_circle_24,
         )
     }
+
+    private fun createUnableToCoverFeeNotificationConfig(
+        fromToken: CryptoCurrency,
+        onBuyClick: () -> Unit,
+    ): NotificationConfig {
+        return NotificationConfig(
+            title = resourceReference(
+                R.string.warning_express_not_enough_fee_for_token_tx_title,
+                wrappedList(fromToken.network.name),
+            ),
+            subtitle = resourceReference(
+                R.string.warning_express_not_enough_fee_for_token_tx_description,
+                wrappedList(fromToken.network.name, fromToken.network.currencySymbol),
+            ),
+            iconResId = fromToken.networkIconResId,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.common_buy_currency, wrappedList(fromToken.name)),
+                onClick = onBuyClick,
+            ),
+        )
+    }
+    // end region
 
     private fun getShortAddressValue(fullAddress: String): String {
         check(fullAddress.length > ADDRESS_MIN_LENGTH) { "Invalid address" }
@@ -770,6 +822,58 @@ internal class StateBuilder(
             additionalBadge = ProviderState.AdditionalBadge.BestTrade,
             selectionType = selectionType,
             percentLowerThenBest = null,
+            onProviderClick = onProviderClick,
+        )
+    }
+
+    private fun SwapProvider.convertToContentSelectableProviderState(
+        isBestRate: Boolean,
+        state: SwapState.QuotesLoadedState,
+        selectionType: ProviderState.SelectionType,
+        onProviderClick: (String) -> Unit,
+    ): ProviderState {
+        val fromTokenInfo = state.fromTokenInfo
+        val toTokenInfo = state.toTokenInfo
+        val rate = toTokenInfo.tokenAmount.value.divide(
+            fromTokenInfo.tokenAmount.value,
+            toTokenInfo.cryptoCurrencyStatus.currency.decimals,
+            RoundingMode.HALF_UP,
+        )
+        val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
+        val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
+        val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
+        val additionalBadge = if (state.permissionState is PermissionDataState.PermissionReadyForRequest) {
+            ProviderState.AdditionalBadge.PermissionRequired
+        } else if (isBestRate) {
+            ProviderState.AdditionalBadge.BestTrade
+        } else {
+            ProviderState.AdditionalBadge.Empty
+        }
+        return ProviderState.Content(
+            id = this.providerId,
+            name = this.name,
+            iconUrl = this.imageLarge,
+            type = this.type.toString(),
+            rate = rateString,
+            additionalBadge = additionalBadge,
+            selectionType = selectionType,
+            percentLowerThenBest = null,
+            onProviderClick = onProviderClick,
+        )
+    }
+
+    private fun SwapProvider.convertToUnavailableProviderState(
+        alertText: TextReference,
+        selectionType: ProviderState.SelectionType,
+        onProviderClick: ((String) -> Unit)? = null,
+    ): ProviderState {
+        return ProviderState.Unavailable(
+            id = this.providerId,
+            name = this.name,
+            iconUrl = this.imageLarge,
+            type = this.type.toString(),
+            selectionType = selectionType,
+            alertText = alertText,
             onProviderClick = onProviderClick,
         )
     }

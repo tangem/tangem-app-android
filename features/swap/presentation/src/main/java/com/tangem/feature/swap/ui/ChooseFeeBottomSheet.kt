@@ -7,6 +7,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerH24
@@ -35,7 +36,7 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
         modifier = Modifier.background(TangemTheme.colors.background.primary),
     ) {
         Text(
-            text = "Choose fee", // todo replace with strings
+            text = stringResource(R.string.common_fee_selector_title),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier
@@ -53,9 +54,7 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
             FeeItemsBlock(content)
         }
         Text(
-            text = "Network transaction fees are small charges paid to support network security, incentivize " +
-                "validators," +
-                " allocate resources, and determine transaction priority.", // todo replace with strings
+            text = stringResource(R.string.common_fee_selector_footer),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             modifier = Modifier
