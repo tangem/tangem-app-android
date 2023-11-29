@@ -3,7 +3,7 @@ package com.tangem.feature.swap.converters
 import com.squareup.moshi.JsonAdapter
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.feature.swap.domain.models.DataError
-import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.utils.converter.Converter
 
 internal class ErrorsDataConverter(
@@ -23,7 +23,7 @@ internal class ErrorsDataConverter(
                 2240 -> DataError.ExchangeNotPossibleError(code = error.code)
                 2250 -> DataError.ExchangeTooSmallAmountError(
                     code = error.code,
-                    amount = SwapAmount(
+                    amount = createFromAmountWithOffset(
                         requireNotNull(error.value?.minAmount),
                         requireNotNull(error.value?.decimals),
                     ),
