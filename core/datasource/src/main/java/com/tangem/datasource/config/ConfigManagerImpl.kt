@@ -107,6 +107,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             walletConnectProjectId = configValues.walletConnectProjectId,
             tangemComAuthorization = configValues.tangemComAuthorization,
             tangemExpressApiKey = configValues.tangemExpressApiKey,
+            oneInchApiKey = configValues.oneInchApiKey,
         )
     }
 
