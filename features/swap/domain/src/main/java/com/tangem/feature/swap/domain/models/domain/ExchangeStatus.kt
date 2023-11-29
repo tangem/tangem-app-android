@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.domain.models.domain
 
 data class ExchangeStatusModel(
-    val providerId: Int,
+    val providerId: String,
     val status: ExchangeStatus? = null,
     val txId: String? = null,
     val txUrl: String? = null,
