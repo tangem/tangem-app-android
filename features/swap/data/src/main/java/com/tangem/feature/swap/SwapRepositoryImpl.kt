@@ -1,5 +1,8 @@
 package com.tangem.feature.swap
 
+import arrow.core.Either
+import arrow.core.raise.catch
+import arrow.core.raise.either
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
@@ -52,6 +55,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
     private val cryptoCurrencyFactory = CryptoCurrencyFactory()
+    private val exchangeStatusConverter = ExchangeStatusConverter()
 
     override suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
@@ -101,6 +105,25 @@ internal class SwapRepositoryImpl @Inject constructor(
                 to = to,
             ),
         ).getOrThrow()
+    }
+
+    override suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel> {
+        return withContext(coroutineDispatcher.io) {
+            either {
+                catch(
+                    {
+                        exchangeStatusConverter.convert(
+                            tangemExpressApi
+                                .getExchangeStatus(txId)
+                                .getOrThrow(),
+                        )
+                    },
+                    {
+                        raise(UnknownError(it.message))
+                    },
+                )
+            }
+        }
     }
 
     override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
