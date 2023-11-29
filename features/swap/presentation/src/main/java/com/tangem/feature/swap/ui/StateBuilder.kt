@@ -20,7 +20,6 @@ import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
-import com.tangem.feature.swap.viewmodels.SwapProcessDataState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -459,39 +458,37 @@ internal class StateBuilder(
         )
     }
 
+    @Suppress("LongParameterList")
     fun createSuccessState(
         uiState: SwapStateHolder,
         txState: TxState.TxSent,
-        dataState: SwapProcessDataState,
+        fromAmount: BigDecimal,
+        toAmount: BigDecimal,
         txUrl: String,
         onSecondaryBtnClick: () -> Unit,
     ): SwapStateHolder {
-        val fromToken = requireNotNull(uiState.sendCardData as? SwapCardState.SwapCardData)
-        val toToken = requireNotNull(uiState.receiveCardData as? SwapCardState.SwapCardData)
-        val fromTokenIconState = fromToken.token?.let(iconStateConverter::convert)
-        val toTokenIconState = toToken.token?.let(iconStateConverter::convert)
+        val providerState = uiState.providerState as ProviderState.Content
+        val fromToken = requireNotNull((uiState.sendCardData as? SwapCardState.SwapCardData)?.token)
+        val toToken = requireNotNull((uiState.receiveCardData as? SwapCardState.SwapCardData)?.token)
+        val fromTokenIconState = iconStateConverter.convert(fromToken)
+        val toTokenIconState = iconStateConverter.convert(toToken)
         val fee = uiState.fee as? FeeItemState.Content ?: return uiState
-        val fromCryptoCurrencyStatus = requireNotNull(fromToken.token)
-        val toCryptoCurrencyStatus = requireNotNull(toToken.token)
-        val rate = txState.toAmount?.toBigDecimal()?.divide(
-            txState.fromAmount?.toBigDecimal(),
-            toCryptoCurrencyStatus.currency.decimals,
-            RoundingMode.HALF_UP,
-        )
-        val fromCurrencySymbol = fromCryptoCurrencyStatus.currency.symbol
-        val toCurrencySymbol = toCryptoCurrencyStatus.currency.symbol
+        val fromFiatAmount = getFormattedFiatAmount(fromToken.value.fiatRate?.multiply(fromAmount))
+        val toFiatAmount = getFormattedFiatAmount(toToken.value.fiatRate?.multiply(toAmount))
 
         return uiState.copy(
             successState = SwapSuccessStateHolder(
-                timestamp = System.currentTimeMillis(),
+                timestamp = txState.timestamp,
                 txUrl = txUrl,
-                selectedProvider = requireNotNull(dataState.selectedProvider),
+                providerName = TextReference.Str(providerState.name),
+                providerType = TextReference.Str(providerState.type),
+                providerIcon = providerState.iconUrl,
                 fee = TextReference.Str("${fee.amountCrypto} ${fee.symbolCrypto} (${fee.amountFiatFormatted})"),
-                rate = TextReference.Str("1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"),
-                fromTokenAmount = TextReference.Str("${txState.fromAmount.orEmpty()} ${fromToken.tokenCurrency}}"),
-                toTokenAmount = TextReference.Str("${txState.toAmount.orEmpty()} ${toToken.tokenCurrency}}"),
-                fromTokenFiatAmount = TextReference.Str(fromToken.amountEquivalent.orEmpty()),
-                toTokenFiatAmount = TextReference.Str(toToken.amountEquivalent.orEmpty()),
+                rate = TextReference.Str(providerState.rate),
+                fromTokenAmount = TextReference.Str(txState.fromAmount.orEmpty()),
+                toTokenAmount = TextReference.Str(txState.toAmount.orEmpty()),
+                fromTokenFiatAmount = TextReference.Str(fromFiatAmount),
+                toTokenFiatAmount = TextReference.Str(toFiatAmount),
                 fromTokenIconState = fromTokenIconState,
                 toTokenIconState = toTokenIconState,
                 onSecondaryButtonClick = onSecondaryBtnClick,
@@ -892,7 +889,7 @@ internal class StateBuilder(
         return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
     }
 
-    private fun getFormattedFiatAmount(amount: BigDecimal): String {
+    private fun getFormattedFiatAmount(amount: BigDecimal?): String {
         val appCurrency = appCurrencyProvider()
 
         return BigDecimalFormatter.formatFiatAmount(amount, appCurrency.code, appCurrency.symbol)
