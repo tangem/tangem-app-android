@@ -94,7 +94,7 @@
     <string name="common_fee_selector_option_market">По рынку</string>
     <string name="common_fee_selector_option_slow">Медленно</string>
     <string name="common_fee_selector_title">Скорость и комиссия</string>
-    <string name="common_generate_addresses">Сгенерировать адреса</string>
+    <string name="common_generate_addresses">Получить адреса</string>
     <string name="common_import">Импортировать</string>
     <string name="common_like">Нравится</string>
     <string name="common_locked">Заблокирован</string>
@@ -641,10 +641,10 @@
     <string name="warning_low_signatures_title">Малое количество подписей</string>
     <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>
     <plurals name="warning_missing_derivation_message">
-        <item quantity="one">Используйте вашу карту, чтобы сгенерировать адрес для %d новой сети</item>
-        <item quantity="few">Используйте вашу карту, чтобы сгенерировать адреса для %d новых сетей</item>
-        <item quantity="many">Используйте вашу карту, чтобы сгенерировать адреса для %d новых сетей</item>
-        <item quantity="other">Используйте вашу карту, чтобы сгенерировать адреса для %d новых сетей</item>
+        <item quantity="one">Используйте вашу карту, чтобы получить адрес для %d сети</item>
+        <item quantity="few">Используйте вашу карту, чтобы получить адреса для %d сетей</item>
+        <item quantity="many">Используйте вашу карту, чтобы получить адреса для %d сетей</item>
+        <item quantity="other">Используйте вашу карту, чтобы получить адреса для %d сетей</item>
     </plurals>
     <string name="warning_missing_derivation_title">Некоторые адреса отсутствуют</string>
     <string name="warning_network_unreachable_message">В данный момент сеть недоступна. Пожалуйста, попробуйте позже.</string>
