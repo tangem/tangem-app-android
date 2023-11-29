@@ -7,11 +7,14 @@ import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.feature.swap.SwapRepositoryImpl
 import com.tangem.feature.swap.converters.ErrorsDataConverter
+import com.tangem.feature.swap.DefaultSwapTransactionRepository
 import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -44,6 +47,14 @@ internal class SwapDataModule {
             walletManagersFacade = walletManagerFacade,
             walletsStateHolder = walletsStateHolder,
             errorsDataConverter = errorsDataConverter,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSwapTransactionRepository(appPreferencesStore: AppPreferencesStore): SwapTransactionRepository {
+        return DefaultSwapTransactionRepository(
+            appPreferencesStore = appPreferencesStore,
         )
     }
 
