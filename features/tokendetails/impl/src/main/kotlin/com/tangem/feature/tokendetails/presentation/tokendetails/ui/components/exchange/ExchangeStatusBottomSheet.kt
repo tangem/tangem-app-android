@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -15,6 +16,7 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.toDateFormat
@@ -64,17 +66,25 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
             toFiatAmount = TextReference.Str(config.toFiatAmount),
         )
         SpacerH12()
-        // todo replace with real provider data
         ExchangeProvider(
-            providerName = TextReference.Str(config.providerId.toString()),
-            providerType = TextReference.Str("CEX"),
-            imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/changenow_512.png",
+            providerName = TextReference.Str(config.provider.name),
+            providerType = TextReference.Str(config.provider.type.name),
+            imageUrl = config.provider.imageLarge,
         )
         SpacerH12()
         ExchangeStatusBlock(
-            status = config.status,
+            statuses = config.statuses,
             onClick = config.onGoToProviderClick,
         )
+        AnimatedContent(
+            targetState = config.notification,
+            label = "Exchange Status Notification Change",
+        ) {
+            it?.let {
+                SpacerH12()
+                Notification(config = it.config)
+            }
+        }
         SpacerH24()
     }
 }
