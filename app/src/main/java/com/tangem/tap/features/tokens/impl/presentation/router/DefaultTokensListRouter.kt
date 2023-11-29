@@ -51,11 +51,12 @@ internal class DefaultTokensListRouter : TokensListRouter {
         store.dispatchDialogShow(alert)
     }
 
-    override fun openSolanaTokensNotSupportAlert() {
+    override fun openNetworkTokensNotSupportAlert(networkName: String) {
         store.dispatchDialogShow(
             AppDialog.SimpleOkDialogRes(
                 headerId = R.string.common_warning,
                 messageId = R.string.alert_manage_tokens_unsupported_message,
+                args = listOf(networkName),
             ),
         )
     }
