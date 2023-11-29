@@ -16,7 +16,7 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(): ApiResponse<T> {
         val e = if (code == null) {
             ApiResponseError.UnknownException(IllegalArgumentException("Unknown error status code: ${code()}"))
         } else {
-            ApiResponseError.HttpException(code, message())
+            ApiResponseError.HttpException(code, message(), errorBody()?.string())
         }
 
         apiError(e)
