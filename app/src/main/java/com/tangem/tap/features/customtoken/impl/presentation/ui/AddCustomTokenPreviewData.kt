@@ -18,7 +18,7 @@ internal object AddCustomTokenPreviewData {
         return setOf(
             AddCustomTokenWarning.PotentialScamToken,
             AddCustomTokenWarning.TokenAlreadyAdded,
-            AddCustomTokenWarning.UnsupportedSolanaToken,
+            AddCustomTokenWarning.UnsupportedToken(networkName = "Solana"),
         )
     }
 
