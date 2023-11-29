@@ -6,6 +6,7 @@ sealed class TxState {
         val fromAmount: String? = null,
         val toAmount: String? = null,
         val txAddress: String,
+        val timestamp: Long,
     ) : TxState()
 
     object UserCancelled : TxState()
