@@ -17,7 +17,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.Visibility
+import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.res.TangemTheme
@@ -46,11 +49,13 @@ internal fun LazyListScope.swapTransactionsItems(
             }
 
             ExchangeStatusItem(
-                providerName = item.providerId.toString(),
+                providerName = item.provider.name,
                 fromTokenIconState = item.fromCurrencyIcon,
                 toTokenIconState = item.toCurrencyIcon,
                 fromAmount = item.fromCryptoAmount,
+                fromSymbol = item.fromCryptoSymbol,
                 toAmount = item.toCryptoAmount,
+                toSymbol = item.toCryptoSymbol,
                 onClick = item.onClick,
                 infoIconRes = iconRes,
                 infoIconTint = tint,
@@ -67,7 +72,9 @@ private fun ExchangeStatusItem(
     fromTokenIconState: TokenIconState,
     toTokenIconState: TokenIconState,
     fromAmount: String,
+    fromSymbol: String,
     toAmount: String,
+    toSymbol: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     @DrawableRes infoIconRes: Int? = null,
@@ -104,14 +111,17 @@ private fun ExchangeStatusItem(
                     bottom.linkTo(parent.bottom)
                 },
         )
-        Text(
+        EllipsisText(
             text = fromAmount,
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
+            ellipsis = TextEllipsis.OffsetEnd(fromSymbol.length),
             modifier = Modifier.constrainAs(fromRef) {
                 start.linkTo(fromIconRef.end, padding6)
                 top.linkTo(titleRef.bottom, padding6)
+                end.linkTo(swapIconRef.start)
                 bottom.linkTo(parent.bottom)
+                width = Dimension.fillToConstraints
             },
         )
         Icon(
@@ -123,6 +133,7 @@ private fun ExchangeStatusItem(
                 .constrainAs(swapIconRef) {
                     start.linkTo(fromRef.end, padding6)
                     top.linkTo(titleRef.bottom, padding6)
+                    end.linkTo(toIconRef.start)
                     bottom.linkTo(parent.bottom)
                 },
         )
@@ -134,17 +145,21 @@ private fun ExchangeStatusItem(
                 .constrainAs(toIconRef) {
                     start.linkTo(swapIconRef.end, padding6)
                     top.linkTo(titleRef.bottom, padding6)
+                    end.linkTo(toRef.start)
                     bottom.linkTo(parent.bottom)
                 },
         )
-        Text(
+        EllipsisText(
             text = toAmount,
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
+            ellipsis = TextEllipsis.OffsetEnd(toSymbol.length),
             modifier = Modifier.constrainAs(toRef) {
                 start.linkTo(toIconRef.end, padding6)
                 top.linkTo(titleRef.bottom, padding6)
+                end.linkTo(infoIconRef.start, padding6)
                 bottom.linkTo(parent.bottom)
+                width = Dimension.fillToConstraints
             },
         )
         Icon(
