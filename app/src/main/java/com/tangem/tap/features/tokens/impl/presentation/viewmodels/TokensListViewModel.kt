@@ -4,7 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.*
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -37,7 +40,9 @@ import com.tangem.utils.coroutines.Debouncer
 import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import timber.log.Timber
@@ -406,14 +411,20 @@ internal class TokensListViewModel @Inject constructor(
                 }
             } else {
                 when (isUnsupportedToken(token.blockchain)) {
-                    SupportTokensState.SolanaNetworkUnsupported -> router.openSolanaTokensNotSupportAlert()
+                    SupportTokensState.NetworkTokensUnsupported -> {
+                        router.openNetworkTokensNotSupportAlert(token.blockchain.fullName)
+                    }
                     SupportTokensState.SupportedToken -> {
                         analyticsSender.sendWhenTokenAdded(token.token)
                         changedTokensList.add(token)
                         toggledNetwork.changeToggleState()
                     }
-                    SupportTokensState.UnsupportedCurve -> router.openUnsupportedNetworkAlert(token.blockchain)
-                    null -> Timber.e("Something went wrong in isUnsupportedToken (no scanResponse found)")
+                    SupportTokensState.UnsupportedCurve -> {
+                        router.openUnsupportedNetworkAlert(token.blockchain)
+                    }
+                    null -> {
+                        Timber.e("Something went wrong in isUnsupportedToken (no scanResponse found)")
+                    }
                 }
             }
         }
@@ -428,7 +439,7 @@ internal class TokensListViewModel @Inject constructor(
 
                 // refactor this later by moving all this logic in card config
                 if (blockchain == Blockchain.Solana && !supportedTokens.contains(Blockchain.Solana)) {
-                    return SupportTokensState.SolanaNetworkUnsupported
+                    return SupportTokensState.NetworkTokensUnsupported
                 }
                 val canHandleToken = it.scanResponse.card.canHandleToken(
                     supportedTokens = supportedTokens,
