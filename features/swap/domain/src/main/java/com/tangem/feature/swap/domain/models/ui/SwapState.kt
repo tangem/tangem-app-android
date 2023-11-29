@@ -90,6 +90,7 @@ data class TxFee(
     val gasLimit: Int,
     val feeFiatFormatted: String,
     val feeCryptoFormatted: String,
+    val decimals: Int,
     val cryptoSymbol: String,
     val feeType: FeeType,
 )
