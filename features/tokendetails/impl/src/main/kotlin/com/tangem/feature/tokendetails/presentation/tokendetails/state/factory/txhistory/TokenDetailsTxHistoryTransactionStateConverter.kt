@@ -13,6 +13,8 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
 
+// FIXME: Refactoring needed
+/** Same as [TokenDetailsPendingTxToTransactionStateConverter] but with other timestamp format */
 internal class TokenDetailsTxHistoryTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
