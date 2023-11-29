@@ -12,7 +12,8 @@ import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
-
+// [REDACTED_TODO_COMMENT]
+/** Same as [TokenDetailsPendingTxToTransactionStateConverter] but with other timestamp format */
 internal class TokenDetailsTxHistoryTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
