@@ -45,6 +45,7 @@ internal class TokenDetailsSkeletonStateConverter(
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
+            swapTxs = persistentListOf(),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
