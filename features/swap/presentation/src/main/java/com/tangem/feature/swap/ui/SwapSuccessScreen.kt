@@ -23,7 +23,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
 import com.tangem.feature.swap.presentation.R
 
@@ -60,7 +59,7 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
             .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-        TransactionDoneTitle(titleRes = R.string.swapping_success_view_title, date = 0L)
+        TransactionDoneTitle(titleRes = R.string.swapping_success_view_title, date = state.timestamp)
         SpacerH16()
         InputRowImage(
             title = TextReference.Res(R.string.swapping_success_from_title),
@@ -83,9 +82,9 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
         )
         SpacerH16()
         InputRowBestRate(
-            imageUrl = state.selectedProvider.imageLarge,
-            title = TextReference.Str(state.selectedProvider.name),
-            titleExtra = TextReference.Str(state.selectedProvider.type.name),
+            imageUrl = state.providerIcon,
+            title = state.providerName,
+            titleExtra = state.providerType,
             subtitle = state.rate,
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -153,13 +152,9 @@ private val state = SwapSuccessStateHolder(
     timestamp = 0L,
     txUrl = "https://www.google.com/#q=nam",
     fee = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
-    selectedProvider = SwapProvider(
-        providerId = "1inch",
-        rateTypes = listOf(),
-        name = "1inch",
-        type = ExchangeProviderType.DEX,
-        imageLarge = "",
-    ),
+    providerName = TextReference.Str("1inch"),
+    providerType = TextReference.Str(ExchangeProviderType.DEX.name),
+    providerIcon = "",
     fromTokenAmount = TextReference.Str("1 000 DAI"),
     toTokenAmount = TextReference.Str("1 000 MATIC"),
     fromTokenFiatAmount = TextReference.Str("1 000 $"),
