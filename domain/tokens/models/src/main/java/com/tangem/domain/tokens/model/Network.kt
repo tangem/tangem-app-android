@@ -22,6 +22,7 @@ data class Network(
     val id: ID,
     val backendId: String,
     val name: String,
+    val currencySymbol: String,
     val derivationPath: DerivationPath,
     val isTestnet: Boolean,
     val standardType: StandardType,
