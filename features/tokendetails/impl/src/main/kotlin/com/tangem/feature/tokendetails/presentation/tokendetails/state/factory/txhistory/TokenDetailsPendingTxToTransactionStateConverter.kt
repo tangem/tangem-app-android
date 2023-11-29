@@ -15,7 +15,9 @@ import com.tangem.utils.toFormattedCurrencyString
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 
-internal class TokenDetailsTxHistoryToTransactionStateConverter(
+// FIXME: Refactoring needed
+/** Same as [TokenDetailsTxHistoryTransactionStateConverter] but with other timestamp format */
+internal class TokenDetailsPendingTxToTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
