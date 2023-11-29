@@ -213,7 +213,10 @@ internal class SwapInteractorImpl @Inject constructor(
         return when (result) {
             is SendTxResult.Success -> {
                 allowPermissionsHandler.addAddressToInProgress(permissionOptions.forTokenContractAddress)
-                TxState.TxSent(txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath) ?: "")
+                TxState.TxSent(
+                    txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
+                    timestamp = System.currentTimeMillis(),
+                )
             }
             SendTxResult.UserCancelledError -> TxState.UserCancelled
             is SendTxResult.BlockchainSdkError -> TxState.BlockchainError
@@ -370,7 +373,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     currencyToGet = currencyToGet,
                     amount = amount,
                     fee = fee,
-                    providerId = swapProvider.providerId,
+                    swapProvider = swapProvider,
                     userWalletId = requireNotNull(getSelectedWallet()).walletId,
                 )
             }
@@ -455,7 +458,8 @@ internal class SwapInteractorImpl @Inject constructor(
                         swapData.toTokenAmount,
                         currencyToGet.symbol,
                     ),
-                    txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath) ?: "",
+                    txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
+                    timestamp = System.currentTimeMillis(),
                 )
             }
             SendTxResult.UserCancelledError -> TxState.UserCancelled
@@ -471,7 +475,7 @@ internal class SwapInteractorImpl @Inject constructor(
         currencyToGet: CryptoCurrencyStatus,
         amount: SwapAmount,
         fee: TxFee,
-        providerId: String,
+        swapProvider: SwapProvider,
         userWalletId: UserWalletId,
     ): TxState {
         val exchangeData = repository.getExchangeData(
@@ -481,7 +485,7 @@ internal class SwapInteractorImpl @Inject constructor(
             toNetwork = currencyToGet.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
-            providerId = providerId,
+            providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
             toAddress = currencyToGet.value.networkAddress?.defaultAddress ?: "",
         )
@@ -501,14 +505,17 @@ internal class SwapInteractorImpl @Inject constructor(
             network = currencyToSend.currency.network,
         )
 
-        return result.fold(ifLeft = {
-            when (it) {
-                is SendTransactionError.NetworkError -> TxState.NetworkError
-                is SendTransactionError.DataError -> TxState.BlockchainError
-                SendTransactionError.DemoCardError -> TxState.UnknownError
-                else -> TxState.UnknownError
-            }
-        }, ifRight = {
+        return result.fold(
+            ifLeft = {
+                when (it) {
+                    is SendTransactionError.NetworkError -> TxState.NetworkError
+                    is SendTransactionError.DataError -> TxState.BlockchainError
+                    SendTransactionError.DemoCardError -> TxState.UnknownError
+                    else -> TxState.UnknownError
+                }
+            },
+            ifRight = {
+                val timestamp = System.currentTimeMillis()
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -521,9 +528,11 @@ internal class SwapInteractorImpl @Inject constructor(
                     txAddress = userWalletManager.getLastTransactionHash(
                         currencyToSend.currency.network.backendId,
                         derivationPath,
-                    ) ?: "",
+                    ).orEmpty(),
+                    timestamp = timestamp,
                 )
-            },)
+            },
+        )
     }
 
     @Deprecated("used in old swap mechanism")
