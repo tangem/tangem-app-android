@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import arrow.core.Either
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
@@ -13,6 +14,8 @@ interface SwapRepository {
     suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
 
     suspend fun getExchangeableTokens(networkId: String): List<Currency>
+
+    suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel>
 
     @Suppress("LongParameterList")
     suspend fun findBestQuote(
