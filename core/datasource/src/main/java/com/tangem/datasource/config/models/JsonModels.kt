@@ -42,6 +42,7 @@ class ConfigValueModel(
     val chiaFireAcademyApiKey: String?,
     val chiaTangemApiKey: String?,
     val tangemExpressApiKey: String,
+    val oneInchApiKey: String,
 )
 
 @JsonClass(generateAdapter = true)
