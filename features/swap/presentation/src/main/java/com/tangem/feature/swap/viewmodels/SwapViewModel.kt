@@ -286,9 +286,13 @@ internal class SwapViewModel @Inject constructor(
                 )
             }
             is SwapState.SwapError -> {
-                Timber.e("SwapError when loading quotes ${state.error}")
-// [REDACTED_TODO_COMMENT]
-                uiState = stateBuilder.mapError(uiState, state.error) { startLoadingQuotesFromLastState() }
+                uiState = stateBuilder.createQuotesErrorState(
+                    uiStateHolder = uiState,
+                    swapProvider = provider,
+                    fromToken = state.fromTokenInfo,
+                    toToken = dataState.toCryptoCurrency,
+                    dataError = state.error,
+                )
             }
         }
     }
