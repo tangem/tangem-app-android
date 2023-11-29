@@ -43,7 +43,7 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
                 placeholderSearchText = stringResource(id = R.string.common_search_tokens),
                 onSearchChange = state.onSearchEntered,
                 onSearchDisplayClose = { state.onSearchEntered("") },
-                subtitle = "", // todo add title
+                subtitle = stringResource(id = R.string.express_exchange_token_list_subtitle),
             )
         },
     )
@@ -55,7 +55,7 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
     LazyColumn(
         modifier = modifier
             .background(color = screenBackgroundColor)
-            .fillMaxWidth(),
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         item { SpacerH8() }
