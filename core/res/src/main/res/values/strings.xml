@@ -92,7 +92,7 @@
     <string name="common_fee_selector_option_market">Market</string>
     <string name="common_fee_selector_option_slow">Slow</string>
     <string name="common_fee_selector_title">Speed and fee</string>
-    <string name="common_generate_addresses">Generate addresses</string>
+    <string name="common_generate_addresses">Get addresses</string>
     <string name="common_import">Import</string>
     <string name="common_learn_and_earn">Learn &amp; Earn</string>
     <string name="common_like">Like</string>
@@ -648,8 +648,8 @@
     <string name="warning_low_signatures_title">Low signature count</string>
     <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
     <plurals name="warning_missing_derivation_message">
-        <item quantity="one">Use your card to generate an address for %d new network</item>
-        <item quantity="other">Use your card to generate an addresses for %d new networks</item>
+        <item quantity="one">Use your card to get an address for %d added network</item>
+        <item quantity="other">Use your card to get an addresses for %d added networks</item>
     </plurals>
     <string name="warning_missing_derivation_title">Some addresses are missing</string>
     <string name="warning_network_unreachable_message">The network is currently unreachable. Please try again later.</string>
