@@ -51,7 +51,9 @@ internal object MockNetworks {
         network = network3,
         value = NetworkStatus.NoAccount(
             amountToCreateAccount = amountToCreateAccount,
-            address = NetworkAddress.Single(defaultAddress = "mock"),
+            address = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+            ),
             errorMessage = "",
         ),
     )
@@ -67,7 +69,9 @@ internal object MockNetworks {
                     MockTokens.token3.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
-                address = NetworkAddress.Single(defaultAddress = "mock"),
+                address = NetworkAddress.Single(
+                    defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+                ),
             ),
         )
 
@@ -80,7 +84,9 @@ internal object MockNetworks {
                     MockTokens.token6.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
-                address = NetworkAddress.Single(defaultAddress = "mock"),
+                address = NetworkAddress.Single(
+                    defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+                ),
             ),
         )
 
@@ -94,7 +100,9 @@ internal object MockNetworks {
                     MockTokens.token10.id to CryptoCurrencyAmountStatus.Loaded(BigDecimal.TEN),
                 ),
                 pendingTransactions = emptyMap(),
-                address = NetworkAddress.Single(defaultAddress = "mock"),
+                address = NetworkAddress.Single(
+                    defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+                ),
             ),
         )
 
