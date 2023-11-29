@@ -27,9 +27,11 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.domain.demo)
     implementation(projects.domain.card)
+    implementation(projects.domain.appCurrency.models)
 
     /** Core modules */
     implementation(projects.core.utils)
+    implementation(projects.core.ui)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
@@ -40,4 +42,5 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.timber)
     implementation(deps.tangem.blockchain)
+    implementation(deps.moshi)
 }
