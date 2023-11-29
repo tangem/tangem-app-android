@@ -5,15 +5,18 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 // [REDACTED_TODO_COMMENT]
-/** Same as [WalletPendingTxToTransactionStateConverter] but with other timestamp format */
-internal class WalletTxHistoryTransactionStateConverter(
+/** Same as [WalletTxHistoryTransactionStateConverter] but with other timestamp format */
+internal class WalletPendingTxToTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: WalletClickIntents,
@@ -23,12 +26,11 @@ internal class WalletTxHistoryTransactionStateConverter(
         return createTransactionStateItem(item = value)
     }
 
-    @Suppress("LongMethod")
     private fun createTransactionStateItem(item: TxHistoryItem): TransactionState {
         return TransactionState.Content(
             txHash = item.txHash,
             amount = item.getAmount(),
-            timestamp = item.getRawTimestamp(),
+            timestamp = item.timestampInMillis.toTimeFormat(),
             status = item.status.tiUiStatus(),
             direction = item.extractDirection(),
             iconRes = item.extractIcon(),
@@ -83,22 +85,18 @@ internal class WalletTxHistoryTransactionStateConverter(
             )
         }
 
-    private fun TxHistoryItem.extractDirection() =
-        if (isOutgoing) TransactionState.Content.Direction.OUTGOING else TransactionState.Content.Direction.INCOMING
-
-    /**
-     * Get timestamp without formatting.
-     * It's life hack that help us to add transaction's group title to flow.
-     *
-     * @see [convert]
-     */
-    private fun TxHistoryItem.getRawTimestamp() = this.timestampInMillis.toString()
-
     private fun TxHistoryItem.TransactionStatus.tiUiStatus() = when (this) {
         TxHistoryItem.TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
         TxHistoryItem.TransactionStatus.Failed -> TransactionState.Content.Status.Failed
         TxHistoryItem.TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
     }
+
+    private fun Long.toTimeFormat(): String {
+        return DateTimeFormatters.formatTime(time = DateTime(this, DateTimeZone.getDefault()))
+    }
+
+    private fun TxHistoryItem.extractDirection() =
+        if (isOutgoing) TransactionState.Content.Direction.OUTGOING else TransactionState.Content.Direction.INCOMING
 
     private fun TxHistoryItem.getAmount(): String {
         val prefix = when (status) {
