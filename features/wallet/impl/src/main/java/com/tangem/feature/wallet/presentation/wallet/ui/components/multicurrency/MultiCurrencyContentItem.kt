@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.feature.wallet.presentation.common.component.NetworkGroupItem
 import com.tangem.feature.wallet.presentation.common.component.TokenItem
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState.TokensListItemState
 
 /**
  * Multi-currency content item
@@ -26,6 +27,22 @@ internal fun MultiCurrencyContentItem(
             NetworkGroupItem(networkName = state.name.resolveReference(), modifier = modifier)
         }
         is WalletTokensListState.TokensListItemState.Token -> {
+            TokenItem(state = state.state, isBalanceHidden = isBalanceHidden, modifier = modifier)
+        }
+    }
+}
+
+@Composable
+internal fun MultiCurrencyContentItem(
+    state: TokensListItemState,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    when (state) {
+        is TokensListItemState.NetworkGroupTitle -> {
+            NetworkGroupItem(networkName = state.name.resolveReference(), modifier = modifier)
+        }
+        is TokensListItemState.Token -> {
             TokenItem(state = state.state, isBalanceHidden = isBalanceHidden, modifier = modifier)
         }
     }
