@@ -20,4 +20,5 @@ data class Config(
     val walletConnectProjectId: String = "",
     val tangemComAuthorization: String? = null,
     val tangemExpressApiKey: String = "",
+    val oneInchApiKey: String = "",
 )
