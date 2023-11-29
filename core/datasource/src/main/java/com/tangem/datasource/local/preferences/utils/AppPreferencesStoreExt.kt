@@ -2,6 +2,7 @@ package com.tangem.datasource.local.preferences.utils
 
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.squareup.moshi.Types
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -13,15 +14,27 @@ inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String
     return data.map { it[key]?.let(adapter::fromJson) }
 }
 
-/** Get flow of data [T] by string [key]. If data is not found, it returns [default] */
+/**
+ * Get flow of data [T] by string [key]. If data is not found, it returns [default]
+ *
+ * Warning: This method cannot be used for parameterized types (e.g. List, Set, etc.).
+ *
+ * @see getObjectList
+ * */
 inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String>, default: T): Flow<T> {
-    val adapter = moshi.adapter(T::class.java)
+    val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
     return data.map { it[key]?.let(adapter::fromJson) ?: default }
 }
 
-/** Get nullable data [T] by string [key] */
+/**
+ * Get nullable data [T] by string [key]
+ *
+ * Warning: This method cannot be used for T with parameterized types (e.g. List, Set, etc.).
+ *
+ * @see getObjectListSync
+ * */
 suspend inline fun <reified T> AppPreferencesStore.getObjectSyncOrNull(key: Preferences.Key<String>): T? {
-    val adapter = moshi.adapter(T::class.java)
+    val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
     return data.firstOrNull()
         ?.get(key)
         ?.let(adapter::fromJson)
@@ -39,8 +52,35 @@ suspend inline fun <reified T> AppPreferencesStore.getObjectSyncOrDefault(
         ?: default
 }
 
-/** Store data [value] by string [key] */
+/**
+ * Store data [value] by string [key]
+ *
+ * Warning: This method cannot be used for T with parameterized types (e.g. List, Set, etc.).
+ *
+ * @see storeObjectList
+ * */
 suspend inline fun <reified T> AppPreferencesStore.storeObject(key: Preferences.Key<String>, value: T) {
-    val adapter = moshi.adapter(T::class.java)
+    val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
     edit { it[key] = adapter.toJson(value) }
+}
+
+/** Store list of data [value] by string [key] */
+suspend inline fun <reified T> AppPreferencesStore.storeObjectList(key: Preferences.Key<String>, value: List<T>) {
+    val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
+    edit { it[key] = adapter.toJson(value) }
+}
+
+/** Get flow of list of data [T] by string [key]. If data is not found, it returns `null` */
+inline fun <reified T> AppPreferencesStore.getObjectList(key: Preferences.Key<String>): Flow<List<T>?> {
+    val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
+    return data.map { it[key]?.let(adapter::fromJson) }
+}
+
+/** Get nullable list of data [T] by string [key] */
+suspend inline fun <reified T> AppPreferencesStore.getObjectListSync(key: Preferences.Key<String>): List<T> {
+    val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
+    return data.firstOrNull()
+        ?.get(key)
+        ?.let(adapter::fromJson)
+        .orEmpty()
 }
