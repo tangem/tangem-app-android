@@ -27,9 +27,7 @@ import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.Debouncer
-import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -401,7 +399,8 @@ internal class SwapViewModel @Inject constructor(
                             uiState = stateBuilder.createSuccessState(
                                 uiState = uiState,
                                 txState = it,
-                                dataState = dataState,
+                                fromAmount = dataState.amount?.toBigDecimal() ?: BigDecimal.ZERO,
+                                toAmount = dataState.swapDataModel?.toTokenAmount?.value ?: BigDecimal.ZERO,
                                 txUrl = url,
                                 onSecondaryBtnClick = {
                                     val txHash = it.txAddress
