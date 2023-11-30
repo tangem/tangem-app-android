@@ -17,19 +17,22 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.ExchangeStatusState
 import com.tangem.features.tokendetails.impl.R
-import kotlinx.collections.immutable.PersistentList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 internal fun ExchangeStatusBlock(
-    statuses: PersistentList<ExchangeStatusState>,
+    statuses: MutableStateFlow<List<ExchangeStatusState>>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val statusValues = statuses.collectAsStateWithLifecycle()
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -70,10 +73,10 @@ internal fun ExchangeStatusBlock(
             }
         }
 
-        statuses.forEachIndexed { index, item ->
+        statusValues.value.forEachIndexed { index, item ->
             ExchangeStatusStep(
                 stepStatus = item,
-                isLast = index == statuses.lastIndex,
+                isLast = index == statusValues.value.lastIndex,
             )
         }
     }
@@ -128,7 +131,7 @@ private fun ExchangeStatusStepText(stepStatus: ExchangeStatusState) {
     }
 
     Text(
-        text = getStatusText(stepStatus)?.let { stringResource(it) }.orEmpty(),
+        text = stepStatus.text.resolveReference(),
         style = TangemTheme.typography.body2,
         color = textColor,
         modifier = Modifier
@@ -206,34 +209,4 @@ private fun ExchangeStepSeparator() {
                 shape = CircleShape,
             ),
     )
-}
-
-private fun getStatusText(stepStatus: ExchangeStatusState) = when (stepStatus.status) {
-    ExchangeStatus.Failed -> R.string.express_exchange_status_failed
-    ExchangeStatus.Verifying -> if (stepStatus.isDone) {
-        R.string.express_exchange_status_verified
-    } else {
-        R.string.express_exchange_status_verifying
-    }
-    ExchangeStatus.New, ExchangeStatus.Waiting -> if (stepStatus.isDone) {
-        R.string.express_exchange_status_received
-    } else {
-        R.string.express_exchange_status_receiving
-    }
-    ExchangeStatus.Confirming -> if (stepStatus.isDone) {
-        R.string.express_exchange_status_confirmed
-    } else {
-        R.string.express_exchange_status_confirming
-    }
-    ExchangeStatus.Exchanging -> if (stepStatus.isDone) {
-        R.string.express_exchange_status_exchanged
-    } else {
-        R.string.express_exchange_status_exchanging
-    }
-    ExchangeStatus.Sending -> if (stepStatus.isDone) {
-        R.string.express_exchange_status_sent
-    } else {
-        R.string.express_exchange_status_sending
-    }
-    else -> null
 }
