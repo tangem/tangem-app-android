@@ -6,7 +6,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 import java.math.BigDecimal
 
-class DefaultInitialToCurrencyResolver(
+internal class DefaultInitialToCurrencyResolver (
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val swapTransactionRepository: SwapTransactionRepository,
 ) : InitialToCurrencyResolver {
