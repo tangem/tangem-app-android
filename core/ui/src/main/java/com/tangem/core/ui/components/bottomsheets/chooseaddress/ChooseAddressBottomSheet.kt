@@ -8,6 +8,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SimpleSettingsRow
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -24,7 +25,7 @@ private fun ChooseAddressBottomSheetContent(content: ChooseAddressBottomSheetCon
     ) {
         content.addressModels.forEach { addressModel ->
             SimpleSettingsRow(
-                title = addressModel.type.name,
+                title = addressModel.displayName.resolveReference(),
                 icon = R.drawable.ic_arrow_top_right_24,
                 onItemsClick = { content.onClick(addressModel) },
             )
