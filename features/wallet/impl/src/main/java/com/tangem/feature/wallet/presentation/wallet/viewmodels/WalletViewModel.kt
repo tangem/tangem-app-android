@@ -19,6 +19,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
@@ -42,10 +43,7 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkGroup
-import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -689,20 +687,11 @@ internal class WalletViewModel @Inject constructor(
     }
 
     override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        val state = uiState as? WalletState.ContentState ?: return
-
         analyticsEventsHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrencyStatus.currency.symbol),
         )
 
         viewModelScope.launch(dispatchers.io) {
-            val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
-
-            val addresses = walletManagersFacade.getAddress(
-                userWalletId = userWallet.walletId,
-                network = cryptoCurrencyStatus.currency.network,
-            )
-
             analyticsEventsHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
 
             val currency = cryptoCurrencyStatus.currency
@@ -711,12 +700,11 @@ internal class WalletViewModel @Inject constructor(
                     name = currency.name,
                     symbol = currency.symbol,
                     network = currency.network.name,
-                    addresses = addresses.map {
-                        AddressModel(
-                            value = it.value,
-                            type = AddressModel.Type.valueOf(it.type.name),
-                        )
-                    },
+                    addresses = cryptoCurrencyStatus.value.networkAddress
+                        ?.availableAddresses
+                        ?.mapToAddressModels(currency)
+                        .orEmpty()
+                        .toImmutableList(),
                     onCopyClick = {
                         analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
                     },
@@ -821,41 +809,39 @@ internal class WalletViewModel @Inject constructor(
 
     private fun openExplorer() {
         val state = uiState as? WalletState.ContentState ?: return
-        val currency = singleWalletCryptoCurrencyStatus?.currency ?: return
+        val currencyStatus = singleWalletCryptoCurrencyStatus ?: return
+        val currency = currencyStatus.currency
 
         viewModelScope.launch(dispatchers.main) {
             val userWalletId = getWallet(state.walletsListConfig.selectedWalletIndex).walletId
 
-            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currency.network)
-
-            if (addresses.size == 1) {
-                router.openUrl(
-                    url = getExploreUrlUseCase(
-                        userWalletId = userWalletId,
-                        currency = currency,
-                        addressType = AddressType.Default,
-                    ),
-                )
-            } else {
-                uiState = stateFactory.getStateWithOpenWalletBottomSheet(
-                    ChooseAddressBottomSheetConfig(
-                        addressModels = addresses
-                            .map { address ->
-                                AddressModel(
-                                    value = address.value,
-                                    type = AddressModel.Type.valueOf(address.type.name),
+            when (val addresses = currencyStatus.value.networkAddress) {
+                is NetworkAddress.Selectable -> {
+                    uiState = stateFactory.getStateWithOpenWalletBottomSheet(
+                        ChooseAddressBottomSheetConfig(
+                            addressModels = addresses.availableAddresses
+                                .mapToAddressModels(currency)
+                                .toImmutableList(),
+                            onClick = {
+                                onAddressTypeSelected(
+                                    userWalletId = userWalletId,
+                                    currency = currency,
+                                    addressModel = it,
                                 )
-                            }
-                            .toImmutableList(),
-                        onClick = {
-                            onAddressTypeSelected(
-                                userWalletId = userWalletId,
-                                currency = currency,
-                                addressModel = it,
-                            )
-                        },
-                    ),
-                )
+                            },
+                        ),
+                    )
+                }
+                is NetworkAddress.Single -> {
+                    router.openUrl(
+                        url = getExploreUrlUseCase(
+                            userWalletId = userWalletId,
+                            currency = currency,
+                            addressType = AddressType.Default,
+                        ),
+                    )
+                }
+                null -> Unit
             }
         }
     }
