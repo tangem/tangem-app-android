@@ -592,7 +592,7 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onMaxAmountClicked() {
         dataState.fromCryptoCurrency?.let {
-            val balance = swapInteractor.getTokenBalance(initialCryptoCurrency.network.id.value, it.currency)
+            val balance = swapInteractor.getTokenBalance(it)
             onAmountChanged(balance.formatToUIRepresentation())
         }
     }
