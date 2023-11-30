@@ -146,7 +146,7 @@ private fun ProviderContentState(
                     )
                     if (state.percentLowerThenBest != null) {
                         Text(
-                            text = "${state.percentLowerThenBest}%",
+                            text = "-${state.percentLowerThenBest}%",
                             style = TangemTheme.typography.body2,
                             color = TangemTheme.colors.text.warning,
                             modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
