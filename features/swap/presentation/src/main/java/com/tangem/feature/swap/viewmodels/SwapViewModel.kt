@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import arrow.core.getOrElse
+import arrow.core.mapNotNull
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
@@ -41,6 +42,8 @@ import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.properties.Delegates
+
+typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 
 @Suppress("LargeClass", "LongParameterList")
 @HiltViewModel
@@ -257,8 +260,12 @@ internal class SwapViewModel @Inject constructor(
                 }
             },
             onSuccess = { providersState ->
-                val (provider, state) = updateLoadedQuotes(providersState)
-                setupLoadedState(provider, state, fromToken)
+                if (providersState.isNotEmpty()) {
+                    val (provider, state) = updateLoadedQuotes(providersState)
+                    setupLoadedState(provider, state, fromToken)
+                } else {
+                    Timber.e("Accidentally empty quotes list")
+                }
             },
             onError = {
                 Timber.e("Error when loading quotes: $it")
@@ -271,11 +278,14 @@ internal class SwapViewModel @Inject constructor(
         when (state) {
             is SwapState.QuotesLoadedState -> {
                 fillLoadedDataState(state, state.permissionState, state.swapDataModel)
+                val loadedStates = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
+                val bestRatedProviderId = findBestQuoteProvider(loadedStates)?.providerId ?: provider.providerId
                 uiState = stateBuilder.createQuotesLoadedState(
                     uiStateHolder = uiState,
                     quoteModel = state,
                     fromToken = fromToken.currency,
                     swapProvider = provider,
+                    bestRatedProviderId = bestRatedProviderId,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                 )
             }
@@ -309,15 +319,13 @@ internal class SwapViewModel @Inject constructor(
             lastLoadedSwapStates = state,
         )
         selectedSwapProvider?.let {
-            return state.entries.first { it.key == selectedSwapProvider }.toPair()
+            return nonEmptyStates.entries.first { it.key == selectedSwapProvider }.toPair()
         }
         return state.entries.first().toPair()
     }
 
     private fun selectProvider(state: Map<SwapProvider, SwapState>): SwapProvider {
-        val stateSuccess = state
-            .filter { it.value is SwapState.QuotesLoadedState }
-            .mapValues { it.value as SwapState.QuotesLoadedState }
+        val stateSuccess = state.getLastLoadedSuccessStates()
         return if (stateSuccess.isNotEmpty()) {
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && state.keys.contains(currentSelected)) {
@@ -328,23 +336,6 @@ internal class SwapViewModel @Inject constructor(
         } else {
             state.keys.first()
         }
-    }
-
-    private fun findBestQuoteProvider(state: Map<SwapProvider, SwapState.QuotesLoadedState>): SwapProvider? {
-        // finding best quotes
-        return state.mapValues {
-            if (!it.value.fromTokenInfo.amountFiat.isNullOrZero() &&
-                !it.value.toTokenInfo.amountFiat.isNullOrZero()
-            ) {
-                it.value.fromTokenInfo.amountFiat.divide(
-                    it.value.toTokenInfo.amountFiat,
-                    it.value.toTokenInfo.cryptoCurrencyStatus.currency.decimals,
-                    RoundingMode.HALF_UP,
-                )
-            } else {
-                BigDecimal.ZERO
-            }
-        }.minByOrNull { it.value }?.key
     }
 
     private fun fillLoadedDataState(
@@ -714,15 +705,13 @@ internal class SwapViewModel @Inject constructor(
                 }
             },
             onProviderClick = { providerId ->
-                val states = dataState.lastLoadedSwapStates
-                    .filter { it.value is SwapState.QuotesLoadedState }
-                    .mapValues { it.value as SwapState.QuotesLoadedState }
-                val bestRatedProviderId = findBestQuoteProvider(states)?.providerId ?: providerId
+                val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
+                val pricesLowerBest = getPricesLowerBest(states)
                 val unavailableProviders = getUnavailableProvidersFor(dataState.lastLoadedSwapStates)
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
                     selectedProviderId = providerId,
-                    bestRatedProviderId = bestRatedProviderId,
+                    pricesLowerBest = pricesLowerBest,
                     unavailableProviders = unavailableProviders,
                     providersStates = dataState.lastLoadedSwapStates,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
@@ -752,6 +741,45 @@ internal class SwapViewModel @Inject constructor(
             )
         }
         return selectedProvider
+    }
+
+    private fun findBestQuoteProvider(state: SuccessLoadedSwapData): SwapProvider? {
+        // finding best quotes
+        return state.minByOrNull {
+            if (!it.value.fromTokenInfo.amountFiat.isNullOrZero() &&
+                !it.value.toTokenInfo.amountFiat.isNullOrZero()
+            ) {
+                it.value.fromTokenInfo.amountFiat.divide(
+                    it.value.toTokenInfo.amountFiat,
+                    it.value.toTokenInfo.cryptoCurrencyStatus.currency.decimals,
+                    RoundingMode.HALF_UP,
+                )
+            } else {
+                BigDecimal.ZERO
+            }
+        }?.key
+    }
+
+    private fun getPricesLowerBest(state: SuccessLoadedSwapData): Map<SwapProvider, Float> {
+        val rates = state.mapValues {
+            it.value.fromTokenInfo.amountFiat.divide(
+                it.value.toTokenInfo.amountFiat,
+                2,
+                RoundingMode.HALF_UP,
+            )
+        }
+        val bestRate = rates.minByOrNull { it.value } ?: return emptyMap()
+        return rates.mapNotNull {
+            if (it.key != bestRate.key) {
+                val percentDiff = bestRate.value
+                    .divide(it.value, 2, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal(HUNDRED_PERCENT))
+                    .toFloat()
+                HUNDRED_PERCENT - percentDiff
+            } else {
+                null
+            }
+        }
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
@@ -794,10 +822,17 @@ internal class SwapViewModel @Inject constructor(
         return getAllProviders().filterNot { it in state }
     }
 
+    private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
+        return this
+            .filter { it.value is SwapState.QuotesLoadedState }
+            .mapValues { it.value as SwapState.QuotesLoadedState }
+    }
+
     companion object {
         private const val loggingTag = "SwapViewModel"
         private const val INITIAL_AMOUNT = ""
         private const val UPDATE_DELAY = 10000L
         private const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        private const val HUNDRED_PERCENT = 100
     }
 }
