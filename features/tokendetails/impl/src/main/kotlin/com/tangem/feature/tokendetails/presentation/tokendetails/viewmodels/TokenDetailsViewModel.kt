@@ -23,12 +23,12 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -67,7 +67,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    private val walletManagersFacade: WalletManagersFacade,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -303,19 +302,15 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onReceiveClick() {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrency.symbol))
+        val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
 
         viewModelScope.launch(dispatchers.io) {
-            val addresses = walletManagersFacade.getAddress(
-                userWalletId = userWalletId,
-                network = cryptoCurrency.network,
-            )
-
-            analyticsEventsHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
+            analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrency.symbol))
+            analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
 
             uiState = stateFactory.getStateWithReceiveBottomSheet(
                 currency = cryptoCurrency,
-                addresses = addresses,
+                networkAddress = networkAddress,
                 sendCopyAnalyticsEvent = {
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
                 },
@@ -378,22 +373,23 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun openExplorer() {
-        viewModelScope.launch(dispatchers.io) {
-            val addresses = walletManagersFacade.getAddress(
-                userWalletId = userWalletId,
-                network = cryptoCurrency.network,
-            )
+        val currencyStatus = cryptoCurrencyStatus ?: return
 
-            if (addresses.size == 1) {
-                router.openUrl(
-                    url = getExploreUrlUseCase(
-                        userWalletId = userWalletId,
-                        currency = cryptoCurrency,
-                        addressType = AddressType.Default,
-                    ),
-                )
-            } else {
-                uiState = stateFactory.getStateWithChooseAddressBottomSheet(addresses = addresses)
+        viewModelScope.launch(dispatchers.io) {
+            when (val addresses = currencyStatus.value.networkAddress) {
+                is NetworkAddress.Selectable -> {
+                    uiState = stateFactory.getStateWithChooseAddressBottomSheet(cryptoCurrency, addresses)
+                }
+                is NetworkAddress.Single -> {
+                    router.openUrl(
+                        url = getExploreUrlUseCase(
+                            userWalletId = userWalletId,
+                            currency = cryptoCurrency,
+                            addressType = AddressType.Default,
+                        ),
+                    )
+                }
+                null -> Unit
             }
         }
     }
