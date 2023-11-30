@@ -4,9 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -16,9 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
-import androidx.constraintlayout.compose.Visibility
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.constraintlayout.compose.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
@@ -41,8 +41,8 @@ internal fun LazyListScope.swapTransactionsItems(
             contentType = { swapTxs[it]::class.java },
         ) {
             val item = swapTxs[it]
-
-            val (iconRes, tint) = when (item.activeStatus) {
+            val status = item.activeStatus.collectAsStateWithLifecycle()
+            val (iconRes, tint) = when (status.value) {
                 ExchangeStatus.Verifying -> R.drawable.ic_alert_triangle_20 to TangemTheme.colors.icon.attention
                 ExchangeStatus.Failed -> R.drawable.ic_alert_circle_24 to TangemTheme.colors.icon.warning
                 else -> null to null
@@ -54,7 +54,6 @@ internal fun LazyListScope.swapTransactionsItems(
                 toTokenIconState = item.toCurrencyIcon,
                 fromAmount = item.fromCryptoAmount,
                 fromSymbol = item.fromCryptoSymbol,
-                toAmount = item.toCryptoAmount,
                 toSymbol = item.toCryptoSymbol,
                 onClick = item.onClick,
                 infoIconRes = iconRes,
@@ -73,7 +72,6 @@ private fun ExchangeStatusItem(
     toTokenIconState: TokenIconState,
     fromAmount: String,
     fromSymbol: String,
-    toAmount: String,
     toSymbol: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -121,7 +119,7 @@ private fun ExchangeStatusItem(
                 top.linkTo(titleRef.bottom, padding6)
                 end.linkTo(swapIconRef.start)
                 bottom.linkTo(parent.bottom)
-                width = Dimension.fillToConstraints
+                width = Dimension.fillToConstraints.atMostWrapContent
             },
         )
         Icon(
@@ -149,17 +147,16 @@ private fun ExchangeStatusItem(
                     bottom.linkTo(parent.bottom)
                 },
         )
-        EllipsisText(
-            text = toAmount,
+        Text(
+            text = toSymbol,
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
-            ellipsis = TextEllipsis.OffsetEnd(toSymbol.length),
             modifier = Modifier.constrainAs(toRef) {
                 start.linkTo(toIconRef.end, padding6)
                 top.linkTo(titleRef.bottom, padding6)
-                end.linkTo(infoIconRef.start, padding6)
+                end.linkTo(infoIconRef.start, padding6, padding6)
                 bottom.linkTo(parent.bottom)
-                width = Dimension.fillToConstraints
+                width = Dimension.fillToConstraints.atLeastWrapContent
             },
         )
         Icon(
@@ -193,3 +190,53 @@ private fun ExchangeStatusItem(
         )
     }
 }
+
+//region Preview
+@Preview
+@Composable
+private fun ExchangeStatusItemPreview_Light(
+    @PreviewParameter(ExchangeStatusItemsPreviewParameterProvider::class) amount: String,
+) {
+    TangemTheme {
+        ExchangeStatusItem(
+            providerName = "ChangeNow",
+            fromTokenIconState = TokenIconState.Loading,
+            toTokenIconState = TokenIconState.Loading,
+            fromAmount = amount,
+            fromSymbol = "USDT",
+            toSymbol = "USDT",
+            onClick = {},
+            infoIconRes = null,
+            infoIconTint = null,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ExchangeStatusItemPreview_Dark(
+    @PreviewParameter(ExchangeStatusItemsPreviewParameterProvider::class) amount: String,
+) {
+    TangemTheme(isDark = true) {
+        ExchangeStatusItem(
+            providerName = "ChangeNow",
+            fromTokenIconState = TokenIconState.Loading,
+            toTokenIconState = TokenIconState.Loading,
+            fromAmount = amount,
+            fromSymbol = "USDT",
+            toSymbol = "USDT",
+            onClick = {},
+            infoIconRes = null,
+            infoIconTint = null,
+        )
+    }
+}
+
+private class ExchangeStatusItemsPreviewParameterProvider : PreviewParameterProvider<String> {
+    override val values: Sequence<String>
+        get() = sequenceOf(
+            "1111111111111111111111111111 USDT",
+            "11111 USDT",
+        )
+}
+//endregion
