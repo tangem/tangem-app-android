@@ -270,6 +270,7 @@ internal class SwapInteractorImpl @Inject constructor(
             toNetwork = toToken.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
+            toDecimals = toToken.currency.decimals,
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
         )
@@ -462,6 +463,7 @@ internal class SwapInteractorImpl @Inject constructor(
             toNetwork = currencyToGet.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
+            toDecimals = currencyToGet.currency.decimals,
             providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
             toAddress = currencyToGet.value.networkAddress?.defaultAddress ?: "",
@@ -652,6 +654,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromAmount = amount.toStringWithRightOffset(),
                 fromDecimals = amount.decimals,
                 providerId = provider.providerId,
+                toDecimals = toToken.decimals,
                 rateType = RateType.FLOAT,
             )
 
@@ -707,7 +710,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         swapAmount = amount,
                         quotesLoadedState = swapState,
                         isAllowedToSpend = isAllowedToSpend,
-                        spenderAddress = requireNotNull(quoteModel.allowanceContract) { "Allowance contract is null" },
+                        spenderAddress = quoteModel.allowanceContract,
                     )
                     state.copy(
                         preparedSwapConfigState = state.preparedSwapConfigState.copy(
@@ -776,6 +779,7 @@ internal class SwapInteractorImpl @Inject constructor(
             toNetwork = toToken.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
+            toDecimals = toToken.currency.decimals,
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
             toAddress = toToken.value.networkAddress?.defaultAddress ?: "",
@@ -907,7 +911,7 @@ internal class SwapInteractorImpl @Inject constructor(
         fromTokenStatus: CryptoCurrencyStatus,
         swapAmount: SwapAmount,
         quotesLoadedState: SwapState.QuotesLoadedState,
-        spenderAddress: String,
+        spenderAddress: String?,
         isAllowedToSpend: Boolean,
     ): SwapState.QuotesLoadedState {
         val fromToken = fromTokenStatus.currency
@@ -934,7 +938,7 @@ internal class SwapInteractorImpl @Inject constructor(
             derivationPath = derivationPath,
             fromToken = fromToken,
             swapAmount = swapAmount,
-            spenderAddress = spenderAddress,
+            spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
         )
         val feeData = try {
             transactionManager.getFee(
