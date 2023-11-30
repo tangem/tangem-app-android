@@ -37,6 +37,7 @@ dependencies {
     implementation(deps.tangem.blockchain)
     implementation(deps.tangem.card.core)
     implementation(deps.timber)
+    implementation(deps.lifecycle.compose)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -65,6 +66,9 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+
+    /** Temp dependency to swap domain */
+    implementation(projects.features.swap.domain)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
