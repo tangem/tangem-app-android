@@ -132,7 +132,7 @@ class DefaultSwapTransactionRepository(
 
     override suspend fun getLastSwappedCryptoCurrencyId(userWalletId: UserWalletId): String? {
         val lastSwappedCurrencies = appPreferencesStore.getObjectListSync<SavedLastSwappedCryptoCurrency>(
-            key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY
+            key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
         )
 
         return lastSwappedCurrencies.find { userWalletId.stringValue == it.userWalletId }?.cryptoCurrencyId
@@ -157,7 +157,7 @@ class DefaultSwapTransactionRepository(
 
             mutablePreferences.setObjectList(
                 key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
-                value = newList
+                value = newList,
             )
         }
     }

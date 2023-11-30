@@ -570,7 +570,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun storeLastCryptoCurrencyId(cryptoCurrency: CryptoCurrency) {
         swapTransactionRepository.storeLastSwappedCryptoCurrencyId(
             UserWalletId(userWalletManager.getWalletId()),
-            cryptoCurrency.id
+            cryptoCurrency.id,
         )
     }
 

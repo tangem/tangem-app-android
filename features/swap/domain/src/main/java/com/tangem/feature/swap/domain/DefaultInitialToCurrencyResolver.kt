@@ -6,7 +6,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 import java.math.BigDecimal
 
-internal class DefaultInitialToCurrencyResolver (
+internal class DefaultInitialToCurrencyResolver(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val swapTransactionRepository: SwapTransactionRepository,
 ) : InitialToCurrencyResolver {
@@ -25,13 +25,9 @@ internal class DefaultInitialToCurrencyResolver (
         }
     }
 
-    override fun tryGetWithMaxAmount(
-        state: TokensDataStateExpress,
-    ): CryptoCurrencyStatus? {
+    override fun tryGetWithMaxAmount(state: TokensDataStateExpress): CryptoCurrencyStatus? {
         return state.toGroup.available.maxByOrNull {
             it.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO
         }?.currencyStatus
     }
-
-
 }

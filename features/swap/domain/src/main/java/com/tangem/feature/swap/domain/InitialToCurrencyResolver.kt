@@ -8,7 +8,7 @@ internal interface InitialToCurrencyResolver {
 
     suspend fun tryGetFromCache(
         initialCryptoCurrency: CryptoCurrency,
-        state: TokensDataStateExpress
+        state: TokensDataStateExpress,
     ): CryptoCurrencyStatus?
 
     fun tryGetWithMaxAmount(state: TokensDataStateExpress): CryptoCurrencyStatus?

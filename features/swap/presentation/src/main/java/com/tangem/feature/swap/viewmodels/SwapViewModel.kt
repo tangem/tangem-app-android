@@ -156,8 +156,9 @@ internal class SwapViewModel @Inject constructor(
                 applyInitialTokenChoice(
                     state,
                     swapInteractor.selectInitialCurrencyToSwap(
-                        initialCryptoCurrency, state
-                    )
+                        initialCryptoCurrency,
+                        state,
+                    ),
                 )
             }.onFailure {
                 Timber.tag(loggingTag).e(it)
@@ -185,11 +186,6 @@ internal class SwapViewModel @Inject constructor(
                 toProvidersList = findSwapProviders(fromCurrencyStatus, selectedCurrency),
             )
         }
-    }
-
-    private suspend fun selectCurrencyToSwap(state: TokensDataStateExpress): CryptoCurrencyStatus? {
-        // todo add algorithm to select initial currency
-        return swapInteractor.selectInitialCurrencyToSwap(initialCryptoCurrency, state)
     }
 
     private fun updateTokensState(dataState: TokensDataStateExpress) {

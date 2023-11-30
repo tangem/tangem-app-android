@@ -132,7 +132,7 @@ class SwapDomainModule {
     fun provideInitialToCurrencyResolver(
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         swapTransactionRepository: SwapTransactionRepository,
-    ) : InitialToCurrencyResolver {
+    ): InitialToCurrencyResolver {
         return DefaultInitialToCurrencyResolver(
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             swapTransactionRepository = swapTransactionRepository,
