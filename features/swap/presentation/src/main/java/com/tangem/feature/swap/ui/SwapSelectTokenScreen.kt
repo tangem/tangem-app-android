@@ -63,7 +63,7 @@ private fun EmptyTokensList(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .background(TangemTheme.colors.background.secondary)
-            .fillMaxSize()
+            .fillMaxSize(),
     ) {
         Column(modifier = Modifier.align(Alignment.Center)) {
             Image(
@@ -82,7 +82,7 @@ private fun EmptyTokensList(modifier: Modifier = Modifier) {
                 text = stringResource(id = R.string.exchange_tokens_empty_tokens),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
