@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -21,7 +20,6 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -135,14 +133,10 @@ private fun MainInfo(state: SwapStateHolder) {
     ConstraintLayout(
         modifier = Modifier.fillMaxWidth(),
     ) {
-        val networkIconRes = remember {
-            getActiveIconRes(state.blockchainId)
-        }
         val (topCard, bottomCard, button) = createRefs()
         val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
         TransactionCardData(
             priceImpactWarning = priceImpactWarning,
-            networkIconRes = networkIconRes,
             swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
@@ -152,7 +146,6 @@ private fun MainInfo(state: SwapStateHolder) {
         val marginCard = TangemTheme.dimens.spacing16
         TransactionCardData(
             priceImpactWarning = priceImpactWarning,
-            networkIconRes = networkIconRes,
             swapCardState = state.receiveCardData,
             modifier = Modifier.constrainAs(bottomCard) {
                 top.linkTo(topCard.bottom, margin = marginCard)
@@ -174,7 +167,6 @@ private fun MainInfo(state: SwapStateHolder) {
 @Composable
 private fun TransactionCardData(
     priceImpactWarning: SwapWarning.HighPriceImpact?,
-    networkIconRes: Int?,
     swapCardState: SwapCardState,
     onSelectTokenClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -202,7 +194,7 @@ private fun TransactionCardData(
                 tokenIconUrl = swapCardState.tokenIconUrl ?: "",
                 tokenCurrency = swapCardState.tokenCurrency,
                 priceImpact = priceImpactWarning,
-                networkIconRes = if (swapCardState.isNotNativeToken) networkIconRes else null,
+                networkIconRes = if (swapCardState.isNotNativeToken) swapCardState.networkIconRes else null,
                 iconPlaceholder = swapCardState.coinId?.let {
                     getActiveIconResByCoinId(it)
                 },
@@ -355,6 +347,7 @@ private val sendCard = SwapCardState.SwapCardData(
     balance = "123",
     coinId = "",
     token = null,
+    networkIconRes = R.drawable.img_polygon_22,
     isBalanceHidden = false,
 )
 
@@ -369,11 +362,11 @@ private val receiveCard = SwapCardState.SwapCardData(
     balance = "33333",
     coinId = "",
     token = null,
+    networkIconRes = R.drawable.img_polygon_22,
     isBalanceHidden = false,
 )
 
 private val state = SwapStateHolder(
-    networkId = "ethereum",
     sendCardData = sendCard,
     receiveCardData = receiveCard,
     fee = FeeItemState.Content(

@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.models
 
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -14,7 +15,6 @@ data class SwapStateHolder(
     val sendCardData: SwapCardState,
     val receiveCardData: SwapCardState,
     val networkCurrency: String,
-    val networkId: String,
     val blockchainId: String, // not the same as networkId, its local id in app
     val warnings: List<SwapWarning> = emptyList(),
     val alert: SwapWarning.GenericWarning? = null,
@@ -42,6 +42,7 @@ data class SwapStateHolder(
 sealed class SwapCardState {
 
     data class SwapCardData(
+        @DrawableRes val networkIconRes: Int?,
         val type: TransactionCardType,
         val amountEquivalent: String?,
         val token: CryptoCurrencyStatus?,
