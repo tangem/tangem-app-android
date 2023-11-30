@@ -3,6 +3,7 @@ package com.tangem.domain.tokens.mock
 import arrow.core.nonEmptyListOf
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
 import java.math.BigDecimal
 
@@ -64,7 +65,9 @@ internal object MockTokensStates {
             priceChange = MockQuotes.quote7.priceChange,
             fiatRate = MockQuotes.quote7.fiatRate,
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
-            networkAddress = null,
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+            ),
         ),
     )
 
@@ -75,7 +78,9 @@ internal object MockTokensStates {
             priceChange = MockQuotes.quote8.priceChange,
             fiatRate = MockQuotes.quote8.fiatRate,
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
-            networkAddress = null,
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+            ),
         ),
     )
 
@@ -86,7 +91,9 @@ internal object MockTokensStates {
             priceChange = MockQuotes.quote9.priceChange,
             fiatRate = MockQuotes.quote9.fiatRate,
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
-            networkAddress = null,
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+            ),
         ),
     )
 
@@ -97,7 +104,9 @@ internal object MockTokensStates {
             priceChange = MockQuotes.quote10.priceChange,
             fiatRate = MockQuotes.quote10.fiatRate,
             amountToCreateAccount = MockNetworks.amountToCreateAccount,
-            networkAddress = null,
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+            ),
         ),
     )
 
