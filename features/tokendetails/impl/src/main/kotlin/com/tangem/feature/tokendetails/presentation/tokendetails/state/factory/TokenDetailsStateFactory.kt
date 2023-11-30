@@ -27,6 +27,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -240,6 +241,19 @@ internal class TokenDetailsStateFactory(
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.removeRentInfo(state))
+    }
+
+    fun getStateWithExchangeStatusBottomSheet(txId: String): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(
+            bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissBottomSheet,
+                content = ExchangeStatusBottomSheetConfig(
+                    value = state.swapTxs.first { it.txId == txId },
+                ),
+            ),
+        )
     }
 
     fun getStateAndTriggerEvent(
