@@ -32,6 +32,7 @@ interface TangemExpressApi {
         @Query("toNetwork") toNetwork: String,
         @Query("fromAmount") fromAmount: String,
         @Query("fromDecimals") fromDecimals: Int,
+        @Query("toDecimals") toDecimals: Int,
         @Query("providerId") providerId: String,
         @Query("rateType") rateType: String,
     ): ApiResponse<ExchangeQuoteResponse>
@@ -44,6 +45,7 @@ interface TangemExpressApi {
         @Query("toNetwork") toNetwork: String,
         @Query("fromAmount") fromAmount: String,
         @Query("fromDecimals") fromDecimals: Int,
+        @Query("toDecimals") toDecimals: Int,
         @Query("providerId") providerId: String,
         @Query("rateType") rateType: String,
         @Query("toAddress") toAddress: String,
