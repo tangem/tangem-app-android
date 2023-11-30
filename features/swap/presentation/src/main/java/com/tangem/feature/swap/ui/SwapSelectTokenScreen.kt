@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,7 +12,10 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.Strings
 import com.tangem.core.ui.components.*
@@ -34,7 +38,12 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
             .systemBarsPadding()
             .background(color = TangemTheme.colors.background.secondary),
         content = { padding ->
-            ListOfTokens(state = state, Modifier.padding(padding))
+            val modifier = Modifier.padding(padding)
+            if (state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty()) {
+                EmptyTokensList(modifier)
+            } else {
+                ListOfTokens(state = state, modifier = modifier)
+            }
         },
         topBar = {
             ExpandableSearchView(
@@ -47,6 +56,36 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
             )
         },
     )
+}
+
+@Composable
+private fun EmptyTokensList(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary)
+            .fillMaxSize()
+    ) {
+        Column(modifier = Modifier.align(Alignment.Center)) {
+            Image(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size64)
+                    .align(Alignment.CenterHorizontally),
+                painter = painterResource(id = R.drawable.ic_no_token_44),
+                colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
+                contentDescription = null,
+            )
+            Text(
+                modifier = Modifier
+                    .padding(top = TangemTheme.dimens.spacing16)
+                    .padding(horizontal = TangemTheme.dimens.spacing30)
+                    .align(Alignment.CenterHorizontally),
+                text = stringResource(id = R.string.exchange_tokens_empty_tokens),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 }
 
 @Composable
@@ -245,5 +284,13 @@ private fun TokenScreenPreview() {
             ),
             onBack = {},
         )
+    }
+}
+
+@Preview
+@Composable
+private fun EmptyTokensListPreview() {
+    TangemTheme(isDark = false) {
+        EmptyTokensList()
     }
 }
