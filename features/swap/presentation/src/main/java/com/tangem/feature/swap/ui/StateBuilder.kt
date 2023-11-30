@@ -49,7 +49,6 @@ internal class StateBuilder(
 
     fun createInitialLoadingState(initialCurrency: CryptoCurrency, networkInfo: NetworkInfo): SwapStateHolder {
         return SwapStateHolder(
-            networkId = initialCurrency.network.backendId,
             blockchainId = networkInfo.blockchainId,
             sendCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.SendCard(actions.onAmountChanged, actions.onAmountSelected),
@@ -62,6 +61,7 @@ internal class StateBuilder(
                 canSelectAnotherToken = false,
                 isNotNativeToken = initialCurrency is CryptoCurrency.Token,
                 balance = "",
+                networkIconRes = getActiveIconRes(initialCurrency.network.id.value),
                 isBalanceHidden = true,
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -74,6 +74,7 @@ internal class StateBuilder(
                 canSelectAnotherToken = false,
                 balance = "",
                 isNotNativeToken = false,
+                networkIconRes = null,
                 coinId = null,
                 isBalanceHidden = true,
             ),
@@ -109,6 +110,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 balance = fromToken.getFormattedAmount(),
+                networkIconRes = getActiveIconRes(fromToken.currency.network.id.value),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.Empty(
@@ -163,6 +165,7 @@ internal class StateBuilder(
                 isNotNativeToken = fromToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectSendToken,
                 balance = if (!canSelectSendToken) uiStateHolder.sendCardData.balance else "",
+                networkIconRes = getActiveIconRes(fromToken.network.id.value),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -176,6 +179,7 @@ internal class StateBuilder(
                 isNotNativeToken = toToken is CryptoCurrency.Token,
                 canSelectAnotherToken = canSelectReceiveToken,
                 balance = if (!canSelectReceiveToken) uiStateHolder.receiveCardData.balance else "",
+                networkIconRes = getActiveIconRes(toToken.network.id.value),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             warnings = emptyList(),
@@ -256,6 +260,7 @@ internal class StateBuilder(
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                networkIconRes = uiStateHolder.sendCardData.networkIconRes,
                 balance = fromCurrencyStatus.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
@@ -269,6 +274,7 @@ internal class StateBuilder(
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
+                networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
                 balance = toCurrencyStatus.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
@@ -329,6 +335,7 @@ internal class StateBuilder(
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
+                networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
                 balance = toToken.getFormattedAmount(),
                 isBalanceHidden = isBalanceHiddenProvider(),
             )
@@ -421,6 +428,7 @@ internal class StateBuilder(
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                networkIconRes = uiStateHolder.sendCardData.networkIconRes,
                 balance = emptyAmountState.fromTokenWalletBalance,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
@@ -434,6 +442,7 @@ internal class StateBuilder(
                 isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
+                networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
                 balance = emptyAmountState.toTokenWalletBalance,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
