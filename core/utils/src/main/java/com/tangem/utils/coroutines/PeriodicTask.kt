@@ -1,4 +1,4 @@
-package com.tangem.feature.swap.viewmodels
+package com.tangem.utils.coroutines
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
