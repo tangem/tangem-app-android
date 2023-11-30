@@ -168,6 +168,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         toNetwork: String,
         fromAmount: String,
         fromDecimals: Int,
+        toDecimals: Int,
         providerId: String,
         rateType: RateType,
     ): AggregatedSwapDataModel<QuoteModel> {
@@ -180,6 +181,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                     toNetwork = toNetwork,
                     fromAmount = fromAmount,
                     fromDecimals = fromDecimals,
+                    toDecimals = toDecimals,
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
                 ).getOrThrow()
@@ -208,6 +210,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         toNetwork: String,
         fromAmount: String,
         fromDecimals: Int,
+        toDecimals: Int,
         providerId: String,
         rateType: RateType,
         toAddress: String,
@@ -221,6 +224,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                     toNetwork = toNetwork,
                     fromAmount = fromAmount,
                     fromDecimals = fromDecimals,
+                    toDecimals = toDecimals,
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
                     toAddress = toAddress,
