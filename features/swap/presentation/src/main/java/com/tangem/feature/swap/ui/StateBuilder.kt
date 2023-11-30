@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
@@ -592,6 +593,7 @@ internal class StateBuilder(
                 txUrl = txUrl,
                 providerName = TextReference.Str(providerState.name),
                 providerType = TextReference.Str(providerState.type),
+                showStatusButton = providerState.type == ExchangeProviderType.CEX.name,
                 providerIcon = providerState.iconUrl,
                 fee = TextReference.Str("${fee.amountCrypto} ${fee.symbolCrypto} (${fee.amountFiatFormatted})"),
                 rate = TextReference.Str(providerState.rate),
