@@ -4,7 +4,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 
-internal interface InitialToCurrencyResolver {
+interface InitialToCurrencyResolver {
 
     suspend fun tryGetFromCache(
         initialCryptoCurrency: CryptoCurrency,
