@@ -104,6 +104,16 @@ fun combinedReference(refs: WrappedList<TextReference>): TextReference {
     return TextReference.Combined(refs)
 }
 
+/**
+ * Combines multiple [TextReference] instances into a single [TextReference].
+ *
+ * @param refs Vararg of [TextReference] instances to be combined.
+ * @return A [TextReference] representing the combined text references.
+ */
+fun combinedReference(vararg refs: TextReference): TextReference {
+    return TextReference.Combined(WrappedList(listOf(*refs)))
+}
+
 /** Resolve [TextReference] as [String] */
 @Composable
 @ReadOnlyComposable

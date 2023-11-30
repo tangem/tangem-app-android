@@ -8,6 +8,7 @@ data class SwapSuccessStateHolder(
     val txUrl: String,
     val fee: TextReference,
     val rate: TextReference,
+    val showStatusButton: Boolean,
     val providerName: TextReference,
     val providerType: TextReference,
     val providerIcon: String,
