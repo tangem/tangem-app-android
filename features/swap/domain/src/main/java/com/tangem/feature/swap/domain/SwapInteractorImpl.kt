@@ -43,6 +43,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val transactionManager: TransactionManager,
     private val userWalletManager: UserWalletManager,
     private val repository: SwapRepository,
+    private val swapTransactionRepository: SwapTransactionRepository,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
@@ -492,6 +493,14 @@ internal class SwapInteractorImpl @Inject constructor(
             },
             ifRight = {
                 val timestamp = System.currentTimeMillis()
+                storeSwapTransaction(
+                    currencyToSend = currencyToSend,
+                    currencyToGet = currencyToGet,
+                    amount = amount,
+                    swapProvider = swapProvider,
+                    swapDataModel = exchangeData.dataModel,
+                    timestamp = timestamp,
+                )
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -529,6 +538,28 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             Fee.Common(feeAmount)
         }
+    }
+
+    private suspend fun storeSwapTransaction(
+        currencyToSend: CryptoCurrencyStatus,
+        currencyToGet: CryptoCurrencyStatus,
+        amount: SwapAmount,
+        swapProvider: SwapProvider,
+        swapDataModel: SwapDataModel,
+        timestamp: Long,
+    ) {
+        swapTransactionRepository.storeTransaction(
+            userWalletId = UserWalletId(userWalletManager.getWalletId()),
+            fromCryptoCurrencyId = currencyToSend.currency.id,
+            toCryptoCurrencyId = currencyToGet.currency.id,
+            transaction = SavedSwapTransactionModel(
+                txId = swapDataModel.transaction.txId,
+                provider = swapProvider,
+                timestamp = timestamp,
+                fromCryptoAmount = amount.value,
+                toCryptoAmount = swapDataModel.toTokenAmount.value,
+            ),
+        )
     }
 
     @Deprecated("used in old swap mechanism")
