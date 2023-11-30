@@ -34,9 +34,10 @@ class SwapDomainModule {
         userWalletManager: UserWalletManager,
         transactionManager: TransactionManager,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-        @SwapScope getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+        getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
         quotesRepository: QuotesRepository,
+        swapTransactionRepository: SwapTransactionRepository,
         walletManagersFacade: WalletManagersFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): SwapInteractor {
@@ -51,6 +52,7 @@ class SwapDomainModule {
             quotesRepository = quotesRepository,
             walletManagersFacade = walletManagersFacade,
             dispatcher = coroutineDispatcherProvider,
+            swapTransactionRepository = swapTransactionRepository,
         )
     }
 
@@ -69,7 +71,6 @@ class SwapDomainModule {
         return GetSelectedWalletSyncUseCase(walletsStateHolder = walletsStateHolder)
     }
 
-    @SwapScope
     @Provides
     @Singleton
     fun providesGetCryptoCurrencyStatusUseCase(
