@@ -294,6 +294,12 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         config = warning.notificationConfig,
                     )
                 }
+                is SwapWarning.GeneralWarning -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                        iconTint = TangemTheme.colors.icon.warning,
+                    )
+                }
                 else -> {}
             }
             SpacerH8()
