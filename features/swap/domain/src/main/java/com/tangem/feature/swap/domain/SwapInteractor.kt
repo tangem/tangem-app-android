@@ -15,16 +15,6 @@ interface SwapInteractor {
     fun initDerivationPathAndNetwork(derivationPath: String?, network: Network)
 
     /**
-     * On search token, locally search tokens in previously loaded list to swap
-     * searching in names and symbols
-     *
-     * @param networkId networkId for tokens
-     * @param searchQuery string query for search
-     * @return [FoundTokensStateExpress] that contains list of tokens matching condition query
-     */
-    suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensStateExpress
-
-    /**
      * Gives permission to swap, this starts scan card process
      *
      * @param networkId network in which selected token
@@ -88,10 +78,9 @@ interface SwapInteractor {
     /**
      * Returns token in wallet balance
      *
-     * @param networkId
      * @param token
      */
-    fun getTokenBalance(networkId: String, token: CryptoCurrency): SwapAmount
+    fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount
 
     fun isAvailableToSwap(networkId: String): Boolean
 
