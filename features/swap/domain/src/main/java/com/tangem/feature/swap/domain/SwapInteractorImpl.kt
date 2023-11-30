@@ -427,6 +427,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
         return when (result) {
             is SendTxResult.Success -> {
+                storeLastCryptoCurrencyId(currencyToGet)
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -503,6 +504,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapDataModel = exchangeData.dataModel,
                     timestamp = timestamp,
                 )
+                storeLastCryptoCurrencyId(currencyToGet.currency)
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -561,6 +563,13 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromCryptoAmount = amount.value,
                 toCryptoAmount = swapDataModel.toTokenAmount.value,
             ),
+        )
+    }
+
+    private suspend fun storeLastCryptoCurrencyId(cryptoCurrency: CryptoCurrency) {
+        swapTransactionRepository.storeLastSwappedCryptoCurrencyId(
+            UserWalletId(userWalletManager.getWalletId()),
+            cryptoCurrency.id
         )
     }
 

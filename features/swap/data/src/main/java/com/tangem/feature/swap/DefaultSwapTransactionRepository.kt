@@ -59,32 +59,7 @@ class DefaultSwapTransactionRepository(
                     ),
                 ),
             )
-
-            saveLastSwappedCryptoCurrency(mutablePreferences, userWalletId, toCryptoCurrencyId)
         }
-    }
-
-    private fun AppPreferencesStore.saveLastSwappedCryptoCurrency(
-        mutablePreferences: androidx.datastore.preferences.core.MutablePreferences,
-        userWalletId: UserWalletId,
-        cryptoCurrencyId: CryptoCurrency.ID,
-    ) {
-        val lastSwappedCryptoCurrencies: List<SavedLastSwappedCryptoCurrency>? = mutablePreferences.getObjectList(
-            key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
-        )
-
-        if (lastSwappedCryptoCurrencies != null) {
-            lastSwappedCryptoCurrencies.filter {
-                it.userWalletId != userWalletId.stringValue
-            } +  SavedLastSwappedCryptoCurrency(userWalletId.stringValue, cryptoCurrencyId.value)
-        } else {
-            SavedLastSwappedCryptoCurrency(userWalletId.stringValue, cryptoCurrencyId.value)
-        }
-
-        mutablePreferences.setObject(
-            key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
-            value = cryptoCurrencyId.value
-        )
     }
 
     override fun getTransactions(
@@ -155,12 +130,36 @@ class DefaultSwapTransactionRepository(
         }
     }
 
-    override suspend fun getLastSwappedCryptoCurrencyId(userWalletId: UserWalletId) : String? {
+    override suspend fun getLastSwappedCryptoCurrencyId(userWalletId: UserWalletId): String? {
         val lastSwappedCurrencies = appPreferencesStore.getObjectListSync<SavedLastSwappedCryptoCurrency>(
             key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY
         )
 
         return lastSwappedCurrencies.find { userWalletId.stringValue == it.userWalletId }?.cryptoCurrencyId
+    }
+
+    override suspend fun storeLastSwappedCryptoCurrencyId(
+        userWalletId: UserWalletId,
+        cryptoCurrencyId: CryptoCurrency.ID,
+    ) {
+        appPreferencesStore.editData { mutablePreferences ->
+            val lastSwappedCryptoCurrencies: List<SavedLastSwappedCryptoCurrency>? = mutablePreferences.getObjectList(
+                key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
+            )
+
+            val newList = if (lastSwappedCryptoCurrencies != null) {
+                lastSwappedCryptoCurrencies.filter {
+                    it.userWalletId != userWalletId.stringValue
+                } + SavedLastSwappedCryptoCurrency(userWalletId.stringValue, cryptoCurrencyId.value)
+            } else {
+                listOf(SavedLastSwappedCryptoCurrency(userWalletId.stringValue, cryptoCurrencyId.value))
+            }
+
+            mutablePreferences.setObjectList(
+                key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
+                value = newList
+            )
+        }
     }
 
     private fun SavedSwapTransactionListModel.checkId(
