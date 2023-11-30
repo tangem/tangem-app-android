@@ -52,6 +52,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val quotesRepository: QuotesRepository,
     private val dispatcher: CoroutineDispatcherProvider,
+    private val swapTransactionRepository: SwapTransactionRepository,
 ) : SwapInteractor {
 
     private val getFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -164,25 +165,6 @@ internal class SwapInteractorImpl @Inject constructor(
     override fun initDerivationPathAndNetwork(derivationPath: String?, network: Network) {
         this.derivationPath = derivationPath
         this.network = network
-    }
-
-    @Deprecated("used in old swap mechanism")
-    override suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensStateExpress {
-        val searchQueryLowerCase = searchQuery.lowercase()
-        val tokensInWallet = cache.getInWalletTokens()
-            .filter {
-                it.token.name.lowercase().contains(searchQueryLowerCase) ||
-                    it.token.symbol.lowercase().contains(searchQueryLowerCase)
-            }
-        val loadedTokens = cache.getLoadedTokens()
-            .filter {
-                it.token.name.lowercase().contains(searchQueryLowerCase) ||
-                    it.token.symbol.lowercase().contains(searchQueryLowerCase)
-            }
-        return FoundTokensStateExpress(
-            tokensInWallet = tokensInWallet,
-            loadedTokens = loadedTokens,
-        )
     }
 
     @Deprecated("used in old swap mechanism")
@@ -555,7 +537,6 @@ internal class SwapInteractorImpl @Inject constructor(
         } else {
             Fee.Common(feeAmount)
         }
-
     }
 
     @Deprecated("used in old swap mechanism")
@@ -570,6 +551,37 @@ internal class SwapInteractorImpl @Inject constructor(
     @Deprecated("used in old swap mechanism")
     override fun isAvailableToSwap(networkId: String): Boolean {
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
+    }
+
+    override suspend fun selectInitialCurrencyToSwap(
+        initialCryptoCurrency: CryptoCurrency,
+        state: TokensDataStateExpress,
+    ): CryptoCurrencyStatus? {
+        return tryGetLastCryptoCurrencyStatusFromCache(initialCryptoCurrency, state)
+            ?: tryGetCryptoCurrencyStatusWithMaxAmount(state)
+            ?: state.toGroup.available.firstOrNull()?.currencyStatus
+    }
+
+    private suspend fun tryGetLastCryptoCurrencyStatusFromCache(
+        initialCryptoCurrency: CryptoCurrency,
+        state: TokensDataStateExpress,
+    ): CryptoCurrencyStatus? {
+        val selectedId = getSelectedWalletSyncUseCase().getOrNull() ?: return null
+        val id = swapTransactionRepository.getLastSwappedCryptoCurrencyId(selectedId.walletId) ?: return null
+
+        return if (id != initialCryptoCurrency.id.value) {
+            state.toGroup.available.find { it.currencyStatus.currency.id.value == id }?.currencyStatus
+        } else {
+            null
+        }
+    }
+
+    private fun tryGetCryptoCurrencyStatusWithMaxAmount(
+        state: TokensDataStateExpress,
+    ): CryptoCurrencyStatus? {
+        return state.toGroup.available.maxByOrNull {
+            it.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO
+        }?.currencyStatus
     }
 
     @Deprecated("used in old swap mechanism")

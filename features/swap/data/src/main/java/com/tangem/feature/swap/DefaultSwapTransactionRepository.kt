@@ -3,9 +3,11 @@ package com.tangem.feature.swap
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
+import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.SwapTransactionRepository
+import com.tangem.feature.swap.domain.models.domain.SavedLastSwappedCryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
 import com.tangem.utils.extensions.addOrReplace
@@ -57,7 +59,32 @@ class DefaultSwapTransactionRepository(
                     ),
                 ),
             )
+
+            saveLastSwappedCryptoCurrency(mutablePreferences, userWalletId, toCryptoCurrencyId)
         }
+    }
+
+    private fun AppPreferencesStore.saveLastSwappedCryptoCurrency(
+        mutablePreferences: androidx.datastore.preferences.core.MutablePreferences,
+        userWalletId: UserWalletId,
+        cryptoCurrencyId: CryptoCurrency.ID,
+    ) {
+        val lastSwappedCryptoCurrencies: List<SavedLastSwappedCryptoCurrency>? = mutablePreferences.getObjectList(
+            key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
+        )
+
+        if (lastSwappedCryptoCurrencies != null) {
+            lastSwappedCryptoCurrencies.filter {
+                it.userWalletId != userWalletId.stringValue
+            } +  SavedLastSwappedCryptoCurrency(userWalletId.stringValue, cryptoCurrencyId.value)
+        } else {
+            SavedLastSwappedCryptoCurrency(userWalletId.stringValue, cryptoCurrencyId.value)
+        }
+
+        mutablePreferences.setObject(
+            key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY,
+            value = cryptoCurrencyId.value
+        )
     }
 
     override fun getTransactions(
@@ -126,6 +153,14 @@ class DefaultSwapTransactionRepository(
                 )
             }
         }
+    }
+
+    override suspend fun getLastSwappedCryptoCurrencyId(userWalletId: UserWalletId) : String? {
+        val lastSwappedCurrencies = appPreferencesStore.getObjectListSync<SavedLastSwappedCryptoCurrency>(
+            key = PreferencesKeys.LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY
+        )
+
+        return lastSwappedCurrencies.find { userWalletId.stringValue == it.userWalletId }?.cryptoCurrencyId
     }
 
     private fun SavedSwapTransactionListModel.checkId(

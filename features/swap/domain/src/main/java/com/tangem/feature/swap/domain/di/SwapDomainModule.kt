@@ -53,6 +53,7 @@ class SwapDomainModule {
             quotesRepository = quotesRepository,
             walletManagersFacade = walletManagersFacade,
             dispatcher = coroutineDispatcherProvider,
+            swapTransactionRepository = TODO()
         )
     }
 
