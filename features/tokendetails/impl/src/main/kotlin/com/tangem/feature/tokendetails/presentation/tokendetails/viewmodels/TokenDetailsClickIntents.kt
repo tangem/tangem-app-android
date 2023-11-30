@@ -38,4 +38,8 @@ interface TokenDetailsClickIntents {
     fun onDismissBottomSheet()
 
     fun onCloseRentInfoNotification()
+
+    fun onSwapTransactionClick(txId: String)
+
+    fun onGoToProviderClick(url: String)
 }
