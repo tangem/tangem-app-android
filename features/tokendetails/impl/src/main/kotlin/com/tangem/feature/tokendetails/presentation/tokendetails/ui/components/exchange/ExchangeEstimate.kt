@@ -22,7 +22,9 @@ internal fun ExchangeEstimate(
     fromTokenIconState: TokenIconState,
     toTokenIconState: TokenIconState,
     fromCryptoAmount: TextReference,
+    fromCryptoSymbol: String,
     toCryptoAmount: TextReference,
+    toCryptoSymbol: String,
     fromFiatAmount: TextReference,
     toFiatAmount: TextReference,
     modifier: Modifier = Modifier,
@@ -59,9 +61,11 @@ internal fun ExchangeEstimate(
             leftIcon = fromTokenIconState,
             leftTitle = fromCryptoAmount,
             leftSubtitle = fromFiatAmount,
+            leftTitleEllipsisOffset = fromCryptoSymbol.length,
             rightIcon = toTokenIconState,
             rightTitle = toCryptoAmount,
             rightSubtitle = toFiatAmount,
+            rightTitleEllipsisOffset = toCryptoSymbol.length,
         )
     }
 }
