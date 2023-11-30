@@ -2,12 +2,11 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import androidx.paging.PagingData
 import arrow.core.Either
-import com.tangem.blockchain.common.address.Address
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
@@ -17,6 +16,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -174,7 +174,7 @@ internal class TokenDetailsStateFactory(
 
     fun getStateWithReceiveBottomSheet(
         currency: CryptoCurrency,
-        addresses: List<Address>,
+        networkAddress: NetworkAddress,
         sendCopyAnalyticsEvent: () -> Unit,
         sendShareAnalyticsEvent: () -> Unit,
     ): TokenDetailsState {
@@ -186,12 +186,7 @@ internal class TokenDetailsStateFactory(
                     name = currency.name,
                     symbol = currency.symbol,
                     network = currency.network.name,
-                    addresses = addresses.map {
-                        AddressModel(
-                            value = it.value,
-                            type = AddressModel.Type.valueOf(it.type.name),
-                        )
-                    },
+                    addresses = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
                     onCopyClick = sendCopyAnalyticsEvent,
                     onShareClick = sendShareAnalyticsEvent,
                 ),
@@ -199,20 +194,16 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithChooseAddressBottomSheet(addresses: List<Address>): TokenDetailsState {
+    fun getStateWithChooseAddressBottomSheet(
+        currency: CryptoCurrency,
+        networkAddress: NetworkAddress,
+    ): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = ChooseAddressBottomSheetConfig(
-                    addressModels = addresses
-                        .map { address ->
-                            AddressModel(
-                                value = address.value,
-                                type = AddressModel.Type.valueOf(address.type.name),
-                            )
-                        }
-                        .toImmutableList(),
+                    addressModels = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
                     onClick = clickIntents::onAddressTypeSelected,
                 ),
             ),
