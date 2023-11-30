@@ -6,18 +6,19 @@ package com.tangem.domain.tokens.model
 sealed class NetworkAddress {
 
     /** The default or currently selected network address. */
-    abstract val defaultAddress: String
+    abstract val defaultAddress: Address
+
+    /** The set of available network addresses to choose from. */
+    abstract val availableAddresses: Set<Address>
 
     /**
      * Represents a single static network address.
      *
      * @property defaultAddress The static network address.
      */
-    data class Single(override val defaultAddress: String) : NetworkAddress() {
+    data class Single(override val defaultAddress: Address) : NetworkAddress() {
 
-        init {
-            checkDefaultAddress()
-        }
+        override val availableAddresses: Set<Address> = setOf(defaultAddress)
     }
 
     /**
@@ -27,17 +28,26 @@ sealed class NetworkAddress {
      * @property availableAddresses The set of available network addresses to choose from.
      */
     data class Selectable(
-        override val defaultAddress: String,
-        val availableAddresses: Set<String>,
+        override val defaultAddress: Address,
+        override val availableAddresses: Set<Address>,
     ) : NetworkAddress() {
 
         init {
-            checkDefaultAddress()
             require(availableAddresses.isNotEmpty()) { "Available network addresses must not be empty" }
         }
     }
 
-    protected fun checkDefaultAddress() {
-        require(defaultAddress.isNotBlank()) { "Selected network address must not be blank" }
+    data class Address(
+        val value: String,
+        val type: Type,
+    ) {
+
+        enum class Type {
+            Primary, Secondary,
+        }
+
+        init {
+            require(value.isNotBlank()) { "Address value must not be blank" }
+        }
     }
 }
