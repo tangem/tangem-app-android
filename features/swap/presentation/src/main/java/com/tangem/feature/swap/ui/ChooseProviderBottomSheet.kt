@@ -2,7 +2,6 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
@@ -24,16 +23,17 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet(config) { content: ChooseProviderBottomSheetConfig ->
+    TangemBottomSheet(
+        config = config,
+        color = TangemTheme.colors.background.tertiary,
+    ) { content: ChooseProviderBottomSheetConfig ->
         ChooseProviderBottomSheetContent(content = content)
     }
 }
 
 @Composable
 private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetConfig) {
-    Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
-    ) {
+    Column {
         Text(
             text = stringResource(R.string.express_choose_providers_title),
             style = TangemTheme.typography.subtitle1,
@@ -60,7 +60,6 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
                 .clip(shape = TangemTheme.shapes.roundedCornersXMedium),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
             content.providers.forEach { provider ->
                 val isSelected = provider.id == content.selectedProviderId
@@ -72,10 +71,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                             enabled = provider.onProviderClick != null,
                             onClick = { provider.onProviderClick?.invoke(provider.id) },
                         )
-                        .padding(
-                            horizontal = TangemTheme.dimens.spacing12,
-                            vertical = TangemTheme.dimens.spacing12,
-                        ),
+                        .padding(TangemTheme.dimens.spacing12),
                 )
             }
         }
