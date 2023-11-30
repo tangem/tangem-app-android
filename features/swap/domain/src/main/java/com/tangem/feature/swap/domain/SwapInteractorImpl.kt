@@ -302,7 +302,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromTokenAddress = getTokenAddress(fromToken.currency)
         val isAllowedToSpend = quotes.dataModel?.allowanceContract?.let {
             isAllowedToSpend(networkId, fromToken.currency, amount, it)
-        } ?: false
+        } ?: true
 
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
@@ -543,19 +543,18 @@ internal class SwapInteractorImpl @Inject constructor(
             value = fee.feeValue,
             currencySymbol = fee.cryptoSymbol,
             decimals = fee.decimals,
-            type = AmountType.Coin
+            type = AmountType.Coin,
         )
 
         return if (fee.gasLimit != 0) {
             Fee.Ethereum(
                 amount = feeAmount,
                 gasLimit = fee.gasLimit.toBigInteger(),
-                gasPrice = (feeAmountValue / fee.gasLimit.toBigDecimal()).toBigInteger()
+                gasPrice = (feeAmountValue / fee.gasLimit.toBigDecimal()).toBigInteger(),
             )
         } else {
             Fee.Common(feeAmount)
         }
-
     }
 
     @Deprecated("used in old swap mechanism")
@@ -1083,7 +1082,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
                 val normalCryptoFee = amountFormatter.formatBigDecimalAmountToUI(
                     amount = feeNormal,
-                    decimals = decimals
+                    decimals = decimals,
                 )
                 val priorityCryptoFee = amountFormatter.formatBigDecimalAmountToUI(
                     amount = feePriority,
