@@ -194,12 +194,13 @@ internal class StateBuilder(
      * @param fromToken token data to swap
      * @return updated whole screen state
      */
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "LongParameterList")
     fun createQuotesLoadedState(
         uiStateHolder: SwapStateHolder,
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
         swapProvider: SwapProvider,
+        bestRatedProviderId: String,
         selectedFeeType: FeeType,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -288,6 +289,7 @@ internal class StateBuilder(
             ),
             updateInProgress = false,
             providerState = swapProvider.convertToContentClickableProviderState(
+                isBestRate = bestRatedProviderId == swapProvider.providerId,
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
                 selectionType = ProviderState.SelectionType.CLICK,
@@ -310,6 +312,7 @@ internal class StateBuilder(
             swapProvider = swapProvider,
             fromToken = fromToken.cryptoCurrencyStatus.currency,
             dataError = dataError,
+            onProviderClick = actions.onProviderClick,
             selectionType = ProviderState.SelectionType.CLICK,
         )
         val receiveCardData = toToken?.let {
@@ -358,6 +361,7 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         fromToken: CryptoCurrency,
         dataError: DataError,
+        onProviderClick: (String) -> Unit,
         selectionType: ProviderState.SelectionType,
     ): ProviderState {
         return when (dataError) {
@@ -368,7 +372,7 @@ internal class StateBuilder(
                         wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     selectionType = selectionType,
-                    onProviderClick = actions.onProviderClick,
+                    onProviderClick = onProviderClick,
                 )
             }
             else -> {
@@ -712,13 +716,13 @@ internal class StateBuilder(
     fun showSelectProviderBottomSheet(
         uiState: SwapStateHolder,
         selectedProviderId: String,
-        bestRatedProviderId: String,
+        pricesLowerBest: Map<SwapProvider, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         unavailableProviders: List<SwapProvider>,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries.mapNotNull {
-            it.convertToProviderState(bestRatedProviderId, actions.onProviderSelect)
+            it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
         }
         val unavailableProviderStates = unavailableProviders.map {
             it.convertToUnavailableProviderState(
@@ -818,23 +822,25 @@ internal class StateBuilder(
         ).toImmutableList()
     }
 
-    private fun Map.Entry<SwapProvider, SwapState>.convertToProviderState(
-        bestRatedProviderId: String,
+    private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
+        pricesLowerBest: Map<SwapProvider, Float>,
         onProviderSelect: (String) -> Unit,
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
             is SwapState.EmptyAmountState -> null
             is SwapState.QuotesLoadedState -> provider.convertToContentSelectableProviderState(
-                isBestRate = provider.providerId == bestRatedProviderId,
+                isBestRate = false, // not show best rate in bottom sheet
                 state = state,
                 onProviderClick = onProviderSelect,
+                pricesLowerBest = pricesLowerBest,
                 selectionType = ProviderState.SelectionType.SELECT,
             )
             is SwapState.SwapError -> getProviderStateForError(
                 swapProvider = provider,
                 fromToken = state.fromTokenInfo.cryptoCurrencyStatus.currency,
                 dataError = state.error,
+                onProviderClick = onProviderSelect,
                 selectionType = ProviderState.SelectionType.SELECT,
             )
         }
@@ -893,6 +899,7 @@ internal class StateBuilder(
     }
 
     private fun SwapProvider.convertToContentClickableProviderState(
+        isBestRate: Boolean,
         fromTokenInfo: TokenSwapInfo,
         toTokenInfo: TokenSwapInfo,
         selectionType: ProviderState.SelectionType,
@@ -905,13 +912,18 @@ internal class StateBuilder(
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
         val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
+        val badge = if (isBestRate) {
+            ProviderState.AdditionalBadge.BestTrade
+        } else {
+            ProviderState.AdditionalBadge.Empty
+        }
         return ProviderState.Content(
             id = this.providerId,
             name = this.name,
             iconUrl = this.imageLarge,
             type = this.type.toString(),
             rate = rateString,
-            additionalBadge = ProviderState.AdditionalBadge.BestTrade,
+            additionalBadge = badge,
             selectionType = selectionType,
             percentLowerThenBest = null,
             onProviderClick = onProviderClick,
@@ -922,17 +934,11 @@ internal class StateBuilder(
         isBestRate: Boolean,
         state: SwapState.QuotesLoadedState,
         selectionType: ProviderState.SelectionType,
+        pricesLowerBest: Map<SwapProvider, Float>,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
-        val fromTokenInfo = state.fromTokenInfo
         val toTokenInfo = state.toTokenInfo
-        val rate = toTokenInfo.tokenAmount.value.calculateRate(
-            fromTokenInfo.tokenAmount.value,
-            toTokenInfo.cryptoCurrencyStatus.currency.decimals,
-        )
-        val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
-        val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
-        val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
+        val rateString = toTokenInfo.tokenAmount.getFormattedCryptoAmount(toTokenInfo.cryptoCurrencyStatus.currency)
         val additionalBadge = if (state.permissionState is PermissionDataState.PermissionReadyForRequest) {
             ProviderState.AdditionalBadge.PermissionRequired
         } else if (isBestRate) {
@@ -948,7 +954,7 @@ internal class StateBuilder(
             rate = rateString,
             additionalBadge = additionalBadge,
             selectionType = selectionType,
-            percentLowerThenBest = null,
+            percentLowerThenBest = pricesLowerBest[this],
             onProviderClick = onProviderClick,
         )
     }
