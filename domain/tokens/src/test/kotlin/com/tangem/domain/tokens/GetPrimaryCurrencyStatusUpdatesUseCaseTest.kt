@@ -118,7 +118,9 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
                     amount = BigDecimal.TEN,
                     hasCurrentNetworkTransactions = false,
                     pendingTransactions = emptySet(),
-                    networkAddress = NetworkAddress.Single(defaultAddress = "mock"),
+                    networkAddress = NetworkAddress.Single(
+                        defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+                    ),
                 ),
             )
         }
