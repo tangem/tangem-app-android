@@ -43,6 +43,7 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
             SwapSuccessScreenButtons(
                 textRes = R.string.common_close,
                 txUrl = state.txUrl,
+                showStatusButton = state.showStatusButton,
                 onExploreClick = state.onSecondaryButtonClick,
                 onDoneClick = onBack,
             )
@@ -105,6 +106,7 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
 private fun SwapSuccessScreenButtons(
     @StringRes textRes: Int,
     txUrl: String,
+    showStatusButton: Boolean,
     onExploreClick: () -> Unit,
     onDoneClick: () -> Unit,
 ) {
@@ -119,21 +121,23 @@ private fun SwapSuccessScreenButtons(
         if (txUrl.isNotBlank()) {
             Row {
                 SecondaryButtonIconStart(
-                    text = stringResource(id = com.tangem.core.ui.R.string.common_explore),
-                    iconResId = com.tangem.core.ui.R.drawable.ic_web_24,
+                    text = stringResource(id = R.string.common_explore),
+                    iconResId = R.drawable.ic_web_24,
                     onClick = onExploreClick,
                     modifier = Modifier.weight(1f),
                 )
-                SpacerW12()
-                SecondaryButtonIconStart(
-                    text = stringResource(id = com.tangem.core.ui.R.string.common_share),
-                    iconResId = com.tangem.core.ui.R.drawable.ic_share_24,
-                    onClick = {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        context.shareText(txUrl)
-                    },
-                    modifier = Modifier.weight(1f),
-                )
+                if (showStatusButton) {
+                    SpacerW12()
+                    SecondaryButtonIconStart(
+                        text = stringResource(id = R.string.express_cex_status_button_title),
+                        iconResId = R.drawable.ic_arrow_top_right_24,
+                        onClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            context.shareText(txUrl)
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
             SpacerH12()
         }
@@ -154,6 +158,7 @@ private val state = SwapSuccessStateHolder(
     fee = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
     providerName = TextReference.Str("1inch"),
     providerType = TextReference.Str(ExchangeProviderType.DEX.name),
+    showStatusButton = false,
     providerIcon = "",
     fromTokenAmount = TextReference.Str("1 000 DAI"),
     toTokenAmount = TextReference.Str("1 000 MATIC"),
