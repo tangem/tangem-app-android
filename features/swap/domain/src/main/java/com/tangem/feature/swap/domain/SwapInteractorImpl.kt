@@ -51,6 +51,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val quotesRepository: QuotesRepository,
     private val dispatcher: CoroutineDispatcherProvider,
     private val swapTransactionRepository: SwapTransactionRepository,
+    private val initialToCurrencyResolver: InitialToCurrencyResolver,
 ) : SwapInteractor {
 
     private val getFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -587,31 +588,9 @@ internal class SwapInteractorImpl @Inject constructor(
         initialCryptoCurrency: CryptoCurrency,
         state: TokensDataStateExpress,
     ): CryptoCurrencyStatus? {
-        return tryGetLastCryptoCurrencyStatusFromCache(initialCryptoCurrency, state)
-            ?: tryGetCryptoCurrencyStatusWithMaxAmount(state)
+        return initialToCurrencyResolver.tryGetFromCache(initialCryptoCurrency, state)
+            ?: initialToCurrencyResolver.tryGetWithMaxAmount(state)
             ?: state.toGroup.available.firstOrNull()?.currencyStatus
-    }
-
-    private suspend fun tryGetLastCryptoCurrencyStatusFromCache(
-        initialCryptoCurrency: CryptoCurrency,
-        state: TokensDataStateExpress,
-    ): CryptoCurrencyStatus? {
-        val selectedId = getSelectedWalletSyncUseCase().getOrNull() ?: return null
-        val id = swapTransactionRepository.getLastSwappedCryptoCurrencyId(selectedId.walletId) ?: return null
-
-        return if (id != initialCryptoCurrency.id.value) {
-            state.toGroup.available.find { it.currencyStatus.currency.id.value == id }?.currencyStatus
-        } else {
-            null
-        }
-    }
-
-    private fun tryGetCryptoCurrencyStatusWithMaxAmount(
-        state: TokensDataStateExpress,
-    ): CryptoCurrencyStatus? {
-        return state.toGroup.available.maxByOrNull {
-            it.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO
-        }?.currencyStatus
     }
 
     @Deprecated("used in old swap mechanism")
