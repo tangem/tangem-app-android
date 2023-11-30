@@ -63,6 +63,7 @@ internal class DefaultWalletRouter(
                     val viewModel = hiltViewModel<WalletViewModel>().apply {
                         router = this@DefaultWalletRouter
                     }
+                    LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
 
                     WalletScreen(state = viewModel.uiState)
                 }
