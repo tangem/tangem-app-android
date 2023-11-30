@@ -29,8 +29,8 @@ class CurrencyConverter(
     fun toCrypto(fiat: BigDecimal): BigDecimal {
         if (fiat.isZero()) return fiat
 
-        val scaledRateValue = rateValue.setScale(decimals, roundingMode)
-        val scaledFiat = fiat.setScale(decimals, roundingMode)
-        return scaledFiat.divide(scaledRateValue, RoundingMode.UP)
+        val fiatValue = fiat.setScale(rateValue.scale(), RoundingMode.UP)
+        val cryptoValue = fiatValue.divide(rateValue, RoundingMode.UP)
+        return cryptoValue.setScale(decimals, roundingMode)
     }
 }
