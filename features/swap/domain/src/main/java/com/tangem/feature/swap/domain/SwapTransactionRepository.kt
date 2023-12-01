@@ -26,4 +26,8 @@ interface SwapTransactionRepository {
         toCryptoCurrencyId: CryptoCurrency.ID,
         txId: String,
     )
+
+    suspend fun storeLastSwappedCryptoCurrencyId(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID)
+
+    suspend fun getLastSwappedCryptoCurrencyId(userWalletId: UserWalletId): String?
 }
