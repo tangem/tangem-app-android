@@ -200,14 +200,17 @@ internal class SwapViewModel @Inject constructor(
         toToken: CryptoCurrencyStatus,
         amount: String,
         toProvidersList: List<SwapProvider>,
+        isSilent: Boolean = false,
     ) {
         singleTaskScheduler.cancelTask()
-        uiState = stateBuilder.createQuotesLoadingState(
-            uiState,
-            fromToken.currency,
-            toToken.currency,
-            initialCryptoCurrency.id.value,
-        )
+        if (!isSilent) {
+            uiState = stateBuilder.createQuotesLoadingState(
+                uiState,
+                fromToken.currency,
+                toToken.currency,
+                initialCryptoCurrency.id.value,
+            )
+        }
         singleTaskScheduler.scheduleTask(
             viewModelScope,
             loadQuotesTask(
@@ -219,7 +222,7 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    private fun startLoadingQuotesFromLastState() {
+    private fun startLoadingQuotesFromLastState(isSilent: Boolean = false) {
         val fromCurrency = dataState.fromCryptoCurrency
         val toCurrency = dataState.toCryptoCurrency
         val amount = dataState.amount
@@ -228,6 +231,7 @@ internal class SwapViewModel @Inject constructor(
                 fromToken = fromCurrency,
                 toToken = toCurrency,
                 amount = amount,
+                isSilent = isSilent,
                 toProvidersList = findSwapProviders(fromCurrency, toCurrency),
             )
         }
@@ -429,6 +433,12 @@ internal class SwapViewModel @Inject constructor(
     private fun givePermissionsToSwap() {
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
+                val feeForPermission = when (val fee = dataState.approveDataModel?.fee) {
+                    TxFeeState.Empty -> error("Fee should not be Empty")
+                    is TxFeeState.MultipleFeeState -> fee.priorityFee
+                    is TxFeeState.SingleFeeState -> fee.fee
+                    null -> error("Fee should not be null")
+                }
                 swapInteractor.givePermissionToSwap(
                     networkId = dataState.networkId,
                     permissionOptions = PermissionOptions(
@@ -444,9 +454,7 @@ internal class SwapViewModel @Inject constructor(
                         approveType = requireNotNull(dataState.approveType) {
                             "uiState.permissionState should not be null"
                         }.toDomainApproveType(),
-                        txFee = requireNotNull(dataState.selectedFee) {
-                            "dataState.selectedFee shouldn't be null"
-                        },
+                        txFee = feeForPermission,
                         spenderAddress = requireNotNull(dataState.approveDataModel?.spenderAddress) {
                             "dataState.approveDataModel.spenderAddress shouldn't be null"
                         },
@@ -664,9 +672,9 @@ internal class SwapViewModel @Inject constructor(
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
                 uiState = stateBuilder.showPermissionBottomSheet(uiState) {
-                    startLoadingQuotesFromLastState()
+                    startLoadingQuotesFromLastState(isSilent = true)
                     analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
-                    stateBuilder.dismissBottomSheet(uiState)
+                    uiState = stateBuilder.dismissBottomSheet(uiState)
                 }
             },
             onAmountSelected = { onAmountSelected(it) },
