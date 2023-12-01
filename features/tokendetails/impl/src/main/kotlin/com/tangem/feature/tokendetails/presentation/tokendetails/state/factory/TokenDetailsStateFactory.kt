@@ -22,6 +22,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
@@ -243,14 +244,13 @@ internal class TokenDetailsStateFactory(
         return state.copy(notifications = notificationConverter.removeRentInfo(state))
     }
 
-    fun getStateWithExchangeStatusBottomSheet(txId: String): TokenDetailsState {
-        val state = currentStateProvider()
-        return state.copy(
+    fun getStateWithExchangeStatusBottomSheet(swapTxState: SwapTransactionsState): TokenDetailsState {
+        return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = ExchangeStatusBottomSheetConfig(
-                    value = state.swapTxs.first { it.txId == txId },
+                    value = swapTxState,
                 ),
             ),
         )
