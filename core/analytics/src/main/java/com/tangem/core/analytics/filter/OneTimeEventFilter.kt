@@ -4,7 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventFilter
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.OneTimeAnalyticsEvent
-import com.tangem.core.analytics.repository.AnalyticsRepository
+import com.tangem.domain.analytics.repository.AnalyticsRepository
 
 class OneTimeEventFilter(
     private val analyticsRepository: AnalyticsRepository,
