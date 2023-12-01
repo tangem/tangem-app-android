@@ -1,10 +1,7 @@
 package com.tangem.data.tokens.di
 
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
-import com.tangem.data.tokens.repository.DefaultMarketCryptoCurrencyRepository
-import com.tangem.data.tokens.repository.DefaultNetworksRepository
-import com.tangem.data.tokens.repository.DefaultQuotesRepository
+import com.tangem.data.tokens.repository.*
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -12,10 +9,7 @@ import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.datasource.local.token.UserMarketCoinsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -92,5 +86,19 @@ internal object TokensDataModule {
         userMarketCoinsStore: UserMarketCoinsStore,
     ): MarketCryptoCurrencyRepository {
         return DefaultMarketCryptoCurrencyRepository(userMarketCoinsStore)
+    }
+
+    @Provides
+    @Singleton
+    fun providesTokensListRepository(
+        tangemTechApi: TangemTechApi,
+        dispatchers: CoroutineDispatcherProvider,
+        quotesRepository: QuotesRepository,
+    ): TokensListRepository {
+        return DefaultTokensListRepository(
+            tangemTechApi = tangemTechApi,
+            dispatchers = dispatchers,
+            quotesRepository = quotesRepository,
+        )
     }
 }
