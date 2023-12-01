@@ -1,14 +1,16 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.common.Provider
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.toDateFormat
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.ExchangeStatusState
@@ -26,6 +28,8 @@ import java.math.BigDecimal
 
 internal class TokenDetailsSwapTransactionsStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
+    private val cryptoCurrency: CryptoCurrency,
+    private val analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
     appCurrencyProvider: Provider<AppCurrency>,
 ) : Converter<Unit, PersistentList<SwapTransactionsState>> {
 
@@ -89,8 +93,13 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         fromCryptoSymbol = fromCurrency.currency.symbol,
                         fromFiatAmount = getFiatAmount(fromFiatAmount),
                         fromCurrencyIcon = iconStateConverter.convert(fromCurrency),
-                        onClick = { clickIntents.onSwapTransactionClick(transaction.txId) },
-                        onGoToProviderClick = { clickIntents.onGoToProviderClick(transaction.status?.txUrl.orEmpty()) },
+                        onClick = { clickIntents.onSwapTransactionClick(transaction.txId, transaction.status?.status) },
+                        onGoToProviderClick = {
+                            analyticsEventsHandlerProvider().send(
+                                TokenExchangeAnalyticsEvent.GoToProviderStatus(cryptoCurrency.symbol),
+                            )
+                            clickIntents.onGoToProviderClick(url = transaction.status?.txUrl.orEmpty())
+                        },
                     ),
                 )
             }
@@ -116,11 +125,27 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     private fun getNotification(status: ExchangeStatus?, txUrl: String?): ExchangeStatusNotifications? {
         if (txUrl == null) return null
         return when (status) {
-            ExchangeStatus.Failed -> ExchangeStatusNotifications.Failed {
-                clickIntents.onGoToProviderClick(txUrl)
+            ExchangeStatus.Failed -> {
+                analyticsEventsHandlerProvider().send(
+                    TokenExchangeAnalyticsEvent.Fail(cryptoCurrency.symbol),
+                )
+                ExchangeStatusNotifications.Failed {
+                    analyticsEventsHandlerProvider().send(
+                        TokenExchangeAnalyticsEvent.GoToProviderFail(cryptoCurrency.symbol),
+                    )
+                    clickIntents.onGoToProviderClick(txUrl)
+                }
             }
-            ExchangeStatus.Verifying -> ExchangeStatusNotifications.NeedVerification {
-                clickIntents.onGoToProviderClick(txUrl)
+            ExchangeStatus.Verifying -> {
+                analyticsEventsHandlerProvider().send(
+                    TokenExchangeAnalyticsEvent.Verification(cryptoCurrency.symbol),
+                )
+                ExchangeStatusNotifications.NeedVerification {
+                    analyticsEventsHandlerProvider().send(
+                        TokenExchangeAnalyticsEvent.GoToProviderKYC(cryptoCurrency.symbol),
+                    )
+                    clickIntents.onGoToProviderClick(txUrl)
+                }
             }
             else -> null
         }
@@ -150,10 +175,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     private fun waitStep(isNew: Boolean, isNewDone: Boolean) = ExchangeStatusState(
         status = ExchangeStatus.New,
         text = when {
-            isNew -> combinedReference(
-                TextReference.Res(R.string.express_exchange_status_receiving),
-                TextReference.Str(STATUS_ACTIVE_DOTS),
-            )
+            isNew -> TextReference.Res(R.string.express_exchange_status_receiving_active)
             else -> TextReference.Res(R.string.express_exchange_status_receiving)
         },
         isActive = isNew,
@@ -163,10 +185,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     private fun confirmStep(isConfirming: Boolean, isConfirmingDone: Boolean) = ExchangeStatusState(
         status = ExchangeStatus.Confirming,
         text = when {
-            isConfirming -> combinedReference(
-                TextReference.Res(R.string.express_exchange_status_confirming),
-                TextReference.Str(STATUS_ACTIVE_DOTS),
-            )
+            isConfirming -> TextReference.Res(R.string.express_exchange_status_confirming_active)
             isConfirmingDone -> TextReference.Res(R.string.express_exchange_status_confirmed)
             else -> TextReference.Res(R.string.express_exchange_status_confirming)
         },
@@ -195,10 +214,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         else -> ExchangeStatusState(
             status = ExchangeStatus.Exchanging,
             text = when {
-                isExchanging -> combinedReference(
-                    TextReference.Res(R.string.express_exchange_status_exchanging),
-                    TextReference.Str(STATUS_ACTIVE_DOTS),
-                )
+                isExchanging -> TextReference.Res(R.string.express_exchange_status_exchanging_active)
                 isExchangingDone -> TextReference.Res(R.string.express_exchange_status_exchanged)
                 else -> TextReference.Res(R.string.express_exchange_status_exchanging)
             },
@@ -210,18 +226,11 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     private fun sendStep(isSending: Boolean, isSendingDone: Boolean) = ExchangeStatusState(
         status = ExchangeStatus.Sending,
         text = when {
-            isSending -> combinedReference(
-                TextReference.Res(R.string.express_exchange_status_sending),
-                TextReference.Str(STATUS_ACTIVE_DOTS),
-            )
+            isSending -> TextReference.Res(R.string.express_exchange_status_sending_active)
             isSendingDone -> TextReference.Res(R.string.express_exchange_status_sent)
             else -> TextReference.Res(R.string.express_exchange_status_sending)
         },
         isActive = isSending,
         isDone = isSendingDone,
     )
-
-    private companion object {
-        private const val STATUS_ACTIVE_DOTS = "…"
-    }
 }
