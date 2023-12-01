@@ -77,11 +77,10 @@ interface FragmentOnBackPressedHandler {
 fun Fragment.addBackPressHandler(handler: FragmentOnBackPressedHandler) {
     requireActivity().onBackPressedDispatcher.addCallback(
         owner = this,
-        onBackPressed = { handler.handleOnBackPressed() }
+        onBackPressed = { handler.handleOnBackPressed() },
     )
 
     view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener {
         handler.handleOnBackPressed()
     }
 }
-
