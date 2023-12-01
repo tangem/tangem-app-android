@@ -10,7 +10,6 @@ import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
 import java.math.BigDecimal
-import java.util.concurrent.TimeUnit
 import com.tangem.blockchain.common.address.Address as SdkAddress
 
 internal class UpdateWalletManagerResultFactory {
@@ -125,7 +124,7 @@ internal class UpdateWalletManagerResultFactory {
 
         return TxHistoryItem(
             txHash = hash,
-            timestampInMillis = TimeUnit.SECONDS.toMillis(millis),
+            timestampInMillis = millis,
             isOutgoing = isOutgoing,
             destinationType = TxHistoryItem.DestinationType.Single(
                 TxHistoryItem.AddressType.User(data.destinationAddress),
