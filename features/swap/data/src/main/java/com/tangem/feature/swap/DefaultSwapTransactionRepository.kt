@@ -99,11 +99,11 @@ class DefaultSwapTransactionRepository(
                     )
                 }
                 ?.transactions
-                ?.dropWhile { it.txId == txId }
+                ?.filterNot { it.txId == txId }
 
             val editedList =
                 if (tokenTransactions.isNullOrEmpty()) {
-                    savedList?.dropWhile {
+                    savedList?.filterNot {
                         it.checkId(
                             checkUserWalletId = userWalletId,
                             fromCurrencyId = fromCryptoCurrencyId,
