@@ -12,7 +12,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
@@ -44,10 +43,6 @@ private fun SwapPermissionBottomSheetContent(content: GivePermissionBottomSheetC
             .padding(horizontal = TangemTheme.dimens.spacing16),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Hand()
-
-        SpacerH10()
-
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(
                 modifier = Modifier.align(Alignment.Center),
