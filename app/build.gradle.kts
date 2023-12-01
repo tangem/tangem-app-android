@@ -74,6 +74,7 @@ dependencies {
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
+    implementation(projects.data.analytics)
 
     /** Features */
     implementation(projects.features.onboarding)
