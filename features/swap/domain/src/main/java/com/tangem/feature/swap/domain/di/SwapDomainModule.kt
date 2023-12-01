@@ -40,6 +40,7 @@ class SwapDomainModule {
         swapTransactionRepository: SwapTransactionRepository,
         walletManagersFacade: WalletManagersFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
+        initialToCurrencyResolver: InitialToCurrencyResolver,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -53,6 +54,7 @@ class SwapDomainModule {
             walletManagersFacade = walletManagersFacade,
             dispatcher = coroutineDispatcherProvider,
             swapTransactionRepository = swapTransactionRepository,
+            initialToCurrencyResolver = initialToCurrencyResolver,
         )
     }
 
@@ -122,6 +124,18 @@ class SwapDomainModule {
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideInitialToCurrencyResolver(
+        @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+        swapTransactionRepository: SwapTransactionRepository,
+    ): InitialToCurrencyResolver {
+        return DefaultInitialToCurrencyResolver(
+            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            swapTransactionRepository = swapTransactionRepository,
         )
     }
 }
