@@ -85,4 +85,9 @@ interface SwapInteractor {
     fun isAvailableToSwap(networkId: String): Boolean
 
     fun getSelectedWallet(): UserWallet?
+
+    suspend fun selectInitialCurrencyToSwap(
+        initialCryptoCurrency: CryptoCurrency,
+        state: TokensDataStateExpress,
+    ): CryptoCurrencyStatus?
 }
