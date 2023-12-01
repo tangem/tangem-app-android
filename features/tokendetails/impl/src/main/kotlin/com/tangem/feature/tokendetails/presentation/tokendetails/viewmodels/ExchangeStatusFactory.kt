@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
 import arrow.core.getOrElse
 import com.tangem.common.Provider
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -35,19 +36,22 @@ internal class ExchangeStatusFactory(
     private val dispatchers: CoroutineDispatcherProvider,
     private val clickIntents: TokenDetailsClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
     private val userWalletId: UserWalletId,
-    private val cryptoCurrencyId: CryptoCurrency.ID,
+    private val cryptoCurrency: CryptoCurrency,
 ) {
 
     private val swapTransactionsStateConverter by lazy {
         TokenDetailsSwapTransactionsStateConverter(
             clickIntents = clickIntents,
+            cryptoCurrency = cryptoCurrency,
             appCurrencyProvider = appCurrencyProvider,
+            analyticsEventsHandlerProvider = analyticsEventsHandlerProvider,
         )
     }
 
     operator fun invoke() = combine(
-        flow = swapTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId),
+        flow = swapTransactionRepository.getTransactions(userWalletId, cryptoCurrency.id),
         flow2 = getWalletCryptoCurrencies().conflate(),
     ) { savedTransactions, cryptoCurrenciesStatusList ->
         innerLoadSwapState(
