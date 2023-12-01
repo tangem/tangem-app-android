@@ -32,6 +32,16 @@ fun CryptoCurrency.Token.tryGetBackgroundForTokenIcon(
 ): Color {
     if (isGrayscale) return TangemColorPalette.Dark2
 
+    return tryGetBackgroundForTokenIcon(contractAddress = contractAddress, fallbackColor = fallbackColor)
+}
+
+/**
+ * Tries to extract a background color from the contract address of a token.
+ *
+ * @param fallbackColor The color to use as a fallback.
+ * @return The extracted background color or the fallback color if extraction fails or if it is a test network token.
+ */
+fun tryGetBackgroundForTokenIcon(contractAddress: String, fallbackColor: Color = TangemColorPalette.Black): Color {
     return try {
         val colorHex = "#" + contractAddress.substring(range = COLOR_HEX_START_INDEX..COLOR_HEX_END_INDEX)
         Color(colorHex.toColorInt())
