@@ -22,6 +22,9 @@ dependencies {
     /** Project - Other */
     implementation(projects.core.utils)
 
+    /** Android - Other */
+    implementation(deps.androidx.paging.runtime)
+
     /** Utils */
     implementation(deps.jodatime)
     implementation(deps.reKotlin)
