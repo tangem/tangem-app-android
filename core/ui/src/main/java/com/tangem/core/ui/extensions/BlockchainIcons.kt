@@ -45,7 +45,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "octaspace", "octaspace/test" -> R.drawable.img_octaspace_22
         "chia", "chia/test" -> R.drawable.img_chia_22
         "NEAR", "NEAR/test" -> R.drawable.img_near_22
-        "decimal", "decimal/testnet" -> R.drawable.img_decimal_22
+        "decimal", "decimal/test" -> R.drawable.img_decimal_22
         else -> R.drawable.ic_alert_24
     }
 }
