@@ -47,6 +47,9 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
+    /** Project - Data */
+    implementation(projects.data.tokens)
+
     /** Domain modules */
     implementation(projects.common)
     implementation(projects.domain.card)
