@@ -43,7 +43,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val transactionManager: TransactionManager,
     private val userWalletManager: UserWalletManager,
     private val repository: SwapRepository,
-    private val swapTransactionRepository: SwapTransactionRepository,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
@@ -51,6 +50,8 @@ internal class SwapInteractorImpl @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val quotesRepository: QuotesRepository,
     private val dispatcher: CoroutineDispatcherProvider,
+    private val swapTransactionRepository: SwapTransactionRepository,
+    private val initialToCurrencyResolver: InitialToCurrencyResolver,
 ) : SwapInteractor {
 
     private val getFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -427,6 +428,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
         return when (result) {
             is SendTxResult.Success -> {
+                storeLastCryptoCurrencyId(currencyToGet)
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -503,6 +505,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapDataModel = exchangeData.dataModel,
                     timestamp = timestamp,
                 )
+                storeLastCryptoCurrencyId(currencyToGet.currency)
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
@@ -564,6 +567,13 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    private suspend fun storeLastCryptoCurrencyId(cryptoCurrency: CryptoCurrency) {
+        swapTransactionRepository.storeLastSwappedCryptoCurrencyId(
+            UserWalletId(userWalletManager.getWalletId()),
+            cryptoCurrency.id,
+        )
+    }
+
     @Deprecated("used in old swap mechanism")
     override fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount {
         return SwapAmount(token.value.amount ?: BigDecimal.ZERO, getTokenDecimals(token.currency))
@@ -572,6 +582,15 @@ internal class SwapInteractorImpl @Inject constructor(
     @Deprecated("used in old swap mechanism")
     override fun isAvailableToSwap(networkId: String): Boolean {
         return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
+    }
+
+    override suspend fun selectInitialCurrencyToSwap(
+        initialCryptoCurrency: CryptoCurrency,
+        state: TokensDataStateExpress,
+    ): CryptoCurrencyStatus? {
+        return initialToCurrencyResolver.tryGetFromCache(initialCryptoCurrency, state)
+            ?: initialToCurrencyResolver.tryGetWithMaxAmount(state)
+            ?: state.toGroup.available.firstOrNull()?.currencyStatus
     }
 
     @Deprecated("used in old swap mechanism")
