@@ -2,10 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -230,5 +227,11 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
     ): GetMissedAddressesCryptoCurrenciesUseCase {
         return GetMissedAddressesCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetGlobalTokenListUseCase(tokensListRepository: TokensListRepository): GetGlobalTokenListUseCase {
+        return GetGlobalTokenListUseCase(repository = tokensListRepository)
     }
 }
