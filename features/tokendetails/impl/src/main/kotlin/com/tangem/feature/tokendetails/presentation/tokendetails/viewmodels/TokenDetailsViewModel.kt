@@ -23,6 +23,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -35,9 +36,11 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.feature.swap.domain.SwapTransactionRepository
+import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -117,8 +120,9 @@ internal class TokenDetailsViewModel @Inject constructor(
             dispatchers = dispatchers,
             clickIntents = this,
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
+            analyticsEventsHandlerProvider = Provider { analyticsEventsHandler },
             userWalletId = userWalletId,
-            cryptoCurrencyId = cryptoCurrency.id,
+            cryptoCurrency = cryptoCurrency,
         )
     }
 
@@ -212,6 +216,9 @@ internal class TokenDetailsViewModel @Inject constructor(
             swapTxStatusTaskScheduler.cancelTask()
             exchangeStatusFactory.invoke()
                 .onEach { swapTxs ->
+                    if (swapTxs.isNotEmpty()) {
+                        analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.CexTx(cryptoCurrency.symbol))
+                    }
                     swapTxStatusTaskScheduler.scheduleTask(
                         viewModelScope,
                         PeriodicTask(
@@ -533,8 +540,21 @@ internal class TokenDetailsViewModel @Inject constructor(
         uiState = stateFactory.getStateWithRemovedRentNotification()
     }
 
-    override fun onSwapTransactionClick(txId: String) {
-        uiState = stateFactory.getStateWithExchangeStatusBottomSheet(txId)
+    override fun onSwapTransactionClick(txId: String, status: ExchangeStatus?) {
+        val swapTxState = uiState.swapTxs.first { it.txId == txId }
+        analyticsEventsHandler.send(
+            TokenExchangeAnalyticsEvent.CexTxOpened(cryptoCurrency.symbol, status?.name.orEmpty()),
+        )
+        when (swapTxState.notification.value) {
+            is ExchangeStatusNotifications.NeedVerification -> {
+                analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.Verification(cryptoCurrency.symbol))
+            }
+            is ExchangeStatusNotifications.Failed -> {
+                analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.Fail(cryptoCurrency.symbol))
+            }
+            else -> Unit
+        }
+        uiState = stateFactory.getStateWithExchangeStatusBottomSheet(swapTxState)
     }
 
     override fun onGoToProviderClick(url: String) {
