@@ -1,6 +1,8 @@
 package com.tangem.feature.swap.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.ui.FeeType
 
 sealed class SwapEvents(
     event: String,
@@ -13,13 +15,17 @@ sealed class SwapEvents(
     )
 
     object SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
-    object ChooseTokenScreenOpened : SwapEvents(event = "Choose Token Screen Opened")
 
-    data class SearchTokenClicked(val currencySymbol: String?) : SwapEvents(
+    data class ChooseTokenScreenOpened(val availableTokens: Boolean) : SwapEvents(
+        event = "Choose Token Screen Opened",
+        params = mapOf("Available tokens" to if (availableTokens) "Yes" else "No")
+    )
+
+    data class SearchTokenClicked(val token: String?) : SwapEvents(
         event = "Searched Token Clicked",
         params = buildMap {
-            if (currencySymbol != null) {
-                put("Token", currencySymbol)
+            if (token != null) {
+                put("Token", token)
             }
         },
     )
@@ -37,8 +43,76 @@ sealed class SwapEvents(
     )
 
     object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
+
+    // TODO
+    data class ButtonPermitAndSwap(val sendToken: String, val receiveToken: String) : SwapEvents(
+        event = "Button - Permit and Swap",
+        params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
+    )
+
     object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
-    object SwapInProgressScreen : SwapEvents(event = "Swap in Progress Screen Opened")
+
+    data class SwapInProgressScreen(
+        val provider: SwapProvider,
+        val commission: FeeType, // Market / Fast
+        val sendToken: String,
+        val receiveToken: String,
+    ) : SwapEvents(
+        event = "Swap in Progress Screen Opened",
+        params = mapOf(
+            "Provider" to provider.name,
+            "Commission" to if (commission == FeeType.NORMAL) "Market" else "Fast",
+            "Send Token" to sendToken,
+            "Receive Token" to receiveToken
+        )
+    )
+
+    object ProviderClicked : SwapEvents("Provider Clicked")
+
+    data class ProviderChoosed(val provider: SwapProvider) : SwapEvents(
+        event = "Provider Choosed",
+        params = mapOf("Provider" to provider.name)
+    )
+
+    object ButtonShare : SwapEvents("Button - Share")
+
+    data class ButtonExplore(val token: String) : SwapEvents(
+        event = "Button - Explore",
+        params = mapOf("Token" to token)
+    )
+
+    object NoticeNoAvailableTokensToSwap : SwapEvents("Notice -  No Available Tokens To Swap")
+
+    object NoticeExchangeRateHasExpired : SwapEvents("Notice - Exchange Rate Has Expired")
+
+    data class NoticeNotEnoughFee(val token: String, val blockchain: String) : SwapEvents(
+        event = "Notice - Not Enough Fee",
+        params = mapOf(
+            "Token" to token,
+            "Blockchain" to blockchain
+        )
+    )
+
+    data class NoticeProviderError(val token: String, val provider: SwapProvider) : SwapEvents(
+        event = "Notice - Provider Error",
+        params = mapOf(
+            "Token" to token,
+            "Provider" to provider.name
+        )
+    )
+
+    data class NoticeExchangeError(
+        val sendToken: String,
+        val receiveToken: String,
+        val provider: SwapProvider,
+    ) : SwapEvents(
+        event = "Notice - Exchange Error",
+        params = mapOf(
+            "Send Token" to sendToken,
+            "Receive Token" to receiveToken,
+            "Provider" to provider.name
+        )
+    )
 }
 
 private const val SWAP_CATEGORY = "Swap"

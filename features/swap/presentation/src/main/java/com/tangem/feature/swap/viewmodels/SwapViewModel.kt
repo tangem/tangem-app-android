@@ -137,7 +137,7 @@ internal class SwapViewModel @Inject constructor(
         uiState = uiState.copy(
             onSelectTokenClick = {
                 router.openScreen(SwapNavScreen.SelectToken)
-                analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened)
+                sendSelectTokenScreenOpenedEvent()
             },
             onSuccess = {
                 router.openScreen(SwapNavScreen.Success)
@@ -145,9 +145,14 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    @Suppress("UnusedPrivateMember")
+    private fun sendSelectTokenScreenOpenedEvent() {
+        val isAnyAvailableTokensTo = dataState.tokensDataState?.toGroup?.available?.isNotEmpty() ?: false
+        val isAnyAvailableTokensFrom = dataState.tokensDataState?.fromGroup?.available?.isNotEmpty() ?: false
+        val isAnyAvailableTokens = isAnyAvailableTokensTo || isAnyAvailableTokensFrom
+        analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened(availableTokens = isAnyAvailableTokens))
+    }
+
     private fun initTokens() {
-        // new flow
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.getTokensDataState(initialCryptoCurrency)
@@ -407,9 +412,14 @@ internal class SwapViewModel @Inject constructor(
                                     if (txHash.isNotEmpty()) {
                                         swapRouter.openUrl(url)
                                     }
+                                    dataState.fromCryptoCurrency?.currency?.symbol?.let { symbol ->
+                                        analyticsEventHandler.send(SwapEvents.ButtonExplore(symbol))
+                                    }
+
                                 },
                             )
-                            analyticsEventHandler.send(SwapEvents.SwapInProgressScreen)
+                            sendSuccessEvent()
+
                             swapRouter.openScreen(SwapNavScreen.Success)
                         }
                         is TxState.UserCancelled -> {
@@ -429,6 +439,20 @@ internal class SwapViewModel @Inject constructor(
                     makeDefaultAlert()
                 }
         }
+    }
+
+    private fun sendSuccessEvent() {
+        val provider = dataState.selectedProvider ?: return
+        val fee = dataState.selectedFee?.feeType ?: return
+        val sendToken = dataState.fromCryptoCurrency?.currency?.symbol ?: return
+        val toToken = dataState.toCryptoCurrency?.currency?.symbol ?: return
+
+        analyticsEventHandler.send(SwapEvents.SwapInProgressScreen(
+            provider = provider,
+            commission = fee,
+            sendToken = sendToken,
+            receiveToken = toToken,
+        ))
     }
 
     private fun givePermissionsToSwap() {
@@ -526,7 +550,7 @@ internal class SwapViewModel @Inject constructor(
             }
         }
         analyticsEventHandler.send(
-            event = SwapEvents.SearchTokenClicked(currencySymbol = foundToken?.currencyStatus?.currency?.symbol),
+            event = SwapEvents.SearchTokenClicked(token = foundToken?.currencyStatus?.currency?.symbol),
         )
 
         if (foundToken != null) {
@@ -714,6 +738,7 @@ internal class SwapViewModel @Inject constructor(
                 }
             },
             onProviderClick = { providerId ->
+                analyticsEventHandler.send(SwapEvents.ProviderClicked)
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(states)
                 val unavailableProviders = getUnavailableProvidersFor(dataState.lastLoadedSwapStates)
@@ -730,6 +755,7 @@ internal class SwapViewModel @Inject constructor(
                 val swapState = dataState.lastLoadedSwapStates[provider]
                 val fromToken = dataState.fromCryptoCurrency
                 if (provider != null && swapState != null && fromToken != null) {
+                    analyticsEventHandler.send(SwapEvents.ProviderChoosed(provider))
                     uiState = stateBuilder.updateSelectedProvider(uiState, provider.providerId)
                     setupLoadedState(
                         provider = provider,
