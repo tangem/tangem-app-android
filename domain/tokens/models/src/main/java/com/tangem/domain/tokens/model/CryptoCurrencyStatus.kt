@@ -78,7 +78,7 @@ data class CryptoCurrencyStatus(
         override val fiatAmount: BigDecimal?,
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
-        override val networkAddress: NetworkAddress?,
+        override val networkAddress: NetworkAddress,
     ) : Status(isError = false) {
 
         override val amount: BigDecimal = BigDecimal.ZERO
@@ -102,7 +102,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
-        override val networkAddress: NetworkAddress?,
+        override val networkAddress: NetworkAddress,
     ) : Status(isError = false)
 
     /**
@@ -123,7 +123,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
-        override val networkAddress: NetworkAddress?,
+        override val networkAddress: NetworkAddress,
     ) : Status(isError = false)
 
     /**
@@ -138,6 +138,6 @@ data class CryptoCurrencyStatus(
         override val amount: BigDecimal,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
-        override val networkAddress: NetworkAddress?,
+        override val networkAddress: NetworkAddress,
     ) : Status(isError = false)
 }
