@@ -468,7 +468,7 @@ internal class SwapInteractorImpl @Inject constructor(
             toDecimals = currencyToGet.currency.decimals,
             providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
-            toAddress = currencyToGet.value.networkAddress?.defaultAddress ?: "",
+            toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value ?: "",
         )
 
         val txData = walletManagersFacade.createTransaction(
@@ -485,6 +485,8 @@ internal class SwapInteractorImpl @Inject constructor(
             userWallet = requireNotNull(getSelectedWallet()),
             network = currencyToSend.currency.network,
         )
+
+        val externalUrl = (exchangeData.dataModel.transaction as? ExpressTransactionModel.CEX)?.externalTxUrl
 
         return result.fold(
             ifLeft = {
@@ -519,6 +521,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         currencyToSend.currency.network.backendId,
                         derivationPath,
                     ).orEmpty(),
+                    txExternalUrl = externalUrl,
                     timestamp = timestamp,
                 )
             },
@@ -801,7 +804,7 @@ internal class SwapInteractorImpl @Inject constructor(
             toDecimals = toToken.currency.decimals,
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
-            toAddress = toToken.value.networkAddress?.defaultAddress ?: "",
+            toAddress = toToken.value.networkAddress?.defaultAddress?.value ?: "",
         ).let {
             val swapData = it.dataModel
             if (swapData != null) {
@@ -908,7 +911,7 @@ internal class SwapInteractorImpl @Inject constructor(
         getSelectedWalletSyncUseCase().getOrNull()?.walletId?.let { userWalletId ->
             val txFeeResult = getFeeUseCase(
                 amount = amount.value,
-                destination = fromToken.value.networkAddress?.defaultAddress ?: "",
+                destination = fromToken.value.networkAddress?.defaultAddress?.value ?: "",
                 userWalletId = userWalletId,
                 cryptoCurrency = fromToken.currency,
             ).firstOrNull()

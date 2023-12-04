@@ -1,15 +1,17 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.common.extensions.amountToCreateAccount
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
+import com.tangem.blockchain.common.address.Address as SdkAddress
 
 internal class UpdateWalletManagerResultFactory {
 
@@ -18,7 +20,7 @@ internal class UpdateWalletManagerResultFactory {
         val addresses = getAvailableAddresses(wallet.addresses)
 
         return UpdateWalletManagerResult.Verified(
-            defaultAddress = wallet.address,
+            selectedAddress = wallet.address,
             addresses = addresses,
             currenciesAmounts = getTokensAmounts(wallet.amounts.values.toSet()),
             currentTransactions = getCurrentTransactions(addresses, wallet.recentTransactions.toSet()),
@@ -30,7 +32,7 @@ internal class UpdateWalletManagerResultFactory {
         val addresses = getAvailableAddresses(wallet.addresses)
 
         return UpdateWalletManagerResult.Verified(
-            defaultAddress = wallet.address,
+            selectedAddress = wallet.address,
             addresses = addresses,
             currenciesAmounts = getDemoTokensAmounts(demoAmount, walletManager.cardTokens),
             currentTransactions = getCurrentTransactions(addresses, wallet.recentTransactions.toSet()),
@@ -48,7 +50,7 @@ internal class UpdateWalletManagerResultFactory {
             UpdateWalletManagerResult.Unreachable
         } else {
             UpdateWalletManagerResult.NoAccount(
-                defaultAddress = wallet.address,
+                selectedAddress = wallet.address,
                 addresses = getAvailableAddresses(wallet.addresses),
                 amountToCreateAccount = amountToCreateAccount,
                 errorMessage = customMessage,
@@ -70,7 +72,7 @@ internal class UpdateWalletManagerResultFactory {
     }
 
     private fun getCurrentTransactions(
-        walletAddresses: Set<String>,
+        walletAddresses: Set<Address>,
         recentTransactions: Set<TransactionData>,
     ): Set<CryptoCurrencyTransaction> {
         val unconfirmedTransactions = recentTransactions.filter {
@@ -95,7 +97,7 @@ internal class UpdateWalletManagerResultFactory {
     }
 
     private fun createCurrencyTransaction(
-        walletAddresses: Set<String>,
+        walletAddresses: Set<Address>,
         data: TransactionData,
     ): CryptoCurrencyTransaction? {
         return when (val type = data.amount.type) {
@@ -115,11 +117,11 @@ internal class UpdateWalletManagerResultFactory {
         }
     }
 
-    private fun createTxHistoryItem(walletAddresses: Set<String>, data: TransactionData): TxHistoryItem? {
+    private fun createTxHistoryItem(walletAddresses: Set<Address>, data: TransactionData): TxHistoryItem? {
         val hash = data.hash ?: return null
         val millis = data.date?.timeInMillis ?: return null
         val amount = getTransactionAmountValue(data.amount) ?: return null
-        val isOutgoing = data.sourceAddress in walletAddresses
+        val isOutgoing = data.sourceAddress in walletAddresses.map { it.value }
 
         return TxHistoryItem(
             txHash = hash,
@@ -141,8 +143,16 @@ internal class UpdateWalletManagerResultFactory {
         )
     }
 
-    private fun getAvailableAddresses(addresses: Set<Address>): Set<String> {
-        return addresses.mapTo(hashSetOf()) { it.value }
+    private fun getAvailableAddresses(addresses: Set<SdkAddress>): Set<Address> {
+        return addresses.mapTo(hashSetOf()) { sdkAddress ->
+            Address(
+                value = sdkAddress.value,
+                type = when (sdkAddress.type) {
+                    AddressType.Default -> Address.Type.Primary
+                    AddressType.Legacy -> Address.Type.Secondary
+                },
+            )
+        }
     }
 
     private fun getCurrencyAmountValue(amount: Amount): BigDecimal? {

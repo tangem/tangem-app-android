@@ -195,8 +195,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Chia, Blockchain.ChiaTestnet -> "chia"
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
-        Blockchain.Decimal -> "decimal"
-        Blockchain.DecimalTestnet -> "decimal/test"
+        Blockchain.Decimal, Blockchain.DecimalTestnet -> "decimal"
         Blockchain.Unknown -> "unknown"
     }
 }
@@ -224,6 +223,4 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
-    Blockchain.Decimal,
-    Blockchain.DecimalTestnet,
 )

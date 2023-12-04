@@ -25,7 +25,7 @@ import kotlinx.collections.immutable.toImmutableList
 fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
-        color = TangemTheme.colors.background.tertiary,
+        contentColor = TangemTheme.colors.background.tertiary,
     ) { content: ChooseProviderBottomSheetConfig ->
         ChooseProviderBottomSheetContent(content = content)
     }
@@ -87,7 +87,7 @@ private fun ChooseProviderBottomSheet_Preview() {
             name = "1inch",
             type = "DEX",
             iconUrl = "",
-            rate = "1 000 000",
+            subtitle = stringReference("1 000 000"),
             additionalBadge = ProviderState.AdditionalBadge.BestTrade,
             percentLowerThenBest = -1.0f,
             selectionType = ProviderState.SelectionType.SELECT,
