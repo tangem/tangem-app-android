@@ -489,17 +489,19 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onTransactionClick(txHash: String) {
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
 // [REDACTED_TODO_COMMENT]
-        if (blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet) {
-            return
-        } else {
-            router.openUrl(
-                url = getExplorerTransactionUrlUseCase(
-                    txHash = txHash,
-                    networkId = cryptoCurrency.network.id,
-                ),
-            )
+        when (Blockchain.fromId(cryptoCurrency.network.id.value)) {
+            Blockchain.TON, Blockchain.TONTestnet,
+            Blockchain.Decimal, Blockchain.DecimalTestnet,
+            -> return
+            else -> {
+                router.openUrl(
+                    url = getExplorerTransactionUrlUseCase(
+                        txHash = txHash,
+                        networkId = cryptoCurrency.network.id,
+                    ),
+                )
+            }
         }
     }
 
