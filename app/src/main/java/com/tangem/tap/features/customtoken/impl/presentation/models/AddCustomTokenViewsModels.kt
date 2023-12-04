@@ -300,9 +300,9 @@ internal sealed class AddCustomTokenWarning(val description: TextReference) {
         description = TextReference.Res(R.string.custom_token_validation_error_already_added),
     )
 
-    /** Unsupported Solana token warning */
-    object UnsupportedSolanaToken : AddCustomTokenWarning(
-        description = TextReference.Res(R.string.alert_manage_tokens_unsupported_message),
+    /** Unsupported token warning */
+    data class UnsupportedToken(val networkName: String) : AddCustomTokenWarning(
+        description = TextReference.Res(R.string.alert_manage_tokens_unsupported_message, networkName),
     )
 
     object WrongDerivationPath : AddCustomTokenWarning(
