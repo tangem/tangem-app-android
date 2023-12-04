@@ -3,6 +3,7 @@ package com.tangem.core.ui.event
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
+import kotlinx.coroutines.launch
 
 /**
  * A Composable function that reacts to a given [StateEvent], executing the provided action only once when the event
@@ -17,8 +18,8 @@ import androidx.compose.runtime.NonRestartableComposable
 fun <A> EventEffect(event: StateEvent<A>, onTrigger: suspend (data: A) -> Unit) {
     LaunchedEffect(event) {
         if (event is StateEvent.Triggered<A>) {
-            onTrigger(event.data)
-            event.onConsume()
+            launch { onTrigger(event.data) }
+                .invokeOnCompletion { event.onConsume() }
         }
     }
 }
