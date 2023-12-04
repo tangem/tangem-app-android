@@ -1,12 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
-import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -20,6 +20,7 @@ import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.walletconnect.WalletConnectActions
@@ -141,15 +142,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
 
         viewModelScope.launch(dispatchers.main) {
-            val currency = cryptoCurrencyStatus.currency
-            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currency.network)
-
             analyticsEventHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
 
             stateHolder.update(
                 OpenBottomSheetTransformer(
                     userWalletId = userWalletId,
-                    content = createReceiveBottomSheetContent(currency, addresses),
+                    content = createReceiveBottomSheetContent(
+                        currency = cryptoCurrencyStatus.currency,
+                        addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return@launch,
+                    ),
                     onDismissBottomSheet = {
                         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
                     },
@@ -160,18 +161,13 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun createReceiveBottomSheetContent(
         currency: CryptoCurrency,
-        addresses: List<Address>,
+        addresses: Set<NetworkAddress.Address>,
     ): TangemBottomSheetConfigContent {
         return TokenReceiveBottomSheetConfig(
             name = currency.name,
             symbol = currency.symbol,
             network = currency.network.name,
-            addresses = addresses.map { address ->
-                AddressModel(
-                    value = address.value,
-                    type = AddressModel.Type.valueOf(address.type.name),
-                )
-            },
+            addresses = addresses.mapToAddressModels(currency).toImmutableList(),
             onCopyClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
             },
@@ -329,40 +325,36 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val userWalletId = stateHolder.getSelectedWalletId()
 
         viewModelScope.launch(dispatchers.main) {
-            val currency = getPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId)?.currency ?: return@launch
-            val addresses = walletManagersFacade.getAddress(userWalletId = userWalletId, network = currency.network)
+            val currencyStatus = getPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId) ?: return@launch
 
-            if (addresses.size == 1) {
-                router.openUrl(
-                    url = getExploreUrlUseCase(
-                        userWalletId = userWalletId,
-                        currency = currency,
-                        addressType = AddressType.Default,
-                    ),
-                )
-            } else {
-                showChooseAddressBottomSheet(userWalletId, addresses, currency)
+            when (val addresses = currencyStatus.value.networkAddress) {
+                is NetworkAddress.Selectable -> {
+                    showChooseAddressBottomSheet(userWalletId, addresses.availableAddresses, currencyStatus.currency)
+                }
+                is NetworkAddress.Single -> {
+                    router.openUrl(
+                        url = getExploreUrlUseCase(
+                            userWalletId = userWalletId,
+                            currency = currencyStatus.currency,
+                            addressType = AddressType.Default,
+                        ),
+                    )
+                }
+                null -> Unit
             }
         }
     }
 
     private fun showChooseAddressBottomSheet(
         userWalletId: UserWalletId,
-        addresses: List<Address>,
+        addresses: Set<NetworkAddress.Address>,
         currency: CryptoCurrency,
     ) {
         stateHolder.update(
             OpenBottomSheetTransformer(
                 userWalletId = userWalletId,
                 content = ChooseAddressBottomSheetConfig(
-                    addressModels = addresses
-                        .map { address ->
-                            AddressModel(
-                                value = address.value,
-                                type = AddressModel.Type.valueOf(address.type.name),
-                            )
-                        }
-                        .toImmutableList(),
+                    addressModels = addresses.mapToAddressModels(currency).toImmutableList(),
                     onClick = {
                         onAddressTypeSelected(
                             userWalletId = userWalletId,
