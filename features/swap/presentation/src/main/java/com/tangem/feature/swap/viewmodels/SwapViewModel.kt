@@ -18,6 +18,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
+import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -182,6 +183,7 @@ internal class SwapViewModel @Inject constructor(
             tokensDataState = state,
         )
         if (selectedCurrency == null) {
+            analyticsEventHandler.send(SwapEvents.NoticeNoAvailableTokensToSwap)
             uiState = stateBuilder.createNoAvailableTokensToSwapState(
                 uiStateHolder = uiState,
                 fromToken = fromCurrencyStatus,
@@ -317,6 +319,27 @@ internal class SwapViewModel @Inject constructor(
                     toToken = dataState.toCryptoCurrency,
                     dataError = state.error,
                 )
+                when(state.error) {
+                    is DataError.ExchangeProviderNotFoundError,
+                    is DataError.ExchangeProviderNotActiveError,
+                    is DataError.ExchangeProviderNotAvailableError -> {
+                        analyticsEventHandler.send(SwapEvents.NoticeProviderError(
+                            token = fromToken.currency.symbol,
+                            provider = provider,
+                        ))
+                    }
+                    is DataError.ExchangeNotPossibleError -> {
+                        val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return
+                        analyticsEventHandler.send(SwapEvents.NoticeExchangeError(
+                            sendToken = fromToken.currency.symbol,
+                            receiveToken = receiveTokenSymbol,
+                            provider = provider,
+                        ))
+                    }
+                    else -> {
+                        /* no-op */
+                    }
+                }
             }
         }
     }
