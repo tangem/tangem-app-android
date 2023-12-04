@@ -77,7 +77,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
-    private val walletManagersFacade: WalletManagersFacade,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
