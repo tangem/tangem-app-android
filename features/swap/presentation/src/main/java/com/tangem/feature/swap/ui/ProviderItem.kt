@@ -138,7 +138,7 @@ private fun ProviderContentState(
                     ),
                 ) {
                     Text(
-                        text = state.rate,
+                        text = state.subtitle.resolveReference(),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                         overflow = TextOverflow.Ellipsis,
@@ -387,7 +387,7 @@ private fun ProviderItem_Content_Preview() {
         name = "1inch",
         type = "DEX",
         iconUrl = "",
-        rate = "1 000 000",
+        subtitle = stringReference("1 000 000"),
         additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
         percentLowerThenBest = -1.0f,
         selectionType = ProviderState.SelectionType.SELECT,
