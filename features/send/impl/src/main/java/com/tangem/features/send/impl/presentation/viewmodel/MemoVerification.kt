@@ -7,6 +7,7 @@ import java.math.BigInteger
 
 internal fun validateMemo(memo: String, cryptoCurrency: CryptoCurrency?): Boolean {
     if (cryptoCurrency == null) return false
+    if (memo.isEmpty()) return true
     return when (cryptoCurrency.network.id.value) {
         Blockchain.XRP.id -> {
             val tag = memo.toLongOrNull()

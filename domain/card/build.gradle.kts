@@ -19,4 +19,8 @@ dependencies {
 
 
     implementation(deps.tangem.card.core)
+    implementation(deps.tangem.blockchain) {
+        exclude(module = "joda-time")
+    }
+
 }
