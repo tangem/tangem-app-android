@@ -304,7 +304,7 @@ internal class SwapViewModel @Inject constructor(
                 if (uiState.warnings.any { it is SwapWarning.UnableToCoverFeeWarning }) {
                     analyticsEventHandler.send(
                         SwapEvents.NoticeNotEnoughFee(
-                            token = fromToken.currency.symbol,
+                            token = initialCryptoCurrency.symbol,
                             blockchain = fromToken.currency.network.name,
                         )
                     )
@@ -331,7 +331,7 @@ internal class SwapViewModel @Inject constructor(
                     -> {
                         analyticsEventHandler.send(
                             SwapEvents.NoticeProviderError(
-                                token = fromToken.currency.symbol,
+                                token = initialCryptoCurrency.symbol,
                                 provider = provider,
                             )
                         )
@@ -449,15 +449,15 @@ internal class SwapViewModel @Inject constructor(
                                     if (txHash.isNotEmpty()) {
                                         swapRouter.openUrl(url)
                                     }
-                                    dataState.fromCryptoCurrency?.currency?.symbol?.let { symbol ->
-                                        analyticsEventHandler.send(SwapEvents.ButtonExplore(symbol))
-                                    }
-
+                                    analyticsEventHandler.send(SwapEvents.ButtonExplore(initialCryptoCurrency.symbol))
                                 },
                                 onStatusClick = {
                                     val txExternalUrl = it.txExternalUrl
                                     if (!txExternalUrl.isNullOrBlank()) {
                                         swapRouter.openUrl(txExternalUrl)
+                                        analyticsEventHandler.send(
+                                            event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol)
+                                        )
                                     }
                                 },
                             )
@@ -594,9 +594,12 @@ internal class SwapViewModel @Inject constructor(
                 it.currencyStatus.currency.id.value == id
             }
         }
-        analyticsEventHandler.send(
-            event = SwapEvents.SearchTokenClicked(token = foundToken?.currencyStatus?.currency?.symbol),
-        )
+        foundToken?.currencyStatus?.currency?.symbol?.let {
+            analyticsEventHandler.send(
+                event = SwapEvents.SearchTokenClicked(token = it)
+            )
+        }
+
 
         if (foundToken != null) {
             val fromToken: CryptoCurrencyStatus

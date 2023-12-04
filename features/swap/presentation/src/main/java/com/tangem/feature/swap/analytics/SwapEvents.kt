@@ -74,7 +74,10 @@ sealed class SwapEvents(
         params = mapOf("Provider" to provider.name)
     )
 
-    object ButtonShare : SwapEvents("Button - Share")
+    data class ButtonStatus(val token: String) : SwapEvents(
+        event = "Button - Status",
+        params = mapOf("Token" to token)
+    )
 
     data class ButtonExplore(val token: String) : SwapEvents(
         event = "Button - Explore",
