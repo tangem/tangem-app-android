@@ -294,6 +294,7 @@ internal class SwapViewModel @Inject constructor(
                     fromToken = fromToken.currency,
                     swapProvider = provider,
                     bestRatedProviderId = bestRatedProviderId,
+                    isManyProviders = dataState.lastLoadedSwapStates.isNotEmpty(),
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                 )
             }
