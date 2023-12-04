@@ -23,7 +23,10 @@ import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.ApproveType
+import com.tangem.feature.swap.models.SwapStateHolder
+import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.toDomainApproveType
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -402,10 +405,16 @@ internal class SwapViewModel @Inject constructor(
                                 fromAmount = dataState.amount?.toBigDecimal() ?: BigDecimal.ZERO,
                                 toAmount = dataState.swapDataModel?.toTokenAmount?.value ?: BigDecimal.ZERO,
                                 txUrl = url,
-                                onSecondaryBtnClick = {
+                                onExploreClick = {
                                     val txHash = it.txAddress
                                     if (txHash.isNotEmpty()) {
                                         swapRouter.openUrl(url)
+                                    }
+                                },
+                                onStatusClick = {
+                                    val txExternalUrl = it.txExternalUrl
+                                    if (!txExternalUrl.isNullOrBlank()) {
+                                        swapRouter.openUrl(txExternalUrl)
                                     }
                                 },
                             )
