@@ -595,9 +595,8 @@ internal class SwapViewModel @Inject constructor(
             }
         }
         foundToken?.currencyStatus?.currency?.symbol?.let {
-            analyticsEventHandler.send(
-                event = SwapEvents.SearchTokenClicked(token = it)
-            )
+            analyticsEventHandler.send(SwapEvents.SearchTokenClicked(token = it))
+            analyticsEventHandler.send(SwapEvents.СhooseTokenScreenResult(tokenChoosed = true))
         }
 
 
@@ -736,6 +735,9 @@ internal class SwapViewModel @Inject constructor(
                 if (bottomSheet != null && bottomSheet.isShow) {
                     uiState = stateBuilder.dismissBottomSheet(uiState)
                 } else {
+                    if (swapRouter.currentScreen == SwapNavScreen.SelectToken) {
+                        analyticsEventHandler.send(SwapEvents.СhooseTokenScreenResult(tokenChoosed = false))
+                    }
                     swapRouter.back()
                 }
                 onSearchEntered("")

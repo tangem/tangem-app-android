@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +34,8 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit) {
+    BackHandler(onBack = onBack)
+
     Scaffold(
         modifier = Modifier
             .systemBarsPadding()

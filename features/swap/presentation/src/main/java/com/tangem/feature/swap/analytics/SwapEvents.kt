@@ -21,13 +21,14 @@ sealed class SwapEvents(
         params = mapOf("Available tokens" to if (availableTokens) "Yes" else "No")
     )
 
-    data class SearchTokenClicked(val token: String?) : SwapEvents(
+    data class СhooseTokenScreenResult(val tokenChoosed: Boolean) : SwapEvents(
+        event = "Сhoose Token Screen Result",
+        params = mapOf("Token Choosed" to if (tokenChoosed) "Yes" else "No")
+    )
+
+    data class SearchTokenClicked(val token: String) : SwapEvents(
         event = "Searched Token Clicked",
-        params = buildMap {
-            if (token != null) {
-                put("Token", token)
-            }
-        },
+        params = mapOf("Token" to token)
     )
 
     data class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
