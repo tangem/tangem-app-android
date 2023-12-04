@@ -486,6 +486,8 @@ internal class SwapInteractorImpl @Inject constructor(
             network = currencyToSend.currency.network,
         )
 
+        val externalUrl = (exchangeData.dataModel.transaction as? ExpressTransactionModel.CEX)?.externalTxUrl
+
         return result.fold(
             ifLeft = {
                 when (it) {
@@ -519,6 +521,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         currencyToSend.currency.network.backendId,
                         derivationPath,
                     ).orEmpty(),
+                    txExternalUrl = externalUrl,
                     timestamp = timestamp,
                 )
             },
