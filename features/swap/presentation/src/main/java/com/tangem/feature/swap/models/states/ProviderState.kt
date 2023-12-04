@@ -22,7 +22,7 @@ sealed class ProviderState {
         val name: String,
         val type: String,
         val iconUrl: String,
-        val rate: String,
+        val subtitle: TextReference,
         val selectionType: SelectionType,
         val additionalBadge: AdditionalBadge,
         val percentLowerThenBest: Float?,
