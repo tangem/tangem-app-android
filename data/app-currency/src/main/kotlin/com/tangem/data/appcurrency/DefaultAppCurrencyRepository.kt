@@ -9,6 +9,7 @@ import com.tangem.datasource.local.appcurrency.AvailableAppCurrenciesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -42,7 +43,9 @@ internal class DefaultAppCurrencyRepository(
             }
 
             withContext(dispatchers.io) {
-                fetchDefaultAppCurrency()
+                if (appPreferencesStore.getSyncOrNull(PreferencesKeys.SELECTED_APP_CURRENCY_KEY) == null) {
+                    fetchDefaultAppCurrency()
+                }
             }
         }
     }
