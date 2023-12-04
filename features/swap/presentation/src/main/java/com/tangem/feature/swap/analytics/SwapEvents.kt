@@ -21,9 +21,9 @@ sealed class SwapEvents(
         params = mapOf("Available tokens" to if (availableTokens) "Yes" else "No")
     )
 
-    data class СhooseTokenScreenResult(val tokenChoosed: Boolean) : SwapEvents(
+    data class СhooseTokenScreenResult(val tokenChosen: Boolean) : SwapEvents(
         event = "Сhoose Token Screen Result",
-        params = mapOf("Token Choosed" to if (tokenChoosed) "Yes" else "No")
+        params = mapOf("Token Chosen" to if (tokenChosen) "Yes" else "No")
     )
 
     data class SearchTokenClicked(val token: String) : SwapEvents(
@@ -45,12 +45,6 @@ sealed class SwapEvents(
 
     object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
 
-    // TODO
-    data class ButtonPermitAndSwap(val sendToken: String, val receiveToken: String) : SwapEvents(
-        event = "Button - Permit and Swap",
-        params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
-    )
-
     object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 
     data class SwapInProgressScreen(
@@ -70,8 +64,8 @@ sealed class SwapEvents(
 
     object ProviderClicked : SwapEvents("Provider Clicked")
 
-    data class ProviderChoosed(val provider: SwapProvider) : SwapEvents(
-        event = "Provider Choosed",
+    data class ProviderChosen(val provider: SwapProvider) : SwapEvents(
+        event = "Provider Chosen",
         params = mapOf("Provider" to provider.name)
     )
 

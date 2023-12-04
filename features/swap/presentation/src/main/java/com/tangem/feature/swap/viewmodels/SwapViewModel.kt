@@ -449,14 +449,16 @@ internal class SwapViewModel @Inject constructor(
                                     if (txHash.isNotEmpty()) {
                                         swapRouter.openUrl(url)
                                     }
-                                    analyticsEventHandler.send(SwapEvents.ButtonExplore(initialCryptoCurrency.symbol))
+                                    analyticsEventHandler.send(
+                                        event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol)
+                                    )
                                 },
                                 onStatusClick = {
                                     val txExternalUrl = it.txExternalUrl
                                     if (!txExternalUrl.isNullOrBlank()) {
                                         swapRouter.openUrl(txExternalUrl)
                                         analyticsEventHandler.send(
-                                            event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol)
+                                            event = SwapEvents.ButtonStatus(initialCryptoCurrency.symbol)
                                         )
                                     }
                                 },
@@ -596,7 +598,7 @@ internal class SwapViewModel @Inject constructor(
         }
         foundToken?.currencyStatus?.currency?.symbol?.let {
             analyticsEventHandler.send(SwapEvents.SearchTokenClicked(token = it))
-            analyticsEventHandler.send(SwapEvents.СhooseTokenScreenResult(tokenChoosed = true))
+            analyticsEventHandler.send(SwapEvents.СhooseTokenScreenResult(tokenChosen = true))
         }
 
 
@@ -736,7 +738,7 @@ internal class SwapViewModel @Inject constructor(
                     uiState = stateBuilder.dismissBottomSheet(uiState)
                 } else {
                     if (swapRouter.currentScreen == SwapNavScreen.SelectToken) {
-                        analyticsEventHandler.send(SwapEvents.СhooseTokenScreenResult(tokenChoosed = false))
+                        analyticsEventHandler.send(SwapEvents.СhooseTokenScreenResult(tokenChosen = false))
                     }
                     swapRouter.back()
                 }
@@ -805,7 +807,7 @@ internal class SwapViewModel @Inject constructor(
                 val swapState = dataState.lastLoadedSwapStates[provider]
                 val fromToken = dataState.fromCryptoCurrency
                 if (provider != null && swapState != null && fromToken != null) {
-                    analyticsEventHandler.send(SwapEvents.ProviderChoosed(provider))
+                    analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
                     uiState = stateBuilder.updateSelectedProvider(uiState, provider.providerId)
                     setupLoadedState(
                         provider = provider,
