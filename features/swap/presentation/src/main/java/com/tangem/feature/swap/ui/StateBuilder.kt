@@ -206,6 +206,7 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         swapProvider: SwapProvider,
         bestRatedProviderId: String,
+        isManyProviders: Boolean,
         selectedFeeType: FeeType,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -299,6 +300,7 @@ internal class StateBuilder(
                 isBestRate = bestRatedProviderId == swapProvider.providerId,
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
+                isNeedBadge = isManyProviders,
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
             ),
@@ -374,7 +376,7 @@ internal class StateBuilder(
     ): ProviderState {
         return when (dataError) {
             is DataError.ExchangeTooSmallAmountError -> {
-                swapProvider.convertToUnavailableProviderState(
+                swapProvider.convertToAvailableFromProviderState(
                     alertText = resourceReference(
                         R.string.express_provider_min_amount,
                         wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
@@ -606,7 +608,7 @@ internal class StateBuilder(
                 showStatusButton = providerState.type == ExchangeProviderType.CEX.name,
                 providerIcon = providerState.iconUrl,
                 fee = TextReference.Str("${fee.amountCrypto} ${fee.symbolCrypto} (${fee.amountFiatFormatted})"),
-                rate = TextReference.Str(providerState.rate),
+                rate = providerState.subtitle,
                 fromTokenAmount = TextReference.Str(txState.fromAmount.orEmpty()),
                 toTokenAmount = TextReference.Str(txState.toAmount.orEmpty()),
                 fromTokenFiatAmount = TextReference.Str(fromFiatAmount),
@@ -911,11 +913,13 @@ internal class StateBuilder(
         return "$firstAddressPart...$secondAddressPart"
     }
 
+    @Suppress("LongParameterList")
     private fun SwapProvider.convertToContentClickableProviderState(
         isBestRate: Boolean,
         fromTokenInfo: TokenSwapInfo,
         toTokenInfo: TokenSwapInfo,
         selectionType: ProviderState.SelectionType,
+        isNeedBadge: Boolean,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
         val rate = toTokenInfo.tokenAmount.value.calculateRate(
@@ -925,7 +929,7 @@ internal class StateBuilder(
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
         val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
-        val badge = if (isBestRate) {
+        val badge = if (isNeedBadge && isBestRate) {
             ProviderState.AdditionalBadge.BestTrade
         } else {
             ProviderState.AdditionalBadge.Empty
@@ -935,7 +939,7 @@ internal class StateBuilder(
             name = this.name,
             iconUrl = this.imageLarge,
             type = this.type.toString(),
-            rate = rateString,
+            subtitle = stringReference(rateString),
             additionalBadge = badge,
             selectionType = selectionType,
             percentLowerThenBest = null,
@@ -964,7 +968,7 @@ internal class StateBuilder(
             name = this.name,
             iconUrl = this.imageLarge,
             type = this.type.toString(),
-            rate = rateString,
+            subtitle = stringReference(rateString),
             additionalBadge = additionalBadge,
             selectionType = selectionType,
             percentLowerThenBest = pricesLowerBest[this],
@@ -984,6 +988,24 @@ internal class StateBuilder(
             type = this.type.toString(),
             selectionType = selectionType,
             alertText = alertText,
+            onProviderClick = onProviderClick,
+        )
+    }
+
+    private fun SwapProvider.convertToAvailableFromProviderState(
+        alertText: TextReference,
+        selectionType: ProviderState.SelectionType,
+        onProviderClick: (String) -> Unit,
+    ): ProviderState {
+        return ProviderState.Content(
+            id = this.providerId,
+            name = this.name,
+            iconUrl = this.imageLarge,
+            type = this.type.toString(),
+            selectionType = selectionType,
+            subtitle = alertText,
+            additionalBadge = ProviderState.AdditionalBadge.Empty,
+            percentLowerThenBest = null,
             onProviderClick = onProviderClick,
         )
     }
