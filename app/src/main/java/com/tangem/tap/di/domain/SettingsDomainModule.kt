@@ -91,4 +91,16 @@ internal object SettingsDomainModule {
     ): UpdateBalanceHidingSettingsUseCase {
         return UpdateBalanceHidingSettingsUseCase(balanceHidingRepository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideSetWalletsScrollPreviewIsShown(settingsRepository: SettingsRepository): NeverToShowWalletsScrollPreview {
+        return NeverToShowWalletsScrollPreview(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIsWalletsScrollPreviewEnabled(settingsRepository: SettingsRepository): IsWalletsScrollPreviewEnabled {
+        return IsWalletsScrollPreviewEnabled(settingsRepository = settingsRepository)
+    }
 }
