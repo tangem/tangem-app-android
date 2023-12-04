@@ -54,17 +54,18 @@ internal class DefaultWalletRouter(
         ) {
             composable(WalletRoute.Wallet.route) {
                 if (walletFeatureToggles.isWalletsScrollingPreviewEnabled) {
-                    val viewModel = hiltViewModel<WalletViewModel>().apply {
-                        router = this@DefaultWalletRouter
-                    }
-
-                    WalletScreen(state = viewModel.uiState)
-                } else {
                     val viewModel = hiltViewModel<WalletViewModelV2>().apply {
                         setWalletRouter(router = this@DefaultWalletRouter)
                     }
 
                     WalletScreenV2(state = viewModel.uiState.collectAsStateWithLifecycle().value)
+                } else {
+                    val viewModel = hiltViewModel<WalletViewModel>().apply {
+                        router = this@DefaultWalletRouter
+                    }
+                    LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
+
+                    WalletScreen(state = viewModel.uiState)
                 }
             }
 
