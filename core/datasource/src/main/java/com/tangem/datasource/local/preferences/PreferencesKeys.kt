@@ -37,6 +37,8 @@ object PreferencesKeys {
 
     val WALLETS_SCROLL_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "walletsScrollPreview") }
 
+    val SENT_ONE_TIME_EVENTS_KEY by lazy { stringPreferencesKey(name = "sentOneTimeEvents") }
+
     val LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY by lazy { stringPreferencesKey(name = "lastSwappedCryptoCurrency") }
 }
 
