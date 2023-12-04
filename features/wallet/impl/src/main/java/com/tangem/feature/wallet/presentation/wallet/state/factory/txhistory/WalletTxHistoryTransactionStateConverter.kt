@@ -12,6 +12,8 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
 
+// FIXME: Refactoring needed
+/** Same as [WalletPendingTxToTransactionStateConverter] but with other timestamp format */
 internal class WalletTxHistoryTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
