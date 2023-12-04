@@ -1,5 +1,6 @@
 package com.tangem.datasource.utils
 
+import com.tangem.lib.auth.AuthBearerProvider
 import com.tangem.lib.auth.AuthProvider
 import com.tangem.lib.auth.ExpressAuthProvider
 
@@ -24,5 +25,9 @@ sealed class RequestHeader(vararg pairs: Pair<String, () -> String>) {
         "api-key" to { expressAuthProvider.getApiKey() },
         "user-id" to { expressAuthProvider.getUserId() },
         "session-id" to { expressAuthProvider.getSessionId() },
+    )
+
+    class AuthBearerHeader(authBearerProvider: AuthBearerProvider) : RequestHeader(
+        "Authorization" to { "Bearer " + authBearerProvider.getApiKey() },
     )
 }
