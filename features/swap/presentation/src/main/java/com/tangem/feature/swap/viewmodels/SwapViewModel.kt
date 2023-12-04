@@ -24,10 +24,7 @@ import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.feature.swap.models.ApproveType
-import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.UiActions
-import com.tangem.feature.swap.models.toDomainApproveType
+import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -304,6 +301,14 @@ internal class SwapViewModel @Inject constructor(
                     isManyProviders = dataState.lastLoadedSwapStates.isNotEmpty(),
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                 )
+                if (uiState.warnings.any { it is SwapWarning.UnableToCoverFeeWarning }) {
+                    analyticsEventHandler.send(
+                        SwapEvents.NoticeNotEnoughFee(
+                            token = fromToken.currency.symbol,
+                            blockchain = fromToken.currency.network.name,
+                        )
+                    )
+                }
             }
             is SwapState.EmptyAmountState -> {
                 uiState = stateBuilder.createQuotesEmptyAmountState(
@@ -319,22 +324,27 @@ internal class SwapViewModel @Inject constructor(
                     toToken = dataState.toCryptoCurrency,
                     dataError = state.error,
                 )
-                when(state.error) {
+                when (state.error) {
                     is DataError.ExchangeProviderNotFoundError,
                     is DataError.ExchangeProviderNotActiveError,
-                    is DataError.ExchangeProviderNotAvailableError -> {
-                        analyticsEventHandler.send(SwapEvents.NoticeProviderError(
-                            token = fromToken.currency.symbol,
-                            provider = provider,
-                        ))
+                    is DataError.ExchangeProviderNotAvailableError,
+                    -> {
+                        analyticsEventHandler.send(
+                            SwapEvents.NoticeProviderError(
+                                token = fromToken.currency.symbol,
+                                provider = provider,
+                            )
+                        )
                     }
                     is DataError.ExchangeNotPossibleError -> {
                         val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return
-                        analyticsEventHandler.send(SwapEvents.NoticeExchangeError(
-                            sendToken = fromToken.currency.symbol,
-                            receiveToken = receiveTokenSymbol,
-                            provider = provider,
-                        ))
+                        analyticsEventHandler.send(
+                            SwapEvents.NoticeExchangeError(
+                                sendToken = fromToken.currency.symbol,
+                                receiveToken = receiveTokenSymbol,
+                                provider = provider,
+                            )
+                        )
                     }
                     else -> {
                         /* no-op */
@@ -480,12 +490,14 @@ internal class SwapViewModel @Inject constructor(
         val sendToken = dataState.fromCryptoCurrency?.currency?.symbol ?: return
         val toToken = dataState.toCryptoCurrency?.currency?.symbol ?: return
 
-        analyticsEventHandler.send(SwapEvents.SwapInProgressScreen(
-            provider = provider,
-            commission = fee,
-            sendToken = sendToken,
-            receiveToken = toToken,
-        ))
+        analyticsEventHandler.send(
+            SwapEvents.SwapInProgressScreen(
+                provider = provider,
+                commission = fee,
+                sendToken = sendToken,
+                receiveToken = toToken,
+            )
+        )
     }
 
     private fun givePermissionsToSwap() {
