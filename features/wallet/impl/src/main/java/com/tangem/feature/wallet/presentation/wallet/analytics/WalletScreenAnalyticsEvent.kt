@@ -20,7 +20,7 @@ sealed class WalletScreenAnalyticsEvent {
             ),
             OneTimeAnalyticsEvent {
 
-            override val oneTimeEventId: String = (id + userWalletId.stringValue).hashCode().toString()
+            override val oneTimeEventId: String = id + userWalletId.stringValue
         }
 
         object WalletOpened : Basic(event = "Wallet Opened")

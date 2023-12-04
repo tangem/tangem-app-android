@@ -59,7 +59,7 @@ sealed class Basic(
         ),
         OneTimeAnalyticsEvent {
 
-        override val oneTimeEventId: String = (id + userWalletId.stringValue).hashCode().toString()
+        override val oneTimeEventId: String = id + userWalletId.stringValue
     }
 
     class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom, memoType: MemoType) : Basic(
