@@ -32,7 +32,7 @@ internal class WalletLoadingTxHistoryConverter(
 
     private val txHistoryItemConverter by lazy {
         val blockchain = currentCardTypeResolverProvider().getBlockchain()
-        WalletTxHistoryTransactionStateConverter(
+        WalletPendingTxToTransactionStateConverter(
             symbol = blockchain.currency,
             decimals = blockchain.decimals(),
             clickIntents = clickIntents,
