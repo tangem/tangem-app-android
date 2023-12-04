@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
     config: TangemBottomSheetConfig,
-    color: Color = TangemTheme.colors.background.primary,
+    contentColor: Color = TangemTheme.colors.background.primary,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShow) }
@@ -31,7 +31,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
         ModalBottomSheet(
             onDismissRequest = config.onDismissRequest,
             sheetState = sheetState,
-            containerColor = color,
+            containerColor = contentColor,
             shape = TangemTheme.shapes.bottomSheetLarge,
             dragHandle = { TangemBottomSheetDraggableHeader(color) },
         ) {
