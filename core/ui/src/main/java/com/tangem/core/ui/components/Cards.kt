@@ -13,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -162,11 +163,12 @@ fun CardWithIcon(
  * >Figma component</a>
  */
 @Composable
-fun IconWithTitleAndDescription(
+internal fun IconWithTitleAndDescription(
     title: String,
-    description: String,
+    description: String?,
     icon: @Composable () -> Unit,
     additionalContent: @Composable () -> Unit = {},
+    iconBackground: Color = TangemTheme.colors.background.secondary,
 ) {
     Row(
         modifier = Modifier
@@ -182,7 +184,7 @@ fun IconWithTitleAndDescription(
         Box(
             modifier = Modifier
                 .background(
-                    color = TangemTheme.colors.background.secondary,
+                    color = iconBackground,
                     shape = CircleShape,
                 )
                 .height(TangemTheme.dimens.size40)
@@ -205,12 +207,14 @@ fun IconWithTitleAndDescription(
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.subtitle1,
             )
-            SpacerH4()
-            Text(
-                text = description,
-                color = TangemTheme.colors.text.secondary,
-                style = TangemTheme.typography.body2,
-            )
+            if (description != null) {
+                SpacerH4()
+                Text(
+                    text = description,
+                    color = TangemTheme.colors.text.secondary,
+                    style = TangemTheme.typography.body2,
+                )
+            }
         }
 
         additionalContent()
