@@ -6,6 +6,7 @@ sealed class TxState {
         val fromAmount: String? = null,
         val toAmount: String? = null,
         val txAddress: String,
+        val txExternalUrl: String? = null,
         val timestamp: Long,
     ) : TxState()
 
