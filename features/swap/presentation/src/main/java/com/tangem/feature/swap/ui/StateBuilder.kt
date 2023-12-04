@@ -585,7 +585,8 @@ internal class StateBuilder(
         fromAmount: BigDecimal,
         toAmount: BigDecimal,
         txUrl: String,
-        onSecondaryBtnClick: () -> Unit,
+        onExploreClick: () -> Unit,
+        onStatusClick: () -> Unit,
     ): SwapStateHolder {
         val providerState = uiState.providerState as ProviderState.Content
         val fromToken = requireNotNull((uiState.sendCardData as? SwapCardState.SwapCardData)?.token)
@@ -612,7 +613,8 @@ internal class StateBuilder(
                 toTokenFiatAmount = TextReference.Str(toFiatAmount),
                 fromTokenIconState = fromTokenIconState,
                 toTokenIconState = toTokenIconState,
-                onSecondaryButtonClick = onSecondaryBtnClick,
+                onExploreButtonClick = onExploreClick,
+                onStatusButtonClick = onStatusClick,
             ),
         )
     }
