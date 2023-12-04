@@ -32,6 +32,10 @@ object PreferencesKeys {
     val SELECTED_APP_CURRENCY_KEY by lazy { stringPreferencesKey(name = "selectedAppCurrency") }
 
     val BALANCE_HIDING_SETTINGS_KEY by lazy { stringPreferencesKey(name = "balanceHidingSettings") }
+
+    val WALLETS_SCROLL_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "walletsScrollPreview") }
+
+    val SENT_ONE_TIME_EVENTS_KEY by lazy { stringPreferencesKey(name = "sentOneTimeEvents") }
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
