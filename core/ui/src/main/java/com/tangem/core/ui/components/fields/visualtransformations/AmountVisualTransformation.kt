@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.fields
+package com.tangem.core.ui.components.fields.visualtransformations
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
