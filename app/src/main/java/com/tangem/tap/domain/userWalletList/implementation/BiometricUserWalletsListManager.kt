@@ -67,15 +67,17 @@ internal class BiometricUserWalletsListManager(
                 }
             }
             .map {
-                if (throwIfNotAllWalletsUnlocked && state.value.userWallets.any(UserWallet::isLocked)) {
-                    Timber.e("Not all user wallets have been unlocked")
+                val userWallets = state.value.userWallets
+
+                if (throwIfNotAllWalletsUnlocked && userWallets.any(UserWallet::isLocked)) {
+                    Timber.e("Some user wallets remain locked")
                     throw UserWalletsListError.NotAllUserWalletsUnlocked
                 }
 
                 val selectedUserWallet = selectedUserWalletSync
                 if (selectedUserWallet == null || selectedUserWallet.isLocked) {
-                    Timber.e("Unable to find selected user wallet")
-                    throw UserWalletsListError.NoUserWalletSelected
+                    findAndSetUnlockedUserWallet(userWallets)
+                        ?: throw UserWalletsListError.NoUserWalletSelected
                 } else {
                     selectedUserWallet
                 }
@@ -280,13 +282,14 @@ internal class BiometricUserWalletsListManager(
         prevSelectedWalletId: UserWalletId?,
         userWallets: List<UserWallet>,
     ): UserWalletId? {
-        val findUnlockedAndSet = {
-            userWallets.firstOrNull { !it.isLocked }
-                ?.walletId
-                ?.also { selectedUserWalletRepository.set(it) }
-        }
+        return prevSelectedWalletId
+            ?: (selectedUserWalletRepository.get() ?: findAndSetUnlockedUserWallet(userWallets)?.walletId)
+    }
 
-        return prevSelectedWalletId ?: (selectedUserWalletRepository.get() ?: findUnlockedAndSet())
+    private fun findAndSetUnlockedUserWallet(userWallets: List<UserWallet>): UserWallet? {
+        return userWallets
+            .firstOrNull { !it.isLocked }
+            ?.also { selectedUserWalletRepository.set(it.walletId) }
     }
 
     private fun changeSelectedUserWalletIdIfNeeded(walletsIdsToRemove: List<UserWalletId>) {
