@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.rememberQrPainters
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
 
@@ -181,13 +182,6 @@ private fun getName(content: TokenReceiveBottomSheetConfig, index: Int): String 
     return if (content.addresses.size < 2) {
         content.name
     } else {
-        "${
-        stringResource(
-            id = when (content.addresses[index].type) {
-                AddressModel.Type.Default -> R.string.address_type_default
-                AddressModel.Type.Legacy -> R.string.address_type_legacy
-            },
-        )
-        } ${content.name}"
+        "${content.addresses[index].displayName.resolveReference()} ${content.name}"
     }
 }
