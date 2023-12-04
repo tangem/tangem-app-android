@@ -11,6 +11,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -111,7 +112,10 @@ class TradeCryptoMiddleware {
     }
 
     private fun proceedNewBuyAction(state: () -> AppState?, action: TradeCryptoAction.New.Buy) {
-        val networkAddress = action.cryptoCurrencyStatus.value.networkAddress?.defaultAddress ?: return
+        val networkAddress = action.cryptoCurrencyStatus.value.networkAddress
+            ?.defaultAddress
+            ?.let(NetworkAddress.Address::value)
+            ?: return
 
         val status = action.cryptoCurrencyStatus
         val currency = status.currency
@@ -194,7 +198,10 @@ class TradeCryptoMiddleware {
     }
 
     private fun proceedNewSellAction(action: TradeCryptoAction.New.Sell) {
-        val networkAddress = action.cryptoCurrencyStatus.value.networkAddress?.defaultAddress ?: return
+        val networkAddress = action.cryptoCurrencyStatus.value.networkAddress
+            ?.defaultAddress
+            ?.let(NetworkAddress.Address::value)
+            ?: return
         val currency = action.cryptoCurrencyStatus.currency
 
         store.state.globalState.exchangeManager.getUrl(
