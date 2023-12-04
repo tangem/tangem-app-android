@@ -2,6 +2,7 @@ package com.tangem.data.tokens.di
 
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.repository.*
+import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
