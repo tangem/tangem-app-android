@@ -18,5 +18,6 @@ data class SwapSuccessStateHolder(
     val toTokenFiatAmount: TextReference,
     val fromTokenIconState: TokenIconState?,
     val toTokenIconState: TokenIconState?,
-    val onSecondaryButtonClick: () -> Unit,
+    val onExploreButtonClick: () -> Unit,
+    val onStatusButtonClick: () -> Unit,
 )

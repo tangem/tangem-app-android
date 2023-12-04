@@ -7,9 +7,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
@@ -20,7 +17,6 @@ import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImage
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
@@ -44,7 +40,8 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
                 textRes = R.string.common_close,
                 txUrl = state.txUrl,
                 showStatusButton = state.showStatusButton,
-                onExploreClick = state.onSecondaryButtonClick,
+                onExploreClick = state.onExploreButtonClick,
+                onStatusClick = state.onStatusButtonClick,
                 onDoneClick = onBack,
             )
         },
@@ -102,17 +99,16 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun SwapSuccessScreenButtons(
     @StringRes textRes: Int,
     txUrl: String,
     showStatusButton: Boolean,
     onExploreClick: () -> Unit,
+    onStatusClick: () -> Unit,
     onDoneClick: () -> Unit,
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
-    val context = LocalContext.current
-
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
@@ -131,10 +127,7 @@ private fun SwapSuccessScreenButtons(
                     SecondaryButtonIconStart(
                         text = stringResource(id = R.string.express_cex_status_button_title),
                         iconResId = R.drawable.ic_arrow_top_right_24,
-                        onClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            context.shareText(txUrl)
-                        },
+                        onClick = onStatusClick,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -167,7 +160,8 @@ private val state = SwapSuccessStateHolder(
     fromTokenIconState = TokenIconState.Loading,
     toTokenIconState = TokenIconState.Loading,
     rate = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
-    onSecondaryButtonClick = {},
+    onExploreButtonClick = {},
+    onStatusButtonClick = {},
 )
 
 @Preview(showBackground = true)
