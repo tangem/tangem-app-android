@@ -294,7 +294,7 @@ internal class SwapInteractorImpl @Inject constructor(
             transactionManager.updateWalletManager(networkId, derivationPath)
         }
         return if (isAllowedToSpend && isBalanceWithoutFeeEnough) {
-            provider to loadSwapData(
+            provider to loadDexSwapData(
                 provider = provider,
                 networkId = networkId,
                 fromToken = fromToken,
@@ -312,8 +312,8 @@ internal class SwapInteractorImpl @Inject constructor(
                 networkId = networkId,
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
-                providerType = provider.type,
-                selectedFee = selectedFee,
+                txFee = TxFeeState.Empty,
+                includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
             )
         }
     }
@@ -327,7 +327,7 @@ internal class SwapInteractorImpl @Inject constructor(
         isBalanceWithoutFeeEnough: Boolean,
         selectedFee: FeeType,
     ): Pair<SwapProvider, SwapState> {
-        return provider to loadQuoteData(
+        return provider to loadCexQuoteData(
             exchangeProviderType = ExchangeProviderType.CEX,
             networkId = networkId,
             amount = amount,
@@ -340,7 +340,6 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    @Deprecated("used in old swap mechanism")
     override suspend fun onSwap(
         swapProvider: SwapProvider,
         networkId: String,
@@ -348,17 +347,22 @@ internal class SwapInteractorImpl @Inject constructor(
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
         amountToSwap: String,
+        includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
     ): TxState {
         return when (swapProvider.type) {
             ExchangeProviderType.CEX -> {
                 val amountDecimal = toBigDecimalOrNull(amountToSwap)
                 val amount = SwapAmount(requireNotNull(amountDecimal), getTokenDecimals(currencyToSend.currency))
-
+                val amountToSwapWithFee = if (includeFeeInAmount is IncludeFeeInAmount.Included) {
+                    includeFeeInAmount.amountSubtractFee
+                } else {
+                    amount
+                }
                 onSwapCex(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
-                    amount = amount,
+                    amount = amountToSwapWithFee,
                     txFee = fee,
                     swapProvider = swapProvider,
                     userWalletId = requireNotNull(getSelectedWallet()).walletId,
@@ -389,20 +393,19 @@ internal class SwapInteractorImpl @Inject constructor(
             return state
         }
         val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken.currency))
-        val feeByPriority = selectFeeByType(feeType = selectedFee, txFeeState = state.txFee)
-        val isBalanceIncludeFeeEnough =
-            isBalanceEnough(fromToken, amount, feeByPriority)
-        val isFeeEnough = checkFeeIsEnough(
-            fee = feeByPriority,
-            spendAmount = amount,
+        val includeFeeInAmount = getIncludeFeeInAmount(
             networkId = networkId,
+            txFee = state.txFee,
+            amount = amount,
             fromToken = fromToken.currency,
+            selectedFee = selectedFee,
         )
         return state.copy(
             permissionState = PermissionDataState.Empty,
             preparedSwapConfigState = state.preparedSwapConfigState.copy(
-                isBalanceEnough = isBalanceIncludeFeeEnough,
-                isFeeEnough = isFeeEnough,
+                isBalanceEnough = includeFeeInAmount !is IncludeFeeInAmount.BalanceNotEnough,
+                isFeeEnough = includeFeeInAmount !is IncludeFeeInAmount.BalanceNotEnough,
+                includeFeeInAmount = includeFeeInAmount,
             ),
         )
     }
@@ -666,7 +669,7 @@ internal class SwapInteractorImpl @Inject constructor(
      * Load quote data calls only if spend is not allowed for token contract address
      */
     @Suppress("LongParameterList")
-    private suspend fun loadQuoteData(
+    private suspend fun loadCexQuoteData(
         exchangeProviderType: ExchangeProviderType,
         networkId: String,
         amount: SwapAmount,
@@ -680,12 +683,31 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
         return coroutineScope {
+            val txFee = if (provider.type == ExchangeProviderType.CEX) {
+                getFeeForCex(amount, fromTokenStatus, networkId)
+            } else {
+                TxFeeState.Empty
+            }
+
+            val includeFeeInAmount = getIncludeFeeInAmount(
+                networkId = networkId,
+                txFee = txFee,
+                amount = amount,
+                fromToken = fromToken,
+                selectedFee = selectedFee,
+            )
+            val amountToRequest = if (includeFeeInAmount is IncludeFeeInAmount.Included) {
+                includeFeeInAmount.amountSubtractFee
+            } else {
+                amount
+            }
+
             val quotes = repository.findBestQuote(
                 fromContractAddress = fromToken.getContractAddress(),
                 fromNetwork = fromToken.network.backendId,
                 toContractAddress = toToken.getContractAddress(),
                 toNetwork = toToken.network.backendId,
-                fromAmount = amount.toStringWithRightOffset(),
+                fromAmount = amountToRequest.toStringWithRightOffset(),
                 fromDecimals = amount.decimals,
                 providerId = provider.providerId,
                 toDecimals = toToken.decimals,
@@ -701,8 +723,8 @@ internal class SwapInteractorImpl @Inject constructor(
                 networkId = networkId,
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
-                providerType = provider.type,
-                selectedFee = selectedFee,
+                txFee = txFee,
+                includeFeeInAmount = includeFeeInAmount,
             )
         }
     }
@@ -716,16 +738,11 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
-        providerType: ExchangeProviderType,
-        selectedFee: FeeType,
+        txFee: TxFeeState,
+        includeFeeInAmount: IncludeFeeInAmount,
     ): SwapState {
         val quoteModel = quoteDataModel.dataModel
         if (quoteModel != null) {
-            val txFee = if (providerType == ExchangeProviderType.CEX) {
-                getFeeForCex(amount, fromToken, networkId)
-            } else {
-                TxFeeState.Empty
-            }
             val swapState = updateBalances(
                 networkId = networkId,
                 fromTokenStatus = fromToken,
@@ -754,19 +771,13 @@ internal class SwapInteractorImpl @Inject constructor(
                     )
                 }
                 ExchangeProviderType.CEX -> {
-                    val feeByPriority = selectFeeByType(feeType = selectedFee, txFeeState = txFee)
-                    val isFeeEnough = checkFeeIsEnough(
-                        fee = feeByPriority,
-                        spendAmount = amount,
-                        networkId = networkId,
-                        fromToken = fromToken.currency,
-                    )
                     swapState.copy(
                         permissionState = PermissionDataState.Empty,
                         preparedSwapConfigState = PreparedSwapConfigState(
-                            isFeeEnough = isFeeEnough,
+                            isFeeEnough = includeFeeInAmount !is IncludeFeeInAmount.BalanceNotEnough,
                             isAllowedToSpend = isAllowedToSpend,
                             isBalanceEnough = isBalanceWithoutFeeEnough,
+                            includeFeeInAmount = includeFeeInAmount,
                         ),
                     )
                 }
@@ -780,6 +791,45 @@ internal class SwapInteractorImpl @Inject constructor(
                 cryptoCurrencyStatus = fromToken,
             )
             return SwapState.SwapError(fromTokenSwapInfo, quoteDataModel.error)
+        }
+    }
+
+    private suspend fun getIncludeFeeInAmount(
+        networkId: String,
+        txFee: TxFeeState,
+        amount: SwapAmount,
+        fromToken: CryptoCurrency,
+        selectedFee: FeeType,
+    ): IncludeFeeInAmount {
+        if (fromToken is CryptoCurrency.Token) {
+            return IncludeFeeInAmount.Excluded
+        }
+        val feeValue = when (txFee) {
+            TxFeeState.Empty -> BigDecimal.ZERO
+            is TxFeeState.MultipleFeeState -> if (selectedFee == FeeType.NORMAL) {
+                txFee.normalFee.feeValue
+            } else {
+                txFee.priorityFee.feeValue
+            }
+            is TxFeeState.SingleFeeState -> txFee.fee.feeValue
+        }
+
+        val tokenForFeeBalance =
+            userWalletManager.getNativeTokenBalance(networkId, derivationPath) ?: ProxyAmount.empty()
+        val amountWithFee = amount.value + feeValue
+        return if (amountWithFee < tokenForFeeBalance.value) {
+            IncludeFeeInAmount.Excluded
+        } else {
+            if (feeValue < amount.value) {
+                IncludeFeeInAmount.Included(
+                    SwapAmount(
+                        tokenForFeeBalance.value - feeValue,
+                        transactionManager.getNativeTokenDecimals(networkId),
+                    ),
+                )
+            } else {
+                IncludeFeeInAmount.BalanceNotEnough
+            }
         }
     }
 
@@ -798,7 +848,7 @@ internal class SwapInteractorImpl @Inject constructor(
      * Load swap data calls only if spend is allowed for token contract address
      */
     @Suppress("LongParameterList")
-    private suspend fun loadSwapData(
+    private suspend fun loadDexSwapData(
         provider: SwapProvider,
         networkId: String,
         fromToken: CryptoCurrencyStatus,
@@ -856,6 +906,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         isAllowedToSpend = true,
                         isBalanceEnough = isBalanceIncludeFeeEnough,
                         isFeeEnough = isFeeEnough,
+                        includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
                     ),
                 )
             } else {
