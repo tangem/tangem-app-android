@@ -54,9 +54,9 @@ internal class ExchangeStatusFactory(
         flow = swapTransactionRepository.getTransactions(userWalletId, cryptoCurrency.id),
         flow2 = getWalletCryptoCurrencies().conflate(),
     ) { savedTransactions, cryptoCurrenciesStatusList ->
-        innerLoadSwapState(
-            savedTransactions,
-            cryptoCurrenciesStatusList,
+        getExchangeStatusState(
+            savedTransactions = savedTransactions,
+            cryptoCurrencyStatusList = cryptoCurrenciesStatusList,
         )
     }
 
@@ -76,35 +76,14 @@ internal class ExchangeStatusFactory(
     suspend fun updateSwapTxStatuses(swapTxList: PersistentList<SwapTransactionsState>) = withContext(dispatchers.io) {
         swapTxList.map { tx ->
             async {
-                val status = getExchangeStatus(tx.txId)?.status
-                swapTransactionsStateConverter.updateTxStatus(tx, status)
-                tx.removeIfFinished(status)
+                val statusModel = getExchangeStatus(tx.txId)
+                swapTransactionsStateConverter.updateTxStatus(tx, statusModel)
+                tx.removeIfFinished(statusModel?.status)
             }
         }
             .awaitAll()
             .filterNotNull()
             .toPersistentList()
-    }
-
-    private suspend fun innerLoadSwapState(
-        savedTransactions: List<SavedSwapTransactionListModel>?,
-        cryptoCurrenciesStatusList: List<CryptoCurrencyStatus>,
-    ): PersistentList<SwapTransactionsState> {
-        val txWithStatuses = savedTransactions?.map { currencySwaps ->
-            currencySwaps.copy(
-                transactions = currencySwaps.transactions.map { tx ->
-                    val status = getExchangeStatus(tx.txId)
-                    tx.copy(
-                        status = status,
-                    )
-                },
-            )
-        }
-
-        return getExchangeStatusState(
-            savedTransactions = txWithStatuses,
-            cryptoCurrencyStatusList = cryptoCurrenciesStatusList,
-        )
     }
 
     private suspend fun getExchangeStatus(txId: String): ExchangeStatusModel? {
@@ -129,8 +108,9 @@ internal class ExchangeStatusFactory(
         )
     }
 
-    private suspend fun SwapTransactionsState.removeIfFinished(status: ExchangeStatus?): SwapTransactionsState? {
-        return if (status == ExchangeStatus.Refunded || status == ExchangeStatus.Finished) {
+    private suspend fun SwapTransactionsState.removeIfFinished(status: ExchangeStatus?) = when (status) {
+        null -> null // not found
+        ExchangeStatus.Refunded, ExchangeStatus.Finished -> {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWalletId,
                 fromCryptoCurrencyId = fromCryptoCurrencyId,
@@ -138,7 +118,8 @@ internal class ExchangeStatusFactory(
                 txId = txId,
             )
             null
-        } else {
+        }
+        else -> {
             this
         }
     }
