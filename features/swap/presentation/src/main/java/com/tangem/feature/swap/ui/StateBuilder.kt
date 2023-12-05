@@ -209,53 +209,7 @@ internal class StateBuilder(
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
-        val warnings = mutableListOf<SwapWarning>()
-        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
-            quoteModel.preparedSwapConfigState.isFeeEnough &&
-            quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
-        ) {
-            warnings.add(
-                SwapWarning.PermissionNeeded(
-                    createPermissionNotificationConfig(fromToken.symbol),
-                ),
-            )
-        }
-        when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
-            is IncludeFeeInAmount.Included ->
-                warnings.add(
-                    SwapWarning.GeneralWarning(
-                        createNetworkFeeCoverageNotificationConfig(),
-                    ),
-                )
-            else -> Unit
-        }
-        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
-            quoteModel.preparedSwapConfigState.isBalanceEnough
-        ) {
-            warnings.add(
-                SwapWarning.UnableToCoverFeeWarning(
-                    createUnableToCoverFeeNotificationConfig(
-                        fromToken = fromToken,
-                        onBuyClick = actions.onBuyClick,
-                    ),
-                ),
-            )
-        }
-        // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
-        if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
-            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
-        ) {
-            warnings.add(SwapWarning.InsufficientFunds)
-        }
-
-        if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
-            warnings.add(
-                SwapWarning.HighPriceImpact(
-                    priceImpact = (quoteModel.priceImpact * HUNDRED_PERCENTS).toInt(),
-                    notificationConfig = highPriceImpactNotificationConfig(),
-                ),
-            )
-        }
+        val warnings = getWarningsForSuccessState(quoteModel, fromToken)
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
@@ -312,6 +266,60 @@ internal class StateBuilder(
                 onProviderClick = actions.onProviderClick,
             ),
         )
+    }
+
+    private fun getWarningsForSuccessState(
+        quoteModel: SwapState.QuotesLoadedState,
+        fromToken: CryptoCurrency,
+    ): List<SwapWarning> {
+        val warnings = mutableListOf<SwapWarning>()
+        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
+            quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
+        ) {
+            warnings.add(
+                SwapWarning.PermissionNeeded(
+                    createPermissionNotificationConfig(fromToken.symbol),
+                ),
+            )
+        }
+        when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
+            is IncludeFeeInAmount.Included ->
+                warnings.add(
+                    SwapWarning.GeneralWarning(
+                        createNetworkFeeCoverageNotificationConfig(),
+                    ),
+                )
+            else -> Unit
+        }
+        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.preparedSwapConfigState.isBalanceEnough
+        ) {
+            warnings.add(
+                SwapWarning.UnableToCoverFeeWarning(
+                    createUnableToCoverFeeNotificationConfig(
+                        fromToken = fromToken,
+                        onBuyClick = actions.onBuyClick,
+                    ),
+                ),
+            )
+        }
+        // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
+        if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
+        ) {
+            warnings.add(SwapWarning.InsufficientFunds)
+        }
+
+        if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
+            warnings.add(
+                SwapWarning.HighPriceImpact(
+                    priceImpact = (quoteModel.priceImpact * HUNDRED_PERCENTS).toInt(),
+                    notificationConfig = highPriceImpactNotificationConfig(),
+                ),
+            )
+        }
+        return warnings
     }
 
     private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
