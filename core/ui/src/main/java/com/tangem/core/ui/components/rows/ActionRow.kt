@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.rows
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
@@ -32,16 +33,20 @@ fun SimpleActionRow(title: String, description: String, modifier: Modifier = Mod
                 .align(Alignment.CenterStart),
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
-            Text(
-                text = title,
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.secondary,
-            )
-            Text(
-                text = description,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
-            )
+            AnimatedContent(targetState = title, label = "") {
+                Text(
+                    text = it,
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.secondary,
+                )
+            }
+            AnimatedContent(targetState = description, label = "") {
+                Text(
+                    text = it,
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.primary1,
+                )
+            }
         }
 
         if (isClickable) {
