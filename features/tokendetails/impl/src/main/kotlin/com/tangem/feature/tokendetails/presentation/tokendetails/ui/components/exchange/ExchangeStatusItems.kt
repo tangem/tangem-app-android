@@ -82,7 +82,7 @@ private fun ExchangeStatusItem(
         modifier = modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors.background.primary)
             .clickable { onClick() }
             .padding(TangemTheme.dimens.spacing12),
     ) {
