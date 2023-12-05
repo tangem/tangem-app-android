@@ -79,6 +79,13 @@ internal class SwapInteractorImpl @Inject constructor(
                 it.currency.getContractAddress() != currency.getContractAddress()
         }
 
+        if (walletCurrencyStatusesExceptInitial.isEmpty()) {
+            return TokensDataStateExpress(
+                fromGroup = CurrenciesGroup(emptyList(), emptyList()),
+                toGroup = CurrenciesGroup(emptyList(), emptyList()),
+            )
+        }
+
         val pairsLeast = getPairs(
             initialCurrency = LeastTokenInfo(
                 contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
