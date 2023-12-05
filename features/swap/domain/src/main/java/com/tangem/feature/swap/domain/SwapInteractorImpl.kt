@@ -596,6 +596,10 @@ internal class SwapInteractorImpl @Inject constructor(
             ?: state.toGroup.available.firstOrNull()?.currencyStatus
     }
 
+    override fun getNativeToken(networkId: String): CryptoCurrency {
+        return repository.getNativeTokenForNetwork(networkId)
+    }
+
     @Deprecated("used in old swap mechanism")
     private fun getTangemFee(): Double {
         return repository.getTangemFee()
