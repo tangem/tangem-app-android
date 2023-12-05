@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 internal fun ExchangeStatusBlock(
     statuses: MutableStateFlow<List<ExchangeStatusState>>,
+    showLink: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -48,28 +50,30 @@ internal fun ExchangeStatusBlock(
                 .padding(bottom = TangemTheme.dimens.spacing16),
         ) {
             Text(
-                text = stringResource(id = R.string.common_balance_title),
+                text = stringResource(id = R.string.express_exchange_status_title),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
             SpacerWMax()
-            Row(
-                modifier = Modifier.clickable { onClick() },
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_arrow_top_right_24),
-                    contentDescription = null,
-                    tint = TangemTheme.colors.icon.informative,
-                    modifier = Modifier
-                        .size(TangemTheme.dimens.spacing16)
-                        .padding(end = TangemTheme.dimens.spacing2),
-                )
-                Text(
-                    text = stringResource(id = R.string.express_go_to_provider),
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
+            AnimatedVisibility(visible = showLink) {
+                Row(
+                    modifier = Modifier.clickable { onClick() },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_top_right_24),
+                        contentDescription = null,
+                        tint = TangemTheme.colors.icon.informative,
+                        modifier = Modifier
+                            .size(TangemTheme.dimens.spacing16)
+                            .padding(end = TangemTheme.dimens.spacing2),
+                    )
+                    Text(
+                        text = stringResource(id = R.string.express_go_to_provider),
+                        style = TangemTheme.typography.body2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                }
             }
         }
 
@@ -99,15 +103,21 @@ private fun ExchangeStatusStep(
                     .size(TangemTheme.dimens.size20),
             ) {
                 when {
-                    it.status == ExchangeStatus.Failed && !it.isDone -> ExchangeStepWaringOrError(
+                    it.status == ExchangeStatus.Failed -> ExchangeStep(
                         iconRes = R.drawable.ic_close_24,
                         color = TangemTheme.colors.icon.warning,
+                        isDone = it.isDone,
                     )
-                    it.status == ExchangeStatus.Verifying && !it.isDone -> ExchangeStepWaringOrError(
+                    it.status == ExchangeStatus.Verifying -> ExchangeStep(
                         iconRes = R.drawable.ic_exclamation_24,
                         color = TangemTheme.colors.icon.attention,
+                        isDone = it.isDone,
                     )
-                    it.isDone -> ExchangeStepSuccess()
+                    it.isDone -> ExchangeStep(
+                        iconRes = R.drawable.ic_check_24,
+                        color = TangemTheme.colors.icon.primary1,
+                        isDone = true,
+                    )
                     it.isActive -> ExchangeStepInProgress()
                     else -> ExchangeStepDefault()
                 }
@@ -153,31 +163,20 @@ private fun ExchangeStepDefault() {
 }
 
 @Composable
-private fun ExchangeStepSuccess() {
-    Icon(
-        painter = painterResource(id = R.drawable.ic_check_24),
-        contentDescription = null,
-        tint = TangemTheme.colors.icon.primary1,
-        modifier = Modifier
-            .border(
-                width = TangemTheme.dimens.size1_5,
-                color = TangemTheme.colors.field.focused,
-                shape = CircleShape,
-            )
-            .padding(TangemTheme.dimens.spacing2),
-    )
-}
-
-@Composable
-private fun ExchangeStepWaringOrError(color: Color, @DrawableRes iconRes: Int) {
+private fun ExchangeStep(color: Color, @DrawableRes iconRes: Int, isDone: Boolean) {
+    val (iconColor, borderColor) = if (isDone) {
+        TangemTheme.colors.icon.primary1 to TangemTheme.colors.field.focused
+    } else {
+        color to color
+    }
     Icon(
         painter = painterResource(id = iconRes),
         contentDescription = null,
-        tint = color,
+        tint = iconColor,
         modifier = Modifier
             .border(
                 width = TangemTheme.dimens.size1_5,
-                color = color,
+                color = borderColor,
                 shape = CircleShape,
             )
             .padding(TangemTheme.dimens.spacing2),

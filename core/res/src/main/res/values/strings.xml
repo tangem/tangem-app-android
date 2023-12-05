@@ -212,6 +212,7 @@
     <string name="express_exchange_status_received">Deposit received</string>
     <string name="express_exchange_status_receiving">Awaiting deposit</string>
     <string name="express_exchange_status_receiving_active">Awaiting deposit…</string>
+    <string name="express_exchange_status_refunded">Refunded</string>
     <string name="express_exchange_status_sending">Sending to you</string>
     <string name="express_exchange_status_sending_active">Sending to you…</string>
     <string name="express_exchange_status_sent">Sent</string>

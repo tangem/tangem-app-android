@@ -12,6 +12,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
+import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.ExchangeStatusState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
@@ -70,6 +71,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         timestamp = TextReference.Str("${timestamp.toDateFormat()}, ${timestamp.toTimeFormat()}"),
                         fiatSymbol = appCurrency.symbol,
                         statuses = MutableStateFlow(getStatuses(transaction.status?.status)),
+                        hasFailed = MutableStateFlow(transaction.status?.status == ExchangeStatus.Failed),
                         activeStatus = MutableStateFlow(transaction.status?.status),
                         notification = MutableStateFlow(
                             getNotification(
@@ -107,11 +109,13 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return result.toPersistentList()
     }
 
-    fun updateTxStatus(tx: SwapTransactionsState, status: ExchangeStatus?) {
-        if (tx.activeStatus.value == status) return
-        tx.activeStatus.update { status }
-        tx.notification.update { getNotification(status, tx.txUrl) }
-        tx.statuses.update { getStatuses(status) }
+    fun updateTxStatus(tx: SwapTransactionsState, statusModel: ExchangeStatusModel?) {
+        if (statusModel == null || tx.activeStatus.value == statusModel.status) return
+        val hasFailed = tx.hasFailed.value || statusModel.status == ExchangeStatus.Failed
+        tx.activeStatus.update { statusModel.status }
+        tx.hasFailed.update { hasFailed }
+        tx.notification.update { getNotification(statusModel.status, statusModel.txUrl) }
+        tx.statuses.update { getStatuses(statusModel.status, hasFailed) }
     }
 
     private fun getFiatAmount(toFiatAmount: BigDecimal): String {
@@ -151,13 +155,15 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         }
     }
 
-    private fun getStatuses(status: ExchangeStatus?): List<ExchangeStatusState> {
+    private fun getStatuses(status: ExchangeStatus?, hasFailed: Boolean = false): List<ExchangeStatusState> {
+        if (status == null) return emptyList()
         val isWaiting = status == ExchangeStatus.New || status == ExchangeStatus.Waiting
         val isConfirming = status == ExchangeStatus.Confirming
         val isVerifying = status == ExchangeStatus.Verifying
         val isExchanging = status == ExchangeStatus.Exchanging
         val isFailed = status == ExchangeStatus.Failed
         val isSending = status == ExchangeStatus.Sending
+        val isRefunded = status == ExchangeStatus.Refunded
 
         val isWaitingDone = !isWaiting
         val isConfirmingDone = !isConfirming && isWaitingDone
@@ -167,8 +173,20 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return listOf(
             waitStep(isWaiting, isWaitingDone),
             confirmStep(isConfirming, isConfirmingDone),
-            exchangeStep(isExchanging, isExchangingDone, isVerifying, isFailed),
-            sendStep(isSending, isSendingDone),
+            exchangeStep(
+                isExchanging = isExchanging,
+                isExchangingDone = isExchangingDone,
+                isRefunded = isRefunded,
+                hasFailed = hasFailed,
+                isVerifying = isVerifying,
+                isFailed = isFailed,
+            ),
+            sendStep(
+                isSending = isSending,
+                isSendingDone = isSendingDone,
+                isRefunded = isRefunded,
+                hasFailed = hasFailed,
+            ),
         )
     }
 
@@ -196,6 +214,8 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     private fun exchangeStep(
         isExchanging: Boolean,
         isExchangingDone: Boolean,
+        isRefunded: Boolean,
+        hasFailed: Boolean,
         isVerifying: Boolean = false,
         isFailed: Boolean = false,
     ) = when {
@@ -205,11 +225,11 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             isActive = true,
             isDone = false,
         )
-        isFailed -> ExchangeStatusState(
+        hasFailed || isFailed || isRefunded -> ExchangeStatusState(
             status = ExchangeStatus.Failed,
             text = TextReference.Res(R.string.express_exchange_status_failed),
-            isActive = true,
-            isDone = false,
+            isActive = isFailed || isRefunded,
+            isDone = isRefunded,
         )
         else -> ExchangeStatusState(
             status = ExchangeStatus.Exchanging,
@@ -223,14 +243,22 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         )
     }
 
-    private fun sendStep(isSending: Boolean, isSendingDone: Boolean) = ExchangeStatusState(
-        status = ExchangeStatus.Sending,
-        text = when {
-            isSending -> TextReference.Res(R.string.express_exchange_status_sending_active)
-            isSendingDone -> TextReference.Res(R.string.express_exchange_status_sent)
-            else -> TextReference.Res(R.string.express_exchange_status_sending)
-        },
-        isActive = isSending,
-        isDone = isSendingDone,
-    )
+    private fun sendStep(isSending: Boolean, isSendingDone: Boolean, isRefunded: Boolean, hasFailed: Boolean) = when {
+        hasFailed || isRefunded -> ExchangeStatusState(
+            status = ExchangeStatus.Refunded,
+            text = TextReference.Res(R.string.express_exchange_status_refunded),
+            isActive = false,
+            isDone = isRefunded,
+        )
+        else -> ExchangeStatusState(
+            status = ExchangeStatus.Sending,
+            text = when {
+                isSending -> TextReference.Res(R.string.express_exchange_status_sending_active)
+                isSendingDone -> TextReference.Res(R.string.express_exchange_status_sent)
+                else -> TextReference.Res(R.string.express_exchange_status_sending)
+            },
+            isActive = isSending,
+            isDone = isSendingDone,
+        )
+    }
 }
