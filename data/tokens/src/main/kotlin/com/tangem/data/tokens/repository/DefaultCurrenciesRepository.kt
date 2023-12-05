@@ -94,12 +94,14 @@ internal class DefaultCurrenciesRepository(
 
             val newCurrencies = (newCoins + filteredCurrencies).distinct()
 
+            val updatedResponse = savedCurrencies.copy(
+                tokens = savedCurrencies.tokens + newCurrencies.map(userTokensResponseFactory::createResponseToken),
+            )
             storeAndPushTokens(
                 userWalletId = userWalletId,
-                response = savedCurrencies.copy(
-                    tokens = savedCurrencies.tokens + newCurrencies.map(userTokensResponseFactory::createResponseToken),
-                ),
+                response = updatedResponse
             )
+            fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
         }
     }
 
