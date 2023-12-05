@@ -748,7 +748,11 @@ internal class SwapViewModel @Inject constructor(
                     )
                 }
             },
-            onBuyClick = {},
+            onBuyClick = {
+                swapInteractor.getSelectedWallet()?.let {
+                    swapRouter.openTokenDetails(it.walletId, swapInteractor.getNativeToken(dataState.networkId))
+                }
+            },
         )
     }
 
