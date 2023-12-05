@@ -15,6 +15,7 @@ internal data class SwapTransactionsState(
     val timestamp: TextReference,
     val fiatSymbol: String,
     val activeStatus: MutableStateFlow<ExchangeStatus?>,
+    val hasFailed: MutableStateFlow<Boolean>,
     val statuses: MutableStateFlow<List<ExchangeStatusState>>,
     val notification: MutableStateFlow<ExchangeStatusNotifications?> = MutableStateFlow(null),
     val toCryptoCurrencyId: CryptoCurrency.ID,
