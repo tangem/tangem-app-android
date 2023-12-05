@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.CircularProgressIndicator
@@ -110,17 +111,21 @@ private fun ProviderContentState(
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             ) {
                 Row {
-                    Text(
-                        text = state.name,
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.primary1,
-                    )
-                    Text(
-                        text = state.type,
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
-                    )
+                    AnimatedContent(targetState = state.name, label = "") {
+                        Text(
+                            text = it,
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors.text.primary1,
+                        )
+                    }
+                    AnimatedContent(targetState = state.type, label = "") {
+                        Text(
+                            text = it,
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors.text.tertiary,
+                            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                        )
+                    }
                     when (state.additionalBadge) {
                         ProviderState.AdditionalBadge.BestTrade ->
                             BestTradeItem(Modifier.padding(start = TangemTheme.dimens.spacing4))
@@ -137,22 +142,26 @@ private fun ProviderContentState(
                         end = TangemTheme.dimens.spacing56,
                     ),
                 ) {
-                    Text(
-                        text = state.subtitle.resolveReference(),
-                        style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                    )
-                    if (state.percentLowerThenBest != null) {
+                    AnimatedContent(targetState = state.subtitle, label = "") {
                         Text(
-                            text = "-${state.percentLowerThenBest}%",
+                            text = it.resolveReference(),
                             style = TangemTheme.typography.body2,
-                            color = TangemTheme.colors.text.warning,
-                            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                            color = TangemTheme.colors.text.tertiary,
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1,
                         )
+                    }
+                    if (state.percentLowerThenBest != null) {
+                        AnimatedContent(targetState = state.percentLowerThenBest, label = "") {
+                            Text(
+                                text = "-$it%",
+                                style = TangemTheme.typography.body2,
+                                color = TangemTheme.colors.text.warning,
+                                modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }
@@ -198,24 +207,30 @@ private fun ProviderUnavailableState(
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             ) {
                 Row {
+                    AnimatedContent(targetState = state.name, label = "") {
+                        Text(
+                            text = it,
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                    }
+                    AnimatedContent(targetState = state.type, label = "") {
+                        Text(
+                            text = it,
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors.text.tertiary,
+                            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                        )
+                    }
+                }
+                AnimatedContent(targetState = state.alertText, label = "") {
                     Text(
-                        text = state.name,
-                        style = TangemTheme.typography.caption2,
+                        text = it.resolveReference(),
+                        style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
-                    )
-                    Text(
-                        text = state.type,
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                        modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
                     )
                 }
-                Text(
-                    text = state.alertText.resolveReference(),
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.tertiary,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
-                )
             }
         }
 
