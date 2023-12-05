@@ -463,11 +463,7 @@ class DefaultWalletManagersFacade(
             derivationPath = network.derivationPath.value,
         )
 
-        val txData = walletManager?.createTransaction(amount, fee, destination)?.copy(
-            extras = null, // todo add memo [[REDACTED_JIRA]]
-        )
-
-        return txData
+        return walletManager?.createTransaction(amount, fee, destination)
     }
 
     override suspend fun sendTransaction(
