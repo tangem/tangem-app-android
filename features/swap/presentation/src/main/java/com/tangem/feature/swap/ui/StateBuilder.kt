@@ -14,9 +14,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.NetworkInfo
-import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
@@ -222,6 +220,15 @@ internal class StateBuilder(
                 ),
             )
         }
+        when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
+            is IncludeFeeInAmount.Included ->
+                warnings.add(
+                    SwapWarning.GeneralWarning(
+                        createNetworkFeeCoverageNotificationConfig(),
+                    ),
+                )
+            else -> Unit
+        }
         if (quoteModel.preparedSwapConfigState.isAllowedToSpend &&
             !quoteModel.preparedSwapConfigState.isFeeEnough &&
             quoteModel.preparedSwapConfigState.isBalanceEnough
@@ -235,7 +242,10 @@ internal class StateBuilder(
                 ),
             )
         }
-        if (!quoteModel.preparedSwapConfigState.isBalanceEnough) {
+        // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
+        if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
+        ) {
             warnings.add(SwapWarning.InsufficientFunds)
         }
 
@@ -289,9 +299,7 @@ internal class StateBuilder(
             ),
             fee = feeState,
             swapButton = SwapButton(
-                enabled = quoteModel.preparedSwapConfigState.isAllowedToSpend &&
-                    quoteModel.preparedSwapConfigState.isBalanceEnough &&
-                    quoteModel.preparedSwapConfigState.isFeeEnough,
+                enabled = getSwapButtonEnabled(quoteModel.preparedSwapConfigState),
                 loading = false,
                 onClick = actions.onSwapClick,
             ),
@@ -305,6 +313,17 @@ internal class StateBuilder(
                 onProviderClick = actions.onProviderClick,
             ),
         )
+    }
+
+    private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
+        return when (preparedSwapConfigState.includeFeeInAmount) {
+            IncludeFeeInAmount.BalanceNotEnough -> false
+            IncludeFeeInAmount.Excluded ->
+                preparedSwapConfigState.isAllowedToSpend &&
+                    preparedSwapConfigState.isBalanceEnough &&
+                    preparedSwapConfigState.isFeeEnough
+            is IncludeFeeInAmount.Included -> true
+        }
     }
 
     fun createQuotesErrorState(
@@ -407,7 +426,7 @@ internal class StateBuilder(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(R.string.common_error),
                     subtitle = resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString())),
-                    iconResId = R.drawable.ic_alert_circle_24,
+                    iconResId = R.drawable.img_attention_20,
                 ),
             )
         }
@@ -899,6 +918,14 @@ internal class StateBuilder(
                 text = resourceReference(R.string.common_buy_currency, wrappedList(fromToken.name)),
                 onClick = onBuyClick,
             ),
+        )
+    }
+
+    private fun createNetworkFeeCoverageNotificationConfig(): NotificationConfig {
+        return NotificationConfig(
+            title = resourceReference(R.string.send_network_fee_warning_title),
+            subtitle = resourceReference(R.string.send_network_fee_warning_content),
+            iconResId = R.drawable.img_attention_20,
         )
     }
     // end region

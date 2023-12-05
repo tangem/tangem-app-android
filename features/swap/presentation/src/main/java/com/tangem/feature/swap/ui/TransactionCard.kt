@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.ui
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -194,14 +195,16 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         )
         SpacerW16()
         if (balance.isNotBlank()) {
-            Text(
-                text = balance,
-                color = TangemTheme.colors.text.tertiary,
-                style = MaterialTheme.typography.body2,
-                modifier = Modifier
-                    .defaultMinSize(minHeight = TangemTheme.dimens.size20)
-                    .padding(top = TangemTheme.dimens.spacing2),
-            )
+            AnimatedContent(targetState = balance, label = "") {
+                Text(
+                    text = it,
+                    color = TangemTheme.colors.text.tertiary,
+                    style = MaterialTheme.typography.body2,
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = TangemTheme.dimens.size20)
+                        .padding(top = TangemTheme.dimens.spacing2),
+                )
+            }
         } else {
             RectangleShimmer(
                 modifier = Modifier
@@ -259,12 +262,14 @@ private fun Content(
                     }
                 }
                 is TransactionCardType.SendCard -> {
-                    AutoSizeTextField(
-                        modifier = sumTextModifier,
-                        textFieldValue = textFieldValue ?: TextFieldValue(),
-                        onAmountChange = { type.onAmountChanged(it) },
-                        onFocusChange = type.onFocusChanged,
-                    )
+                    AnimatedContent(targetState = textFieldValue, label = "") {
+                        AutoSizeTextField(
+                            modifier = sumTextModifier,
+                            textFieldValue = it ?: TextFieldValue(),
+                            onAmountChange = { type.onAmountChanged(it) },
+                            onFocusChange = type.onFocusChanged,
+                        )
+                    }
                 }
             }
 
@@ -292,12 +297,14 @@ private fun Content(
                         )
                     }
                 } else {
-                    Text(
-                        text = amountEquivalent,
-                        color = TangemTheme.colors.text.tertiary,
-                        style = TangemTheme.typography.body2,
-                        modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
-                    )
+                    AnimatedContent(targetState = amountEquivalent, label = "") {
+                        Text(
+                            text = it,
+                            color = TangemTheme.colors.text.tertiary,
+                            style = TangemTheme.typography.body2,
+                            modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
+                        )
+                    }
                 }
             } else {
                 RectangleShimmer(

@@ -381,15 +381,22 @@ internal class SwapViewModel @Inject constructor(
     private fun onSwapClick() {
         singleTaskScheduler.cancelTask()
         uiState = stateBuilder.createSwapInProgressState(uiState)
+        val provider = requireNotNull(dataState.selectedProvider) { "Selected provider is null" }
+        val lastLoadedQuotesState = dataState.lastLoadedSwapStates[provider] as? SwapState.QuotesLoadedState
+        if (lastLoadedQuotesState == null) {
+            Timber.e("Last loaded quotes state is null")
+            return
+        }
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
-                    swapProvider = requireNotNull(dataState.selectedProvider),
+                    swapProvider = provider,
                     networkId = dataState.networkId,
                     swapData = dataState.swapDataModel,
                     currencyToSend = requireNotNull(dataState.fromCryptoCurrency),
                     currencyToGet = requireNotNull(dataState.toCryptoCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
+                    includeFeeInAmount = lastLoadedQuotesState.preparedSwapConfigState.includeFeeInAmount,
                     fee = requireNotNull(dataState.selectedFee),
                 )
             }
