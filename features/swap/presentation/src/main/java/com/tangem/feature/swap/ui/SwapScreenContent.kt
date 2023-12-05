@@ -74,7 +74,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
                 if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
 
-                if (state.permissionState is SwapPermissionState.InProgress) {
+                AnimatedVisibility(visible = state.permissionState is SwapPermissionState.InProgress) {
                     CardWithIcon(
                         title = stringResource(id = R.string.swapping_pending_transaction_title),
                         description = stringResource(id = R.string.swapping_pending_transaction_subtitle),
@@ -236,6 +236,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun SwapWarnings(warnings: List<SwapWarning>) {
     Column(
@@ -289,7 +290,6 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                 is SwapWarning.GeneralWarning -> {
                     Notification(
                         config = warning.notificationConfig,
-                        iconTint = TangemTheme.colors.icon.warning,
                     )
                 }
                 else -> {}
