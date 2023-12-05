@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import arrow.core.flatten
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -129,9 +130,9 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
         val availableCryptoCurrencies = filteredPairs.mapNotNull { pair ->
-            val status = findCryptoCurrencyStatusByLeastInfo(tokenInfoForAvailable(pair), cryptoCurrenciesList)
-            status?.let { CryptoCurrencySwapInfo(it, pair.providers) }
-        }
+            val statuses = findCryptoCurrencyStatusByLeastInfo(tokenInfoForAvailable(pair), cryptoCurrenciesList)
+            statuses.map { CryptoCurrencySwapInfo(it, pair.providers) }
+        }.flatten()
 
         val unavailableCryptoCurrencies = cryptoCurrenciesList - availableCryptoCurrencies
             .map { it.currencyStatus }
@@ -146,8 +147,8 @@ internal class SwapInteractorImpl @Inject constructor(
     private fun findCryptoCurrencyStatusByLeastInfo(
         leastTokenInfo: LeastTokenInfo,
         cryptoCurrencyStatusesList: List<CryptoCurrencyStatus>,
-    ): CryptoCurrencyStatus? {
-        return cryptoCurrencyStatusesList.find {
+    ): List<CryptoCurrencyStatus> {
+        return cryptoCurrencyStatusesList.filter {
             it.currency.network.backendId == leastTokenInfo.network &&
                 it.currency.getContractAddress() == leastTokenInfo.contractAddress
         }
