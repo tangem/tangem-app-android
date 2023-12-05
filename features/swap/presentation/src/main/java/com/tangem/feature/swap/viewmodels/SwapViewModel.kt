@@ -324,32 +324,40 @@ internal class SwapViewModel @Inject constructor(
                     toToken = dataState.toCryptoCurrency,
                     dataError = state.error,
                 )
-                when (state.error) {
-                    is DataError.ExchangeProviderNotFoundError,
-                    is DataError.ExchangeProviderNotActiveError,
-                    is DataError.ExchangeProviderNotAvailableError,
-                    -> {
-                        analyticsEventHandler.send(
-                            SwapEvents.NoticeProviderError(
-                                token = initialCryptoCurrency.symbol,
-                                provider = provider,
-                            )
-                        )
-                    }
-                    is DataError.ExchangeNotPossibleError -> {
-                        val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return
-                        analyticsEventHandler.send(
-                            SwapEvents.NoticeExchangeError(
-                                sendToken = fromToken.currency.symbol,
-                                receiveToken = receiveTokenSymbol,
-                                provider = provider,
-                            )
-                        )
-                    }
-                    else -> {
-                        /* no-op */
-                    }
-                }
+                sendErrorAnalyticsEvent(state.error, provider, fromToken)
+            }
+        }
+    }
+
+    private fun sendErrorAnalyticsEvent(
+        error: DataError,
+        provider: SwapProvider,
+        fromToken: CryptoCurrencyStatus
+    ) {
+        when (error) {
+            is DataError.ExchangeProviderNotFoundError,
+            is DataError.ExchangeProviderNotActiveError,
+            is DataError.ExchangeProviderNotAvailableError,
+            -> {
+                analyticsEventHandler.send(
+                    SwapEvents.NoticeProviderError(
+                        token = initialCryptoCurrency.symbol,
+                        provider = provider,
+                    )
+                )
+            }
+            is DataError.ExchangeNotPossibleError -> {
+                val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return
+                analyticsEventHandler.send(
+                    SwapEvents.NoticeExchangeError(
+                        sendToken = fromToken.currency.symbol,
+                        receiveToken = receiveTokenSymbol,
+                        provider = provider,
+                    )
+                )
+            }
+            else -> {
+                /* no-op */
             }
         }
     }
