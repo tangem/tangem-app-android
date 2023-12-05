@@ -99,7 +99,7 @@ internal class DefaultCurrenciesRepository(
             )
             storeAndPushTokens(
                 userWalletId = userWalletId,
-                response = updatedResponse
+                response = updatedResponse,
             )
             fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
         }
