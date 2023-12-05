@@ -222,8 +222,7 @@ internal class StateBuilder(
                 ),
             )
         }
-        if (quoteModel.preparedSwapConfigState.isAllowedToSpend &&
-            !quoteModel.preparedSwapConfigState.isFeeEnough &&
+        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
             quoteModel.preparedSwapConfigState.isBalanceEnough
         ) {
             warnings.add(
@@ -896,7 +895,7 @@ internal class StateBuilder(
             ),
             iconResId = fromToken.networkIconResId,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.common_buy_currency, wrappedList(fromToken.name)),
+                text = resourceReference(R.string.common_buy_currency, wrappedList(fromToken.network.currencySymbol)),
                 onClick = onBuyClick,
             ),
         )
