@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.featuretoggles)
+    implementation(projects.core.navigation)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.common)
@@ -45,6 +46,7 @@ dependencies {
 
     /** Api */
     implementation(projects.features.swap.api)
+    implementation(projects.features.tokendetails.api)
 
     /** Domain */
     implementation(projects.features.swap.domain)
