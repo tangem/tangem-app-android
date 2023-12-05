@@ -64,6 +64,7 @@ interface SwapInteractor {
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
         amountToSwap: String,
+        includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
     ): TxState
 
