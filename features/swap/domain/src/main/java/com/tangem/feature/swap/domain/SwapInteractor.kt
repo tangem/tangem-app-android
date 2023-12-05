@@ -90,4 +90,6 @@ interface SwapInteractor {
         initialCryptoCurrency: CryptoCurrency,
         state: TokensDataStateExpress,
     ): CryptoCurrencyStatus?
+
+    fun getNativeToken(networkId: String): CryptoCurrency
 }
