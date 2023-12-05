@@ -3,6 +3,7 @@ package com.tangem.feature.swap.domain.models.ui
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import java.math.BigDecimal
@@ -18,6 +19,7 @@ sealed interface SwapState {
             isAllowedToSpend = false,
             isBalanceEnough = false,
             isFeeEnough = false,
+            includeFeeInAmount = IncludeFeeInAmount.Excluded,
         ),
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapDataModel? = null,
