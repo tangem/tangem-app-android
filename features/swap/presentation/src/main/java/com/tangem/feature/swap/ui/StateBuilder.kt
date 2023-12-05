@@ -14,9 +14,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
-import com.tangem.feature.swap.domain.models.domain.NetworkInfo
-import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
@@ -211,41 +209,7 @@ internal class StateBuilder(
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
-        val warnings = mutableListOf<SwapWarning>()
-        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
-            quoteModel.preparedSwapConfigState.isFeeEnough &&
-            quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
-        ) {
-            warnings.add(
-                SwapWarning.PermissionNeeded(
-                    createPermissionNotificationConfig(fromToken.symbol),
-                ),
-            )
-        }
-        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
-            quoteModel.preparedSwapConfigState.isBalanceEnough
-        ) {
-            warnings.add(
-                SwapWarning.UnableToCoverFeeWarning(
-                    createUnableToCoverFeeNotificationConfig(
-                        fromToken = fromToken,
-                        onBuyClick = actions.onBuyClick,
-                    ),
-                ),
-            )
-        }
-        if (!quoteModel.preparedSwapConfigState.isBalanceEnough) {
-            warnings.add(SwapWarning.InsufficientFunds)
-        }
-
-        if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
-            warnings.add(
-                SwapWarning.HighPriceImpact(
-                    priceImpact = (quoteModel.priceImpact * HUNDRED_PERCENTS).toInt(),
-                    notificationConfig = highPriceImpactNotificationConfig(),
-                ),
-            )
-        }
+        val warnings = getWarningsForSuccessState(quoteModel, fromToken)
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
@@ -288,9 +252,7 @@ internal class StateBuilder(
             ),
             fee = feeState,
             swapButton = SwapButton(
-                enabled = quoteModel.preparedSwapConfigState.isAllowedToSpend &&
-                    quoteModel.preparedSwapConfigState.isBalanceEnough &&
-                    quoteModel.preparedSwapConfigState.isFeeEnough,
+                enabled = getSwapButtonEnabled(quoteModel.preparedSwapConfigState),
                 loading = false,
                 onClick = actions.onSwapClick,
             ),
@@ -304,6 +266,71 @@ internal class StateBuilder(
                 onProviderClick = actions.onProviderClick,
             ),
         )
+    }
+
+    private fun getWarningsForSuccessState(
+        quoteModel: SwapState.QuotesLoadedState,
+        fromToken: CryptoCurrency,
+    ): List<SwapWarning> {
+        val warnings = mutableListOf<SwapWarning>()
+        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
+            quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
+        ) {
+            warnings.add(
+                SwapWarning.PermissionNeeded(
+                    createPermissionNotificationConfig(fromToken.symbol),
+                ),
+            )
+        }
+        when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
+            is IncludeFeeInAmount.Included ->
+                warnings.add(
+                    SwapWarning.GeneralWarning(
+                        createNetworkFeeCoverageNotificationConfig(),
+                    ),
+                )
+            else -> Unit
+        }
+        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.preparedSwapConfigState.isBalanceEnough
+        ) {
+            warnings.add(
+                SwapWarning.UnableToCoverFeeWarning(
+                    createUnableToCoverFeeNotificationConfig(
+                        fromToken = fromToken,
+                        onBuyClick = actions.onBuyClick,
+                    ),
+                ),
+            )
+        }
+        // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
+        if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
+        ) {
+            warnings.add(SwapWarning.InsufficientFunds)
+        }
+
+        if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
+            warnings.add(
+                SwapWarning.HighPriceImpact(
+                    priceImpact = (quoteModel.priceImpact * HUNDRED_PERCENTS).toInt(),
+                    notificationConfig = highPriceImpactNotificationConfig(),
+                ),
+            )
+        }
+        return warnings
+    }
+
+    private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
+        return when (preparedSwapConfigState.includeFeeInAmount) {
+            IncludeFeeInAmount.BalanceNotEnough -> false
+            IncludeFeeInAmount.Excluded ->
+                preparedSwapConfigState.isAllowedToSpend &&
+                    preparedSwapConfigState.isBalanceEnough &&
+                    preparedSwapConfigState.isFeeEnough
+            is IncludeFeeInAmount.Included -> true
+        }
     }
 
     fun createQuotesErrorState(
@@ -406,7 +433,7 @@ internal class StateBuilder(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(R.string.common_error),
                     subtitle = resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString())),
-                    iconResId = R.drawable.ic_alert_circle_24,
+                    iconResId = R.drawable.img_attention_20,
                 ),
             )
         }
@@ -898,6 +925,14 @@ internal class StateBuilder(
                 text = resourceReference(R.string.common_buy_currency, wrappedList(fromToken.network.currencySymbol)),
                 onClick = onBuyClick,
             ),
+        )
+    }
+
+    private fun createNetworkFeeCoverageNotificationConfig(): NotificationConfig {
+        return NotificationConfig(
+            title = resourceReference(R.string.send_network_fee_warning_title),
+            subtitle = resourceReference(R.string.send_network_fee_warning_content),
+            iconResId = R.drawable.img_attention_20,
         )
     }
     // end region
