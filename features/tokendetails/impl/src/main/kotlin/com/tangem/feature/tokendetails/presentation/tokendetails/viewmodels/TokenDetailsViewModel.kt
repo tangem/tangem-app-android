@@ -524,6 +524,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                         refresh = true,
                         showItemsLoading = uiState.txHistoryState !is TxHistoryState.Content,
                     )
+                    subscribeOnExchangeTransactionsUpdates()
                 },
             ).awaitAll()
             uiState = stateFactory.getRefreshedState()
