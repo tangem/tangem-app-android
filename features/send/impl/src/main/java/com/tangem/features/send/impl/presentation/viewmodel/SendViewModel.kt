@@ -6,8 +6,15 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.PagingData
 import arrow.core.getOrElse
+import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
+import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
+import com.tangem.blockchain.blockchains.stellar.StellarMemo
+import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
+import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
+import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -80,7 +87,7 @@ internal class SendViewModel @Inject constructor(
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
-    private var inneRrouter: InnerSendRouter by Delegates.notNull()
+    private var innerRouter: InnerSendRouter by Delegates.notNull()
     private var stateRouter: StateRouter by Delegates.notNull()
 
     private val stateFactory = SendStateFactory(
@@ -111,7 +118,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
-        inneRrouter = router
+        innerRouter = router
         this.stateRouter = stateRouter
         uiState = uiState.copy(currentState = stateRouter.currentState)
     }
@@ -428,7 +435,7 @@ internal class SendViewModel @Inject constructor(
             destination = recipient.value,
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
-        ) ?: return
+        )?.copy(extras = getMemoExtras(cryptoCurrency.network.id.value, memo?.value)) ?: return
 
         sendTransactionUseCase(
             txData = txData,
@@ -475,7 +482,7 @@ internal class SendViewModel @Inject constructor(
 
     override fun showFee() = stateRouter.showFee(isFromSend = true)
 
-    override fun onExploreClick(txUrl: String) = inneRrouter.openUrl(txUrl)
+    override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
 
     private fun getTxUrl(hash: String): String {
         val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
@@ -490,6 +497,25 @@ internal class SendViewModel @Inject constructor(
         }
     }
     // endregion
+
+    private fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
+        val blockchain = Blockchain.fromId(networkId)
+        if (memo == null) return null
+        return when (blockchain) {
+            Blockchain.Stellar -> {
+                val xmlMemo = when (determineXlmMemoType(memo)) {
+                    XlmMemoType.TEXT -> StellarMemo.Text(memo)
+                    XlmMemoType.ID -> StellarMemo.Id(memo.toBigInteger())
+                }
+                StellarTransactionExtras(xmlMemo)
+            }
+            Blockchain.Binance -> BinanceTransactionExtras(memo)
+            Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
+            Blockchain.Cosmos -> CosmosTransactionExtras(memo)
+            Blockchain.TON -> TonTransactionExtras(memo)
+            else -> null
+        }
+    }
 
     companion object {
         private const val XRP_X_ADDRESS = 'X'
