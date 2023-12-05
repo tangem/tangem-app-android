@@ -15,7 +15,7 @@ class DefaultMarketCryptoCurrencyRepository(
 
         return assetsStore.getSyncOrNull(userWalletId)?.find {
             it.network == cryptoCurrency.network.backendId &&
-                it.contractAddress == contractAddress
+                it.contractAddress.equals(contractAddress, ignoreCase = true)
         }?.exchangeAvailable ?: false
     }
 }
