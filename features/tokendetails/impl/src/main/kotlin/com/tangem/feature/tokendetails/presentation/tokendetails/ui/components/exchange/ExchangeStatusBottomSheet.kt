@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -78,8 +77,8 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
         SpacerH12()
         ExchangeStatusBlock(
             statuses = config.statuses,
-            showLink = notification.value == null,
-            onClick = config.onGoToProviderClick,
+            showLink = notification.value == null && config.txUrl != null,
+            onClick = { config.onGoToProviderClick(config.txUrl.orEmpty()) },
         )
         AnimatedContent(
             targetState = notification.value,
