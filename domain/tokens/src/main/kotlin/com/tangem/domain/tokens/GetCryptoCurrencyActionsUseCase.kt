@@ -97,12 +97,8 @@ class GetCryptoCurrencyActionsUseCase(
         // copy address
         activeList.add(TokenActionsState.ActionState.CopyAddress(true))
 
-        // buy
-        if (rampManager.availableForBuy(cryptoCurrency)) {
-            activeList.add(TokenActionsState.ActionState.Buy(true))
-        } else {
-            disabledList.add(TokenActionsState.ActionState.Buy(false))
-        }
+        // receive
+        activeList.add(TokenActionsState.ActionState.Receive(true))
 
         // send
         if (isSendDisabled(cryptoCurrencyStatus = cryptoCurrencyStatus, coinStatus = coinStatus)) {
@@ -111,14 +107,18 @@ class GetCryptoCurrencyActionsUseCase(
             activeList.add(TokenActionsState.ActionState.Send(true))
         }
 
-        // receive
-        activeList.add(TokenActionsState.ActionState.Receive(true))
-
         // swap
         if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency)) {
             activeList.add(TokenActionsState.ActionState.Swap(true))
         } else {
             disabledList.add(TokenActionsState.ActionState.Swap(false))
+        }
+
+        // buy
+        if (rampManager.availableForBuy(cryptoCurrency)) {
+            activeList.add(TokenActionsState.ActionState.Buy(true))
+        } else {
+            disabledList.add(TokenActionsState.ActionState.Buy(false))
         }
 
         // sell
