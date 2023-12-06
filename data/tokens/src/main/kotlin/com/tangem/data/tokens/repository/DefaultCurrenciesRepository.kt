@@ -390,13 +390,16 @@ internal class DefaultCurrenciesRepository(
                     )
                 }
 
-            val response = tangemExpressApi.getAssets(
-                AssetsRequestBody(
-                    tokensList = tokensList,
-                ),
-            )
+            if (tokensList.isNotEmpty()) {
+                val response = tangemExpressApi.getAssets(
+                    AssetsRequestBody(
+                        tokensList = tokensList,
+                    ),
+                )
 
-            assetsStore.store(userWalletId, response.getOrThrow())
+                assetsStore.store(userWalletId, response.getOrThrow())
+            }
+
         } catch (e: Throwable) {
             Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
         }
