@@ -132,8 +132,9 @@ internal class SwapInteractorImpl @Inject constructor(
             val providers = findProvidersForPair(pair, filteredPairs, tokenInfoForAvailable)
             if (providers != null) {
                 CryptoCurrencySwapInfo(pair, providers)
-            } else
+            } else {
                 null
+            }
         }
 
         val unavailableCryptoCurrencies = cryptoCurrenciesList - availableCryptoCurrencies
