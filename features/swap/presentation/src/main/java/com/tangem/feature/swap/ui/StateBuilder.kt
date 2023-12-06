@@ -567,6 +567,24 @@ internal class StateBuilder(
         }
     }
 
+    fun createInitialErrorState(uiState: SwapStateHolder, onRefreshClick: () -> Unit): SwapStateHolder {
+        return uiState.copy(
+            warnings = listOf(
+                SwapWarning.GeneralWarning(
+                    notificationConfig = NotificationConfig(
+                        title = TextReference.Res(R.string.warning_express_refresh_required_title),
+                        subtitle = TextReference.EMPTY,
+                        iconResId = R.drawable.ic_alert_circle_24,
+                        buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                            text = TextReference.Res(R.string.warning_button_refresh),
+                            onClick = onRefreshClick,
+                        ),
+                    ),
+                ),
+            ),
+        )
+    }
+
     private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType): FeeItemState {
         val isClickable: Boolean
         val fee = when (txFeeState) {
