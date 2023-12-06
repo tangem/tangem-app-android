@@ -29,7 +29,7 @@ internal data class SwapTransactionsState(
     val fromFiatAmount: String,
     val fromCurrencyIcon: TokenIconState,
     val onClick: () -> Unit,
-    val onGoToProviderClick: () -> Unit,
+    val onGoToProviderClick: (String) -> Unit,
 )
 
 internal class ExchangeStatusState(
