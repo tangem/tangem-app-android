@@ -20,6 +20,7 @@ class UserWalletBuilder(
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
             ProductType.Start2Coin -> "Start2Coin"
+            ProductType.Visa -> "Tangem Visa"
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,
@@ -28,7 +29,6 @@ class UserWalletBuilder(
                 cardTypesResolver.isStart2Coin() -> "Start2Coin"
                 else -> "Wallet"
             }
-            ProductType.Wallet2 -> "Wallet"
         }
 
     /**
