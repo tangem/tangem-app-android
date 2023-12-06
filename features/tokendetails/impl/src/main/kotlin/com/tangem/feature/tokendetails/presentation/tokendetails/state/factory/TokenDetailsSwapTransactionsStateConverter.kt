@@ -194,6 +194,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         status = ExchangeStatus.New,
         text = when {
             isNew -> TextReference.Res(R.string.express_exchange_status_receiving_active)
+            isNewDone -> TextReference.Res(R.string.express_exchange_status_received)
             else -> TextReference.Res(R.string.express_exchange_status_receiving)
         },
         isActive = isNew,
