@@ -62,6 +62,9 @@ object OnboardingHelper {
                 AppScreen.OnboardingOther
             }
             ProductType.Twins -> AppScreen.OnboardingTwins
+            ProductType.Visa -> throw java.lang.UnsupportedOperationException(
+                "Onboarding for VISA cards is not supported",
+            )
             ProductType.Start2Coin -> throw java.lang.UnsupportedOperationException(
                 "Onboarding for Start2Coin cards is not supported",
             )
