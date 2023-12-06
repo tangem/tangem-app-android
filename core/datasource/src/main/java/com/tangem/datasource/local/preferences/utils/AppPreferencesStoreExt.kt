@@ -12,7 +12,15 @@ import kotlinx.coroutines.flow.map
 /** Get flow of nullable data [T] by string [key] */
 inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String>): Flow<T?> {
     val adapter = moshi.adapter(T::class.java)
-    return data.map { it[key]?.let(adapter::fromJson) }
+    return data.map { preferences ->
+        preferences[key]?.let {
+            try {
+                adapter.fromJson(it)
+            } catch (e: JsonDataException) {
+                null
+            }
+        }
+    }
 }
 
 /**
@@ -44,7 +52,13 @@ suspend inline fun <reified T> AppPreferencesStore.getObjectSyncOrNull(key: Pref
     val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
     return data.firstOrNull()
         ?.get(key)
-        ?.let(adapter::fromJson)
+        ?.let {
+            try {
+                adapter.fromJson(it)
+            } catch (e: JsonDataException) {
+                null
+            }
+        }
 }
 
 /** Get data [T] by string [key]. If data is not found, it returns [default] */
@@ -55,7 +69,13 @@ suspend inline fun <reified T> AppPreferencesStore.getObjectSyncOrDefault(
     val adapter = moshi.adapter(T::class.java)
     return data.firstOrNull()
         ?.get(key)
-        ?.let(adapter::fromJson)
+        ?.let {
+            try {
+                adapter.fromJson(it)
+            } catch (e: JsonDataException) {
+                default
+            }
+        }
         ?: default
 }
 
