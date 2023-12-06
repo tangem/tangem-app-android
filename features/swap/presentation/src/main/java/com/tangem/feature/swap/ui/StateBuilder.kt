@@ -784,6 +784,36 @@ internal class StateBuilder(
         )
     }
 
+    fun updateProvidersBottomSheetContent(
+        uiState: SwapStateHolder,
+        tokenSwapInfoForProviders: Map<String, TokenSwapInfo>,
+    ): SwapStateHolder {
+        val config = uiState.bottomSheetConfig?.content as? ChooseProviderBottomSheetConfig
+        return if (config != null) {
+            val providers = config.providers
+            uiState.copy(
+                bottomSheetConfig = uiState.bottomSheetConfig.copy(
+                    content = config.copy(
+                        providers = providers.map {
+                            val tokenInfo = tokenSwapInfoForProviders[it.id]
+                            if (it is ProviderState.Content && tokenInfo != null) {
+                                val rateString = tokenInfo.tokenAmount
+                                    .getFormattedCryptoAmount(tokenInfo.cryptoCurrencyStatus.currency)
+                                it.copy(
+                                    subtitle = stringReference(rateString),
+                                )
+                            } else {
+                                it
+                            }
+                        }.toImmutableList(),
+                    ),
+                ),
+            )
+        } else {
+            uiState
+        }
+    }
+
     fun updateSelectedProvider(uiState: SwapStateHolder, selectedProviderId: String): SwapStateHolder {
         val config = uiState.bottomSheetConfig?.content as? ChooseProviderBottomSheetConfig
         return if (config != null) {
