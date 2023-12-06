@@ -54,7 +54,7 @@ object OnboardingHelper {
     }
 
     fun whereToNavigate(scanResponse: ScanResponse): AppScreen {
-        return when (scanResponse.productType) {
+        return when (val type = scanResponse.productType) {
             ProductType.Note -> AppScreen.OnboardingNote
             ProductType.Wallet,
             ProductType.Wallet2,
@@ -65,9 +65,9 @@ object OnboardingHelper {
                 AppScreen.OnboardingOther
             }
             ProductType.Twins -> AppScreen.OnboardingTwins
-            ProductType.Start2Coin -> throw java.lang.UnsupportedOperationException(
-                "Onboarding for Start2Coin cards is not supported",
-            )
+            ProductType.Start2Coin,
+            ProductType.Visa,
+            -> throw UnsupportedOperationException("Onboarding for ${type.name} cards is not supported")
         }
     }
 
