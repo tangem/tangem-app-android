@@ -96,11 +96,11 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         fromFiatAmount = getFiatAmount(fromFiatAmount),
                         fromCurrencyIcon = iconStateConverter.convert(fromCurrency),
                         onClick = { clickIntents.onSwapTransactionClick(transaction.txId, transaction.status?.status) },
-                        onGoToProviderClick = {
+                        onGoToProviderClick = { url ->
                             analyticsEventsHandlerProvider().send(
                                 TokenExchangeAnalyticsEvent.GoToProviderStatus(cryptoCurrency.symbol),
                             )
-                            clickIntents.onGoToProviderClick(url = transaction.status?.txUrl.orEmpty())
+                            clickIntents.onGoToProviderClick(url = url)
                         },
                     ),
                 )
