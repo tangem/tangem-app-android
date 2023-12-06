@@ -13,6 +13,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -36,11 +37,9 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.feature.swap.domain.SwapTransactionRepository
-import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -77,6 +76,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
+    private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -116,6 +116,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             swapRepository = swapRepository,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            swapTransactionStatusStore = swapTransactionStatusStore,
             dispatchers = dispatchers,
             clickIntents = this,
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
@@ -215,9 +216,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             swapTxStatusTaskScheduler.cancelTask()
             exchangeStatusFactory.invoke()
                 .onEach { swapTxs ->
-                    if (swapTxs.isNotEmpty()) {
-                        analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.CexTx(cryptoCurrency.symbol))
-                    }
                     swapTxStatusTaskScheduler.scheduleTask(
                         viewModelScope,
                         PeriodicTask(
@@ -539,20 +537,9 @@ internal class TokenDetailsViewModel @Inject constructor(
         uiState = stateFactory.getStateWithRemovedRentNotification()
     }
 
-    override fun onSwapTransactionClick(txId: String, status: ExchangeStatus?) {
+    override fun onSwapTransactionClick(txId: String) {
         val swapTxState = uiState.swapTxs.first { it.txId == txId }
-        analyticsEventsHandler.send(
-            TokenExchangeAnalyticsEvent.CexTxOpened(cryptoCurrency.symbol, status?.name.orEmpty()),
-        )
-        when (swapTxState.notification.value) {
-            is ExchangeStatusNotifications.NeedVerification -> {
-                analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.Verification(cryptoCurrency.symbol))
-            }
-            is ExchangeStatusNotifications.Failed -> {
-                analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.Fail(cryptoCurrency.symbol))
-            }
-            else -> Unit
-        }
+        analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.CexTxStatusOpened(cryptoCurrency.symbol))
         uiState = stateFactory.getStateWithExchangeStatusBottomSheet(swapTxState)
     }
 
