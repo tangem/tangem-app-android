@@ -805,6 +805,13 @@ internal class SwapInteractorImpl @Inject constructor(
         if (fromToken is CryptoCurrency.Token) {
             return IncludeFeeInAmount.Excluded
         }
+
+        val tokenForFeeBalance =
+            userWalletManager.getNativeTokenBalance(networkId, derivationPath) ?: ProxyAmount.empty()
+
+        if (amount.value > tokenForFeeBalance.value) {
+            return IncludeFeeInAmount.BalanceNotEnough
+        }
         val feeValue = when (txFee) {
             TxFeeState.Empty -> BigDecimal.ZERO
             is TxFeeState.MultipleFeeState -> if (selectedFee == FeeType.NORMAL) {
@@ -815,8 +822,6 @@ internal class SwapInteractorImpl @Inject constructor(
             is TxFeeState.SingleFeeState -> txFee.fee.feeValue
         }
 
-        val tokenForFeeBalance =
-            userWalletManager.getNativeTokenBalance(networkId, derivationPath) ?: ProxyAmount.empty()
         val amountWithFee = amount.value + feeValue
         return if (amountWithFee < tokenForFeeBalance.value) {
             IncludeFeeInAmount.Excluded
