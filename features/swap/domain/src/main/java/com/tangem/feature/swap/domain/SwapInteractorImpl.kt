@@ -502,9 +502,10 @@ internal class SwapInteractorImpl @Inject constructor(
         return result.fold(
             ifLeft = {
                 when (it) {
+                    SendTransactionError.UserCancelledError -> TxState.UserCancelled
+                    is SendTransactionError.BlockchainSdkError -> TxState.BlockchainError
+                    is SendTransactionError.TangemSdkError -> TxState.TangemSdkError
                     is SendTransactionError.NetworkError -> TxState.NetworkError
-                    is SendTransactionError.DataError -> TxState.BlockchainError
-                    SendTransactionError.DemoCardError -> TxState.UnknownError
                     else -> TxState.UnknownError
                 }
             },
