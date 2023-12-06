@@ -39,6 +39,8 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.controlButtons
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import kotlinx.collections.immutable.toImmutableList
 
@@ -139,6 +141,18 @@ private fun WalletContent(
                 walletState.marketPriceBlockState?.let { marketPriceBlockState ->
                     marketPriceBlock(state = marketPriceBlockState, modifier = itemModifier)
                 }
+            }
+
+            (selectedWallet as? WalletState.Visa.Content)?.let {
+                depositButton(
+                    modifier = itemModifier.fillMaxWidth(),
+                    state = it.depositButtonState,
+                )
+
+                balancesAndLimitsBlock(
+                    modifier = itemModifier,
+                    state = it.balancesAndLimitBlockState,
+                )
             }
 
             contentItemsV2(
