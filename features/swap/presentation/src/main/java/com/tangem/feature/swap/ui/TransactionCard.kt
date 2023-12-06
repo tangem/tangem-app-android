@@ -262,14 +262,12 @@ private fun Content(
                     }
                 }
                 is TransactionCardType.SendCard -> {
-                    AnimatedContent(targetState = textFieldValue, label = "") {
-                        AutoSizeTextField(
-                            modifier = sumTextModifier,
-                            textFieldValue = it ?: TextFieldValue(),
-                            onAmountChange = { type.onAmountChanged(it) },
-                            onFocusChange = type.onFocusChanged,
-                        )
-                    }
+                    AutoSizeTextField(
+                        modifier = sumTextModifier,
+                        textFieldValue = textFieldValue ?: TextFieldValue(),
+                        onAmountChange = { type.onAmountChanged(it) },
+                        onFocusChange = type.onFocusChanged,
+                    )
                 }
             }
 
