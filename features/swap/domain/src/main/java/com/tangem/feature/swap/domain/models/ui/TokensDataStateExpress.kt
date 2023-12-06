@@ -10,7 +10,7 @@ data class TokensDataStateExpress(
         val EMPTY =
             TokensDataStateExpress(
                 fromGroup = CurrenciesGroup(emptyList(), emptyList()),
-                toGroup = CurrenciesGroup(emptyList(), emptyList())
+                toGroup = CurrenciesGroup(emptyList(), emptyList()),
             )
     }
 }

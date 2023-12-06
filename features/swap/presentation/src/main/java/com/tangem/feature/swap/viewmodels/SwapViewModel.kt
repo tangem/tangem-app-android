@@ -168,7 +168,7 @@ internal class SwapViewModel @Inject constructor(
 
                 applyInitialTokenChoice(
                     state = TokensDataStateExpress.EMPTY,
-                    selectedCurrency = null
+                    selectedCurrency = null,
                 )
 
                 uiState = stateBuilder.createInitialErrorState(uiState) {
