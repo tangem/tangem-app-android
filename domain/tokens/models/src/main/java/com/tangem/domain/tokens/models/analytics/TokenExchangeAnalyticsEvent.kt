@@ -7,24 +7,14 @@ class TokenExchangeAnalyticsEvent(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Token", event, params, null) {
 
-    class CexTx(token: String) : TokenScreenAnalyticsEvent(
-        event = "Notice - ChangeNow Swap",
+    class CexTxStatusOpened(token: String) : TokenScreenAnalyticsEvent(
+        event = "ChangeNow Status Opened",
         params = mapOf("Token" to token),
     )
 
-    class CexTxOpened(token: String, status: String) : TokenScreenAnalyticsEvent(
-        event = "ChangeNow Swap Opened",
+    class CexTxStatusChanged(token: String, status: String) : TokenScreenAnalyticsEvent(
+        event = "ChangeNow Status",
         params = mapOf("Token" to token, "Status" to status),
-    )
-
-    class Verification(token: String) : TokenScreenAnalyticsEvent(
-        event = "Notice - KYC required",
-        params = mapOf("Token" to token),
-    )
-
-    class Fail(token: String) : TokenScreenAnalyticsEvent(
-        event = "Notice - Operation Fail",
-        params = mapOf("Token" to token),
     )
 
     class GoToProviderStatus(token: String) : TokenScreenAnalyticsEvent(
