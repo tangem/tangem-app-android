@@ -18,6 +18,7 @@ import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
+import com.tangem.domain.common.TapWorkarounds.isVisa
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -172,10 +173,10 @@ private class ScanWalletProcessor(
     }
 
     private fun determineProductTypeForSingleCurrencyWallet(card: CardDTO): ProductType {
-        return if (card.isStart2Coin) {
-            ProductType.Start2Coin
-        } else {
-            ProductType.Note
+        return when {
+            card.isStart2Coin -> ProductType.Start2Coin
+            card.isVisa -> ProductType.Visa
+            else -> ProductType.Note
         }
     }
 
