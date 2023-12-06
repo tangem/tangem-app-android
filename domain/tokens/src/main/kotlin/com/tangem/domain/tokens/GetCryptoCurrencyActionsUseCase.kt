@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens
 
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -55,6 +56,7 @@ class GetCryptoCurrencyActionsUseCase(
                     userWalletId = userWallet.walletId,
                     coinStatus = maybeCoinStatus.getOrNull(),
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
                 )
             }
 
@@ -66,11 +68,17 @@ class GetCryptoCurrencyActionsUseCase(
         userWalletId: UserWalletId,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        cardTypesResolver: CardTypesResolver,
     ): TokenActionsState {
         return TokenActionsState(
             walletId = userWalletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            states = createListOfActions(userWalletId, coinStatus, cryptoCurrencyStatus),
+            states = createListOfActions(
+                userWalletId,
+                coinStatus,
+                cryptoCurrencyStatus,
+                cardTypesResolver,
+            ),
         )
     }
 
@@ -82,6 +90,7 @@ class GetCryptoCurrencyActionsUseCase(
         userWalletId: UserWalletId,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        cardTypesResolver: CardTypesResolver,
     ): List<TokenActionsState.ActionState> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
@@ -107,8 +116,11 @@ class GetCryptoCurrencyActionsUseCase(
             activeList.add(TokenActionsState.ActionState.Send(true))
         }
 
+        val isMulticurrencyWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
         // swap
-        if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency)) {
+        if (isMulticurrencyWallet &&
+            marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency)
+        ) {
             activeList.add(TokenActionsState.ActionState.Swap(true))
         } else {
             disabledList.add(TokenActionsState.ActionState.Swap(false))

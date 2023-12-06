@@ -399,7 +399,6 @@ internal class DefaultCurrenciesRepository(
 
                 assetsStore.store(userWalletId, response.getOrThrow())
             }
-
         } catch (e: Throwable) {
             Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
         }
