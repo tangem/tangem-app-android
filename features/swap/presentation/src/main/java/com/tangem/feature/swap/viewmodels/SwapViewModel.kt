@@ -294,7 +294,7 @@ internal class SwapViewModel @Inject constructor(
                     fromToken = fromToken.currency,
                     swapProvider = provider,
                     bestRatedProviderId = bestRatedProviderId,
-                    isManyProviders = dataState.lastLoadedSwapStates.isNotEmpty(),
+                    isManyProviders = dataState.lastLoadedSwapStates.size > 1,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                 )
             }
@@ -717,7 +717,7 @@ internal class SwapViewModel @Inject constructor(
                 val fromToken = dataState.fromCryptoCurrency ?: return@UiActions
                 val amountToSwap = dataState.amount ?: return@UiActions
                 val selectedProvider = dataState.selectedProvider ?: return@UiActions
-                uiState = stateBuilder.updateSelectedFee(uiState, it.feeType)
+                uiState = stateBuilder.updateSelectedFeeBottomSheet(uiState, it.feeType)
                 dataState = dataState.copy(selectedFee = it)
                 viewModelScope.launch(dispatchers.io) {
                     val updatedState = swapInteractor.updateQuotesStateWithSelectedFee(
