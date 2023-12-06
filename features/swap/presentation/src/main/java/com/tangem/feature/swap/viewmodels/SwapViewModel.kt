@@ -165,6 +165,19 @@ internal class SwapViewModel @Inject constructor(
                 )
             }.onFailure {
                 Timber.tag(loggingTag).e(it)
+
+                applyInitialTokenChoice(
+                    state = TokensDataStateExpress.EMPTY,
+                    selectedCurrency = null,
+                )
+
+                uiState = stateBuilder.createInitialErrorState(uiState) {
+                    uiState = stateBuilder.createInitialLoadingState(
+                        initialCurrency = initialCryptoCurrency,
+                        networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
+                    )
+                    initTokens()
+                }
             }
         }
     }
