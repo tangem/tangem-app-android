@@ -825,7 +825,7 @@ internal class StateBuilder(
         )
     }
 
-    fun updateSelectedFee(uiState: SwapStateHolder, selectedFee: FeeType): SwapStateHolder {
+    fun updateSelectedFeeBottomSheet(uiState: SwapStateHolder, selectedFee: FeeType): SwapStateHolder {
         val config = uiState.bottomSheetConfig?.content as? ChooseFeeBottomSheetConfig
         return if (config != null) {
             uiState.copy(
