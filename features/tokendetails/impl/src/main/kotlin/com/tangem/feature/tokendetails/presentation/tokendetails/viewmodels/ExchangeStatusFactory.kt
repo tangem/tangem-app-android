@@ -3,10 +3,13 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 import arrow.core.getOrElse
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.datasource.local.swaptx.ExchangeAnalyticsStatus
+import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.SwapRepository
@@ -33,6 +36,7 @@ internal class ExchangeStatusFactory(
     private val swapRepository: SwapRepository,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val clickIntents: TokenDetailsClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -90,8 +94,24 @@ internal class ExchangeStatusFactory(
         return swapRepository.getExchangeStatus(txId)
             .fold(
                 ifLeft = { null },
-                ifRight = { it },
+                ifRight = {
+                    sendStatusUpdateAnalytics(it)
+                    it
+                },
             )
+    }
+
+    private suspend fun sendStatusUpdateAnalytics(statusModel: ExchangeStatusModel) {
+        val txId = statusModel.txId ?: return
+        val status = toAnalyticStatus(statusModel.status) ?: return
+        val savedStatus = swapTransactionStatusStore.getTransactionStatus(txId)
+
+        if (savedStatus != status) {
+            analyticsEventsHandlerProvider().send(
+                TokenExchangeAnalyticsEvent.CexTxStatusChanged(cryptoCurrency.symbol, status.value),
+            )
+            swapTransactionStatusStore.setTransactionStatus(txId, status)
+        }
     }
 
     private fun getExchangeStatusState(
@@ -121,6 +141,22 @@ internal class ExchangeStatusFactory(
         }
         else -> {
             this
+        }
+    }
+
+    private fun toAnalyticStatus(status: ExchangeStatus?): ExchangeAnalyticsStatus? {
+        return when (status) {
+            ExchangeStatus.New,
+            ExchangeStatus.Waiting,
+            ExchangeStatus.Sending,
+            ExchangeStatus.Confirming,
+            ExchangeStatus.Exchanging,
+            -> ExchangeAnalyticsStatus.InProgress
+            ExchangeStatus.Verifying -> ExchangeAnalyticsStatus.KYC
+            ExchangeStatus.Failed -> ExchangeAnalyticsStatus.Fail
+            ExchangeStatus.Finished -> ExchangeAnalyticsStatus.Done
+            ExchangeStatus.Refunded -> ExchangeAnalyticsStatus.Refunded
+            else -> null
         }
     }
 }
