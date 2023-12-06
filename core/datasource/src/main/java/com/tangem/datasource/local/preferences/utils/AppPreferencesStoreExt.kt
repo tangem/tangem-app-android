@@ -2,6 +2,7 @@ package com.tangem.datasource.local.preferences.utils
 
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Types
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +24,13 @@ inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String
  * */
 inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String>, default: T): Flow<T> {
     val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
-    return data.map { it[key]?.let(adapter::fromJson) ?: default }
+    return data.map {
+        try {
+            it[key]?.let(adapter::fromJson) ?: default
+        } catch (e: JsonDataException) {
+            default
+        }
+    }
 }
 
 /**
