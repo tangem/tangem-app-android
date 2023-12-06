@@ -271,6 +271,13 @@ internal class SwapViewModel @Inject constructor(
                 if (providersState.isNotEmpty()) {
                     val (provider, state) = updateLoadedQuotes(providersState)
                     setupLoadedState(provider, state, fromToken)
+                    uiState = stateBuilder.updateProvidersBottomSheetContent(
+                        uiState = uiState,
+                        tokenSwapInfoForProviders = providersState
+                            .getLastLoadedSuccessStates()
+                            .entries
+                            .associate { it.key.providerId to it.value.toTokenInfo },
+                    )
                 } else {
                     Timber.e("Accidentally empty quotes list")
                 }
