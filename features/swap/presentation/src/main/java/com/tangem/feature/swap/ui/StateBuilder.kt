@@ -20,6 +20,7 @@ import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.viewmodels.SwapProcessDataState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -638,38 +639,40 @@ internal class StateBuilder(
     @Suppress("LongParameterList")
     fun createSuccessState(
         uiState: SwapStateHolder,
-        txState: TxState.TxSent,
-        fromAmount: BigDecimal,
-        toAmount: BigDecimal,
+        timeStamp: Long,
         txUrl: String,
+        dataState: SwapProcessDataState,
         onExploreClick: () -> Unit,
         onStatusClick: () -> Unit,
     ): SwapStateHolder {
+        val fee = requireNotNull(dataState.selectedFee)
+        val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
+        val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
+        val fromAmount = requireNotNull(dataState.amount?.toBigDecimal())
+        val toAmount = requireNotNull(dataState.swapDataModel?.toTokenAmount?.value)
         val providerState = uiState.providerState as ProviderState.Content
-        val fromToken = requireNotNull((uiState.sendCardData as? SwapCardState.SwapCardData)?.token)
-        val toToken = requireNotNull((uiState.receiveCardData as? SwapCardState.SwapCardData)?.token)
-        val fromTokenIconState = iconStateConverter.convert(fromToken)
-        val toTokenIconState = iconStateConverter.convert(toToken)
-        val fee = uiState.fee as? FeeItemState.Content ?: return uiState
-        val fromFiatAmount = getFormattedFiatAmount(fromToken.value.fiatRate?.multiply(fromAmount))
-        val toFiatAmount = getFormattedFiatAmount(toToken.value.fiatRate?.multiply(toAmount))
+
+        val fromCryptoAmount = BigDecimalFormatter.formatCryptoAmount(fromAmount, fromCryptoCurrency.currency)
+        val toCryptoAmount = BigDecimalFormatter.formatCryptoAmount(toAmount, toCryptoCurrency.currency)
+        val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
+        val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
 
         return uiState.copy(
             successState = SwapSuccessStateHolder(
-                timestamp = txState.timestamp,
+                timestamp = timeStamp,
                 txUrl = txUrl,
-                providerName = TextReference.Str(providerState.name),
-                providerType = TextReference.Str(providerState.type),
+                providerName = stringReference(providerState.name),
+                providerType = stringReference(providerState.type),
                 showStatusButton = providerState.type == ExchangeProviderType.CEX.name,
                 providerIcon = providerState.iconUrl,
-                fee = TextReference.Str("${fee.amountCrypto} ${fee.symbolCrypto} (${fee.amountFiatFormatted})"),
                 rate = providerState.subtitle,
-                fromTokenAmount = TextReference.Str(txState.fromAmount.orEmpty()),
-                toTokenAmount = TextReference.Str(txState.toAmount.orEmpty()),
-                fromTokenFiatAmount = TextReference.Str(fromFiatAmount),
-                toTokenFiatAmount = TextReference.Str(toFiatAmount),
-                fromTokenIconState = fromTokenIconState,
-                toTokenIconState = toTokenIconState,
+                fee = stringReference("${fee.feeCryptoFormatted} (${fee.feeFiatFormatted})"),
+                fromTokenAmount = stringReference(fromCryptoAmount),
+                toTokenAmount = stringReference(toCryptoAmount),
+                fromTokenFiatAmount = stringReference(fromFiatAmount),
+                toTokenFiatAmount = stringReference(toFiatAmount),
+                fromTokenIconState = iconStateConverter.convert(fromCryptoCurrency),
+                toTokenIconState = iconStateConverter.convert(toCryptoCurrency),
                 onExploreButtonClick = onExploreClick,
                 onStatusButtonClick = onStatusClick,
             ),
