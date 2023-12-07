@@ -5,9 +5,14 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.*
 import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
+import com.tangem.datasource.api.express.models.request.AssetsRequestBody
+import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.local.token.UserMarketCoinsStore
+import com.tangem.datasource.local.token.AssetsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.toCoinId
@@ -28,12 +33,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
+    private val tangemExpressApi: TangemExpressApi,
     private val userTokensStore: UserTokensStore,
     private val userWalletsStore: UserWalletsStore,
-    private val userMarketCoinsStore: UserMarketCoinsStore,
+    private val assetsStore: AssetsStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CurrenciesRepository {
@@ -88,12 +94,14 @@ internal class DefaultCurrenciesRepository(
 
             val newCurrencies = (newCoins + filteredCurrencies).distinct()
 
+            val updatedResponse = savedCurrencies.copy(
+                tokens = savedCurrencies.tokens + newCurrencies.map(userTokensResponseFactory::createResponseToken),
+            )
             storeAndPushTokens(
                 userWalletId = userWalletId,
-                response = savedCurrencies.copy(
-                    tokens = savedCurrencies.tokens + newCurrencies.map(userTokensResponseFactory::createResponseToken),
-                ),
+                response = updatedResponse,
             )
+            fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
         }
     }
 
@@ -374,14 +382,25 @@ internal class DefaultCurrenciesRepository(
         userTokens: UserTokensResponse,
     ) {
         try {
-            val networkIds = userTokens.tokens
-                .distinctBy { it.networkId }
-                .joinToString(separator = ",") { it.networkId }
-            val response = tangemTechApi.getCoins(networkIds = networkIds, exchangeable = true)
+            val tokensList = userTokens.tokens
+                .map {
+                    LeastTokenInfo(
+                        contractAddress = it.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
+                        network = it.networkId,
+                    )
+                }
 
-            userMarketCoinsStore.store(userWalletId, response)
+            if (tokensList.isNotEmpty()) {
+                val response = tangemExpressApi.getAssets(
+                    AssetsRequestBody(
+                        tokensList = tokensList,
+                    ),
+                )
+
+                assetsStore.store(userWalletId, response.getOrThrow())
+            }
         } catch (e: Throwable) {
-            Timber.e(e, "Unable to fetch user market coins for: ${userWalletId.stringValue}")
+            Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
         }
     }
 
