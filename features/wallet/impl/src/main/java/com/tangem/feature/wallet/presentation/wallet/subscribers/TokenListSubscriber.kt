@@ -40,7 +40,7 @@ internal class TokenListSubscriber(
             .conflate()
             .distinctUntilChanged()
             .onEach(::updateContent)
-            .onEach(tokenListAnalyticsSender::send)
+            .onEach { tokenListAnalyticsSender.send(userWallet, maybeTokenList = it) }
             .onEach(walletWithFundsChecker::check)
     }
 

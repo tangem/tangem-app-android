@@ -44,9 +44,17 @@ class AppPreferencesStore(
         return this[key]?.let(adapter::fromJson)
     }
 
-    /** Get nullable list of data [T] by string [key] */
+    /** Get list of data [T] by string [key] */
     inline fun <reified T> MutablePreferences.getObjectList(key: Preferences.Key<String>): List<T>? {
         val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
+        return this[key]?.let(adapter::fromJson)
+    }
+
+    /** Get map with [String] key and value [V] by string [key] from [MutablePreferences] */
+    inline fun <reified V> MutablePreferences.getObjectMap(key: Preferences.Key<String>): Map<String, V>? {
+        val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
+        val adapter = moshi.adapter<Map<String, V>>(type)
+
         return this[key]?.let(adapter::fromJson)
     }
 
@@ -65,6 +73,14 @@ class AppPreferencesStore(
     /** Set list of data [T] by string [key] to [MutablePreferences] */
     inline fun <reified T> MutablePreferences.setObjectList(key: Preferences.Key<String>, value: List<T>) {
         val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
+        this[key] = adapter.toJson(value)
+    }
+
+    /** Set map with [String] key and value [V] by string [key] to [MutablePreferences] */
+    inline fun <reified V> MutablePreferences.setObjectMap(key: Preferences.Key<String>, value: Map<String, V>) {
+        val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
+        val adapter = moshi.adapter<Map<String, V>>(type)
+
         this[key] = adapter.toJson(value)
     }
 }
