@@ -22,6 +22,8 @@ interface CardTypesResolver {
 
     fun isWallet2(): Boolean
 
+    fun isVisaWallet(): Boolean
+
     fun isRing(): Boolean
 
     fun isTangemTwins(): Boolean
