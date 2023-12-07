@@ -29,40 +29,37 @@ internal class SetTxHistoryCountErrorTransformer(
 
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
-            is WalletState.SingleCurrency.Content -> prevState.toErrorState()
+            is WalletState.SingleCurrency.Content -> prevState.copy(txHistoryState = createErrorState())
+            is WalletState.Visa.Content -> prevState.copy(txHistoryState = createErrorState())
             is WalletState.SingleCurrency.Locked,
+            is WalletState.Visa.Locked,
             -> {
-                Timber.e("Impossible to load transactions history for locked wallet")
+                Timber.w("Impossible to load transactions history for locked wallet")
                 prevState
             }
-            is WalletState.MultiCurrency,
-            -> {
-                Timber.e("Impossible to load transactions history for multi-currency wallet")
+            is WalletState.MultiCurrency -> {
+                Timber.w("Impossible to load transactions history for multi-currency wallet")
                 prevState
             }
         }
     }
 
-    private fun WalletState.SingleCurrency.Content.toErrorState(): WalletState {
-        return copy(
-            txHistoryState = when (error) {
-                is TxHistoryStateError.EmptyTxHistories -> {
-                    TxHistoryState.Empty(onExploreClick = clickIntents::onExploreClick)
-                }
-                is TxHistoryStateError.DataError -> {
-                    TxHistoryState.Error(
-                        onReloadClick = clickIntents::onReloadClick,
-                        onExploreClick = clickIntents::onExploreClick,
-                    )
-                }
-                is TxHistoryStateError.TxHistoryNotImplemented -> {
-                    TxHistoryState.NotSupported(
-                        pendingTransactions = txHistoryItemConverter.convertList(pendingTransactions)
-                            .toImmutableList(),
-                        onExploreClick = clickIntents::onExploreClick,
-                    )
-                }
-            },
-        )
+    private fun createErrorState(): TxHistoryState = when (error) {
+        is TxHistoryStateError.EmptyTxHistories -> {
+            TxHistoryState.Empty(onExploreClick = clickIntents::onExploreClick)
+        }
+        is TxHistoryStateError.DataError -> {
+            TxHistoryState.Error(
+                onReloadClick = clickIntents::onReloadClick,
+                onExploreClick = clickIntents::onExploreClick,
+            )
+        }
+        is TxHistoryStateError.TxHistoryNotImplemented -> {
+            TxHistoryState.NotSupported(
+                pendingTransactions = txHistoryItemConverter.convertList(pendingTransactions)
+                    .toImmutableList(),
+                onExploreClick = clickIntents::onExploreClick,
+            )
+        }
     }
 }

@@ -21,14 +21,16 @@ internal class SetCryptoCurrencyActionsTransformer(
             is WalletState.SingleCurrency.Content -> {
                 prevState.copy(buttons = tokenActionsState.toManageButtons())
             }
-            is WalletState.SingleCurrency.Locked,
-            -> {
-                Timber.e("Impossible to load primary currency status for locked wallet")
+            is WalletState.SingleCurrency.Locked -> {
+                Timber.w("Impossible to load primary currency status for locked wallet")
                 prevState
             }
-            is WalletState.MultiCurrency,
-            -> {
-                Timber.e("Impossible to load crypto currency actions for multi-currency wallet")
+            is WalletState.MultiCurrency -> {
+                Timber.w("Impossible to load crypto currency actions for multi-currency wallet")
+                prevState
+            }
+            is WalletState.Visa -> {
+                Timber.w("Impossible to load crypto currency actions for VISA wallet")
                 prevState
             }
         }
