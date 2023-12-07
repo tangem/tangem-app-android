@@ -65,15 +65,16 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     messageRes = R.string.wallet_connect_scanner_error_not_valid_card,
                     context = context,
                 )
-            is WalletConnectDialog.AddNetwork ->
+            is WalletConnectDialog.AddNetwork -> {
+                val message = context.getString(
+                    R.string.wallet_connect_error_missing_blockchains,
+                ) + state.dialog.networks.joinToString()
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect_title,
-                    message = context.getString(
-                        R.string.wallet_connect_network_not_found_format,
-                        state.dialog.network,
-                    ),
+                    message = message,
                     context = context,
                 )
+            }
             is WalletConnectDialog.OpeningSessionRejected -> {
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect_title,
