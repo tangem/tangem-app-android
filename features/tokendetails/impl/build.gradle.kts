@@ -28,6 +28,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
+    implementation(deps.compose.constraintLayout)
 
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
@@ -36,6 +37,7 @@ dependencies {
     implementation(deps.tangem.blockchain)
     implementation(deps.tangem.card.core)
     implementation(deps.timber)
+    implementation(deps.lifecycle.compose)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -48,6 +50,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.datasource)
 
     /** Domain modules */
     implementation(projects.domain.appCurrency)
@@ -65,7 +68,11 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
 
+    /** Temp dependency to swap domain */
+    implementation(projects.features.swap.domain)
+
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.send.api)
+    implementation(projects.features.swap.domain)
 }
