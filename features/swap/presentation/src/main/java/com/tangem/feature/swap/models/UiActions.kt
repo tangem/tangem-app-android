@@ -15,6 +15,7 @@ data class UiActions(
     val openPermissionBottomSheet: () -> Unit,
     val onChangeApproveType: (ApproveType) -> Unit,
     // region new actions
+    val onRetryClick: () -> Unit,
     val onClickFee: () -> Unit,
     val onSelectFeeType: (TxFee) -> Unit,
     val onProviderClick: (String) -> Unit,
