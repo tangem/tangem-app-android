@@ -11,8 +11,11 @@ android {
 
 dependencies {
 
+    /** Project - Domain */
+    implementation(projects.domain.analytics)
+    implementation(projects.domain.wallets.models)
+
     /** Project - Analytics */
-    implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
 
     /** Project - Data */
