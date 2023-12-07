@@ -72,6 +72,15 @@ internal class InitializeWalletsTransformer(
                     onExploreClick = clickIntents::onExploreClick,
                 )
             },
+            visaWalletCreator = {
+                WalletState.Visa.Locked(
+                    walletCardState = userWallet.toLockedWalletCardState(),
+                    onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
+                    onUnlockClick = clickIntents::onUnlockWalletClick,
+                    onScanClick = clickIntents::onScanToUnlockWalletClick,
+                    onExploreClick = clickIntents::onExploreClick,
+                )
+            },
         )
     }
 
