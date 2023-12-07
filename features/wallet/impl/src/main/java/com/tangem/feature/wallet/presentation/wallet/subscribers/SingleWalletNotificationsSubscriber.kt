@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetWarningsTransformer
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import kotlinx.collections.immutable.ImmutableList
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.onEach
  */
 internal class SingleWalletNotificationsSubscriber(
     private val userWalletId: UserWalletId,
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val getSingleWalletWarningsFactory: GetSingleWalletWarningsFactory,
     private val clickIntents: WalletClickIntentsV2,
 ) : WalletSubscriber() {
