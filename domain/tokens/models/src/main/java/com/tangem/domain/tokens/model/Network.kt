@@ -11,6 +11,7 @@ import kotlinx.parcelize.Parcelize
  * (e.g., ERC20, BEP20).
  *
  * @property id The unique identifier of the network.
+ * @property backendId The name of this network in the Tangem backend.
  * @property name The human-readable name of the network, such as "Ethereum" or "Bitcoin".
  * @property derivationPath The path used to derive keys for this network.
  * @property isTestnet Indicates whether the network is a test network or a main network.
@@ -19,7 +20,9 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class Network(
     val id: ID,
+    val backendId: String,
     val name: String,
+    val currencySymbol: String,
     val derivationPath: DerivationPath,
     val isTestnet: Boolean,
     val standardType: StandardType,
