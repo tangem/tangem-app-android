@@ -32,7 +32,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWall
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
@@ -66,7 +66,7 @@ internal interface WalletWarningsClickIntents {
 @Suppress("LongParameterList")
 @ViewModelScoped
 internal class WalletWarningsClickIntentsImplementer @Inject constructor(
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
