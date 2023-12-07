@@ -1,28 +1,21 @@
 package com.tangem.data.tokens.repository
 
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.datasource.local.token.UserMarketCoinsStore
-import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
+import com.tangem.datasource.local.token.AssetsStore
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
 class DefaultMarketCryptoCurrencyRepository(
-    private val userMarketCoinsStore: UserMarketCoinsStore,
+    private val assetsStore: AssetsStore,
 ) : MarketCryptoCurrencyRepository {
 
-    override suspend fun isExchangeable(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID): Boolean {
-        val blockchain = Blockchain.fromId(cryptoCurrencyId.rawNetworkId)
-        val apiNetworkId = blockchain.toNetworkId()
-        return userMarketCoinsStore.getSyncOrNull(userWalletId)?.coins
-            ?.firstOrNull { it.id == cryptoCurrencyId.rawCurrencyId }
-            ?.networks
-            ?.firstOrNull {
-                if (it.contractAddress != null) {
-                    it.networkId == apiNetworkId && it.contractAddress == cryptoCurrencyId.contractAddress
-                } else {
-                    it.networkId == apiNetworkId
-                }
-            }?.exchangeable ?: false
+    override suspend fun isExchangeable(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
+        val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE
+
+        return assetsStore.getSyncOrNull(userWalletId)?.find {
+            it.network == cryptoCurrency.network.backendId &&
+                it.contractAddress.equals(contractAddress, ignoreCase = true)
+        }?.exchangeAvailable ?: false
     }
 }
