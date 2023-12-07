@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.domain
 
-import arrow.core.flatten
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -129,10 +128,14 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenInfoForFilter(it).network == currency.network.backendId
         }
 
-        val availableCryptoCurrencies = filteredPairs.mapNotNull { pair ->
-            val statuses = findCryptoCurrencyStatusByLeastInfo(tokenInfoForAvailable(pair), cryptoCurrenciesList)
-            statuses.map { CryptoCurrencySwapInfo(it, pair.providers) }
-        }.flatten()
+        val availableCryptoCurrencies = cryptoCurrenciesList.mapNotNull { pair ->
+            val providers = findProvidersForPair(pair, filteredPairs, tokenInfoForAvailable)
+            if (providers != null) {
+                CryptoCurrencySwapInfo(pair, providers)
+            } else {
+                null
+            }
+        }
 
         val unavailableCryptoCurrencies = cryptoCurrenciesList - availableCryptoCurrencies
             .map { it.currencyStatus }
@@ -144,13 +147,20 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun findCryptoCurrencyStatusByLeastInfo(
-        leastTokenInfo: LeastTokenInfo,
-        cryptoCurrencyStatusesList: List<CryptoCurrencyStatus>,
-    ): List<CryptoCurrencyStatus> {
-        return cryptoCurrencyStatusesList.filter {
-            it.currency.network.backendId == leastTokenInfo.network &&
-                it.currency.getContractAddress() == leastTokenInfo.contractAddress
+    private fun findProvidersForPair(
+        cryptoCurrencyStatuses: CryptoCurrencyStatus,
+        swapPairsLeastList: List<SwapPairLeast>,
+        tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
+    ): List<SwapProvider>? {
+        return swapPairsLeastList.firstNotNullOfOrNull {
+            val listTokenInfo = tokenInfoForAvailable(it)
+            if (cryptoCurrencyStatuses.currency.network.backendId == listTokenInfo.network &&
+                cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress
+            ) {
+                it.providers
+            } else {
+                null
+            }
         }
     }
 
