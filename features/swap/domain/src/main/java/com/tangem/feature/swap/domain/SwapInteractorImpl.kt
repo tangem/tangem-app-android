@@ -295,9 +295,13 @@ internal class SwapInteractorImpl @Inject constructor(
         )
 
         val fromTokenAddress = getTokenAddress(fromToken.currency)
-        val isAllowedToSpend = quotes.dataModel?.allowanceContract?.let {
-            isAllowedToSpend(networkId, fromToken.currency, amount, it)
-        } ?: true
+        val isAllowedToSpend = if (quotes.dataModel != null) {
+            quotes.dataModel.allowanceContract?.let {
+                isAllowedToSpend(networkId, fromToken.currency, amount, it)
+            } ?: true
+        } else {
+            false
+        }
 
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
