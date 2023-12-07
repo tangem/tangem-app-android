@@ -12,7 +12,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.atoms.Hand
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -20,12 +21,21 @@ import com.tangem.feature.swap.models.ApprovePermissionButton
 import com.tangem.feature.swap.models.ApproveType
 import com.tangem.feature.swap.models.CancelPermissionButton
 import com.tangem.feature.swap.models.SwapPermissionState
+import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, onCancel: () -> Unit) {
+fun SwapPermissionBottomSheet(config: TangemBottomSheetConfig) {
+    TangemBottomSheet(config) { content: GivePermissionBottomSheetConfig ->
+        SwapPermissionBottomSheetContent(content = content)
+    }
+}
+
+@Composable
+private fun SwapPermissionBottomSheetContent(content: GivePermissionBottomSheetConfig) {
     var isPermissionAlertShow by remember { mutableStateOf(false) }
+    val data = content.data
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.primary)
@@ -33,10 +43,6 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
             .padding(horizontal = TangemTheme.dimens.spacing16),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Hand()
-
-        SpacerH10()
-
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(
                 modifier = Modifier.align(Alignment.Center),
@@ -87,7 +93,7 @@ fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, 
             text = stringResource(id = R.string.common_cancel),
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                onCancel()
+                content.onCancel()
             },
         )
 
@@ -261,7 +267,7 @@ private fun DropdownSelector(
 @Composable
 private fun FeeItem(fee: String) {
     InformationItem(
-        subtitle = stringResource(id = R.string.send_fee_label),
+        subtitle = stringResource(id = R.string.common_fee_label),
         value = fee,
     )
 }
@@ -288,7 +294,7 @@ private fun getTitleForApproveType(approveType: ApproveType): String = when (app
 @Composable
 private fun Preview_AgreementBottomSheet_InLightTheme() {
     TangemTheme(isDark = false) {
-        SwapPermissionBottomSheetContent(data = previewData) {}
+        SwapPermissionBottomSheetContent(content = previewData)
     }
 }
 
@@ -296,20 +302,21 @@ private fun Preview_AgreementBottomSheet_InLightTheme() {
 @Composable
 private fun Preview_AgreementBottomSheet_InDarkTheme() {
     TangemTheme(isDark = true) {
-        SwapPermissionBottomSheetContent(data = previewData) {}
+        SwapPermissionBottomSheetContent(content = previewData)
     }
 }
 
-private val previewData = SwapPermissionState.ReadyForRequest(
-    currency = "DAI",
-    amount = "∞",
-    walletAddress = "",
-    spenderAddress = "",
-    fee = TextReference.Str("2,14$"),
-    approveType = ApproveType.UNLIMITED,
-    approveButton = ApprovePermissionButton(true) {},
-    cancelButton = CancelPermissionButton(true),
-    onChangeApproveType = { ApproveType.UNLIMITED },
+private val previewData = GivePermissionBottomSheetConfig(
+    data = SwapPermissionState.ReadyForRequest(
+        currency = "DAI",
+        amount = "∞",
+        walletAddress = "",
+        spenderAddress = "",
+        fee = TextReference.Str("2,14$"),
+        approveType = ApproveType.UNLIMITED,
+        approveButton = ApprovePermissionButton(true) {},
+        cancelButton = CancelPermissionButton(true),
+        onChangeApproveType = { ApproveType.UNLIMITED },
+    ),
+    onCancel = {},
 )
-
-//endregion preview
