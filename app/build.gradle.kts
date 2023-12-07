@@ -51,6 +51,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.analytics)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
