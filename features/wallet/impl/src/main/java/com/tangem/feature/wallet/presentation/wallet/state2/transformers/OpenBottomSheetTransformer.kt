@@ -37,6 +37,17 @@ internal class OpenBottomSheetTransformer(
             is WalletState.SingleCurrency.Locked -> {
                 prevState.copy(isBottomSheetShow = true, onBottomSheetDismiss = onDismissBottomSheet)
             }
+            is WalletState.Visa.Content -> prevState.copy(
+                bottomSheetConfig = TangemBottomSheetConfig(
+                    isShow = true,
+                    onDismissRequest = onDismissBottomSheet,
+                    content = content,
+                ),
+            )
+            is WalletState.Visa.Locked -> prevState.copy(
+                isBottomSheetShow = true,
+                onBottomSheetDismiss = onDismissBottomSheet,
+            )
         }
     }
 }
