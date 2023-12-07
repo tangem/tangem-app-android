@@ -8,7 +8,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,8 +44,18 @@ import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsSta
  * >Figma component</a>
  */
 @Composable
-fun Notification(config: NotificationConfig, modifier: Modifier = Modifier, iconTint: Color? = null) {
-    BaseContainer(buttonsState = config.buttonsState, onClick = config.onClick, modifier = modifier) {
+fun Notification(
+    config: NotificationConfig,
+    modifier: Modifier = Modifier,
+    containerColor: Color? = null,
+    iconTint: Color? = null,
+) {
+    BaseContainer(
+        buttonsState = config.buttonsState,
+        onClick = config.onClick,
+        modifier = modifier,
+        containerColor = containerColor,
+    ) {
         Column(
             modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
             verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
@@ -71,9 +83,10 @@ private fun BaseContainer(
     buttonsState: NotificationConfig.ButtonsState?,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    containerColor: Color? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val containerColor by rememberUpdatedState(
+    val tempContainerColor by rememberUpdatedState(
         newValue = if (buttonsState != null || onClick != null) {
             TangemTheme.colors.background.primary
         } else {
@@ -88,7 +101,7 @@ private fun BaseContainer(
             .fillMaxWidth(),
         enabled = onClick != null,
         shape = TangemTheme.shapes.roundedCornersXMedium,
-        color = containerColor,
+        color = containerColor ?: tempContainerColor,
     ) {
         Box(content = content)
     }
