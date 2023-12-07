@@ -1,0 +1,19 @@
+package com.tangem.feature.wallet.presentation.wallet.state2.model
+
+import androidx.compose.runtime.Immutable
+
+@Immutable
+internal sealed class BalancesAndLimitsBlockState {
+
+    object Loading : BalancesAndLimitsBlockState()
+
+    object Error : BalancesAndLimitsBlockState()
+
+    data class Content(
+        val availableBalance: String,
+        val currencySymbol: String,
+        val limitDays: Int,
+        val isEnabled: Boolean,
+        val onClick: () -> Unit,
+    ) : BalancesAndLimitsBlockState()
+}
