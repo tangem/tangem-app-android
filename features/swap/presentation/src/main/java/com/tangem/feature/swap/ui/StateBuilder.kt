@@ -429,6 +429,17 @@ internal class StateBuilder(
                     iconResId = R.drawable.ic_alert_circle_24,
                 ),
             )
+            is DataError.UnknownError -> SwapWarning.GeneralWarning(
+                notificationConfig = NotificationConfig(
+                    title = resourceReference(R.string.common_error),
+                    subtitle = resourceReference(R.string.swapping_generic_error),
+                    iconResId = R.drawable.img_attention_20,
+                    buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                        text = resourceReference(R.string.warning_button_refresh),
+                        onClick = actions.onRetryClick,
+                    ),
+                ),
+            )
             else -> SwapWarning.GeneralWarning(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(R.string.common_error),
