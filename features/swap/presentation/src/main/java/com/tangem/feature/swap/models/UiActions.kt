@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.models
 
-import com.tangem.core.ui.components.states.Item
 import com.tangem.feature.swap.domain.models.ui.TxFee
 
 data class UiActions(
@@ -14,7 +13,12 @@ data class UiActions(
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
     val openPermissionBottomSheet: () -> Unit,
-    val hidePermissionBottomSheet: () -> Unit,
     val onChangeApproveType: (ApproveType) -> Unit,
-    val onSelectItemFee: (Item<TxFee>) -> Unit,
+    // region new actions
+    val onRetryClick: () -> Unit,
+    val onClickFee: () -> Unit,
+    val onSelectFeeType: (TxFee) -> Unit,
+    val onProviderClick: (String) -> Unit,
+    val onProviderSelect: (String) -> Unit,
+    val onBuyClick: () -> Unit,
 )
