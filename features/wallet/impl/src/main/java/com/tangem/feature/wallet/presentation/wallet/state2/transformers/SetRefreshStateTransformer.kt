@@ -3,10 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState.Visa.BalancesAndLimitsBlockState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState.Visa.DepositButtonState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.BalancesAndLimitsBlockState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.DepositButtonState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 

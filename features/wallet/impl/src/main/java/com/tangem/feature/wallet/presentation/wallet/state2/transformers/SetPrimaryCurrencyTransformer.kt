@@ -5,7 +5,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.SingleWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.SingleWalletMarketPriceConverter
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.VisaWalletCardStateConverter

@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state2.utils
 
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SendEventTransformer
 import javax.inject.Inject
 
@@ -14,7 +14,7 @@ import javax.inject.Inject
  * @author Andrew Khokhlov on 24/11/2023
  */
 internal class WalletEventSender @Inject constructor(
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
 ) {
 
     fun send(event: WalletEvent) {

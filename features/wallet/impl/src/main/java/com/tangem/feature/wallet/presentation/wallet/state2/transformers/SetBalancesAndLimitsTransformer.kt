@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState.Visa.BalancesAndLimitsBlockState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.BalancesAndLimitsBlockState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 
 internal class SetBalancesAndLimitsTransformer(

@@ -29,10 +29,10 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.NOT_INITIALIZED_WALLET_INDEX
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.NOT_INITIALIZED_WALLET_INDEX
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
