@@ -101,6 +101,7 @@ internal object TokenDetailsPreviewData {
         ),
         dialogConfig = null,
         pendingTxs = persistentListOf(),
+        swapTxs = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
         bottomSheetConfig = null,
         isBalanceHidden = false,
