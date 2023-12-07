@@ -457,9 +457,8 @@ internal class SwapViewModel @Inject constructor(
                             )
                             uiState = stateBuilder.createSuccessState(
                                 uiState = uiState,
-                                txState = it,
-                                fromAmount = dataState.amount?.toBigDecimal() ?: BigDecimal.ZERO,
-                                toAmount = dataState.swapDataModel?.toTokenAmount?.value ?: BigDecimal.ZERO,
+                                timeStamp = it.timestamp,
+                                dataState = dataState,
                                 txUrl = url,
                                 onExploreClick = {
                                     val txHash = it.txAddress
