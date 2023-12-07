@@ -1,42 +1,18 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.PermissionOptions
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
-import java.math.BigDecimal
 
 interface SwapInteractor {
 
-    fun initDerivationPathAndNetwork(derivationPath: String?, network: Network?)
+    suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress
 
-    /**
-     * Init tokens to swap, load tokens list available to swap for given network
-     *
-     * @param initialCurrency currency which to swap or receive
-     * @return [TokensDataState] that contains info about all available to swap tokens for networkId
-     * and preselected tokens which initially select to swap
-     */
-    suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState
-
-    /**
-     * On search token, locally search tokens in previously loaded list to swap
-     * searching in names and symbols
-     *
-     * @param networkId networkId for tokens
-     * @param searchQuery string query for search
-     * @return [FoundTokensState] that contains list of tokens matching condition query
-     */
-    suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensState
-
-    /**
-     * Find specific token by id, null if not found
-     *
-     * @param id token id
-     * @return [Currency] or null
-     */
-    fun findTokenById(id: String): Currency?
+    fun initDerivationPathAndNetwork(derivationPath: String?, network: Network)
 
     /**
      * Gives permission to swap, this starts scan card process
@@ -61,11 +37,12 @@ interface SwapInteractor {
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         networkId: String,
-        fromToken: Currency,
-        toToken: Currency,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus,
+        providers: List<SwapProvider>,
         amountToSwap: String,
         selectedFee: FeeType = FeeType.NORMAL,
-    ): SwapState
+    ): Map<SwapProvider, SwapState>
 
     /**
      * Starts swap transaction, perform sign transaction
@@ -81,30 +58,39 @@ interface SwapInteractor {
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun onSwap(
+        swapProvider: SwapProvider,
         networkId: String,
-        swapStateData: SwapStateData,
-        currencyToSend: Currency,
-        currencyToGet: Currency,
+        swapData: SwapDataModel?,
+        currencyToSend: CryptoCurrencyStatus,
+        currencyToGet: CryptoCurrencyStatus,
         amountToSwap: String,
+        includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
     ): TxState
+
+    suspend fun updateQuotesStateWithSelectedFee(
+        state: SwapState.QuotesLoadedState,
+        selectedFee: FeeType,
+        fromToken: CryptoCurrencyStatus,
+        amountToSwap: String,
+        networkId: String,
+    ): SwapState.QuotesLoadedState
 
     /**
      * Returns token in wallet balance
      *
-     * @param networkId
      * @param token
      */
-    fun getTokenBalance(networkId: String, token: Currency): SwapAmount
+    fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount
 
     fun isAvailableToSwap(networkId: String): Boolean
 
-    fun getSwapAmountForToken(amount: String, token: Currency): SwapAmount
+    fun getSelectedWallet(): UserWallet?
 
-    suspend fun checkFeeIsEnough(
-        fee: BigDecimal?,
-        spendAmount: SwapAmount,
-        networkId: String,
-        fromToken: Currency,
-    ): Boolean
+    suspend fun selectInitialCurrencyToSwap(
+        initialCryptoCurrency: CryptoCurrency,
+        state: TokensDataStateExpress,
+    ): CryptoCurrencyStatus?
+
+    fun getNativeToken(networkId: String): CryptoCurrency
 }
