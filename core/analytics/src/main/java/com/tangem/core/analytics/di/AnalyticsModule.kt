@@ -3,7 +3,7 @@ package com.tangem.core.analytics.di
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.filter.OneTimeEventFilter
-import com.tangem.core.analytics.repository.AnalyticsRepository
+import com.tangem.domain.analytics.repository.AnalyticsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
