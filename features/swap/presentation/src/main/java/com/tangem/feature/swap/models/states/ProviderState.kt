@@ -25,7 +25,7 @@ sealed class ProviderState {
         val subtitle: TextReference,
         val selectionType: SelectionType,
         val additionalBadge: AdditionalBadge,
-        val percentLowerThenBest: Float?,
+        val percentLowerThenBest: Float = 0f,
         override val onProviderClick: (String) -> Unit,
     ) : ProviderState()
 
@@ -47,5 +47,21 @@ sealed class ProviderState {
 
     enum class SelectionType {
         NONE, CLICK, SELECT
+    }
+}
+
+object ProviderPercentDiffComparator : Comparator<ProviderState> {
+    override fun compare(o1: ProviderState, o2: ProviderState): Int {
+        if (o1 is ProviderState.Content && o2 !is ProviderState.Content) {
+            return 1
+        }
+        if (o1 !is ProviderState.Content && o2 is ProviderState.Content) {
+            return -1
+        }
+        return if (o1 is ProviderState.Content && o2 is ProviderState.Content) {
+            o1.percentLowerThenBest.compareTo(o2.percentLowerThenBest)
+        } else {
+            0
+        }
     }
 }
