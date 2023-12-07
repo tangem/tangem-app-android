@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.ui
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,7 +10,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -17,6 +17,7 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -55,53 +56,114 @@ fun TransactionCard(
     @DrawableRes networkIconRes: Int? = null,
     onChangeTokenClick: (() -> Unit)? = null,
 ) {
-    Card(
-        shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-        backgroundColor = TangemTheme.colors.background.primary,
-        elevation = TangemTheme.dimens.elevation2,
-        modifier = modifier,
+    Box(
+        modifier = modifier
+            .background(
+                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
+                color = TangemTheme.colors.background.primary,
+            )
+            .fillMaxSize(),
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.Start,
-            ) {
-                Header(balance = balance, type = type)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            Header(balance = stringResource(R.string.common_balance, balance), type = type)
 
-                Content(
-                    type = type,
-                    amountEquivalent = amountEquivalent,
-                    textFieldValue = textFieldValue,
-                    priceImpact = priceImpact,
-                )
-            }
+            Content(
+                type = type,
+                amountEquivalent = amountEquivalent,
+                textFieldValue = textFieldValue,
+                priceImpact = priceImpact,
+            )
+        }
 
-            Box(modifier = Modifier.align(Alignment.BottomEnd)) {
-                Token(
-                    tokenIconUrl = tokenIconUrl,
-                    tokenCurrency = tokenCurrency,
-                    networkIconRes = networkIconRes,
-                    iconPlaceholder = iconPlaceholder,
-                )
-            }
+        Box(modifier = Modifier.align(Alignment.BottomEnd)) {
+            Token(
+                tokenIconUrl = tokenIconUrl,
+                tokenCurrency = tokenCurrency,
+                networkIconRes = networkIconRes,
+                iconPlaceholder = iconPlaceholder,
+            )
+        }
 
-            if (onChangeTokenClick != null) {
-                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                    ChangeTokenSelector()
-                }
-                Box(
-                    Modifier
-                        .align(Alignment.CenterEnd)
-                        .height(TangemTheme.dimens.size116)
-                        .width(TangemTheme.dimens.size102)
-                        .clickable(
-                            indication = rememberRipple(bounded = false),
-                            interactionSource = remember { MutableInteractionSource() },
-                        ) { onChangeTokenClick() },
-                )
+        if (onChangeTokenClick != null) {
+            Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                ChangeTokenSelector()
             }
+            Box(
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .height(TangemTheme.dimens.size116)
+                    .width(TangemTheme.dimens.size102)
+                    .clickable(
+                        indication = rememberRipple(bounded = false),
+                        interactionSource = remember { MutableInteractionSource() },
+                    ) { onChangeTokenClick() },
+            )
+        }
+    }
+}
+
+@Composable
+fun TransactionCardEmpty(
+    type: TransactionCardType,
+    amountEquivalent: String?,
+    textFieldValue: TextFieldValue?,
+    modifier: Modifier = Modifier,
+    onChangeTokenClick: (() -> Unit)? = null,
+) {
+    Box(
+        modifier = modifier
+            .background(
+                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
+                color = TangemTheme.colors.background.primary,
+            )
+            .fillMaxSize(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            Header(
+                balance = stringResource(id = R.string.swapping_token_not_available),
+                type = type,
+            )
+
+            Content(
+                type = type,
+                amountEquivalent = amountEquivalent,
+                textFieldValue = textFieldValue,
+                priceImpact = null,
+            )
+        }
+
+        Box(modifier = Modifier.align(Alignment.BottomEnd)) {
+            Token(
+                tokenIconUrl = "",
+                tokenCurrency = "",
+                iconPlaceholder = R.drawable.ic_no_token_44,
+            )
+        }
+
+        if (onChangeTokenClick != null) {
+            Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                ChangeTokenSelector()
+            }
+            Box(
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .height(TangemTheme.dimens.size116)
+                    .width(TangemTheme.dimens.size102)
+                    .clickable(
+                        indication = rememberRipple(bounded = false),
+                        interactionSource = remember { MutableInteractionSource() },
+                    ) { onChangeTokenClick() },
+            )
         }
     }
 }
@@ -133,14 +195,16 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         )
         SpacerW16()
         if (balance.isNotBlank()) {
-            Text(
-                text = stringResource(R.string.common_balance, balance),
-                color = TangemTheme.colors.text.tertiary,
-                style = MaterialTheme.typography.body2,
-                modifier = Modifier
-                    .defaultMinSize(minHeight = TangemTheme.dimens.size20)
-                    .padding(top = TangemTheme.dimens.spacing2),
-            )
+            AnimatedContent(targetState = balance, label = "") {
+                Text(
+                    text = it,
+                    color = TangemTheme.colors.text.tertiary,
+                    style = MaterialTheme.typography.body2,
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = TangemTheme.dimens.size20)
+                        .padding(top = TangemTheme.dimens.spacing2),
+                )
+            }
         } else {
             RectangleShimmer(
                 modifier = Modifier
@@ -231,12 +295,14 @@ private fun Content(
                         )
                     }
                 } else {
-                    Text(
-                        text = amountEquivalent,
-                        color = TangemTheme.colors.text.tertiary,
-                        style = TangemTheme.typography.body2,
-                        modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
-                    )
+                    AnimatedContent(targetState = amountEquivalent, label = "") {
+                        Text(
+                            text = it,
+                            color = TangemTheme.colors.text.tertiary,
+                            style = TangemTheme.typography.body2,
+                            modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
+                        )
+                    }
                 }
             } else {
                 RectangleShimmer(
@@ -311,6 +377,7 @@ private fun TokenIcon(
                 color = iconBackgroundColor,
                 shape = TangemTheme.shapes.roundedCorners8,
             )
+            .clip(TangemTheme.shapes.roundedCorners8)
 
         val data = tokenIconUrl.ifEmpty { iconPlaceholder }
 
@@ -376,6 +443,7 @@ fun ChangeTokenSelector() {
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size20),
             painter = painterResource(id = R.drawable.ic_chevron_24),
+            tint = TangemTheme.colors.icon.secondary,
             contentDescription = null,
         )
     }

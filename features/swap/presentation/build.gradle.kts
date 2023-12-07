@@ -12,13 +12,20 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.featuretoggles)
+    implementation(projects.core.navigation)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
     implementation(projects.common)
 
     /** Domain modules **/
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -28,8 +35,10 @@ dependencies {
     implementation(deps.androidx.browser)
 
     /** Compose */
+    implementation(deps.arrow.core)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material)
+    implementation(deps.compose.material3)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
@@ -37,6 +46,7 @@ dependencies {
 
     /** Api */
     implementation(projects.features.swap.api)
+    implementation(projects.features.tokendetails.api)
 
     /** Domain */
     implementation(projects.features.swap.domain)

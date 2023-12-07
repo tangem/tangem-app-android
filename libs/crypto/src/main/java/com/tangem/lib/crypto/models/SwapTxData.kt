@@ -13,6 +13,7 @@ import java.math.BigDecimal
  * @property amountToSend amount of tx
  * @property currencyToSend currency for tx
  */
+// [REDACTED_TODO_COMMENT]
 data class SwapTxData(
     val networkId: String,
     val feeAmount: BigDecimal,
