@@ -30,6 +30,7 @@ internal class WalletClickIntentsV2 @Inject constructor(
     private val warningsClickIntentsImplementer: WalletWarningsClickIntentsImplementer,
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
     private val contentClickIntentsImplementor: WalletContentClickIntentsImplementor,
+    private val visaWalletIntentsImplementor: VisaWalletIntentsImplementor,
     private val stateHolder: WalletStateHolderV2,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
@@ -45,7 +46,8 @@ internal class WalletClickIntentsV2 @Inject constructor(
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
     WalletCurrencyActionsClickIntents by currencyActionsClickIntentsImplementor,
-    WalletContentClickIntents by contentClickIntentsImplementor {
+    WalletContentClickIntents by contentClickIntentsImplementor,
+    VisaWalletIntents by visaWalletIntentsImplementor {
 
     override fun initialize(router: InnerWalletRouter, coroutineScope: CoroutineScope) {
         super.initialize(router, coroutineScope)
@@ -83,14 +85,21 @@ internal class WalletClickIntentsV2 @Inject constructor(
                 analyticsEventHandler.send(PortfolioEvent.Refreshed)
                 refreshMultiCurrencyContent()
             }
-            is WalletState.SingleCurrency.Content -> {
+            is WalletState.SingleCurrency.Content,
+            is WalletState.Visa.Content,
+            -> {
                 analyticsEventHandler.send(PortfolioEvent.Refreshed)
                 refreshSingleCurrencyContent()
             }
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
+            is WalletState.Visa.Locked,
             -> Unit
         }
+    }
+
+    fun onReloadClick() {
+        refreshSingleCurrencyContent()
     }
 
     private fun refreshMultiCurrencyContent() {
@@ -115,10 +124,6 @@ internal class WalletClickIntentsV2 @Inject constructor(
                 SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = false),
             )
         }
-    }
-
-    fun onReloadClick() {
-        refreshSingleCurrencyContent()
     }
 
     // FIXME: refreshSingleCurrencyContent mustn't update the TxHistory and Buttons. It only must fetch primary
