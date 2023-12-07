@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state2.transformers.conver
 
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
@@ -12,6 +13,7 @@ import com.tangem.utils.converter.Converter
 internal class VisaWalletCardStateConverter(
     private val status: CryptoCurrencyStatus,
     private val selectedWallet: UserWallet,
+    private val appCurrency: AppCurrency,
 ) : Converter<WalletCardState, WalletCardState> {
 
     override fun convert(value: WalletCardState): WalletCardState {
@@ -65,8 +67,8 @@ internal class VisaWalletCardStateConverter(
     private fun createAdditionalInfo(status: CryptoCurrencyStatus): WalletAdditionalInfo {
         val fiatAmount = BigDecimalFormatter.formatFiatAmount(
             status.value.fiatAmount,
-            fiatCurrencyCode = "EUR",
-            fiatCurrencySymbol = "€",
+            fiatCurrencyCode = appCurrency.code,
+            fiatCurrencySymbol = appCurrency.symbol,
         )
         val infoContent = stringReference(
             value = buildString {

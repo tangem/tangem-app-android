@@ -49,7 +49,7 @@ internal class SetPrimaryCurrencyTransformer(
     }
 
     private fun WalletCardState.toLoadedVisaState(): WalletCardState {
-        return VisaWalletCardStateConverter(status, userWallet).convert(value = this)
+        return VisaWalletCardStateConverter(status, userWallet, appCurrency).convert(value = this)
     }
 
     private fun MarketPriceBlockState.toLoadedState(): MarketPriceBlockState {
