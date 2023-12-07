@@ -128,6 +128,7 @@ include(":domain:app-theme:models")
 include(":domain:balance-hiding")
 include(":domain:balance-hiding:models")
 include(":domain:transaction")
+include(":domain:analytics")
 // endregion Domain modules
 
 // region Data modules
