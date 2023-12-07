@@ -114,6 +114,11 @@ sealed class AnalyticsParam {
         object SeedImport : WalletCreationType("Seed import")
     }
 
+    sealed class WalletType(val value: String) {
+        object MultiCurrency : WalletType(value = "Multicurrency")
+        class SingleCurrency(currencyName: String) : WalletType(currencyName)
+    }
+
     companion object Key {
         const val BLOCKCHAIN = "blockchain"
         const val TOKEN = "Token"

@@ -2,16 +2,18 @@ package com.tangem.tap.common.analytics.converters
 
 import com.tangem.common.Converter
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.analytics.events.Basic
 
 /**
 * [REDACTED_AUTHOR]
  */
-class TopUpEventConverter : Converter<CardTypesResolver, Basic.ToppedUp?> {
+class TopUpEventConverter : Converter<Pair<UserWalletId, CardTypesResolver>, Basic.ToppedUp?> {
 
-    override fun convert(value: CardTypesResolver): Basic.ToppedUp? {
-        val paramCardCurrency = ParamCardCurrencyConverter().convert(value) ?: return null
+    override fun convert(value: Pair<UserWalletId, CardTypesResolver>): Basic.ToppedUp? {
+        val (userWalletId, resolver) = value
+        val paramCardCurrency = ParamCardCurrencyConverter().convert(resolver) ?: return null
 
-        return Basic.ToppedUp(paramCardCurrency)
+        return Basic.ToppedUp(userWalletId, paramCardCurrency)
     }
 }
