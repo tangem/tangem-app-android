@@ -36,6 +36,8 @@ object PreferencesKeys {
     val WALLETS_SCROLL_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "walletsScrollPreview") }
 
     val SENT_ONE_TIME_EVENTS_KEY by lazy { stringPreferencesKey(name = "sentOneTimeEvents") }
+
+    val WALLETS_BALANCES_STATES_KEY by lazy { stringPreferencesKey(name = "walletsBalancesStates") }
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */

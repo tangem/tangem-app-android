@@ -1,8 +1,8 @@
 package com.tangem.data.analytics.di
 
-import com.tangem.core.analytics.repository.AnalyticsRepository
 import com.tangem.data.analytics.DefaultAnalyticsRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.domain.analytics.repository.AnalyticsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
