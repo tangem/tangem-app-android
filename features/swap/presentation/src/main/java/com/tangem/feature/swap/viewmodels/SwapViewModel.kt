@@ -306,7 +306,7 @@ internal class SwapViewModel @Inject constructor(
                         SwapEvents.NoticeNotEnoughFee(
                             token = initialCryptoCurrency.symbol,
                             blockchain = fromToken.currency.network.name,
-                        )
+                        ),
                     )
                 }
             }
@@ -324,42 +324,19 @@ internal class SwapViewModel @Inject constructor(
                     toToken = dataState.toCryptoCurrency,
                     dataError = state.error,
                 )
-                sendErrorAnalyticsEvent(state.error, provider, fromToken)
+                sendErrorAnalyticsEvent(state.error, provider)
             }
         }
     }
 
-    private fun sendErrorAnalyticsEvent(
-        error: DataError,
-        provider: SwapProvider,
-        fromToken: CryptoCurrencyStatus
-    ) {
-        when (error) {
-            is DataError.ExchangeProviderNotFoundError,
-            is DataError.ExchangeProviderNotActiveError,
-            is DataError.ExchangeProviderNotAvailableError,
-            -> {
-                analyticsEventHandler.send(
-                    SwapEvents.NoticeProviderError(
-                        token = initialCryptoCurrency.symbol,
-                        provider = provider,
-                    )
-                )
-            }
-            is DataError.ExchangeNotPossibleError -> {
-                val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return
-                analyticsEventHandler.send(
-                    SwapEvents.NoticeExchangeError(
-                        sendToken = fromToken.currency.symbol,
-                        receiveToken = receiveTokenSymbol,
-                        provider = provider,
-                    )
-                )
-            }
-            else -> {
-                /* no-op */
-            }
-        }
+    private fun sendErrorAnalyticsEvent(error: DataError, provider: SwapProvider) {
+        analyticsEventHandler.send(
+            SwapEvents.NoticeProviderError(
+                token = initialCryptoCurrency.symbol,
+                provider = provider,
+                errorCode = error.code,
+            ),
+        )
     }
 
     private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {
@@ -458,7 +435,7 @@ internal class SwapViewModel @Inject constructor(
                                         swapRouter.openUrl(url)
                                     }
                                     analyticsEventHandler.send(
-                                        event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol)
+                                        event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol),
                                     )
                                 },
                                 onStatusClick = {
@@ -466,7 +443,7 @@ internal class SwapViewModel @Inject constructor(
                                     if (!txExternalUrl.isNullOrBlank()) {
                                         swapRouter.openUrl(txExternalUrl)
                                         analyticsEventHandler.send(
-                                            event = SwapEvents.ButtonStatus(initialCryptoCurrency.symbol)
+                                            event = SwapEvents.ButtonStatus(initialCryptoCurrency.symbol),
                                         )
                                     }
                                 },
@@ -506,7 +483,7 @@ internal class SwapViewModel @Inject constructor(
                 commission = fee,
                 sendToken = sendToken,
                 receiveToken = toToken,
-            )
+            ),
         )
     }
 
@@ -607,7 +584,6 @@ internal class SwapViewModel @Inject constructor(
         foundToken?.currencyStatus?.currency?.symbol?.let {
             analyticsEventHandler.send(SwapEvents.ChooseTokenScreenResult(tokenChosen = true, token = it))
         }
-
 
         if (foundToken != null) {
             val fromToken: CryptoCurrencyStatus
