@@ -443,6 +443,7 @@ fun ChangeTokenSelector() {
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size20),
             painter = painterResource(id = R.drawable.ic_chevron_24),
+            tint = TangemTheme.colors.icon.secondary,
             contentDescription = null,
         )
     }
