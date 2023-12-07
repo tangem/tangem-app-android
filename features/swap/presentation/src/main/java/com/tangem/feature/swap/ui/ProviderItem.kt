@@ -151,7 +151,7 @@ private fun ProviderContentState(
                             maxLines = 1,
                         )
                     }
-                    if (state.percentLowerThenBest != null) {
+                    if (state.percentLowerThenBest > 0f) {
                         AnimatedContent(targetState = state.percentLowerThenBest, label = "") {
                             Text(
                                 text = "-$it%",
