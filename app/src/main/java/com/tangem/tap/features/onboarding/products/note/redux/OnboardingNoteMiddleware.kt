@@ -152,6 +152,8 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
+                OnboardingHelper.sendToppedUpEvent(scanResponse)
+
                 store.state.globalState.topUpController?.send(scanResponse, AnalyticsParam.CardBalanceState.Full)
                 store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.Done))
             }
