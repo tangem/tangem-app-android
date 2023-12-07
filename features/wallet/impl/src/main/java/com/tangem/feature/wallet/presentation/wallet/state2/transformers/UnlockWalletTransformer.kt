@@ -41,9 +41,11 @@ internal class UnlockWalletTransformer(
         return when (prevState) {
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
+            is WalletState.Visa.Locked,
             -> walletLoadingStateFactory.create(userWallet = unlockedWallet)
             is WalletState.MultiCurrency.Content,
             is WalletState.SingleCurrency.Content,
+            is WalletState.Visa.Content,
             -> {
                 Timber.e("Impossible to unlock wallet with content state")
                 prevState
