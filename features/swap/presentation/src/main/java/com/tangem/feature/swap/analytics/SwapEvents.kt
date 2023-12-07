@@ -21,14 +21,12 @@ sealed class SwapEvents(
         params = mapOf("Available tokens" to if (availableTokens) "Yes" else "No")
     )
 
-    data class СhooseTokenScreenResult(val tokenChosen: Boolean) : SwapEvents(
-        event = "Сhoose Token Screen Result",
-        params = mapOf("Token Chosen" to if (tokenChosen) "Yes" else "No")
-    )
-
-    data class SearchTokenClicked(val token: String) : SwapEvents(
-        event = "Searched Token Clicked",
-        params = mapOf("Token" to token)
+    data class ChooseTokenScreenResult(val tokenChosen: Boolean, val token: String? = null) : SwapEvents(
+        event = "Choose Token Screen Result",
+        params = buildMap {
+            put("Token Chosen", if (tokenChosen) "Yes" else "No")
+            token?.let { put("Token", it) }
+        }
     )
 
     data class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
@@ -79,7 +77,7 @@ sealed class SwapEvents(
         params = mapOf("Token" to token)
     )
 
-    object NoticeNoAvailableTokensToSwap : SwapEvents("Notice -  No Available Tokens To Swap")
+    object NoticeNoAvailableTokensToSwap : SwapEvents("Notice - No Available Tokens To Swap")
 
     object NoticeExchangeRateHasExpired : SwapEvents("Notice - Exchange Rate Has Expired")
 
