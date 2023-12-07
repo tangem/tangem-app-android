@@ -338,6 +338,9 @@ internal class SwapViewModel @Inject constructor(
                 )
             }
             is SwapState.SwapError -> {
+                if (state.error is DataError.UnknownError) {
+                    singleTaskScheduler.cancelTask()
+                }
                 uiState = stateBuilder.createQuotesErrorState(
                     uiStateHolder = uiState,
                     swapProvider = provider,
@@ -422,6 +425,7 @@ internal class SwapViewModel @Inject constructor(
             }
     }
 
+    @Suppress("LongMethod")
     private fun onSwapClick() {
         singleTaskScheduler.cancelTask()
         uiState = stateBuilder.createSwapInProgressState(uiState)
@@ -832,6 +836,9 @@ internal class SwapViewModel @Inject constructor(
                 swapInteractor.getSelectedWallet()?.let {
                     swapRouter.openTokenDetails(it.walletId, swapInteractor.getNativeToken(dataState.networkId))
                 }
+            },
+            onRetryClick = {
+                startLoadingQuotesFromLastState()
             },
         )
     }
