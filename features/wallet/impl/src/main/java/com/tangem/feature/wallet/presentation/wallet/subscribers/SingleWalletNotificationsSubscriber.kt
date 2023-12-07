@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
-import kotlin.coroutines.CoroutineContext
 
 /**
 [REDACTED_AUTHOR]
@@ -22,12 +21,9 @@ internal class SingleWalletNotificationsSubscriber(
     private val stateHolder: WalletStateHolderV2,
     private val getSingleWalletWarningsFactory: GetSingleWalletWarningsFactory,
     private val clickIntents: WalletClickIntentsV2,
-) : WalletSubscriber<ImmutableList<WalletNotification>>(name = "single_wallet_warnings") {
+) : WalletSubscriber() {
 
-    override fun create(
-        coroutineScope: CoroutineScope,
-        uiDispatcher: CoroutineContext,
-    ): Flow<ImmutableList<WalletNotification>> {
+    override fun create(coroutineScope: CoroutineScope): Flow<ImmutableList<WalletNotification>> {
         return getSingleWalletWarningsFactory.create(clickIntents)
             .conflate()
             .distinctUntilChanged()
