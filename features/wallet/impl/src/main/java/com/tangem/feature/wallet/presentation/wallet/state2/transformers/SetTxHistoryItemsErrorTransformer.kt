@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import timber.log.Timber
 
