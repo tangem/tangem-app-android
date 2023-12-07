@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
-import kotlin.coroutines.CoroutineContext
 
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenListSubscriber(
@@ -28,12 +27,9 @@ internal class SingleWalletWithTokenListSubscriber(
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val getCardTokensListUseCase: GetCardTokensListUseCase,
-) : WalletSubscriber<Either<TokenListError, TokenList>>(name = "single_wallet_with_token_list") {
+) : WalletSubscriber() {
 
-    override fun create(
-        coroutineScope: CoroutineScope,
-        uiDispatcher: CoroutineContext,
-    ): Flow<Either<TokenListError, TokenList>> {
+    override fun create(coroutineScope: CoroutineScope): Flow<Either<TokenListError, TokenList>> {
         return getCardTokensListUseCase(userWalletId = userWallet.walletId)
             .conflate()
             .distinctUntilChanged()
