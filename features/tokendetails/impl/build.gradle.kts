@@ -50,6 +50,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.datasource)
 
     /** Domain modules */
     implementation(projects.domain.appCurrency)
