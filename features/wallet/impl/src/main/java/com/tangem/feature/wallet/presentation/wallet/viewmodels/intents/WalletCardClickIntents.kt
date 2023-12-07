@@ -8,8 +8,8 @@ import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
@@ -26,7 +26,7 @@ internal interface WalletCardClickIntents {
 }
 
 internal class WalletCardClickIntentsImplementor @Inject constructor(
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val updateWalletUseCase: UpdateWalletUseCase,
