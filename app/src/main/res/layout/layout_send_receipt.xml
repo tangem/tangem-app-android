@@ -33,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/send_fee_label"
+        android:text="@string/common_fee_label"
         android:textColor="@color/text_tertiary"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"

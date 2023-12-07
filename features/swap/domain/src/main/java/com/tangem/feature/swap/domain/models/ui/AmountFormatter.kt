@@ -25,7 +25,7 @@ class AmountFormatter {
      * @param currency
      * @return formatted [String]
      */
-    fun formatBigDecimalAmountToUI(amount: BigDecimal, decimals: Int, currency: String): String {
+    fun formatBigDecimalAmountToUI(amount: BigDecimal, decimals: Int, currency: String? = null): String {
         return amount.toFormattedCurrencyString(decimals, currency)
     }
 }
