@@ -20,4 +20,9 @@ internal class MockQuotesRepository(
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote> {
         return getQuotesUpdates(currenciesIds).first()
     }
+
+    override suspend fun getQuoteSync(currencyId: CryptoCurrency.ID): Quote {
+        return quotes.map { it.getOrElse { e -> throw e } }.first()
+            .first { it.rawCurrencyId == currencyId.rawCurrencyId }
+    }
 }
