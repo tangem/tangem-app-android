@@ -29,7 +29,7 @@ internal class SingleWalletContentLoader(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
-    override fun create(): List<WalletSubscriber<*>> {
+    override fun create(): List<WalletSubscriber> {
         return listOf(
             PrimaryCurrencySubscriber(
                 userWallet = userWallet,

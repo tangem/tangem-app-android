@@ -46,5 +46,11 @@ internal fun LazyListScope.contentItemsV2(
         is WalletStateV2.SingleCurrency -> {
             txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
         }
+        is WalletStateV2.Visa.Content -> {
+            // TODO: Will be implemented soon
+        }
+        is WalletStateV2.Visa.Locked -> {
+            // TODO: Will be implemented soon
+        }
     }
 }

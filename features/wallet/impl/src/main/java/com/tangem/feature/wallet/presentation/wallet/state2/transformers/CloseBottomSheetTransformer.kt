@@ -15,6 +15,10 @@ internal class CloseBottomSheetTransformer(userWalletId: UserWalletId) : WalletS
                 prevState.copy(bottomSheetConfig = prevState.bottomSheetConfig?.copy(isShow = false))
             }
             is WalletState.SingleCurrency.Locked -> prevState.copy(isBottomSheetShow = false)
+            is WalletState.Visa.Content -> prevState.copy(
+                bottomSheetConfig = prevState.bottomSheetConfig?.copy(isShow = false),
+            )
+            is WalletState.Visa.Locked -> prevState.copy(isBottomSheetShow = false)
         }
     }
 }
