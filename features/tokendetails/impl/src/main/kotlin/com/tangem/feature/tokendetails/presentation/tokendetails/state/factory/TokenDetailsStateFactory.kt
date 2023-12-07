@@ -22,11 +22,13 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -231,6 +233,18 @@ internal class TokenDetailsStateFactory(
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.removeRentInfo(state))
+    }
+
+    fun getStateWithExchangeStatusBottomSheet(swapTxState: SwapTransactionsState): TokenDetailsState {
+        return currentStateProvider().copy(
+            bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissBottomSheet,
+                content = ExchangeStatusBottomSheetConfig(
+                    value = swapTxState,
+                ),
+            ),
+        )
     }
 
     fun getStateAndTriggerEvent(
