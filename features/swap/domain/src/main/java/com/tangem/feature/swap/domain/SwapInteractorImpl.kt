@@ -74,10 +74,13 @@ internal class SwapInteractorImpl @Inject constructor(
         val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase(selectedWallet.walletId)
             .getOrElse { emptyList() }
 
-        val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses.filter {
-            it.currency.network.backendId != currency.network.backendId ||
-                it.currency.getContractAddress() != currency.getContractAddress()
-        }
+        val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses
+            .filter {
+                val currencyFilter = it.currency.network.backendId != currency.network.backendId ||
+                    it.currency.getContractAddress() != currency.getContractAddress()
+                val statusFilter = it.value is CryptoCurrencyStatus.Loaded
+                statusFilter && currencyFilter
+            }
 
         if (walletCurrencyStatusesExceptInitial.isEmpty()) {
             return TokensDataStateExpress(
@@ -128,10 +131,10 @@ internal class SwapInteractorImpl @Inject constructor(
                 tokenInfoForFilter(it).network == currency.network.backendId
         }
 
-        val availableCryptoCurrencies = cryptoCurrenciesList.mapNotNull { pair ->
-            val providers = findProvidersForPair(pair, filteredPairs, tokenInfoForAvailable)
+        val availableCryptoCurrencies = cryptoCurrenciesList.mapNotNull { cryptoCurrencyStatus ->
+            val providers = findProvidersForPair(cryptoCurrencyStatus, filteredPairs, tokenInfoForAvailable)
             if (providers != null) {
-                CryptoCurrencySwapInfo(pair, providers)
+                CryptoCurrencySwapInfo(cryptoCurrencyStatus, providers)
             } else {
                 null
             }
