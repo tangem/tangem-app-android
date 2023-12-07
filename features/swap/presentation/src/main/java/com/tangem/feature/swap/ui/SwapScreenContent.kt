@@ -7,10 +7,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -20,45 +18,34 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.components.states.Item
-import com.tangem.core.ui.components.states.SelectableItemsState
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
-import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.*
+import com.tangem.feature.swap.models.states.FeeItemState
+import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
-import kotlinx.collections.immutable.toImmutableList
-import java.math.BigDecimal
 
 @Suppress("LongMethod")
 @Composable
-internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick: () -> Unit) {
+internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modifier) {
     val keyboard by keyboardAsState()
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-        Image(
-            modifier = Modifier
-                .size(width = TangemTheme.dimens.size164, height = TangemTheme.dimens.size80)
-                .align(Alignment.BottomCenter)
-                .padding(bottom = TangemTheme.dimens.spacing28),
-            painter = painterResource(id = R.drawable.ill_one_inch_powered),
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-        )
-
         Column {
             AppBarWithBackButton(
                 text = stringResource(R.string.common_swap),
                 onBackClick = state.onBackClicked,
                 iconRes = R.drawable.ic_close_24,
             )
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -74,11 +61,20 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
             ) {
                 MainInfo(state)
 
-                FeeItem(feeState = state.fee, currency = state.networkCurrency)
+                ProviderItemBlock(
+                    state = state.providerState,
+                    modifier = Modifier
+                        .clickable(
+                            enabled = state.providerState.onProviderClick != null,
+                            onClick = { state.providerState.onProviderClick?.invoke(state.providerState.id) },
+                        ),
+                )
+
+                FeeItemBlock(state = state.fee)
 
                 if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
 
-                if (state.permissionState is SwapPermissionState.InProgress) {
+                AnimatedVisibility(visible = state.permissionState is SwapPermissionState.InProgress) {
                     CardWithIcon(
                         title = stringResource(id = R.string.swapping_pending_transaction_title),
                         description = stringResource(id = R.string.swapping_pending_transaction_subtitle),
@@ -92,7 +88,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                         },
                     )
                 }
-                MainButton(state = state, onPermissionWarningClick = onPermissionWarningClick)
+                MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
             }
         }
 
@@ -137,53 +133,24 @@ private fun MainInfo(state: SwapStateHolder) {
     ConstraintLayout(
         modifier = Modifier.fillMaxWidth(),
     ) {
-        val networkIconRes = remember {
-            getActiveIconRes(state.blockchainId)
-        }
         val (topCard, bottomCard, button) = createRefs()
         val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
-        TransactionCard(
-            type = state.sendCardData.type,
-            balance = if (state.sendCardData.isBalanceHidden) {
-                STARS
-            } else {
-                state.sendCardData.balance
-            },
-            textFieldValue = state.sendCardData.amountTextFieldValue,
-            amountEquivalent = state.sendCardData.amountEquivalent,
-            tokenIconUrl = state.sendCardData.tokenIconUrl,
-            tokenCurrency = state.sendCardData.tokenCurrency,
-            priceImpact = priceImpactWarning,
-            networkIconRes = if (state.sendCardData.isNotNativeToken) networkIconRes else null,
-            iconPlaceholder = state.sendCardData.coinId?.let {
-                getActiveIconResByCoinId(it)
-            },
-            onChangeTokenClick = if (state.sendCardData.canSelectAnotherToken) state.onSelectTokenClick else null,
+        TransactionCardData(
+            priceImpactWarning = priceImpactWarning,
+            swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
             },
+            onSelectTokenClick = state.onSelectTokenClick,
         )
         val marginCard = TangemTheme.dimens.spacing16
-        TransactionCard(
-            type = state.receiveCardData.type,
-            balance = if (state.receiveCardData.isBalanceHidden) STARS else state.receiveCardData.balance,
-            textFieldValue = state.receiveCardData.amountTextFieldValue,
-            amountEquivalent = state.receiveCardData.amountEquivalent,
-            tokenIconUrl = state.receiveCardData.tokenIconUrl,
-            tokenCurrency = state.receiveCardData.tokenCurrency,
-            priceImpact = priceImpactWarning,
-            networkIconRes = if (state.receiveCardData.isNotNativeToken) networkIconRes else null,
-            iconPlaceholder = state.receiveCardData.coinId?.let {
-                getActiveIconResByCoinId(it)
-            },
-            onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) {
-                state.onSelectTokenClick
-            } else {
-                null
-            },
+        TransactionCardData(
+            priceImpactWarning = priceImpactWarning,
+            swapCardState = state.receiveCardData,
             modifier = Modifier.constrainAs(bottomCard) {
                 top.linkTo(topCard.bottom, margin = marginCard)
             },
+            onSelectTokenClick = state.onSelectTokenClick,
         )
         val marginButton = TangemTheme.dimens.spacing32
         SwapButton(
@@ -194,6 +161,47 @@ private fun MainInfo(state: SwapStateHolder) {
                 end.linkTo(topCard.end)
             },
         )
+    }
+}
+
+@Composable
+private fun TransactionCardData(
+    priceImpactWarning: SwapWarning.HighPriceImpact?,
+    swapCardState: SwapCardState,
+    onSelectTokenClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    when (swapCardState) {
+        is SwapCardState.Empty -> {
+            TransactionCardEmpty(
+                type = swapCardState.type,
+                amountEquivalent = swapCardState.amountEquivalent,
+                textFieldValue = swapCardState.amountTextFieldValue,
+                onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
+                modifier = modifier,
+            )
+        }
+        is SwapCardState.SwapCardData -> {
+            TransactionCard(
+                type = swapCardState.type,
+                balance = if (swapCardState.isBalanceHidden) {
+                    STARS
+                } else {
+                    swapCardState.balance
+                },
+                textFieldValue = swapCardState.amountTextFieldValue,
+                amountEquivalent = swapCardState.amountEquivalent,
+                tokenIconUrl = swapCardState.tokenIconUrl ?: "",
+                tokenCurrency = swapCardState.tokenCurrency,
+                priceImpact = priceImpactWarning,
+                networkIconRes = if (swapCardState.isNotNativeToken) swapCardState.networkIconRes else null,
+                iconPlaceholder = swapCardState.coinId?.let {
+                    getActiveIconResByCoinId(it)
+                },
+                onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
+                modifier = modifier,
+            )
+        }
     }
 }
 
@@ -228,48 +236,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun FeeItem(feeState: FeeState, currency: String) {
-    val titleString = stringResource(id = R.string.send_network_fee_title)
-    val disclaimer = stringResource(id = R.string.swapping_tangem_fee_disclaimer, "${feeState.tangemFee}%")
-    when (feeState) {
-        is FeeState.Loaded -> {
-            if (feeState.state != null) {
-                SelectableInfoCard(
-                    state = feeState.state,
-                    disclaimer = disclaimer,
-                    onSelect = feeState.onSelectItem,
-                )
-            }
-        }
-        FeeState.Loading -> {
-            SmallInfoCardWithDisclaimer(
-                startText = titleString,
-                endText = "",
-                disclaimer = disclaimer,
-                isLoading = true,
-            )
-        }
-        is FeeState.NotEnoughFundsWarning -> {
-            if (feeState.state != null) {
-                SelectableInfoCardWithWarning(
-                    state = feeState.state,
-                    warningText = stringResource(
-                        id = R.string.swapping_not_enough_funds_for_fee,
-                        currency,
-                        currency,
-                    ),
-                    disclaimer = disclaimer,
-                    onSelect = feeState.onSelectItem,
-                )
-            }
-        }
-        is FeeState.Empty -> {
-            SmallInfoCard(startText = titleString, endText = "")
-        }
-    }
-}
-
+@Suppress("LongMethod")
 @Composable
 private fun SwapWarnings(warnings: List<SwapWarning>) {
     Column(
@@ -280,26 +247,14 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
         warnings.forEach { warning ->
             when (warning) {
                 is SwapWarning.HighPriceImpact -> {
-                    WarningCard(
-                        title = stringResource(id = R.string.swapping_high_price_impact),
-                        description = stringResource(id = R.string.swapping_high_price_impact_description),
+                    Notification(
+                        config = warning.notificationConfig,
+                        iconTint = TangemTheme.colors.icon.warning,
                     )
                 }
                 is SwapWarning.PermissionNeeded -> {
-                    WarningCard(
-                        title = stringResource(id = R.string.swapping_permission_header),
-                        description = stringResource(
-                            id = R.string.swapping_permission_subheader,
-                            warning.tokenCurrency,
-                        ),
-                        icon = {
-                            Icon(
-                                painter = painterResource(id = com.tangem.core.ui.R.drawable.ic_locked_24),
-                                contentDescription = null,
-                                modifier = Modifier.size(TangemTheme.dimens.size20),
-                                tint = TangemTheme.colors.icon.primary1,
-                            )
-                        },
+                    Notification(
+                        config = warning.notificationConfig,
                     )
                 }
                 is SwapWarning.GenericWarning -> {
@@ -316,14 +271,28 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         onClick = warning.onClick,
                     )
                 }
+                is SwapWarning.NoAvailableTokensToSwap -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                    )
+                }
+                is SwapWarning.TooSmallAmountWarning -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                        iconTint = TangemTheme.colors.icon.warning,
+                    )
+                }
+                is SwapWarning.UnableToCoverFeeWarning -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                    )
+                }
+                is SwapWarning.GeneralWarning -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                    )
+                }
                 else -> {}
-                // is SwapWarning.RateExpired -> {
-                //     RefreshableWaringCard(
-                //         title = stringResource(id = R.string.),
-                //         description = stringResource(id = R.string.),
-                //         onClick = warning.onClick,
-                //     )
-                // }
             }
             SpacerH8()
         }
@@ -367,7 +336,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
 
 // region preview
 
-private val sendCard = SwapCardData(
+private val sendCard = SwapCardState.SwapCardData(
     type = TransactionCardType.SendCard({}) {},
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
@@ -377,10 +346,12 @@ private val sendCard = SwapCardData(
     canSelectAnotherToken = false,
     balance = "123",
     coinId = "",
+    token = null,
+    networkIconRes = R.drawable.img_polygon_22,
     isBalanceHidden = false,
 )
 
-private val receiveCard = SwapCardData(
+private val receiveCard = SwapCardState.SwapCardData(
     type = TransactionCardType.ReceiveCard(),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
@@ -390,63 +361,39 @@ private val receiveCard = SwapCardData(
     canSelectAnotherToken = true,
     balance = "33333",
     coinId = "",
+    token = null,
+    networkIconRes = R.drawable.img_polygon_22,
     isBalanceHidden = false,
 )
 
-val stateSelectable = SelectableItemsState(
-    selectedItem = Item(
-        0,
-        TextReference.Str("Balance"),
-        TextReference.Str("0.4405434 BTC"),
-        true,
-        TxFee(
-            feeValue = BigDecimal.ZERO,
-            gasLimit = 0,
-            feeFiatFormatted = "",
-            feeCryptoFormatted = "",
-            feeType = FeeType.NORMAL,
-        ),
-    ),
-    items = listOf(
-        Item(
-            0,
-            TextReference.Str("Normal"),
-            TextReference.Str("0.4405434 BTC"),
-            true,
-            TxFee(
-                feeValue = BigDecimal.ZERO,
-                gasLimit = 0,
-                feeFiatFormatted = "",
-                feeCryptoFormatted = "",
-                feeType = FeeType.NORMAL,
-            ),
-        ),
-        Item(
-            1,
-            TextReference.Str("Priority"),
-            TextReference.Str("0.46 BTC"),
-            false,
-            TxFee(
-                feeValue = BigDecimal.ZERO,
-                gasLimit = 0,
-                feeFiatFormatted = "",
-                feeCryptoFormatted = "",
-                feeType = FeeType.NORMAL,
-            ),
-        ),
-    ).toImmutableList(),
-)
-
 private val state = SwapStateHolder(
-    networkId = "ethereum",
     sendCardData = sendCard,
     receiveCardData = receiveCard,
-    fee = FeeState.Loaded(
-        tangemFee = 0.0,
-        state = stateSelectable,
-        onSelectItem = {},
+    fee = FeeItemState.Content(
+        feeType = FeeType.NORMAL,
+        title = stringReference("Fee"),
+        amountCrypto = "100",
+        symbolCrypto = "1000",
+        amountFiatFormatted = "(100)",
+        isClickable = true,
+        onClick = {},
     ),
-    warnings = listOf(SwapWarning.PermissionNeeded("DAI")),
+    warnings = listOf(
+        SwapWarning.PermissionNeeded(
+            notificationConfig = NotificationConfig(
+                title = stringReference("Give Premission"),
+                subtitle = stringReference("To continue swapping you need to give permission to Tangem"),
+                iconResId = R.drawable.ic_locked_24,
+            ),
+        ),
+        SwapWarning.NoAvailableTokensToSwap(
+            notificationConfig = NotificationConfig(
+                title = stringReference("No tokens"),
+                subtitle = stringReference("Swap tokens not available"),
+                iconResId = R.drawable.img_attention_20,
+            ),
+        ),
+    ),
     networkCurrency = "MATIC",
     swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
     onRefresh = {},
@@ -454,13 +401,14 @@ private val state = SwapStateHolder(
     onChangeCardsClicked = {},
     permissionState = SwapPermissionState.InProgress,
     blockchainId = "POLYGON",
+    providerState = ProviderState.Loading(),
 )
 
 @Preview
 @Composable
 private fun SwapScreenContentPreview() {
     TangemTheme(isDark = false) {
-        SwapScreenContent(state = state) {}
+        SwapScreenContent(state = state, modifier = Modifier)
     }
 }
 
