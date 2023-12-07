@@ -2,6 +2,7 @@ package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.model.Network
 import timber.log.Timber
 
@@ -21,9 +22,11 @@ internal fun getNetwork(
 
     return Network(
         id = Network.ID(blockchain.id),
+        backendId = blockchain.toNetworkId(),
         name = blockchain.fullName,
         isTestnet = blockchain.isTestnet(),
         derivationPath = getNetworkDerivationPath(blockchain, extraDerivationPath, derivationStyleProvider),
+        currencySymbol = blockchain.currency,
         standardType = getNetworkStandardType(blockchain),
     )
 }
