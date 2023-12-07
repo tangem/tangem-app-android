@@ -1,13 +1,16 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import arrow.core.Either
-import com.tangem.common.extensions.isZero
+import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
+import com.tangem.domain.analytics.model.WalletBalanceState
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import dagger.hilt.android.scopes.ViewModelScoped
 import java.math.BigDecimal
@@ -16,13 +19,43 @@ import javax.inject.Inject
 @ViewModelScoped
 internal class TokenListAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val checkIsWalletToppedUpUseCase: CheckIsWalletToppedUpUseCase,
 ) {
 
-    fun send(maybeTokenList: Either<TokenListError, TokenList>) {
+    suspend fun send(userWallet: UserWallet, maybeTokenList: Either<TokenListError, TokenList>) {
         val tokenList = (maybeTokenList as? Either.Right)?.value ?: return
 
-        createCardBalanceState(tokenList)?.let {
-            analyticsEventHandler.send(event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(balance = it))
+        sendBalanceLoadedEventIfNeeded(tokenList)
+        sendToppedUpEventIfNeeded(tokenList, userWallet)
+    }
+
+    private fun sendBalanceLoadedEventIfNeeded(tokenList: TokenList) {
+        createCardBalanceState(tokenList)?.let { balanceState ->
+            analyticsEventHandler.send(event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(balanceState))
+        }
+    }
+
+    private suspend fun sendToppedUpEventIfNeeded(tokenList: TokenList, userWallet: UserWallet) {
+        val balanceState = tokenList.toWalletBalanceState() ?: return
+
+        val isWalletToppedUp = checkIsWalletToppedUpUseCase(userWallet.walletId, balanceState)
+            .getOrElse { return }
+
+        if (isWalletToppedUp) {
+            val walletType = if (userWallet.isMultiCurrency) {
+                AnalyticsParam.WalletType.MultiCurrency
+            } else {
+                // For single currency wallets with token list, e.g. Noodle
+                val currency = when (tokenList) {
+                    is TokenList.Empty -> return
+                    is TokenList.GroupedByNetwork -> tokenList.groups.first().currencies.first()
+                    is TokenList.Ungrouped -> tokenList.currencies.first()
+                }
+
+                AnalyticsParam.WalletType.SingleCurrency(currency.currency.name)
+            }
+
+            analyticsEventHandler.send(WalletScreenAnalyticsEvent.Basic.WalletToppedUp(userWallet.walletId, walletType))
         }
     }
 
@@ -30,10 +63,11 @@ internal class TokenListAnalyticsSender @Inject constructor(
         return when (val fiatBalance = tokenList.totalFiatBalance) {
             is TokenList.FiatBalance.Failed -> fiatBalance.toCardBalanceState(tokenList)
             is TokenList.FiatBalance.Loaded -> fiatBalance.toCardBalanceState()
-            TokenList.FiatBalance.Loading -> null
+            is TokenList.FiatBalance.Loading -> null
         }
     }
 
+    @Suppress("UnusedReceiverParameter")
     private fun TokenList.FiatBalance.Failed.toCardBalanceState(tokenList: TokenList): AnalyticsParam.CardBalanceState {
         val currenciesStatuses = when (tokenList) {
             is TokenList.Empty -> emptyList()
@@ -50,13 +84,25 @@ internal class TokenListAnalyticsSender @Inject constructor(
         }
     }
 
-    private fun TokenList.FiatBalance.Loaded.toCardBalanceState(): AnalyticsParam.CardBalanceState? {
+    private fun TokenList.FiatBalance.Loaded.toCardBalanceState(): AnalyticsParam.CardBalanceState {
         return if (amount > BigDecimal.ZERO) {
             AnalyticsParam.CardBalanceState.Full
-        } else if (amount.isZero()) {
-            AnalyticsParam.CardBalanceState.Empty
         } else {
-            null
+            AnalyticsParam.CardBalanceState.Empty
+        }
+    }
+
+    private fun TokenList.toWalletBalanceState(): WalletBalanceState? {
+        return when (val balance = totalFiatBalance) {
+            is TokenList.FiatBalance.Failed -> WalletBalanceState.Error
+            is TokenList.FiatBalance.Loaded -> {
+                if (balance.amount > BigDecimal.ZERO) {
+                    WalletBalanceState.ToppedUp
+                } else {
+                    WalletBalanceState.Empty
+                }
+            }
+            is TokenList.FiatBalance.Loading -> null
         }
     }
 }

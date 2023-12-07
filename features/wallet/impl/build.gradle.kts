@@ -66,6 +66,7 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.analytics)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.features.onboarding)
 
