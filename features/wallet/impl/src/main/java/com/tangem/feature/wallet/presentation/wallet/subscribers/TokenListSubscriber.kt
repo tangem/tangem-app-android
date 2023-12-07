@@ -8,7 +8,7 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListTransformer
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
@@ -24,7 +24,7 @@ typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
 internal class TokenListSubscriber(
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntentsV2,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
