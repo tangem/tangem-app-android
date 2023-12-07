@@ -17,8 +17,12 @@ internal class RenameWalletTransformer(
             is WalletState.SingleCurrency.Content -> {
                 prevState.copy(walletCardState = prevState.walletCardState.copySealed(title = newName))
             }
+            is WalletState.Visa.Content -> {
+                prevState.copy(walletCardState = prevState.walletCardState.copySealed(title = newName))
+            }
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
+            is WalletState.Visa.Locked,
             -> {
                 Timber.e("Impossible to rename wallet in locked state")
                 prevState
