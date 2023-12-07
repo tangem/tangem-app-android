@@ -2,7 +2,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 
 interface TokenDetailsClickIntents {
 
@@ -40,7 +39,7 @@ interface TokenDetailsClickIntents {
 
     fun onCloseRentInfoNotification()
 
-    fun onSwapTransactionClick(txId: String, status: ExchangeStatus?)
+    fun onSwapTransactionClick(txId: String)
 
     fun onGoToProviderClick(url: String)
 }
