@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import kotlinx.collections.immutable.ImmutableList
 import timber.log.Timber
 

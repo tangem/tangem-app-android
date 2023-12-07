@@ -4,7 +4,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList

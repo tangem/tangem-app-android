@@ -4,7 +4,7 @@ import com.tangem.common.Provider
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenState
 
 internal class ScrollToWalletTransformer(
     private val index: Int,
