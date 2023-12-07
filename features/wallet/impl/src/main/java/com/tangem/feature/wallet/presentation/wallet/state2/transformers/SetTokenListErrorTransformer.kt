@@ -18,14 +18,16 @@ internal class SetTokenListErrorTransformer(
                     is WalletState.MultiCurrency.Content -> {
                         prevState.copy(tokensListState = WalletTokensListState.Empty)
                     }
-                    is WalletState.MultiCurrency.Locked,
-                    -> {
-                        Timber.e("Impossible to load tokens list for locked wallet")
+                    is WalletState.MultiCurrency.Locked -> {
+                        Timber.w("Impossible to load tokens list for locked wallet")
                         prevState
                     }
-                    is WalletState.SingleCurrency,
-                    -> {
-                        Timber.e("Impossible to load tokens list for single-currency wallet")
+                    is WalletState.SingleCurrency -> {
+                        Timber.w("Impossible to load tokens list for single-currency wallet")
+                        prevState
+                    }
+                    is WalletState.Visa -> {
+                        Timber.w("Impossible to load tokens list for VISA wallet")
                         prevState
                     }
                 }
