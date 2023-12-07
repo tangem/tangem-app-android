@@ -10,9 +10,15 @@ dependencies {
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
 
-    /** Core shouldn't depends on core, but in case with utils and logging its necessary */
-    implementation(projects.core.utils)
+    /** Analytics - Models */
     implementation(projects.core.analytics.models)
 
+    /** Domain */
+    implementation(projects.domain.analytics)
+
+    /** Other */
     implementation(deps.kotlin.coroutines)
+
+    /** Core shouldn't depend on core, but in case with utils and logging its necessary */
+    implementation(projects.core.utils)
 }
