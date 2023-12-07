@@ -42,6 +42,7 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.math.absoluteValue
 import kotlin.properties.Delegates
 
 typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
@@ -863,21 +864,17 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun getPricesLowerBest(state: SuccessLoadedSwapData): Map<SwapProvider, Float> {
-        val rates = state.mapValues {
-            it.value.fromTokenInfo.amountFiat.divide(
-                it.value.toTokenInfo.amountFiat,
-                2,
-                RoundingMode.HALF_UP,
-            )
-        }
-        val bestRate = rates.minByOrNull { it.value } ?: return emptyMap()
-        return rates.mapNotNull {
-            if (it.key != bestRate.key) {
-                val percentDiff = bestRate.value
-                    .divide(it.value, 2, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal(HUNDRED_PERCENT))
-                    .toFloat()
-                HUNDRED_PERCENT - percentDiff
+        val bestRateEntry = state.maxByOrNull { it.value.toTokenInfo.tokenAmount.value } ?: return emptyMap()
+        val bestRate = bestRateEntry.value.toTokenInfo.tokenAmount.value
+        val hundredPercent = BigDecimal("100")
+        return state.mapNotNull {
+            if (it.key != bestRateEntry.key) {
+                val amount = it.value.toTokenInfo.tokenAmount.value
+                val percentDiff = BigDecimal.ONE.minus(
+                    amount.divide(bestRate, RoundingMode.HALF_UP)
+                        .multiply(hundredPercent),
+                )
+                percentDiff.setScale(2, RoundingMode.HALF_UP).toFloat().absoluteValue
             } else {
                 null
             }
@@ -935,6 +932,5 @@ internal class SwapViewModel @Inject constructor(
         private const val INITIAL_AMOUNT = ""
         private const val UPDATE_DELAY = 10000L
         private const val DEBOUNCE_AMOUNT_DELAY = 1000L
-        private const val HUNDRED_PERCENT = 100
     }
 }
