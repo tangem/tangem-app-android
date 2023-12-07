@@ -10,7 +10,6 @@ import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetCryp
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import kotlin.coroutines.CoroutineContext
 
 internal class SingleWalletButtonsSubscriber(
     private val userWallet: UserWallet,
@@ -18,9 +17,9 @@ internal class SingleWalletButtonsSubscriber(
     private val clickIntents: WalletClickIntentsV2,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
-) : WalletSubscriber<TokenActionsState>(name = "single_wallet_buttons") {
+) : WalletSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope, uiDispatcher: CoroutineContext): Flow<TokenActionsState> {
+    override fun create(coroutineScope: CoroutineScope): Flow<TokenActionsState> {
         return channelFlow {
             getPrimaryCurrencyStatusUpdatesUseCase.collectLatest(userWalletId = userWallet.walletId) { status ->
                 getCryptoCurrencyActionsUseCase(userWallet = userWallet, cryptoCurrencyStatus = status)
