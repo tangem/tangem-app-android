@@ -13,8 +13,8 @@ import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetRefreshStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListErrorTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -31,7 +31,7 @@ internal class WalletClickIntentsV2 @Inject constructor(
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
     private val contentClickIntentsImplementor: WalletContentClickIntentsImplementor,
     private val visaWalletIntentsImplementor: VisaWalletIntentsImplementor,
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
