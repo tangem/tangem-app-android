@@ -4,10 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
@@ -121,6 +124,11 @@ internal class AppSettingsViewModel(
                 dialog = dialogsFactory.createThemeModeSelectorDialog(
                     selectedModeIndex = selectedMode.ordinal,
                     onSelect = { mode ->
+                        Analytics.send(
+                            event = Settings.AppSettings.ThemeSwitched(
+                                theme = AnalyticsParam.AppTheme.fromAppThemeMode(mode),
+                            ),
+                        )
                         store.dispatchOnMain(DetailsAction.AppSettings.ChangeAppThemeMode(mode))
                         dismissDialog()
                     },
