@@ -18,34 +18,40 @@ internal class SetTxHistoryCountTransformer(
 
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
-            is WalletState.SingleCurrency.Content -> prevState.toLoadingState()
+            is WalletState.SingleCurrency.Content -> prevState.copy(
+                txHistoryState = prevState.txHistoryState.toLoadingState(),
+            )
+            is WalletState.Visa.Content -> prevState.copy(
+                txHistoryState = prevState.txHistoryState.toLoadingState(),
+            )
             is WalletState.SingleCurrency.Locked,
+            is WalletState.Visa.Locked,
             -> {
-                Timber.e("Impossible to load transactions history for locked wallet")
+                Timber.w("Impossible to load transactions history for locked wallet")
                 prevState
             }
-            is WalletState.MultiCurrency,
-            -> {
-                Timber.e("Impossible to load transactions history for multi-currency wallet")
+            is WalletState.MultiCurrency -> {
+                Timber.w("Impossible to load transactions history for multi-currency wallet")
                 prevState
             }
         }
     }
 
-    private fun WalletState.SingleCurrency.Content.toLoadingState(): WalletState {
-        return if (txHistoryState is TxHistoryState.Content) {
-            (txHistoryState as? TxHistoryState.Content)?.contentItems?.update {
-                Timber.d("Load transactions history: $transactionsCount")
-                PagingData.from(data = createLoadingItems())
-            }
-            this
-        } else {
-            val txHistoryContent = TxHistoryState.Content(
-                contentItems = MutableStateFlow(
-                    value = PagingData.from(data = createLoadingItems()),
-                ),
+    private fun TxHistoryState.toLoadingState(): TxHistoryState {
+        return if (this is TxHistoryState.Content) {
+            Timber.d("Load transactions history: $transactionsCount")
+
+            copy(
+                contentItems = contentItems.apply {
+                    update {
+                        PagingData.from(data = createLoadingItems())
+                    }
+                },
             )
-            copy(txHistoryState = txHistoryContent)
+        } else {
+            TxHistoryState.Content(
+                contentItems = MutableStateFlow(PagingData.from(createLoadingItems())),
+            )
         }
     }
 

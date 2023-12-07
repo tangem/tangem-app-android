@@ -24,7 +24,7 @@ internal class SingleWalletWithTokenContentLoader(
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
-    override fun create(): List<WalletSubscriber<*>> {
+    override fun create(): List<WalletSubscriber> {
         return listOf(
             SingleWalletWithTokenListSubscriber(
                 userWallet = userWallet,

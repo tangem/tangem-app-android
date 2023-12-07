@@ -139,6 +139,84 @@ internal sealed class WalletState {
             )
         }
     }
+
+    internal sealed class Visa : WalletState() {
+
+        abstract val balancesAndLimitBlockState: BalancesAndLimitsBlockState?
+        abstract val txHistoryState: TxHistoryState
+
+        data class Content(
+            override val pullToRefreshConfig: WalletPullToRefreshConfig,
+            override val walletCardState: WalletCardState,
+            override val warnings: ImmutableList<WalletNotification>,
+            override val bottomSheetConfig: TangemBottomSheetConfig?,
+            override val balancesAndLimitBlockState: BalancesAndLimitsBlockState,
+            override val txHistoryState: TxHistoryState,
+            val depositButtonState: DepositButtonState,
+        ) : Visa()
+
+        data class Locked(
+            override val walletCardState: WalletCardState,
+            val onUnlockNotificationClick: () -> Unit,
+            val isBottomSheetShow: Boolean = false,
+            val onBottomSheetDismiss: () -> Unit = {},
+            val onUnlockClick: () -> Unit,
+            val onScanClick: () -> Unit,
+            val onExploreClick: () -> Unit,
+        ) : Visa() {
+
+            override val pullToRefreshConfig: WalletPullToRefreshConfig
+                get() = WalletPullToRefreshConfig(isRefreshing = false, onRefresh = {})
+
+            override val warnings: ImmutableList<WalletNotification> = persistentListOf(
+                WalletNotification.UnlockWallets(onUnlockNotificationClick),
+            )
+
+            override val bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = isBottomSheetShow,
+                onDismissRequest = onBottomSheetDismiss,
+                content = WalletBottomSheetConfig.UnlockWallets(
+                    onUnlockClick = onUnlockClick,
+                    onScanClick = onScanClick,
+                ),
+            )
+
+            override val balancesAndLimitBlockState: BalancesAndLimitsBlockState? = null
+
+            override val txHistoryState: TxHistoryState = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = PagingData.from(
+                        data = listOf(
+                            TxHistoryState.TxHistoryItemState.Title(onExploreClick = onExploreClick),
+                            TxHistoryState.TxHistoryItemState.Transaction(
+                                state = TransactionState.Locked(txHash = "LOCKED_TX_HASH"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        }
+
+        sealed class BalancesAndLimitsBlockState {
+
+            object Loading : BalancesAndLimitsBlockState()
+
+            object Error : BalancesAndLimitsBlockState()
+
+            data class Content(
+                val availableBalance: String,
+                val currencySymbol: String,
+                val limitDays: Int,
+                val isEnabled: Boolean,
+                val onClick: () -> Unit,
+            ) : BalancesAndLimitsBlockState()
+        }
+
+        data class DepositButtonState(
+            val isEnabled: Boolean,
+            val onClick: () -> Unit,
+        )
+    }
 }
 
 internal sealed class WalletTokensListState {
