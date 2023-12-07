@@ -18,15 +18,13 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
+import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.feature.swap.models.ApproveType
-import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.UiActions
-import com.tangem.feature.swap.models.toDomainApproveType
+import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
@@ -140,7 +138,7 @@ internal class SwapViewModel @Inject constructor(
         uiState = uiState.copy(
             onSelectTokenClick = {
                 router.openScreen(SwapNavScreen.SelectToken)
-                analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened)
+                sendSelectTokenScreenOpenedEvent()
             },
             onSuccess = {
                 router.openScreen(SwapNavScreen.Success)
@@ -148,9 +146,14 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    @Suppress("UnusedPrivateMember")
+    private fun sendSelectTokenScreenOpenedEvent() {
+        val isAnyAvailableTokensTo = dataState.tokensDataState?.toGroup?.available?.isNotEmpty() ?: false
+        val isAnyAvailableTokensFrom = dataState.tokensDataState?.fromGroup?.available?.isNotEmpty() ?: false
+        val isAnyAvailableTokens = isAnyAvailableTokensTo || isAnyAvailableTokensFrom
+        analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened(availableTokens = isAnyAvailableTokens))
+    }
+
     private fun initTokens() {
-        // new flow
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.getTokensDataState(initialCryptoCurrency)
@@ -190,6 +193,7 @@ internal class SwapViewModel @Inject constructor(
             tokensDataState = state,
         )
         if (selectedCurrency == null) {
+            analyticsEventHandler.send(SwapEvents.NoticeNoAvailableTokensToSwap)
             uiState = stateBuilder.createNoAvailableTokensToSwapState(
                 uiStateHolder = uiState,
                 fromToken = fromCurrencyStatus,
@@ -317,6 +321,14 @@ internal class SwapViewModel @Inject constructor(
                     isManyProviders = dataState.lastLoadedSwapStates.size > 1,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                 )
+                if (uiState.warnings.any { it is SwapWarning.UnableToCoverFeeWarning }) {
+                    analyticsEventHandler.send(
+                        SwapEvents.NoticeNotEnoughFee(
+                            token = initialCryptoCurrency.symbol,
+                            blockchain = fromToken.currency.network.name,
+                        ),
+                    )
+                }
             }
             is SwapState.EmptyAmountState -> {
                 uiState = stateBuilder.createQuotesEmptyAmountState(
@@ -332,8 +344,19 @@ internal class SwapViewModel @Inject constructor(
                     toToken = dataState.toCryptoCurrency,
                     dataError = state.error,
                 )
+                sendErrorAnalyticsEvent(state.error, provider)
             }
         }
+    }
+
+    private fun sendErrorAnalyticsEvent(error: DataError, provider: SwapProvider) {
+        analyticsEventHandler.send(
+            SwapEvents.NoticeProviderError(
+                token = initialCryptoCurrency.symbol,
+                provider = provider,
+                errorCode = error.code,
+            ),
+        )
     }
 
     private fun updateLoadedQuotes(state: Map<SwapProvider, SwapState>): Pair<SwapProvider, SwapState> {
@@ -438,15 +461,22 @@ internal class SwapViewModel @Inject constructor(
                                     if (txHash.isNotEmpty()) {
                                         swapRouter.openUrl(url)
                                     }
+                                    analyticsEventHandler.send(
+                                        event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol),
+                                    )
                                 },
                                 onStatusClick = {
                                     val txExternalUrl = it.txExternalUrl
                                     if (!txExternalUrl.isNullOrBlank()) {
                                         swapRouter.openUrl(txExternalUrl)
+                                        analyticsEventHandler.send(
+                                            event = SwapEvents.ButtonStatus(initialCryptoCurrency.symbol),
+                                        )
                                     }
                                 },
                             )
-                            analyticsEventHandler.send(SwapEvents.SwapInProgressScreen)
+                            sendSuccessEvent()
+
                             swapRouter.openScreen(SwapNavScreen.Success)
                         }
                         is TxState.UserCancelled -> {
@@ -466,6 +496,22 @@ internal class SwapViewModel @Inject constructor(
                     makeDefaultAlert()
                 }
         }
+    }
+
+    private fun sendSuccessEvent() {
+        val provider = dataState.selectedProvider ?: return
+        val fee = dataState.selectedFee?.feeType ?: return
+        val sendToken = dataState.fromCryptoCurrency?.currency?.symbol ?: return
+        val toToken = dataState.toCryptoCurrency?.currency?.symbol ?: return
+
+        analyticsEventHandler.send(
+            SwapEvents.SwapInProgressScreen(
+                provider = provider,
+                commission = fee,
+                sendToken = sendToken,
+                receiveToken = toToken,
+            ),
+        )
     }
 
     private fun givePermissionsToSwap() {
@@ -563,9 +609,9 @@ internal class SwapViewModel @Inject constructor(
                 it.currencyStatus.currency.id.value == id
             }
         }
-        analyticsEventHandler.send(
-            event = SwapEvents.SearchTokenClicked(currencySymbol = foundToken?.currencyStatus?.currency?.symbol),
-        )
+        foundToken?.currencyStatus?.currency?.symbol?.let {
+            analyticsEventHandler.send(SwapEvents.ChooseTokenScreenResult(tokenChosen = true, token = it))
+        }
 
         if (foundToken != null) {
             val fromToken: CryptoCurrencyStatus
@@ -702,6 +748,9 @@ internal class SwapViewModel @Inject constructor(
                 if (bottomSheet != null && bottomSheet.isShow) {
                     uiState = stateBuilder.dismissBottomSheet(uiState)
                 } else {
+                    if (swapRouter.currentScreen == SwapNavScreen.SelectToken) {
+                        analyticsEventHandler.send(SwapEvents.ChooseTokenScreenResult(tokenChosen = false))
+                    }
                     swapRouter.back()
                 }
                 onSearchEntered("")
@@ -752,6 +801,7 @@ internal class SwapViewModel @Inject constructor(
                 }
             },
             onProviderClick = { providerId ->
+                analyticsEventHandler.send(SwapEvents.ProviderClicked)
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(states)
                 val unavailableProviders = getUnavailableProvidersFor(dataState.lastLoadedSwapStates)
@@ -768,6 +818,7 @@ internal class SwapViewModel @Inject constructor(
                 val swapState = dataState.lastLoadedSwapStates[provider]
                 val fromToken = dataState.fromCryptoCurrency
                 if (provider != null && swapState != null && fromToken != null) {
+                    analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
                     uiState = stateBuilder.updateSelectedProvider(uiState, provider.providerId)
                     setupLoadedState(
                         provider = provider,
