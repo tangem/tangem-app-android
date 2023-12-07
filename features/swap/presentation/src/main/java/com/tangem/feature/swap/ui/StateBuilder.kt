@@ -780,9 +780,11 @@ internal class StateBuilder(
         unavailableProviders: List<SwapProvider>,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
-        val availableProvidersStates = providersStates.entries.mapNotNull {
-            it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
-        }
+        val availableProvidersStates = providersStates.entries
+            .mapNotNull {
+                it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
+            }
+            .sortedWith(ProviderPercentDiffComparator)
         val unavailableProviderStates = unavailableProviders.map {
             it.convertToUnavailableProviderState(
                 alertText = resourceReference(R.string.express_provider_not_available),
@@ -1024,7 +1026,7 @@ internal class StateBuilder(
             subtitle = stringReference(rateString),
             additionalBadge = badge,
             selectionType = selectionType,
-            percentLowerThenBest = null,
+            percentLowerThenBest = ZERO_PERCENT,
             onProviderClick = onProviderClick,
         )
     }
@@ -1053,7 +1055,7 @@ internal class StateBuilder(
             subtitle = stringReference(rateString),
             additionalBadge = additionalBadge,
             selectionType = selectionType,
-            percentLowerThenBest = pricesLowerBest[this],
+            percentLowerThenBest = pricesLowerBest[this] ?: ZERO_PERCENT,
             onProviderClick = onProviderClick,
         )
     }
@@ -1087,7 +1089,7 @@ internal class StateBuilder(
             selectionType = selectionType,
             subtitle = alertText,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
-            percentLowerThenBest = null,
+            percentLowerThenBest = ZERO_PERCENT,
             onProviderClick = onProviderClick,
         )
     }
@@ -1128,5 +1130,6 @@ internal class StateBuilder(
         private const val HUNDRED_PERCENTS = 100
         private const val UNKNOWN_AMOUNT_SIGN = "—"
         private const val MAX_DECIMALS_TO_SHOW = 8
+        private const val ZERO_PERCENT = 0f
     }
 }
