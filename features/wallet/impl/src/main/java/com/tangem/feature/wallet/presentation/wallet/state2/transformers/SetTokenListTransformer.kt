@@ -29,14 +29,14 @@ internal class SetTokenListTransformer(
                     manageTokensButtonConfig = createManageTokensButtonConfig(),
                 )
             }
-            is WalletState.MultiCurrency.Locked,
-            -> {
-                Timber.e("Impossible to load tokens list for locked wallet")
+            is WalletState.MultiCurrency.Locked -> {
+                Timber.w("Impossible to load tokens list for locked wallet")
                 prevState
             }
+            is WalletState.Visa,
             is WalletState.SingleCurrency,
             -> {
-                Timber.e("Impossible to load tokens list for single-currency wallet")
+                Timber.w("Impossible to load tokens list for single-currency wallet")
                 prevState
             }
         }
