@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.OneTimeAnalyticsEvent
+import com.tangem.domain.wallets.models.UserWalletId
 
 sealed class WalletScreenAnalyticsEvent {
 
@@ -10,6 +12,16 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
         error: Throwable? = null,
     ) : AnalyticsEvent(category = "Basic", event = event, params = params, error = error) {
+
+        class WalletToppedUp(userWalletId: UserWalletId, walletType: AnalyticsParam.WalletType) :
+            Basic(
+                event = "Topped up",
+                params = mapOf(AnalyticsParam.CURRENCY to walletType.value),
+            ),
+            OneTimeAnalyticsEvent {
+
+            override val oneTimeEventId: String = id + userWalletId.stringValue
+        }
 
         object WalletOpened : Basic(event = "Wallet Opened")
 
