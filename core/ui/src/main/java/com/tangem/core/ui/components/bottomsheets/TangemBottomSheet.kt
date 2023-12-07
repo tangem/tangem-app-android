@@ -33,7 +33,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
             sheetState = sheetState,
             containerColor = contentColor,
             shape = TangemTheme.shapes.bottomSheetLarge,
-            dragHandle = { TangemBottomSheetDraggableHeader() },
+            dragHandle = { TangemBottomSheetDraggableHeader(contentColor) },
         ) {
             content(config.content)
         }
