@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state2.utils
 
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 
 internal inline fun UserWallet.createStateByWalletType(
     multiCurrencyCreator: () -> WalletState.MultiCurrency,
