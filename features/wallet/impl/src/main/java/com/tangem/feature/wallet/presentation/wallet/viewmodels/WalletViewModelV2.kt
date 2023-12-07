@@ -20,8 +20,8 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent.DemonstrateWalletsScrollPreview.Direction
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
@@ -40,7 +40,7 @@ import kotlin.properties.Delegates
 @Suppress("LongParameterList")
 @HiltViewModel
 internal class WalletViewModelV2 @Inject constructor(
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntentsV2,
     private val walletEventSender: WalletEventSender,
     private val walletsUpdateActionResolver: WalletsUpdateActionResolverV2,
