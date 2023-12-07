@@ -10,7 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyS
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItemsV2
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState as WalletStateV2
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState as WalletStateV2
 
 /**
  * Wallet content
