@@ -878,9 +878,8 @@ internal class SwapViewModel @Inject constructor(
             if (it.key != bestRateEntry.key) {
                 val amount = it.value.toTokenInfo.tokenAmount.value
                 val percentDiff = BigDecimal.ONE.minus(
-                    amount.divide(bestRate, RoundingMode.HALF_UP)
-                        .multiply(hundredPercent),
-                )
+                    amount.divide(bestRate, RoundingMode.HALF_UP),
+                ).multiply(hundredPercent)
                 percentDiff.setScale(2, RoundingMode.HALF_UP).toFloat().absoluteValue
             } else {
                 null
