@@ -95,7 +95,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         fromCryptoSymbol = fromCurrency.currency.symbol,
                         fromFiatAmount = getFiatAmount(fromFiatAmount),
                         fromCurrencyIcon = iconStateConverter.convert(fromCurrency),
-                        onClick = { clickIntents.onSwapTransactionClick(transaction.txId, transaction.status?.status) },
+                        onClick = { clickIntents.onSwapTransactionClick(transaction.txId) },
                         onGoToProviderClick = { url ->
                             analyticsEventsHandlerProvider().send(
                                 TokenExchangeAnalyticsEvent.GoToProviderStatus(cryptoCurrency.symbol),
@@ -130,9 +130,6 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         if (txUrl == null) return null
         return when (status) {
             ExchangeStatus.Failed -> {
-                analyticsEventsHandlerProvider().send(
-                    TokenExchangeAnalyticsEvent.Fail(cryptoCurrency.symbol),
-                )
                 ExchangeStatusNotifications.Failed {
                     analyticsEventsHandlerProvider().send(
                         TokenExchangeAnalyticsEvent.GoToProviderFail(cryptoCurrency.symbol),
@@ -141,9 +138,6 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 }
             }
             ExchangeStatus.Verifying -> {
-                analyticsEventsHandlerProvider().send(
-                    TokenExchangeAnalyticsEvent.Verification(cryptoCurrency.symbol),
-                )
                 ExchangeStatusNotifications.NeedVerification {
                     analyticsEventsHandlerProvider().send(
                         TokenExchangeAnalyticsEvent.GoToProviderKYC(cryptoCurrency.symbol),
