@@ -97,23 +97,25 @@ internal class WalletViewModelV2 @Inject constructor(
             shouldSaveUserWalletsUseCase()
                 .conflate()
                 .distinctUntilChanged()
-                .collectLatest { shouldSaveUserWallet ->
-                    getWalletsUseCase()
-                        .distinctUntilChanged()
-                        .conflate()
-                        .map {
-                            walletsUpdateActionResolver.resolve(
-                                wallets = it,
-                                currentState = stateHolder.value,
-                                canSaveWallets = shouldSaveUserWallet,
-                            )
-                        }
-                        .onEach(::updateWallets)
-                        .flowOn(dispatchers.main)
-                        .launchIn(viewModelScope)
-                        .saveIn(walletsUpdateJobHolder)
-                }
+                .collectLatest(::subscribeToUserWalletsUpdates)
         }
+    }
+
+    private fun subscribeToUserWalletsUpdates(shouldSaveUserWallet: Boolean) {
+        getWalletsUseCase()
+            .distinctUntilChanged()
+            .conflate()
+            .map {
+                walletsUpdateActionResolver.resolve(
+                    wallets = it,
+                    currentState = stateHolder.value,
+                    canSaveWallets = shouldSaveUserWallet,
+                )
+            }
+            .onEach(::updateWallets)
+            .flowOn(dispatchers.main)
+            .launchIn(viewModelScope)
+            .saveIn(walletsUpdateJobHolder)
     }
 
     private fun subscribeOnBalanceHiding() {
