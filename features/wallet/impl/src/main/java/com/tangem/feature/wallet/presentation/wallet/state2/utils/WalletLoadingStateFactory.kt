@@ -9,11 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.ManageTokensButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState.Visa.BalancesAndLimitsBlockState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState.Visa.DepositButtonState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.*
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
