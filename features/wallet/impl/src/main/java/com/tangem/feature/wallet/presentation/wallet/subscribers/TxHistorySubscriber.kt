@@ -21,7 +21,6 @@ import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletCl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlin.coroutines.CoroutineContext
 
 typealias MaybeTxHistoryCount = Either<TxHistoryStateError, Int>
 typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>
@@ -35,12 +34,9 @@ internal class TxHistorySubscriber(
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
-) : WalletSubscriber<PagingData<TxHistoryItem>>(name = "tx_history") {
+) : WalletSubscriber() {
 
-    override fun create(
-        coroutineScope: CoroutineScope,
-        uiDispatcher: CoroutineContext,
-    ): Flow<PagingData<TxHistoryItem>> {
+    override fun create(coroutineScope: CoroutineScope): Flow<PagingData<TxHistoryItem>> {
         return flow {
             getPrimaryCurrencyStatusUpdatesUseCase.collectLatest(userWalletId = userWallet.walletId) { status ->
                 val maybeTxHistoryItemCount = txHistoryItemsCountUseCase(
