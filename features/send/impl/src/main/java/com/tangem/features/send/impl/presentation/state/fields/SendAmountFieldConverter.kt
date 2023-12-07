@@ -24,7 +24,7 @@ internal class SendAmountFieldConverter(
             ),
             placeholder = TextReference.Str(DEFAULT_VALUE),
             isError = false,
-            error = TextReference.Res(R.string.send_insufficient_funds),
+            error = TextReference.Res(R.string.swapping_insufficient_funds),
         )
     }
 
