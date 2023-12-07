@@ -12,7 +12,7 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetPrimaryCurrencyTransformer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +25,7 @@ import java.math.BigDecimal
 internal class PrimaryCurrencySubscriber(
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
