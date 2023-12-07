@@ -9,4 +9,5 @@ import com.tangem.feature.swap.domain.models.SwapAmount
  */
 data class QuoteModel(
     val toTokenAmount: SwapAmount,
+    val allowanceContract: String?,
 )
