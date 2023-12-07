@@ -84,5 +84,10 @@ sealed class Settings(
             event = "Main Currency Changed",
             params = mapOf("Currency Type" to currencyType),
         )
+
+        class ThemeSwitched(theme: AnalyticsParam.AppTheme) : AppSettings(
+            event = "App Theme Switched",
+            params = mapOf("State" to theme.value),
+        )
     }
 }
