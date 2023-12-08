@@ -51,6 +51,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.analytics)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
@@ -74,6 +75,7 @@ dependencies {
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
+    implementation(projects.data.analytics)
 
     /** Features */
     implementation(projects.features.onboarding)
