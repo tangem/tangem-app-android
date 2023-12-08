@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.models.domain
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
 import com.tangem.feature.swap.domain.models.ui.TxFee
 
@@ -15,7 +16,8 @@ import com.tangem.feature.swap.domain.models.ui.TxFee
 data class PermissionOptions(
     val approveData: RequestApproveStateData,
     val forTokenContractAddress: String,
-    val fromToken: Currency,
+    val fromToken: CryptoCurrency,
+    val spenderAddress: String,
     val approveType: SwapApproveType,
     val txFee: TxFee,
 )
