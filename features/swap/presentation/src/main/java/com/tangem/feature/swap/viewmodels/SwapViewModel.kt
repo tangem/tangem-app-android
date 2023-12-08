@@ -791,7 +791,7 @@ internal class SwapViewModel @Inject constructor(
                 val fromToken = dataState.fromCryptoCurrency ?: return@UiActions
                 val amountToSwap = dataState.amount ?: return@UiActions
                 val selectedProvider = dataState.selectedProvider ?: return@UiActions
-                uiState = stateBuilder.updateSelectedFeeBottomSheet(uiState, it.feeType)
+                uiState = stateBuilder.dismissBottomSheet(uiState)
                 dataState = dataState.copy(selectedFee = it)
                 viewModelScope.launch(dispatchers.io) {
                     val updatedState = swapInteractor.updateQuotesStateWithSelectedFee(
@@ -823,7 +823,7 @@ internal class SwapViewModel @Inject constructor(
                 val fromToken = dataState.fromCryptoCurrency
                 if (provider != null && swapState != null && fromToken != null) {
                     analyticsEventHandler.send(SwapEvents.ProviderChosen(provider))
-                    uiState = stateBuilder.updateSelectedProvider(uiState, provider.providerId)
+                    uiState = stateBuilder.dismissBottomSheet(uiState)
                     setupLoadedState(
                         provider = provider,
                         state = swapState,
@@ -915,15 +915,12 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun getAllProviders(): List<SwapProvider> {
-        dataState.tokensDataState?.let { data ->
-            val allProviders =
-                data.fromGroup.available.flatMap { it.providers } + data.toGroup.available.flatMap { it.providers }
-            return allProviders.distinct()
-        } ?: return emptyList()
+        return dataState.tokensDataState?.allProviders ?: emptyList()
     }
 
     private fun getUnavailableProvidersFor(state: Map<SwapProvider, SwapState>): List<SwapProvider> {
-        return getAllProviders().filterNot { it in state }
+        val availableProviders = state.keys.map { it.providerId }
+        return getAllProviders().filterNot { availableProviders.contains(it.providerId) }
     }
 
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
