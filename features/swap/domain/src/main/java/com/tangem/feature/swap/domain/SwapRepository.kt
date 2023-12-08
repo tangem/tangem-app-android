@@ -1,26 +1,33 @@
 package com.tangem.feature.swap.domain
 
+import arrow.core.Either
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
-import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.QuoteModel
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.*
 import java.math.BigDecimal
 
 interface SwapRepository {
+
+    suspend fun getPairs(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): List<SwapPairLeast>
 
     suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
 
     suspend fun getExchangeableTokens(networkId: String): List<Currency>
 
+    suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel>
+
+    @Suppress("LongParameterList")
     suspend fun findBestQuote(
-        networkId: String,
-        fromTokenAddress: String,
-        toTokenAddress: String,
-        amount: String,
+        fromContractAddress: String,
+        fromNetwork: String,
+        toContractAddress: String,
+        toNetwork: String,
+        fromAmount: String,
+        fromDecimals: Int,
+        toDecimals: Int,
+        providerId: String,
+        rateType: RateType,
     ): AggregatedSwapDataModel<QuoteModel>
 
     /**
@@ -30,24 +37,13 @@ interface SwapRepository {
      */
     suspend fun addressForTrust(networkId: String): String
 
-    @Suppress("LongParameterList")
-    suspend fun prepareSwapTransaction(
-        networkId: String,
-        fromTokenAddress: String,
-        toTokenAddress: String,
-        amount: String,
-        fromWalletAddress: String,
-        slippage: Int,
-    ): AggregatedSwapDataModel<SwapDataModel>
-
     /**
      * Returns a tangem fee for swap in percents
      * Example: 0.35%
      */
     fun getTangemFee(): Double
 
-    suspend fun getCryptoCurrency(userWallet: UserWallet, currency: Currency, network: Network): CryptoCurrency?
-
+    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun getAllowance(
         userWalletId: UserWalletId,
@@ -55,14 +51,33 @@ interface SwapRepository {
         derivationPath: String?,
         tokenDecimalCount: Int,
         tokenAddress: String,
+        spenderAddress: String,
     ): BigDecimal
 
+    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun getApproveData(
         userWalletId: UserWalletId,
         networkId: String,
         derivationPath: String?,
-        currency: Currency,
+        currency: CryptoCurrency,
         amount: BigDecimal?,
+        spenderAddress: String,
     ): String
+
+    @Suppress("LongParameterList")
+    suspend fun getExchangeData(
+        fromContractAddress: String,
+        fromNetwork: String,
+        toContractAddress: String,
+        toNetwork: String,
+        fromAmount: String,
+        fromDecimals: Int,
+        toDecimals: Int,
+        providerId: String,
+        rateType: RateType,
+        toAddress: String,
+    ): AggregatedSwapDataModel<SwapDataModel>
+
+    fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 }
