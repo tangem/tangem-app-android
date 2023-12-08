@@ -1,5 +1,6 @@
 package com.tangem.core.ui.utils
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.NumberFormat
@@ -22,6 +23,10 @@ object BigDecimalFormatter {
         }
 
         return formatter.format(cryptoAmount) + "\u2009$cryptoCurrency"
+    }
+
+    fun formatCryptoAmount(cryptoAmount: BigDecimal?, cryptoCurrency: CryptoCurrency): String {
+        return formatCryptoAmount(cryptoAmount, cryptoCurrency.symbol, cryptoCurrency.decimals)
     }
 
     fun formatFiatAmount(

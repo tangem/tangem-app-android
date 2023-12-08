@@ -13,6 +13,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -24,6 +25,7 @@ import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -31,16 +33,19 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
@@ -50,7 +55,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @HiltViewModel
 internal class TokenDetailsViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
@@ -67,6 +72,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val swapRepository: SwapRepository,
+    private val swapTransactionRepository: SwapTransactionRepository,
+    private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -85,7 +95,10 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
     private val warningsJobHolder = JobHolder()
+    private val swapTxJobHolder = JobHolder()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
+
+    private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -96,6 +109,22 @@ internal class TokenDetailsViewModel @Inject constructor(
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )
+
+    private val exchangeStatusFactory by lazy {
+        ExchangeStatusFactory(
+            swapTransactionRepository = swapTransactionRepository,
+            swapRepository = swapRepository,
+            getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            swapTransactionStatusStore = swapTransactionStatusStore,
+            dispatchers = dispatchers,
+            clickIntents = this,
+            appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
+            analyticsEventsHandlerProvider = Provider { analyticsEventsHandler },
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+        )
+    }
 
     var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
         private set
@@ -108,8 +137,14 @@ internal class TokenDetailsViewModel @Inject constructor(
         handleBalanceHiding(owner)
     }
 
+    override fun onCleared() {
+        swapTxStatusTaskScheduler.cancelTask()
+        super.onCleared()
+    }
+
     private fun updateContent() {
         subscribeOnCurrencyStatusUpdates()
+        subscribeOnExchangeTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
     }
 
@@ -173,6 +208,33 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .flowOn(dispatchers.io)
                 .launchIn(viewModelScope)
                 .saveIn(marketPriceJobHolder)
+        }
+    }
+
+    private fun subscribeOnExchangeTransactionsUpdates() {
+        viewModelScope.launch(dispatchers.io) {
+            swapTxStatusTaskScheduler.cancelTask()
+            exchangeStatusFactory.invoke()
+                .onEach { swapTxs ->
+                    swapTxStatusTaskScheduler.scheduleTask(
+                        viewModelScope,
+                        PeriodicTask(
+                            delay = EXCHANGE_STATUS_UPDATE_DELAY,
+                            task = {
+                                runCatching(dispatchers.io) {
+                                    exchangeStatusFactory.updateSwapTxStatuses(swapTxs)
+                                }
+                            },
+                            onSuccess = { updatedTxs ->
+                                uiState = uiState.copy(swapTxs = updatedTxs)
+                            },
+                            onError = {},
+                        ),
+                    )
+                }
+                .flowOn(dispatchers.io)
+                .launchIn(viewModelScope)
+                .saveIn(swapTxJobHolder)
         }
     }
 
@@ -460,6 +522,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                         refresh = true,
                         showItemsLoading = uiState.txHistoryState !is TxHistoryState.Content,
                     )
+                    subscribeOnExchangeTransactionsUpdates()
                 },
             ).awaitAll()
             uiState = stateFactory.getRefreshedState()
@@ -472,5 +535,19 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onCloseRentInfoNotification() {
         uiState = stateFactory.getStateWithRemovedRentNotification()
+    }
+
+    override fun onSwapTransactionClick(txId: String) {
+        val swapTxState = uiState.swapTxs.first { it.txId == txId }
+        analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.CexTxStatusOpened(cryptoCurrency.symbol))
+        uiState = stateFactory.getStateWithExchangeStatusBottomSheet(swapTxState)
+    }
+
+    override fun onGoToProviderClick(url: String) {
+        router.openUrl(url)
+    }
+
+    private companion object {
+        const val EXCHANGE_STATUS_UPDATE_DELAY = 10_000L
     }
 }

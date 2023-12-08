@@ -154,7 +154,7 @@ class TopUpController(
 
         if (cardBalanceState.isToppedUp()) {
             topupWalletStorage.save(topupInfo.copy(cardBalanceState = DataSourceTopupInfo.CardBalanceState.Full))
-            TopUpEventConverter().convert(cardTypesResolver)?.let {
+            TopUpEventConverter().convert(value = userWalletId to cardTypesResolver)?.let {
                 Analytics.send(it)
             }
         }
