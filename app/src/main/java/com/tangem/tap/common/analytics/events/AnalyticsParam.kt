@@ -1,5 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.features.details.redux.SecurityOption
 
 sealed class AnalyticsParam {
@@ -14,7 +15,7 @@ sealed class AnalyticsParam {
 
     // MultiCurrency or CurrencyType
     sealed class CardCurrency(val value: String) {
-        object MultiCurrency : CardCurrency("Multicurrency")
+        object MultiCurrency : CardCurrency(value = "Multicurrency")
         class SingleCurrency(type: CurrencyType) : CardCurrency(type.value)
     }
 
@@ -137,6 +138,22 @@ sealed class AnalyticsParam {
         object PrivateKey : WalletCreationType(value = "Private Key")
         object NewSeed : WalletCreationType(value = "New Seed")
         object SeedImport : WalletCreationType(value = "Seed Import")
+    }
+
+    sealed class AppTheme(val value: String) {
+        object System : AppTheme("System")
+        object Dark : AppTheme("Dark")
+        object Light : AppTheme("Light")
+
+        companion object {
+            fun fromAppThemeMode(mode: AppThemeMode): AppTheme {
+                return when (mode) {
+                    AppThemeMode.FORCE_DARK -> Dark
+                    AppThemeMode.FORCE_LIGHT -> Light
+                    AppThemeMode.FOLLOW_SYSTEM -> System
+                }
+            }
+        }
     }
 
     companion object Key {
