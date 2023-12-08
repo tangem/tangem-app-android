@@ -66,6 +66,7 @@ internal fun WalletEventEffect(
                         }
                         .addOnFailureListener(Timber::e)
                 }
+                is WalletEvent.DemonstrateWalletsScrollPreview -> Unit
             }
         },
     )
