@@ -9,6 +9,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -31,6 +32,28 @@ fun WarningCard(title: String, description: String, icon: @Composable (() -> Uni
                 title = title,
                 description = description,
                 icon = icon,
+            )
+        },
+    )
+}
+
+/**
+ * A card with a warning icon to the left and title without description shown to the right of it.
+ *
+ * @param title title of the warning in bold
+ *
+ * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=290%3A217&t=yMepJZTRh5bLkOoJ-1"
+ * >Figma component</a>
+ */
+@Composable
+fun WarningCardTitleOnly(title: String, icon: @Composable (() -> Unit)? = null) {
+    WarningCardMaterial3Style(
+        content = {
+            WarningBody(
+                title = title,
+                description = null,
+                icon = icon,
+                iconBackground = TangemTheme.colors.button.disabled,
             )
         },
     )
@@ -105,7 +128,8 @@ fun RefreshableWaringCard(
 @Composable
 private fun WarningBody(
     title: String,
-    description: String,
+    description: String?,
+    iconBackground: Color = TangemTheme.colors.background.secondary,
     icon: @Composable (() -> Unit)? = null,
     additionalContent: @Composable () -> Unit = {},
 ) {
@@ -119,6 +143,7 @@ private fun WarningBody(
                 contentDescription = null,
             )
         },
+        iconBackground = iconBackground,
     )
 }
 
@@ -129,6 +154,20 @@ private fun WarningCardSurface(onClick: (() -> Unit)? = null, content: @Composab
         shape = RoundedCornerShape(TangemTheme.dimens.size12),
         backgroundColor = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
+        onClick = onClick ?: {},
+        enabled = onClick != null,
+    ) {
+        content()
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun WarningCardMaterial3Style(onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(TangemTheme.dimens.radius16),
+        backgroundColor = TangemTheme.colors.button.disabled,
+        elevation = TangemTheme.dimens.elevation0,
         onClick = onClick ?: {},
         enabled = onClick != null,
     ) {
