@@ -1,20 +1,36 @@
 package com.tangem.feature.swap.domain.models
 
-sealed class DataError {
-    object NoError : DataError()
-    data class UnknownError(val message: String) : DataError()
-    object InsufficientLiquidity : DataError()
-}
+import java.math.BigDecimal
 
-fun mapErrors(error: String?): DataError {
-    return if (error == null) {
-        DataError.NoError
-    } else {
-        when (error) {
-            INSUFFICIENT_LIQUIDITY_ERROR -> DataError.InsufficientLiquidity
-            else -> DataError.UnknownError(error)
-        }
+sealed class DataError {
+
+    abstract val code: Int
+
+    data class BadRequest(override val code: Int) : DataError()
+
+    data class ExchangeProviderNotFoundError(override val code: Int) : DataError()
+
+    data class ExchangeProviderNotActiveError(override val code: Int) : DataError()
+
+    data class ExchangeProviderNotAvailableError(override val code: Int) : DataError()
+
+    data class ExchangeNotPossibleError(override val code: Int) : DataError()
+
+    data class ExchangeTooSmallAmountError(override val code: Int, val amount: SwapAmount) : DataError()
+
+    data class ExchangeNotEnoughAllowanceError(override val code: Int, val currentAllowance: BigDecimal) : DataError()
+
+    data class ExchangeNotEnoughBalanceError(override val code: Int) : DataError()
+
+    data class ExchangeInvalidAddressError(override val code: Int) : DataError()
+
+    data class ExchangeInvalidFromDecimalsError(
+        override val code: Int,
+        val receivedFromDecimals: Int,
+        val expressFromDecimals: Int,
+    ) : DataError()
+
+    object UnknownError : DataError() {
+        override val code: Int = -1
     }
 }
-
-private const val INSUFFICIENT_LIQUIDITY_ERROR = "insufficient liquidity"
