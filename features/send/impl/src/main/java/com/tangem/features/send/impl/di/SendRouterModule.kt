@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.di
 
+import com.tangem.core.navigation.ReduxNavController
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.DefaultSendRouter
 import dagger.Module
@@ -17,7 +18,7 @@ internal object SendRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideSendRouter(): SendRouter {
-        return DefaultSendRouter()
+    fun provideSendRouter(reduxNavController: ReduxNavController): SendRouter {
+        return DefaultSendRouter(reduxNavController)
     }
 }
