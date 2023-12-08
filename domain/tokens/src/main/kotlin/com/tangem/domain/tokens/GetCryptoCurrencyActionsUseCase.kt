@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens
 
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -32,10 +33,7 @@ class GetCryptoCurrencyActionsUseCase(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    suspend operator fun invoke(
-        userWallet: UserWallet,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): Flow<TokenActionsState> {
+    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Flow<TokenActionsState> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
@@ -43,19 +41,26 @@ class GetCryptoCurrencyActionsUseCase(
             userWalletId = userWallet.walletId,
         )
         val networkId = cryptoCurrencyStatus.currency.network.id
-        val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
-            operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
-        } else if (!userWallet.isMultiCurrency) {
-            operations.getPrimaryCurrencyStatusFlow()
-        } else {
-            operations.getNetworkCoinFlow(networkId, cryptoCurrencyStatus.currency.network.derivationPath)
-        }
-        return networkFlow.mapLatest { maybeCoinStatus ->
-            createTokenActionsState(
-                userWalletId = userWallet.walletId,
-                coinStatus = maybeCoinStatus.getOrNull(),
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-            )
+
+        return flow {
+            val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
+                operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+            } else if (!userWallet.isMultiCurrency) {
+                operations.getPrimaryCurrencyStatusFlow()
+            } else {
+                operations.getNetworkCoinFlow(networkId, cryptoCurrencyStatus.currency.network.derivationPath)
+            }
+
+            val flow = networkFlow.mapLatest { maybeCoinStatus ->
+                createTokenActionsState(
+                    userWalletId = userWallet.walletId,
+                    coinStatus = maybeCoinStatus.getOrNull(),
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
+                )
+            }
+
+            emitAll(flow)
         }.flowOn(dispatchers.io)
     }
 
@@ -63,11 +68,17 @@ class GetCryptoCurrencyActionsUseCase(
         userWalletId: UserWalletId,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        cardTypesResolver: CardTypesResolver,
     ): TokenActionsState {
         return TokenActionsState(
             walletId = userWalletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            states = createListOfActions(userWalletId, coinStatus, cryptoCurrencyStatus),
+            states = createListOfActions(
+                userWalletId,
+                coinStatus,
+                cryptoCurrencyStatus,
+                cardTypesResolver,
+            ),
         )
     }
 
@@ -79,6 +90,7 @@ class GetCryptoCurrencyActionsUseCase(
         userWalletId: UserWalletId,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        cardTypesResolver: CardTypesResolver,
     ): List<TokenActionsState.ActionState> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
@@ -94,12 +106,8 @@ class GetCryptoCurrencyActionsUseCase(
         // copy address
         activeList.add(TokenActionsState.ActionState.CopyAddress(true))
 
-        // buy
-        if (rampManager.availableForBuy(cryptoCurrency)) {
-            activeList.add(TokenActionsState.ActionState.Buy(true))
-        } else {
-            disabledList.add(TokenActionsState.ActionState.Buy(false))
-        }
+        // receive
+        activeList.add(TokenActionsState.ActionState.Receive(true))
 
         // send
         if (isSendDisabled(cryptoCurrencyStatus = cryptoCurrencyStatus, coinStatus = coinStatus)) {
@@ -108,14 +116,21 @@ class GetCryptoCurrencyActionsUseCase(
             activeList.add(TokenActionsState.ActionState.Send(true))
         }
 
-        // receive
-        activeList.add(TokenActionsState.ActionState.Receive(true))
-
+        val isMulticurrencyWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
         // swap
-        if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency.id)) {
+        if (isMulticurrencyWallet &&
+            marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency)
+        ) {
             activeList.add(TokenActionsState.ActionState.Swap(true))
         } else {
             disabledList.add(TokenActionsState.ActionState.Swap(false))
+        }
+
+        // buy
+        if (rampManager.availableForBuy(cryptoCurrency)) {
+            activeList.add(TokenActionsState.ActionState.Buy(true))
+        } else {
+            disabledList.add(TokenActionsState.ActionState.Buy(false))
         }
 
         // sell
