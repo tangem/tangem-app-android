@@ -45,4 +45,5 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.timber)
     implementation(deps.retrofit) // For HttpException
+    implementation(deps.androidx.paging.runtime)
 }

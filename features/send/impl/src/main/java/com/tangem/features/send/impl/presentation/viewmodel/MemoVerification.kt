@@ -7,6 +7,7 @@ import java.math.BigInteger
 
 internal fun validateMemo(memo: String, cryptoCurrency: CryptoCurrency?): Boolean {
     if (cryptoCurrency == null) return false
+    if (memo.isEmpty()) return true
     return when (cryptoCurrency.network.id.value) {
         Blockchain.XRP.id -> {
             val tag = memo.toLongOrNull()
@@ -40,7 +41,12 @@ private fun isAssignableValue(value: String): Boolean {
     }
 }
 
-private enum class XlmMemoType { TEXT, ID }
+fun determineXlmMemoType(value: String): XlmMemoType = when {
+    value.isNotEmpty() && value.isDigitsOnly() -> XlmMemoType.ID
+    else -> XlmMemoType.TEXT
+}
+
+enum class XlmMemoType { TEXT, ID }
 
 private const val XRP_TAG_MAX_NUMBER = 4294967295
 private const val XLM_MEMO_MAX_LENGTH = 28
