@@ -60,7 +60,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     override suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
         currencyList: List<CryptoCurrency>,
-    ): List<SwapPairLeast> {
+    ): PairsWithProviders {
         return withContext(coroutineDispatcher.io) {
             val initial = NetworkLeastTokenInfo(
                 contractAddress = initialCurrency.contractAddress,
