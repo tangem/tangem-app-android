@@ -14,10 +14,15 @@ dependencies {
 
     implementation(projects.core.utils)
 
+    /** Tangem SDKs */
+    implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
 
+    implementation(projects.domain.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.demo)
+    implementation(projects.domain.card)
 }

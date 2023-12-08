@@ -17,4 +17,16 @@ internal sealed class WalletEvent {
     data class CopyAddress(val address: String, val toast: TextReference) : WalletEvent()
 
     data class RateApp(val onDismissClick: () -> Unit) : WalletEvent()
+
+    data class DemonstrateWalletsScrollPreview(val direction: Direction) : WalletEvent() {
+
+        enum class Direction {
+
+            /** 1 -> 2 */
+            LEFT,
+
+            /** 1 <- 2 */
+            RIGHT,
+        }
+    }
 }
