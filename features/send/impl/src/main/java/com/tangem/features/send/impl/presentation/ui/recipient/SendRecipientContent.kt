@@ -141,7 +141,8 @@ private fun LazyListScope.recipientListItem(
                     ListItemWithIcon(
                         title = item.title.resolveReference(),
                         subtitle = item.subtitle.resolveReference(),
-                        info = item.info?.let { ", ${it.resolveReference()}" },
+                        info = item.timestamp?.resolveReference(),
+                        subtitleEndOffset = item.subtitleEndOffset,
                         subtitleIconRes = item.subtitleIconRes,
                         modifier = Modifier
                             .then(
