@@ -141,22 +141,20 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrencyStatus.currency.symbol),
         )
 
-        viewModelScope.launch(dispatchers.main) {
-            analyticsEventHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
+        analyticsEventHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
 
-            stateHolder.update(
-                OpenBottomSheetTransformer(
-                    userWalletId = userWalletId,
-                    content = createReceiveBottomSheetContent(
-                        currency = cryptoCurrencyStatus.currency,
-                        addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return@launch,
-                    ),
-                    onDismissBottomSheet = {
-                        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
-                    },
+        stateHolder.update(
+            OpenBottomSheetTransformer(
+                userWalletId = userWalletId,
+                content = createReceiveBottomSheetContent(
+                    currency = cryptoCurrencyStatus.currency,
+                    addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return,
                 ),
-            )
-        }
+                onDismissBottomSheet = {
+                    stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
+                },
+            ),
+        )
     }
 
     private fun createReceiveBottomSheetContent(
