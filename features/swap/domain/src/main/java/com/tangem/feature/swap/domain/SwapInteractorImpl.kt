@@ -83,10 +83,7 @@ internal class SwapInteractorImpl @Inject constructor(
             }
 
         if (walletCurrencyStatusesExceptInitial.isEmpty()) {
-            return TokensDataStateExpress(
-                fromGroup = CurrenciesGroup(emptyList(), emptyList()),
-                toGroup = CurrenciesGroup(emptyList(), emptyList()),
-            )
+            return TokensDataStateExpress.EMPTY
         }
 
         val pairsLeast = getPairs(
@@ -100,18 +97,19 @@ internal class SwapInteractorImpl @Inject constructor(
         return TokensDataStateExpress(
             fromGroup = getToCurrenciesGroup(
                 currency = currency,
-                leastPairs = pairsLeast,
+                leastPairs = pairsLeast.pairs,
                 cryptoCurrenciesList = walletCurrencyStatusesExceptInitial,
                 tokenInfoForFilter = { it.from },
                 tokenInfoForAvailable = { it.to },
             ),
             toGroup = getToCurrenciesGroup(
                 currency = currency,
-                leastPairs = pairsLeast,
+                leastPairs = pairsLeast.pairs,
                 cryptoCurrenciesList = walletCurrencyStatusesExceptInitial,
                 tokenInfoForFilter = { it.to },
                 tokenInfoForAvailable = { it.from },
             ),
+            allProviders = pairsLeast.allProviders,
         )
     }
 
@@ -177,7 +175,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
         currenciesList: List<CryptoCurrency>,
-    ): List<SwapPairLeast> {
+    ): PairsWithProviders {
         return repository.getPairs(initialCurrency, currenciesList)
     }
 
