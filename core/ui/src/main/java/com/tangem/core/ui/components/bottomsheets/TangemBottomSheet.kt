@@ -6,6 +6,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
     config: TangemBottomSheetConfig,
+    contentColor: Color = TangemTheme.colors.background.primary,
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShow) }
@@ -29,9 +31,9 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
         ModalBottomSheet(
             onDismissRequest = config.onDismissRequest,
             sheetState = sheetState,
-            containerColor = TangemTheme.colors.background.primary,
+            containerColor = contentColor,
             shape = TangemTheme.shapes.bottomSheetLarge,
-            dragHandle = { TangemBottomSheetDraggableHeader() },
+            dragHandle = { TangemBottomSheetDraggableHeader(contentColor) },
         ) {
             content(config.content)
         }
