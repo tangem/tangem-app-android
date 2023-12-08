@@ -4,8 +4,17 @@ import com.squareup.moshi.Json
 import java.math.BigDecimal
 
 data class ExchangeDataResponse(
+    @Json(name = "fromAmount")
+    val fromAmount: String,
+
+    @Json(name = "fromDecimals")
+    val fromDecimals: Int,
+
     @Json(name = "toAmount")
-    val toAmount: BigDecimal,
+    val toAmount: String,
+
+    @Json(name = "toDecimals")
+    val toDecimals: Int,
 
     @Json(name = "txType")
     val txType: TxType,
