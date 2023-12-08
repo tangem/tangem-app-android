@@ -8,5 +8,5 @@ import com.tangem.domain.wallets.models.UserWalletId
  */
 interface MarketCryptoCurrencyRepository {
 
-    suspend fun isExchangeable(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID): Boolean
+    suspend fun isExchangeable(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean
 }
