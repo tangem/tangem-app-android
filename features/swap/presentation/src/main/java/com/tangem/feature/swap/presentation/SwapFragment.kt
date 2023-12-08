@@ -5,6 +5,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
+import com.tangem.core.navigation.ReduxNavController
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
@@ -26,6 +27,9 @@ class SwapFragment : ComposeFragment() {
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
+    @Inject
+    lateinit var reduxNavController: ReduxNavController
+
     private val viewModel by viewModels<SwapViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +39,7 @@ class SwapFragment : ComposeFragment() {
             SwapRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
                 customTabsManager = CustomTabsManager(WeakReference(context)),
+                reduxNavController = reduxNavController,
             ),
         )
     }
@@ -82,7 +87,5 @@ class SwapFragment : ComposeFragment() {
 
     companion object {
         const val CURRENCY_BUNDLE_KEY = "swap_currency"
-        const val DERIVATION_PATH = "DERIVATION_STYLE"
-        const val NETWORK = "NETWORK"
     }
 }

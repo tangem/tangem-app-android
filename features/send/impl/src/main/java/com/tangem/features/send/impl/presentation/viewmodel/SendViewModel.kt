@@ -6,9 +6,17 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.PagingData
 import arrow.core.getOrElse
+import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
+import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
+import com.tangem.blockchain.blockchains.stellar.StellarMemo
+import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
+import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
+import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.Provider
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -18,8 +26,11 @@ import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -28,6 +39,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.api.navigation.SendRouter
+import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.SendStateFactory
 import com.tangem.features.send.impl.presentation.state.SendUiState
@@ -48,7 +60,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 @HiltViewModel
 internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
@@ -60,6 +72,8 @@ internal class SendViewModel @Inject constructor(
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val getFeeUseCase: GetFeeUseCase,
+    private val sendTransactionUseCase: SendTransactionUseCase,
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
@@ -73,7 +87,8 @@ internal class SendViewModel @Inject constructor(
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
-    private var innerRouter: StateRouter by Delegates.notNull()
+    private var innerRouter: InnerSendRouter by Delegates.notNull()
+    private var stateRouter: StateRouter by Delegates.notNull()
 
     private val stateFactory = SendStateFactory(
         clickIntents = this,
@@ -102,9 +117,10 @@ internal class SendViewModel @Inject constructor(
         getFee()
     }
 
-    fun setRouter(router: StateRouter) {
+    fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
         innerRouter = router
-        uiState = uiState.copy(currentState = router.currentState)
+        this.stateRouter = stateRouter
+        uiState = uiState.copy(currentState = stateRouter.currentState)
     }
 
     private fun subscribeOnCurrencyStatusUpdates(owner: LifecycleOwner) {
@@ -271,9 +287,10 @@ internal class SendViewModel @Inject constructor(
     }
 
     // region screen state navigation
-    override fun onBackClick() = innerRouter.onBackClick()
-    override fun onNextClick() = innerRouter.onNextClick()
-    override fun onPrevClick() = innerRouter.onPrevClick()
+    override fun popBackStack() = stateRouter.popBackStack()
+    override fun onBackClick() = stateRouter.onBackClick()
+    override fun onNextClick() = stateRouter.onNextClick()
+    override fun onPrevClick() = stateRouter.onPrevClick()
 
     override fun onQrCodeScanClick() {
 // [REDACTED_TODO_COMMENT]
@@ -314,7 +331,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun checkIfXrpAddressValue(value: String): Boolean {
-        if (cryptoCurrency.network.id.value == Blockchain.XRP.id && value.first() == XRP_X_ADDRESS) {
+        if (cryptoCurrency.network.id.value == Blockchain.XRP.id && value.firstOrNull() == XRP_X_ADDRESS) {
             viewModelScope.launch(dispatchers.io) {
                 val result = XrpAddressService.decodeXAddress(value)
                 onRecipientAddressValueChange(result?.address.orEmpty())
@@ -382,8 +399,126 @@ internal class SendViewModel @Inject constructor(
     }
     //endregion
 
+    // region send state clicks
+    override fun onSendClick() {
+        val sendState = uiState.sendState ?: return
+
+        if (sendState.isSuccess.value) popBackStack()
+        sendState.isSending.update { true }
+        viewModelScope.launch(dispatchers.io) {
+            verifyAndSendTransaction()
+        }
+    }
+
+    private suspend fun verifyAndSendTransaction() {
+        val sendState = uiState.sendState ?: return
+        val amount = uiState.amountState?.amountTextField?.value ?: return
+        val recipient = uiState.recipientState?.addressTextField?.value ?: return
+        val feeState = uiState.feeState?.feeSelectorState?.value as? FeeSelectorState.Content ?: return
+        val memo = uiState.recipientState?.memoTextField?.value
+        val fee = getFee(feeState) ?: return
+
+        val amountToSend = amount.value.toBigDecimal().convertToAmount(cryptoCurrency)
+// [REDACTED_TODO_COMMENT]
+        // val transactionErrors = walletManagersFacade.validateTransaction(
+        //     amount = amountToSend,
+        //     fee = fee.amount,
+        //     userWalletId = userWalletId,
+        //     network = cryptoCurrency.network,
+        // )
+
+        val txData = walletManagersFacade.createTransaction(
+            amount = amountToSend,
+            fee = fee,
+            memo = memo?.value,
+            destination = recipient.value,
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+        )?.copy(extras = getMemoExtras(cryptoCurrency.network.id.value, memo?.value)) ?: return
+
+        sendTransactionUseCase(
+            txData = txData,
+            userWallet = userWallet,
+            network = cryptoCurrency.network,
+        ).fold(
+            ifLeft = {
+                sendState.isSending.update { false }
+// [REDACTED_TODO_COMMENT]
+            },
+            ifRight = {
+                sendState.transactionDate.update {
+                    txData.date?.timeInMillis ?: System.currentTimeMillis()
+                }
+                sendState.isSuccess.update { true }
+                sendState.txUrl.update {
+                    getTxUrl(txData.hash.orEmpty())
+                }
+            },
+        )
+    }
+
+    private fun getFee(feeState: FeeSelectorState.Content): Fee? {
+        return when (val selectedFee = feeState.fees) {
+            is TransactionFee.Choosable -> {
+                when (feeState.selectedFee) {
+                    FeeType.SLOW -> selectedFee.minimum
+                    FeeType.MARKET -> selectedFee.normal
+                    FeeType.FAST -> selectedFee.priority
+                    FeeType.CUSTOM -> {
+                        val feeAmount = feeState.customValues.value.firstOrNull()?.value
+                            ?.let { BigDecimal(it) } ?: return null
+                        Fee.Common(feeAmount.convertToAmount(cryptoCurrency))
+                    }
+                }
+            }
+            is TransactionFee.Single -> selectedFee.normal
+        }
+    }
+
+    override fun showAmount() = stateRouter.showAmount(isFromSend = true)
+
+    override fun showRecipient() = stateRouter.showRecipient(isFromSend = true)
+
+    override fun showFee() = stateRouter.showFee(isFromSend = true)
+
+    override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
+
+    private fun getTxUrl(hash: String): String {
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+// [REDACTED_TODO_COMMENT]
+        return if (blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet) {
+            EMPTY
+        } else {
+            getExplorerTransactionUrlUseCase(
+                txHash = hash,
+                networkId = cryptoCurrency.network.id,
+            )
+        }
+    }
+    // endregion
+
+    private fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
+        val blockchain = Blockchain.fromId(networkId)
+        if (memo == null) return null
+        return when (blockchain) {
+            Blockchain.Stellar -> {
+                val xmlMemo = when (determineXlmMemoType(memo)) {
+                    XlmMemoType.TEXT -> StellarMemo.Text(memo)
+                    XlmMemoType.ID -> StellarMemo.Id(memo.toBigInteger())
+                }
+                StellarTransactionExtras(xmlMemo)
+            }
+            Blockchain.Binance -> BinanceTransactionExtras(memo)
+            Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
+            Blockchain.Cosmos -> CosmosTransactionExtras(memo)
+            Blockchain.TON -> TonTransactionExtras(memo)
+            else -> null
+        }
+    }
+
     companion object {
         private const val XRP_X_ADDRESS = 'X'
         private const val DEFAULT_VALUE = "0.00"
+        private const val EMPTY = ""
     }
 }

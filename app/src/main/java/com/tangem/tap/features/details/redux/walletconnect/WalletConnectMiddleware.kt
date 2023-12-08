@@ -278,7 +278,7 @@ class WalletConnectMiddleware {
                     ).guard {
                         store.dispatchOnMain(
                             GlobalAction.ShowDialog(
-                                WalletConnectDialog.AddNetwork(blockchain.fullName),
+                                WalletConnectDialog.AddNetwork(listOf(blockchain.fullName)),
                             ),
                         )
                         return@launch
@@ -325,7 +325,7 @@ class WalletConnectMiddleware {
                     is WalletConnectError.ApprovalErrorAddNetwork -> {
                         store.dispatchOnMain(
                             GlobalAction.ShowDialog(
-                                WalletConnectDialog.UnsupportedNetwork(action.error.networks),
+                                WalletConnectDialog.AddNetwork(action.error.networks),
                             ),
                         )
                     }
@@ -417,7 +417,7 @@ class WalletConnectMiddleware {
             store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(session.session))
             store.dispatchOnMain(
                 GlobalAction.ShowDialog(
-                    WalletConnectDialog.AddNetwork(blockchain.fullName),
+                    WalletConnectDialog.AddNetwork(listOf(blockchain.fullName)),
                 ),
             )
             return

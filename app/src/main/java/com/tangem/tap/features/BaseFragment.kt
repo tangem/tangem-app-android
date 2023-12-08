@@ -75,9 +75,10 @@ interface FragmentOnBackPressedHandler {
 
 @SuppressLint("FragmentBackPressedCallback")
 fun Fragment.addBackPressHandler(handler: FragmentOnBackPressedHandler) {
-    requireActivity().onBackPressedDispatcher.addCallback {
-        handler.handleOnBackPressed()
-    }
+    requireActivity().onBackPressedDispatcher.addCallback(
+        owner = this,
+        onBackPressed = { handler.handleOnBackPressed() },
+    )
 
     view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener {
         handler.handleOnBackPressed()

@@ -103,9 +103,31 @@ inline fun <reified T> AppPreferencesStore.getObjectList(key: Preferences.Key<St
     return data.map { it[key]?.let(adapter::fromJson) }
 }
 
-/** Get nullable list of data [T] by string [key] */
+/** Get list of data [T] by string [key], or empty if data is not found */
 suspend inline fun <reified T> AppPreferencesStore.getObjectListSync(key: Preferences.Key<String>): List<T> {
     val adapter = moshi.adapter<List<T>>(Types.newParameterizedType(List::class.java, T::class.java))
+    return data.firstOrNull()
+        ?.get(key)
+        ?.let(adapter::fromJson)
+        .orEmpty()
+}
+
+/** Store map with [String] key and value [V] by string [key] */
+suspend inline fun <reified V> AppPreferencesStore.storeObjectMap(
+    key: Preferences.Key<String>,
+    value: Map<String, V>,
+) {
+    val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
+    val adapter = moshi.adapter<Map<String, V>>(type)
+
+    edit { it[key] = adapter.toJson(value) }
+}
+
+/** Get map with [String] key and value [V] by string [key], or empty if data is not found */
+suspend inline fun <reified V> AppPreferencesStore.getObjectMap(key: Preferences.Key<String>): Map<String, V> {
+    val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
+    val adapter = moshi.adapter<Map<String, V>>(type)
+
     return data.firstOrNull()
         ?.get(key)
         ?.let(adapter::fromJson)

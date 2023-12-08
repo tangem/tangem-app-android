@@ -2,13 +2,13 @@ package com.tangem.domain.walletmanager
 
 import arrow.core.Either
 import com.tangem.blockchain.blockchains.solana.RentProvider
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -19,6 +19,7 @@ import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
+import java.util.EnumSet
 // [REDACTED_TODO_COMMENT]
 /**
  * A facade for managing wallets.
@@ -163,4 +164,57 @@ interface WalletManagersFacade {
         userWalletId: UserWalletId,
         network: Network,
     ): Result<TransactionFee>?
+
+    /**
+     * Validates transaction
+     *
+     * @param amount of transaction
+     * @param fee of transaction
+     * @param userWalletId selected wallet id
+     * @param network network of currency
+     */
+    @Deprecated("Will be removed in future")
+    suspend fun validateTransaction(
+        amount: Amount,
+        fee: Amount?,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): EnumSet<TransactionError>?
+
+    /**
+     * Creates transaction [TransactionData]
+     *
+     * @param amount of transaction
+     * @param fee of transaction
+     * @param memo of transaction optional
+     * @param destination address
+     * @param userWalletId selected wallet id
+     * @param network network of currency
+     */
+    @Suppress("LongParameterList")
+    @Deprecated("Will be removed in future")
+    suspend fun createTransaction(
+        amount: Amount,
+        fee: Fee,
+        memo: String?,
+        destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): TransactionData?
+
+    /**
+     * Sends transaction
+     *
+     * @param txData transaction data
+     * @param signer card signer
+     * @param userWalletId selected wallet id
+     * @param network network of currency
+     */
+    @Deprecated("Will be removed in future")
+    suspend fun sendTransaction(
+        txData: TransactionData,
+        signer: CommonSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): SimpleResult
 }

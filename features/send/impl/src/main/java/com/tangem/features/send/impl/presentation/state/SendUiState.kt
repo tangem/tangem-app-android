@@ -23,6 +23,7 @@ internal data class SendUiState(
     val amountState: SendStates.AmountState? = null,
     val recipientState: SendStates.RecipientState? = null,
     val feeState: SendStates.FeeState? = null,
+    val sendState: SendStates.SendState? = null,
     val recipientList: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
     val currentState: MutableStateFlow<SendUiStateType>,
 )
@@ -64,11 +65,15 @@ internal sealed class SendStates {
         val isSubtract: MutableStateFlow<Boolean> = MutableStateFlow(false),
         val receivedAmount: MutableStateFlow<String> = MutableStateFlow(""),
     ) : SendStates()
-// [REDACTED_TODO_COMMENT]
+
     /** Send state */
     data class SendState(
-        val isSuccess: Boolean,
-    )
+        override val type: SendUiStateType = SendUiStateType.Send,
+        val isSending: MutableStateFlow<Boolean> = MutableStateFlow(false),
+        val isSuccess: MutableStateFlow<Boolean> = MutableStateFlow(false),
+        val transactionDate: MutableStateFlow<Long> = MutableStateFlow(0L),
+        val txUrl: MutableStateFlow<String> = MutableStateFlow(""),
+    ) : SendStates()
 }
 
 enum class SendUiStateType {
@@ -76,5 +81,4 @@ enum class SendUiStateType {
     Recipient,
     Fee,
     Send,
-    Done,
 }

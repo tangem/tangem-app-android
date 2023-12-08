@@ -14,6 +14,7 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.api.common.MoshiConverter
@@ -216,6 +217,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var sendFeatureToggles: SendFeatureToggles
+
+    @Inject
+    lateinit var oneTimeEventFilter: OneTimeEventFilter
     // endregion Injected
 
     override fun onCreate() {
@@ -351,6 +355,8 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
+
+        factory.addFilter(oneTimeEventFilter)
 
         val buildData = AnalyticsHandlerBuilder.Data(
             application = application,
