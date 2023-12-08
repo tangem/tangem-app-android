@@ -4,10 +4,10 @@ import arrow.core.getOrElse
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.model.BalancesAndLimitsBottomSheetConfig
@@ -101,10 +101,10 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     )
 
     private fun showBalanceInfo() {
-        eventSender.send(WalletEvent.ShowToast(stringReference(value = "Not implemented yet")))
+        eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaBalancesInfo))
     }
 
     private fun showLimitInfo() {
-        eventSender.send(WalletEvent.ShowToast(stringReference(value = "Not implemented yet")))
+        eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaLimitsInfo))
     }
 }
