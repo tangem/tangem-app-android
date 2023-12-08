@@ -11,7 +11,8 @@ internal sealed class SendRecipientListContent {
         val id: String,
         val title: TextReference,
         val subtitle: TextReference,
-        val info: TextReference? = null,
+        val timestamp: TextReference? = null,
+        val subtitleEndOffset: Int = 0,
         @DrawableRes val subtitleIconRes: Int? = null,
     ) : SendRecipientListContent()
 
