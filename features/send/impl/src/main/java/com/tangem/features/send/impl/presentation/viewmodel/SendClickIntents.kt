@@ -4,6 +4,8 @@ import com.tangem.features.send.impl.presentation.state.fee.FeeType
 
 interface SendClickIntents {
 
+    fun popBackStack()
+
     fun onBackClick()
 
     fun onNextClick()
@@ -32,5 +34,17 @@ interface SendClickIntents {
     fun onCustomFeeValueChange(index: Int, value: String)
 
     fun onSubtractSelect(value: Boolean)
+    // endregion
+
+    // region Send
+    fun onSendClick()
+
+    fun showAmount()
+
+    fun showRecipient()
+
+    fun showFee()
+
+    fun onExploreClick(txUrl: String)
     // endregion
 }

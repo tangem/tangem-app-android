@@ -10,6 +10,7 @@ import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
@@ -35,6 +36,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import java.math.BigDecimal
+import java.util.EnumSet
 
 @Suppress("LargeClass")
 // FIXME: Move to its own module and make internal
@@ -429,6 +431,54 @@ class DefaultWalletManagersFacade(
             amount = amount,
             destination = destination,
         )
+    }
+
+    override suspend fun validateTransaction(
+        amount: Amount,
+        fee: Amount?,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): EnumSet<TransactionError>? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+        return walletManager?.validateTransaction(amount, fee)
+    }
+
+    override suspend fun createTransaction(
+        amount: Amount,
+        fee: Fee,
+        memo: String?,
+        destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): TransactionData? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+
+        return walletManager?.createTransaction(amount, fee, destination)
+    }
+
+    override suspend fun sendTransaction(
+        txData: TransactionData,
+        signer: CommonSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): SimpleResult {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+        return (walletManager as TransactionSender).send(txData, signer)
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
