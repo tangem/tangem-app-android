@@ -438,6 +438,7 @@
     <string name="send_amount_label">Amount</string>
     <string name="send_amount_substract">Subtract from send amount</string>
     <string name="send_amount_substract_footer">The recipient will receive %s</string>
+    <string name="send_confirm_label">Confirm</string>
     <string name="send_date_format">%1$s at %2$s</string>
     <string name="send_destination_hint_address">Address</string>
     <string name="send_destination_tag_field">Destination Tag</string>
@@ -488,6 +489,7 @@
     <string name="send_qrcode_scan_info">Please align your QR code with the square to scan it. Ensure you scan %s network address.</string>
     <string name="send_recent_transactions">Recent</string>
     <string name="send_recipient">Recipient</string>
+    <string name="send_recipient_label">Send to</string>
     <string name="send_recipient_address_error">Not a valid address</string>
     <string name="send_recipient_address_footer">Ensure that you are sending funds to an %s wallet address. Errors may result in the loss of your tokens</string>
     <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
