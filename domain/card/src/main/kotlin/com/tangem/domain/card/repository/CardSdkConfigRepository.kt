@@ -1,6 +1,7 @@
 package com.tangem.domain.card.repository
 
 import com.tangem.TangemSdk
+import com.tangem.blockchain.common.CommonSigner
 import com.tangem.domain.models.scan.ProductType
 
 /**
@@ -28,4 +29,13 @@ interface CardSdkConfigRepository {
 
     /** Check if access code saving is enabled */
     fun isAccessCodeSavingEnabled(): Boolean
+
+    /** Get common signer by [cardId] */
+    fun getCommonSigner(cardId: String?): CommonSigner
+
+    /** Check if linked terminal is enabled */
+    fun isLinkedTerminal(): Boolean?
+
+    /** Set linked terminal by [isLinked] */
+    fun setLinkedTerminal(isLinked: Boolean?)
 }
