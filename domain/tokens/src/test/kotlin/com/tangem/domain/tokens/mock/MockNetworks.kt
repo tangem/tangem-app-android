@@ -18,6 +18,8 @@ internal object MockNetworks {
         name = "Network One",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        backendId = "network1",
+        currencySymbol = "ETH",
         derivationPath = Network.DerivationPath.None,
     )
 
@@ -26,6 +28,8 @@ internal object MockNetworks {
         name = "Network Two",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        backendId = "network1",
+        currencySymbol = "ETH",
         derivationPath = Network.DerivationPath.None,
     )
 
@@ -34,6 +38,8 @@ internal object MockNetworks {
         name = "Network Three",
         isTestnet = false,
         standardType = Network.StandardType.ERC20,
+        backendId = "network1",
+        currencySymbol = "ETH",
         derivationPath = Network.DerivationPath.None,
     )
 
