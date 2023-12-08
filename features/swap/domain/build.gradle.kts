@@ -23,9 +23,15 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.demo)
+    implementation(projects.domain.card)
+    implementation(projects.domain.appCurrency.models)
 
     /** Core modules */
     implementation(projects.core.utils)
+    implementation(projects.core.ui)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
@@ -35,4 +41,6 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
     implementation(deps.timber)
+    implementation(deps.tangem.blockchain)
+    implementation(deps.moshi)
 }
