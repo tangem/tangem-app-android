@@ -50,7 +50,7 @@ internal fun SendNavigationButtons(uiState: SendUiState) {
 private fun SendSecondaryNavigationButton(uiState: SendUiState) {
     val currentState = uiState.currentState.collectAsState()
     AnimatedVisibility(
-        visible = currentState.value == SendUiStateType.Recipient ||
+        visible = currentState.value == SendUiStateType.Amount ||
             currentState.value == SendUiStateType.Fee,
     ) {
         Icon(
