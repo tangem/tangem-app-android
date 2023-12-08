@@ -2,8 +2,9 @@ package com.tangem.datasource.di
 
 import android.content.Context
 import com.squareup.moshi.Moshi
+import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
-import com.tangem.datasource.api.express.ExpressApi
+import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.utils.RequestHeader.*
@@ -32,11 +33,16 @@ class NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         expressAuthProvider: ExpressAuthProvider,
-    ): ExpressApi {
+    ): TangemExpressApi {
+        val url = if (BuildConfig.ENVIRONMENT == "dev") {
+            DEV_EXPRESS_BASE_URL
+        } else {
+            PROD_EXPRESS_BASE_URL
+        }
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
-            .baseUrl(DEV_EXPRESS_BASE_URL)
+            .baseUrl(url)
             .client(
                 OkHttpClient.Builder()
                     .addHeaders(Express(expressAuthProvider))
@@ -44,7 +50,7 @@ class NetworkModule {
                     .build(),
             )
             .build()
-            .create(ExpressApi::class.java)
+            .create(TangemExpressApi::class.java)
     }
 
     @Provides
