@@ -118,12 +118,12 @@ class GetCryptoCurrencyActionsUseCase(
 
         val isMulticurrencyWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
         // swap
-        if (isMulticurrencyWallet &&
-            marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency)
-        ) {
-            activeList.add(TokenActionsState.ActionState.Swap(true))
-        } else {
-            disabledList.add(TokenActionsState.ActionState.Swap(false))
+        if (isMulticurrencyWallet) {
+            if (marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency)) {
+                activeList.add(TokenActionsState.ActionState.Swap(true))
+            } else {
+                disabledList.add(TokenActionsState.ActionState.Swap(false))
+            }
         }
 
         // buy
@@ -164,11 +164,13 @@ class GetCryptoCurrencyActionsUseCase(
         return activeList + disabledList
     }
 
-    private fun isSendDisabled(cryptoCurrencyStatus: CryptoCurrencyStatus, coinStatus: CryptoCurrencyStatus?): Boolean =
-        cryptoCurrencyStatus.value.amount.isNullOrZero() ||
-            coinStatus?.value?.amount.isNullOrZero() ||
-            currenciesRepository.hasPendingTransactions(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                coinStatus = coinStatus,
-            )
+    private fun isSendDisabled(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus?,
+    ): Boolean = cryptoCurrencyStatus.value.amount.isNullOrZero() ||
+        coinStatus?.value?.amount.isNullOrZero() ||
+        currenciesRepository.hasPendingTransactions(
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            coinStatus = coinStatus,
+        )
 }
