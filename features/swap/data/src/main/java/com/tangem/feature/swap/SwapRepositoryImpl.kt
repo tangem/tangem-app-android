@@ -71,21 +71,24 @@ internal class SwapRepositoryImpl @Inject constructor(
                 )
                 val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
 
-                val pairs = async {
+                val pairsDeferred = async {
                     getPairsInternal(
                         from = arrayListOf(initial),
                         to = currenciesList,
                     )
                 }
 
-                val reversedPairs = async {
+                val reversedPairsDeferred = async {
                     getPairsInternal(
                         from = currenciesList,
                         to = arrayListOf(initial),
                     )
                 }
 
-                val allPairs = pairs.await() + reversedPairs.await()
+                val pairs = pairsDeferred.await().getOrThrow()
+                val reversedPairs = reversedPairsDeferred.await().getOrThrow()
+
+                val allPairs = pairs + reversedPairs
 
                 val providers = tangemExpressApi.getProviders().getOrThrow()
 
@@ -97,7 +100,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                 )
             } catch (exception: Exception) {
                 if (exception is ApiResponseError.HttpException) {
-                    throw ExpressException(errorsDataConverter.convert(exception.errorBody?: ""))
+                    throw ExpressException(errorsDataConverter.convert(exception.errorBody ?: ""))
                 } else {
                     throw exception
                 }
@@ -109,13 +112,13 @@ internal class SwapRepositoryImpl @Inject constructor(
     private suspend fun getPairsInternal(
         from: List<NetworkLeastTokenInfo>,
         to: List<NetworkLeastTokenInfo>,
-    ): List<SwapPair> {
+    ): ApiResponse<List<SwapPair>> {
         return tangemExpressApi.getPairs(
             PairsRequestBody(
                 from = from,
                 to = to,
             ),
-        ).getOrThrow()
+        )
     }
 
     override suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel> {
