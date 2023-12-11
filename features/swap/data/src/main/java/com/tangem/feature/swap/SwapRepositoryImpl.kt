@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
@@ -28,6 +29,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
@@ -62,49 +64,61 @@ internal class SwapRepositoryImpl @Inject constructor(
         currencyList: List<CryptoCurrency>,
     ): PairsWithProviders {
         return withContext(coroutineDispatcher.io) {
-            val initial = NetworkLeastTokenInfo(
-                contractAddress = initialCurrency.contractAddress,
-                network = initialCurrency.network,
-            )
-            val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
-
-            val pairs = async {
-                getPairsInternal(
-                    from = arrayListOf(initial),
-                    to = currenciesList,
+            try {
+                val initial = NetworkLeastTokenInfo(
+                    contractAddress = initialCurrency.contractAddress,
+                    network = initialCurrency.network,
                 )
+                val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
+
+                val pairsDeferred = async {
+                    getPairsInternal(
+                        from = arrayListOf(initial),
+                        to = currenciesList,
+                    )
+                }
+
+                val reversedPairsDeferred = async {
+                    getPairsInternal(
+                        from = currenciesList,
+                        to = arrayListOf(initial),
+                    )
+                }
+
+                val pairs = pairsDeferred.await().getOrThrow()
+                val reversedPairs = reversedPairsDeferred.await().getOrThrow()
+
+                val allPairs = pairs + reversedPairs
+
+                val providers = tangemExpressApi.getProviders().getOrThrow()
+
+                return@withContext swapPairInfoConverter.convert(
+                    SwapPairsWithProviders(
+                        swapPair = allPairs,
+                        providers = providers,
+                    ),
+                )
+            } catch (exception: Exception) {
+                if (exception is ApiResponseError.HttpException) {
+                    throw ExpressException(errorsDataConverter.convert(exception.errorBody ?: ""))
+                } else {
+                    throw exception
+                }
             }
 
-            val reversedPairs = async {
-                getPairsInternal(
-                    from = currenciesList,
-                    to = arrayListOf(initial),
-                )
-            }
-
-            val allPairs = pairs.await() + reversedPairs.await()
-
-            val providers = tangemExpressApi.getProviders().getOrThrow()
-
-            return@withContext swapPairInfoConverter.convert(
-                SwapPairsWithProviders(
-                    swapPair = allPairs,
-                    providers = providers,
-                ),
-            )
         }
     }
 
     private suspend fun getPairsInternal(
         from: List<NetworkLeastTokenInfo>,
         to: List<NetworkLeastTokenInfo>,
-    ): List<SwapPair> {
+    ): ApiResponse<List<SwapPair>> {
         return tangemExpressApi.getPairs(
             PairsRequestBody(
                 from = from,
                 to = to,
             ),
-        ).getOrThrow()
+        )
     }
 
     override suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel> {
