@@ -25,7 +25,7 @@ sealed class ProviderState {
         val subtitle: TextReference,
         val selectionType: SelectionType,
         val additionalBadge: AdditionalBadge,
-        val percentLowerThenBest: Float = 0f,
+        val percentLowerThenBest: PercentLowerThanBest = PercentLowerThanBest.Empty,
         override val onProviderClick: (String) -> Unit,
     ) : ProviderState()
 
@@ -50,18 +50,35 @@ sealed class ProviderState {
     }
 }
 
+sealed class PercentLowerThanBest {
+    data class Value(val value: Float) : PercentLowerThanBest()
+    object Empty : PercentLowerThanBest()
+}
+
 object ProviderPercentDiffComparator : Comparator<ProviderState> {
     override fun compare(o1: ProviderState, o2: ProviderState): Int {
         if (o1 is ProviderState.Content && o2 !is ProviderState.Content) {
-            return 1
-        }
-        if (o1 !is ProviderState.Content && o2 is ProviderState.Content) {
             return -1
         }
-        return if (o1 is ProviderState.Content && o2 is ProviderState.Content) {
-            o1.percentLowerThenBest.compareTo(o2.percentLowerThenBest)
+        if (o1 !is ProviderState.Content && o2 is ProviderState.Content) {
+            return 1
+        }
+        if (o1 is ProviderState.Content && o2 is ProviderState.Content) {
+            val o1Percent = o1.percentLowerThenBest
+            val o2Percent = o2.percentLowerThenBest
+            if (o1Percent is PercentLowerThanBest.Value && o2Percent !is PercentLowerThanBest.Value) {
+                return -1
+            }
+            if (o1Percent !is PercentLowerThanBest.Value && o2Percent is PercentLowerThanBest.Value) {
+                return 1
+            }
+            return if (o1Percent is PercentLowerThanBest.Value && o2Percent is PercentLowerThanBest.Value) {
+                o1Percent.value.compareTo(o2Percent.value)
+            } else {
+                0
+            }
         } else {
-            0
+            return 0
         }
     }
 }
