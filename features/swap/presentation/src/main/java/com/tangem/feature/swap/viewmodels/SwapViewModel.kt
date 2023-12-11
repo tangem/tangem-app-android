@@ -18,6 +18,7 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -174,13 +175,14 @@ internal class SwapViewModel @Inject constructor(
                     selectedCurrency = null,
                 )
 
-                uiState = stateBuilder.createInitialErrorState(uiState) {
-                    uiState = stateBuilder.createInitialLoadingState(
-                        initialCurrency = initialCryptoCurrency,
-                        networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
-                    )
-                    initTokens()
-                }
+                uiState =
+                    stateBuilder.createInitialErrorState(uiState, (it as? ExpressException)?.dataError?.code ?: DataError.UnknownError.code) {
+                        uiState = stateBuilder.createInitialLoadingState(
+                            initialCurrency = initialCryptoCurrency,
+                            networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
+                        )
+                        initTokens()
+                    }
             }
         }
     }
