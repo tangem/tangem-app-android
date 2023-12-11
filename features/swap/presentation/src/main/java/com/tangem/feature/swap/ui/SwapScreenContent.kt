@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
@@ -40,12 +39,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             .background(color = TangemTheme.colors.background.secondary),
     ) {
         Column {
-            AppBarWithBackButton(
-                text = stringResource(R.string.common_swap),
-                onBackClick = state.onBackClicked,
-                iconRes = R.drawable.ic_close_24,
-            )
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
