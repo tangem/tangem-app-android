@@ -35,6 +35,10 @@ internal class WalletStateController @Inject constructor() {
         mutableUiState.update(function = transformer::transform)
     }
 
+    fun clear() {
+        mutableUiState.update { getInitialState() }
+    }
+
     fun getSelectedWallet(): WalletState {
         return with(value) { wallets[selectedWalletIndex] }
     }
