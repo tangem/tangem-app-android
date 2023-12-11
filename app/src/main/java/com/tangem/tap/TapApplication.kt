@@ -158,7 +158,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
         store = createReduxStore()
 
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.LOG_ENABLED) {
             Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
             Timber.plant(
                 object : Timber.DebugTree() {
