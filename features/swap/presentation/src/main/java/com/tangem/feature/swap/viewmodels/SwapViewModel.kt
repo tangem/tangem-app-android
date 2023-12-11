@@ -176,10 +176,15 @@ internal class SwapViewModel @Inject constructor(
                 )
 
                 uiState =
-                    stateBuilder.createInitialErrorState(uiState, (it as? ExpressException)?.dataError?.code ?: DataError.UnknownError.code) {
+                    stateBuilder.createInitialErrorState(
+                        uiState,
+                        (it as? ExpressException)?.dataError?.code ?: DataError.UnknownError.code,
+                    ) {
                         uiState = stateBuilder.createInitialLoadingState(
                             initialCurrency = initialCryptoCurrency,
-                            networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
+                            networkInfo = blockchainInteractor.getBlockchainInfo(
+                                initialCryptoCurrency.network.backendId,
+                            ),
                         )
                         initTokens()
                     }
