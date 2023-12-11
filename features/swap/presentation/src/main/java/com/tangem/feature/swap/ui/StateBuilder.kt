@@ -643,7 +643,7 @@ internal class StateBuilder(
     @Suppress("LongParameterList")
     fun createSuccessState(
         uiState: SwapStateHolder,
-        timeStamp: Long,
+        txState: TxState.TxSent,
         txUrl: String,
         dataState: SwapProcessDataState,
         onExploreClick: () -> Unit,
@@ -652,18 +652,16 @@ internal class StateBuilder(
         val fee = requireNotNull(dataState.selectedFee)
         val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
         val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
-        val fromAmount = toBigDecimalOrNull(requireNotNull(dataState.amount))
-        val toAmount = requireNotNull(dataState.swapDataModel?.toTokenAmount?.value)
+        val fromAmount = txState.fromAmountValue ?: BigDecimal.ZERO
+        val toAmount = txState.toAmountValue ?: BigDecimal.ZERO
         val providerState = uiState.providerState as ProviderState.Content
 
-        val fromCryptoAmount = BigDecimalFormatter.formatCryptoAmount(fromAmount, fromCryptoCurrency.currency)
-        val toCryptoAmount = BigDecimalFormatter.formatCryptoAmount(toAmount, toCryptoCurrency.currency)
         val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
 
         return uiState.copy(
             successState = SwapSuccessStateHolder(
-                timestamp = timeStamp,
+                timestamp = txState.timestamp,
                 txUrl = txUrl,
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
@@ -671,8 +669,8 @@ internal class StateBuilder(
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
                 fee = stringReference("${fee.feeCryptoFormatted} (${fee.feeFiatFormatted})"),
-                fromTokenAmount = stringReference(fromCryptoAmount),
-                toTokenAmount = stringReference(toCryptoAmount),
+                fromTokenAmount = stringReference(txState.fromAmount.orEmpty()),
+                toTokenAmount = stringReference(txState.toAmount.orEmpty()),
                 fromTokenFiatAmount = stringReference(fromFiatAmount),
                 toTokenFiatAmount = stringReference(toFiatAmount),
                 fromTokenIconState = iconStateConverter.convert(fromCryptoCurrency),
