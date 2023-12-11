@@ -579,14 +579,18 @@ internal class StateBuilder(
         }
     }
 
-    fun createInitialErrorState(uiState: SwapStateHolder, onRefreshClick: () -> Unit): SwapStateHolder {
+    fun createInitialErrorState(
+        uiState: SwapStateHolder,
+        code: Int,
+        onRefreshClick: () -> Unit,
+    ): SwapStateHolder {
         return uiState.copy(
             warnings = listOf(
                 SwapWarning.GeneralWarning(
                     notificationConfig = NotificationConfig(
                         title = TextReference.Res(R.string.warning_express_refresh_required_title),
-                        subtitle = TextReference.EMPTY,
-                        iconResId = R.drawable.ic_alert_circle_24,
+                        subtitle = TextReference.Res(R.string.generic_error_code, wrappedList(code)),
+                        iconResId = R.drawable.ic_alert_triangle_20,
                         buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                             text = TextReference.Res(R.string.warning_button_refresh),
                             onClick = onRefreshClick,
