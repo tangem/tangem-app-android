@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import arrow.core.getOrElse
-import arrow.core.mapNotNull
 import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
@@ -19,6 +18,7 @@ import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -175,13 +175,19 @@ internal class SwapViewModel @Inject constructor(
                     selectedCurrency = null,
                 )
 
-                uiState = stateBuilder.createInitialErrorState(uiState) {
-                    uiState = stateBuilder.createInitialLoadingState(
-                        initialCurrency = initialCryptoCurrency,
-                        networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
-                    )
-                    initTokens()
-                }
+                uiState =
+                    stateBuilder.createInitialErrorState(
+                        uiState,
+                        (it as? ExpressException)?.dataError?.code ?: DataError.UnknownError.code,
+                    ) {
+                        uiState = stateBuilder.createInitialLoadingState(
+                            initialCurrency = initialCryptoCurrency,
+                            networkInfo = blockchainInteractor.getBlockchainInfo(
+                                initialCryptoCurrency.network.backendId,
+                            ),
+                        )
+                        initTokens()
+                    }
             }
         }
     }
@@ -289,11 +295,13 @@ internal class SwapViewModel @Inject constructor(
                 if (providersState.isNotEmpty()) {
                     val (provider, state) = updateLoadedQuotes(providersState)
                     setupLoadedState(provider, state, fromToken)
+                    val successStates = providersState
+                        .getLastLoadedSuccessStates()
+                    val pricesLowerBest = getPricesLowerBest(successStates)
                     uiState = stateBuilder.updateProvidersBottomSheetContent(
                         uiState = uiState,
-                        tokenSwapInfoForProviders = providersState
-                            .getLastLoadedSuccessStates()
-                            .entries
+                        pricesLowerBest = pricesLowerBest,
+                        tokenSwapInfoForProviders = successStates.entries
                             .associate { it.key.providerId to it.value.toTokenInfo },
                     )
                 } else {
@@ -384,7 +392,7 @@ internal class SwapViewModel @Inject constructor(
         val stateSuccess = state.getLastLoadedSuccessStates()
         return if (stateSuccess.isNotEmpty()) {
             val currentSelected = dataState.selectedProvider
-            if (currentSelected != null && state.keys.contains(currentSelected)) {
+            if (currentSelected != null && stateSuccess.keys.contains(currentSelected)) {
                 currentSelected
             } else {
                 findBestQuoteProvider(stateSuccess) ?: stateSuccess.keys.first()
@@ -457,7 +465,7 @@ internal class SwapViewModel @Inject constructor(
                             )
                             uiState = stateBuilder.createSuccessState(
                                 uiState = uiState,
-                                timeStamp = it.timestamp,
+                                txState = it,
                                 dataState = dataState,
                                 txUrl = url,
                                 onExploreClick = {
@@ -869,21 +877,21 @@ internal class SwapViewModel @Inject constructor(
         }?.key
     }
 
-    private fun getPricesLowerBest(state: SuccessLoadedSwapData): Map<SwapProvider, Float> {
+    private fun getPricesLowerBest(state: SuccessLoadedSwapData): Map<String, Float> {
         val bestRateEntry = state.maxByOrNull { it.value.toTokenInfo.tokenAmount.value } ?: return emptyMap()
         val bestRate = bestRateEntry.value.toTokenInfo.tokenAmount.value
         val hundredPercent = BigDecimal("100")
-        return state.mapNotNull {
+        return state.entries.mapNotNull {
             if (it.key != bestRateEntry.key) {
                 val amount = it.value.toTokenInfo.tokenAmount.value
                 val percentDiff = BigDecimal.ONE.minus(
                     amount.divide(bestRate, RoundingMode.HALF_UP),
                 ).multiply(hundredPercent)
-                percentDiff.setScale(2, RoundingMode.HALF_UP).toFloat().absoluteValue
+                it.key.providerId to percentDiff.setScale(2, RoundingMode.HALF_UP).toFloat().absoluteValue
             } else {
                 null
             }
-        }
+        }.toMap()
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
