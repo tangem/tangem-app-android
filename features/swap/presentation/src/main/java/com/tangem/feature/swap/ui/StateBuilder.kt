@@ -648,7 +648,7 @@ internal class StateBuilder(
         val fee = requireNotNull(dataState.selectedFee)
         val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
         val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
-        val fromAmount = requireNotNull(dataState.amount?.toBigDecimal())
+        val fromAmount = toBigDecimalOrNull(requireNotNull(dataState.amount))
         val toAmount = requireNotNull(dataState.swapDataModel?.toTokenAmount?.value)
         val providerState = uiState.providerState as ProviderState.Content
 
@@ -1134,6 +1134,10 @@ internal class StateBuilder(
 
     private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
         return this.divide(to, min(decimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
+    }
+
+    private fun toBigDecimalOrNull(text: String): BigDecimal? {
+        return text.replace(",", ".").toBigDecimalOrNull()
     }
 
     private companion object {
