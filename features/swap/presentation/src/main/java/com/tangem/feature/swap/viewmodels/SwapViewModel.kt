@@ -457,7 +457,7 @@ internal class SwapViewModel @Inject constructor(
                             )
                             uiState = stateBuilder.createSuccessState(
                                 uiState = uiState,
-                                timeStamp = it.timestamp,
+                                txState = it,
                                 dataState = dataState,
                                 txUrl = url,
                                 onExploreClick = {
