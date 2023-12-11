@@ -789,7 +789,7 @@ internal class StateBuilder(
     fun showSelectProviderBottomSheet(
         uiState: SwapStateHolder,
         selectedProviderId: String,
-        pricesLowerBest: Map<SwapProvider, Float>,
+        pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         unavailableProviders: List<SwapProvider>,
         onDismiss: () -> Unit,
@@ -820,6 +820,7 @@ internal class StateBuilder(
 
     fun updateProvidersBottomSheetContent(
         uiState: SwapStateHolder,
+        pricesLowerBest: Map<String, Float>,
         tokenSwapInfoForProviders: Map<String, TokenSwapInfo>,
     ): SwapStateHolder {
         val config = uiState.bottomSheetConfig?.content as? ChooseProviderBottomSheetConfig
@@ -835,6 +836,9 @@ internal class StateBuilder(
                                     .getFormattedCryptoAmount(tokenInfo.cryptoCurrencyStatus.currency)
                                 it.copy(
                                     subtitle = stringReference(rateString),
+                                    percentLowerThenBest = pricesLowerBest[it.id]?.let { percent ->
+                                        PercentLowerThanBest.Value(percent)
+                                    } ?: PercentLowerThanBest.Empty,
                                 )
                             } else {
                                 it
@@ -928,7 +932,7 @@ internal class StateBuilder(
     }
 
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
-        pricesLowerBest: Map<SwapProvider, Float>,
+        pricesLowerBest: Map<String, Float>,
         onProviderSelect: (String) -> Unit,
     ): ProviderState? {
         val provider = this.key
@@ -1040,7 +1044,7 @@ internal class StateBuilder(
             subtitle = stringReference(rateString),
             additionalBadge = badge,
             selectionType = selectionType,
-            percentLowerThenBest = ZERO_PERCENT,
+            percentLowerThenBest = PercentLowerThanBest.Empty,
             onProviderClick = onProviderClick,
         )
     }
@@ -1049,7 +1053,7 @@ internal class StateBuilder(
         isBestRate: Boolean,
         state: SwapState.QuotesLoadedState,
         selectionType: ProviderState.SelectionType,
-        pricesLowerBest: Map<SwapProvider, Float>,
+        pricesLowerBest: Map<String, Float>,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
         val toTokenInfo = state.toTokenInfo
@@ -1069,7 +1073,9 @@ internal class StateBuilder(
             subtitle = stringReference(rateString),
             additionalBadge = additionalBadge,
             selectionType = selectionType,
-            percentLowerThenBest = pricesLowerBest[this] ?: ZERO_PERCENT,
+            percentLowerThenBest = pricesLowerBest[this.providerId]?.let { percent ->
+                PercentLowerThanBest.Value(percent)
+            } ?: PercentLowerThanBest.Value(0f),
             onProviderClick = onProviderClick,
         )
     }
@@ -1103,7 +1109,7 @@ internal class StateBuilder(
             selectionType = selectionType,
             subtitle = alertText,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
-            percentLowerThenBest = ZERO_PERCENT,
+            percentLowerThenBest = PercentLowerThanBest.Empty,
             onProviderClick = onProviderClick,
         )
     }
@@ -1148,6 +1154,5 @@ internal class StateBuilder(
         private const val HUNDRED_PERCENTS = 100
         private const val UNKNOWN_AMOUNT_SIGN = "—"
         private const val MAX_DECIMALS_TO_SHOW = 8
-        private const val ZERO_PERCENT = 0f
     }
 }
