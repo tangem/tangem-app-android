@@ -449,7 +449,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun checkForNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            BuildConfig.DEBUG &&
+            BuildConfig.LOG_ENABLED &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) {
