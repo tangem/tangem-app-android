@@ -97,7 +97,8 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
     LazyColumn(
         modifier = modifier
             .background(color = screenBackgroundColor)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         item { SpacerH8() }
