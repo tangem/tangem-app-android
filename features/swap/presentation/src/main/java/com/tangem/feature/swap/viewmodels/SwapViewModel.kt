@@ -384,7 +384,7 @@ internal class SwapViewModel @Inject constructor(
         val stateSuccess = state.getLastLoadedSuccessStates()
         return if (stateSuccess.isNotEmpty()) {
             val currentSelected = dataState.selectedProvider
-            if (currentSelected != null && state.keys.contains(currentSelected)) {
+            if (currentSelected != null && stateSuccess.keys.contains(currentSelected)) {
                 currentSelected
             } else {
                 findBestQuoteProvider(stateSuccess) ?: stateSuccess.keys.first()
