@@ -105,7 +105,6 @@ internal class SwapRepositoryImpl @Inject constructor(
                     throw exception
                 }
             }
-
         }
     }
 
