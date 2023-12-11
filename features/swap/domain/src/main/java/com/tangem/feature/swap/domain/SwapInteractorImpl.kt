@@ -461,10 +461,12 @@ internal class SwapInteractorImpl @Inject constructor(
                         amount,
                         currencyToSend.symbol,
                     ),
+                    fromAmountValue = amount.value,
                     toAmount = amountFormatter.formatSwapAmountToUI(
                         swapData.toTokenAmount,
                         currencyToGet.symbol,
                     ),
+                    toAmountValue = swapData.toTokenAmount.value,
                     txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
                     timestamp = System.currentTimeMillis(),
                 )
@@ -541,10 +543,12 @@ internal class SwapInteractorImpl @Inject constructor(
                         amount,
                         currencyToSend.currency.symbol,
                     ),
+                    fromAmountValue = amount.value,
                     toAmount = amountFormatter.formatSwapAmountToUI(
                         exchangeData.dataModel.toTokenAmount,
                         currencyToGet.currency.symbol,
                     ),
+                    toAmountValue = exchangeData.dataModel.toTokenAmount.value,
                     txAddress = userWalletManager.getLastTransactionHash(
                         currencyToSend.currency.network.backendId,
                         derivationPath,
