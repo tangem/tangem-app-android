@@ -64,6 +64,8 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
         val unlockedWallet = wallets.count { it !is WalletCardState.LockedContent }
 
         if (unlockedWallet == 1) {
+            stateHolder.clear()
+
             router.popBackStack(
                 screen = if (wallets.size > 1) AppScreen.Welcome else AppScreen.Home,
             )
