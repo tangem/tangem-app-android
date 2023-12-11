@@ -579,11 +579,7 @@ internal class StateBuilder(
         }
     }
 
-    fun createInitialErrorState(
-        uiState: SwapStateHolder,
-        code: Int,
-        onRefreshClick: () -> Unit,
-    ): SwapStateHolder {
+    fun createInitialErrorState(uiState: SwapStateHolder, code: Int, onRefreshClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             warnings = listOf(
                 SwapWarning.GeneralWarning(
