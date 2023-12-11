@@ -453,7 +453,7 @@ internal class StateBuilder(
             else -> SwapWarning.GeneralWarning(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(R.string.common_error),
-                    subtitle = if (dataError.code == DataError.UnknownError.code){
+                    subtitle = if (dataError.code == DataError.UnknownError.code) {
                         resourceReference(R.string.swapping_generic_error)
                     } else {
                         resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString()))
