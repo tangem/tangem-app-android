@@ -228,7 +228,7 @@
     <string name="express_provider_best_rate">Best rate</string>
     <string name="express_provider_min_amount">Available from %s</string>
     <string name="express_provider_not_available">Unavailable for this pair</string>
-    <string name="express_provider_permission_needed">Permission Needed</string>
+    <string name="express_provider_permission_needed">Permission Required</string>
     <string name="feedback_data_collection_message">The following information is optional. You can erase it if you don\'t want to share it.</string>
     <string name="feedback_preface_rate_negative">Tell us what functions you are missing, and we will try to help you.</string>
     <string name="feedback_preface_scan_failed">Please tell us what card do you have</string>
