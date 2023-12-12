@@ -1,10 +1,10 @@
-package com.tangem.feature.swap.domain
+package com.tangem.feature.swap.domain.api
 
 import arrow.core.Either
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.DataError
 import java.math.BigDecimal
 
 interface SwapRepository {
@@ -28,7 +28,7 @@ interface SwapRepository {
         toDecimals: Int,
         providerId: String,
         rateType: RateType,
-    ): AggregatedSwapDataModel<QuoteModel>
+    ): Either<DataError, QuoteModel>
 
     /**
      * Returns address of 1inch router that must be trusted
@@ -77,7 +77,7 @@ interface SwapRepository {
         providerId: String,
         rateType: RateType,
         toAddress: String,
-    ): AggregatedSwapDataModel<SwapDataModel>
+    ): Either<DataError, SwapDataModel>
 
     fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 }
