@@ -26,6 +26,10 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.settings)
+    implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.domain.models)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -47,11 +51,6 @@ dependencies {
     /** Api */
     implementation(projects.features.swap.api)
     implementation(projects.features.tokendetails.api)
-
-    /** Domain */
-    implementation(projects.features.swap.domain)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.settings)
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
