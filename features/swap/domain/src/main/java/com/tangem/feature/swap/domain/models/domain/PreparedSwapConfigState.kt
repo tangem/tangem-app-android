@@ -14,6 +14,7 @@ data class PreparedSwapConfigState(
     val isAllowedToSpend: Boolean,
     val isBalanceEnough: Boolean,
     val isFeeEnough: Boolean,
+    val hasOutgoingTransaction: Boolean,
     val includeFeeInAmount: IncludeFeeInAmount,
 )
 

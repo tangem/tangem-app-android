@@ -420,7 +420,6 @@ internal class SwapInteractorImpl @Inject constructor(
             permissionState = PermissionDataState.Empty,
             preparedSwapConfigState = state.preparedSwapConfigState.copy(
                 isBalanceEnough = includeFeeInAmount !is IncludeFeeInAmount.BalanceNotEnough,
-                isFeeEnough = includeFeeInAmount !is IncludeFeeInAmount.BalanceNotEnough,
                 includeFeeInAmount = includeFeeInAmount,
             ),
         )
@@ -798,6 +797,7 @@ internal class SwapInteractorImpl @Inject constructor(
                             isFeeEnough = includeFeeInAmount !is IncludeFeeInAmount.BalanceNotEnough,
                             isAllowedToSpend = isAllowedToSpend,
                             isBalanceEnough = isBalanceWithoutFeeEnough,
+                            hasOutgoingTransaction = hasOutgoingTransaction(fromToken),
                             includeFeeInAmount = includeFeeInAmount,
                         ),
                     )
@@ -873,7 +873,7 @@ internal class SwapInteractorImpl @Inject constructor(
     /**
      * Load swap data calls only if spend is allowed for token contract address
      */
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod")
     private suspend fun loadDexSwapData(
         provider: SwapProvider,
         networkId: String,
@@ -932,6 +932,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         isAllowedToSpend = true,
                         isBalanceEnough = isBalanceIncludeFeeEnough,
                         isFeeEnough = isFeeEnough,
+                        hasOutgoingTransaction = hasOutgoingTransaction(fromToken),
                         includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
                     ),
                 )
@@ -1224,6 +1225,10 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun hasOutgoingTransaction(cryptoCurrencyStatuses: CryptoCurrencyStatus): Boolean {
+        return cryptoCurrencyStatuses.value.pendingTransactions.any { it.isOutgoing }
     }
 
     private fun Fee.getGasLimit(): Int {
