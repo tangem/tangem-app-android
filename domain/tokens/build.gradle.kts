@@ -18,6 +18,9 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.settings)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.domain.models)
 
     /** Project - Other */
     implementation(projects.core.utils)
