@@ -38,7 +38,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
@@ -431,6 +431,20 @@ class DefaultWalletManagersFacade(
             amount = amount,
             destination = destination,
         )
+    }
+
+    override suspend fun estimateFee(
+        amount: Amount,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Result<TransactionFee>? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+        return (walletManager as? TransactionSender)?.estimateFee(amount = amount)
     }
 
     override suspend fun validateTransaction(
