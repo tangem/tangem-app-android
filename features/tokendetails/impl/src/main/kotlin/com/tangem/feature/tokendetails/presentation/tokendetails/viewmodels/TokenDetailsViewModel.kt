@@ -20,6 +20,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -35,8 +36,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.SwapTransactionRepository
+import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -74,6 +75,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
@@ -545,6 +547,12 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onGoToProviderClick(url: String) {
         router.openUrl(url)
+    }
+
+    override fun onSwapPromoDismiss() {
+        viewModelScope.launch(dispatchers.main) {
+            shouldShowSwapPromoTokenUseCase.neverToShow()
+        }
     }
 
     private companion object {
