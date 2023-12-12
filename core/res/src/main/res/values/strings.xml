@@ -677,6 +677,8 @@
     <string name="warning_developer_card_title">Not for users!</string>
     <string name="warning_existential_deposit_message">%1$s network requires an Existential Deposit. If your account drops below %2$s, it will be deactivated, and any remaining funds will be destroyed.</string>
     <string name="warning_existential_deposit_title">Network requires Existential Deposit</string>
+    <string name="warning_express_active_transaction_message">Swap will be available after the %s transaction is complete</string>
+    <string name="warning_express_active_transaction_title">You have active transaction</string>
     <string name="warning_express_no_exchangeable_coins_description">You do not have any %s exchangeable coins in your list</string>
     <string name="warning_express_no_exchangeable_coins_title">No available tokens to swap</string>
     <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
