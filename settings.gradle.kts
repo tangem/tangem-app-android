@@ -27,7 +27,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         mavenLocal()
-        jcenter() // unable to replace with mavenCentral() due to rekotlin and com.otaliastudios:cameraview
+        jcenter() // unable to replace with mavenCentral() due to rekotlin
         maven("https://nexus.tangem-tech.com/repository/maven-releases/")
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
@@ -141,3 +141,4 @@ include(":data:txhistory")
 include(":data:wallets")
 include(":data:analytics")
 // endregion Data modules
+include(":features:qr-scanning")

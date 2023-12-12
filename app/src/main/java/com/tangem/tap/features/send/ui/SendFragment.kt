@@ -15,6 +15,8 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.example.qr_scanning.SCAN_QR_REQUEST_CODE
+import com.example.qr_scanning.SCAN_RESULT
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.core.analytics.Analytics
@@ -147,7 +149,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             Analytics.send(Token.Send.ButtonQRCode())
             startActivityForResult(
                 Intent(requireContext(), ScanQrCodeActivity::class.java),
-                ScanQrCodeActivity.SCAN_QR_REQUEST_CODE,
+                SCAN_QR_REQUEST_CODE,
             )
         }
     }
@@ -201,9 +203,9 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode != ScanQrCodeActivity.SCAN_QR_REQUEST_CODE) return
+        if (requestCode != SCAN_QR_REQUEST_CODE) return
 
-        val scannedCode = data?.getStringExtra(ScanQrCodeActivity.SCAN_RESULT) ?: ""
+        val scannedCode = data?.getStringExtra(SCAN_RESULT) ?: ""
         if (scannedCode.isEmpty()) return
 
         // Delayed launch is needed in order for the UI to be drawn and to process the sent events.

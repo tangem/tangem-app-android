@@ -1,5 +1,6 @@
 package com.tangem.tap.proxy.redux
 
+import com.example.qr_scanning.QrScanRouter
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -50,6 +51,7 @@ data class DaggerGraphState(
     val networksRepository: NetworksRepository? = null,
     val sendFeatureToggles: SendFeatureToggles? = null,
     val sendRouter: SendRouter? = null,
+    val qrScanRouter: QrScanRouter? = null,
 
     // FIXME: It is used only for TokensList screen. Remove after refactoring of TokensList
     val currenciesRepository: CurrenciesRepository? = null,

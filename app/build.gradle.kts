@@ -143,6 +143,7 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(project(mapOf("path" to ":features:qr-scanning")))
     kapt(deps.hilt.kapt)
 
     /** Other libraries */
@@ -155,7 +156,6 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
-    implementation(deps.otaliastudiosCameraView)
     implementation(deps.coil)
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
@@ -193,19 +193,5 @@ dependencies {
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
-
-    /** Camera */
-    implementation(deps.camera.camera2)
-    implementation(deps.camera.lifecycle)
-    implementation(deps.camera.view)
-
-    implementation(deps.listenableFuture)
-    implementation(deps.mlKit.barcodeScanning)
-
-    /** Excluded dependencies */
-    implementation("com.google.guava:guava:30.0-android") {
-        // excludes version 9999.0-empty-to-avoid-conflict-with-guava
-        exclude(group="com.google.guava", module = "listenablefuture")
-    }
 
 }

@@ -1,6 +1,7 @@
-package com.tangem.tap.features.details.ui.walletconnect
+package com.example.qr_scanning
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.*
@@ -10,14 +11,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.example.qr_scanning.databinding.LayoutQrScanningBinding
 import com.google.common.util.concurrent.ListenableFuture
-import com.otaliastudios.cameraview.CameraView
-import com.tangem.core.navigation.NavigationAction
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder
-import com.tangem.tap.store
-import com.tangem.wallet.R
-import com.tangem.wallet.databinding.LayoutQrScanningBinding
+// import com.tangem.core.navigation.NavigationAction
+// import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+// import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder
+// import com.tangem.tap.store
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -33,14 +32,15 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setFitSystemWindows(fit = true)
-        activity?.onBackPressedDispatcher?.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    store.dispatch(NavigationAction.PopBackTo())
-                }
-            },
-        )
+
+        // activity?.onBackPressedDispatcher?.addCallback(
+        //     this,
+        //     object : OnBackPressedCallback(true) {
+        //         override fun handleOnBackPressed() {
+        //             // store.dispatch(NavigationAction.PopBackTo())
+        //         }
+        //     },
+        // )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -61,11 +61,11 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
                     cameraProvider = requireNotNull(cameraProvider),
                     cameraExecutor = requireNotNull(cameraExecutor),
                     onScanned = { result ->
-                        store.dispatch(NavigationAction.PopBackTo())
-                        setFitSystemWindows(fit = false)
-                        if (result.isNotBlank()) {
-                            store.dispatch(WalletConnectAction.OpenSession(result))
-                        }
+                        // store.dispatch(NavigationAction.PopBackTo())
+                        // setFitSystemWindows(fit = false)
+                        // if (result.isNotBlank()) {
+                        //     store.dispatch(WalletConnectAction.OpenSession(result))
+                        // }
                     },
                 )
             },
@@ -83,11 +83,11 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        if (requestCode != CameraView.PERMISSION_REQUEST_CODE) return
+        if (requestCode != PERMISSION_REQUEST_CODE) return
 
         if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-            store.dispatch(WalletConnectAction.NotifyCameraPermissionIsRequired)
-            store.dispatch(NavigationAction.PopBackTo())
+            // store.dispatch(WalletConnectAction.NotifyCameraPermissionIsRequired)
+            // store.dispatch(NavigationAction.PopBackTo())
         }
     }
 
@@ -97,12 +97,13 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
     }
 
     private fun requestPermission() {
-        requestPermissions(arrayOf(Manifest.permission.CAMERA), CameraView.PERMISSION_REQUEST_CODE)
+        requestPermissions(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CODE)
     }
 
     private fun setFitSystemWindows(fit: Boolean) {
-        activity?.window?.let {
-            WindowCompat.setDecorFitsSystemWindows(it, fit)
-        }
+        // activity?.window?.let {
+        //     WindowCompat.setDecorFitsSystemWindows(it, fit)
+        // }
     }
+
 }

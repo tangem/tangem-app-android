@@ -21,6 +21,7 @@ object DaggerGraphReducer {
                 manageTokensRouter = action.manageTokensRouter,
                 cardSdkConfigRepository = action.cardSdkConfigRepository,
                 sendRouter = action.sendRouter,
+                qrScanRouter = action.qrScanRouter,
             )
         }
     }
