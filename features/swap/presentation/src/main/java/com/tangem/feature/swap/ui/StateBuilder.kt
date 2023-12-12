@@ -12,11 +12,11 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.TokensDataConverter
+import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
-import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
