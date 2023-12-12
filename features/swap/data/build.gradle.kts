@@ -15,6 +15,8 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.domain.models)
+    implementation(projects.features.swap.domain.api)
 
     /** Network */
     implementation(deps.retrofit)
