@@ -1,8 +1,10 @@
 package com.tangem.feature.swap
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import arrow.core.right
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
@@ -27,12 +29,11 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
-import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
-import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
-import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -184,7 +185,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         toDecimals: Int,
         providerId: String,
         rateType: RateType,
-    ): AggregatedSwapDataModel<QuoteModel> {
+    ): Either<DataError, QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
                 val response = tangemExpressApi.getExchangeQuote(
@@ -198,14 +199,12 @@ internal class SwapRepositoryImpl @Inject constructor(
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
                 ).getOrThrow()
-                AggregatedSwapDataModel(
-                    dataModel = QuoteModel(
-                        toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
-                        allowanceContract = response.allowanceContract,
-                    ),
-                )
+                QuoteModel(
+                    toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
+                    allowanceContract = response.allowanceContract,
+                ).right()
             } catch (ex: Exception) {
-                AggregatedSwapDataModel(null, getDataError(ex))
+                getDataError(ex).left()
             }
         }
     }
@@ -227,7 +226,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         providerId: String,
         rateType: RateType,
         toAddress: String,
-    ): AggregatedSwapDataModel<SwapDataModel> {
+    ): Either<DataError, SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
                 val response = tangemExpressApi.getExchangeData(
@@ -242,11 +241,9 @@ internal class SwapRepositoryImpl @Inject constructor(
                     rateType = rateType.name.lowercase(),
                     toAddress = toAddress,
                 ).getOrThrow()
-                AggregatedSwapDataModel(
-                    dataModel = expressDataConverter.convert(response),
-                )
+                expressDataConverter.convert(response).right()
             } catch (ex: Exception) {
-                AggregatedSwapDataModel(null, getDataError(ex))
+                getDataError(ex).left()
             }
         }
     }
