@@ -5,7 +5,10 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
+import com.tangem.feature.swap.domain.models.domain.PermissionOptions
+import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.*
 
 interface SwapInteractor {
