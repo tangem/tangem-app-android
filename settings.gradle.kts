@@ -79,12 +79,16 @@ include(":libs:auth")
 
 // region Feature modules
 include(":features:onboarding")
+
 include(":features:referral:data")
 include(":features:referral:domain")
 include(":features:referral:presentation")
+
 include(":features:swap:api")
 include(":features:swap:data")
 include(":features:swap:domain")
+include(":features:swap:domain:models")
+include(":features:swap:domain:api")
 include(":features:swap:presentation")
 
 include(":features:tester:api")
