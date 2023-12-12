@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.domain.demo)
     implementation(projects.domain.card)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.txhistory.models)
 
     /** Core modules */
     implementation(projects.core.utils)
