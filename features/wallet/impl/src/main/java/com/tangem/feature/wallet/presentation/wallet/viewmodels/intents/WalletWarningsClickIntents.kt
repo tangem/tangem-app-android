@@ -84,7 +84,20 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
 
     override fun onAddBackupCardClick() {
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped)
+
+        prepareOnboardingProcess()
         router.openOnboardingScreen()
+    }
+
+    private fun prepareOnboardingProcess() {
+        getSelectedWalletSyncUseCase.unwrap()?.let {
+            reduxStateHolder.dispatch(
+                LegacyAction.StartOnboardingProcess(
+                    scanResponse = it.scanResponse,
+                    canSkipBackup = false,
+                ),
+            )
+        }
     }
 
     override fun onCloseAlreadySignedHashesWarningClick() {
