@@ -70,9 +70,10 @@ dependencies {
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.domain.models)
 
     /** Feature Apis */
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.send.api)
-    implementation(projects.features.swap.domain)
 }
