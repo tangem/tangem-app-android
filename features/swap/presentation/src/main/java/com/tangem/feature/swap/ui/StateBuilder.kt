@@ -320,6 +320,26 @@ internal class StateBuilder(
                 ),
             )
         }
+        if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
+            warnings.add(
+                SwapWarning.TransactionInProgressWarning(
+                    title = resourceReference(R.string.swapping_pending_transaction_title),
+                    description = resourceReference(R.string.swapping_pending_transaction_subtitle),
+                ),
+            )
+        } else if (quoteModel.preparedSwapConfigState.hasOutgoingTransaction) {
+            warnings.add(
+                SwapWarning.TransactionInProgressWarning(
+                    title = resourceReference(R.string.warning_express_active_transaction_title),
+                    description = resourceReference(
+                        id = R.string.warning_express_active_transaction_message,
+                        formatArgs = wrappedList(
+                            quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.network.currencySymbol,
+                        ),
+                    ),
+                ),
+            )
+        }
         return warnings
     }
 
@@ -430,22 +450,23 @@ internal class StateBuilder(
                     iconResId = R.drawable.ic_alert_circle_24,
                 ),
             )
-            is DataError.UnknownError -> SwapWarning.GeneralWarning(
+            else -> SwapWarning.GeneralWarning(
                 notificationConfig = NotificationConfig(
-                    title = resourceReference(R.string.common_error),
-                    subtitle = resourceReference(R.string.swapping_generic_error),
+                    title = if (dataError is DataError.UnknownError) {
+                        resourceReference(R.string.common_error)
+                    } else {
+                        resourceReference(R.string.warning_express_refresh_required_title)
+                    },
+                    subtitle = if (dataError is DataError.UnknownError) {
+                        resourceReference(R.string.swapping_generic_error)
+                    } else {
+                        resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString()))
+                    },
                     iconResId = R.drawable.img_attention_20,
                     buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                         text = resourceReference(R.string.warning_button_refresh),
                         onClick = actions.onRetryClick,
                     ),
-                ),
-            )
-            else -> SwapWarning.GeneralWarning(
-                notificationConfig = NotificationConfig(
-                    title = resourceReference(R.string.common_error),
-                    subtitle = resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString())),
-                    iconResId = R.drawable.img_attention_20,
                 ),
             )
         }
@@ -956,7 +977,7 @@ internal class StateBuilder(
     // region warnings
     private fun createPermissionNotificationConfig(fromTokenSymbol: String): NotificationConfig {
         return NotificationConfig(
-            title = resourceReference(R.string.swapping_permission_header),
+            title = resourceReference(R.string.express_provider_permission_needed),
             subtitle = resourceReference(
                 id = R.string.swapping_permission_subheader,
                 formatArgs = wrappedList(fromTokenSymbol),
