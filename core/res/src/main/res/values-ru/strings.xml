@@ -244,6 +244,8 @@
     <string name="main_promotion_credited">1INCH токены будут зачислены на адрес вашего кошелька в сети %s в течение 48 часов</string>
     <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
     <string name="main_scan_card_warning_view_title">Отсканируйте карту</string>
+    <string name="main_swap_promotion_message">Обменивайте свои цифровые активы между различными сетями</string>
+    <string name="main_swap_promotion_title">Кроссчейн-своп теперь доступен</string>
     <string name="main_tokens">Токены</string>
     <string name="manage_tokens_add">Добавить</string>
     <string name="manage_tokens_edit">Изменить</string>
@@ -539,6 +541,9 @@
     <string name="token_details_unable_hide_alert_message">Токен %1$s является основной валютой в сети %2$s и не может быть скрыт до тех пор, пока у вас в списке есть другие токены этой сети.</string>
     <string name="token_details_unable_hide_alert_title">Невозможно скрыть %s</string>
     <string name="token_item_no_rate">Нет цены</string>
+    <string name="token_swap_promotion_message">Обменяйте этот токен на другие активы в вашем портфеле</string>
+    <string name="token_swap_promotion_title">Представляем кроссчейн-своп</string>
+    <string name="token_swap_promotion_button">Обменять</string>
     <string name="transaction_history_contract_address">контракт: %s</string>
     <string name="transaction_history_empty_transactions">У вас еще нет транзакций</string>
     <string name="transaction_history_error_failed_to_load">Не удалось загрузить историю транзакций.\nНажмите на кнопку перезагрузки, чтобы обновить информацию.</string>
