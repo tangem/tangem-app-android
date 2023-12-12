@@ -29,6 +29,8 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.domain.models)
 
     /** Core modules */
     implementation(projects.core.utils)
@@ -38,7 +40,6 @@ dependencies {
     implementation(projects.features.wallet.api)
 
     /** Other Libraries **/
-    implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
     implementation(deps.timber)
