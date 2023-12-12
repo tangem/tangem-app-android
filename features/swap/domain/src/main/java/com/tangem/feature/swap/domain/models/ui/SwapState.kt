@@ -19,6 +19,7 @@ sealed interface SwapState {
             isAllowedToSpend = false,
             isBalanceEnough = false,
             isFeeEnough = false,
+            hasOutgoingTransaction = false,
             includeFeeInAmount = IncludeFeeInAmount.Excluded,
         ),
         val permissionState: PermissionDataState = PermissionDataState.Empty,
