@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.SubcomposeAsyncImage
@@ -374,7 +375,7 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
         ),
     ) {
         Text(
-            text = "Permission required",
+            text = stringResource(id = R.string.express_provider_permission_needed),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
