@@ -346,9 +346,7 @@ internal class SwapViewModel @Inject constructor(
                 )
             }
             is SwapState.SwapError -> {
-                if (state.error is DataError.UnknownError) {
-                    singleTaskScheduler.cancelTask()
-                }
+                singleTaskScheduler.cancelTask()
                 uiState = stateBuilder.createQuotesErrorState(
                     uiStateHolder = uiState,
                     swapProvider = provider,
