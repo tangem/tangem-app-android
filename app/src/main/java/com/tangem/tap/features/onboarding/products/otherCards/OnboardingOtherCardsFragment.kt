@@ -71,19 +71,19 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     }
 
     private fun setupCreateWalletState() = with(mainBinding.onboardingActionContainer) {
-        btnMainAction?.setText(R.string.onboarding_create_wallet_button_create_wallet)
-        btnMainAction?.setIconResource(R.drawable.ic_tangem_24)
-        btnMainAction?.setOnClickListener {
+        btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
+        btnMainAction.setOnClickListener {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(OnboardingOtherCardsAction.CreateWallet)
         }
-        btnAlternativeAction?.setText(R.string.onboarding_button_what_does_it_mean)
-        btnAlternativeAction?.setOnClickListener { }
+        btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
+        btnAlternativeAction.setOnClickListener { }
 
         tvHeader.setText(R.string.onboarding_create_wallet_header)
-        tvBody?.setText(R.string.onboarding_create_wallet_body)
+        tvBody.setText(R.string.onboarding_create_wallet_body)
 
-        btnAlternativeAction?.isVisible = false // temporary
+        btnAlternativeAction.isVisible = false // temporary
 
         mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_circle),
@@ -92,19 +92,19 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     }
 
     private fun setupDoneState() = with(mainBinding.onboardingActionContainer) {
-        btnMainAction?.setText(R.string.common_continue)
-        btnMainAction?.icon = null
-        btnMainAction?.setOnClickListener {
+        btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
+        btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingOtherCardsAction.Done)
         }
 
-        btnAlternativeAction?.isVisible = false
-        btnAlternativeAction?.text = ""
-        btnAlternativeAction?.setOnClickListener { }
+        btnAlternativeAction.isVisible = false
+        btnAlternativeAction.text = ""
+        btnAlternativeAction.setOnClickListener { }
 
         tvHeader.setText(R.string.onboarding_done_header)
-        tvBody?.setText(R.string.onboarding_done_body)
+        tvBody.setText(R.string.onboarding_done_body)
 
         mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
