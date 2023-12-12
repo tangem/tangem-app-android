@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.states.FeeItemState
@@ -125,6 +126,7 @@ sealed interface SwapWarning {
     data class TooSmallAmountWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class UnableToCoverFeeWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class GeneralWarning(val notificationConfig: NotificationConfig) : SwapWarning
+    data class TransactionInProgressWarning(val title: TextReference, val description: TextReference) : SwapWarning
 }
 
 enum class GenericWarningType {

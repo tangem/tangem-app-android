@@ -261,6 +261,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(TangemTheme.dimens.size16),
                     color = TangemTheme.colors.icon.informative,
+                    strokeWidth = TangemTheme.dimens.size2,
                 )
                 Text(
                     text = "Fetching best rates ...",

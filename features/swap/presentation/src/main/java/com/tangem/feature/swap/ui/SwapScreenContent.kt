@@ -20,6 +20,7 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
@@ -67,20 +68,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
                 if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
 
-                AnimatedVisibility(visible = state.permissionState is SwapPermissionState.InProgress) {
-                    CardWithIcon(
-                        title = stringResource(id = R.string.swapping_pending_transaction_title),
-                        description = stringResource(id = R.string.swapping_pending_transaction_subtitle),
-                        icon = {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .size(TangemTheme.dimens.size16),
-                                color = TangemTheme.colors.icon.primary1,
-                                strokeWidth = TangemTheme.dimens.size2,
-                            )
-                        },
-                    )
-                }
                 MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
             }
         }
@@ -283,6 +270,20 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                 is SwapWarning.GeneralWarning -> {
                     Notification(
                         config = warning.notificationConfig,
+                    )
+                }
+                is SwapWarning.TransactionInProgressWarning -> {
+                    CardWithIcon(
+                        title = warning.title.resolveReference(),
+                        description = warning.description.resolveReference(),
+                        icon = {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(TangemTheme.dimens.size16),
+                                color = TangemTheme.colors.icon.primary1,
+                                strokeWidth = TangemTheme.dimens.size2,
+                            )
+                        },
                     )
                 }
                 else -> {}
