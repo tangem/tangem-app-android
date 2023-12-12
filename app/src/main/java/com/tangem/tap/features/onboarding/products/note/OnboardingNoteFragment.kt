@@ -96,69 +96,69 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     }
 
     private fun setupNoneState() = with(mainBinding.onboardingActionContainer) {
-        btnMainAction?.isVisible = false
-        btnAlternativeAction?.isVisible = false
+        btnMainAction.isVisible = false
+        btnAlternativeAction.isVisible = false
         btnRefreshBalanceWidget.show(false)
         tvHeader.isVisible = false
-        tvBody?.isVisible = false
+        tvBody.isVisible = false
 
-        btnMainAction?.text = ""
-        btnMainAction?.icon = null
-        btnAlternativeAction?.text = ""
-        btnAlternativeAction?.icon = null
+        btnMainAction.text = ""
+        btnMainAction.icon = null
+        btnAlternativeAction.text = ""
+        btnAlternativeAction.icon = null
         tvHeader.text = ""
-        tvBody?.text = ""
+        tvBody.text = ""
     }
 
     private fun setupCreateWalletState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
-        btnMainAction?.setText(R.string.onboarding_create_wallet_button_create_wallet)
-        btnMainAction?.setIconResource(R.drawable.ic_tangem_24)
-        btnMainAction?.setOnClickListener {
+        btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
+        btnMainAction.setOnClickListener {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(OnboardingNoteAction.CreateWallet)
         }
-        btnAlternativeAction?.setText(R.string.onboarding_button_what_does_it_mean)
-        btnAlternativeAction?.setOnClickListener { }
+        btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
+        btnAlternativeAction.setOnClickListener { }
 
         btnRefreshBalanceWidget.mainView.setOnClickListener(null)
 
         tvHeader.setText(R.string.onboarding_create_wallet_header)
-        tvBody?.setText(R.string.onboarding_create_wallet_body)
+        tvBody.setText(R.string.onboarding_create_wallet_body)
 
         mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_circle),
         )
         updateConstraints(state.currentStep, R.layout.lp_onboarding_create_wallet)
 
-        btnAlternativeAction?.isVisible = false // temporary
+        btnAlternativeAction.isVisible = false // temporary
     }
 
     private fun setupTopUpWalletState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
         if (state.isBuyAllowed) {
-            btnMainAction?.setText(R.string.onboarding_top_up_button_but_crypto)
-            btnMainAction?.icon = null
-            btnMainAction?.setOnClickListener {
+            btnMainAction.setText(R.string.onboarding_top_up_button_but_crypto)
+            btnMainAction.icon = null
+            btnMainAction.setOnClickListener {
                 store.dispatch(OnboardingNoteAction.TopUp)
             }
 
-            btnAlternativeAction?.isVisible = true
-            btnAlternativeAction?.setText(R.string.onboarding_top_up_button_show_wallet_address)
-            btnAlternativeAction?.setOnClickListener {
+            btnAlternativeAction.isVisible = true
+            btnAlternativeAction.setText(R.string.onboarding_top_up_button_show_wallet_address)
+            btnAlternativeAction.setOnClickListener {
                 store.dispatch(OnboardingNoteAction.ShowAddressInfoDialog)
             }
         } else {
-            btnMainAction?.setText(R.string.onboarding_button_receive_crypto)
-            btnMainAction?.icon = null
-            btnMainAction?.setOnClickListener {
+            btnMainAction.setText(R.string.onboarding_button_receive_crypto)
+            btnMainAction.icon = null
+            btnMainAction.setOnClickListener {
                 store.dispatch(OnboardingNoteAction.ShowAddressInfoDialog)
             }
 
-            btnAlternativeAction?.isVisible = false
+            btnAlternativeAction.isVisible = false
         }
 
         tvHeader.setText(R.string.onboarding_topup_title)
         if (state.balanceNonCriticalError == null) {
-            tvBody?.setText(R.string.onboarding_top_up_body)
+            tvBody.setText(R.string.onboarding_top_up_body)
         } else {
             state.walletBalance.amountToCreateAccount?.let { amount ->
                 val tvBodyMessage = getString(
@@ -166,7 +166,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
                     amount,
                     state.walletBalance.currency.currencySymbol,
                 )
-                tvBody?.text = tvBodyMessage
+                tvBody.text = tvBodyMessage
             }
         }
 
@@ -183,20 +183,20 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     }
 
     private fun setupDoneState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
-        btnMainAction?.setText(R.string.common_continue)
-        btnMainAction?.icon = null
-        btnMainAction?.setOnClickListener {
+        btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
+        btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingNoteAction.Done)
         }
 
-        btnAlternativeAction?.isVisible = false
-        btnAlternativeAction?.text = ""
-        btnAlternativeAction?.setOnClickListener { }
+        btnAlternativeAction.isVisible = false
+        btnAlternativeAction.text = ""
+        btnAlternativeAction.setOnClickListener { }
         btnRefreshBalanceWidget.mainView.setOnClickListener(null)
 
         tvHeader.setText(R.string.onboarding_done_header)
-        tvBody?.setText(R.string.onboarding_done_body)
+        tvBody.setText(R.string.onboarding_done_body)
 
         mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
