@@ -13,7 +13,7 @@ import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.feature.swap.SwapRepositoryImpl
 import com.tangem.feature.swap.converters.ErrorsDataConverter
 import com.tangem.feature.swap.DefaultSwapTransactionRepository
-import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
