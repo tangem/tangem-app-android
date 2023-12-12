@@ -166,4 +166,16 @@ sealed class WalletNotification(val config: NotificationConfig) {
             onCloseClick = onCloseClick,
         ),
     )
+
+    data class SwapPromo(
+        val onCloseClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.main_swap_promotion_title),
+            subtitle = resourceReference(id = R.string.main_swap_promotion_message),
+            iconResId = R.drawable.ic_swap_promo_34,
+            backgroundResId = R.drawable.img_swap_promo_banner_background,
+            onCloseClick = onCloseClick,
+        ),
+    )
 }
