@@ -13,7 +13,7 @@ import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
@@ -54,8 +54,8 @@ internal class SwapInteractorImpl @Inject constructor(
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
 ) : SwapInteractor {
 
-    private val getFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
-        GetFeeUseCase(walletManagersFacade, dispatcher)
+    private val estimateFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        EstimateFeeUseCase(walletManagersFacade, dispatcher)
     }
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
@@ -999,9 +999,8 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
     ): TxFeeState {
         getSelectedWalletSyncUseCase().getOrNull()?.walletId?.let { userWalletId ->
-            val txFeeResult = getFeeUseCase(
+            val txFeeResult = estimateFeeUseCase(
                 amount = amount.value,
-                destination = fromToken.value.networkAddress?.defaultAddress?.value ?: "",
                 userWalletId = userWalletId,
                 cryptoCurrency = fromToken.currency,
             ).firstOrNull()
