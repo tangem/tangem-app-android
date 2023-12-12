@@ -8,6 +8,7 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.repositories.SwapPromoRepository
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
@@ -102,5 +103,21 @@ internal object SettingsDomainModule {
     @ViewModelScoped
     fun provideIsWalletsScrollPreviewEnabled(settingsRepository: SettingsRepository): IsWalletsScrollPreviewEnabled {
         return IsWalletsScrollPreviewEnabled(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideShouldShowSwapPromoWalletUseCase(
+        swapPromoRepository: SwapPromoRepository,
+    ): ShouldShowSwapPromoWalletUseCase {
+        return ShouldShowSwapPromoWalletUseCase(swapPromoRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideShouldShowSwapPromoTokenUseCase(
+        swapPromoRepository: SwapPromoRepository,
+    ): ShouldShowSwapPromoTokenUseCase {
+        return ShouldShowSwapPromoTokenUseCase(swapPromoRepository)
     }
 }
