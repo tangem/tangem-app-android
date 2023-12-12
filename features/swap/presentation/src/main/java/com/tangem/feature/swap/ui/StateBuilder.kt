@@ -320,6 +320,26 @@ internal class StateBuilder(
                 ),
             )
         }
+        if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
+            warnings.add(
+                SwapWarning.TransactionInProgressWarning(
+                    title = resourceReference(R.string.swapping_pending_transaction_title),
+                    description = resourceReference(R.string.swapping_pending_transaction_subtitle),
+                ),
+            )
+        } else if (quoteModel.preparedSwapConfigState.hasOutgoingTransaction) {
+            warnings.add(
+                SwapWarning.TransactionInProgressWarning(
+                    title = resourceReference(R.string.warning_express_active_transaction_title),
+                    description = resourceReference(
+                        id = R.string.warning_express_active_transaction_message,
+                        formatArgs = wrappedList(
+                            quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.network.currencySymbol,
+                        ),
+                    ),
+                ),
+            )
+        }
         return warnings
     }
 
