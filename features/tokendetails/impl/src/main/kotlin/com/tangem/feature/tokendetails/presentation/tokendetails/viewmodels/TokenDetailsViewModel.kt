@@ -35,7 +35,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
