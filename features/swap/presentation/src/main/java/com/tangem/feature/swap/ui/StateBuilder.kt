@@ -976,7 +976,7 @@ internal class StateBuilder(
     // region warnings
     private fun createPermissionNotificationConfig(fromTokenSymbol: String): NotificationConfig {
         return NotificationConfig(
-            title = resourceReference(R.string.swapping_permission_header),
+            title = resourceReference(R.string.express_provider_permission_needed),
             subtitle = resourceReference(
                 id = R.string.swapping_permission_subheader,
                 formatArgs = wrappedList(fromTokenSymbol),
