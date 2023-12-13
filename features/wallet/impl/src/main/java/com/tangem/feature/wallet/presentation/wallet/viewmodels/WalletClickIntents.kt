@@ -72,4 +72,6 @@ internal interface WalletClickIntents {
     fun onExploreClick()
 
     fun onTransactionClick(txHash: String)
+
+    fun onCloseSwapPromoNotificationClick()
 }
