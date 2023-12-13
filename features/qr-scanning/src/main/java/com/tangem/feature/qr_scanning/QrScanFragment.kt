@@ -1,18 +1,16 @@
-package com.example.qr_scanning
+package com.tangem.feature.qr_scanning
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.*
-import androidx.activity.OnBackPressedCallback
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.example.qr_scanning.databinding.LayoutQrScanningBinding
 import com.google.common.util.concurrent.ListenableFuture
+import com.tangem.feature.qr_scanning.databinding.LayoutQrScanningBinding
 // import com.tangem.core.navigation.NavigationAction
 // import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 // import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder

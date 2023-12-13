@@ -1,6 +1,6 @@
 package com.tangem.tap.proxy.redux
 
-import com.example.qr_scanning.QrScanRouter
+import com.tangem.feature.qr_scanning.QrScanRouter
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.features.managetokens.navigation.ManageTokensRouter

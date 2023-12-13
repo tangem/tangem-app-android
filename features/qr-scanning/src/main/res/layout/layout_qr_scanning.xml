@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.example.qr_scanning.ViewFinderOverlay
+    <com.tangem.feature.qr_scanning.ViewFinderOverlay
         android:id="@+id/overlay"
         android:layerType="software"
         android:layout_width="match_parent"

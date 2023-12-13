@@ -1,4 +1,4 @@
-package com.example.qr_scanning
+package com.tangem.feature.qr_scanning
 
 import android.content.Context
 import android.graphics.*

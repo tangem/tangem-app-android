@@ -1,4 +1,4 @@
-package com.example.qr_scanning
+package com.tangem.feature.qr_scanning
 
 import android.content.Context
 import android.util.Size
@@ -9,7 +9,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.lifecycle.LifecycleOwner
-import com.example.qr_scanning.databinding.LayoutQrScanningBinding
+import com.tangem.feature.qr_scanning.databinding.LayoutQrScanningBinding
 import java.util.concurrent.ExecutorService
 
 internal class PreviewBinder {
@@ -49,7 +49,7 @@ internal class PreviewBinder {
         }
         orientationEventListener.enable()
 
-        val analyzer: ImageAnalysis.Analyzer = com.example.qr_scanning.MLKitBarcodeAnalyzer {
+        val analyzer: ImageAnalysis.Analyzer = MLKitBarcodeAnalyzer {
             imageAnalysis.clearAnalyzer()
             onScanned.invoke(it)
         }

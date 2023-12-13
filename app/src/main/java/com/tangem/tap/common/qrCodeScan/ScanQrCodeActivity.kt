@@ -12,7 +12,7 @@ class ScanQrCodeActivity : AppCompatActivity() {
     // private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
     // private var cameraExecutor: ExecutorService? = null
     //
-    // private val binder = com.example.qr_scanning.PreviewBinder()
+    // private val binder = com.tangem.feature.qr_scanning.PreviewBinder()
     //
     // override fun onCreate(state: Bundle?) {
     //     super.onCreate(state)
