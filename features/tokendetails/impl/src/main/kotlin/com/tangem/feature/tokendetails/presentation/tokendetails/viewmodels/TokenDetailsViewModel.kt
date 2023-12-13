@@ -43,6 +43,7 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.utils.coroutines.*
@@ -229,7 +230,14 @@ internal class TokenDetailsViewModel @Inject constructor(
                                 }
                             },
                             onSuccess = { updatedTxs ->
-                                uiState = uiState.copy(swapTxs = updatedTxs)
+                                val config = uiState.bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig
+                                val currentTx = updatedTxs.firstOrNull { it.txId == config?.value?.txId }
+                                uiState = uiState.copy(
+                                    swapTxs = updatedTxs,
+                                    bottomSheetConfig = currentTx?.let(
+                                        stateFactory::updateStateWithExchangeStatusBottomSheet,
+                                    ),
+                                )
                             },
                             onError = {},
                         ),
