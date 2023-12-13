@@ -560,6 +560,7 @@ internal class SwapViewModel @Inject constructor(
                         is TxState.TxSent -> {
                             uiState = stateBuilder.loadingPermissionState(uiState)
                             uiState = stateBuilder.dismissBottomSheet(uiState)
+                            startLoadingQuotesFromLastState(isSilent = true)
                         }
                         is TxState.UserCancelled -> Unit
                         else -> {
