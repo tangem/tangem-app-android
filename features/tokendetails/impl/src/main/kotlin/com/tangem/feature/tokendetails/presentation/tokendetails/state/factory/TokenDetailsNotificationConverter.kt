@@ -45,6 +45,10 @@ internal class TokenDetailsNotificationConverter(
             is CryptoCurrencyWarning.HasPendingTransactions -> TokenDetailsNotification.HasPendingTransactions(
                 coinSymbol = warning.blockchainSymbol,
             )
+            is CryptoCurrencyWarning.SwapPromo -> TokenDetailsNotification.SwapPromo(
+                onSwapClick = clickIntents::onSwapPromoClick,
+                onCloseClick = clickIntents::onSwapPromoDismiss,
+            )
         }
     }
 }
