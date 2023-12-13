@@ -34,6 +34,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -142,8 +143,14 @@ internal class WalletViewModelV2 @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
                     if (selectedWallet.isMultiCurrency) {
+                        Timber.d("WalletConnect: initialize and setup networks for ${selectedWallet.walletId}")
+
                         reduxStateHolder.dispatch(
                             action = WalletConnectActions.New.Initialize(userWallet = selectedWallet),
+                        )
+
+                        reduxStateHolder.dispatch(
+                            action = WalletConnectActions.New.SetupUserChains(userWallet = selectedWallet),
                         )
                     }
                 }
