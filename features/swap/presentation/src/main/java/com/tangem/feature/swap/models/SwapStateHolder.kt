@@ -19,7 +19,7 @@ data class SwapStateHolder(
     val blockchainId: String, // not the same as networkId, its local id in app
     val warnings: List<SwapWarning> = emptyList(),
     val alert: SwapWarning.GenericWarning? = null,
-    val updateInProgress: Boolean = false,
+    val changeCardsButtonState: ChangeCardsButtonState = ChangeCardsButtonState.ENABLED,
     val providerState: ProviderState,
 
     val fee: FeeItemState = FeeItemState.Empty,
@@ -131,4 +131,8 @@ sealed interface SwapWarning {
 
 enum class GenericWarningType {
     NETWORK, OTHER
+}
+
+enum class ChangeCardsButtonState {
+    ENABLED, DISABLED, UPDATE_IN_PROGRESS
 }
