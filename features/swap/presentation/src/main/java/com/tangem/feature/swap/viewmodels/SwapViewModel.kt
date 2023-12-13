@@ -653,12 +653,18 @@ internal class SwapViewModel @Inject constructor(
     private fun onChangeCardsClicked() {
         val newFromToken = dataState.toCryptoCurrency
         val newToToken = dataState.fromCryptoCurrency
+
+
         if (newFromToken != null && newToToken != null) {
             dataState = dataState.copy(
                 fromCryptoCurrency = newFromToken,
                 toCryptoCurrency = newToToken,
             )
             isOrderReversed = !isOrderReversed
+            dataState.tokensDataState?.let {
+                updateTokensState(it)
+            }
+
             val decimals = newFromToken.currency.decimals
             lastAmount.value = cutAmountWithDecimals(decimals, lastAmount.value)
             uiState = stateBuilder.updateSwapAmount(
