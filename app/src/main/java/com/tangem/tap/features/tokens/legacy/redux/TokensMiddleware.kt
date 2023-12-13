@@ -16,7 +16,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -202,9 +201,7 @@ object TokensMiddleware {
                 userWalletId = userWallet.walletId,
                 update = { it.copy(scanResponse = updatedScanResponse) },
             ).doOnSuccess {
-                addCryptoCurrenciesUseCase(userWallet.walletId, currencyList).onRight {
-                    store.dispatch(action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet))
-                }
+                addCryptoCurrenciesUseCase(userWallet.walletId, currencyList)
             }
         }
         store.dispatchOnMain(NavigationAction.PopBackTo())
