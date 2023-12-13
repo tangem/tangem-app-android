@@ -80,6 +80,12 @@ internal class WalletViewModelV2 @Inject constructor(
         clickIntents.initialize(router, viewModelScope)
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        stateHolder.clear()
+        walletScreenContentLoader.cancelAll()
+    }
+
     private fun suggestToEnableBiometrics() {
         viewModelScope.launch(dispatchers.main) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
