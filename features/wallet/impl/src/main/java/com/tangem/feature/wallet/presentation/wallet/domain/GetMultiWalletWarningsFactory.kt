@@ -52,10 +52,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             flow = getTokenListUseCase(userWallet.walletId).conflate(),
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId).conflate(),
-            // flow4 = getMissedAddressCryptoCurrenciesUseCase(userWallet.walletId).conflate(),
         ) { maybeTokenList, isReadyToShowRating, isNeedToBackup ->
-            // maybeTokenList.onRight { Timber.e(it.toString()) }
-            // maybeMissedAddressCurrencies.onRight { Timber.e(it.toString()) }
             readyForRateAppNotification = true
             buildList {
                 addCriticalNotifications(cardTypesResolver)
