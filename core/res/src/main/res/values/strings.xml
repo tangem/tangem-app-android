@@ -263,6 +263,8 @@
     <string name="main_promotion_credited">1INCH tokens will be credited to your %s wallet address within 48 hours</string>
     <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
     <string name="main_scan_card_warning_view_title">Scan your card</string>
+    <string name="main_swap_promotion_message">Swap multiple currencies across several blockchains</string>
+    <string name="main_swap_promotion_title">Cross-chain swaps are now available</string>
     <string name="main_tokens">Tokens</string>
     <string name="manage_tokens_add">Add</string>
     <string name="manage_tokens_edit">Edit</string>
@@ -569,6 +571,9 @@
     <string name="token_details_unable_hide_alert_message">The %1$s token is the main currency on the %2$s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
     <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
     <string name="token_item_no_rate">No rate</string>
+    <string name="token_swap_promotion_message">Exchange this token for other assets in your portfolio</string>
+    <string name="token_swap_promotion_title">Introducing cross-chain swaps</string>
+    <string name="token_swap_promotion_button">Exchange now</string>
     <string name="transaction_history_contract_address">contract: %s</string>
     <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
     <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
