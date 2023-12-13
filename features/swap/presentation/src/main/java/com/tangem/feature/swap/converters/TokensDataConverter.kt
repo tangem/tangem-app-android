@@ -2,10 +2,7 @@ package com.tangem.feature.swap.converters
 
 import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
-import com.tangem.core.ui.extensions.getTintForTokenIcon
-import com.tangem.core.ui.extensions.networkIconResId
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -15,6 +12,7 @@ import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelectState
+import com.tangem.feature.swap.presentation.R
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
@@ -26,8 +24,8 @@ class TokensDataConverter(
 ) : Converter<CurrenciesGroup, SwapSelectTokenStateHolder> {
 
     override fun convert(value: CurrenciesGroup): SwapSelectTokenStateHolder {
-        val availableTitle = TokenToSelectState.Title(stringReference("My tokens")) // todo replace with resource
-        val unavailableTitle = TokenToSelectState.Title(stringReference("My tokens")) // todo replace with resource
+        val availableTitle = TokenToSelectState.Title(resourceReference(R.string.exchange_tokens_available_tokens_header))
+        val unavailableTitle = TokenToSelectState.Title(resourceReference(R.string.exchange_tokens_available_tokens_header))
         return SwapSelectTokenStateHolder(
             availableTokens = value.available.map { tokenWithBalanceToTokenToSelect(it, true) }
                 .toMutableList()
