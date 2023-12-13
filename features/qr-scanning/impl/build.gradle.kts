@@ -44,7 +44,7 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    // implementation(projects.features.qrScanning.api)
+    implementation(projects.features.qrScanning.api)
 
     /** Compose */
     implementation(deps.compose.foundation)

@@ -96,6 +96,7 @@ dependencies {
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
     implementation(projects.features.send.impl)
+    implementation(projects.features.qrScanning.api)
     implementation(projects.features.qrScanning.impl)
 
     /** AndroidX libraries */

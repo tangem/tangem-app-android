@@ -102,7 +102,7 @@ include(":features:send:impl")
 include(":features:manage-tokens:api")
 include(":features:manage-tokens:impl")
 
-//include(":features:qr-scanning:api")
+include(":features:qr-scanning:api")
 include(":features:qr-scanning:impl")
 // endregion Feature modules
 
