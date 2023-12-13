@@ -359,13 +359,14 @@ internal class StateBuilder(
         }
     }
 
+    @Suppress("LongParameterList")
     fun createQuotesErrorState(
         uiStateHolder: SwapStateHolder,
         swapProvider: SwapProvider,
         fromToken: TokenSwapInfo,
         toToken: CryptoCurrencyStatus?,
         dataError: DataError,
-        isReverseSwapPossible: Boolean
+        isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
