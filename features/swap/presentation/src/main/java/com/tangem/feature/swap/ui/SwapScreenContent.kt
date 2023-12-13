@@ -223,8 +223,6 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(TangemTheme.dimens.spacing12),
                 )
             }
-
-
         }
     }
 }
