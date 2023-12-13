@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.constraintlayout.compose.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
@@ -41,8 +40,7 @@ internal fun LazyListScope.swapTransactionsItems(
             contentType = { swapTxs[it]::class.java },
         ) {
             val item = swapTxs[it]
-            val status = item.activeStatus.collectAsStateWithLifecycle()
-            val (iconRes, tint) = when (status.value) {
+            val (iconRes, tint) = when (item.activeStatus) {
                 ExchangeStatus.Verifying -> R.drawable.ic_alert_triangle_20 to TangemTheme.colors.icon.attention
                 ExchangeStatus.Failed -> R.drawable.ic_alert_circle_24 to TangemTheme.colors.icon.warning
                 else -> null to null
