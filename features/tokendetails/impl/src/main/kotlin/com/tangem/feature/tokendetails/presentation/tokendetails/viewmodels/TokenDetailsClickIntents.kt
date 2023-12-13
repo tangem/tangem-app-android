@@ -45,4 +45,6 @@ interface TokenDetailsClickIntents {
     fun onGoToProviderClick(url: String)
 
     fun onSwapPromoDismiss()
+
+    fun onSwapPromoClick()
 }
