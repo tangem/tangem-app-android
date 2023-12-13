@@ -195,23 +195,36 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
         contentColor = TangemTheme.colors.text.primary1,
         modifier = modifier.size(TangemTheme.dimens.size48),
         onClick = state.onChangeCardsClicked,
-        enabled = !state.updateInProgress,
+        enabled = state.changeCardsButtonState == ChangeCardsButtonState.ENABLED,
     ) {
-        if (state.updateInProgress) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size16)
-                    .padding(TangemTheme.dimens.spacing14),
-                color = TangemTheme.colors.icon.primary1,
-                strokeWidth = TangemTheme.dimens.size2,
-            )
-        } else {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
-                contentDescription = null,
-                tint = TangemTheme.colors.text.primary1,
-                modifier = Modifier.padding(TangemTheme.dimens.spacing12),
-            )
+        when (state.changeCardsButtonState) {
+            ChangeCardsButtonState.UPDATE_IN_PROGRESS -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(TangemTheme.dimens.size16)
+                        .padding(TangemTheme.dimens.spacing14),
+                    color = TangemTheme.colors.icon.primary1,
+                    strokeWidth = TangemTheme.dimens.size2,
+                )
+            }
+            ChangeCardsButtonState.ENABLED -> {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.text.primary1,
+                    modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                )
+            }
+            ChangeCardsButtonState.DISABLED -> {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.text.disabled,
+                    modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                )
+            }
+
+
         }
     }
 }
