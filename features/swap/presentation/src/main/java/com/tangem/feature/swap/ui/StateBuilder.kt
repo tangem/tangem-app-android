@@ -84,7 +84,7 @@ internal class StateBuilder(
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
-            updateInProgress = true,
+            changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             providerState = ProviderState.Empty(),
         )
@@ -138,7 +138,7 @@ internal class StateBuilder(
                 loading = false,
                 onClick = { },
             ),
-            updateInProgress = false,
+            changeCardsButtonState = ChangeCardsButtonState.DISABLED,
         )
     }
 
@@ -186,7 +186,7 @@ internal class StateBuilder(
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             providerState = ProviderState.Loading(),
             permissionState = uiStateHolder.permissionState,
-            updateInProgress = true,
+            changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
         )
     }
 
@@ -207,6 +207,7 @@ internal class StateBuilder(
         bestRatedProviderId: String,
         isManyProviders: Boolean,
         selectedFeeType: FeeType,
+        isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -257,7 +258,11 @@ internal class StateBuilder(
                 loading = false,
                 onClick = actions.onSwapClick,
             ),
-            updateInProgress = false,
+            changeCardsButtonState = if (isReverseSwapPossible) {
+                ChangeCardsButtonState.ENABLED
+            } else {
+                ChangeCardsButtonState.DISABLED
+            },
             providerState = swapProvider.convertToContentClickableProviderState(
                 isBestRate = bestRatedProviderId == swapProvider.providerId,
                 fromTokenInfo = quoteModel.fromTokenInfo,
@@ -360,6 +365,7 @@ internal class StateBuilder(
         fromToken: TokenSwapInfo,
         toToken: CryptoCurrencyStatus?,
         dataError: DataError,
+        isReverseSwapPossible: Boolean
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -409,7 +415,11 @@ internal class StateBuilder(
                 loading = false,
                 onClick = actions.onSwapClick,
             ),
-            updateInProgress = false,
+            changeCardsButtonState = if (isReverseSwapPossible) {
+                ChangeCardsButtonState.ENABLED
+            } else {
+                ChangeCardsButtonState.DISABLED
+            },
             providerState = providerState,
         )
     }
@@ -475,6 +485,7 @@ internal class StateBuilder(
     fun createQuotesEmptyAmountState(
         uiStateHolder: SwapStateHolder,
         emptyAmountState: SwapState.EmptyAmountState,
+        isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -514,7 +525,11 @@ internal class StateBuilder(
                 loading = false,
                 onClick = { },
             ),
-            updateInProgress = false,
+            changeCardsButtonState = if (isReverseSwapPossible) {
+                ChangeCardsButtonState.ENABLED
+            } else {
+                ChangeCardsButtonState.DISABLED
+            },
             providerState = ProviderState.Empty(),
         )
     }
@@ -538,7 +553,7 @@ internal class StateBuilder(
 
     fun createSilentLoadState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
-            updateInProgress = true,
+            changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
         )
     }
 
@@ -713,7 +728,7 @@ internal class StateBuilder(
                 onClick = onAlertClick,
                 type = if (txState is TxState.NetworkError) GenericWarningType.NETWORK else GenericWarningType.OTHER,
             ),
-            updateInProgress = false,
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
         )
     }
 
