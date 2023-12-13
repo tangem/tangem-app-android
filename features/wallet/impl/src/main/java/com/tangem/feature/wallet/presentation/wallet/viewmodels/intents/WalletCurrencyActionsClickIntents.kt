@@ -23,7 +23,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
-import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -252,12 +251,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                         )
                     },
                     ifRight = {
-                        getSelectedWalletSyncUseCase.unwrap()?.let { userWallet ->
-                            reduxStateHolder.dispatch(
-                                action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet),
-                            )
-                        }
-
                         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
                     },
                 )
