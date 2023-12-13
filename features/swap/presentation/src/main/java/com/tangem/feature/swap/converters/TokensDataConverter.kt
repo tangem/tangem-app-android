@@ -24,8 +24,12 @@ class TokensDataConverter(
 ) : Converter<CurrenciesGroup, SwapSelectTokenStateHolder> {
 
     override fun convert(value: CurrenciesGroup): SwapSelectTokenStateHolder {
-        val availableTitle = TokenToSelectState.Title(resourceReference(R.string.exchange_tokens_available_tokens_header))
-        val unavailableTitle = TokenToSelectState.Title(resourceReference(R.string.exchange_tokens_available_tokens_header))
+        val availableTitle = TokenToSelectState.Title(
+            resourceReference(R.string.exchange_tokens_available_tokens_header),
+        )
+        val unavailableTitle = TokenToSelectState.Title(
+            resourceReference(R.string.exchange_tokens_available_tokens_header),
+        )
         return SwapSelectTokenStateHolder(
             availableTokens = value.available.map { tokenWithBalanceToTokenToSelect(it, true) }
                 .toMutableList()

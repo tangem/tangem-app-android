@@ -115,11 +115,11 @@ internal class SwapViewModel @Inject constructor(
 
     override fun onCreate(owner: LifecycleOwner) {
         getBalanceHidingSettingsUseCase().flowWithLifecycle(owner.lifecycle).onEach {
-                isBalanceHidden = it.isBalanceHidden
-                withContext(dispatchers.main) {
-                    uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
-                }
-            }.launchIn(viewModelScope)
+            isBalanceHidden = it.isBalanceHidden
+            withContext(dispatchers.main) {
+                uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
+            }
+        }.launchIn(viewModelScope)
     }
 
     override fun onCleared() {
@@ -296,7 +296,8 @@ internal class SwapViewModel @Inject constructor(
                     uiState = stateBuilder.updateProvidersBottomSheetContent(
                         uiState = uiState,
                         pricesLowerBest = pricesLowerBest,
-                        tokenSwapInfoForProviders = successStates.entries.associate { it.key.providerId to it.value.toTokenInfo },
+                        tokenSwapInfoForProviders = successStates.entries
+                            .associate { it.key.providerId to it.value.toTokenInfo },
                     )
                 } else {
                     Timber.e("Accidentally empty quotes list")
@@ -323,7 +324,7 @@ internal class SwapViewModel @Inject constructor(
                     bestRatedProviderId = bestRatedProviderId,
                     isManyProviders = dataState.lastLoadedSwapStates.size > 1,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
-                    isReverseSwapPossible = isReverseSwapPossible()
+                    isReverseSwapPossible = isReverseSwapPossible(),
                 )
                 if (uiState.warnings.any { it is SwapWarning.UnableToCoverFeeWarning }) {
                     analyticsEventHandler.send(
@@ -450,55 +451,55 @@ internal class SwapViewModel @Inject constructor(
                     fee = requireNotNull(dataState.selectedFee),
                 )
             }.onSuccess {
-                    when (it) {
-                        is TxState.TxSent -> {
-                            val url = blockchainInteractor.getExplorerTransactionLink(
-                                networkId = dataState.networkId,
-                                txAddress = it.txAddress,
-                            )
-                            uiState = stateBuilder.createSuccessState(
-                                uiState = uiState,
-                                txState = it,
-                                dataState = dataState,
-                                txUrl = url,
-                                onExploreClick = {
-                                    val txHash = it.txAddress
-                                    if (txHash.isNotEmpty()) {
-                                        swapRouter.openUrl(url)
-                                    }
+                when (it) {
+                    is TxState.TxSent -> {
+                        val url = blockchainInteractor.getExplorerTransactionLink(
+                            networkId = dataState.networkId,
+                            txAddress = it.txAddress,
+                        )
+                        uiState = stateBuilder.createSuccessState(
+                            uiState = uiState,
+                            txState = it,
+                            dataState = dataState,
+                            txUrl = url,
+                            onExploreClick = {
+                                val txHash = it.txAddress
+                                if (txHash.isNotEmpty()) {
+                                    swapRouter.openUrl(url)
+                                }
+                                analyticsEventHandler.send(
+                                    event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol),
+                                )
+                            },
+                            onStatusClick = {
+                                val txExternalUrl = it.txExternalUrl
+                                if (!txExternalUrl.isNullOrBlank()) {
+                                    swapRouter.openUrl(txExternalUrl)
                                     analyticsEventHandler.send(
-                                        event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol),
+                                        event = SwapEvents.ButtonStatus(initialCryptoCurrency.symbol),
                                     )
-                                },
-                                onStatusClick = {
-                                    val txExternalUrl = it.txExternalUrl
-                                    if (!txExternalUrl.isNullOrBlank()) {
-                                        swapRouter.openUrl(txExternalUrl)
-                                        analyticsEventHandler.send(
-                                            event = SwapEvents.ButtonStatus(initialCryptoCurrency.symbol),
-                                        )
-                                    }
-                                },
-                            )
-                            sendSuccessEvent()
+                                }
+                            },
+                        )
+                        sendSuccessEvent()
 
-                            swapRouter.openScreen(SwapNavScreen.Success)
-                        }
-                        is TxState.UserCancelled -> {
-                            startLoadingQuotesFromLastState()
-                        }
-                        else -> {
-                            startLoadingQuotesFromLastState()
-                            uiState = stateBuilder.createErrorTransaction(uiState, it) {
-                                uiState = stateBuilder.clearAlert(uiState)
-                            }
+                        swapRouter.openScreen(SwapNavScreen.Success)
+                    }
+                    is TxState.UserCancelled -> {
+                        startLoadingQuotesFromLastState()
+                    }
+                    else -> {
+                        startLoadingQuotesFromLastState()
+                        uiState = stateBuilder.createErrorTransaction(uiState, it) {
+                            uiState = stateBuilder.clearAlert(uiState)
                         }
                     }
-                }.onFailure {
-                    Timber.e(it)
-                    startLoadingQuotesFromLastState()
-                    makeDefaultAlert()
                 }
+            }.onFailure {
+                Timber.e(it)
+                startLoadingQuotesFromLastState()
+                makeDefaultAlert()
+            }
         }
     }
 
@@ -533,8 +534,8 @@ internal class SwapViewModel @Inject constructor(
                         approveData = requireNotNull(dataState.approveDataModel) {
                             "dataState.approveDataModel might not be null"
                         },
-                        forTokenContractAddress = (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Token)?.contractAddress
-                            ?: "",
+                        forTokenContractAddress = (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Token)
+                            ?.contractAddress ?: "",
                         fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
                             "dataState.fromCurrency might not be null"
                         },
@@ -548,22 +549,22 @@ internal class SwapViewModel @Inject constructor(
                     ),
                 )
             }.onSuccess {
-                    when (it) {
-                        is TxState.TxSent -> {
-                            uiState = stateBuilder.loadingPermissionState(uiState)
-                            uiState = stateBuilder.dismissBottomSheet(uiState)
-                            startLoadingQuotesFromLastState(isSilent = true)
-                        }
-                        is TxState.UserCancelled -> Unit
-                        else -> {
-                            uiState = stateBuilder.createErrorTransaction(uiState, it) {
-                                uiState = stateBuilder.clearAlert(uiState)
-                            }
+                when (it) {
+                    is TxState.TxSent -> {
+                        uiState = stateBuilder.loadingPermissionState(uiState)
+                        uiState = stateBuilder.dismissBottomSheet(uiState)
+                        startLoadingQuotesFromLastState(isSilent = true)
+                    }
+                    is TxState.UserCancelled -> Unit
+                    else -> {
+                        uiState = stateBuilder.createErrorTransaction(uiState, it) {
+                            uiState = stateBuilder.clearAlert(uiState)
                         }
                     }
-                }.onFailure {
-                    makeDefaultAlert()
                 }
+            }.onFailure {
+                makeDefaultAlert()
+            }
         }
     }
 
@@ -644,7 +645,6 @@ internal class SwapViewModel @Inject constructor(
     private fun onChangeCardsClicked() {
         val newFromToken = dataState.toCryptoCurrency
         val newToToken = dataState.fromCryptoCurrency
-
 
         if (newFromToken != null && newToToken != null) {
             dataState = dataState.copy(
@@ -890,12 +890,12 @@ internal class SwapViewModel @Inject constructor(
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
         return getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
-                maybeAppCurrency.getOrElse { AppCurrency.Default }
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = AppCurrency.Default,
-            )
+            maybeAppCurrency.getOrElse { AppCurrency.Default }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = AppCurrency.Default,
+        )
     }
 
     private fun findSwapProviders(fromToken: CryptoCurrencyStatus, toToken: CryptoCurrencyStatus): List<SwapProvider> {
