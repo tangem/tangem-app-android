@@ -12,8 +12,8 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.SwapTransactionRepository
+import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
@@ -81,8 +81,9 @@ internal class ExchangeStatusFactory(
         swapTxList.map { tx ->
             async {
                 val statusModel = getExchangeStatus(tx.txId)
-                swapTransactionsStateConverter.updateTxStatus(tx, statusModel)
-                tx.removeIfFinished(statusModel?.status)
+                swapTransactionsStateConverter
+                    .updateTxStatus(tx, statusModel)
+                    .removeIfFinished(statusModel?.status)
             }
         }
             .awaitAll()
