@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.fragment.app.*
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.FragmentShareTransition
+import com.tangem.feature.qr_scanning.SourceType
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment
@@ -173,7 +174,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.QrScan -> {
             store.state.daggerGraphState
                 .get(getDependency = DaggerGraphState::qrScanRouter)
-                .getEntryFragment()
+                .getEntryFragment(type = SourceType.WALLET_CONNECT)
         }
         AppScreen.ReferralProgram -> ReferralFragment()
         AppScreen.Swap -> SwapFragment()

@@ -4,6 +4,10 @@ import androidx.fragment.app.Fragment
 
 interface QrScanRouter {
 
-    fun getEntryFragment(): Fragment
+    fun getEntryFragment(type: SourceType): Fragment
+
+    companion object {
+        const val SOURCE_KEY = "source"
+    }
 
 }

@@ -1,4 +1,4 @@
-package com.tangem.feature.qr_scanning
+package com.tangem.feature.qr_scanning.inner
 
 import android.content.Context
 import android.util.Size
