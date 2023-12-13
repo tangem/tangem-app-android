@@ -20,11 +20,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
 
 internal class TokenDetailsSwapTransactionsStateConverter(
@@ -70,14 +69,12 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         txUrl = transaction.status?.txUrl,
                         timestamp = TextReference.Str("${timestamp.toDateFormat()}, ${timestamp.toTimeFormat()}"),
                         fiatSymbol = appCurrency.symbol,
-                        statuses = MutableStateFlow(getStatuses(transaction.status?.status)),
-                        hasFailed = MutableStateFlow(transaction.status?.status == ExchangeStatus.Failed),
-                        activeStatus = MutableStateFlow(transaction.status?.status),
-                        notification = MutableStateFlow(
-                            getNotification(
-                                transaction.status?.status,
-                                transaction.status?.txUrl,
-                            ),
+                        statuses = getStatuses(transaction.status?.status),
+                        hasFailed = transaction.status?.status == ExchangeStatus.Failed,
+                        activeStatus = transaction.status?.status,
+                        notification = getNotification(
+                            transaction.status?.status,
+                            transaction.status?.txUrl,
                         ),
                         toCryptoCurrencyId = toCurrency.currency.id,
                         toCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
@@ -109,13 +106,16 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return result.toPersistentList()
     }
 
-    fun updateTxStatus(tx: SwapTransactionsState, statusModel: ExchangeStatusModel?) {
-        if (statusModel == null || tx.activeStatus.value == statusModel.status) return
-        val hasFailed = tx.hasFailed.value || statusModel.status == ExchangeStatus.Failed
-        tx.activeStatus.update { statusModel.status }
-        tx.hasFailed.update { hasFailed }
-        tx.notification.update { getNotification(statusModel.status, statusModel.txUrl) }
-        tx.statuses.update { getStatuses(statusModel.status, hasFailed) }
+    fun updateTxStatus(tx: SwapTransactionsState, statusModel: ExchangeStatusModel?): SwapTransactionsState {
+        if (statusModel == null || tx.activeStatus == statusModel.status) return tx
+        val hasFailed = tx.hasFailed || statusModel.status == ExchangeStatus.Failed
+        return tx.copy(
+            activeStatus = statusModel.status,
+            hasFailed = hasFailed,
+            notification = getNotification(statusModel.status, statusModel.txUrl),
+            statuses = getStatuses(statusModel.status, hasFailed),
+            txUrl = statusModel.txUrl,
+        )
     }
 
     private fun getFiatAmount(toFiatAmount: BigDecimal): String {
@@ -149,8 +149,8 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         }
     }
 
-    private fun getStatuses(status: ExchangeStatus?, hasFailed: Boolean = false): List<ExchangeStatusState> {
-        if (status == null) return emptyList()
+    private fun getStatuses(status: ExchangeStatus?, hasFailed: Boolean = false): ImmutableList<ExchangeStatusState> {
+        if (status == null) return persistentListOf()
         val isWaiting = status == ExchangeStatus.New || status == ExchangeStatus.Waiting
         val isConfirming = status == ExchangeStatus.Confirming
         val isVerifying = status == ExchangeStatus.Verifying
@@ -181,7 +181,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 isRefunded = isRefunded,
                 hasFailed = hasFailed,
             ),
-        )
+        ).toPersistentList()
     }
 
     private fun waitStep(isNew: Boolean, isNewDone: Boolean) = ExchangeStatusState(

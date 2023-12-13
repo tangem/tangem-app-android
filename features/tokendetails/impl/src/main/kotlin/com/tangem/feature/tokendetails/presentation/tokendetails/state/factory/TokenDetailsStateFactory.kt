@@ -34,6 +34,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
+@Suppress("TooManyFunctions")
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -244,6 +245,19 @@ internal class TokenDetailsStateFactory(
                     value = swapTxState,
                 ),
             ),
+        )
+    }
+
+    fun updateStateWithExchangeStatusBottomSheet(swapTxState: SwapTransactionsState): TangemBottomSheetConfig? {
+        val state = currentStateProvider()
+        val bottomSheetConfig = state.bottomSheetConfig
+        val currentConfig = bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig ?: return bottomSheetConfig
+        return bottomSheetConfig.copy(
+            content = if (currentConfig.value != swapTxState) {
+                ExchangeStatusBottomSheetConfig(swapTxState)
+            } else {
+                currentConfig
+            },
         )
     }
 
