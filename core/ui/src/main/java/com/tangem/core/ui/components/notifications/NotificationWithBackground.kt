@@ -66,10 +66,12 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
         Image(
             painter = painterResource(config.iconResId),
             contentDescription = null,
-            modifier = Modifier.constrainAs(iconRef) {
-                start.linkTo(parent.start, spacing12)
-                linkTo(titleRef.top, subtitleRef.bottom, bias = 0.1f)
-            },
+            modifier = Modifier
+                .size(TangemTheme.dimens.size34)
+                .constrainAs(iconRef) {
+                    start.linkTo(parent.start, spacing12)
+                    linkTo(titleRef.top, subtitleRef.bottom, bias = 0.1f)
+                },
         )
         Text(
             text = config.title.resolveReference(),
@@ -147,7 +149,7 @@ private class NotificationWithBackgroundPreviewProvider : PreviewParameterProvid
             NotificationConfig(
                 title = resourceReference(id = R.string.main_swap_promotion_title),
                 subtitle = resourceReference(id = R.string.main_swap_promotion_message),
-                iconResId = R.drawable.ic_swap_promo_34,
+                iconResId = R.drawable.img_swap_promo,
                 backgroundResId = R.drawable.img_swap_promo_banner_background,
             ),
             NotificationConfig(
@@ -158,7 +160,7 @@ private class NotificationWithBackgroundPreviewProvider : PreviewParameterProvid
                         "currencies between any chains you wish. Commission free period " +
                         "till Dec 31.",
                 ),
-                iconResId = R.drawable.ic_swap_promo_34,
+                iconResId = R.drawable.img_swap_promo,
                 backgroundResId = R.drawable.img_swap_promo_banner_background,
                 buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                     text = resourceReference(id = R.string.token_swap_promotion_button),
