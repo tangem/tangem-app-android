@@ -96,6 +96,7 @@ dependencies {
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
     implementation(projects.features.send.impl)
+    implementation(projects.features.qrScanning.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -143,7 +144,7 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
-    implementation(project(mapOf("path" to ":features:qr-scanning")))
+
     kapt(deps.hilt.kapt)
 
     /** Other libraries */

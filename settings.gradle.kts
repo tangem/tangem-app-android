@@ -101,6 +101,9 @@ include(":features:send:impl")
 
 include(":features:manage-tokens:api")
 include(":features:manage-tokens:impl")
+
+//include(":features:qr-scanning:api")
+include(":features:qr-scanning:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -141,4 +144,4 @@ include(":data:txhistory")
 include(":data:wallets")
 include(":data:analytics")
 // endregion Data modules
-include(":features:qr-scanning")
+

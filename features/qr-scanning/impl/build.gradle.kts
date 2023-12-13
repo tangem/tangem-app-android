@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.feature.qr_scanning"
+    namespace = "com.tangem.feature.qr_scanning.impl"
 
     viewBinding {
         enable = true
@@ -43,4 +43,9 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    // implementation(projects.features.qrScanning.api)
+
+    /** Compose */
+    implementation(deps.compose.foundation)
 }

@@ -10,7 +10,8 @@ import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.common.util.concurrent.ListenableFuture
-import com.tangem.feature.qr_scanning.databinding.LayoutQrScanningBinding
+import com.tangem.feature.qr_scanning.impl.R
+import com.tangem.feature.qr_scanning.impl.databinding.LayoutQrScanningBinding
 // import com.tangem.core.navigation.NavigationAction
 // import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 // import com.tangem.tap.features.details.ui.walletconnect.dialogs.PreviewBinder

@@ -9,7 +9,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.lifecycle.LifecycleOwner
-import com.tangem.feature.qr_scanning.databinding.LayoutQrScanningBinding
+import com.tangem.feature.qr_scanning.impl.databinding.LayoutQrScanningBinding
 import java.util.concurrent.ExecutorService
 
 internal class PreviewBinder {
