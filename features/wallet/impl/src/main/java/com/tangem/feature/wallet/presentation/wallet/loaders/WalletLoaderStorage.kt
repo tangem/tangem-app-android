@@ -23,4 +23,9 @@ internal class WalletLoaderStorage @Inject constructor() {
             loaders.remove(id)
         }
     }
+
+    fun clear() {
+        loaders.values.forEach { it.forEach(Job::cancel) }
+        loaders.clear()
+    }
 }
