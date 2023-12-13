@@ -71,7 +71,6 @@ fun LazyListScope.txHistoryItems(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.contentItems(
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>,
     isBalanceHidden: Boolean,
@@ -93,7 +92,6 @@ private fun LazyListScope.contentItems(
                     state = item,
                     isBalanceHidden = isBalanceHidden,
                     modifier = modifier
-                        .animateItemPlacement()
                         .roundedShapeItemDecoration(
                             currentIndex = index,
                             lastIndex = txHistoryItems.itemSnapshotList.lastIndex,
