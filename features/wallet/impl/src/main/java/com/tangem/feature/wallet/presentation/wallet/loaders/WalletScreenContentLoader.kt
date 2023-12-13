@@ -63,6 +63,11 @@ internal class WalletScreenContentLoader @Inject constructor(
         storage.remove(id)
     }
 
+    fun cancelAll() {
+        Timber.d("All content loading is canceled")
+        storage.clear()
+    }
+
     private fun loadInternal(
         userWallet: UserWallet,
         appCurrency: AppCurrency,
