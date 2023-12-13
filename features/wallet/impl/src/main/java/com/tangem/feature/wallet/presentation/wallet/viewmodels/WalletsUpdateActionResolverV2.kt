@@ -228,7 +228,7 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
         data class ReinitializeWallets(val selectedWallet: UserWallet) : Action() {
 
             override fun toString(): String {
-                return "Reinitialize(selectedWallet = ${selectedWallet.walletId})"
+                return "ReinitializeWallets(selectedWallet = ${selectedWallet.walletId})"
             }
         }
 
