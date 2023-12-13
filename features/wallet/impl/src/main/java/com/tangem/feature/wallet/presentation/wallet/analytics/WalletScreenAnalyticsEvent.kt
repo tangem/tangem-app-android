@@ -63,4 +63,6 @@ sealed class WalletScreenAnalyticsEvent {
         object NoticeWalletLocked : MainScreen(event = "Notice - Wallet Locked")
         object WalletUnlockTapped : MainScreen(event = "Button - Wallet Unlock Tapped")
     }
+
+    object SwapPromo : AnalyticsEvent(category = "Swap Promo", event = "Button - Close")
 }

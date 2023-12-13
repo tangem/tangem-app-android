@@ -29,6 +29,7 @@ import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
+import com.tangem.domain.tokens.models.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -552,7 +553,13 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onSwapPromoDismiss() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoTokenUseCase.neverToShow()
+            analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Close)
         }
+    }
+
+    override fun onSwapPromoClick() {
+        onSwapClick()
+        analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Exchange(cryptoCurrency.symbol))
     }
 
     private companion object {
