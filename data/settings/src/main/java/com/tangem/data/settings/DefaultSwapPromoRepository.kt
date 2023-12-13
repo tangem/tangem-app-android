@@ -43,12 +43,13 @@ class DefaultSwapPromoRepository(
     private fun checkPromoPeriod(): Boolean {
         val currentDate = Calendar.getInstance()
         return currentDate.get(Calendar.DATE) in START_DATE_KEY..END_DATE_KEY &&
-            currentDate.get(Calendar.MONTH) == MONTH_KEY
+            currentDate.get(Calendar.MONTH) == MONTH_KEY && currentDate.get(Calendar.YEAR) == YEAR_KEY
     }
 
     companion object {
         private const val START_DATE_KEY = 15
         private const val END_DATE_KEY = 31
         private const val MONTH_KEY = 11 // December
+        private const val YEAR_KEY = 2023 // just in case
     }
 }
