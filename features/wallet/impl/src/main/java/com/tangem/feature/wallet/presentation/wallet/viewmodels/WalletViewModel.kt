@@ -128,6 +128,7 @@ internal class WalletViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val scanCardToUnlockWalletUseCase: ScanCardToUnlockWalletClickHandler,
+    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isNeedToBackupUseCase: IsNeedToBackupUseCase,
     getMissedAddressesCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
@@ -146,6 +147,7 @@ internal class WalletViewModel @Inject constructor(
         isNeedToBackupUseCase = isNeedToBackupUseCase,
         getMissedAddressCryptoCurrenciesUseCase = getMissedAddressesCryptoCurrenciesUseCase,
         hasSingleWalletSignedHashesUseCase = hasSingleWalletSignedHashesUseCase,
+        shouldShowSwapPromoWalletUseCase = shouldShowSwapPromoWalletUseCase,
         clickIntents = this,
     )
 
@@ -772,6 +774,12 @@ internal class WalletViewModel @Inject constructor(
             ?: return
 
         refreshSingleCurrencyContent(selectedWalletIndex)
+    }
+
+    override fun onCloseSwapPromoNotificationClick() {
+        viewModelScope.launch(dispatchers.main) {
+            shouldShowSwapPromoWalletUseCase.neverToShow()
+        }
     }
 
     // FIXME: refreshSingleCurrencyContent mustn't update the TxHistory and Buttons. It only must fetch primary
