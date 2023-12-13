@@ -32,15 +32,6 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setFitSystemWindows(fit = true)
-
-        // activity?.onBackPressedDispatcher?.addCallback(
-        //     this,
-        //     object : OnBackPressedCallback(true) {
-        //         override fun handleOnBackPressed() {
-        //             // store.dispatch(NavigationAction.PopBackTo())
-        //         }
-        //     },
-        // )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -61,8 +52,8 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
                     cameraProvider = requireNotNull(cameraProvider),
                     cameraExecutor = requireNotNull(cameraExecutor),
                     onScanned = { result ->
-                        // store.dispatch(NavigationAction.PopBackTo())
-                        // setFitSystemWindows(fit = false)
+                        parentFragmentManager.popBackStack()
+                        setFitSystemWindows(fit = false)
                         // if (result.isNotBlank()) {
                         //     store.dispatch(WalletConnectAction.OpenSession(result))
                         // }
@@ -87,7 +78,8 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
         if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
             // store.dispatch(WalletConnectAction.NotifyCameraPermissionIsRequired)
-            // store.dispatch(NavigationAction.PopBackTo())
+
+            parentFragmentManager.popBackStack()
         }
     }
 
@@ -101,9 +93,9 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
     }
 
     private fun setFitSystemWindows(fit: Boolean) {
-        // activity?.window?.let {
-        //     WindowCompat.setDecorFitsSystemWindows(it, fit)
-        // }
+        activity?.window?.let {
+            WindowCompat.setDecorFitsSystemWindows(it, fit)
+        }
     }
 
 }
