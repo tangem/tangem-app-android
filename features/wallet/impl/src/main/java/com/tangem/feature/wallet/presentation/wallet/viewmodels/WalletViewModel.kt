@@ -779,6 +779,7 @@ internal class WalletViewModel @Inject constructor(
     override fun onCloseSwapPromoNotificationClick() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoWalletUseCase.neverToShow()
+            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.SwapPromo)
         }
     }
 
