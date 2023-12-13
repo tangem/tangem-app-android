@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.domain.tokens.model.CryptoCurrency
 
+@Suppress("TooManyFunctions")
 interface TokenDetailsClickIntents {
 
     fun onBackClick()
@@ -42,4 +43,6 @@ interface TokenDetailsClickIntents {
     fun onSwapTransactionClick(txId: String)
 
     fun onGoToProviderClick(url: String)
+
+    fun onSwapPromoDismiss()
 }
