@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
@@ -35,7 +34,6 @@ internal class WalletClickIntentsV2 @Inject constructor(
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val fetchCardTokenListUseCase: FetchCardTokenListUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
@@ -72,7 +70,6 @@ internal class WalletClickIntentsV2 @Inject constructor(
             maybeUserWallet.onRight {
                 walletScreenContentLoader.load(
                     userWallet = it,
-                    appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
                     clickIntents = this@WalletClickIntentsV2,
                     coroutineScope = viewModelScope,
                 )
@@ -141,10 +138,9 @@ internal class WalletClickIntentsV2 @Inject constructor(
 
             walletScreenContentLoader.load(
                 userWallet = userWallet,
-                appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
                 clickIntents = this@WalletClickIntentsV2,
-                coroutineScope = viewModelScope,
                 isRefresh = true,
+                coroutineScope = viewModelScope,
             )
 
             stateHolder.update(
