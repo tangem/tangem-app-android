@@ -128,7 +128,7 @@ class DefaultWalletManagersFacade(
         val walletManager = getOrCreateWalletManager(userWalletId, blockchain, derivationPath)
         if (walletManager == null || blockchain == Blockchain.Unknown) {
             Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
-            return UpdateWalletManagerResult.Unreachable
+            return UpdateWalletManagerResult.UnreachableWithoutAddresses
         }
 
         return getLastWalletManagerResult(walletManager)
@@ -248,7 +248,7 @@ class DefaultWalletManagersFacade(
         )
         if (walletManager == null || blockchain == Blockchain.Unknown) {
             Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
-            return UpdateWalletManagerResult.Unreachable
+            return UpdateWalletManagerResult.UnreachableWithoutAddresses
         }
 
         updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
@@ -281,7 +281,7 @@ class DefaultWalletManagersFacade(
         } catch (e: Throwable) {
             Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
-            UpdateWalletManagerResult.Unreachable
+            resultFactory.getUnreachableResult(walletManager)
         }
     }
 
@@ -293,7 +293,7 @@ class DefaultWalletManagersFacade(
         } catch (e: Throwable) {
             Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
-            UpdateWalletManagerResult.Unreachable
+            resultFactory.getUnreachableResult(walletManager)
         }
     }
 
