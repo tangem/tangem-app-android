@@ -16,6 +16,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 
@@ -89,30 +91,36 @@ class GetCurrencyWarningsUseCase(
             cryptoStatuses.fold(
                 ifLeft = { null },
                 ifRight = { cryptoCurrencyStatuses ->
-                    val pairs = swapRepository.getPairs(
-                        LeastTokenInfo(
-                            contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
-                            network = currency.network.backendId,
-                        ),
-                        cryptoCurrencyStatuses.map { it.currency },
-                    )
+                    val pairs = runCatching(dispatchers.io) {
+                        swapRepository.getPairs(
+                            LeastTokenInfo(
+                                contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
+                                network = currency.network.backendId,
+                            ),
+                            cryptoCurrencyStatuses.map { it.currency },
+                        )
+                    }.getOrNull()?.pairs ?: emptyList()
+
                     val filteredCurrencies = cryptoCurrencyStatuses.filterNot {
-                        it.currency.network.backendId == currency.network.backendId
+                        it.currency.id == currency.id
                     }
-                    val currencyPairs = pairs.pairs.filter {
+                    val currencyPairs = pairs.filter {
                         it.from.network == currency.network.backendId ||
                             it.to.network == currency.network.backendId
                     }
                     val isExchangeable = currencyPairs.any { pair ->
-                        val availablePair = if (currencyStatus.value.amount.isZero()) {
-                            filteredCurrencies.filterNot { it.value.amount.isZero() }
+                        val availablePair = if (currencyStatus.value.amount.isNullOrZero()) {
+                            filteredCurrencies.filterNot { it.value.amount.isNullOrZero() }
                         } else {
                             filteredCurrencies
                         }
                         availablePair
                             .any {
-                                it.currency.network.backendId == pair.to.network ||
-                                    it.currency.network.backendId == pair.from.network
+                                (
+                                    it.currency.network.backendId == pair.to.network ||
+                                        it.currency.network.backendId == pair.from.network
+                                    ) &&
+                                    !it.value.amount.isNullOrZero()
                             }
                     }
                     if (isExchangeable) {
