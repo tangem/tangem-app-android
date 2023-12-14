@@ -19,6 +19,4 @@ internal class QrScanningViewModel @Inject constructor(
     fun onQrScanned(qrCode: String) {
         emitQrScannedEventUseCase.invoke(source, qrCode)
     }
-
 }
-

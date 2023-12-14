@@ -26,9 +26,9 @@ object ClipboardOrScanQrDialog {
                     NavigationAction.NavigateTo(
                         screen = AppScreen.QrScan,
                         bundle = bundleOf(
-                            QrScanRouter.SOURCE_KEY to SourceType.WALLET_CONNECT
-                        )
-                    )
+                            QrScanRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
+                        ),
+                    ),
                 )
             }
             setOnDismissListener {

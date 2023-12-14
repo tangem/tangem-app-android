@@ -13,7 +13,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal object QrScanningModule {
 
-
     @Provides
     @Singleton
     fun provideQrScannedEventsRepository(): QrScannedEventsRepository {
@@ -25,5 +24,4 @@ internal object QrScanningModule {
     fun provideEmitQrScannedEventUseCase(repository: QrScannedEventsRepository): EmitQrScannedEventUseCase {
         return EmitQrScannedEventUseCase(repository)
     }
-
 }

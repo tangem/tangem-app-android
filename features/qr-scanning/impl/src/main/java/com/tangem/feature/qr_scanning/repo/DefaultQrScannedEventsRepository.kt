@@ -19,4 +19,3 @@ internal class DefaultQrScannedEventsRepository : QrScannedEventsRepository {
         .filter { it.type == type }
         .map { it.qrCode }
 }
-

@@ -7,6 +7,5 @@ interface QrScannedEventsRepository {
 
     fun emitScan(type: SourceType, qrCode: String)
 
-    fun subscribeToScan(type: SourceType) : Flow<String>
-
+    fun subscribeToScan(type: SourceType): Flow<String>
 }

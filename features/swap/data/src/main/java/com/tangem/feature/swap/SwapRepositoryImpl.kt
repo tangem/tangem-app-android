@@ -8,7 +8,6 @@ import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
-import com.tangem.blockchain.extensions.successOr
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow

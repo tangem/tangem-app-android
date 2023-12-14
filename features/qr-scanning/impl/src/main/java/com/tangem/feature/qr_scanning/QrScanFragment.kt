@@ -3,7 +3,6 @@ package com.tangem.feature.qr_scanning
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
@@ -64,7 +63,7 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
                         setFitSystemWindows(fit = false)
                         if (result.isNotBlank()) {
                             viewModel.onQrScanned(result)
-                            //store.dispatch(WalletConnectAction.OpenSession(result))
+                            // store.dispatch(WalletConnectAction.OpenSession(result))
                         }
                     },
                 )
@@ -111,9 +110,8 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
         fun create(type: SourceType): QrScanFragment = QrScanFragment().apply {
             arguments = bundleOf(
-                QrScanRouter.SOURCE_KEY to type
+                QrScanRouter.SOURCE_KEY to type,
             )
         }
     }
-
 }

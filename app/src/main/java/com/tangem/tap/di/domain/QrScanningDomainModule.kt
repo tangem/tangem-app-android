@@ -17,5 +17,4 @@ internal object QrScanningDomainModule {
     fun provideListenToQrScanUseCase(repository: QrScannedEventsRepository): ListenToQrScanUseCase {
         return ListenToQrScanUseCase(repository)
     }
-
 }
