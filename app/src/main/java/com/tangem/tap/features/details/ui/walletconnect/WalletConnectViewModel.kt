@@ -7,13 +7,8 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
-import com.tangem.tap.features.send.redux.AmountAction
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.rekotlin.Store
 import timber.log.Timber
@@ -22,10 +17,7 @@ internal class WalletConnectViewModel(
     private val store: Store<AppState>,
 ) : ViewModel(), DefaultLifecycleObserver {
 
-    fun init(
-        owner: LifecycleOwner,
-        listenToQrScanningUseCase: ListenToQrScanningUseCase,
-    ) {
+    fun init(owner: LifecycleOwner, listenToQrScanningUseCase: ListenToQrScanningUseCase) {
         viewModelScope.launch {
             listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
                 .flowWithLifecycle(owner.lifecycle, minActiveState = Lifecycle.State.CREATED)
