@@ -35,7 +35,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -143,17 +142,12 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
 
-        stateHolder.update(
-            OpenBottomSheetTransformer(
-                userWalletId = userWalletId,
-                content = createReceiveBottomSheetContent(
-                    currency = cryptoCurrencyStatus.currency,
-                    addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return,
-                ),
-                onDismissBottomSheet = {
-                    stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
-                },
+        stateHolder.showBottomSheet(
+            createReceiveBottomSheetContent(
+                currency = cryptoCurrencyStatus.currency,
+                addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return,
             ),
+            userWalletId,
         )
     }
 
@@ -348,25 +342,18 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         addresses: Set<NetworkAddress.Address>,
         currency: CryptoCurrency,
     ) {
-        stateHolder.update(
-            OpenBottomSheetTransformer(
-                userWalletId = userWalletId,
-                content = ChooseAddressBottomSheetConfig(
-                    addressModels = addresses.mapToAddressModels(currency).toImmutableList(),
-                    onClick = {
-                        onAddressTypeSelected(
-                            userWalletId = userWalletId,
-                            currency = currency,
-                            addressModel = it,
-                        )
-                    },
-                ),
-                onDismissBottomSheet = {
-                    stateHolder.update(
-                        CloseBottomSheetTransformer(userWalletId = userWalletId),
+        stateHolder.showBottomSheet(
+            ChooseAddressBottomSheetConfig(
+                addressModels = addresses.mapToAddressModels(currency).toImmutableList(),
+                onClick = {
+                    onAddressTypeSelected(
+                        userWalletId = userWalletId,
+                        currency = currency,
+                        addressModel = it,
                     )
                 },
             ),
+            userWalletId,
         )
     }
 

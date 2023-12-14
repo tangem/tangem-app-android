@@ -10,8 +10,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -43,15 +41,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
             val currencyStatus = getPrimaryCurrencyStatus(userWalletId) ?: return@launch
 
             createReceiveBottomSheetContent(currencyStatus)?.let { content ->
-                stateController.update(
-                    OpenBottomSheetTransformer(
-                        userWalletId = userWalletId,
-                        content = content,
-                        onDismissBottomSheet = {
-                            stateController.update(CloseBottomSheetTransformer(userWalletId))
-                        },
-                    ),
-                )
+                stateController.showBottomSheet(content)
             }
         }
     }
