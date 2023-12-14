@@ -15,6 +15,9 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.Unreachable(
             priceChange = MockQuotes.quote1.priceChange,
             fiatRate = MockQuotes.quote1.fiatRate,
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+            ),
         ),
     )
 
@@ -23,6 +26,9 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.Unreachable(
             priceChange = MockQuotes.quote2.priceChange,
             fiatRate = MockQuotes.quote2.fiatRate,
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+            ),
         ),
     )
 
@@ -31,6 +37,9 @@ internal object MockTokensStates {
         value = CryptoCurrencyStatus.Unreachable(
             priceChange = MockQuotes.quote3.priceChange,
             fiatRate = MockQuotes.quote3.fiatRate,
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
+            ),
         ),
     )
 

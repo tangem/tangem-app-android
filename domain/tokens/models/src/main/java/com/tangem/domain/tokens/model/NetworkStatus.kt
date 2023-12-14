@@ -21,10 +21,14 @@ data class NetworkStatus(
      */
     sealed class Status
 
+    object UnreachableWithoutAddresses : Status()
+
     /**
      * Represents the state where the network is unreachable.
+     *
+     * @property address Network addresses.
      */
-    object Unreachable : Status()
+    data class Unreachable(val address: NetworkAddress) : Status()
 
     /**
      * Represents the state where a derivation has been missed.
