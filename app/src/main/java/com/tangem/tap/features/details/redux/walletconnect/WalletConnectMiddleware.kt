@@ -17,8 +17,8 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.qr_scanning.QrScanRouter
-import com.tangem.feature.qr_scanning.SourceType
+import com.tangem.feature.qrscanning.QrScanRouter
+import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction

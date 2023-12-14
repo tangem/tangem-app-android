@@ -12,14 +12,14 @@ class ScanQrCodeActivity : AppCompatActivity() {
     // private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
     // private var cameraExecutor: ExecutorService? = null
     //
-    // private val binder = com.tangem.feature.qr_scanning.inner.PreviewBinder()
+    // private val binder = com.tangem.feature.qrscanning.inner.PreviewBinder()
     //
     // override fun onCreate(state: Bundle?) {
     //     super.onCreate(state)
     //
     //     if (!permissionIsGranted()) requestPermission()
     //
-    //     setContentView(R.layout.layout_qr_scanning)
+    //     setContentView(R.layout.layout_qrscanning)
     //
     //     cameraProviderFuture = ProcessCameraProvider.getInstance(this)
     //     cameraExecutor = Executors.newSingleThreadExecutor()

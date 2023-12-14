@@ -1,4 +1,4 @@
-package com.tangem.feature.qr_scanning.inner
+package com.tangem.feature.qrscanning.inner
 
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis

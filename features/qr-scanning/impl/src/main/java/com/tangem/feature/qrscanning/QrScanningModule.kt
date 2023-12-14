@@ -1,8 +1,8 @@
-package com.tangem.feature.qr_scanning
+package com.tangem.feature.qrscanning
 
-import com.tangem.feature.qr_scanning.repo.DefaultQrScannedEventsRepository
-import com.tangem.feature.qr_scanning.repo.QrScannedEventsRepository
-import com.tangem.feature.qr_scanning.usecase.EmitQrScannedEventUseCase
+import com.tangem.feature.qrscanning.repo.DefaultQrScannedEventsRepository
+import com.tangem.feature.qrscanning.repo.QrScannedEventsRepository
+import com.tangem.feature.qrscanning.usecase.EmitQrScannedEventUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.feature.qr_scanning.api"
+    namespace = "com.tangem.feature.qrscanning.api"
 }
 
 dependencies {

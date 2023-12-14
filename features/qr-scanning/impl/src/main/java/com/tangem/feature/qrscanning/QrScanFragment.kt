@@ -1,4 +1,4 @@
-package com.tangem.feature.qr_scanning
+package com.tangem.feature.qrscanning
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -12,9 +12,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.common.util.concurrent.ListenableFuture
-import com.tangem.feature.qr_scanning.impl.R
-import com.tangem.feature.qr_scanning.impl.databinding.LayoutQrScanningBinding
-import com.tangem.feature.qr_scanning.inner.PreviewBinder
+import com.tangem.feature.qrscanning.impl.R
+import com.tangem.feature.qrscanning.impl.databinding.LayoutQrScanningBinding
+import com.tangem.feature.qrscanning.inner.PreviewBinder
 import dagger.hilt.android.AndroidEntryPoint
 // import com.tangem.core.navigation.NavigationAction
 // import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction

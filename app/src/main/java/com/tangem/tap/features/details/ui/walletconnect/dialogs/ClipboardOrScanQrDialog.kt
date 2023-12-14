@@ -6,8 +6,8 @@ import androidx.core.os.bundleOf
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.feature.qr_scanning.QrScanRouter
-import com.tangem.feature.qr_scanning.SourceType
+import com.tangem.feature.qrscanning.QrScanRouter
+import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.store

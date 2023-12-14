@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.feature.qr_scanning.repo.QrScannedEventsRepository
-import com.tangem.feature.qr_scanning.usecase.ListenToQrScanUseCase
+import com.tangem.feature.qrscanning.repo.QrScannedEventsRepository
+import com.tangem.feature.qrscanning.usecase.ListenToQrScanUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

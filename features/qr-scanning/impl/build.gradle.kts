@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.feature.qr_scanning.impl"
+    namespace = "com.tangem.feature.qrscanning.impl"
 
     viewBinding {
         enable = true

@@ -1,7 +1,7 @@
-package com.tangem.feature.qr_scanning.usecase
+package com.tangem.feature.qrscanning.usecase
 
-import com.tangem.feature.qr_scanning.SourceType
-import com.tangem.feature.qr_scanning.repo.QrScannedEventsRepository
+import com.tangem.feature.qrscanning.SourceType
+import com.tangem.feature.qrscanning.repo.QrScannedEventsRepository
 
 internal class EmitQrScannedEventUseCase(
     private val repository: QrScannedEventsRepository,

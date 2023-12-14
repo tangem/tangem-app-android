@@ -23,7 +23,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.feature.qr_scanning.QrScanRouter
+import com.tangem.feature.qrscanning.QrScanRouter
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.navigation.AppScreen

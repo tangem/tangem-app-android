@@ -15,8 +15,8 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.feature.qr_scanning.SCAN_QR_REQUEST_CODE
-import com.tangem.feature.qr_scanning.SCAN_RESULT
+import com.tangem.feature.qrscanning.SCAN_QR_REQUEST_CODE
+import com.tangem.feature.qrscanning.SCAN_RESULT
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.core.analytics.Analytics

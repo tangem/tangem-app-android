@@ -1,4 +1,4 @@
-package com.tangem.feature.qr_scanning
+package com.tangem.feature.qrscanning
 
 const val SCAN_QR_REQUEST_CODE = 1001
 const val SCAN_RESULT = "scanResult"

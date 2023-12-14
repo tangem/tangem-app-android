@@ -1,6 +1,6 @@
 package com.tangem.tap.proxy.redux
 
-import com.tangem.feature.qr_scanning.QrScanRouter
+import com.tangem.feature.qrscanning.QrScanRouter
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository

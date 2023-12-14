@@ -1,10 +1,10 @@
-package com.tangem.feature.qr_scanning
+package com.tangem.feature.qrscanning
 
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.tangem.feature.qr_scanning.QrScanRouter.Companion.SOURCE_KEY
-import com.tangem.feature.qr_scanning.usecase.EmitQrScannedEventUseCase
+import com.tangem.feature.qrscanning.QrScanRouter.Companion.SOURCE_KEY
+import com.tangem.feature.qrscanning.usecase.EmitQrScannedEventUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

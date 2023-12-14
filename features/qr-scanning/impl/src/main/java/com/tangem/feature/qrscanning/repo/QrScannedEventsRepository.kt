@@ -1,6 +1,6 @@
-package com.tangem.feature.qr_scanning.repo
+package com.tangem.feature.qrscanning.repo
 
-import com.tangem.feature.qr_scanning.SourceType
+import com.tangem.feature.qrscanning.SourceType
 import kotlinx.coroutines.flow.Flow
 
 interface QrScannedEventsRepository {
