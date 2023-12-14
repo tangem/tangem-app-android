@@ -22,10 +22,15 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.Visibility
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SecondaryButtonIconStart
+import com.tangem.core.ui.components.buttons.common.TangemButton
+import com.tangem.core.ui.components.buttons.common.TangemButtonColors
+import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.LocalIsInDarkTheme
+import com.tangem.core.ui.res.TangemColorPalette.Dark6
+import com.tangem.core.ui.res.TangemColorPalette.Light4
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -113,10 +118,19 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
                     config.onCloseClick?.invoke()
                 },
         )
-        SecondaryButtonIconStart(
+        val isDarkMode = LocalIsInDarkTheme.current
+        TangemButton(
             text = button?.text?.resolveReference().orEmpty(),
-            iconResId = button?.iconResId ?: R.drawable.ic_exchange_vertical_24,
+            icon = TangemButtonIconPosition.Start(button?.iconResId ?: R.drawable.ic_exchange_vertical_24),
             onClick = button?.onClick ?: {},
+            colors = TangemButtonColors(
+                backgroundColor = if (isDarkMode) Light4 else TangemTheme.colors.button.secondary,
+                contentColor = Dark6,
+                disabledBackgroundColor = TangemTheme.colors.button.disabled,
+                disabledContentColor = TangemTheme.colors.text.disabled,
+            ),
+            enabled = true,
+            showProgress = false,
             modifier = Modifier.constrainAs(buttonRef) {
                 start.linkTo(parent.start, spacing12)
                 end.linkTo(parent.end, spacing12)
@@ -135,10 +149,20 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
 //region preview
 @Preview
 @Composable
-private fun NotificationWithBackgroundPreview(
+private fun NotificationWithBackgroundPreview_Light(
     @PreviewParameter(NotificationWithBackgroundPreviewProvider::class) config: NotificationConfig,
 ) {
     TangemTheme {
+        NotificationWithBackground(config = config)
+    }
+}
+
+@Preview
+@Composable
+private fun NotificationWithBackgroundPreview_Dark(
+    @PreviewParameter(NotificationWithBackgroundPreviewProvider::class) config: NotificationConfig,
+) {
+    TangemTheme(isDark = true) {
         NotificationWithBackground(config = config)
     }
 }
