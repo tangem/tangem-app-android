@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
@@ -24,18 +24,13 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
-    fun create(
-        userWallet: UserWallet,
-        appCurrency: AppCurrency,
-        clickIntents: WalletClickIntentsV2,
-        isRefresh: Boolean,
-    ): WalletContentLoader {
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntentsV2, isRefresh: Boolean): WalletContentLoader {
         return SingleWalletContentLoader(
             userWallet = userWallet,
-            appCurrency = appCurrency,
             clickIntents = clickIntents,
             isRefresh = isRefresh,
             stateHolder = stateHolder,
@@ -45,6 +40,7 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
             setWalletWithFundsFoundUseCase = setWalletWithFundsFoundUseCase,
             txHistoryItemsCountUseCase = txHistoryItemsCountUseCase,
             txHistoryItemsUseCase = txHistoryItemsUseCase,
+            getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             analyticsEventHandler = analyticsEventHandler,
         )
     }
