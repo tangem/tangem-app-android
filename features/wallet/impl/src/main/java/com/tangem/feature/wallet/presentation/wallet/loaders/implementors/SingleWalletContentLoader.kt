@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
@@ -16,7 +16,6 @@ import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletCl
 @Suppress("LongParameterList")
 internal class SingleWalletContentLoader(
     private val userWallet: UserWallet,
-    private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntentsV2,
     private val isRefresh: Boolean,
     private val stateHolder: WalletStateController,
@@ -26,6 +25,7 @@ internal class SingleWalletContentLoader(
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
@@ -33,10 +33,10 @@ internal class SingleWalletContentLoader(
         return listOf(
             PrimaryCurrencySubscriber(
                 userWallet = userWallet,
-                appCurrency = appCurrency,
                 stateHolder = stateHolder,
                 getPrimaryCurrencyStatusUpdatesUseCase = getPrimaryCurrencyStatusUpdatesUseCase,
                 setWalletWithFundsFoundUseCase = setWalletWithFundsFoundUseCase,
+                getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 analyticsEventHandler = analyticsEventHandler,
             ),
             SingleWalletButtonsSubscriber(
