@@ -103,4 +103,5 @@ internal object SettingsDomainModule {
     fun provideIsWalletsScrollPreviewEnabled(settingsRepository: SettingsRepository): IsWalletsScrollPreviewEnabled {
         return IsWalletsScrollPreviewEnabled(settingsRepository = settingsRepository)
     }
+
 }

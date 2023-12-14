@@ -42,4 +42,6 @@ dependencies {
 
     /** Compose */
     implementation(deps.compose.foundation)
+
+    implementation(deps.arrow.core)
 }
