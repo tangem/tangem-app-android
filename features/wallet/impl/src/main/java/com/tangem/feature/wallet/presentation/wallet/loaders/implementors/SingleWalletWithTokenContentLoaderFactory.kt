@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
-import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -14,24 +14,21 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val stateHolder: WalletStateController,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
-    private val getCardTokensListUseCase: GetCardTokensListUseCase,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
+    private val getCardTokensListUseCase: GetCardTokensListUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) {
 
-    fun create(
-        userWallet: UserWallet,
-        appCurrency: AppCurrency,
-        clickIntents: WalletClickIntentsV2,
-    ): SingleWalletWithTokenContentLoader {
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntentsV2): SingleWalletWithTokenContentLoader {
         return SingleWalletWithTokenContentLoader(
             userWallet = userWallet,
-            appCurrency = appCurrency,
             clickIntents = clickIntents,
             stateHolder = stateHolder,
             tokenListAnalyticsSender = tokenListAnalyticsSender,
             walletWithFundsChecker = walletWithFundsChecker,
-            getCardTokensListUseCase = getCardTokensListUseCase,
             getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,
+            getCardTokensListUseCase = getCardTokensListUseCase,
+            getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         )
     }
 }
