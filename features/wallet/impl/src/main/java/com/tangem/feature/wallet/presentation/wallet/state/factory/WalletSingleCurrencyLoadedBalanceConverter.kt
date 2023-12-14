@@ -73,6 +73,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.UnreachableWithoutAddresses,
             is CryptoCurrencyStatus.NoQuote,
             -> MarketPriceBlockState.Error(currencySymbol)
         }
@@ -116,6 +117,7 @@ internal class WalletSingleCurrencyLoadedBalanceConverter(
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.UnreachableWithoutAddresses,
             -> {
                 WalletCardState.Error(
                     id = selectedWallet.id,
