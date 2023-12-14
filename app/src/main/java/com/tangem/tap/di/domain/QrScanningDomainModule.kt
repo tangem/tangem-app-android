@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.feature.qrscanning.repo.QrScannedEventsRepository
-import com.tangem.feature.qrscanning.usecase.ListenToQrScanUseCase
+import com.tangem.feature.qrscanning.repo.QrScanningEventsRepository
+import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +14,7 @@ internal object QrScanningDomainModule {
 
     @Provides
     @Singleton
-    fun provideListenToQrScanUseCase(repository: QrScannedEventsRepository): ListenToQrScanUseCase {
-        return ListenToQrScanUseCase(repository)
+    fun provideListenToQrScanUseCase(repository: QrScanningEventsRepository): ListenToQrScanningUseCase {
+        return ListenToQrScanningUseCase(repository)
     }
 }

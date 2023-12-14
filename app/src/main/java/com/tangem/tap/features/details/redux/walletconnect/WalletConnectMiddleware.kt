@@ -17,7 +17,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.qrscanning.QrScanRouter
+import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -103,9 +103,9 @@ class WalletConnectMiddleware {
                 } else {
                     store.dispatchOnMain(
                         NavigationAction.NavigateTo(
-                            screen = AppScreen.QrScan,
+                            screen = AppScreen.QrScanning,
                             bundle = bundleOf(
-                                QrScanRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
+                                QrScanningRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
                             ),
                         ),
                     )

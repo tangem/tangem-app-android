@@ -23,7 +23,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.feature.qrscanning.QrScanRouter
+import com.tangem.feature.qrscanning.QrScanningRouter
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.navigation.AppScreen
@@ -136,7 +136,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var sendRouter: SendRouter
 
     @Inject
-    lateinit var qrScanRouter: QrScanRouter
+    lateinit var qrScanningRouter: QrScanningRouter
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -210,7 +210,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 manageTokensRouter = manageTokensRouter,
                 cardSdkConfigRepository = cardSdkConfigRepository,
                 sendRouter = sendRouter,
-                qrScanRouter = qrScanRouter,
+                qrScanningRouter = qrScanningRouter,
             ),
         )
     }

@@ -12,7 +12,7 @@ internal object QrScanningRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideQrScanRouter(): QrScanRouter {
-        return DefaultQrScanRouter()
+    fun provideQrScanRouter(): QrScanningRouter {
+        return DefaultQrScanningRouter()
     }
 }

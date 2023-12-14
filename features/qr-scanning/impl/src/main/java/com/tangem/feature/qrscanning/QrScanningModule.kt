@@ -1,7 +1,7 @@
 package com.tangem.feature.qrscanning
 
-import com.tangem.feature.qrscanning.repo.DefaultQrScannedEventsRepository
-import com.tangem.feature.qrscanning.repo.QrScannedEventsRepository
+import com.tangem.feature.qrscanning.repo.DefaultQrScanningEventsRepository
+import com.tangem.feature.qrscanning.repo.QrScanningEventsRepository
 import com.tangem.feature.qrscanning.usecase.EmitQrScannedEventUseCase
 import dagger.Module
 import dagger.Provides
@@ -15,13 +15,13 @@ internal object QrScanningModule {
 
     @Provides
     @Singleton
-    fun provideQrScannedEventsRepository(): QrScannedEventsRepository {
-        return DefaultQrScannedEventsRepository()
+    fun provideQrScannedEventsRepository(): QrScanningEventsRepository {
+        return DefaultQrScanningEventsRepository()
     }
 
     @Provides
     @Singleton
-    fun provideEmitQrScannedEventUseCase(repository: QrScannedEventsRepository): EmitQrScannedEventUseCase {
+    fun provideEmitQrScannedEventUseCase(repository: QrScanningEventsRepository): EmitQrScannedEventUseCase {
         return EmitQrScannedEventUseCase(repository)
     }
 }

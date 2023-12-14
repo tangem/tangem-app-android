@@ -24,7 +24,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @AndroidEntryPoint
-internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
+internal class QrScanningFragment : Fragment(R.layout.layout_qr_scanning) {
 
     private val binding: LayoutQrScanningBinding by viewBinding(LayoutQrScanningBinding::bind)
 
@@ -108,9 +108,9 @@ internal class QrScanFragment : Fragment(R.layout.layout_qr_scanning) {
 
     companion object {
 
-        fun create(type: SourceType): QrScanFragment = QrScanFragment().apply {
+        fun create(type: SourceType): QrScanningFragment = QrScanningFragment().apply {
             arguments = bundleOf(
-                QrScanRouter.SOURCE_KEY to type,
+                QrScanningRouter.SOURCE_KEY to type,
             )
         }
     }

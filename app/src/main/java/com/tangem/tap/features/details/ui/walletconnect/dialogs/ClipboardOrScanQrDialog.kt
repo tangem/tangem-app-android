@@ -6,7 +6,7 @@ import androidx.core.os.bundleOf
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.feature.qrscanning.QrScanRouter
+import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -24,9 +24,9 @@ object ClipboardOrScanQrDialog {
             setNegativeButton(context.getText(R.string.wallet_connect_scan_new_code)) { _, _ ->
                 store.dispatch(
                     NavigationAction.NavigateTo(
-                        screen = AppScreen.QrScan,
+                        screen = AppScreen.QrScanning,
                         bundle = bundleOf(
-                            QrScanRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
+                            QrScanningRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
                         ),
                     ),
                 )
