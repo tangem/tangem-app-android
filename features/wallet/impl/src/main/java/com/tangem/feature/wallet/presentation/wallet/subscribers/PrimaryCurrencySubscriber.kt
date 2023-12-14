@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
@@ -15,39 +16,45 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetPrimaryCurrencyTransformer
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.math.BigDecimal
 
 internal class PrimaryCurrencySubscriber(
     private val userWallet: UserWallet,
-    private val appCurrency: AppCurrency,
     private val stateHolder: WalletStateController,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : WalletSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
-        return getPrimaryCurrencyStatusUpdatesUseCase(userWallet.walletId)
-            .conflate()
-            .distinctUntilChanged()
-            .onEach { maybeCurrencyStatus ->
-                val status = maybeCurrencyStatus.getOrElse {
+    override fun create(
+        coroutineScope: CoroutineScope,
+    ): Flow<Pair<Either<CurrencyStatusError, CryptoCurrencyStatus>, AppCurrency>> {
+        return combine(
+            flow = getPrimaryCurrencyStatusUpdatesUseCase(userWallet.walletId)
+                .conflate()
+                .distinctUntilChanged(),
+            flow2 = getSelectedAppCurrencyUseCase()
+                .conflate()
+                .distinctUntilChanged()
+                .map { maybeAppCurrency -> maybeAppCurrency.getOrElse { AppCurrency.Default } },
+            transform = { maybeCurrencyStatus, appCurrency -> maybeCurrencyStatus to appCurrency },
+        )
+            .onEach { maybeCurrencyStatusAndAppCurrency ->
+                val status = maybeCurrencyStatusAndAppCurrency.first.getOrElse {
                     Timber.e("Unable to get primary currency status: $it")
                     return@onEach
                 }
 
-                updateContent(status)
+                updateContent(status, maybeCurrencyStatusAndAppCurrency.second)
                 sendAnalyticsEvent(status)
                 checkWalletWithFunds(status)
             }
     }
 
-    private fun updateContent(status: CryptoCurrencyStatus) {
+    private fun updateContent(status: CryptoCurrencyStatus, appCurrency: AppCurrency) {
         stateHolder.update(
             SetPrimaryCurrencyTransformer(
                 status = status,
