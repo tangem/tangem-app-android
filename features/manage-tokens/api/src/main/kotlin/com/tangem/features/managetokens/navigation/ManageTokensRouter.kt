@@ -5,5 +5,4 @@ import androidx.fragment.app.Fragment
 interface ManageTokensRouter {
 
     fun getEntryFragment(): Fragment
-
 }
