@@ -9,6 +9,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
+import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
@@ -23,13 +24,19 @@ internal class WalletConnectFragment : ComposeFragment(), StoreSubscriber<Wallet
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
+    @Inject
+    lateinit var qrScanningUseCase: ListenToQrScanningUseCase
+
     private val viewModel = WalletConnectViewModel(store)
+
     private var screenState: MutableState<WalletConnectScreenState> =
         mutableStateOf(viewModel.updateState(store.state.walletConnectState))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Analytics.send(WalletConnect.ScreenOpened())
+        lifecycle.addObserver(viewModel)
+        viewModel.init(this, qrScanningUseCase)
     }
 
     @Composable

@@ -1,9 +1,7 @@
 package com.tangem.feature.qrscanning.repo
 
 import com.tangem.feature.qrscanning.SourceType
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 
 internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
 
@@ -11,8 +9,8 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
 
     private val scannedEvents = MutableSharedFlow<QrScanningEvent>()
 
-    override fun emitResult(type: SourceType, qrCode: String) {
-        scannedEvents.tryEmit(QrScanningEvent(type, qrCode))
+    override suspend fun emitResult(type: SourceType, qrCode: String) {
+        scannedEvents.emit(QrScanningEvent(type, qrCode))
     }
 
     override fun subscribeToScanningResults(type: SourceType) = scannedEvents

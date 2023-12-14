@@ -7,7 +7,7 @@ internal class EmitQrScannedEventUseCase(
     private val repository: QrScanningEventsRepository,
 ) {
 
-    operator fun invoke(type: SourceType, qrCode: String) {
+    suspend operator fun invoke(type: SourceType, qrCode: String) {
         repository.emitResult(type, qrCode)
     }
 }

@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface QrScanningEventsRepository {
 
-    fun emitResult(type: SourceType, qrCode: String)
+    suspend fun emitResult(type: SourceType, qrCode: String)
 
     fun subscribeToScanningResults(type: SourceType): Flow<String>
 }

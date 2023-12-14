@@ -63,7 +63,6 @@ internal class QrScanningFragment : Fragment(R.layout.layout_qr_scanning) {
                         setFitSystemWindows(fit = false)
                         if (result.isNotBlank()) {
                             viewModel.onQrScanned(result)
-                            // store.dispatch(WalletConnectAction.OpenSession(result))
                         }
                     },
                 )
