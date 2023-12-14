@@ -2,10 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.CanUseBiometryUseCase
@@ -51,7 +48,6 @@ internal class WalletViewModelV2 @Inject constructor(
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     analyticsEventsHandler: AnalyticsEventHandler,
@@ -60,8 +56,6 @@ internal class WalletViewModelV2 @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
-
-    private val selectedAppCurrencyFlow = createSelectedAppCurrencyFlow()
 
     private var router: InnerWalletRouter by Delegates.notNull()
     private var walletsUpdateJobHolder: JobHolder = JobHolder()
@@ -165,10 +159,9 @@ internal class WalletViewModelV2 @Inject constructor(
             is WalletsUpdateActionResolverV2.Action.ReinitializeWallets -> {
                 walletScreenContentLoader.load(
                     userWallet = action.selectedWallet,
-                    appCurrency = selectedAppCurrencyFlow.value,
                     clickIntents = clickIntents,
-                    coroutineScope = viewModelScope,
                     isRefresh = true,
+                    coroutineScope = viewModelScope,
                 )
             }
             is WalletsUpdateActionResolverV2.Action.ReinitializeWallet -> reinitializeWallet(action)
@@ -188,7 +181,6 @@ internal class WalletViewModelV2 @Inject constructor(
     private fun initializeWallets(action: WalletsUpdateActionResolverV2.Action.InitializeWallets) {
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
-            appCurrency = selectedAppCurrencyFlow.value,
             clickIntents = clickIntents,
             coroutineScope = viewModelScope,
         )
@@ -227,7 +219,6 @@ internal class WalletViewModelV2 @Inject constructor(
 
             walletScreenContentLoader.load(
                 userWallet = action.selectedWallet,
-                appCurrency = selectedAppCurrencyFlow.value,
                 clickIntents = clickIntents,
                 coroutineScope = viewModelScope,
             )
@@ -249,7 +240,6 @@ internal class WalletViewModelV2 @Inject constructor(
 
             walletScreenContentLoader.load(
                 userWallet = action.selectedWallet,
-                appCurrency = selectedAppCurrencyFlow.value,
                 clickIntents = clickIntents,
                 coroutineScope = viewModelScope,
             )
@@ -264,7 +254,6 @@ internal class WalletViewModelV2 @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             walletScreenContentLoader.load(
                 userWallet = action.selectedWallet,
-                appCurrency = selectedAppCurrencyFlow.value,
                 clickIntents = clickIntents,
                 coroutineScope = viewModelScope,
             )
@@ -295,7 +284,6 @@ internal class WalletViewModelV2 @Inject constructor(
 
             walletScreenContentLoader.load(
                 userWallet = action.selectedWallet,
-                appCurrency = selectedAppCurrencyFlow.value,
                 clickIntents = clickIntents,
                 coroutineScope = viewModelScope,
             )
@@ -310,17 +298,5 @@ internal class WalletViewModelV2 @Inject constructor(
                 stateUpdater = { newState -> stateHolder.update { newState } },
             ),
         )
-    }
-
-    private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
-        return getSelectedAppCurrencyUseCase()
-            .map { maybeAppCurrency ->
-                maybeAppCurrency.getOrElse { AppCurrency.Default }
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = AppCurrency.Default,
-            )
     }
 }
