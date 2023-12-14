@@ -84,8 +84,6 @@ internal class QrScanningFragment : Fragment(R.layout.layout_qr_scanning) {
         if (requestCode != PERMISSION_REQUEST_CODE) return
 
         if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-            // store.dispatch(WalletConnectAction.NotifyCameraPermissionIsRequired)
-
             parentFragmentManager.popBackStack()
         }
     }

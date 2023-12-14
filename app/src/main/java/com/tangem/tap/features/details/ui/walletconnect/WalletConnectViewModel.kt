@@ -8,7 +8,6 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.rekotlin.Store
 import timber.log.Timber
