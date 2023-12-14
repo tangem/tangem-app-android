@@ -19,7 +19,10 @@ internal class NetworkStatusFactory {
             network = network,
             value = when (result) {
                 is UpdateWalletManagerResult.MissedDerivation -> NetworkStatus.MissedDerivation
-                is UpdateWalletManagerResult.Unreachable -> NetworkStatus.Unreachable
+                is UpdateWalletManagerResult.UnreachableWithoutAddresses -> NetworkStatus.UnreachableWithoutAddresses
+                is UpdateWalletManagerResult.Unreachable -> NetworkStatus.Unreachable(
+                    address = getNetworkAddress(result.selectedAddress, result.addresses),
+                )
                 is UpdateWalletManagerResult.NoAccount -> NetworkStatus.NoAccount(
                     address = getNetworkAddress(result.selectedAddress, result.addresses),
                     amountToCreateAccount = result.amountToCreateAccount,
