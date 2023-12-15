@@ -17,6 +17,12 @@ data class ExchangeProvider(
 
     @Json(name = "imageSmall")
     val imageSmallUrl: String,
+
+    @Json(name = "termsOfUse")
+    val termsOfUse: String?,
+
+    @Json(name = "privacyPolicy")
+    val privacyPolicy: String?,
 )
 
 enum class ExchangeProviderType {
