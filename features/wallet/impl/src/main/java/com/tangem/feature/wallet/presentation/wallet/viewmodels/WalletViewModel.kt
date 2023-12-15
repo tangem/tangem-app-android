@@ -315,7 +315,8 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    // TODO: [REDACTED_JIRA]
+    @Deprecated("Use DerivePublicKeysUseCase instead")
+    // FIXME: Migration: [REDACTED_JIRA]
     private fun deriveMissingCurrencies(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
