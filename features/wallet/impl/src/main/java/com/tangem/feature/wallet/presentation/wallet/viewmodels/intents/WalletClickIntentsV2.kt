@@ -56,6 +56,7 @@ internal class WalletClickIntentsV2 @Inject constructor(
         warningsClickIntentsImplementer.initialize(router, coroutineScope)
         currencyActionsClickIntentsImplementor.initialize(router, coroutineScope)
         contentClickIntentsImplementor.initialize(router, coroutineScope)
+        visaWalletIntentsImplementor.initialize(router, coroutineScope)
     }
 
     fun onWalletChange(index: Int) {
