@@ -114,14 +114,14 @@ private fun FromWallet(walletName: String, walletBalance: String) {
 
 @Composable
 private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: State<Boolean>, onClick: () -> Unit) {
-    val amount = amountState.amountTextField.collectAsStateWithLifecycle()
+    val amount = amountState.amountTextField
 
     val cryptoAmount = formatCryptoAmount(
         cryptoCurrency = amountState.cryptoCurrencyStatus.currency,
-        cryptoAmount = amount.value.value.toBigDecimalOrDefault(),
+        cryptoAmount = amount.value.toBigDecimalOrDefault(),
     )
     val fiatAmount = BigDecimalFormatter.formatFiatAmount(
-        fiatAmount = amount.value.fiatValue.toBigDecimalOrDefault(),
+        fiatAmount = amount.fiatValue.toBigDecimalOrDefault(),
         fiatCurrencyCode = amountState.appCurrency.code,
         fiatCurrencySymbol = amountState.appCurrency.symbol,
     )
@@ -140,8 +140,8 @@ private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: State<Bo
 
 @Composable
 private fun RecipientBlock(recipientState: SendStates.RecipientState, isSuccess: State<Boolean>, onClick: () -> Unit) {
-    val address = recipientState.addressTextField.collectAsStateWithLifecycle()
-    val memo = recipientState.memoTextField?.collectAsStateWithLifecycle()
+    val address = recipientState.addressTextField
+    val memo = recipientState.memoTextField
 
     Column(
         modifier = Modifier
@@ -149,16 +149,16 @@ private fun RecipientBlock(recipientState: SendStates.RecipientState, isSuccess:
             .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isSuccess.value) { onClick() },
     ) {
-        val showMemo = memo != null && memo.value.value.isNotBlank()
+        val showMemo = memo != null && memo.value.isNotBlank()
         InputRowRecipientDefault(
             title = TextReference.Res(R.string.send_recipient),
-            value = address.value.value,
+            value = address.value,
             showDivider = showMemo,
         )
         if (showMemo) {
             InputRowDefault(
                 title = TextReference.Res(R.string.send_extras_hint_memo),
-                text = TextReference.Str(memo?.value?.value.orEmpty()),
+                text = TextReference.Str(memo?.value.orEmpty()),
             )
         }
     }
