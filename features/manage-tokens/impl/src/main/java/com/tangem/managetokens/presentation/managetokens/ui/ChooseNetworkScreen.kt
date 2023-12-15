@@ -35,9 +35,13 @@ internal fun ChooseNetworkScreen(
 ) {
     val networkState = state.chooseNetworkState
     LazyColumn(
+        contentPadding = PaddingValues(
+            start = TangemTheme.dimens.spacing16,
+            end = TangemTheme.dimens.spacing16,
+            bottom = TangemTheme.dimens.spacing16,
+        ),
         modifier = modifier
-            .background(TangemTheme.colors.background.tertiary)
-            .padding(TangemTheme.dimens.spacing16),
+            .background(TangemTheme.colors.background.tertiary),
     ) {
         item {
             Text(
