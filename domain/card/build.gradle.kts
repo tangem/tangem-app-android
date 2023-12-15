@@ -16,7 +16,8 @@ dependencies {
     implementation(projects.domain.legacy)
     // TODO: Remove after new card scan result was implemented
     implementation(projects.domain.models)
-
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
 
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain) {
