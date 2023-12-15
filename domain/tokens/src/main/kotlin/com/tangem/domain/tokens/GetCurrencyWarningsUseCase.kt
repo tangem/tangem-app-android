@@ -57,7 +57,7 @@ class GetCurrencyWarningsUseCase(
             operations.getCurrenciesStatusesFlow().conflate(),
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
             flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
-            showSwapPromoTokenUseCase().conflate(),
+            showSwapPromoTokenUseCase(userWalletId.stringValue, currency.id.value).conflate(),
         ) { coinRelatedWarnings, cryptoStatuses, maybeRentWarning, maybeEdWarning, shouldShowSwapPromo ->
             setOfNotNull(
                 getSwapPromoNotificationWarning(
@@ -116,11 +116,8 @@ class GetCurrencyWarningsUseCase(
                         }
                         availablePair
                             .any {
-                                (
-                                    it.currency.network.backendId == pair.to.network ||
-                                        it.currency.network.backendId == pair.from.network
-                                    ) &&
-                                    !it.value.amount.isNullOrZero()
+                                it.currency.network.backendId == pair.to.network ||
+                                    it.currency.network.backendId == pair.from.network
                             }
                     }
                     if (isExchangeable) {
