@@ -164,7 +164,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 NavigationAction.NavigateTo(
                     screen = AppScreen.QrScanning,
                     bundle = bundleOf(
-                        QrScanningRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
+                        QrScanningRouter.SOURCE_KEY to SourceType.SEND,
                     ),
                 ),
             )
@@ -173,7 +173,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun listenToQrCode() {
         lifecycleScope.launch {
-            listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
+            listenToQrScanningUseCase(SourceType.SEND)
                 .flowWithLifecycle(this@SendFragment.lifecycle, minActiveState = Lifecycle.State.CREATED)
                 .collect {
                     delay(200)
