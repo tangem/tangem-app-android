@@ -1,6 +1,5 @@
 package com.tangem.feature.qrscanning
 
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,7 +13,7 @@ import javax.inject.Inject
 internal class QrScanningViewModel @Inject constructor(
     private val emitQrScannedEventUseCase: EmitQrScannedEventUseCase,
     savedStateHandle: SavedStateHandle,
-) : ViewModel(), DefaultLifecycleObserver {
+) : ViewModel() {
 
     private val source: SourceType = savedStateHandle[SOURCE_KEY] ?: error("Source is mandatory")
 

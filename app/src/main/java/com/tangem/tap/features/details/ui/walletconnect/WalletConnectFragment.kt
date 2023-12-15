@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.viewModels
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
@@ -24,28 +25,25 @@ internal class WalletConnectFragment : ComposeFragment(), StoreSubscriber<Wallet
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
-    @Inject
-    lateinit var qrScanningUseCase: ListenToQrScanningUseCase
+    private val viewModel: WalletConnectViewModel by viewModels()
 
-    private val viewModel = WalletConnectViewModel(store)
-
-    private var screenState: MutableState<WalletConnectScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.walletConnectState))
+    private var screenState: MutableState<WalletConnectScreenState>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Analytics.send(WalletConnect.ScreenOpened())
         lifecycle.addObserver(viewModel)
-        viewModel.init(this, qrScanningUseCase)
+        screenState = mutableStateOf(viewModel.updateState(store.state.walletConnectState))
     }
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
+        val state = screenState?.value ?: return
         WalletConnectScreen(
             modifier = modifier,
-            state = screenState.value,
+            state = state,
             onBackClick = {
-                if (screenState.value.isLoading) {
+                if (state.isLoading) {
                     store.dispatch(
                         WalletConnectAction.FailureEstablishingSession(
                             store.state.walletConnectState.newSessionData?.session?.session,
@@ -73,6 +71,6 @@ internal class WalletConnectFragment : ComposeFragment(), StoreSubscriber<Wallet
 
     override fun newState(state: WalletConnectState) {
         if (activity == null || view == null) return
-        screenState.value = viewModel.updateState(state)
+        screenState?.value = viewModel.updateState(state)
     }
 }

@@ -3,20 +3,22 @@ package com.tangem.tap.features.details.ui.walletconnect
 import androidx.lifecycle.*
 import com.tangem.feature.qrscanning.SourceType
 import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
-import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
+import com.tangem.tap.store
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
-import org.rekotlin.Store
 import timber.log.Timber
+import javax.inject.Inject
 
-internal class WalletConnectViewModel(
-    private val store: Store<AppState>,
-) : ViewModel(), DefaultLifecycleObserver {
+@HiltViewModel
+internal class WalletConnectViewModel @Inject constructor(
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase
+): ViewModel(), DefaultLifecycleObserver {
 
-    fun init(owner: LifecycleOwner, listenToQrScanningUseCase: ListenToQrScanningUseCase) {
+    override fun onCreate(owner: LifecycleOwner) {
         viewModelScope.launch {
             listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
                 .flowWithLifecycle(owner.lifecycle, minActiveState = Lifecycle.State.CREATED)

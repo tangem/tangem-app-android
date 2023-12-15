@@ -38,7 +38,6 @@ internal class QrScanningFragment : Fragment(R.layout.layout_qr_scanning) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setFitSystemWindows(fit = true)
-        lifecycle.addObserver(viewModel)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
