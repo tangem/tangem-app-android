@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -105,6 +104,5 @@ internal class QrScanningFragment : Fragment(R.layout.layout_qr_scanning) {
     companion object {
 
         fun create() = QrScanningFragment()
-
     }
 }

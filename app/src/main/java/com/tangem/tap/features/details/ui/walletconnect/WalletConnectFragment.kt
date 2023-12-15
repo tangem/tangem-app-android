@@ -10,7 +10,6 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
-import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState

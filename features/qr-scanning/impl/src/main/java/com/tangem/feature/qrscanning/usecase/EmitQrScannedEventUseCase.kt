@@ -9,7 +9,7 @@ import com.tangem.feature.qrscanning.repo.QrScanningEventsRepository
 internal class EmitQrScannedEventUseCase(
     private val repository: QrScanningEventsRepository,
 ) {
-    suspend operator fun invoke(type: SourceType, qrCode: String) : Either<Exception, Unit> {
+    suspend operator fun invoke(type: SourceType, qrCode: String): Either<Exception, Unit> {
         return try {
             repository.emitResult(type, qrCode)
             Unit.right()

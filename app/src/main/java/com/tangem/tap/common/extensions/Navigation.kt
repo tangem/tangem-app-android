@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.fragment.app.*
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.FragmentShareTransition
-import com.tangem.feature.qrscanning.SourceType
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.features.customtoken.impl.presentation.AddCustomTokenFragment

@@ -15,8 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class WalletConnectViewModel @Inject constructor(
-    private val listenToQrScanningUseCase: ListenToQrScanningUseCase
-): ViewModel(), DefaultLifecycleObserver {
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+) : ViewModel(), DefaultLifecycleObserver {
 
     override fun onCreate(owner: LifecycleOwner) {
         viewModelScope.launch {
