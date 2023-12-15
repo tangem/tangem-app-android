@@ -247,7 +247,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxWidth()) {
         Column {
             Text(
-                text = "Provider",
+                text = stringResource(R.string.express_provider),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.secondary,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
@@ -265,7 +265,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
                     strokeWidth = TangemTheme.dimens.size2,
                 )
                 Text(
-                    text = "Fetching best rates ...",
+                    text = stringResource(R.string.express_fetch_best_rates),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
