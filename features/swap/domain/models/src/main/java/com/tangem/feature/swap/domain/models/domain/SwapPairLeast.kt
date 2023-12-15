@@ -32,6 +32,8 @@ data class SwapProvider(
     val name: String,
     val type: ExchangeProviderType,
     val imageLarge: String,
+    val termsOfUse: String?,
+    val privacyPolicy: String?,
 )
 
 enum class ExchangeProviderType {
