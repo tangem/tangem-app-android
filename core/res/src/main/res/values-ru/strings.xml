@@ -203,11 +203,17 @@
     <string name="express_exchange_notification_verification_title">Провайдер запрашивает прохождение верификации</string>
     <string name="express_exchange_token_list_subtitle">Список токенов в вашем кошельке</string>
     <string name="express_fetch_best_rates">Получение наилучших курсов...</string>
+    <string name="express_floating_rate">Плавающая ставка</string>
+    <string name="express_go_to_provider">К провайдеру</string>
+    <string name="express_legal_one_placeholder">Пользуясь сервисом вы соглашаетесь с %s</string>
+    <string name="express_legal_two_placeholders">Пользуясь сервисом вы соглашаетесь с %1$s и %2$s</string>
+    <string name="express_privacy_policy">Политикой конфиденциальности</string>
     <string name="express_provider">Провайдер</string>
     <string name="express_provider_best_rate">Лучший курс</string>
     <string name="express_provider_min_amount">Доступно с %s</string>
     <string name="express_provider_not_available">Недоступно для этой пары</string>
     <string name="express_provider_permission_needed">Требуется разрешение</string>
+    <string name="express_terms_of_use">Условиями использования</string>
     <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
     <string name="feedback_preface_rate_negative">Расскажите, каких функций вам не хватает, и мы постараемся вам помочь.</string>
     <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у вас карта?</string>

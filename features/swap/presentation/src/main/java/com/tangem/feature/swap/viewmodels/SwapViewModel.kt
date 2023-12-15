@@ -22,8 +22,8 @@ import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
+import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
@@ -844,6 +844,16 @@ internal class SwapViewModel @Inject constructor(
             },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
+            },
+            onPolicyClick = {
+                uiState = stateBuilder.showWebViewBottomSheet(uiState, it) {
+                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                }
+            },
+            onTosClick = {
+                uiState = stateBuilder.showWebViewBottomSheet(uiState, it) {
+                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                }
             },
         )
     }

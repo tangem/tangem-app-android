@@ -43,6 +43,8 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
             name = exchangeProvider.name,
             type = convertExchangeType(exchangeProvider.type),
             imageLarge = exchangeProvider.imageLargeUrl,
+            termsOfUse = exchangeProvider.termsOfUse,
+            privacyPolicy = exchangeProvider.privacyPolicy,
         )
     }
 
@@ -57,6 +59,8 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
             name = additionalProvider.name,
             type = convertExchangeType(additionalProvider.type),
             imageLarge = additionalProvider.imageLargeUrl,
+            termsOfUse = additionalProvider.termsOfUse,
+            privacyPolicy = additionalProvider.privacyPolicy,
         )
     }
 
