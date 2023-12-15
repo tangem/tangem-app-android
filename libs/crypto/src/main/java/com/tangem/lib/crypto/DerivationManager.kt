@@ -1,7 +1,8 @@
 package com.tangem.lib.crypto
 
 import com.tangem.lib.crypto.models.Currency
-
+// [REDACTED_TODO_COMMENT]
+@Deprecated(message = "Use DerivePublicKeysUseCase instead")
 interface DerivationManager {
 
     /**

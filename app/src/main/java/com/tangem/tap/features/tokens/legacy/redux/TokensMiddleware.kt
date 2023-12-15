@@ -95,6 +95,8 @@ object TokensMiddleware {
         }
     }
 
+    @Deprecated(message = "Use DerivePublicKeysUseCase instead")
+// [REDACTED_TODO_COMMENT]
     private fun deriveMissingCoins(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,

@@ -82,6 +82,8 @@ class DefaultCustomTokenInteractor(
         return currency.derivationPath?.let { !scanResponse.hasDerivation(currency.blockchain, it) } ?: false
     }
 
+    @Deprecated("Use DerivePublicKeysUseCase instead")
+// [REDACTED_TODO_COMMENT]
     private suspend fun deriveMissingBlockchains(
         userWallet: UserWallet,
         currencyList: List<Currency>,

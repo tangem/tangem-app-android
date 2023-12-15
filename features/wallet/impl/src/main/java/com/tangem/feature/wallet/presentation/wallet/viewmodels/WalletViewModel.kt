@@ -314,6 +314,8 @@ internal class WalletViewModel @Inject constructor(
             }
         }
     }
+
+    @Deprecated("Use DerivePublicKeysUseCase instead")
 // [REDACTED_TODO_COMMENT]
     private fun deriveMissingCurrencies(
         scanResponse: ScanResponse,
