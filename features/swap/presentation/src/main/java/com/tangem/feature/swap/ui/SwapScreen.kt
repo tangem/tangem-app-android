@@ -3,8 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material.*
-import androidx.compose.material3.*
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -14,6 +13,7 @@ import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.models.states.GivePermissionBottomSheetConfig
+import com.tangem.feature.swap.models.states.WebViewBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
 
 @Composable
@@ -47,6 +47,9 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                 }
                 is ChooseFeeBottomSheetConfig -> {
                     ChooseFeeBottomSheet(config = config)
+                }
+                is WebViewBottomSheetConfig -> {
+                    WebViewBottomSheet(config = config)
                 }
             }
         }
