@@ -33,7 +33,11 @@ internal fun ChooseWalletScreen(state: ChooseWalletState.Choose, modifier: Modif
     LazyColumn(
         modifier = modifier
             .background(TangemTheme.colors.background.tertiary)
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            ),
     ) {
         item {
             Box(
@@ -101,13 +105,13 @@ private fun WalletItem(wallet: WalletState, selectedWallet: WalletState?, modifi
                 .build(),
             loading = {
                 Image(
-                    painter = painterResource(R.drawable.card_placeholder_primary),
+                    painter = painterResource(R.drawable.card_placeholder_black),
                     contentDescription = null,
                 )
             },
             error = {
                 Image(
-                    painter = painterResource(R.drawable.card_placeholder_primary),
+                    painter = painterResource(R.drawable.card_placeholder_black),
                     contentDescription = null,
                 )
             },
