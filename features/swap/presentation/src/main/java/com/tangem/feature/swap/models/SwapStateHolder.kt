@@ -30,6 +30,7 @@ data class SwapStateHolder(
     val bottomSheetConfig: TangemBottomSheetConfig? = null,
 
     val swapButton: SwapButton,
+    val tosState: TosState? = null,
 
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
@@ -105,6 +106,17 @@ sealed interface TransactionCardType {
         val highPriceImpact: String? = null,
     ) : TransactionCardType
 }
+
+data class TosState(
+    val tosLink: LegalState?,
+    val policyLink: LegalState?,
+)
+
+data class LegalState(
+    val title: TextReference,
+    val link: String,
+    val onClick: (String) -> Unit,
+)
 
 sealed interface SwapWarning {
     data class PermissionNeeded(val notificationConfig: NotificationConfig) : SwapWarning
