@@ -3,8 +3,10 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.repository.WalletAddressServiceRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -90,5 +92,17 @@ internal object WalletsDomainModule {
     @ViewModelScoped
     fun providesShouldSaveUserWalletsUseCase(walletsRepository: WalletsRepository): ShouldSaveUserWalletsUseCase {
         return ShouldSaveUserWalletsUseCase(walletsRepository = walletsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesValidateWalletAddressUseCase(
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): ValidateWalletAddressUseCase {
+        return ValidateWalletAddressUseCase(
+            walletAddressServiceRepository = walletAddressServiceRepository,
+            dispatchers = dispatchers,
+        )
     }
 }
