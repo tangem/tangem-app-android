@@ -2,6 +2,8 @@ package com.tangem.lib.crypto
 
 import com.tangem.lib.crypto.models.Currency
 
+// FIXME: Migration [REDACTED_JIRA]
+@Deprecated(message = "Use DerivePublicKeysUseCase instead")
 interface DerivationManager {
 
     /**
