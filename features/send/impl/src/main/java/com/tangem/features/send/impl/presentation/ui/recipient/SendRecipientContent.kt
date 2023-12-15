@@ -11,7 +11,9 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -38,8 +40,9 @@ internal fun SendRecipientContent(
     recipientList: LazyPagingItems<SendRecipientListContent>,
 ) {
     if (uiState == null) return
-    val address = uiState.addressTextField.collectAsState().value
-    val memo = uiState.memoTextField?.collectAsState()?.value
+    val address = uiState.addressTextField
+    val isValidating by remember(uiState.isValidating) { derivedStateOf { uiState.isValidating } }
+    val isError by remember(address.isError) { derivedStateOf { address.isError } }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -57,7 +60,8 @@ internal fun SendRecipientContent(
                     onValueChange = address.onValueChange,
                     onPasteClick = clickIntents::onRecipientAddressValueChange,
                     singleLine = true,
-                    isError = address.isError,
+                    isError = isError,
+                    isLoading = isValidating,
                     error = address.error,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing4)
@@ -68,7 +72,7 @@ internal fun SendRecipientContent(
                 )
             }
         }
-        memo?.let { memoField ->
+        uiState.memoTextField?.let { memoField ->
             item(key = MEMO_FIELD_KEY) {
                 TextFieldWithPaste(
                     value = memoField.value,
