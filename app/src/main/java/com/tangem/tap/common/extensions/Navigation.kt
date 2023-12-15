@@ -174,7 +174,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.QrScanning -> {
             store.state.daggerGraphState
                 .get(getDependency = DaggerGraphState::qrScanningRouter)
-                .getEntryFragment(type = SourceType.WALLET_CONNECT)
+                .getEntryFragment()
         }
         AppScreen.ReferralProgram -> ReferralFragment()
         AppScreen.Swap -> SwapFragment()

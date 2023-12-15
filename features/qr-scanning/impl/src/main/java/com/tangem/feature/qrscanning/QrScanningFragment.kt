@@ -104,10 +104,7 @@ internal class QrScanningFragment : Fragment(R.layout.layout_qr_scanning) {
 
     companion object {
 
-        fun create(type: SourceType): QrScanningFragment = QrScanningFragment().apply {
-            arguments = bundleOf(
-                QrScanningRouter.SOURCE_KEY to type,
-            )
-        }
+        fun create() = QrScanningFragment()
+
     }
 }
