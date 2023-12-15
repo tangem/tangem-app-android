@@ -271,6 +271,26 @@ internal class StateBuilder(
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
             ),
+            tosState = createTosState(swapProvider),
+        )
+    }
+
+    private fun createTosState(swapProvider: SwapProvider): TosState {
+        return TosState(
+            tosLink = swapProvider.termsOfUse?.let {
+                LegalState(
+                    title = resourceReference(R.string.express_terms_of_use),
+                    link = it,
+                    onClick = actions.onTosClick,
+                )
+            },
+            policyLink = swapProvider.privacyPolicy?.let {
+                LegalState(
+                    title = resourceReference(R.string.express_privacy_policy),
+                    link = it,
+                    onClick = actions.onPolicyClick,
+                )
+            },
         )
     }
 
@@ -422,6 +442,7 @@ internal class StateBuilder(
                 ChangeCardsButtonState.DISABLED
             },
             providerState = providerState,
+            tosState = createTosState(swapProvider),
         )
     }
 
@@ -802,6 +823,17 @@ internal class StateBuilder(
                 )
             }
         }
+    }
+
+    fun showWebViewBottomSheet(uiState: SwapStateHolder, url: String, onDismiss: () -> Unit): SwapStateHolder {
+        val config = WebViewBottomSheetConfig(url = url)
+        return uiState.copy(
+            bottomSheetConfig = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = onDismiss,
+                content = config,
+            ),
+        )
     }
 
     fun showPermissionBottomSheet(uiState: SwapStateHolder, onDismiss: () -> Unit): SwapStateHolder {
