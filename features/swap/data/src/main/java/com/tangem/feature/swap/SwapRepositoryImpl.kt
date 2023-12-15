@@ -41,7 +41,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val tangemExpressApi: TangemExpressApi,
@@ -97,6 +97,53 @@ internal class SwapRepositoryImpl @Inject constructor(
                     SwapPairsWithProviders(
                         swapPair = allPairs,
                         providers = providers,
+                    ),
+                )
+            } catch (exception: Exception) {
+                if (exception is ApiResponseError.HttpException) {
+                    throw ExpressException(errorsDataConverter.convert(exception.errorBody ?: ""))
+                } else {
+                    throw exception
+                }
+            }
+        }
+    }
+
+    override suspend fun getPairsOnly(
+        initialCurrency: LeastTokenInfo,
+        currencyList: List<CryptoCurrency>,
+    ): PairsWithProviders {
+        return withContext(coroutineDispatcher.io) {
+            try {
+                val initial = NetworkLeastTokenInfo(
+                    contractAddress = initialCurrency.contractAddress,
+                    network = initialCurrency.network,
+                )
+                val currenciesList = currencyList.map { leastTokenInfoConverter.convert(it) }
+
+                val pairsDeferred = async {
+                    getPairsInternal(
+                        from = arrayListOf(initial),
+                        to = currenciesList,
+                    )
+                }
+
+                val reversedPairsDeferred = async {
+                    getPairsInternal(
+                        from = currenciesList,
+                        to = arrayListOf(initial),
+                    )
+                }
+
+                val pairs = pairsDeferred.await().getOrThrow()
+                val reversedPairs = reversedPairsDeferred.await().getOrThrow()
+
+                val allPairs = pairs + reversedPairs
+
+                return@withContext swapPairInfoConverter.convert(
+                    SwapPairsWithProviders(
+                        swapPair = allPairs,
+                        providers = emptyList(),
                     ),
                 )
             } catch (exception: Exception) {
