@@ -37,6 +37,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.domain.wallets.usecase.ValidateWalletAddressUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
@@ -74,6 +75,7 @@ internal class SendViewModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
@@ -110,6 +112,7 @@ internal class SendViewModel @Inject constructor(
     private var recipientsJobHolder = JobHolder()
     private var walletAddressesJobHolder = JobHolder()
     private var feeJobHolder = JobHolder()
+    private var addressValidationJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
         getWalletAddresses()
@@ -255,8 +258,8 @@ internal class SendViewModel @Inject constructor(
 
                     stateFactory.onFeeOnLoadingState()
                     getFeeUseCase.invoke(
-                        amount = amountState.amountTextField.value.value.toBigDecimal(),
-                        destination = recipientState.addressTextField.value.value,
+                        amount = amountState.amountTextField.value.toBigDecimal(),
+                        destination = recipientState.addressTextField.value,
                         userWalletId = userWalletId,
                         cryptoCurrency = cryptoCurrency,
                     )
@@ -319,15 +322,33 @@ internal class SendViewModel @Inject constructor(
 
     // region recipient state clicks
     override fun onRecipientAddressValueChange(value: String) {
-        if (!checkIfXrpAddressValue(value)) {
-            uiState = stateFactory.getOnRecipientAddressValueChangeState(value)
-        }
+        uiState = stateFactory.onRecipientAddressValueChange(value)
+        viewModelScope.launch(dispatchers.main) {
+            uiState = stateFactory.getOnRecipientAddressValidationStarted()
+            if (!checkIfXrpAddressValue(value)) {
+                val isValidAddress = validateAddress(value)
+                uiState = stateFactory.getOnRecipientAddressValidState(value, isValidAddress)
+            }
+        }.saveIn(addressValidationJobHolder)
     }
 
     override fun onRecipientMemoValueChange(value: String) {
-        if (!checkIfXrpAddressValue(value)) {
-            uiState = stateFactory.getOnRecipientMemoValueChangeState(value)
-        }
+        uiState = stateFactory.getOnRecipientMemoValueChange(value)
+        viewModelScope.launch(dispatchers.main) {
+            uiState = stateFactory.getOnRecipientAddressValidationStarted()
+            if (!checkIfXrpAddressValue(value)) {
+                val isValidAddress = validateAddress(value)
+                uiState = stateFactory.getOnRecipientMemoValidState(value, isValidAddress)
+            }
+        }.saveIn(addressValidationJobHolder)
+    }
+
+    private suspend fun validateAddress(value: String): Boolean {
+        return validateWalletAddressUseCase(
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+            address = value,
+        ).getOrElse { false }
     }
 
     private fun checkIfXrpAddressValue(value: String): Boolean {
@@ -395,7 +416,7 @@ internal class SendViewModel @Inject constructor(
             is TransactionFee.Single -> selectedFee.normal.amount.value
         } ?: BigDecimal.ZERO
 
-        return BigDecimal(amount.value).minus(fee)
+        return BigDecimal(amount).minus(fee)
     }
     //endregion
 
@@ -418,7 +439,7 @@ internal class SendViewModel @Inject constructor(
         val memo = uiState.recipientState?.memoTextField?.value
         val fee = getFee(feeState) ?: return
 
-        val amountToSend = amount.value.toBigDecimal().convertToAmount(cryptoCurrency)
+        val amountToSend = amount.toBigDecimal().convertToAmount(cryptoCurrency)
 
         // todo add notifications [[REDACTED_JIRA]]
         // val transactionErrors = walletManagersFacade.validateTransaction(
@@ -431,11 +452,11 @@ internal class SendViewModel @Inject constructor(
         val txData = walletManagersFacade.createTransaction(
             amount = amountToSend,
             fee = fee,
-            memo = memo?.value,
-            destination = recipient.value,
+            memo = memo,
+            destination = recipient,
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
-        )?.copy(extras = getMemoExtras(cryptoCurrency.network.id.value, memo?.value)) ?: return
+        )?.copy(extras = getMemoExtras(cryptoCurrency.network.id.value, memo)) ?: return
 
         sendTransactionUseCase(
             txData = txData,
