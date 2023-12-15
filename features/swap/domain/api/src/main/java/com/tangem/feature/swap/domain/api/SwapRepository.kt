@@ -11,6 +11,9 @@ interface SwapRepository {
 
     suspend fun getPairs(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): PairsWithProviders
 
+    /** Express getPairs request variant without providers request */
+    suspend fun getPairsOnly(initialCurrency: LeastTokenInfo, currencyList: List<CryptoCurrency>): PairsWithProviders
+
     suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
 
     suspend fun getExchangeableTokens(networkId: String): List<Currency>

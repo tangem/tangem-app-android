@@ -22,8 +22,8 @@ import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
+import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
@@ -577,10 +577,12 @@ internal class SwapViewModel @Inject constructor(
                 tokenDataState.toGroup
             }
             val available = group.available.filter {
-                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true)
+                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true) ||
+                    it.currencyStatus.currency.symbol.contains(searchQuery, ignoreCase = true)
             }
             val unavailable = group.unavailable.filter {
-                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true)
+                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true) ||
+                    it.currencyStatus.currency.symbol.contains(searchQuery, ignoreCase = true)
             }
             val filteredTokenDataState = if (isOrderReversed) {
                 tokenDataState.copy(
@@ -842,6 +844,16 @@ internal class SwapViewModel @Inject constructor(
             },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
+            },
+            onPolicyClick = {
+                uiState = stateBuilder.showWebViewBottomSheet(uiState, it) {
+                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                }
+            },
+            onTosClick = {
+                uiState = stateBuilder.showWebViewBottomSheet(uiState, it) {
+                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                }
             },
         )
     }

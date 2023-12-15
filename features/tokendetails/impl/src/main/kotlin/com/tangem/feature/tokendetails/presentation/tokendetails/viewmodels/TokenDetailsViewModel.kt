@@ -219,6 +219,8 @@ internal class TokenDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             swapTxStatusTaskScheduler.cancelTask()
             exchangeStatusFactory.invoke()
+                .distinctUntilChanged()
+                .filterNot { it.isEmpty() }
                 .onEach { swapTxs ->
                     swapTxStatusTaskScheduler.scheduleTask(
                         viewModelScope,
@@ -230,13 +232,14 @@ internal class TokenDetailsViewModel @Inject constructor(
                                 }
                             },
                             onSuccess = { updatedTxs ->
-                                val config = uiState.bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig
-                                val currentTx = updatedTxs.firstOrNull { it.txId == config?.value?.txId }
+                                val config = uiState.bottomSheetConfig
+                                val exchangeBottomSheet = config?.content as? ExchangeStatusBottomSheetConfig
+                                val currentTx = updatedTxs.firstOrNull { it.txId == exchangeBottomSheet?.value?.txId }
                                 uiState = uiState.copy(
                                     swapTxs = updatedTxs,
                                     bottomSheetConfig = currentTx?.let(
                                         stateFactory::updateStateWithExchangeStatusBottomSheet,
-                                    ),
+                                    ) ?: config,
                                 )
                             },
                             onError = {},
@@ -560,14 +563,17 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onSwapPromoDismiss() {
         viewModelScope.launch(dispatchers.main) {
-            shouldShowSwapPromoTokenUseCase.neverToShow()
+            shouldShowSwapPromoTokenUseCase.neverToShow(userWalletId.stringValue, cryptoCurrency.id.value)
             analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Close)
         }
     }
 
     override fun onSwapPromoClick() {
+        viewModelScope.launch(dispatchers.main) {
+            shouldShowSwapPromoTokenUseCase.neverToShow(userWalletId.stringValue, cryptoCurrency.id.value)
+            analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Exchange(cryptoCurrency.symbol))
+        }
         onSwapClick()
-        analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Exchange(cryptoCurrency.symbol))
     }
 
     private companion object {
