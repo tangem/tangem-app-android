@@ -577,10 +577,12 @@ internal class SwapViewModel @Inject constructor(
                 tokenDataState.toGroup
             }
             val available = group.available.filter {
-                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true)
+                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true) ||
+                    it.currencyStatus.currency.symbol.contains(searchQuery, ignoreCase = true)
             }
             val unavailable = group.unavailable.filter {
-                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true)
+                it.currencyStatus.currency.name.contains(searchQuery, ignoreCase = true) ||
+                    it.currencyStatus.currency.symbol.contains(searchQuery, ignoreCase = true)
             }
             val filteredTokenDataState = if (isOrderReversed) {
                 tokenDataState.copy(
