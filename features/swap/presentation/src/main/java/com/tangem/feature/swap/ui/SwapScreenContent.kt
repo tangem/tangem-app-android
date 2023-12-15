@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -11,8 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.Strings.STARS
@@ -70,6 +75,15 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
                 MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
             }
+        }
+
+        state.tosState?.let {
+            ProviderTos(
+                tosState = it,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = TangemTheme.dimens.spacing16),
+            )
         }
 
         AnimatedVisibility(
@@ -182,6 +196,84 @@ private fun TransactionCardData(
                 modifier = modifier,
             )
         }
+    }
+}
+
+@Composable
+private fun ProviderTos(tosState: TosState, modifier: Modifier = Modifier) {
+    val tos = tosState.tosLink
+    val policy = tosState.policyLink
+    if (tos == null && policy == null) return
+
+    val (annotatedString, click) = getAnnotatedStringForLegalsWithClick(tos, policy)
+
+    ClickableText(
+        text = annotatedString,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = TangemTheme.dimens.spacing54),
+        style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Center),
+        onClick = click,
+    )
+}
+
+@Composable
+private fun getAnnotatedStringForLegalsWithClick(
+    tos: LegalState?,
+    policy: LegalState?,
+): Pair<AnnotatedString, (Int) -> Unit> {
+    return if (tos != null && policy != null) {
+        val tosTitle = tos.title.resolveReference()
+        val policyTitle = policy.title.resolveReference()
+        val fullString = stringResource(id = R.string.express_legal_two_placeholders, tosTitle, policyTitle)
+        val tosIndex = fullString.indexOf(tosTitle)
+        val policyIndex = fullString.indexOf(policyTitle)
+        val string = buildAnnotatedString {
+            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                append(fullString.substring(0, tosIndex))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+                append(fullString.substring(tosIndex, tosIndex + tosTitle.length))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                append(fullString.substring(tosIndex + tosTitle.length, policyIndex))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+                append(fullString.substring(policyIndex, policyIndex + policyTitle.length))
+            }
+        }
+        val click = { i: Int ->
+            val tosStyle = requireNotNull(string.spanStyles.getOrNull(1))
+            if (i in tosStyle.start..tosStyle.end) {
+                tos.onClick(tos.link)
+            }
+            val policyStyle = requireNotNull(string.spanStyles.lastOrNull())
+            if (i in policyStyle.start..policyStyle.end) {
+                policy.onClick(policy.link)
+            }
+        }
+        string to click
+    } else {
+        val legal = requireNotNull(tos ?: policy) { "tos or policy must not be null" }
+        val legalTitle = legal.title
+            .resolveReference()
+        val fullString = stringResource(id = R.string.express_legal_one_placeholder, legal)
+        val legalIndex = fullString.indexOf(legalTitle)
+        val string = buildAnnotatedString {
+            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                append(fullString.substring(0, legalIndex))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+                append(fullString.substring(legalIndex, legalIndex + legalTitle.length))
+            }
+        }
+        val click = { i: Int ->
+            val legalStyle = requireNotNull(string.spanStyles.lastOrNull())
+            if (i in legalStyle.start..legalStyle.end) {
+                legal.onClick(legal.link)
+            }
+        }
+        string to click
     }
 }
 
@@ -407,6 +499,18 @@ private val state = SwapStateHolder(
     permissionState = SwapPermissionState.InProgress,
     blockchainId = "POLYGON",
     providerState = ProviderState.Loading(),
+    tosState = TosState(
+        tosLink = LegalState(
+            title = stringReference("Tangem"),
+            link = "https://tangem.com",
+            onClick = {},
+        ),
+        policyLink = LegalState(
+            title = stringReference("Tangem"),
+            link = "https://tangem.com",
+            onClick = {},
+        ),
+    ),
 )
 
 @Preview
