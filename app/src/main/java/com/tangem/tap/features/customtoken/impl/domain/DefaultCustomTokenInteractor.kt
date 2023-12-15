@@ -83,6 +83,8 @@ class DefaultCustomTokenInteractor(
         return currency.derivationPath?.let { !scanResponse.hasDerivation(currency.blockchain, it) } ?: false
     }
 
+    @Deprecated("Use DerivePublicKeysUseCase instead")
+    // FIXME: Migration https://tangem.atlassian.net/browse/AND-5154
     private suspend fun deriveMissingBlockchains(
         userWallet: UserWallet,
         currencyList: List<Currency>,

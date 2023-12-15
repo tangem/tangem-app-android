@@ -96,6 +96,8 @@ object TokensMiddleware {
         }
     }
 
+    @Deprecated(message = "Use DerivePublicKeysUseCase instead")
+    // FIXME: Migration https://tangem.atlassian.net/browse/AND-5153
     private fun deriveMissingCoins(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,

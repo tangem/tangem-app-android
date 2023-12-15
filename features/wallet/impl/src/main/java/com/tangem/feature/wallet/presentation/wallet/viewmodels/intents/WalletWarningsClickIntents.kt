@@ -107,6 +107,8 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
         }
     }
 
+    @Deprecated("Use DerivePublicKeysUseCase instead")
+    // FIXME: Migration: https://tangem.atlassian.net/browse/AND-5156
     override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
@@ -127,7 +129,6 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
         }
     }
 
-    // TODO: https://tangem.atlassian.net/browse/AND-4572
     private fun deriveMissingCurrencies(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
