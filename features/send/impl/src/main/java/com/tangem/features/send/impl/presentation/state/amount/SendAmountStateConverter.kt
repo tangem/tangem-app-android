@@ -12,7 +12,6 @@ import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldCo
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class SendAmountStateConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -35,7 +34,7 @@ internal class SendAmountStateConverter(
             walletName = userWallet.name,
             walletBalance = "$crypto ($fiat)",
             tokenIconState = iconStateConverter.convert(status),
-            amountTextField = MutableStateFlow(sendAmountFieldConverter.convert(Unit)),
+            amountTextField = sendAmountFieldConverter.convert(Unit),
             isFiatValue = false,
             isPrimaryButtonEnabled = false,
             segmentedButtonConfig = persistentListOf(
