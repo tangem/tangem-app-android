@@ -34,7 +34,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -212,17 +211,11 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
     override fun onOpenUnlockWalletsBottomSheetClick() {
-        stateHolder.update(
-            OpenBottomSheetTransformer(
-                content = requireNotNull(stateHolder.getSelectedWallet().bottomSheetConfig).content,
-                userWalletId = stateHolder.getSelectedWalletId(),
-                onDismissBottomSheet = {
-                    stateHolder.update(
-                        CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()),
-                    )
-                },
-            ),
-        )
+        val config = requireNotNull(stateHolder.getSelectedWallet().bottomSheetConfig) {
+            "Impossible to open unlock wallet bottom sheet if it's null"
+        }
+
+        stateHolder.showBottomSheet(config.content)
     }
 
     override fun onUnlockWalletClick() {
