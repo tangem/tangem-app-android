@@ -96,6 +96,8 @@ object TokensMiddleware {
         }
     }
 
+    @Deprecated(message = "Use DerivePublicKeysUseCase instead")
+    // FIXME: Migration [REDACTED_JIRA]
     private fun deriveMissingCoins(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
