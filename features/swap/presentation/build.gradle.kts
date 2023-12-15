@@ -54,6 +54,8 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
+    implementation(deps.compose.accompanist.webView)
+    implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
