@@ -196,6 +196,7 @@
     <string name="express_cex_status_button_title">Status</string>
     <string name="express_choose_providers_subtitle">Providers facilitate transactions, ensuring smooth and efficient token swaps</string>
     <string name="express_choose_providers_title">Choose provider</string>
+    <string name="express_more_providers_soon">More providers are coming soon.\nStay tuned!</string>
     <string name="express_estimated_amount">Estimated amount</string>
     <string name="express_exchange_by">Exchange by %s</string>
     <string name="express_exchange_notification_failed_text">Visit provider’s website to refund your money</string>
