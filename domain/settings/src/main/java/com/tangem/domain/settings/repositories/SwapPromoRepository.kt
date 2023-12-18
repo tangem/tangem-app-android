@@ -5,9 +5,9 @@ import kotlinx.coroutines.flow.Flow
 interface SwapPromoRepository {
     fun isReadyToShowWallet(): Flow<Boolean>
 
-    fun isReadyToShowToken(userWalletId: String, currencyId: String): Flow<Boolean>
+    fun isReadyToShowToken(): Flow<Boolean>
 
     suspend fun setNeverToShowWallet()
 
-    suspend fun setNeverToShowToken(userWalletId: String, currencyId: String)
+    suspend fun setNeverToShowToken()
 }
