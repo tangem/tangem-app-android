@@ -733,7 +733,7 @@ internal class SwapViewModel @Inject constructor(
             },
             onGivePermissionClick = {
                 givePermissionsToSwap()
-                sendGivePermissionClickEvent()
+                sendPermissionApproveClickedEvent()
             },
             onChangeCardsClicked = {
                 onChangeCardsClicked()
@@ -946,7 +946,7 @@ internal class SwapViewModel @Inject constructor(
             .contains(chosen.currency)
     }
 
-    private fun sendGivePermissionClickEvent() {
+    private fun sendPermissionApproveClickedEvent() {
         val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol
         val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol
         val approveType = dataState.approveType
