@@ -48,7 +48,7 @@ sealed class SwapEvents(
         params = mapOf(
             "Send Token" to sendToken,
             "Receive Token" to receiveToken,
-            "Type" to if (approveType == ApproveType.LIMITED) "Current Transaction" else "Unlimited"
+            "Type" to if (approveType == ApproveType.LIMITED) "Current Transaction" else "Unlimited",
         ),
     )
 
