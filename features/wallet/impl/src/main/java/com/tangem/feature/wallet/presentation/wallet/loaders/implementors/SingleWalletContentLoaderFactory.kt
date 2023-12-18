@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
@@ -26,6 +27,7 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntentsV2, isRefresh: Boolean): WalletContentLoader {
@@ -42,6 +44,7 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
             txHistoryItemsUseCase = txHistoryItemsUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             analyticsEventHandler = analyticsEventHandler,
+            walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
         )
     }
 }

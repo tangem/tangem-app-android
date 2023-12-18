@@ -5,6 +5,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
@@ -22,6 +23,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val getTokenListUseCase: GetTokenListUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val reduxStateHolder: ReduxStateHolder,
+    private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntentsV2): WalletContentLoader {
@@ -35,6 +37,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,
             reduxStateHolder = reduxStateHolder,
+            walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
         )
     }
 }
