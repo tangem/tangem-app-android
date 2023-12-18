@@ -70,6 +70,7 @@ dependencies {
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)
+    implementation(projects.features.tester.api)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
