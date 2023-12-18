@@ -8,6 +8,7 @@ import com.tangem.core.ui.components.states.Item
 import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
@@ -24,6 +25,7 @@ data class SwapStateHolder(
 
     val fee: FeeItemState = FeeItemState.Empty,
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
+    val priceImpact: PriceImpact,
 
     val successState: SwapSuccessStateHolder? = null,
     val selectTokenState: SwapSelectTokenStateHolder? = null,
