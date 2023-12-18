@@ -17,6 +17,10 @@
     },
     {
         "name": "WALLETS_SCROLLING_PREVIEW_ENABLED",
-        "version": "undefined"
+        "version": "5.5.0"
+    },
+    {
+        "name": "DERIVE_PUBLIC_KEYS_REFACTORING_ENABLED",
+        "version": "5.5.0"
     }
 ]
