@@ -29,6 +29,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
@@ -127,9 +128,9 @@ private fun MainInfo(state: SwapStateHolder) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         val (topCard, bottomCard, button) = createRefs()
-        val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
+        val priceImpact = state.priceImpact
         TransactionCardData(
-            priceImpactWarning = priceImpactWarning,
+            priceImpact = priceImpact,
             swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
@@ -138,7 +139,7 @@ private fun MainInfo(state: SwapStateHolder) {
         )
         val marginCard = TangemTheme.dimens.spacing16
         TransactionCardData(
-            priceImpactWarning = priceImpactWarning,
+            priceImpact = priceImpact,
             swapCardState = state.receiveCardData,
             modifier = Modifier.constrainAs(bottomCard) {
                 top.linkTo(topCard.bottom, margin = marginCard)
@@ -159,7 +160,7 @@ private fun MainInfo(state: SwapStateHolder) {
 
 @Composable
 private fun TransactionCardData(
-    priceImpactWarning: SwapWarning.HighPriceImpact?,
+    priceImpact: PriceImpact,
     swapCardState: SwapCardState,
     onSelectTokenClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -186,7 +187,7 @@ private fun TransactionCardData(
                 amountEquivalent = swapCardState.amountEquivalent,
                 tokenIconUrl = swapCardState.tokenIconUrl ?: "",
                 tokenCurrency = swapCardState.tokenCurrency,
-                priceImpact = priceImpactWarning,
+                priceImpact = priceImpact,
                 networkIconRes = if (swapCardState.isNotNativeToken) swapCardState.networkIconRes else null,
                 iconPlaceholder = swapCardState.coinId?.let {
                     getActiveIconResByCoinId(it)
@@ -498,6 +499,7 @@ private val state = SwapStateHolder(
     permissionState = SwapPermissionState.InProgress,
     blockchainId = "POLYGON",
     providerState = ProviderState.Loading(),
+    priceImpact = PriceImpact.Empty(),
     tosState = TosState(
         tosLink = LegalState(
             title = stringReference("Tangem"),
