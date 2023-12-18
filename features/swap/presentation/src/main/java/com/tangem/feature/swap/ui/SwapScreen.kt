@@ -1,8 +1,7 @@
 package com.tangem.feature.swap.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,6 +28,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                 iconRes = R.drawable.ic_close_24,
             )
         },
+        contentWindowInsets = WindowInsets(left = 0, top = 0, right = 0, bottom = 0),
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
 
