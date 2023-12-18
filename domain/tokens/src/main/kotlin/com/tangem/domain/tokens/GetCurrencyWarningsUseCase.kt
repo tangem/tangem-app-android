@@ -85,7 +85,7 @@ class GetCurrencyWarningsUseCase(
         val currency = currencyStatus.currency
         val cryptoStatuses = operations.getCurrenciesStatusesSync()
         return combine(
-            showSwapPromoTokenUseCase(userWalletId.stringValue, currency.id.value).conflate(),
+            showSwapPromoTokenUseCase().conflate(),
             flowOf(marketCryptoCurrencyRepository.isExchangeable(userWalletId, currency)).conflate(),
         ) { shouldShowSwapPromo, isExchangeable ->
             if (shouldShowSwapPromo && isExchangeable) {
