@@ -69,6 +69,7 @@ dependencies {
     implementation(projects.domain.analytics)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.features.onboarding)
+    implementation(projects.features.tester.api)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
