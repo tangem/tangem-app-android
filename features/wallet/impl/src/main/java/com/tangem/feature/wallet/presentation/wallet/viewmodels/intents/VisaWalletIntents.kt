@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state2.model.BalancesAndLimitsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -28,8 +29,8 @@ internal interface VisaWalletIntents {
 
 @ViewModelScoped
 internal class VisaWalletIntentsImplementor @Inject constructor(
-    private val eventSender: WalletEventSender,
     private val stateController: WalletStateController,
+    private val eventSender: WalletEventSender,
     private val getPrimaryCurrencyUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), VisaWalletIntents {
@@ -75,6 +76,35 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     }
 
     override fun onBalancesAndLimitsClick() {
+        stateController.showBottomSheet(getBalancesAndLimitsConfig())
+    }
+
+    // TODO: Implement
+    private fun getBalancesAndLimitsConfig() = BalancesAndLimitsBottomSheetConfig(
+        currency = "USDT",
+        balance = BalancesAndLimitsBottomSheetConfig.Balance(
+            totalBalance = "492.45",
+            availableBalance = "392.45",
+            blockedBalance = "36.00",
+            debit = "00.00",
+            pending = "20.99",
+            amlVerified = "356.45",
+        ),
+        limit = BalancesAndLimitsBottomSheetConfig.Limit(
+            availableBy = "Nov, 11",
+            inStore = "563.00",
+            other = "100.00",
+            singleTransaction = "100.00",
+        ),
+        onBalanceInfoClick = this::showBalanceInfo,
+        onLimitInfoClick = this::showLimitInfo,
+    )
+
+    private fun showBalanceInfo() {
+        eventSender.send(WalletEvent.ShowToast(stringReference(value = "Not implemented yet")))
+    }
+
+    private fun showLimitInfo() {
         eventSender.send(WalletEvent.ShowToast(stringReference(value = "Not implemented yet")))
     }
 }
