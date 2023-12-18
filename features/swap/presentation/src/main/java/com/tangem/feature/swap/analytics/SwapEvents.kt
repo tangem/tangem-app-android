@@ -3,6 +3,7 @@ package com.tangem.feature.swap.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.models.ApproveType
 
 private const val SWAP_CATEGORY = "Swap"
 
@@ -38,9 +39,17 @@ sealed class SwapEvents(
 
     object ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
 
-    data class ButtonPermissionApproveClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
+    data class ButtonPermissionApproveClicked(
+        val sendToken: String,
+        val receiveToken: String,
+        val approveType: ApproveType,
+    ) : SwapEvents(
         event = "Button - Permission Approve",
-        params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
+        params = mapOf(
+            "Send Token" to sendToken,
+            "Receive Token" to receiveToken,
+            "Type" to if (approveType == ApproveType.LIMITED) "Current Transaction" else "Unlimited"
+        ),
     )
 
     object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
