@@ -7,5 +7,7 @@ interface ReduxStateHolder {
 
     fun dispatch(action: Action)
 
+    suspend fun dispatchWithMain(action: Action)
+
     suspend fun onUserWalletSelected(userWallet: UserWallet)
 }
