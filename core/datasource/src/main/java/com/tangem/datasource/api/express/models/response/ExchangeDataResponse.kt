@@ -39,6 +39,12 @@ data class ExchangeDataResponse(
 
     @Json(name = "externalTxUrl")
     val externalTxUrl: String?, // null if DEX, url of provider exchange status page if CEX
+
+    @Json(name = "txExtraIdName")
+    val txExtraIdName: String?,
+
+    @Json(name = "txExtraId")
+    val txExtraId: String?,
 )
 
 enum class TxType {

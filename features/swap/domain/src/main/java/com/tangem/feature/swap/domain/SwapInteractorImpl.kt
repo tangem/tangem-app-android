@@ -499,13 +499,23 @@ internal class SwapInteractorImpl @Inject constructor(
             toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value ?: "",
         ).getOrNull()
 
+        val exchangeDataCex = exchangeData?.transaction as? ExpressTransactionModel.CEX ?: return TxState.UnknownError
+        val txExtras = transactionManager.getMemoExtras(
+            currencyToSend.currency.network.backendId,
+            exchangeDataCex.txExtraId,
+        )
+        if (txExtras == null && exchangeDataCex.txExtraId != null) {
+            return TxState.UnknownError
+        }
         val txData = walletManagersFacade.createTransaction(
             amount = amount.value.convertToAmount(currencyToSend.currency),
             fee = getFeeForTransaction(txFee),
             memo = null,
-            destination = (exchangeData?.transaction as ExpressTransactionModel.CEX).txTo,
+            destination = exchangeDataCex.txTo,
             userWalletId = userWalletId,
             network = currencyToSend.currency.network,
+        )?.copy(
+            extras = txExtras,
         )
 
         val result = sendTransactionUseCase(

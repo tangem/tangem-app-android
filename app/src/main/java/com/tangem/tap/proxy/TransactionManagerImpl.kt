@@ -2,9 +2,15 @@ package com.tangem.tap.proxy
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.Message
+import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
+import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.optimism.OptimismWalletManager
+import com.tangem.blockchain.blockchains.stellar.StellarMemo
+import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
+import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
+import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -18,6 +24,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.send.impl.presentation.viewmodel.XlmMemoType
+import com.tangem.features.send.impl.presentation.viewmodel.determineXlmMemoType
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.*
@@ -141,6 +149,25 @@ class TransactionManagerImpl(
     override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: error("blockchain not found")
         return blockchain.getExploreTxUrl(txAddress)
+    }
+
+    override fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
+        val blockchain = Blockchain.fromNetworkId(networkId)
+        if (memo == null) return null
+        return when (blockchain) {
+            Blockchain.Stellar -> {
+                val xmlMemo = when (determineXlmMemoType(memo)) {
+                    XlmMemoType.TEXT -> StellarMemo.Text(memo)
+                    XlmMemoType.ID -> StellarMemo.Id(memo.toBigInteger())
+                }
+                StellarTransactionExtras(xmlMemo)
+            }
+            Blockchain.Binance -> BinanceTransactionExtras(memo)
+            Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
+            Blockchain.Cosmos -> CosmosTransactionExtras(memo)
+            Blockchain.TON -> TonTransactionExtras(memo)
+            else -> null
+        }
     }
 
     override fun getNativeTokenDecimals(networkId: String): Int {
