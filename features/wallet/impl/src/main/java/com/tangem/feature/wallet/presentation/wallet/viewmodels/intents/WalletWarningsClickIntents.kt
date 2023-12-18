@@ -35,10 +35,12 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
+import com.tangem.features.tester.api.TesterFeatureToggles
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 internal interface WalletWarningsClickIntents {
@@ -78,6 +80,7 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val reduxStateHolder: ReduxStateHolder,
+    private val testerFeatureToggles: TesterFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
@@ -107,8 +110,6 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
         }
     }
 
-    @Deprecated("Use DerivePublicKeysUseCase instead")
-    // FIXME: Migration: [REDACTED_JIRA]
     override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
@@ -116,15 +117,25 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped)
 
         viewModelScope.launch(dispatchers.main) {
-            deriveMissingCurrencies(
-                scanResponse = userWallet.scanResponse,
-                currencyList = missedAddressCurrencies,
-            ) { scannedCardResponse ->
-                updateWalletUseCase(
+            if (testerFeatureToggles.isDerivePublicKeysRefactoringEnabled) {
+                derivePublicKeysUseCase(
                     userWalletId = userWallet.walletId,
-                    update = { it.copy(scanResponse = scannedCardResponse) },
+                    currencies = missedAddressCurrencies,
                 )
-                    .onRight { fetchTokenListUseCase(userWalletId = it.walletId) }
+                    .onRight { fetchTokenListUseCase(userWalletId = userWallet.walletId) }
+                    .onLeft { Timber.e("Failed to derive public keys: $it") }
+            } else {
+                // TODO: delete [REDACTED_JIRA]
+                deriveMissingCurrencies(
+                    scanResponse = userWallet.scanResponse,
+                    currencyList = missedAddressCurrencies,
+                ) { scannedCardResponse ->
+                    updateWalletUseCase(
+                        userWalletId = userWallet.walletId,
+                        update = { it.copy(scanResponse = scannedCardResponse) },
+                    )
+                        .onRight { fetchTokenListUseCase(userWalletId = it.walletId) }
+                }
             }
         }
     }
