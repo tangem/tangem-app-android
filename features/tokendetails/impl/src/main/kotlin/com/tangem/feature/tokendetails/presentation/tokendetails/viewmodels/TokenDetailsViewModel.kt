@@ -333,7 +333,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
         val cryptoCurrencyStatus = cryptoCurrencyStatus ?: return
 
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(dispatchers.main) {
             when (val currency = cryptoCurrencyStatus.currency) {
                 is CryptoCurrency.Coin -> {
                     reduxStateHolder.dispatch(
@@ -363,7 +363,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .firstOrNull()
 
-            reduxStateHolder.dispatch(
+            reduxStateHolder.dispatchWithMain(
                 action = TradeCryptoAction.New.SendToken(
                     userWallet = wallet,
                     tokenCurrency = tokenCurrency,

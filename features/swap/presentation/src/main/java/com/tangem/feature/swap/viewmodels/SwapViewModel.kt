@@ -79,7 +79,7 @@ internal class SwapViewModel @Inject constructor(
     private val amountDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
 
-    private var dataState by mutableStateOf(SwapProcessDataState(networkId = initialCryptoCurrency.network.backendId))
+    private var dataState by mutableStateOf(SwapProcessDataState())
 
     var uiState: SwapStateHolder by mutableStateOf(
         stateBuilder.createInitialLoadingState(
@@ -103,11 +103,6 @@ internal class SwapViewModel @Inject constructor(
                     requireNotNull(getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()) {
                         "Failed to get initial crypto currency status"
                     }
-
-                swapInteractor.initDerivationPathAndNetwork(
-                    derivationPath = initialCryptoCurrency.network.derivationPath.value,
-                    network = initialCryptoCurrency.network,
-                )
                 initTokens()
             }
         }
@@ -278,7 +273,6 @@ internal class SwapViewModel @Inject constructor(
                         approveDataModel = null,
                     )
                     swapInteractor.findBestQuote(
-                        networkId = dataState.networkId,
                         fromToken = fromToken,
                         toToken = toToken,
                         providers = toProvidersList,
@@ -438,13 +432,13 @@ internal class SwapViewModel @Inject constructor(
             Timber.e("Last loaded quotes state is null")
             return
         }
+        val fromCurrency = requireNotNull(dataState.fromCryptoCurrency)
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
                     swapProvider = provider,
-                    networkId = dataState.networkId,
                     swapData = dataState.swapDataModel,
-                    currencyToSend = requireNotNull(dataState.fromCryptoCurrency),
+                    currencyToSend = fromCurrency,
                     currencyToGet = requireNotNull(dataState.toCryptoCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
                     includeFeeInAmount = lastLoadedQuotesState.preparedSwapConfigState.includeFeeInAmount,
@@ -454,7 +448,7 @@ internal class SwapViewModel @Inject constructor(
                 when (it) {
                     is TxState.TxSent -> {
                         val url = blockchainInteractor.getExplorerTransactionLink(
-                            networkId = dataState.networkId,
+                            networkId = fromCurrency.currency.network.backendId,
                             txAddress = it.txAddress,
                         )
                         uiState = stateBuilder.createSuccessState(
@@ -528,17 +522,18 @@ internal class SwapViewModel @Inject constructor(
                     is TxFeeState.SingleFeeState -> fee.fee
                     null -> error("Fee should not be null")
                 }
+                val fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
+                    "dataState.fromCurrency might not be null"
+                }
                 swapInteractor.givePermissionToSwap(
-                    networkId = dataState.networkId,
+                    networkId = fromToken.network.backendId,
                     permissionOptions = PermissionOptions(
                         approveData = requireNotNull(dataState.approveDataModel) {
                             "dataState.approveDataModel might not be null"
                         },
                         forTokenContractAddress = (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Token)
                             ?.contractAddress ?: "",
-                        fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
-                            "dataState.fromCurrency might not be null"
-                        },
+                        fromToken = fromToken,
                         approveType = requireNotNull(dataState.approveType) {
                             "uiState.permissionState should not be null"
                         }.toDomainApproveType(),
@@ -805,7 +800,6 @@ internal class SwapViewModel @Inject constructor(
                         selectedFee = it.feeType,
                         fromToken = fromToken,
                         amountToSwap = amountToSwap,
-                        networkId = dataState.networkId,
                     )
                     setupLoadedState(selectedProvider, updatedState, fromToken)
                 }
@@ -839,7 +833,11 @@ internal class SwapViewModel @Inject constructor(
             },
             onBuyClick = {
                 swapInteractor.getSelectedWallet()?.let {
-                    swapRouter.openTokenDetails(it.walletId, swapInteractor.getNativeToken(dataState.networkId))
+                    val fromToken = dataState.fromCryptoCurrency ?: return@let
+                    swapRouter.openTokenDetails(
+                        it.walletId,
+                        swapInteractor.getNativeToken(fromToken.currency.network.backendId),
+                    )
                 }
             },
             onRetryClick = {
