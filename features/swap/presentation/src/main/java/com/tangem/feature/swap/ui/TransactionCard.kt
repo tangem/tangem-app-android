@@ -191,7 +191,9 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
             color = TangemTheme.colors.text.tertiary,
             maxLines = 1,
             style = MaterialTheme.typography.subtitle2,
-            modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size24),
+            modifier = Modifier
+                .defaultMinSize(minHeight = TangemTheme.dimens.size24)
+                .align(Alignment.CenterVertically),
         )
         SpacerW16()
         if (balance.isNotBlank()) {
@@ -201,8 +203,8 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                     color = TangemTheme.colors.text.tertiary,
                     style = MaterialTheme.typography.body2,
                     modifier = Modifier
-                        .defaultMinSize(minHeight = TangemTheme.dimens.size20)
-                        .padding(top = TangemTheme.dimens.spacing2),
+                        .defaultMinSize(minHeight = TangemTheme.dimens.size24)
+                        .align(Alignment.CenterVertically),
                 )
             }
         } else {
