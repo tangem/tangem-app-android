@@ -675,7 +675,7 @@ internal class WalletViewModel @Inject constructor(
                 .collectLatest {
                     it.onRight { coinStatus ->
                         uiState = stateFactory.getStateWithClosedBottomSheet()
-                        reduxStateHolder.dispatch(
+                        reduxStateHolder.dispatchWithMain(
                             action = TradeCryptoAction.New.SendToken(
                                 userWallet = userWallet,
                                 tokenCurrency = requireNotNull(cryptoCurrencyStatus.currency as? CryptoCurrency.Token),
@@ -1163,8 +1163,8 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    private fun setupWalletConnectOnWallet(userWallet: UserWallet) {
-        reduxStateHolder.dispatch(
+    private suspend fun setupWalletConnectOnWallet(userWallet: UserWallet) {
+        reduxStateHolder.dispatchWithMain(
             action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet),
         )
     }
