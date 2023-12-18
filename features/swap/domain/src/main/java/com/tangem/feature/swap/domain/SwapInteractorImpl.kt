@@ -79,7 +79,7 @@ internal class SwapInteractorImpl @Inject constructor(
             .filter {
                 val currencyFilter = it.currency.network.backendId != currency.network.backendId ||
                     it.currency.getContractAddress() != currency.getContractAddress()
-                val statusFilter = it.value is CryptoCurrencyStatus.Loaded
+                val statusFilter = it.value is CryptoCurrencyStatus.Loaded || it.value is CryptoCurrencyStatus.NoAccount
                 val notCustomTokenFilter = !it.currency.isCustom
                 statusFilter && currencyFilter && notCustomTokenFilter
             }
