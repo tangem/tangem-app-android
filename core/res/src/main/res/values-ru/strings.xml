@@ -198,6 +198,7 @@
     <string name="express_choose_providers_subtitle">Провайдеры проводят транзакции, обеспечивая плавный и эффективный обмен токенами</string>
     <string name="express_choose_providers_title">Выберите провайдера</string>
     <string name="express_estimated_amount">Курс обмена</string>
+    <string name="express_more_providers_soon">Больше провайдеров на подходе.\nСледите за обновлениями!</string>
     <string name="express_exchange_notification_failed_text">Чтобы вернуть ваши деньги, посетите сайт провайдера</string>
     <string name="express_exchange_notification_failed_title">Операция не выполнена провайдером</string>
     <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
