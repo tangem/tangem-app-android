@@ -13,7 +13,7 @@ sealed interface SwapState {
     data class QuotesLoadedState(
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
-        val priceImpact: Float,
+        val priceImpact: PriceImpact,
         val networkCurrency: String,
         val preparedSwapConfigState: PreparedSwapConfigState = PreparedSwapConfigState(
             isAllowedToSpend = false,
@@ -38,6 +38,20 @@ sealed interface SwapState {
         val fromTokenInfo: TokenSwapInfo,
         val error: DataError,
     ) : SwapState
+}
+
+sealed class PriceImpact {
+
+    abstract val value: Float
+
+    fun getIntPercentValue() = (value * HUNDRED_PERCENTS).toInt()
+    data class Empty(override val value: Float = 0f) : PriceImpact()
+    data class ValueWithNotify(override val value: Float) : PriceImpact()
+    data class Value(override val value: Float) : PriceImpact()
+
+    companion object {
+        private const val HUNDRED_PERCENTS = 100
+    }
 }
 
 sealed class PermissionDataState {

@@ -87,6 +87,7 @@ internal class StateBuilder(
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             providerState = ProviderState.Empty(),
+            priceImpact = PriceImpact.Empty(),
         )
     }
 
@@ -139,6 +140,7 @@ internal class StateBuilder(
                 onClick = { },
             ),
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
+            priceImpact = PriceImpact.Empty(),
         )
     }
 
@@ -187,6 +189,7 @@ internal class StateBuilder(
             providerState = ProviderState.Loading(),
             permissionState = uiStateHolder.permissionState,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
+            priceImpact = PriceImpact.Empty(),
         )
     }
 
@@ -271,6 +274,11 @@ internal class StateBuilder(
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
             ),
+            priceImpact = if (quoteModel.priceImpact.value > PRICE_IMPACT_THRESHOLD) {
+                quoteModel.priceImpact
+            } else {
+                PriceImpact.Empty()
+            },
             tosState = createTosState(swapProvider),
         )
     }
@@ -337,10 +345,11 @@ internal class StateBuilder(
             warnings.add(SwapWarning.InsufficientFunds)
         }
 
-        if (quoteModel.priceImpact > PRICE_IMPACT_THRESHOLD) {
+        val priceImpact = quoteModel.priceImpact
+        if (priceImpact is PriceImpact.ValueWithNotify && priceImpact.value > PRICE_IMPACT_THRESHOLD) {
             warnings.add(
                 SwapWarning.HighPriceImpact(
-                    priceImpact = (quoteModel.priceImpact * HUNDRED_PERCENTS).toInt(),
+                    priceImpact = priceImpact.getIntPercentValue(),
                     notificationConfig = highPriceImpactNotificationConfig(),
                 ),
             )
@@ -442,6 +451,7 @@ internal class StateBuilder(
                 ChangeCardsButtonState.DISABLED
             },
             providerState = providerState,
+            priceImpact = PriceImpact.Empty(),
             tosState = createTosState(swapProvider),
         )
     }
@@ -553,6 +563,7 @@ internal class StateBuilder(
                 ChangeCardsButtonState.DISABLED
             },
             providerState = ProviderState.Empty(),
+            priceImpact = PriceImpact.Empty(),
         )
     }
 
@@ -1226,7 +1237,6 @@ internal class StateBuilder(
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val PRICE_IMPACT_THRESHOLD = 0.1
-        private const val HUNDRED_PERCENTS = 100
         private const val UNKNOWN_AMOUNT_SIGN = "—"
         private const val MAX_DECIMALS_TO_SHOW = 8
     }
