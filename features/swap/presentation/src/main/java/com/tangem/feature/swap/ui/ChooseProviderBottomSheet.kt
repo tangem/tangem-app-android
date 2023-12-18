@@ -4,11 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,7 +57,12 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
         )
         Column(
             modifier = Modifier
-                .padding(TangemTheme.dimens.spacing16)
+                .padding(
+                    top = TangemTheme.dimens.spacing16,
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing16,
+                    bottom = TangemTheme.dimens.spacing14,
+                )
                 .background(
                     color = TangemTheme.colors.background.action,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -76,6 +83,23 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                 )
             }
         }
+        Icon(
+            painterResource(id = R.drawable.ic_lightning_16),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.informative,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally),
+        )
+        Text(
+            text = stringResource(R.string.express_more_providers_soon),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.icon.informative,
+            modifier = Modifier
+                .padding(top = TangemTheme.dimens.spacing6, bottom = TangemTheme.dimens.spacing16)
+                .padding(horizontal = TangemTheme.dimens.spacing56)
+                .align(Alignment.CenterHorizontally),
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
