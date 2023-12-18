@@ -21,9 +21,9 @@ class DefaultSwapPromoRepository(
             .map { it && checkPromoPeriod() }
     }
 
-    override fun isReadyToShowToken(userWalletId: String, currencyId: String): Flow<Boolean> {
-        return appPreferencesStore.get(IS_TOKEN_SWAP_PROMO_SHOW_KEY, emptySet())
-            .map { !it.contains(userWalletId + currencyId) && checkPromoPeriod() }
+    override fun isReadyToShowToken(): Flow<Boolean> {
+        return appPreferencesStore.get(IS_TOKEN_SWAP_PROMO_SHOW_KEY, true)
+            .map { it && checkPromoPeriod() }
     }
 
     override suspend fun setNeverToShowWallet() {
@@ -33,14 +33,11 @@ class DefaultSwapPromoRepository(
         )
     }
 
-    override suspend fun setNeverToShowToken(userWalletId: String, currencyId: String) {
-        appPreferencesStore.editData { mutablePreferences ->
-            val storesCurrencies = mutablePreferences.getOrDefault(IS_TOKEN_SWAP_PROMO_SHOW_KEY, emptySet())
-            mutablePreferences.set(
-                key = IS_TOKEN_SWAP_PROMO_SHOW_KEY,
-                value = storesCurrencies.toMutableSet().apply { add(userWalletId + currencyId) },
-            )
-        }
+    override suspend fun setNeverToShowToken() {
+        appPreferencesStore.store(
+            key = IS_TOKEN_SWAP_PROMO_SHOW_KEY,
+            value = false,
+        )
     }
 
     private fun checkPromoPeriod(): Boolean {
