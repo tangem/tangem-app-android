@@ -74,16 +74,15 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
                 if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
 
                 MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
-            }
-        }
 
-        state.tosState?.let {
-            ProviderTos(
-                tosState = it,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = TangemTheme.dimens.spacing16),
-            )
+                state.tosState?.let {
+                    ProviderTos(
+                        tosState = it,
+                        modifier = Modifier
+                            .padding(top = TangemTheme.dimens.spacing16),
+                    )
+                }
+            }
         }
 
         AnimatedVisibility(
