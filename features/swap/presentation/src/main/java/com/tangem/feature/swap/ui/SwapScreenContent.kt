@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.ui
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -45,58 +45,53 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-        Column {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing16,
+                    top = TangemTheme.dimens.spacing16,
+                    bottom = TangemTheme.dimens.spacing32,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        ) {
+            MainInfo(state)
+
+            ProviderItemBlock(
+                state = state.providerState,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(
-                        start = TangemTheme.dimens.spacing16,
-                        end = TangemTheme.dimens.spacing16,
-                        top = TangemTheme.dimens.spacing16,
-                        bottom = TangemTheme.dimens.spacing32,
+                    .clickable(
+                        enabled = state.providerState.onProviderClick != null,
+                        onClick = { state.providerState.onProviderClick?.invoke(state.providerState.id) },
                     ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
-            ) {
-                MainInfo(state)
+            )
 
-                ProviderItemBlock(
-                    state = state.providerState,
+            FeeItemBlock(state = state.fee)
+
+            if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
+
+            MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
+
+            state.tosState?.let {
+                ProviderTos(
+                    tosState = it,
                     modifier = Modifier
-                        .clickable(
-                            enabled = state.providerState.onProviderClick != null,
-                            onClick = { state.providerState.onProviderClick?.invoke(state.providerState.id) },
-                        ),
+                        .padding(top = TangemTheme.dimens.spacing16),
                 )
-
-                FeeItemBlock(state = state.fee)
-
-                if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
-
-                MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
-
-                state.tosState?.let {
-                    ProviderTos(
-                        tosState = it,
-                        modifier = Modifier
-                            .padding(top = TangemTheme.dimens.spacing16),
-                    )
-                }
             }
         }
 
-        AnimatedVisibility(
-            visible = keyboard is Keyboard.Opened,
-            modifier = Modifier
-                .imePadding()
-                .align(Alignment.BottomCenter),
-        ) {
+        if (keyboard is Keyboard.Opened) {
             Text(
                 text = stringResource(id = R.string.send_max_amount_label),
                 style = TangemTheme.typography.button,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .imePadding()
                     .fillMaxWidth()
                     .background(TangemTheme.colors.button.secondary)
                     .clickable { state.onMaxAmountSelected?.invoke() }
