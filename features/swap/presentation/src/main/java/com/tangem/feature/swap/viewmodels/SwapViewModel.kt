@@ -733,16 +733,7 @@ internal class SwapViewModel @Inject constructor(
             },
             onGivePermissionClick = {
                 givePermissionsToSwap()
-                val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol
-                val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol
-                if (sendTokenSymbol != null && receiveTokenSymbol != null) {
-                    analyticsEventHandler.send(
-                        SwapEvents.ButtonPermissionApproveClicked(
-                            sendToken = sendTokenSymbol,
-                            receiveToken = receiveTokenSymbol,
-                        ),
-                    )
-                }
+                sendPermissionApproveClickedEvent()
             },
             onChangeCardsClicked = {
                 onChangeCardsClicked()
@@ -953,6 +944,21 @@ internal class SwapViewModel @Inject constructor(
         return currenciesGroup.available
             .map { it.currencyStatus.currency }
             .contains(chosen.currency)
+    }
+
+    private fun sendPermissionApproveClickedEvent() {
+        val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol
+        val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol
+        val approveType = dataState.approveType
+        if (sendTokenSymbol != null && receiveTokenSymbol != null && approveType != null) {
+            analyticsEventHandler.send(
+                SwapEvents.ButtonPermissionApproveClicked(
+                    sendToken = sendTokenSymbol,
+                    receiveToken = receiveTokenSymbol,
+                    approveType = approveType,
+                ),
+            )
+        }
     }
 
     companion object {
