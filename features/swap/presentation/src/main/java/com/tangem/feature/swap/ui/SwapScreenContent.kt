@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.ui
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -29,6 +29,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
@@ -44,58 +45,53 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-        Column {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing16,
+                    top = TangemTheme.dimens.spacing16,
+                    bottom = TangemTheme.dimens.spacing32,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        ) {
+            MainInfo(state)
+
+            ProviderItemBlock(
+                state = state.providerState,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(
-                        start = TangemTheme.dimens.spacing16,
-                        end = TangemTheme.dimens.spacing16,
-                        top = TangemTheme.dimens.spacing16,
-                        bottom = TangemTheme.dimens.spacing32,
+                    .clickable(
+                        enabled = state.providerState.onProviderClick != null,
+                        onClick = { state.providerState.onProviderClick?.invoke(state.providerState.id) },
                     ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
-            ) {
-                MainInfo(state)
+            )
 
-                ProviderItemBlock(
-                    state = state.providerState,
+            FeeItemBlock(state = state.fee)
+
+            if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
+
+            MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
+
+            state.tosState?.let {
+                ProviderTos(
+                    tosState = it,
                     modifier = Modifier
-                        .clickable(
-                            enabled = state.providerState.onProviderClick != null,
-                            onClick = { state.providerState.onProviderClick?.invoke(state.providerState.id) },
-                        ),
+                        .padding(top = TangemTheme.dimens.spacing16),
                 )
-
-                FeeItemBlock(state = state.fee)
-
-                if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
-
-                MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
-
-                state.tosState?.let {
-                    ProviderTos(
-                        tosState = it,
-                        modifier = Modifier
-                            .padding(top = TangemTheme.dimens.spacing16),
-                    )
-                }
             }
         }
 
-        AnimatedVisibility(
-            visible = keyboard is Keyboard.Opened,
-            modifier = Modifier
-                .imePadding()
-                .align(Alignment.BottomCenter),
-        ) {
+        if (keyboard is Keyboard.Opened) {
             Text(
                 text = stringResource(id = R.string.send_max_amount_label),
                 style = TangemTheme.typography.button,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .imePadding()
                     .fillMaxWidth()
                     .background(TangemTheme.colors.button.secondary)
                     .clickable { state.onMaxAmountSelected?.invoke() }
@@ -127,9 +123,9 @@ private fun MainInfo(state: SwapStateHolder) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         val (topCard, bottomCard, button) = createRefs()
-        val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
+        val priceImpact = state.priceImpact
         TransactionCardData(
-            priceImpactWarning = priceImpactWarning,
+            priceImpact = priceImpact,
             swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
@@ -138,7 +134,7 @@ private fun MainInfo(state: SwapStateHolder) {
         )
         val marginCard = TangemTheme.dimens.spacing16
         TransactionCardData(
-            priceImpactWarning = priceImpactWarning,
+            priceImpact = priceImpact,
             swapCardState = state.receiveCardData,
             modifier = Modifier.constrainAs(bottomCard) {
                 top.linkTo(topCard.bottom, margin = marginCard)
@@ -159,7 +155,7 @@ private fun MainInfo(state: SwapStateHolder) {
 
 @Composable
 private fun TransactionCardData(
-    priceImpactWarning: SwapWarning.HighPriceImpact?,
+    priceImpact: PriceImpact,
     swapCardState: SwapCardState,
     onSelectTokenClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -186,7 +182,7 @@ private fun TransactionCardData(
                 amountEquivalent = swapCardState.amountEquivalent,
                 tokenIconUrl = swapCardState.tokenIconUrl ?: "",
                 tokenCurrency = swapCardState.tokenCurrency,
-                priceImpact = priceImpactWarning,
+                priceImpact = priceImpact,
                 networkIconRes = if (swapCardState.isNotNativeToken) swapCardState.networkIconRes else null,
                 iconPlaceholder = swapCardState.coinId?.let {
                     getActiveIconResByCoinId(it)
@@ -498,6 +494,7 @@ private val state = SwapStateHolder(
     permissionState = SwapPermissionState.InProgress,
     blockchainId = "POLYGON",
     providerState = ProviderState.Loading(),
+    priceImpact = PriceImpact.Empty(),
     tosState = TosState(
         tosLink = LegalState(
             title = stringReference("Tangem"),
