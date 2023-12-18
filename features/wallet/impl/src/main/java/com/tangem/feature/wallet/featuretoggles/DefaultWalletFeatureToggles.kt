@@ -4,7 +4,7 @@ import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 
 /**
- * Default implementation of CustomToken feature toggles
+ * Default implementation of Wallet feature toggles
  *
  * @property featureTogglesManager manager for getting information about the availability of feature toggles
  *
