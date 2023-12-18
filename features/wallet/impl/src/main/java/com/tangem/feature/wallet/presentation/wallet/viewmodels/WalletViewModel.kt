@@ -316,7 +316,6 @@ internal class WalletViewModel @Inject constructor(
     }
 
     @Deprecated("Use DerivePublicKeysUseCase instead")
-    // FIXME: Migration: https://tangem.atlassian.net/browse/AND-5156
     private fun deriveMissingCurrencies(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,

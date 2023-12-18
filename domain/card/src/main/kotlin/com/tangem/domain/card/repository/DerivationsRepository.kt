@@ -5,5 +5,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 
 interface DerivationsRepository {
 
+    @Throws
     suspend fun derivePublicKeys(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 }
