@@ -25,5 +25,7 @@ sealed class ExpressTransactionModel {
         override val txTo: String,
         val externalTxId: String,
         val externalTxUrl: String,
+        val txExtraIdName: String?,
+        val txExtraId: String?,
     ) : ExpressTransactionModel()
 }
