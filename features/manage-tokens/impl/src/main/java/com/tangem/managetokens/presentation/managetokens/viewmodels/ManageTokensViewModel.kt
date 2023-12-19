@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.map
 import arrow.core.getOrElse
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.DerivePublicKeysUseCase
@@ -21,16 +20,13 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
-import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.Event
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
-import com.tangem.managetokens.presentation.managetokens.state.DerivationNotificationState
 import com.tangem.managetokens.presentation.managetokens.state.ManageTokensState
 import com.tangem.managetokens.presentation.managetokens.state.TokenButtonType
 import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
 import com.tangem.managetokens.presentation.managetokens.state.factory.*
-import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -43,7 +39,7 @@ import javax.inject.Inject
 import kotlin.collections.set
 import kotlin.properties.Delegates
 
-@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "LargeClass")
 @HiltViewModel
 internal class ManageTokensViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
@@ -55,9 +51,11 @@ internal class ManageTokensViewModel @Inject constructor(
     private val selectWalletUseCase: SelectWalletUseCase,
     private val getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
-    private val updateWalletUseCase: UpdateWalletUseCase,
+    private val getMissedAddressesCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
     private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val checkCurrencyCompatibilityUseCase: CheckCurrencyCompatibilityUseCase,
+    private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
 ) : ViewModel(), ManageTokensClickIntents, DefaultLifecycleObserver {
 
     private val debouncer = Debouncer()
@@ -78,7 +76,7 @@ internal class ManageTokensViewModel @Inject constructor(
 
     private var selectedWallet: UserWallet? = null
 
-    private var neededDerivations: Map<UserWallet, List<DerivationData>> = emptyMap()
+    private var neededDerivations: Map<UserWalletId, List<CryptoCurrency>> = emptyMap()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -129,10 +127,8 @@ internal class ManageTokensViewModel @Inject constructor(
                         selectWalletUseCase(wallets.first().walletId)
                         selectedWallet = wallets.first()
                     }
+                    updateDerivationNotificationState()
                     withContext(dispatchers.main) {
-                        neededDerivations = MissingDerivationsIdentifier
-                            .getMissingDerivationsForWallets(wallets, addedCurrenciesByWallet)
-                        updateDerivationNotificationState()
                         uiState = stateFactory.updateChooseWalletState(wallets, userWallets, selectedWallet)
                     }
                 }
@@ -145,30 +141,28 @@ internal class ManageTokensViewModel @Inject constructor(
         }
     }
 
-    private fun isAdded(address: String?, blockchain: Blockchain, currencies: Collection<CryptoCurrency>): Boolean {
-        return if (address != null) {
-            currencies.any {
-                !it.isCustom && it is CryptoCurrency.Token && it.contractAddress == address
-            }
-        } else {
-            currencies.any {
-                !it.isCustom && it is CryptoCurrency.Coin && it.name == blockchain.fullName
-            }
+    private fun updateDerivationNotificationState() {
+        viewModelScope.launch(dispatchers.io) {
+            getMissedAddressesCryptoCurrenciesUseCase(wallets.map { it.walletId })
+                .distinctUntilChanged()
+                .collectLatest {
+                    it.onRight { mapOfMissingDerivations ->
+                        neededDerivations = mapOfMissingDerivations
+                        withContext(dispatchers.main) { updateDerivation() }
+                    }
+                }
         }
     }
 
-    private fun updateDerivationNotificationState() {
-        val derivationNotificationState = if (neededDerivations.isEmpty()) {
-            null
-        } else {
-            DerivationNotificationState(
-                totalNeeded = neededDerivations.values.map { it.map { it.derivationsNeeded() } }.sumOf { it.sum() },
-                totalWallets = wallets.size,
-                walletsToDerive = neededDerivations.keys.size,
-                onGenerateClick = this::onGenerateDerivationClick,
-            )
-        }
-        uiState = uiState.copy(derivationNotification = derivationNotificationState)
+    private fun updateDerivation() {
+        val totalNeeded = neededDerivations.values.sumOf { derivations -> derivations.size }
+        val walletsToDerive = neededDerivations.values
+            .filter { derivations -> derivations.isNotEmpty() }.size
+        uiState = stateFactory.updateDerivationNotification(
+            totalNeeded = totalNeeded,
+            totalWallets = wallets.size,
+            walletsToDerive = walletsToDerive,
+        )
     }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
@@ -204,21 +198,8 @@ internal class ManageTokensViewModel @Inject constructor(
         when (token.availableAction.value) {
             TokenButtonType.ADD, TokenButtonType.EDIT -> {
                 uiState = uiState.copy(selectedToken = token)
-
                 val addedCurrenciesOnWallet = addedCurrenciesByWallet[selectedWallet] ?: listOf()
-
-                token.chooseNetworkState.nativeNetworks.forEach {
-                    if (it is NetworkItemState.Toggleable) {
-                        val isAdded = isAdded(it.address, it.blockchain, addedCurrenciesOnWallet)
-                        if (isAdded != it.isAdded.value) (it as? NetworkItemState.Toggleable)?.changeToggleState()
-                    }
-                }
-                token.chooseNetworkState.nonNativeNetworks.forEach {
-                    if (it is NetworkItemState.Toggleable) {
-                        val isAdded = isAdded(it.address, it.blockchain, addedCurrenciesOnWallet)
-                        if (isAdded != it.isAdded.value) (it as? NetworkItemState.Toggleable)?.changeToggleState()
-                    }
-                }
+                stateFactory.updateTokenNetworksOnTokenSelection(token, addedCurrenciesOnWallet)
             }
             TokenButtonType.NOT_AVAILABLE -> {
                 uiState = stateFactory.getStateAndTriggerEvent(
@@ -237,32 +218,13 @@ internal class ManageTokensViewModel @Inject constructor(
     override fun onGenerateDerivationClick() {
         if (neededDerivations.isNotEmpty()) {
             viewModelScope.launch(dispatchers.io) {
-                val wallet = neededDerivations.keys.firstOrNull()
-                val derivations = neededDerivations[wallet]?.toMapOfDerivations()
-                if (wallet == null || derivations.isNullOrEmpty()) return@launch
-
-                derivePublicKeysUseCase(cardId = null, derivations = derivations)
+                val walletId = neededDerivations.keys.firstOrNull()
+                val currenciesToDerive = neededDerivations[walletId]
+                if (walletId == null || currenciesToDerive.isNullOrEmpty()) return@launch
+                derivePublicKeysUseCase(walletId, currenciesToDerive)
                     .onRight {
-                        val newDerivedKeys = it.entries
-                        val oldDerivedKeys = wallet.scanResponse.derivedKeys
-
-                        val walletKeys = (newDerivedKeys.keys + oldDerivedKeys.keys).toSet()
-
-                        val updatedDerivedKeys = walletKeys.associateWith { walletKey ->
-                            val oldDerivations = ExtendedPublicKeysMap(oldDerivedKeys[walletKey] ?: emptyMap())
-                            val newDerivations = newDerivedKeys[walletKey] ?: ExtendedPublicKeysMap(emptyMap())
-                            ExtendedPublicKeysMap(oldDerivations + newDerivations)
-                        }
-                        val updatedScanResponse = wallet.scanResponse.copy(derivedKeys = updatedDerivedKeys)
-
-                        updateWalletUseCase(
-                            userWalletId = wallet.walletId,
-                            update = { userWallet -> userWallet.copy(scanResponse = updatedScanResponse) },
-                        ).onRight { userWallet ->
-                            fetchTokenListUseCase(userWalletId = userWallet.walletId)
-                        }
-
                         updateDerivationNotificationState()
+                        fetchTokenListUseCase(userWalletId = walletId)
                     }
             }
         }
@@ -283,29 +245,39 @@ internal class ManageTokensViewModel @Inject constructor(
         if (network.isAdded.value) {
             toggleToken(token, network, selectedWallet)
         } else {
-            TokenCompatibility(selectedWallet)
-                .check(network.blockchain, network.address == null)
-                .fold(
-                    ifLeft = { error ->
-                        val alert = when (error) {
-                            TokenCompatibility.AddTokenError.SolanaTokensUnsupported ->
-                                AlertState.TokensUnsupported(network.blockchain.fullName)
-                            TokenCompatibility.AddTokenError.UnsupportedBlockchain ->
-                                AlertState.TokensUnsupportedBlockchainByCard(network.blockchain.fullName)
-                            TokenCompatibility.AddTokenError.UnsupportedCurve ->
-                                AlertState.TokensUnsupportedCurve
-                        }
-                        uiState = stateFactory.getStateAndTriggerEvent(
-                            state = uiState,
-                            event = Event.ShowAlert(alert),
-                            setUiState = { uiState = it },
-                        )
-                    },
-                    ifRight = {
-                        toggleToken(token, network, selectedWallet)
-                    },
-                )
+            viewModelScope.launch(dispatchers.io) {
+                checkCompatibilityAndToggleToken(token, network, selectedWallet)
+            }
         }
+    }
+
+    private suspend fun checkCompatibilityAndToggleToken(
+        token: TokenItemState.Loaded,
+        network: NetworkItemState.Toggleable,
+        selectedWallet: UserWallet,
+    ) {
+        checkCurrencyCompatibilityUseCase(
+            networkId = network.id,
+            isMainNetwork = network.address == null,
+            userWalletId = selectedWallet.walletId,
+        )
+            .fold(
+                ifLeft = { error ->
+                    uiState = stateFactory.getStateAndTriggerEvent(
+                        state = uiState,
+                        event = Event.ShowAlert(
+                            stateFactory.transformAddTokenErrorToAlert(
+                                error,
+                                network.name,
+                            ),
+                        ),
+                        setUiState = { uiState = it },
+                    )
+                },
+                ifRight = {
+                    withContext(dispatchers.main) { toggleToken(token, network, selectedWallet) }
+                },
+            )
     }
 
     private fun toggleToken(
@@ -321,39 +293,54 @@ internal class ManageTokensViewModel @Inject constructor(
         ) {
             "It is only null if Blockchain is Unknown, which mustn't happen here"
         }
-
         if (!network.isAdded.value) {
+            updateUi(token, network)
             addedCurrenciesByWallet[selectedWallet]?.add(cryptoCurrency)
             allAddedCurrencies.add(cryptoCurrency)
             viewModelScope.launch(dispatchers.io) {
-                addCryptoCurrenciesUseCase(selectedWallet.walletId, cryptoCurrency)
+                addCryptoCurrenciesUseCase(
+                    userWalletId = selectedWallet.walletId,
+                    currency = cryptoCurrency,
+                )
             }
         } else {
-            addedCurrenciesByWallet[selectedWallet]?.remove(cryptoCurrency)
-            allAddedCurrencies.remove(cryptoCurrency)
             viewModelScope.launch(dispatchers.io) {
-                removeCurrencyUseCase(selectedWallet.walletId, cryptoCurrency)
+                if (canBeRemovedAndShowAlertIfNot(selectedWallet.walletId, cryptoCurrency)) {
+                    withContext(dispatchers.main) { updateUi(token, network) }
+                    addedCurrenciesByWallet[selectedWallet]?.remove(cryptoCurrency)
+                    allAddedCurrencies.remove(cryptoCurrency)
+                    removeCurrencyUseCase(selectedWallet.walletId, cryptoCurrency)
+                }
             }
         }
-        network.changeToggleState()
-        val isAnyAdded = token.chooseNetworkState.nativeNetworks.any {
-            it is NetworkItemState.Toggleable && isAdded(
-                address = it.address,
-                blockchain = it.blockchain,
-                currencies = allAddedCurrencies,
-            )
-        } || token.chooseNetworkState.nonNativeNetworks.any {
-            it is NetworkItemState.Toggleable && isAdded(
-                address = it.address,
-                blockchain = it.blockchain,
-                currencies = allAddedCurrencies,
-            )
-        }
-        val buttonType = if (isAnyAdded) TokenButtonType.EDIT else TokenButtonType.ADD
-        token.availableAction.value = buttonType
-        neededDerivations = MissingDerivationsIdentifier
-            .getMissingDerivationsForWallets(wallets, addedCurrenciesByWallet)
+    }
+
+    private fun updateUi(token: TokenItemState.Loaded, network: NetworkItemState.Toggleable) {
+        stateFactory.toggleNetworkState(token, network, allAddedCurrencies)
         updateDerivationNotificationState()
+    }
+
+    private suspend fun canBeRemovedAndShowAlertIfNot(
+        walletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): Boolean {
+        return if (cryptoCurrency is CryptoCurrency.Coin &&
+            !isCryptoCurrencyCoinCouldHide(walletId, cryptoCurrency)
+        ) {
+            uiState = stateFactory.getStateAndTriggerEvent(
+                state = uiState,
+                event = Event.ShowAlert(
+                    AlertState.CannotHideNetworkWithTokens(
+                        tokenName = cryptoCurrency.name,
+                        networkName = cryptoCurrency.network.name,
+                    ),
+                ),
+                setUiState = { uiState = it },
+            )
+            false
+        } else {
+            true
+        }
     }
 
     override fun onNonNativeNetworkHintClick() {
