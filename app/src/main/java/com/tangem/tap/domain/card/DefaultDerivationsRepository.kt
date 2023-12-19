@@ -27,6 +27,11 @@ internal class DefaultDerivationsRepository(
     override suspend fun derivePublicKeys(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
 
+        if (!userWallet.scanResponse.card.settings.isHDWalletAllowed) {
+            Timber.d("Nothing to derive")
+            return
+        }
+
         val derivations = MissedDerivationsFinder(scanResponse = userWallet.scanResponse)
             .find(currencies)
             .ifEmpty {
