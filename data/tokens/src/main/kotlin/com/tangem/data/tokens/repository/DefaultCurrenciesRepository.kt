@@ -49,6 +49,7 @@ internal class DefaultCurrenciesRepository(
     private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
+    private val customTokensMerger = CustomTokensMerger(tangemTechApi, dispatchers)
 
     override suspend fun saveTokens(
         userWalletId: UserWalletId,
@@ -352,6 +353,7 @@ internal class DefaultCurrenciesRepository(
 
         val compatibleUserTokensResponse = response
             .let { it.copy(tokens = it.tokens.distinct()) }
+            .let { customTokensMerger.mergeIfPresented(userWalletId, response) }
             .let(userTokensBackwardCompatibility::applyCompatibilityAndGetUpdated)
 
         userTokensStore.store(userWallet.walletId, compatibleUserTokensResponse)
