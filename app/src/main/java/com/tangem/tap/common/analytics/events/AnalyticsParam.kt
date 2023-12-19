@@ -30,8 +30,14 @@ sealed class AnalyticsParam {
     }
 
     sealed class OnOffState(val value: String) {
+
         object On : OnOffState("On")
         object Off : OnOffState("Off")
+
+        companion object {
+
+            operator fun invoke(value: Boolean): OnOffState = if (value) On else Off
+        }
     }
 
     sealed class UserCode(val value: String) {
