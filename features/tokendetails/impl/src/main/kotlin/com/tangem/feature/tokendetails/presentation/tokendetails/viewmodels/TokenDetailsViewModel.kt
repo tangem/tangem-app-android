@@ -563,14 +563,14 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onSwapPromoDismiss() {
         viewModelScope.launch(dispatchers.main) {
-            shouldShowSwapPromoTokenUseCase.neverToShow(userWalletId.stringValue, cryptoCurrency.id.value)
+            shouldShowSwapPromoTokenUseCase.neverToShow()
             analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Close)
         }
     }
 
     override fun onSwapPromoClick() {
         viewModelScope.launch(dispatchers.main) {
-            shouldShowSwapPromoTokenUseCase.neverToShow(userWalletId.stringValue, cryptoCurrency.id.value)
+            shouldShowSwapPromoTokenUseCase.neverToShow()
             analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Exchange(cryptoCurrency.symbol))
         }
         onSwapClick()
