@@ -246,4 +246,12 @@ internal object TokensDomainModule {
     fun provideGetGlobalTokenListUseCase(tokensListRepository: TokensListRepository): GetGlobalTokenListUseCase {
         return GetGlobalTokenListUseCase(repository = tokensListRepository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideCheckTokenCompatibilityUseCase(
+        repository: NetworksCompatibilityRepository,
+    ): CheckCurrencyCompatibilityUseCase {
+        return CheckCurrencyCompatibilityUseCase(repository)
+    }
 }
