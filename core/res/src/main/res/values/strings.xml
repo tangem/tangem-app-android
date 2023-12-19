@@ -193,6 +193,7 @@
     <string name="exchange_tokens_available_tokens_header">My tokens</string>
     <string name="exchange_tokens_empty_tokens">You haven\'t added any tokens yet. Add tokens via Market to swap</string>
     <string name="exchange_tokens_unavailable_tokens_header">Cannot be swapped for %s</string>
+    <string name="express_cex_fee_explanation">Additionally, the network fee for sending the exchanged funds back to your address is included in the rate</string>
     <string name="express_cex_status_button_title">Status</string>
     <string name="express_choose_providers_subtitle">Providers facilitate transactions, ensuring smooth and efficient token swaps</string>
     <string name="express_choose_providers_title">Choose provider</string>

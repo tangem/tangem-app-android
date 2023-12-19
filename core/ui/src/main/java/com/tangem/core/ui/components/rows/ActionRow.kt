@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH28
 import com.tangem.core.ui.res.TangemTheme
@@ -20,7 +21,12 @@ import com.tangem.core.ui.res.TangemTheme
  * https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-807&mode=design&t=Ygv5sohTTHYAQcBS-4
  */
 @Composable
-fun SimpleActionRow(title: String, description: String, modifier: Modifier = Modifier, isClickable: Boolean = true) {
+fun SimpleActionRow(
+    title: String,
+    description: String,
+    modifier: Modifier = Modifier,
+    isClickable: Boolean = true
+) {
     Box(
         modifier = modifier
             .background(color = TangemTheme.colors.background.action)
