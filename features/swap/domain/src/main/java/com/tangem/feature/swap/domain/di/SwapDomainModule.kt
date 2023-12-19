@@ -42,6 +42,7 @@ class SwapDomainModule {
         walletManagersFacade: WalletManagersFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
         initialToCurrencyResolver: InitialToCurrencyResolver,
+        blockchainInteractor: BlockchainInteractor,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -56,6 +57,7 @@ class SwapDomainModule {
             dispatcher = coroutineDispatcherProvider,
             swapTransactionRepository = swapTransactionRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
+            blockchainInteractor = blockchainInteractor,
         )
     }
 

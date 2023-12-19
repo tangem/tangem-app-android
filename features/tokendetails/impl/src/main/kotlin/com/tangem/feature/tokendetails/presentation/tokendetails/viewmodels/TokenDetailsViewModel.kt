@@ -222,6 +222,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .filterNot { it.isEmpty() }
                 .onEach { swapTxs ->
+                    updateSwapTx(swapTxs)
                     swapTxStatusTaskScheduler.scheduleTask(
                         viewModelScope,
                         PeriodicTask(
@@ -231,18 +232,8 @@ internal class TokenDetailsViewModel @Inject constructor(
                                     exchangeStatusFactory.updateSwapTxStatuses(swapTxs)
                                 }
                             },
-                            onSuccess = { updatedTxs ->
-                                val config = uiState.bottomSheetConfig
-                                val exchangeBottomSheet = config?.content as? ExchangeStatusBottomSheetConfig
-                                val currentTx = updatedTxs.firstOrNull { it.txId == exchangeBottomSheet?.value?.txId }
-                                uiState = uiState.copy(
-                                    swapTxs = updatedTxs,
-                                    bottomSheetConfig = currentTx?.let(
-                                        stateFactory::updateStateWithExchangeStatusBottomSheet,
-                                    ) ?: config,
-                                )
-                            },
-                            onError = {},
+                            onSuccess = ::updateSwapTx,
+                            onError = { /* no-op */ },
                         ),
                     )
                 }
@@ -250,6 +241,18 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .launchIn(viewModelScope)
                 .saveIn(swapTxJobHolder)
         }
+    }
+
+    private fun updateSwapTx(swapTxs: PersistentList<SwapTransactionsState>) {
+        val config = uiState.bottomSheetConfig
+        val exchangeBottomSheet = config?.content as? ExchangeStatusBottomSheetConfig
+        val currentTx = swapTxs.firstOrNull { it.txId == exchangeBottomSheet?.value?.txId }
+        uiState = uiState.copy(
+            swapTxs = swapTxs,
+            bottomSheetConfig = currentTx?.let(
+                stateFactory::updateStateWithExchangeStatusBottomSheet,
+            ) ?: config,
+        )
     }
 
     /**
