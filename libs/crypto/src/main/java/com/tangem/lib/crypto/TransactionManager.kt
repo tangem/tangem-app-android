@@ -1,5 +1,6 @@
 package com.tangem.lib.crypto
 
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import java.math.BigDecimal
@@ -71,4 +72,7 @@ interface TransactionManager {
 
     @Throws(IllegalStateException::class)
     fun getExplorerTransactionLink(networkId: String, txAddress: String): String
+
+    // TODO: move to another place to use as in Send feature
+    fun getMemoExtras(networkId: String, memo: String?): TransactionExtras?
 }
