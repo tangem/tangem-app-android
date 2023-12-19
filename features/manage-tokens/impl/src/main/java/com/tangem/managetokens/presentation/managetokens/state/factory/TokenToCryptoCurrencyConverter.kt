@@ -1,9 +1,7 @@
 package com.tangem.managetokens.presentation.managetokens.state.factory
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
 import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
@@ -15,28 +13,22 @@ internal class TokenToCryptoCurrencyConverter(
 ) : Converter<TokenItemState.Loaded, CryptoCurrency?> {
 
     override fun convert(value: TokenItemState.Loaded): CryptoCurrency? {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(network.id))
-        val sdkToken = if (network is NetworkItemState.Toggleable && network.address != null) {
-            com.tangem.blockchain.common.Token(
-                symbol = value.currencySymbol,
-                name = value.name,
-                contractAddress = network.address,
-                decimals = network.decimals!!,
-                id = value.tokenId,
-            )
-        } else {
-            null
-        }
-        return if (sdkToken != null) {
+        return if (network is NetworkItemState.Toggleable && network.address != null) {
             CryptoCurrencyFactory().createToken(
-                sdkToken = sdkToken,
-                blockchain = blockchain,
+                CryptoCurrencyFactory.Token(
+                    symbol = value.currencySymbol,
+                    name = value.name,
+                    id = value.tokenId,
+                    contractAddress = network.address,
+                    decimals = requireNotNull(network.decimals),
+                ),
+                networkId = network.id,
                 derivationStyleProvider = derivationStyleProvider,
                 extraDerivationPath = null,
             )
         } else {
             CryptoCurrencyFactory().createCoin(
-                blockchain = blockchain,
+                networkId = network.id,
                 derivationStyleProvider = derivationStyleProvider,
                 extraDerivationPath = null,
             )
