@@ -215,7 +215,7 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         val warnings = getWarningsForSuccessState(quoteModel, fromToken)
-        val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
+        val feeState = createFeeState(quoteModel.txFee, selectedFeeType, swapProvider)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
         return uiStateHolder.copy(
@@ -666,7 +666,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType): FeeItemState {
+    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType, swapProvider: SwapProvider): FeeItemState {
         val isClickable: Boolean
         val fee = when (txFeeState) {
             TxFeeState.Empty -> return FeeItemState.Empty
@@ -692,6 +692,11 @@ internal class StateBuilder(
             title = resourceReference(R.string.common_fee_label),
             amountCrypto = fee.feeCryptoFormatted,
             symbolCrypto = fee.cryptoSymbol,
+            explanation = if (swapProvider.type == ExchangeProviderType.CEX) {
+                resourceReference(R.string.express_cex_fee_explanation)
+            } else {
+                null
+            },
             amountFiatFormatted = fee.feeFiatFormatted,
             isClickable = isClickable,
             onClick = actions.onClickFee,
@@ -1002,6 +1007,7 @@ internal class StateBuilder(
                 amountCrypto = this.normalFee.feeCryptoFormatted,
                 symbolCrypto = this.normalFee.cryptoSymbol,
                 amountFiatFormatted = this.normalFee.feeFiatFormatted,
+                explanation = null,
                 isClickable = true,
                 onClick = {},
             ),
@@ -1011,6 +1017,7 @@ internal class StateBuilder(
                 amountCrypto = this.priorityFee.feeCryptoFormatted,
                 symbolCrypto = this.priorityFee.cryptoSymbol,
                 amountFiatFormatted = this.priorityFee.feeFiatFormatted,
+                explanation = null,
                 isClickable = true,
                 onClick = {},
             ),
