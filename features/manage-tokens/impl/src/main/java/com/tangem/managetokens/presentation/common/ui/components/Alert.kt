@@ -16,6 +16,7 @@ internal fun Alert(state: AlertState, onDismiss: () -> Unit) {
         AlertState.TokensUnsupportedCurve,
         is AlertState.TokensUnsupported,
         is AlertState.TokensUnsupportedBlockchainByCard,
+        is AlertState.CannotHideNetworkWithTokens,
         -> DefaultAlert(state, onDismiss)
         is AlertState.TokenUnavailable -> TokenUnavailableAlert(state, onDismiss)
     }
