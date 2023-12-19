@@ -447,19 +447,14 @@ internal class SwapViewModel @Inject constructor(
             }.onSuccess {
                 when (it) {
                     is TxState.TxSent -> {
-                        val url = blockchainInteractor.getExplorerTransactionLink(
-                            networkId = fromCurrency.currency.network.backendId,
-                            txAddress = it.txAddress,
-                        )
                         uiState = stateBuilder.createSuccessState(
                             uiState = uiState,
                             txState = it,
                             dataState = dataState,
-                            txUrl = url,
                             onExploreClick = {
-                                val txHash = it.txAddress
-                                if (txHash.isNotEmpty()) {
-                                    swapRouter.openUrl(url)
+                                val txUrl = it.txUrl
+                                if (!txUrl.isNullOrBlank()) {
+                                    swapRouter.openUrl(txUrl)
                                 }
                                 analyticsEventHandler.send(
                                     event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol),
