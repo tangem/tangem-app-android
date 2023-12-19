@@ -1,17 +1,15 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.*
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.card.DefaultDerivationsRepository
 import com.tangem.tap.domain.card.DefaultDerivePublicKeysUseCase
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -66,12 +64,11 @@ internal object CardDomainModule {
     @ViewModelScoped
     fun provideDerivePublicKeysUseCase(
         tangemSdkManager: TangemSdkManager,
-        userWalletsStore: UserWalletsStore,
-        dispatchers: CoroutineDispatcherProvider,
+        derivationsRepository: DerivationsRepository,
     ): DerivePublicKeysUseCase {
         return DefaultDerivePublicKeysUseCase(
             tangemSdkManager = tangemSdkManager,
-            derivationsRepository = DefaultDerivationsRepository(tangemSdkManager, userWalletsStore, dispatchers),
+            derivationsRepository = derivationsRepository,
         )
     }
 
