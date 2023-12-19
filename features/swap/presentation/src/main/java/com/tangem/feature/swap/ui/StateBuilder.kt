@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.ui
 
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.Provider
@@ -26,7 +25,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
-import kotlin.math.exp
 import kotlin.math.min
 
 /**
@@ -668,11 +666,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun createFeeState(
-        txFeeState: TxFeeState,
-        feeType: FeeType,
-        swapProvider: SwapProvider,
-    ): FeeItemState {
+    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType, swapProvider: SwapProvider): FeeItemState {
         val isClickable: Boolean
         val fee = when (txFeeState) {
             TxFeeState.Empty -> return FeeItemState.Empty

@@ -57,7 +57,7 @@ fun FeeItem(state: FeeItemState.Content) {
                     top = TangemTheme.dimens.spacing10,
                     bottom = TangemTheme.dimens.spacing10,
                     end = TangemTheme.dimens.spacing2,
-                )
+                ),
             )
             Text(
                 text = it.resolveReference(),
@@ -65,8 +65,8 @@ fun FeeItem(state: FeeItemState.Content) {
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier.padding(
                     bottom = TangemTheme.dimens.spacing10,
-                    end = TangemTheme.dimens.spacing16
-                )
+                    end = TangemTheme.dimens.spacing16,
+                ),
             )
         }
     }
@@ -83,7 +83,7 @@ private fun FeeItemPreview() {
         amountFiatFormatted = "(1000$)",
         explanation = stringReference(
             "Additionally, the network fee for sending the exchanged funds back to your address is " +
-                "included in the rate"
+                "included in the rate",
         ),
         isClickable = false,
         onClick = {},
