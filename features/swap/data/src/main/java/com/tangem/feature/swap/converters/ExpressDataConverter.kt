@@ -34,6 +34,8 @@ class ExpressDataConverter : Converter<ExchangeDataResponse, SwapDataModel> {
                 txTo = transactionDto.txTo,
                 externalTxId = requireNotNull(transactionDto.externalTxId),
                 externalTxUrl = requireNotNull(transactionDto.externalTxUrl),
+                txExtraIdName = transactionDto.txExtraIdName,
+                txExtraId = transactionDto.txExtraId,
             )
         }
     }
