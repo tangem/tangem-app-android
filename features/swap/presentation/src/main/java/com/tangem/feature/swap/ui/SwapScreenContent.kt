@@ -467,13 +467,14 @@ private val state = SwapStateHolder(
         amountCrypto = "100",
         symbolCrypto = "1000",
         amountFiatFormatted = "(100)",
+        explanation = null,
         isClickable = true,
         onClick = {},
     ),
     warnings = listOf(
         SwapWarning.PermissionNeeded(
             notificationConfig = NotificationConfig(
-                title = stringReference("Give Premission"),
+                title = stringReference("Give Permission"),
                 subtitle = stringReference("To continue swapping you need to give permission to Tangem"),
                 iconResId = R.drawable.ic_locked_24,
             ),
