@@ -43,18 +43,19 @@ internal sealed class SendStates {
         val tokenIconState: TokenIconState,
         val isFiatValue: Boolean,
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
-        val amountTextField: MutableStateFlow<SendTextField.Amount>,
+        val amountTextField: SendTextField.Amount,
         val isPrimaryButtonEnabled: Boolean,
     ) : SendStates()
 
     /** Recipient state */
     data class RecipientState(
         override val type: SendUiStateType = SendUiStateType.Recipient,
-        val addressTextField: MutableStateFlow<SendTextField.RecipientAddress>,
-        val memoTextField: MutableStateFlow<SendTextField.RecipientMemo>?,
+        val addressTextField: SendTextField.RecipientAddress,
+        val memoTextField: SendTextField.RecipientMemo?,
         val recipients: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
         val network: String,
         val isPrimaryButtonEnabled: Boolean,
+        val isValidating: Boolean = false,
     ) : SendStates()
 
     /** Fee and speed state */
