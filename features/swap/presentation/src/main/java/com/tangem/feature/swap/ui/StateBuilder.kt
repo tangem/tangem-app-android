@@ -378,6 +378,7 @@ internal class StateBuilder(
     }
 
     private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
+        if (preparedSwapConfigState.hasOutgoingTransaction) return false
         return when (preparedSwapConfigState.includeFeeInAmount) {
             IncludeFeeInAmount.BalanceNotEnough -> false
             IncludeFeeInAmount.Excluded ->
