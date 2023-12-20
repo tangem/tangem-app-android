@@ -8,7 +8,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 // [REDACTED_TODO_COMMENT]
 interface DerivePublicKeysUseCase {
-
+// [REDACTED_TODO_COMMENT]
     @Deprecated(message = "Use invoke(cardId: String?, derivations: Map<ByteArrayKey, List<DerivationPath>>) instead")
     suspend operator fun invoke(
         cardId: String? = null,
