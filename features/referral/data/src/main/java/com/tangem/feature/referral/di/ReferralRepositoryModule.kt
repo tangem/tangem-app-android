@@ -2,6 +2,7 @@ package com.tangem.feature.referral.di
 
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.demo.DemoModeDatasource
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.data.ReferralRepositoryImpl
 import com.tangem.feature.referral.domain.ReferralRepository
@@ -25,6 +26,7 @@ class ReferralRepositoryModule {
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
         demoModeDatasource: DemoModeDatasource,
         authProvider: AuthProvider,
+        userWalletsStore: UserWalletsStore,
     ): ReferralRepository {
         return ReferralRepositoryImpl(
             referralApi = tangemTechApi,
@@ -32,6 +34,7 @@ class ReferralRepositoryModule {
             coroutineDispatcher = coroutineDispatcherProvider,
             demoModeDatasource = demoModeDatasource,
             authProvider = authProvider,
+            userWalletsStore = userWalletsStore,
         )
     }
 }
