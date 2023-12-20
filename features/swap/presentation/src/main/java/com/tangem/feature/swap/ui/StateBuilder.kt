@@ -50,7 +50,7 @@ internal class StateBuilder(
         return SwapStateHolder(
             blockchainId = networkInfo.blockchainId,
             sendCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.SendCard(actions.onAmountChanged, actions.onAmountSelected),
+                type = TransactionCardType.InputFieldCard(actions.onAmountChanged, actions.onAmountSelected),
                 amountEquivalent = null,
                 amountTextFieldValue = null,
                 token = null,
@@ -64,7 +64,7 @@ internal class StateBuilder(
                 isBalanceHidden = true,
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReceiveCard(),
+                type = TransactionCardType.ReadOnlyCard(),
                 amountEquivalent = null,
                 tokenIconUrl = "",
                 tokenCurrency = "",
@@ -98,7 +98,9 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
+                type = TransactionCardType.ReadOnlyCard(
+                    headerResId = R.string.exchange_send_view_header
+                ),
                 amountTextFieldValue = TextFieldValue(
                     text = "0",
                 ),
@@ -114,7 +116,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.Empty(
-                type = TransactionCardType.ReceiveCard(),
+                type = TransactionCardType.ReadOnlyCard(),
                 amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
                 amountTextFieldValue = TextFieldValue(
                     text = "0",
@@ -156,7 +158,7 @@ internal class StateBuilder(
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.InputFieldCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = null,
                 token = uiStateHolder.sendCardData.token,
@@ -170,7 +172,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReceiveCard(),
+                type = TransactionCardType.ReadOnlyCard(),
                 amountTextFieldValue = null,
                 amountEquivalent = null,
                 token = uiStateHolder.receiveCardData.token,
@@ -220,7 +222,7 @@ internal class StateBuilder(
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.InputFieldCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = getFormattedFiatAmount(quoteModel.fromTokenInfo.amountFiat),
                 token = fromCurrencyStatus,
@@ -234,7 +236,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReceiveCard(),
+                type = TransactionCardType.ReadOnlyCard(),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 token = toCurrencyStatus,
@@ -409,7 +411,7 @@ internal class StateBuilder(
         )
         val receiveCardData = toToken?.let {
             SwapCardState.SwapCardData(
-                type = TransactionCardType.ReceiveCard(),
+                type = TransactionCardType.ReadOnlyCard(),
                 amountTextFieldValue = TextFieldValue(
                     text = "0",
                 ),
@@ -425,7 +427,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             )
         } ?: SwapCardState.Empty(
-            type = TransactionCardType.ReceiveCard(),
+            type = TransactionCardType.ReadOnlyCard(),
             amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
             amountTextFieldValue = TextFieldValue(
                 text = "0",
@@ -523,7 +525,7 @@ internal class StateBuilder(
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.InputFieldCard),
                 amountTextFieldValue = uiStateHolder.sendCardData.amountTextFieldValue,
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
                 token = uiStateHolder.sendCardData.token,
@@ -537,7 +539,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReceiveCard(),
+                type = TransactionCardType.ReadOnlyCard(),
                 amountTextFieldValue = TextFieldValue("0"),
                 amountEquivalent = emptyAmountState.zeroAmountEquivalent,
                 token = uiStateHolder.receiveCardData.token,
