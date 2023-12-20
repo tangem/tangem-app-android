@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
@@ -11,6 +12,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -21,6 +23,7 @@ internal object WalletManagersFacadeModule {
     @Provides
     @Singleton
     fun provideWalletManagersFacade(
+        @ApplicationContext context: Context,
         walletManagersStore: WalletManagersStore,
         userWalletsStore: UserWalletsStore,
         configManager: ConfigManager,
@@ -28,6 +31,7 @@ internal object WalletManagersFacadeModule {
         @SdkMoshi moshi: Moshi,
     ): WalletManagersFacade {
         return DefaultWalletManagersFacade(
+            context = context,
             walletManagersStore = walletManagersStore,
             userWalletsStore = userWalletsStore,
             configManager = configManager,

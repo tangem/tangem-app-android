@@ -1,5 +1,6 @@
 package com.tangem.domain.walletmanager
 
+import android.content.Context
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
@@ -10,6 +11,7 @@ import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
@@ -42,6 +44,7 @@ import java.util.EnumSet
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
+    private val context: Context,
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
     configManager: ConfigManager,
@@ -55,6 +58,7 @@ class DefaultWalletManagersFacade(
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
     private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
+    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
 
     override suspend fun update(
         userWalletId: UserWalletId,
@@ -444,7 +448,13 @@ class DefaultWalletManagersFacade(
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
-        return (walletManager as? TransactionSender)?.estimateFee(amount = amount)
+
+        val destination = estimationFeeAddressFactory.makeAddress(blockchain, context)
+
+        return (walletManager as? TransactionSender)?.estimateFee(
+            amount = amount,
+            destination = destination,
+        )
     }
 
     override suspend fun validateTransaction(
