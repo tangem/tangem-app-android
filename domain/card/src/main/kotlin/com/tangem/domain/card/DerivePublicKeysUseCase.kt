@@ -7,9 +7,10 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 
-// FIXME: Cover with tests [REDACTED_JIRA]
+// TODO: Convert to class [REDACTED_JIRA]
 interface DerivePublicKeysUseCase {
 
+    // TODO: delete [REDACTED_JIRA]
     @Deprecated(message = "Use invoke(cardId: String?, derivations: Map<ByteArrayKey, List<DerivationPath>>) instead")
     suspend operator fun invoke(
         cardId: String? = null,
