@@ -54,6 +54,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val dispatcher: CoroutineDispatcherProvider,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
+    private val blockchainInteractor: BlockchainInteractor,
 ) : SwapInteractor {
 
     private val estimateFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -539,6 +540,10 @@ internal class SwapInteractorImpl @Inject constructor(
             },
             ifRight = {
                 val timestamp = System.currentTimeMillis()
+                val txUrl = blockchainInteractor.getExplorerTransactionLink(
+                    networkId = currencyToSend.currency.network.backendId,
+                    txAddress = exchangeData.transaction.txTo,
+                )
                 storeSwapTransaction(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
@@ -546,6 +551,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapProvider = swapProvider,
                     swapDataModel = exchangeData,
                     timestamp = timestamp,
+                    txUrl = txUrl,
                 )
                 storeLastCryptoCurrencyId(currencyToGet.currency)
                 TxState.TxSent(
@@ -564,6 +570,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         derivationPath,
                     ).orEmpty(),
                     txExternalUrl = externalUrl,
+                    txUrl = txUrl,
                     timestamp = timestamp,
                 )
             },
@@ -597,6 +604,7 @@ internal class SwapInteractorImpl @Inject constructor(
         swapProvider: SwapProvider,
         swapDataModel: SwapDataModel,
         timestamp: Long,
+        txUrl: String,
     ) {
         swapTransactionRepository.storeTransaction(
             userWalletId = UserWalletId(userWalletManager.getWalletId()),
@@ -608,6 +616,12 @@ internal class SwapInteractorImpl @Inject constructor(
                 timestamp = timestamp,
                 fromCryptoAmount = amount.value,
                 toCryptoAmount = swapDataModel.toTokenAmount.value,
+                status = ExchangeStatusModel(
+                    providerId = swapProvider.providerId,
+                    status = ExchangeStatus.New,
+                    txId = swapDataModel.transaction.txId,
+                    txUrl = txUrl,
+                ),
             ),
         )
     }

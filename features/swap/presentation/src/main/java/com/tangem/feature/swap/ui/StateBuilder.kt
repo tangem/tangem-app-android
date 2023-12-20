@@ -722,7 +722,6 @@ internal class StateBuilder(
     fun createSuccessState(
         uiState: SwapStateHolder,
         txState: TxState.TxSent,
-        txUrl: String,
         dataState: SwapProcessDataState,
         onExploreClick: () -> Unit,
         onStatusClick: () -> Unit,
@@ -740,7 +739,7 @@ internal class StateBuilder(
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = txState.timestamp,
-                txUrl = txUrl,
+                txUrl = txState.txUrl.orEmpty(),
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
                 showStatusButton = providerState.type == ExchangeProviderType.CEX.name,
