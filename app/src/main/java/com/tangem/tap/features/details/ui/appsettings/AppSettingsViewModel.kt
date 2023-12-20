@@ -58,6 +58,7 @@ internal class AppSettingsViewModel(
     private fun buildItems(state: AppSettingsState): ImmutableList<AppSettingsScreenState.Item> {
         val items = buildList {
             if (state.needEnrollBiometrics) {
+                Analytics.send(Settings.AppSettings.EnableBiometrics)
                 itemsFactory.createEnrollBiometricsCard(onClick = ::enrollBiometrics).let(::add)
             }
 
@@ -165,6 +166,9 @@ internal class AppSettingsViewModel(
     }
 
     private fun onFlipToHideBalanceToggled(enable: Boolean) {
+        val param = AnalyticsParam.OnOffState(enable)
+        Analytics.send(Settings.AppSettings.HideBalanceChanged(param))
+
         store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(hideBalance = enable))
     }
 
