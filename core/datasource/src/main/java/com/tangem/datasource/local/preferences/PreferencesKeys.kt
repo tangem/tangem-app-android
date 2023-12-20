@@ -35,6 +35,8 @@ object PreferencesKeys {
 
     val SWAP_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "swapTransactions") }
 
+    val SWAP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "swapTransactionsStatuses") }
+
     val WALLETS_SCROLL_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "walletsScrollPreview") }
 
     val SENT_ONE_TIME_EVENTS_KEY by lazy { stringPreferencesKey(name = "sentOneTimeEvents") }
