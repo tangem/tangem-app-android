@@ -215,7 +215,7 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         val warnings = getWarningsForSuccessState(quoteModel, fromToken)
-        val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
+        val feeState = createFeeState(quoteModel.txFee, selectedFeeType, swapProvider)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
         return uiStateHolder.copy(
@@ -378,6 +378,7 @@ internal class StateBuilder(
     }
 
     private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
+        if (preparedSwapConfigState.hasOutgoingTransaction) return false
         return when (preparedSwapConfigState.includeFeeInAmount) {
             IncludeFeeInAmount.BalanceNotEnough -> false
             IncludeFeeInAmount.Excluded ->
@@ -394,12 +395,21 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         fromToken: TokenSwapInfo,
         toToken: CryptoCurrencyStatus?,
+        includeFeeInAmount: IncludeFeeInAmount,
         dataError: DataError,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
-        val warning = getWarningForError(dataError, fromToken.cryptoCurrencyStatus.currency)
+        val warnings = mutableListOf<SwapWarning>()
+        warnings.add(getWarningForError(dataError, fromToken.cryptoCurrencyStatus.currency))
+        if (includeFeeInAmount is IncludeFeeInAmount.Included) {
+            warnings.add(
+                SwapWarning.GeneralWarning(
+                    createNetworkFeeCoverageNotificationConfig(),
+                ),
+            )
+        }
         val providerState = getProviderStateForError(
             swapProvider = swapProvider,
             fromToken = fromToken.cryptoCurrencyStatus.currency,
@@ -437,7 +447,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(fromToken.amountFiat),
             ),
             receiveCardData = receiveCardData,
-            warnings = listOf(warning),
+            warnings = warnings,
             permissionState = SwapPermissionState.Empty,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
@@ -666,7 +676,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType): FeeItemState {
+    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType, swapProvider: SwapProvider): FeeItemState {
         val isClickable: Boolean
         val fee = when (txFeeState) {
             TxFeeState.Empty -> return FeeItemState.Empty
@@ -692,6 +702,11 @@ internal class StateBuilder(
             title = resourceReference(R.string.common_fee_label),
             amountCrypto = fee.feeCryptoFormatted,
             symbolCrypto = fee.cryptoSymbol,
+            explanation = if (swapProvider.type == ExchangeProviderType.CEX) {
+                resourceReference(R.string.express_cex_fee_explanation)
+            } else {
+                null
+            },
             amountFiatFormatted = fee.feeFiatFormatted,
             isClickable = isClickable,
             onClick = actions.onClickFee,
@@ -717,7 +732,6 @@ internal class StateBuilder(
     fun createSuccessState(
         uiState: SwapStateHolder,
         txState: TxState.TxSent,
-        txUrl: String,
         dataState: SwapProcessDataState,
         onExploreClick: () -> Unit,
         onStatusClick: () -> Unit,
@@ -735,7 +749,7 @@ internal class StateBuilder(
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = txState.timestamp,
-                txUrl = txUrl,
+                txUrl = txState.txUrl.orEmpty(),
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
                 showStatusButton = providerState.type == ExchangeProviderType.CEX.name,
@@ -1002,6 +1016,7 @@ internal class StateBuilder(
                 amountCrypto = this.normalFee.feeCryptoFormatted,
                 symbolCrypto = this.normalFee.cryptoSymbol,
                 amountFiatFormatted = this.normalFee.feeFiatFormatted,
+                explanation = null,
                 isClickable = true,
                 onClick = {},
             ),
@@ -1011,6 +1026,7 @@ internal class StateBuilder(
                 amountCrypto = this.priorityFee.feeCryptoFormatted,
                 symbolCrypto = this.priorityFee.cryptoSymbol,
                 amountFiatFormatted = this.priorityFee.feeFiatFormatted,
+                explanation = null,
                 isClickable = true,
                 onClick = {},
             ),
@@ -1221,7 +1237,7 @@ internal class StateBuilder(
     }
 
     private fun SwapAmount.getFormattedCryptoAmount(token: CryptoCurrency): String {
-        return "${this.formatToUIRepresentation()} ${token.network.currencySymbol}"
+        return "${this.formatToUIRepresentation()} ${token.symbol}"
     }
 
     private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
