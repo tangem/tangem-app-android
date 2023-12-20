@@ -344,6 +344,7 @@ internal class SwapViewModel @Inject constructor(
                     fromToken = state.fromTokenInfo,
                     toToken = dataState.toCryptoCurrency,
                     dataError = state.error,
+                    includeFeeInAmount = state.includeFeeInAmount,
                     isReverseSwapPossible = isReverseSwapPossible(),
                 )
                 sendErrorAnalyticsEvent(state.error, provider)
