@@ -4,7 +4,7 @@ import androidx.paging.PagingData
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -23,7 +23,6 @@ import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientS
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.features.send.impl.presentation.viewmodel.isNotAddressInWallet
 import com.tangem.features.send.impl.presentation.viewmodel.validateMemo
-import com.tangem.features.send.impl.presentation.viewmodel.verifyAddress
 import com.tangem.utils.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -118,41 +117,64 @@ internal class SendStateFactory(
         )
     }
 
-    fun getOnRecipientAddressValueChangeState(value: String): SendUiState {
+    fun onRecipientAddressValueChange(value: String): SendUiState {
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+        return state.copy(
+            recipientState = recipientState.copy(
+                addressTextField = recipientState.addressTextField.copy(value = value),
+            ),
+        )
+    }
+
+    fun getOnRecipientAddressValidState(value: String, isValidAddress: Boolean): SendUiState {
         val state = currentStateProvider()
         val recipientState = state.recipientState ?: return state
 
         val isValidMemo = validateMemo(
-            memo = recipientState.addressTextField.value.value,
+            memo = recipientState.addressTextField.value,
             cryptoCurrency = cryptoCurrencyStatusProvider().currency,
         )
         val isAddressInWallet = isNotAddressInWallet(
             address = value,
             walletAddresses = walletAddressesProvider(),
         )
-        val isValidAddress = verifyAddress(
-            address = value,
-            cryptoCurrency = cryptoCurrencyStatusProvider().currency,
-        )
-
-        recipientState.addressTextField.update {
-            it.copy(
-                value = value,
-                error = when {
-                    !isValidAddress || !isAddressInWallet -> TextReference.Res(R.string.send_recipient_address_error)
-                    else -> null
-                },
-                isError = !isValidAddress || !isAddressInWallet,
-            )
-        }
         return state.copy(
             recipientState = recipientState.copy(
                 isPrimaryButtonEnabled = isValidMemo && isValidAddress && isAddressInWallet,
+                isValidating = false,
+                addressTextField = recipientState.addressTextField.copy(
+                    error = when {
+                        !isValidAddress || !isAddressInWallet -> resourceReference(
+                            R.string.send_recipient_address_error,
+                        )
+                        else -> null
+                    },
+                    isError = value.isNotEmpty() && !isValidAddress || !isAddressInWallet,
+                ),
             ),
         )
     }
 
-    fun getOnRecipientMemoValueChangeState(value: String): SendUiState {
+    fun getOnRecipientAddressValidationStarted(): SendUiState {
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+        return state.copy(
+            recipientState = recipientState.copy(isValidating = true),
+        )
+    }
+
+    fun getOnRecipientMemoValueChange(value: String): SendUiState {
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+        return state.copy(
+            recipientState = recipientState.copy(
+                memoTextField = recipientState.memoTextField?.copy(value = value),
+            ),
+        )
+    }
+
+    fun getOnRecipientMemoValidState(value: String, isValidAddress: Boolean): SendUiState {
         val state = currentStateProvider()
         val recipientState = state.recipientState ?: return state
 
@@ -162,22 +184,15 @@ internal class SendStateFactory(
         )
         val isAddressInWallet = isNotAddressInWallet(
             walletAddresses = walletAddressesProvider(),
-            address = recipientState.addressTextField.value.value,
+            address = recipientState.addressTextField.value,
         )
-        val isValidAddress = verifyAddress(
-            address = recipientState.addressTextField.value.value,
-            cryptoCurrency = cryptoCurrencyStatusProvider().currency,
-        )
-
-        recipientState.memoTextField?.update {
-            it.copy(
-                value = value,
-                isError = !isValidMemo,
-            )
-        }
         return state.copy(
             recipientState = recipientState.copy(
                 isPrimaryButtonEnabled = isValidMemo && isValidAddress && isAddressInWallet,
+                isValidating = false,
+                memoTextField = recipientState.memoTextField?.copy(
+                    isError = value.isNotEmpty() || isValidMemo && isValidAddress && isAddressInWallet,
+                ),
             ),
         )
     }
