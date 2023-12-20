@@ -54,7 +54,7 @@ internal class ExchangeStatusFactory(
         )
     }
 
-    operator fun invoke() = combine(
+    suspend operator fun invoke() = combine(
         flow = swapTransactionRepository.getTransactions(userWalletId, cryptoCurrency.id),
         flow2 = getWalletCryptoCurrencies().conflate(),
     ) { savedTransactions, cryptoCurrenciesStatusList ->
@@ -95,9 +95,10 @@ internal class ExchangeStatusFactory(
         return swapRepository.getExchangeStatus(txId)
             .fold(
                 ifLeft = { null },
-                ifRight = {
-                    sendStatusUpdateAnalytics(it)
-                    it
+                ifRight = { statusModel ->
+                    sendStatusUpdateAnalytics(statusModel)
+                    swapTransactionRepository.storeTransactionState(txId, statusModel)
+                    statusModel
                 },
             )
     }
