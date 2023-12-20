@@ -98,6 +98,7 @@
     <string name="common_fee_selector_option_slow">Медленно</string>
     <string name="common_fee_selector_title">Скорость и комиссия</string>
     <string name="common_generate_addresses">Получить адреса</string>
+    <string name="common_go_to_provider">К провайдеру</string>
     <string name="common_import">Импортировать</string>
     <string name="common_like">Нравится</string>
     <string name="common_locked">Заблокирован</string>
@@ -449,6 +450,8 @@
     <string name="send_notification_exceed_fee_title">Комиссия превышает баланс</string>
     <string name="send_notification_high_fee_text">Комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить 0.01.</string>
     <string name="send_notification_high_fee_title">Увеличение комиссии</string>
+    <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
+    <string name="send_notification_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
     <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
     <string name="send_notification_invalid_amount_title">Недопустимая сумма</string>
     <string name="send_notification_invalid_minimum_amount_text">Минимальная сумма отправки - %1$s. Пожалуйста, убедитесь, что остаток после отправки также не будет меньше %1$s.</string>
