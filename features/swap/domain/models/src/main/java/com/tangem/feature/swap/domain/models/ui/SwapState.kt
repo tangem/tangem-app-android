@@ -37,6 +37,7 @@ sealed interface SwapState {
     data class SwapError(
         val fromTokenInfo: TokenSwapInfo,
         val error: DataError,
+        val includeFeeInAmount: IncludeFeeInAmount,
     ) : SwapState
 }
 
