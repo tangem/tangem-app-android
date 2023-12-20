@@ -183,7 +183,9 @@ dependencies {
     }
 
     /** Testing libraries */
+    testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
@@ -205,7 +207,7 @@ dependencies {
     /** Excluded dependencies */
     implementation("com.google.guava:guava:30.0-android") {
         // excludes version 9999.0-empty-to-avoid-conflict-with-guava
-        exclude(group="com.google.guava", module = "listenablefuture")
+        exclude(group = "com.google.guava", module = "listenablefuture")
     }
 
 }
