@@ -11,14 +11,27 @@ android {
 }
 
 dependencies {
+
+    /** Tangem libraries */
+    implementation(deps.tangem.blockchain) // android-library
+
+    /** Core */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+
+    /** Domain */
     implementation(projects.domain.wallets)
+
+    /** Domain models */
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.tokens.models)
 
     /** DI */
     implementation(deps.hilt.android)
+    implementation(project(":domain:legacy"))
     kapt(deps.hilt.kapt)
 
-    /** Local storages */
+    /** Other deps */
     implementation(deps.androidx.datastore)
+    implementation(deps.arrow.core)
 }
