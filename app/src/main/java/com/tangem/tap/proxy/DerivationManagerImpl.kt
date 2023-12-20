@@ -52,31 +52,6 @@ class DerivationManagerImpl(
         AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
     }
 
-    override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine { continuation ->
-        val blockchain = Blockchain.fromNetworkId(currency.networkId)
-        val card = appStateHolder.getActualCard()
-        if (blockchain != null && card != null) {
-            val appToken = getAppToken(currency)
-            val scanResponse = appStateHolder.scanResponse
-            if (scanResponse != null) {
-                val blockchainNetwork = BlockchainNetwork(blockchain, scanResponse.derivationStyleProvider)
-                val appCurrency = com.tangem.tap.domain.model.Currency.fromBlockchainNetwork(
-                    blockchainNetwork,
-                    appToken,
-                )
-                deriveMissingBlockchains(
-                    scanResponse = scanResponse,
-                    currencyList = listOf(appCurrency),
-                    onSuccess = { continuation.resumeWith(Result.success(true)) },
-                ) {
-                    continuation.resumeWith(Result.failure(it))
-                }
-            }
-        } else {
-            continuation.resumeWith(Result.failure(IllegalStateException("no blockchain or card found")))
-        }
-    }
-
     override suspend fun deriveAndAddTokens(currency: Currency) = suspendCoroutine { continuation ->
         val selectedUserWallet = requireNotNull(
             userWalletsListManager.selectedUserWalletSync,
@@ -134,27 +109,6 @@ class DerivationManagerImpl(
                 },
             )
         }
-    }
-
-    override fun getDerivationPathForBlockchain(networkId: String): String? {
-        val scanResponse = appStateHolder.scanResponse
-        val blockchain = Blockchain.fromNetworkId(networkId)
-        if (scanResponse != null && blockchain != null) {
-            return blockchain.derivationPath(scanResponse.derivationStyleProvider.getDerivationStyle())?.rawPath
-        }
-        return null
-    }
-
-    override fun hasDerivation(networkId: String, derivationPath: String): Boolean {
-        val scanResponse = appStateHolder.scanResponse
-        val blockchain = Blockchain.fromNetworkId(networkId)
-        if (scanResponse != null && blockchain != null) {
-            return scanResponse.hasDerivation(
-                blockchain,
-                derivationPath,
-            )
-        }
-        return false
     }
 
     private suspend fun addToken(
