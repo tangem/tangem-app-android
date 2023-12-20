@@ -428,7 +428,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
 // region preview
 
 private val sendCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.InputFieldCard({}, {}),
+    type = TransactionCardType.Inputtable({}, {}),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
@@ -443,7 +443,7 @@ private val sendCard = SwapCardState.SwapCardData(
 )
 
 private val receiveCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.ReadOnlyCard(),
+    type = TransactionCardType.ReadOnly(),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
