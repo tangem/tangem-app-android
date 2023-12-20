@@ -39,7 +39,7 @@ internal class ErrorsDataConverter(
                     receivedFromDecimals = requireNotNull(error.value?.receivedFromDecimals),
                     expressFromDecimals = requireNotNull(error.value?.expressFromDecimals),
                 )
-                else -> DataError.UnknownError
+                else -> DataError.UnknownErrorWithCode(error.code)
             }
         } catch (e: Exception) {
             return DataError.UnknownError
