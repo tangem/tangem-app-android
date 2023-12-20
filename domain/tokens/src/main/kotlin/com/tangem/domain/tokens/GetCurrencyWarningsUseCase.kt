@@ -88,7 +88,7 @@ class GetCurrencyWarningsUseCase(
             showSwapPromoTokenUseCase().conflate(),
             flowOf(marketCryptoCurrencyRepository.isExchangeable(userWalletId, currency)).conflate(),
         ) { shouldShowSwapPromo, isExchangeable ->
-            if (shouldShowSwapPromo && isExchangeable) {
+            if (shouldShowSwapPromo && isExchangeable && currencyStatus.value !is CryptoCurrencyStatus.Unreachable) {
                 cryptoStatuses.fold(
                     ifLeft = { null },
                     ifRight = { cryptoCurrencyStatuses ->
