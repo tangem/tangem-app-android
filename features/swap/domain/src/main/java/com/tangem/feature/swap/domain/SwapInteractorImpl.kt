@@ -9,7 +9,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.convertToAmount
@@ -63,7 +62,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
     private val amountFormatter = AmountFormatter()
-    private var network: Network? = null
+    private val hundredPercent = BigInteger("100")
 
     override suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
         val selectedWallet = getSelectedWalletSyncUseCase().fold(
@@ -1249,15 +1248,15 @@ internal class SwapInteractorImpl @Inject constructor(
         val gasLimit = this.gasLimit
         val increasedGasPrice = this.amount.value?.movePointRight(this.amount.decimals)
             ?.divide(gasLimit.toBigDecimal(), RoundingMode.HALF_UP)
-        val increaseGasLimit = gasLimit
+        val increasedGasLimit = gasLimit
             .multiply(percentage.toBigInteger())
-            .divide(BigInteger("100"))
+            .divide(hundredPercent)
         val increasedAmount = this.amount.copy(
-            value = increaseGasLimit.toBigDecimal().multiply(increasedGasPrice).movePointLeft(this.amount.decimals),
+            value = increasedGasLimit.toBigDecimal().multiply(increasedGasPrice).movePointLeft(this.amount.decimals),
         )
         return this.copy(
             amount = increasedAmount,
-            gasLimit = increaseGasLimit,
+            gasLimit = increasedGasLimit,
         )
     }
 
