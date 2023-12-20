@@ -67,10 +67,11 @@ internal class ReferralRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCryptoCurrency(userWalletId: UserWalletId, tokenData: TokenData): CryptoCurrency? {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("Wallet not found")
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("Wallet $userWalletId not found")
         val derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider
 
-        val blockchain = Blockchain.fromNetworkId(tokenData.networkId) ?: error("Blockchain not found")
+        val blockchain = Blockchain.fromNetworkId(tokenData.networkId)
+            ?: error("Blockchain ${tokenData.networkId} not found")
 
         val cryptoCurrencyFactory = CryptoCurrencyFactory()
 

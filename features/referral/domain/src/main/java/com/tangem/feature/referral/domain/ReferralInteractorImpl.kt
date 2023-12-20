@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.domain
 
+import arrow.core.getOrElse
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -50,35 +51,32 @@ internal class ReferralInteractorImpl(
     }
 
     private suspend fun startReferralNew(tokenData: TokenData): ReferralData {
-        val userWallet = getSelectedWalletSyncUseCase().fold(ifLeft = { error("Wallet not found") }, ifRight = { it })
+        val userWallet = getSelectedWalletSyncUseCase().getOrElse {
+            error("Failed to get selected wallet: $it")
+        }
 
         val cryptoCurrency = repository.getCryptoCurrency(userWalletId = userWallet.walletId, tokenData = tokenData)
+        derivePublicKeysUseCase(userWallet.walletId, listOfNotNull(cryptoCurrency)).getOrElse {
+            Timber.e("Failed to derive public keys: $it")
+            throw it
+        }
 
-        return derivePublicKeysUseCase(userWalletId = userWallet.walletId, currencies = listOfNotNull(cryptoCurrency))
-            .fold(
-                ifLeft = {
-                    Timber.e("Failed to derive public keys: $it")
-                    throw it
-                },
-                ifRight = {
-                    addCryptoCurrenciesUseCase(
-                        userWalletId = userWallet.walletId,
-                        currencies = listOfNotNull(cryptoCurrency),
-                    )
+        addCryptoCurrenciesUseCase(
+            userWalletId = userWallet.walletId,
+            currencies = listOfNotNull(cryptoCurrency),
+        )
 
-                    val publicAddress = userWalletManager.getWalletAddress(
-                        networkId = tokenData.networkId,
-                        derivationPath = cryptoCurrency?.network?.derivationPath?.value,
-                    )
+        val publicAddress = userWalletManager.getWalletAddress(
+            networkId = tokenData.networkId,
+            derivationPath = cryptoCurrency?.network?.derivationPath?.value,
+        )
 
-                    repository.startReferral(
-                        walletId = userWalletManager.getWalletId(),
-                        networkId = tokenData.networkId,
-                        tokenId = tokenData.id,
-                        address = publicAddress,
-                    )
-                },
-            )
+        return repository.startReferral(
+            walletId = userWalletManager.getWalletId(),
+            networkId = tokenData.networkId,
+            tokenId = tokenData.id,
+            address = publicAddress,
+        )
     }
 
     private suspend fun startReferralLegacy(tokenData: TokenData): ReferralData {
