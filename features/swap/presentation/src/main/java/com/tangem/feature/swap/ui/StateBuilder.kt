@@ -394,12 +394,21 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         fromToken: TokenSwapInfo,
         toToken: CryptoCurrencyStatus?,
+        includeFeeInAmount: IncludeFeeInAmount,
         dataError: DataError,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
-        val warning = getWarningForError(dataError, fromToken.cryptoCurrencyStatus.currency)
+        val warnings = mutableListOf<SwapWarning>()
+        warnings.add(getWarningForError(dataError, fromToken.cryptoCurrencyStatus.currency))
+        if (includeFeeInAmount is IncludeFeeInAmount.Included) {
+            warnings.add(
+                SwapWarning.GeneralWarning(
+                    createNetworkFeeCoverageNotificationConfig(),
+                ),
+            )
+        }
         val providerState = getProviderStateForError(
             swapProvider = swapProvider,
             fromToken = fromToken.cryptoCurrencyStatus.currency,
@@ -437,7 +446,7 @@ internal class StateBuilder(
                 amountEquivalent = getFormattedFiatAmount(fromToken.amountFiat),
             ),
             receiveCardData = receiveCardData,
-            warnings = listOf(warning),
+            warnings = warnings,
             permissionState = SwapPermissionState.Empty,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
@@ -1221,7 +1230,7 @@ internal class StateBuilder(
     }
 
     private fun SwapAmount.getFormattedCryptoAmount(token: CryptoCurrency): String {
-        return "${this.formatToUIRepresentation()} ${token.network.currencySymbol}"
+        return "${this.formatToUIRepresentation()} ${token.symbol}"
     }
 
     private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
