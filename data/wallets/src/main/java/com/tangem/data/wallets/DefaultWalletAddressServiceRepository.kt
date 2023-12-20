@@ -12,13 +12,13 @@ class DefaultWalletAddressServiceRepository(
 ) : WalletAddressServiceRepository {
     override suspend fun validate(userWalletId: UserWalletId, network: Network, address: String): Boolean {
         val blockchain = Blockchain.fromId(network.id.value)
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
-        ) ?: return false
 
         return if (blockchain.isNear()) {
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = blockchain,
+                derivationPath = network.derivationPath.value,
+            ) ?: return false
             (walletManager as? NearWalletManager)?.validateAddress(address) ?: false
         } else {
             blockchain.validateAddress(address)
