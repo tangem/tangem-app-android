@@ -3,6 +3,10 @@ package com.tangem.datasource.api.express.models.response
 import com.squareup.moshi.Json
 import java.math.BigDecimal
 
+data class ExchangeDataResponseWithTxDetails(
+    val dataResponse: ExchangeDataResponse,
+    val txDetails: TxDetails,
+)
 data class ExchangeDataResponse(
     @Json(name = "fromAmount")
     val fromAmount: String,
@@ -16,11 +20,22 @@ data class ExchangeDataResponse(
     @Json(name = "toDecimals")
     val toDecimals: Int,
 
-    @Json(name = "txType")
-    val txType: TxType,
-
     @Json(name = "txId")
     val txId: String, // inner tangem-express transaction id
+
+    @Json(name = "txDetailsJson")
+    val txDetailsJson: String,
+
+    @Json(name = "signature")
+    val signature: String,
+)
+
+data class TxDetails(
+    @Json(name = "requestId")
+    val requestId: String,
+
+    @Json(name = "txType")
+    val txType: TxType,
 
     @Json(name = "txFrom")
     val txFrom: String?, // account for debiting tokens (same as toAddress) if DEX, null if CEX

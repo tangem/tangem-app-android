@@ -15,7 +15,7 @@ internal class DefaultExpressAuthProvider(
     private var uuid = AtomicReference(UUID.randomUUID())
 
     override fun getApiKey(): String {
-        return configManager.config.tangemExpressApiKey
+        return configManager.config.express?.apiKey ?: ""
     }
 
     override fun getUserId(): String {
