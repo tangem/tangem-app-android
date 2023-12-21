@@ -8,6 +8,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.walletmanager.DefaultWalletManagersFacade
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.feature.onboarding.data.MnemonicRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,6 +25,7 @@ internal object WalletManagersFacadeModule {
         walletManagersStore: WalletManagersStore,
         userWalletsStore: UserWalletsStore,
         configManager: ConfigManager,
+        mnemonicRepository: MnemonicRepository,
         assetReader: AssetReader,
         @SdkMoshi moshi: Moshi,
     ): WalletManagersFacade {
@@ -33,6 +35,7 @@ internal object WalletManagersFacadeModule {
             configManager = configManager,
             assetReader = assetReader,
             moshi = moshi,
+            mnemonic = mnemonicRepository.generateDefaultMnemonic(),
         )
     }
 }
