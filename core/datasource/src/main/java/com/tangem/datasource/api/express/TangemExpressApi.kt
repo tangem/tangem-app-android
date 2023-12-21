@@ -49,6 +49,7 @@ interface TangemExpressApi {
         @Query("providerId") providerId: String,
         @Query("rateType") rateType: String,
         @Query("toAddress") toAddress: String,
+        @Query("requestId") requestId: String,
     ): ApiResponse<ExchangeDataResponse>
 
     @GET("exchange-status")
