@@ -1,4 +1,4 @@
-package com.tangem.feature.onboarding.data.di
+package com.tangem.tap.di.domain
 
 import android.content.Context
 import com.tangem.crypto.bip39.Wordlist
@@ -14,11 +14,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class OnboardingDataModule {
+class MnemonicModule {
 
     @Provides
     @Singleton
-    fun provideSeedPhraseSdkRepository(@ApplicationContext context: Context): MnemonicRepository {
+    fun provideMnemonicRepository(@ApplicationContext context: Context): MnemonicRepository {
         return DefaultMnemonicRepository(Wordlist.getWordlist(context))
     }
 }
