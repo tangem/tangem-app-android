@@ -17,6 +17,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.asset.AssetReader
 import com.tangem.datasource.config.ConfigManager
@@ -44,10 +45,10 @@ import java.util.EnumSet
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
-    private val context: Context,
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
     configManager: ConfigManager,
+    mnemonic: Mnemonic,
     assetReader: AssetReader,
     moshi: Moshi,
 ) : WalletManagersFacade {
@@ -58,7 +59,7 @@ class DefaultWalletManagersFacade(
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
     private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
-    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
+    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory(mnemonic) }
 
     override suspend fun update(
         userWalletId: UserWalletId,
@@ -449,7 +450,7 @@ class DefaultWalletManagersFacade(
             derivationPath = network.derivationPath.value,
         )
 
-        val destination = estimationFeeAddressFactory.makeAddress(blockchain, context)
+        val destination = estimationFeeAddressFactory.makeAddress(blockchain)
 
         return (walletManager as? TransactionSender)?.estimateFee(
             amount = amount,

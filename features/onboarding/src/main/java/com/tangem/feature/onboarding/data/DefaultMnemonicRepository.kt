@@ -8,7 +8,7 @@ import com.tangem.crypto.bip39.Wordlist
 /**
  * @author Anton Zhilenkov on 17.04.2023.
  */
-internal class DefaultMnemonicRepository(
+class DefaultMnemonicRepository(
     private val bip39Wordlist: Wordlist,
 ) : MnemonicRepository {
 
