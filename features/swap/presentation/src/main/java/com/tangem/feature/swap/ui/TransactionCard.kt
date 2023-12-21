@@ -182,10 +182,7 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val title = when (type) {
-            is TransactionCardType.ReceiveCard -> R.string.exchange_receive_view_header
-            is TransactionCardType.SendCard -> R.string.exchange_send_view_header
-        }
+        val title = type.headerResId
         Text(
             text = stringResource(id = title),
             color = TangemTheme.colors.text.tertiary,
@@ -245,7 +242,7 @@ private fun Content(
         ) {
             val sumTextModifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32)
             when (type) {
-                is TransactionCardType.ReceiveCard -> {
+                is TransactionCardType.ReadOnly -> {
                     if (textFieldValue != null) {
                         ResizableText(
                             text = textFieldValue.text,
@@ -263,7 +260,7 @@ private fun Content(
                         )
                     }
                 }
-                is TransactionCardType.SendCard -> {
+                is TransactionCardType.Inputtable -> {
                     AutoSizeTextField(
                         modifier = sumTextModifier,
                         textFieldValue = textFieldValue ?: TextFieldValue(),
@@ -276,7 +273,7 @@ private fun Content(
             SpacerH8()
 
             if (amountEquivalent != null) {
-                if (type is TransactionCardType.ReceiveCard && priceImpact !is PriceImpact.Empty) {
+                if (type is TransactionCardType.ReadOnly && priceImpact !is PriceImpact.Empty) {
                     Row {
                         Text(
                             text = makePriceImpactBalanceWarning(amountEquivalent, priceImpact.getIntPercentValue()),
@@ -485,7 +482,7 @@ private fun Preview_SwapMainCard_InDarkTheme() {
 @Composable
 private fun TransactionCardPreview() {
     TransactionCard(
-        type = TransactionCardType.SendCard({}) {},
+        type = TransactionCardType.Inputtable({}, {}),
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",
