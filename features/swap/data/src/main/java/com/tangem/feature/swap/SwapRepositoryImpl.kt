@@ -5,10 +5,7 @@ import arrow.core.left
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Approver
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -347,23 +344,27 @@ internal class SwapRepositoryImpl @Inject constructor(
 
         return (walletManager as? Approver)?.getApproveData(
             spenderAddress,
-            amount?.let { convertToAmount(it, currency, blockchain) },
+            amount?.let { convertToAmount(it, currency) },
         ) ?: error("Cannot cast to Approver")
     }
 
-    private fun convertToAmount(amount: BigDecimal, currency: CryptoCurrency, blockchain: Blockchain): Amount {
-        return when (currency) {
-            is CryptoCurrency.Token -> {
-                Amount(value = amount, blockchain = blockchain)
-            }
-            is CryptoCurrency.Coin -> {
-                Amount(
-                    currencySymbol = currency.symbol,
-                    value = amount,
-                    decimals = currency.decimals,
+    private fun convertToAmount(amount: BigDecimal, currency: CryptoCurrency): Amount {
+        return Amount(
+            currencySymbol = currency.symbol,
+            value = amount,
+            decimals = currency.decimals,
+            type = if (currency is CryptoCurrency.Token) {
+                AmountType.Token(
+                    Token(
+                        symbol = currency.symbol,
+                        contractAddress = currency.contractAddress,
+                        decimals = currency.decimals,
+                    ),
                 )
-            }
-        }
+            } else {
+                AmountType.Coin
+            },
+        )
     }
 
     private fun getOneInchApi(networkId: String): OneInchApi {
