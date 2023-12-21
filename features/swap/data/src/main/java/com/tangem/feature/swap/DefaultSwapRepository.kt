@@ -5,10 +5,8 @@ import arrow.core.left
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Approver
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
+import com.squareup.moshi.Moshi
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -16,12 +14,12 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
+import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
 import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
-import com.tangem.datasource.api.oneinch.OneInchApi
-import com.tangem.datasource.api.oneinch.OneInchApiFactory
+import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -37,20 +35,23 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.io.IOException
 import java.math.BigDecimal
+import java.util.UUID
 import javax.inject.Inject
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
 @Suppress("LongParameterList", "LargeClass")
-internal class SwapRepositoryImpl @Inject constructor(
+internal class DefaultSwapRepository @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val tangemExpressApi: TangemExpressApi,
-    private val oneInchApiFactory: OneInchApiFactory,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
-    private val configManager: ConfigManager,
     private val walletManagersFacade: WalletManagersFacade,
     private val walletsStateHolder: WalletsStateHolder,
     private val errorsDataConverter: ErrorsDataConverter,
+    private val dataSignatureVerifier: DataSignatureVerifier,
+    moshi: Moshi,
 ) : SwapRepository {
 
     private val tokensConverter = TokensConverter()
@@ -59,6 +60,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val swapPairInfoConverter = SwapPairInfoConverter()
     private val cryptoCurrencyFactory = CryptoCurrencyFactory()
     private val exchangeStatusConverter = ExchangeStatusConverter()
+    private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
 
     override suspend fun getPairs(
         initialCurrency: LeastTokenInfo,
@@ -256,12 +258,6 @@ internal class SwapRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addressForTrust(networkId: String): String {
-        return withContext(coroutineDispatcher.io) {
-            getOneInchApi(networkId).approveSpender().address
-        }
-    }
-
     override suspend fun getExchangeData(
         fromContractAddress: String,
         fromNetwork: String,
@@ -276,6 +272,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     ): Either<DataError, SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
+                val requestId = UUID.randomUUID().toString()
                 val response = tangemExpressApi.getExchangeData(
                     fromContractAddress = fromContractAddress,
                     fromNetwork = fromNetwork,
@@ -287,16 +284,36 @@ internal class SwapRepositoryImpl @Inject constructor(
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
                     toAddress = toAddress,
+                    requestId = requestId,
                 ).getOrThrow()
-                expressDataConverter.convert(response).right()
+                if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
+                    val txDetails = parseTxDetails(response.txDetailsJson)
+                        ?: return@withContext DataError.UnknownError.left()
+                    if (txDetails.requestId != requestId) {
+                        return@withContext DataError.InvalidRequestIdError().left()
+                    }
+                    expressDataConverter.convert(
+                        ExchangeDataResponseWithTxDetails(
+                            dataResponse = response,
+                            txDetails = txDetails,
+                        ),
+                    ).right()
+                } else {
+                    DataError.InvalidSignatureError().left()
+                }
             } catch (ex: Exception) {
                 getDataError(ex).left()
             }
         }
     }
 
-    override fun getTangemFee(): Double {
-        return configManager.config.swapReferrerAccount?.fee?.toDoubleOrNull() ?: 0.0
+    private fun parseTxDetails(txDetailsJson: String): TxDetails? {
+        return try {
+            txDetailsMoshiAdapter.fromJson(txDetailsJson)
+        } catch (e: IOException) {
+            Timber.e(e, "error parsing txDetailsJson")
+            null
+        }
     }
 
     override suspend fun getAllowance(
@@ -347,27 +364,27 @@ internal class SwapRepositoryImpl @Inject constructor(
 
         return (walletManager as? Approver)?.getApproveData(
             spenderAddress,
-            amount?.let { convertToAmount(it, currency, blockchain) },
+            amount?.let { convertToAmount(it, currency) },
         ) ?: error("Cannot cast to Approver")
     }
 
-    private fun convertToAmount(amount: BigDecimal, currency: CryptoCurrency, blockchain: Blockchain): Amount {
-        return when (currency) {
-            is CryptoCurrency.Token -> {
-                Amount(value = amount, blockchain = blockchain)
-            }
-            is CryptoCurrency.Coin -> {
-                Amount(
-                    currencySymbol = currency.symbol,
-                    value = amount,
-                    decimals = currency.decimals,
+    private fun convertToAmount(amount: BigDecimal, currency: CryptoCurrency): Amount {
+        return Amount(
+            currencySymbol = currency.symbol,
+            value = amount,
+            decimals = currency.decimals,
+            type = if (currency is CryptoCurrency.Token) {
+                AmountType.Token(
+                    Token(
+                        symbol = currency.symbol,
+                        contractAddress = currency.contractAddress,
+                        decimals = currency.decimals,
+                    ),
                 )
-            }
-        }
-    }
-
-    private fun getOneInchApi(networkId: String): OneInchApi {
-        return oneInchApiFactory.getApi(networkId)
+            } else {
+                AmountType.Coin
+            },
+        )
     }
 
     override fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
