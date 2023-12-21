@@ -25,7 +25,6 @@ sealed interface SwapState {
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapDataModel? = null,
         val txFee: TxFeeState,
-        val tangemFee: Double,
     ) : SwapState
 
     data class EmptyAmountState(
