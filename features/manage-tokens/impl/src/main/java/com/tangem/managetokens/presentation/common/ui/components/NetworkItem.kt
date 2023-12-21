@@ -15,7 +15,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.res.TangemTheme
@@ -130,7 +129,6 @@ private class NetworkItemStateProvider : CollectionPreviewParameterProvider<Netw
             id = "",
             address = "",
             onToggleClick = { _, _ -> },
-            blockchain = Blockchain.Ethereum,
             decimals = 0,
         ),
         NetworkItemState.Toggleable(
@@ -142,7 +140,6 @@ private class NetworkItemStateProvider : CollectionPreviewParameterProvider<Netw
             id = "",
             address = "",
             onToggleClick = { _, _ -> },
-            blockchain = Blockchain.BSC,
             decimals = 0,
         ),
         NetworkItemState.Selectable(
@@ -151,7 +148,6 @@ private class NetworkItemStateProvider : CollectionPreviewParameterProvider<Netw
             iconResId = R.drawable.img_polygon_22,
             id = "",
             onNetworkClick = { },
-            blockchain = Blockchain.Ethereum,
         ),
     ),
 )

@@ -1,15 +1,14 @@
 package com.tangem.managetokens.presentation.managetokens.state.factory
 
 import androidx.compose.runtime.mutableStateOf
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Token
+import com.tangem.managetokens.presentation.common.utils.CurrencyUtils
 import com.tangem.managetokens.presentation.managetokens.state.QuotesState
 import com.tangem.managetokens.presentation.managetokens.state.TokenButtonType
 import com.tangem.managetokens.presentation.managetokens.state.TokenIconState
@@ -27,9 +26,9 @@ internal class TokenConverter(
 
     override fun convert(value: Token): TokenItemState.Loaded {
         val isAnyAdded = value.networks.any { network ->
-            isAdded(
+            CurrencyUtils.isAdded(
                 address = network.address,
-                blockchain = requireNotNull(Blockchain.fromNetworkId(network.networkId)),
+                networkId = network.networkId,
                 currencies = allAddedCurrencies(),
             )
         }
@@ -64,17 +63,5 @@ internal class TokenConverter(
             chooseNetworkState = networksToChooseNetworkStateConverter.convert(value.networks),
             onButtonClick = onTokenItemButtonClick,
         )
-    }
-
-    private fun isAdded(address: String?, blockchain: Blockchain, currencies: Collection<CryptoCurrency>): Boolean {
-        return if (address != null) {
-            currencies.any {
-                !it.isCustom && it is CryptoCurrency.Token && it.contractAddress == address
-            }
-        } else {
-            currencies.any {
-                !it.isCustom && it is CryptoCurrency.Coin && it.name == blockchain.fullName
-            }
-        }
     }
 }
