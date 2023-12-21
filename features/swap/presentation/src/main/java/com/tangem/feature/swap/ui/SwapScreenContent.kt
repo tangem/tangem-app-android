@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.ui
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -429,7 +428,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
 // region preview
 
 private val sendCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.SendCard({}) {},
+    type = TransactionCardType.Inputtable({}, {}),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
@@ -444,7 +443,7 @@ private val sendCard = SwapCardState.SwapCardData(
 )
 
 private val receiveCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.ReceiveCard(),
+    type = TransactionCardType.ReadOnly(),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
