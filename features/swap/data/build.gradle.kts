@@ -37,6 +37,9 @@ dependencies {
     /** Tangem SDKs */
     implementation(deps.tangem.blockchain)
 
+    /** Others */
+    implementation(deps.timber)
+
     /** DI */
     implementation(deps.hilt.android)
 
