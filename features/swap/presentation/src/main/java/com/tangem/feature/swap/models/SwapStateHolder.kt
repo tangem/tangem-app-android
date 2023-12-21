@@ -1,7 +1,9 @@
 package com.tangem.feature.swap.models
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.states.Item
@@ -99,13 +101,17 @@ sealed interface FeeSelectState {
 
 sealed interface TransactionCardType {
 
-    data class SendCard(
+    val headerResId: Int
+
+    data class Inputtable(
         val onAmountChanged: ((String) -> Unit),
         val onFocusChanged: ((Boolean) -> Unit),
+        @StringRes override val headerResId: Int = R.string.exchange_send_view_header,
     ) : TransactionCardType
 
-    data class ReceiveCard(
+    data class ReadOnly(
         val highPriceImpact: String? = null,
+        @StringRes override val headerResId: Int = R.string.exchange_receive_view_header,
     ) : TransactionCardType
 }
 
