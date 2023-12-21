@@ -99,7 +99,7 @@ internal class StateBuilder(
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(
-                    headerResId = R.string.exchange_send_view_header
+                    headerResId = R.string.exchange_send_view_header,
                 ),
                 amountTextFieldValue = TextFieldValue(
                     text = "0",
