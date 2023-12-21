@@ -21,7 +21,7 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
         )
     }
 
-    override suspend fun estimateFee(amount: Amount): Result<TransactionFee> {
+    override suspend fun estimateFee(amount: Amount, destination: String): Result<TransactionFee> {
         return getFee(amount, walletManager.wallet.address)
     }
 
