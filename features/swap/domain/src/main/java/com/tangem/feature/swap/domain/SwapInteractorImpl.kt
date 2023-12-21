@@ -653,11 +653,6 @@ internal class SwapInteractorImpl @Inject constructor(
         return repository.getNativeTokenForNetwork(networkId)
     }
 
-    @Deprecated("used in old swap mechanism")
-    private fun getTangemFee(): Double {
-        return repository.getTangemFee()
-    }
-
     private fun getTokenDecimals(token: CryptoCurrency): Int {
         return if (token is CryptoCurrency.Token) {
             token.decimals
@@ -1013,7 +1008,6 @@ internal class SwapInteractorImpl @Inject constructor(
             ),
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             swapDataModel = swapData,
-            tangemFee = getTangemFee(),
             txFee = txFeeState,
         )
     }
