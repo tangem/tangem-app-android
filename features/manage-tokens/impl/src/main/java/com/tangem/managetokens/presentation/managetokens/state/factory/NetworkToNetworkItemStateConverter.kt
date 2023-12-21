@@ -2,14 +2,13 @@ package com.tangem.managetokens.presentation.managetokens.state.factory
 
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.core.ui.extensions.getActiveIconRes
-import com.tangem.core.ui.extensions.getGreyedOutIconRes
-import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.core.ui.extensions.getActiveIconResByNetworkId
+import com.tangem.core.ui.extensions.getGreyedOutIconResByNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
+import com.tangem.managetokens.presentation.common.utils.CurrencyUtils
 import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -26,18 +25,15 @@ internal class NetworkToNetworkItemStateConverter(
 
     private fun createManageNetworkContent(network: Token.Network): NetworkItemState {
         val addedCurrencies = addedCurrenciesByWalletProvider()[selectedWalletProvider()] ?: emptyList()
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(network.networkId)) {
-            "Network ID must be valid"
-        }
-        val isAdded = isAdded(
+        val isAdded = CurrencyUtils.isAdded(
             address = network.address,
-            blockchain = blockchain,
+            networkId = network.networkId,
             currencies = addedCurrencies,
         )
         return NetworkItemState.Toggleable(
-            name = blockchain.fullName.uppercase(),
+            name = network.name.uppercase(),
             iconResId = mutableIntStateOf(
-                getNetworkIconResId(isAdded, blockchain.id),
+                getNetworkIconResId(isAdded, network.networkId), // todo
             ),
             isMainNetwork = isMainNetwork(network),
             isAdded = mutableStateOf(isAdded),
@@ -45,30 +41,17 @@ internal class NetworkToNetworkItemStateConverter(
             protocolName = network.standardType,
             address = network.address,
             decimals = network.decimalCount,
-            blockchain = blockchain,
             onToggleClick = onNetworkToggleClick,
         )
     }
 
-    private fun getNetworkIconResId(isAdded: Boolean, blockchainId: String): Int {
+    private fun getNetworkIconResId(isAdded: Boolean, networkId: String): Int {
         return if (isAdded) {
-            getActiveIconRes(blockchainId)
+            getActiveIconResByNetworkId(networkId)
         } else {
-            getGreyedOutIconRes(blockchainId)
+            getGreyedOutIconResByNetworkId(networkId)
         }
     }
 
     private fun isMainNetwork(network: Token.Network) = network.address == null
-
-    private fun isAdded(address: String?, blockchain: Blockchain, currencies: Collection<CryptoCurrency>): Boolean {
-        return if (address != null) {
-            currencies.any {
-                !it.isCustom && it is CryptoCurrency.Token && it.contractAddress == address
-            }
-        } else {
-            currencies.any {
-                !it.isCustom && it is CryptoCurrency.Coin && it.name == blockchain.fullName
-            }
-        }
-    }
 }
