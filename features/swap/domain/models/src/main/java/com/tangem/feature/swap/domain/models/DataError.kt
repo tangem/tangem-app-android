@@ -32,6 +32,10 @@ sealed class DataError {
 
     data class UnknownErrorWithCode(override val code: Int) : DataError()
 
+    data class InvalidSignatureError(override val code: Int = 990) : DataError()
+
+    data class InvalidRequestIdError(override val code: Int = 991) : DataError()
+
     object UnknownError : DataError() {
         override val code: Int = -1
     }
