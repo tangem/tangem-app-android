@@ -35,7 +35,7 @@ internal object WalletManagersFacadeModule {
             configManager = configManager,
             assetReader = assetReader,
             moshi = moshi,
-            mnemonic = mnemonicRepository.generateDefaultMnemonic()
+            mnemonic = mnemonicRepository.generateDefaultMnemonic(),
         )
     }
 }
