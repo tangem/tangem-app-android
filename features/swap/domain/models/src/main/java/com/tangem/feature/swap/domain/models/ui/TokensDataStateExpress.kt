@@ -11,8 +11,8 @@ data class TokensDataStateExpress(
     companion object {
         val EMPTY =
             TokensDataStateExpress(
-                fromGroup = CurrenciesGroup(emptyList(), emptyList()),
-                toGroup = CurrenciesGroup(emptyList(), emptyList()),
+                fromGroup = CurrenciesGroup(emptyList(), emptyList(), false),
+                toGroup = CurrenciesGroup(emptyList(), emptyList(),  false),
                 allProviders = emptyList(),
             )
     }
@@ -21,4 +21,5 @@ data class TokensDataStateExpress(
 data class CurrenciesGroup(
     val available: List<CryptoCurrencySwapInfo>,
     val unavailable: List<CryptoCurrencySwapInfo>,
+    val afterSearch: Boolean,
 )

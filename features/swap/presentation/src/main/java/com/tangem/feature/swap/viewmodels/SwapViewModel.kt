@@ -580,13 +580,16 @@ internal class SwapViewModel @Inject constructor(
                     fromGroup = tokenDataState.fromGroup.copy(
                         available = available,
                         unavailable = unavailable,
+                        afterSearch = true,
                     ),
+
                 )
             } else {
                 tokenDataState.copy(
                     toGroup = tokenDataState.toGroup.copy(
                         available = available,
                         unavailable = unavailable,
+                        afterSearch = true,
                     ),
                 )
             }
