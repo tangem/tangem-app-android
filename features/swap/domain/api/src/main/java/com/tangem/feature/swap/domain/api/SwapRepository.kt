@@ -33,19 +33,6 @@ interface SwapRepository {
         rateType: RateType,
     ): Either<DataError, QuoteModel>
 
-    /**
-     * Returns address of 1inch router that must be trusted
-     *
-     * @return address
-     */
-    suspend fun addressForTrust(networkId: String): String
-
-    /**
-     * Returns a tangem fee for swap in percents
-     * Example: 0.35%
-     */
-    fun getTangemFee(): Double
-
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun getAllowance(
