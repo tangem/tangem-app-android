@@ -109,8 +109,7 @@ private fun TokensNotFound(modifier: Modifier = Modifier) {
                 .padding(top = TangemTheme.dimens.spacing32)
                 .padding(horizontal = TangemTheme.dimens.spacing30)
                 .align(Alignment.TopCenter),
-            // todo add text
-            text = "No tokens found. Please try another request",
+            text = stringResource(id = R.string.express_token_list_empty_search),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
