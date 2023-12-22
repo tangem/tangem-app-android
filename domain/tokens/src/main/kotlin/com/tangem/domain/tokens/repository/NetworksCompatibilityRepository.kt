@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 
 interface NetworksCompatibilityRepository {
@@ -12,4 +13,9 @@ interface NetworksCompatibilityRepository {
 
     @Throws(IllegalArgumentException::class)
     suspend fun isNetworkSupported(networkId: String, userWalletId: UserWalletId): Boolean
+
+    @Throws(IllegalArgumentException::class)
+    suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network>
+
+    fun areTokensSupportedByNetwork(networkId: String): Boolean
 }

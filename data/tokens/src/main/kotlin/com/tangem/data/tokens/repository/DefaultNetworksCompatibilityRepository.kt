@@ -1,12 +1,12 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.data.tokens.utils.getNetwork
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.canHandleBlockchain
-import com.tangem.domain.common.extensions.canHandleToken
-import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.supportedTokens
+import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.NetworksCompatibilityRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -56,6 +56,23 @@ internal class DefaultNetworksCompatibilityRepository(
                 cardTypesResolver = scanResponse.cardTypesResolver,
             )
         }
+    }
+
+    @Throws(IllegalArgumentException::class)
+    override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> {
+        val scanResponse = getWalletOrThrow(userWalletId).scanResponse
+        return Blockchain.values()
+            .filter { blockchain ->
+                scanResponse.card.supportedBlockchains(scanResponse.cardTypesResolver).contains(blockchain)
+            }
+            .sortedBy(Blockchain::fullName)
+            .mapNotNull { blockchain ->
+                getNetwork(blockchain, null, scanResponse.derivationStyleProvider)
+            }
+    }
+
+    override fun areTokensSupportedByNetwork(networkId: String): Boolean {
+        return Blockchain.fromNetworkId(networkId)?.canHandleTokens() ?: false
     }
 
     private suspend fun getWalletOrThrow(userWalletId: UserWalletId): UserWallet {
