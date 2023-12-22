@@ -1,6 +1,7 @@
 package com.tangem.managetokens.presentation.common.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
@@ -24,11 +25,23 @@ import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
 import com.tangem.managetokens.presentation.managetokens.state.previewdata.TokenItemStatePreviewData
 
 @Composable
-internal fun NetworkItem(state: NetworkItemState, tokenState: TokenItemState.Loaded?, modifier: Modifier = Modifier) {
+internal fun NetworkItem(
+    state: NetworkItemState,
+    tokenState: TokenItemState.Loaded?,
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+) {
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.action)
             .defaultMinSize(minHeight = TangemTheme.dimens.size68)
+            .then(
+                if (state is NetworkItemState.Selectable) {
+                    Modifier.clickable { state.onNetworkClick(state) }
+                } else {
+                    Modifier
+                },
+            )
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -54,6 +67,12 @@ internal fun NetworkItem(state: NetworkItemState, tokenState: TokenItemState.Loa
                     state.onToggleClick(tokenState!!, state)
                 },
                 checked = state.isAdded.value,
+            )
+        } else if (state is NetworkItemState.Selectable && isSelected) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_check_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.accent,
             )
         }
     }
