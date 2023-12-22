@@ -31,7 +31,7 @@ internal class NetworkToNetworkItemStateConverter(
             currencies = addedCurrencies,
         )
         return NetworkItemState.Toggleable(
-            name = network.name.uppercase(),
+            name = network.name,
             iconResId = mutableIntStateOf(
                 getNetworkIconResId(isAdded, network.networkId), // todo
             ),

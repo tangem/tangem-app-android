@@ -55,7 +55,7 @@ internal fun TokensList(tokens: LazyPagingItems<TokenItemState>, addCustomTokenB
 
             if (addCustomTokenButton.isVisible) {
                 item {
-                    AddCustomTokenButton(onButtonClick = { addCustomTokenButton.onClick })
+                    AddCustomTokenButton(onButtonClick = addCustomTokenButton.onClick)
                 }
             }
         }
