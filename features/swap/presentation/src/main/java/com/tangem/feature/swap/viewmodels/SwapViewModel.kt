@@ -381,9 +381,9 @@ internal class SwapViewModel @Inject constructor(
 
     private fun selectProvider(state: Map<SwapProvider, SwapState>): SwapProvider {
         val consideredProviders = state.filter {
-            it.value is SwapState.QuotesLoadedState ||
-                it.value is SwapState.SwapError && (it.value as SwapState.SwapError).error is DataError.ExchangeTooSmallAmountError
+            it.value is SwapState.QuotesLoadedState || isExchangeTooSmallAmountError(it.value)
         }
+
         return if (consideredProviders.isNotEmpty()) {
             val currentSelected = dataState.selectedProvider
             if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
@@ -959,6 +959,10 @@ internal class SwapViewModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private val isExchangeTooSmallAmountError: (SwapState) -> Boolean = {
+        it is SwapState.SwapError && it.error is DataError.ExchangeTooSmallAmountError
     }
 
     companion object {
