@@ -13,7 +13,7 @@ internal class ExchangeStatusConverter : Converter<ExchangeStatusResponse, Excha
                 it.name.lowercase() == value.externalStatus.name.lowercase()
             },
             txId = value.externalTxId,
-            txUrl = value.externalTxUrl,
+            txExternalUrl = value.externalTxUrl,
         )
     }
 }
