@@ -45,7 +45,9 @@ internal fun ChooseWalletScreen(state: ChooseWalletState.Choose, modifier: Modif
             ) {
                 IconButton(
                     onClick = state.onCloseChoosingWalletClick,
-                    modifier = Modifier.align(Alignment.CenterStart),
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .clickable { state.onCloseChoosingWalletClick() },
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_back_24),
