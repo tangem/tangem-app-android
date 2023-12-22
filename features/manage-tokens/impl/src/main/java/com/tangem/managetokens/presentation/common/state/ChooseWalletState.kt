@@ -10,6 +10,7 @@ internal sealed class ChooseWalletState {
         val selectedWallet: WalletState?,
         val onChooseWalletClick: () -> Unit,
         val onCloseChoosingWalletClick: () -> Unit,
+        val show: Boolean = false,
     ) : ChooseWalletState()
 
     object NoSelection : ChooseWalletState()
@@ -19,13 +20,10 @@ internal sealed class ChooseWalletState {
             get() = when (type) {
                 ChooseWalletWarning.SINGLE_CURRENCY ->
                     TextReference.Res(R.string.manage_tokens_wallet_support_only_one_network_title)
-                ChooseWalletWarning.WALLET_INCOMPATIBLE ->
-                    TextReference.Res(R.string.manage_tokens_wallet_does_not_supported_blockchain)
             }
     }
 }
 
 enum class ChooseWalletWarning {
     SINGLE_CURRENCY,
-    WALLET_INCOMPATIBLE,
 }
