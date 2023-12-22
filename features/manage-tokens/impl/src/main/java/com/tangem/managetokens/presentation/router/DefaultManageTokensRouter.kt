@@ -14,6 +14,11 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
 import com.tangem.managetokens.ManageTokensFragment
+import com.tangem.managetokens.presentation.common.state.ChooseWalletState
+import com.tangem.managetokens.presentation.customtokens.ui.ChooseDerivationScreen
+import com.tangem.managetokens.presentation.customtokens.ui.ChooseNetworkCustomScreen
+import com.tangem.managetokens.presentation.customtokens.ui.CustomTokensChooseWalletScreen
+import com.tangem.managetokens.presentation.customtokens.ui.CustomTokensScreen
 import com.tangem.managetokens.presentation.customtokens.viewmodels.CustomTokensViewModel
 import com.tangem.managetokens.presentation.managetokens.ui.ManageTokensScreen
 import com.tangem.managetokens.presentation.managetokens.viewmodels.ManageTokensViewModel
@@ -50,8 +55,7 @@ internal class DefaultManageTokensRouter(
                     val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
-                    // CustomTokensScreen(state = viewModel.uiState)
-                    // TODO: enable in [REDACTED_JIRA]
+                    CustomTokensScreen(state = viewModel.uiState)
                 }
                 composable(
                     ManageTokensRoute.CustomTokens.ChooseNetwork.route,
@@ -59,10 +63,9 @@ internal class DefaultManageTokensRouter(
                     val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
-                    // ChooseNetworkCustomScreen(
-                    //     state = viewModel.uiState.chooseNetworkState,
-                    // )
-                    // TODO: enable in [REDACTED_JIRA]
+                    ChooseNetworkCustomScreen(
+                        state = viewModel.uiState.chooseNetworkState,
+                    )
                 }
                 composable(
                     ManageTokensRoute.CustomTokens.ChooseDerivation.route,
@@ -70,10 +73,9 @@ internal class DefaultManageTokensRouter(
                     val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
-                    // ChooseDerivationScreen(
-                    //     state = requireNotNull(viewModel.uiState.chooseDerivationState),
-                    // )
-                    // TODO: enable in [REDACTED_JIRA]
+                    ChooseDerivationScreen(
+                        state = requireNotNull(viewModel.uiState.chooseDerivationState),
+                    )
                 }
                 composable(
                     ManageTokensRoute.CustomTokens.ChooseWallet.route,
@@ -81,10 +83,9 @@ internal class DefaultManageTokensRouter(
                     val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
-                    // CustomTokensChooseWalletScreen(
-                    //     state = viewModel.uiState.chooseWalletState as ChooseWalletState.Choose,
-                    // )
-                    // TODO: enable in [REDACTED_JIRA]
+                    CustomTokensChooseWalletScreen(
+                        state = viewModel.uiState.chooseWalletState as ChooseWalletState.Choose,
+                    )
                 }
             }
         }
