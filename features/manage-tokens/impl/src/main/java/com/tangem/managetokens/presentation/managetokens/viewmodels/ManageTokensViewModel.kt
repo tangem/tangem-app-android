@@ -27,9 +27,11 @@ import com.tangem.managetokens.presentation.managetokens.state.ManageTokensState
 import com.tangem.managetokens.presentation.managetokens.state.TokenButtonType
 import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
 import com.tangem.managetokens.presentation.managetokens.state.factory.*
+import com.tangem.managetokens.presentation.router.InnerManageTokensRouter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
+import com.tangem.utils.coroutines.Debouncer.Companion.DEFAULT_WAIT_TIME_MS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -64,6 +66,8 @@ internal class ManageTokensViewModel @Inject constructor(
         currentStateProvider = Provider { uiState },
         clickIntents = this,
     )
+
+    var router: InnerManageTokensRouter by Delegates.notNull()
 
     var uiState: ManageTokensState by mutableStateOf(stateFactory.getInitialState(flowOf(PagingData.from(emptyList()))))
         private set
@@ -178,13 +182,13 @@ internal class ManageTokensViewModel @Inject constructor(
     }
 
     override fun onAddCustomTokensButtonClick() {
-        TODO("Not yet implemented") // TODO: add when custom tokens are implemented
+        router.openCustomTokensScreen()
     }
 
     override fun onSearchQueryChange(query: String) {
         uiState = uiState.copy(searchBarState = uiState.searchBarState.copy(query = query))
 
-        debouncer.debounce(waitMs = 500L, coroutineScope = viewModelScope + dispatchers.io) {
+        debouncer.debounce(waitMs = DEFAULT_WAIT_TIME_MS, coroutineScope = viewModelScope + dispatchers.io) {
             val state = stateFactory.showAddCustomTokensButton(query.isNotBlank())
             uiState = state.copy(tokens = getInitialTokensList(query))
         }
