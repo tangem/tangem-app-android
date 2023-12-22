@@ -12,8 +12,11 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
@@ -32,6 +35,7 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,6 +61,7 @@ internal class SwapViewModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusSyncUseCase,
+    private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
 
@@ -448,6 +453,7 @@ internal class SwapViewModel @Inject constructor(
             }.onSuccess {
                 when (it) {
                     is TxState.TxSent -> {
+                        updateWalletBalance()
                         uiState = stateBuilder.createSuccessState(
                             uiState = uiState,
                             txState = it,
@@ -957,10 +963,32 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
+    private fun updateWalletBalance() {
+        swapInteractor.getSelectedWallet()?.let { userWallet ->
+            dataState.fromCryptoCurrency?.currency?.network?.let { network ->
+                viewModelScope.launch {
+                    withContext(NonCancellable) {
+                        updateForBalance(userWallet, network)
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun updateForBalance(userWallet: UserWallet, network: Network) {
+        updateDelayedCurrencyStatusUseCase(
+            userWalletId = userWallet.walletId,
+            network = network,
+            delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
+            refresh = true,
+        )
+    }
+
     companion object {
         private const val loggingTag = "SwapViewModel"
         private const val INITIAL_AMOUNT = ""
         private const val UPDATE_DELAY = 10000L
         private const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        private const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
     }
 }
