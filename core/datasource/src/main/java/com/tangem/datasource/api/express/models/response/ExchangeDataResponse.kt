@@ -31,6 +31,9 @@ data class ExchangeDataResponse(
 )
 
 data class TxDetails(
+    @Json(name = "payoutAddress")
+    val payoutAddress: String,
+
     @Json(name = "requestId")
     val requestId: String,
 
