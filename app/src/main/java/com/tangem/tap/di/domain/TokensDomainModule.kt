@@ -254,4 +254,36 @@ internal object TokensDomainModule {
     ): CheckCurrencyCompatibilityUseCase {
         return CheckCurrencyCompatibilityUseCase(repository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideFindTokenByContractAddressUseCase(
+        tokensListRepository: TokensListRepository,
+    ): FindTokenByContractAddressUseCase {
+        return FindTokenByContractAddressUseCase(repository = tokensListRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideValidateContractAddressUseCase(
+        tokensListRepository: TokensListRepository,
+    ): ValidateContractAddressUseCase {
+        return ValidateContractAddressUseCase(tokensListRepository = tokensListRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideAreTokensSupportedByNetworkUseCase(
+        repository: NetworksCompatibilityRepository,
+    ): AreTokensSupportedByNetworkUseCase {
+        return AreTokensSupportedByNetworkUseCase(repository = repository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetNetworksSupportedByWallet(
+        repository: NetworksCompatibilityRepository,
+    ): GetNetworksSupportedByWallet {
+        return GetNetworksSupportedByWallet(repository = repository)
+    }
 }
