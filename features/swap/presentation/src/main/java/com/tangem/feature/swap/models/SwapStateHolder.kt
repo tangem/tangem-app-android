@@ -72,7 +72,6 @@ sealed class SwapCardState {
 
 data class SwapButton(
     val enabled: Boolean,
-    val loading: Boolean = false,
     val onClick: () -> Unit,
 )
 

@@ -399,7 +399,6 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.swapping_insufficient_funds),
                 enabled = false,
-                showProgress = state.swapButton.loading,
                 onClick = state.swapButton.onClick,
             )
         }
@@ -408,7 +407,6 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.swapping_give_permission),
                 enabled = true,
-                showProgress = state.swapButton.loading,
                 onClick = onPermissionWarningClick,
             )
         }
@@ -418,7 +416,6 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
                 text = stringResource(id = R.string.common_swap),
                 iconResId = R.drawable.ic_tangem_24,
                 enabled = state.swapButton.enabled,
-                showProgress = state.swapButton.loading,
                 onClick = state.swapButton.onClick,
             )
         }
@@ -487,7 +484,7 @@ private val state = SwapStateHolder(
         ),
     ),
     networkCurrency = "MATIC",
-    swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
+    swapButton = SwapButton(enabled = true, onClick = {}),
     onRefresh = {},
     onBackClicked = {},
     onChangeCardsClicked = {},
