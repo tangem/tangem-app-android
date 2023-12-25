@@ -326,7 +326,7 @@ internal class SwapViewModel @Inject constructor(
                     fromToken = fromToken.currency,
                     swapProvider = provider,
                     bestRatedProviderId = bestRatedProviderId,
-                    isManyProviders = dataState.lastLoadedSwapStates.size > 1,
+                    isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     isReverseSwapPossible = isReverseSwapPossible(),
                 )
@@ -390,9 +390,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun selectProvider(state: Map<SwapProvider, SwapState>): SwapProvider {
-        val consideredProviders = state.filter {
-            it.value is SwapState.QuotesLoadedState || isExchangeTooSmallAmountError(it.value)
-        }
+        val consideredProviders = state.consideredProvidersStates()
 
         return if (consideredProviders.isNotEmpty()) {
             val currentSelected = dataState.selectedProvider
@@ -946,6 +944,12 @@ internal class SwapViewModel @Inject constructor(
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
         return this.filter { it.value is SwapState.QuotesLoadedState }
             .mapValues { it.value as SwapState.QuotesLoadedState }
+    }
+
+    private fun Map<SwapProvider, SwapState>.consideredProvidersStates(): Map<SwapProvider, SwapState> {
+        return this.filter {
+            it.value is SwapState.QuotesLoadedState || isExchangeTooSmallAmountError(it.value)
+        }
     }
 
     private fun isReverseSwapPossible(): Boolean {
