@@ -732,6 +732,7 @@ internal class StateBuilder(
         dataState: SwapProcessDataState,
         onExploreClick: () -> Unit,
         onStatusClick: () -> Unit,
+        txUrl: String,
     ): SwapStateHolder {
         val fee = requireNotNull(dataState.selectedFee)
         val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
@@ -746,7 +747,7 @@ internal class StateBuilder(
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = txState.timestamp,
-                txUrl = txState.txUrl.orEmpty(),
+                txUrl = txUrl,
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
                 showStatusButton = providerState.type == ExchangeProviderType.CEX.name,
