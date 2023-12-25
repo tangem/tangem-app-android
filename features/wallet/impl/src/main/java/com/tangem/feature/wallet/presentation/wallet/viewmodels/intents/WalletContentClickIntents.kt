@@ -15,8 +15,6 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -89,21 +87,14 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     private fun showActionsBottomSheet(tokenActionsState: TokenActionsState, userWallet: UserWallet) {
-        stateHolder.update(
-            OpenBottomSheetTransformer(
-                userWalletId = userWallet.walletId,
-                content = ActionsBottomSheetConfig(
-                    actions = MultiWalletCurrencyActionsConverter(
-                        userWallet = userWallet,
-                        clickIntents = currencyActionsClickIntentsImplementor,
-                    ).convert(tokenActionsState),
-                ),
-                onDismissBottomSheet = {
-                    stateHolder.update(
-                        CloseBottomSheetTransformer(userWalletId = userWallet.walletId),
-                    )
-                },
+        stateHolder.showBottomSheet(
+            ActionsBottomSheetConfig(
+                actions = MultiWalletCurrencyActionsConverter(
+                    userWallet = userWallet,
+                    clickIntents = currencyActionsClickIntentsImplementor,
+                ).convert(tokenActionsState),
             ),
+            userWallet.walletId,
         )
     }
 

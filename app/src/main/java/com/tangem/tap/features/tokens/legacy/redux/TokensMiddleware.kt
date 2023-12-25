@@ -16,7 +16,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -25,6 +24,7 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.card.DefaultDerivePublicKeysUseCase
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -32,6 +32,7 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 @Suppress("LargeClass")
 object TokensMiddleware {
@@ -83,20 +84,40 @@ object TokensMiddleware {
 
             val currencyList = blockchainsToAdd + tokensToAdd
 
-            if (scanResponse.supportsHdWallet()) {
-                deriveMissingCoins(scanResponse = scanResponse, currencyList = currencyList) {
-                    submitAdd(
-                        userWallet = action.userWallet,
-                        updatedScanResponse = it,
-                        currencyList = currencyList,
-                    )
-                }
+            val featureToggles = store.state.daggerGraphState.get(DaggerGraphState::testerFeatureToggles)
+            if (featureToggles.isDerivePublicKeysRefactoringEnabled) {
+                val derivePublicKeys = DefaultDerivePublicKeysUseCase(
+                    tangemSdkManager = tangemSdkManager,
+                    derivationsRepository = store.state.daggerGraphState.get(DaggerGraphState::derivationsRepository),
+                )
+
+                derivePublicKeys(userWalletId = action.userWallet.walletId, currencies = currencyList)
+                    .onRight {
+                        addCryptoCurrenciesUseCase(
+                            userWalletId = action.userWallet.walletId,
+                            currencies = currencyList,
+                        )
+                        store.dispatchOnMain(NavigationAction.PopBackTo())
+                    }
+                    .onLeft { Timber.e("Failed to derive public keys: $it") }
             } else {
-                submitAdd(action.userWallet, scanResponse, currencyList)
+                // TODO: delete https://tangem.atlassian.net/browse/AND-5618
+                if (scanResponse.supportsHdWallet()) {
+                    deriveMissingCoins(scanResponse = scanResponse, currencyList = currencyList) {
+                        submitAdd(
+                            userWallet = action.userWallet,
+                            updatedScanResponse = it,
+                            currencyList = currencyList,
+                        )
+                    }
+                } else {
+                    submitAdd(action.userWallet, scanResponse, currencyList)
+                }
             }
         }
     }
 
+    @Deprecated(message = "Use DerivePublicKeysUseCase instead")
     private fun deriveMissingCoins(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
@@ -202,9 +223,7 @@ object TokensMiddleware {
                 userWalletId = userWallet.walletId,
                 update = { it.copy(scanResponse = updatedScanResponse) },
             ).doOnSuccess {
-                addCryptoCurrenciesUseCase(userWallet.walletId, currencyList).onRight {
-                    store.dispatch(action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet))
-                }
+                addCryptoCurrenciesUseCase(userWallet.walletId, currencyList)
             }
         }
         store.dispatchOnMain(NavigationAction.PopBackTo())

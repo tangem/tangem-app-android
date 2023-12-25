@@ -18,6 +18,18 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideAddCryptoCurrenciesUseCase(
+        currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
+    ): AddCryptoCurrenciesUseCase {
+        return AddCryptoCurrenciesUseCase(
+            currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideFetchTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -233,5 +245,13 @@ internal object TokensDomainModule {
     @ViewModelScoped
     fun provideGetGlobalTokenListUseCase(tokensListRepository: TokensListRepository): GetGlobalTokenListUseCase {
         return GetGlobalTokenListUseCase(repository = tokensListRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideCheckTokenCompatibilityUseCase(
+        repository: NetworksCompatibilityRepository,
+    ): CheckCurrencyCompatibilityUseCase {
+        return CheckCurrencyCompatibilityUseCase(repository)
     }
 }

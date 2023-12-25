@@ -315,7 +315,7 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    // TODO: https://tangem.atlassian.net/browse/AND-4572
+    @Deprecated("Use DerivePublicKeysUseCase instead")
     private fun deriveMissingCurrencies(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
@@ -1222,7 +1222,9 @@ internal class WalletViewModel @Inject constructor(
                             }
                         }
                         is CryptoCurrencyStatus.NoQuote -> AnalyticsParam.CardBalanceState.NoRate
-                        is CryptoCurrencyStatus.Unreachable -> AnalyticsParam.CardBalanceState.BlockchainError
+                        is CryptoCurrencyStatus.Unreachable,
+                        is CryptoCurrencyStatus.UnreachableWithoutAddresses,
+                        -> AnalyticsParam.CardBalanceState.BlockchainError
                         is CryptoCurrencyStatus.MissedDerivation,
                         is CryptoCurrencyStatus.Loading,
                         is CryptoCurrencyStatus.Custom,

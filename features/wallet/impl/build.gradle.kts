@@ -70,6 +70,7 @@ dependencies {
 
     //TODO: Create api/impl modules for onboarding https://tangem.atlassian.net/browse/AND-4841
     implementation(projects.features.onboarding)
+    implementation(projects.features.tester.api)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
