@@ -54,7 +54,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val dispatcher: CoroutineDispatcherProvider,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
-    private val blockchainInteractor: BlockchainInteractor,
 ) : SwapInteractor {
 
     private val estimateFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -148,6 +147,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return CurrenciesGroup(
             available = availableCryptoCurrencies,
             unavailable = unavailableCryptoCurrencies.map { CryptoCurrencySwapInfo(it, emptyList()) },
+            afterSearch = false,
         )
     }
 
@@ -214,7 +214,7 @@ internal class SwapInteractorImpl @Inject constructor(
             is SendTxResult.Success -> {
                 allowPermissionsHandler.addAddressToInProgress(permissionOptions.forTokenContractAddress)
                 TxState.TxSent(
-                    txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
+                    txHash = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
                     timestamp = System.currentTimeMillis(),
                 )
             }
@@ -462,7 +462,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         currencyToGet.symbol,
                     ),
                     toAmountValue = swapData.toTokenAmount.value,
-                    txAddress = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
+                    txHash = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
                     timestamp = System.currentTimeMillis(),
                 )
             }
@@ -536,10 +536,6 @@ internal class SwapInteractorImpl @Inject constructor(
             },
             ifRight = {
                 val timestamp = System.currentTimeMillis()
-                val txUrl = blockchainInteractor.getExplorerTransactionLink(
-                    networkId = currencyToSend.currency.network.backendId,
-                    txAddress = exchangeData.transaction.txTo,
-                )
                 storeSwapTransaction(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
@@ -547,7 +543,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapProvider = swapProvider,
                     swapDataModel = exchangeData,
                     timestamp = timestamp,
-                    txUrl = txUrl,
+                    txExternalUrl = externalUrl.orEmpty(),
                 )
                 storeLastCryptoCurrencyId(currencyToGet.currency)
                 TxState.TxSent(
@@ -561,12 +557,11 @@ internal class SwapInteractorImpl @Inject constructor(
                         currencyToGet.currency.symbol,
                     ),
                     toAmountValue = exchangeData.toTokenAmount.value,
-                    txAddress = userWalletManager.getLastTransactionHash(
+                    txHash = userWalletManager.getLastTransactionHash(
                         currencyToSend.currency.network.backendId,
                         derivationPath,
                     ).orEmpty(),
                     txExternalUrl = externalUrl,
-                    txUrl = txUrl,
                     timestamp = timestamp,
                 )
             },
@@ -601,7 +596,7 @@ internal class SwapInteractorImpl @Inject constructor(
         swapProvider: SwapProvider,
         swapDataModel: SwapDataModel,
         timestamp: Long,
-        txUrl: String,
+        txExternalUrl: String,
     ) {
         swapTransactionRepository.storeTransaction(
             userWalletId = UserWalletId(userWalletManager.getWalletId()),
@@ -617,7 +612,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     providerId = swapProvider.providerId,
                     status = ExchangeStatus.New,
                     txId = swapDataModel.transaction.txId,
-                    txUrl = txUrl,
+                    txExternalUrl = txExternalUrl,
                 ),
             ),
         )
