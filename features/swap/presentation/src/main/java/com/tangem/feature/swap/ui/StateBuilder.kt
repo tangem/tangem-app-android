@@ -79,7 +79,7 @@ internal class StateBuilder(
             ),
             fee = FeeItemState.Empty,
             networkCurrency = networkInfo.blockchainCurrency,
-            swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
+            swapButton = SwapButton(enabled = false, onClick = {}),
             onRefresh = {},
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
@@ -138,7 +138,6 @@ internal class StateBuilder(
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 enabled = false,
-                loading = false,
                 onClick = { },
             ),
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
@@ -187,7 +186,7 @@ internal class StateBuilder(
             ),
             warnings = emptyList(),
             fee = FeeItemState.Empty,
-            swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
+            swapButton = SwapButton(enabled = false, onClick = {}),
             providerState = ProviderState.Loading(),
             permissionState = uiStateHolder.permissionState,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
@@ -260,7 +259,6 @@ internal class StateBuilder(
             fee = feeState,
             swapButton = SwapButton(
                 enabled = getSwapButtonEnabled(quoteModel.preparedSwapConfigState),
-                loading = false,
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = if (isReverseSwapPossible) {
@@ -454,7 +452,6 @@ internal class StateBuilder(
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 enabled = false,
-                loading = false,
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = if (isReverseSwapPossible) {
@@ -566,7 +563,6 @@ internal class StateBuilder(
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 enabled = false,
-                loading = false,
                 onClick = { },
             ),
             changeCardsButtonState = if (isReverseSwapPossible) {
@@ -582,7 +578,6 @@ internal class StateBuilder(
     fun createSwapInProgressState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
-                loading = true,
                 enabled = false,
             ),
         )
@@ -737,6 +732,7 @@ internal class StateBuilder(
         dataState: SwapProcessDataState,
         onExploreClick: () -> Unit,
         onStatusClick: () -> Unit,
+        txUrl: String,
     ): SwapStateHolder {
         val fee = requireNotNull(dataState.selectedFee)
         val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
@@ -751,7 +747,7 @@ internal class StateBuilder(
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = txState.timestamp,
-                txUrl = txState.txUrl.orEmpty(),
+                txUrl = txUrl,
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
                 showStatusButton = providerState.type == ExchangeProviderType.CEX.name,

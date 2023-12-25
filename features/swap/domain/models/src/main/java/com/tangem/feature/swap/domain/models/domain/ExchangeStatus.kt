@@ -4,7 +4,7 @@ data class ExchangeStatusModel(
     val providerId: String,
     val status: ExchangeStatus? = null,
     val txId: String? = null,
-    val txUrl: String? = null,
+    val txExternalUrl: String? = null,
 )
 
 enum class ExchangeStatus {
