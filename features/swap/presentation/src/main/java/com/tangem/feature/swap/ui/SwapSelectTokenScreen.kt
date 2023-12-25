@@ -42,10 +42,16 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
             .background(color = TangemTheme.colors.background.secondary),
         content = { padding ->
             val modifier = Modifier.padding(padding)
-            if (state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty()) {
-                EmptyTokensList(modifier)
-            } else {
-                ListOfTokens(state = state, modifier = modifier)
+            when {
+                state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty() && state.afterSearch -> {
+                    TokensNotFound(modifier)
+                }
+                state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty() && !state.afterSearch -> {
+                    EmptyTokensList(modifier)
+                }
+                else -> {
+                    ListOfTokens(state = state, modifier = modifier)
+                }
             }
         },
         topBar = {
@@ -88,6 +94,26 @@ private fun EmptyTokensList(modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Center,
             )
         }
+    }
+}
+
+@Composable
+private fun TokensNotFound(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary)
+            .fillMaxSize(),
+    ) {
+        Text(
+            modifier = Modifier
+                .padding(top = TangemTheme.dimens.spacing32)
+                .padding(horizontal = TangemTheme.dimens.spacing30)
+                .align(Alignment.TopCenter),
+            text = stringResource(id = R.string.express_token_list_empty_search),
+            style = TangemTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -283,6 +309,7 @@ private fun TokenScreenPreview() {
             state = SwapSelectTokenStateHolder(
                 availableTokens = listOf(title, token, token, token).toImmutableList(),
                 unavailableTokens = listOf(title, token, token, token).toImmutableList(),
+                afterSearch = false,
                 onSearchEntered = {},
                 onTokenSelected = {},
             ),
