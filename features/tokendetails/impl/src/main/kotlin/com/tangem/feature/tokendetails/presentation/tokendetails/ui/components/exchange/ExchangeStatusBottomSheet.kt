@@ -76,7 +76,7 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
         SpacerH12()
         ExchangeStatusBlock(
             statuses = config.statuses,
-            showLink = config.notification == null && config.txUrl != null,
+            showLink = config.showProviderLink,
             onClick = { config.onGoToProviderClick(config.txUrl.orEmpty()) },
         )
         AnimatedContent(
