@@ -79,7 +79,11 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                             enabled = provider.onProviderClick != null,
                             onClick = { provider.onProviderClick?.invoke(provider.id) },
                         )
-                        .padding(TangemTheme.dimens.spacing12),
+                        .padding(
+                            top = TangemTheme.dimens.spacing12,
+                            bottom = TangemTheme.dimens.spacing12,
+                            end = TangemTheme.dimens.spacing12,
+                        ),
                 )
             }
         }
