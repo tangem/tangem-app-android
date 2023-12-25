@@ -13,5 +13,7 @@ data class QuotesResponse(
         val price: BigDecimal?,
         @Json(name = "priceChange24h")
         val priceChange: BigDecimal?,
+        @Json(name = "prices24h")
+        val prices: Map<String, Float>?,
     )
 }
