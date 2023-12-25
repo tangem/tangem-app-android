@@ -131,7 +131,7 @@ private fun MainInfo(state: SwapStateHolder) {
             },
             onSelectTokenClick = state.onSelectTokenClick,
         )
-        val marginCard = TangemTheme.dimens.spacing16
+        val marginCard = TangemTheme.dimens.spacing12
         TransactionCardData(
             priceImpact = priceImpact,
             swapCardState = state.receiveCardData,
@@ -140,7 +140,7 @@ private fun MainInfo(state: SwapStateHolder) {
             },
             onSelectTokenClick = state.onSelectTokenClick,
         )
-        val marginButton = TangemTheme.dimens.spacing32
+        val marginButton = TangemTheme.dimens.spacing30
         SwapButton(
             state,
             modifier = Modifier.constrainAs(button) {
@@ -223,18 +223,7 @@ private fun getAnnotatedStringForLegalsWithClick(
         val tosIndex = fullString.indexOf(tosTitle)
         val policyIndex = fullString.indexOf(policyTitle)
         val string = buildAnnotatedString {
-            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
-                append(fullString.substring(0, tosIndex))
-            }
-            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
-                append(fullString.substring(tosIndex, tosIndex + tosTitle.length))
-            }
-            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
-                append(fullString.substring(tosIndex + tosTitle.length, policyIndex))
-            }
-            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
-                append(fullString.substring(policyIndex, policyIndex + policyTitle.length))
-            }
+
         }
         val click = { i: Int ->
             val tosStyle = requireNotNull(string.spanStyles.getOrNull(1))
