@@ -205,6 +205,7 @@
     <string name="express_exchange_notification_failed_title">Операция не выполнена провайдером</string>
     <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
     <string name="express_exchange_notification_verification_title">Провайдер запрашивает прохождение верификации</string>
+    <string name="express_exchange_status_canceled">Отменен</string>
     <string name="express_exchange_status_confirmed">Подтверждено</string>
     <string name="express_exchange_status_confirming">Подтверждение</string>
     <string name="express_exchange_status_confirming_active">Подтверждение...</string>
