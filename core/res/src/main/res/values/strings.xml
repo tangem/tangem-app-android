@@ -205,7 +205,7 @@
     <string name="express_exchange_notification_failed_title">Operation failed by provider</string>
     <string name="express_exchange_notification_verification_text">Visit provider’s website for verification</string>
     <string name="express_exchange_notification_verification_title">KYC verification required by provider</string>
-    <string name="express_exchange_status_cancelled">Cancelled</string>
+    <string name="express_exchange_status_canceled">Canceled</string>
     <string name="express_exchange_status_confirmed">Confirmed</string>
     <string name="express_exchange_status_confirming">Confirming</string>
     <string name="express_exchange_status_confirming_active">Confirming…</string>
