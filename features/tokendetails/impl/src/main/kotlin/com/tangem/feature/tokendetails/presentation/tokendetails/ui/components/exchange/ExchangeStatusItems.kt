@@ -4,7 +4,9 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -42,7 +44,9 @@ internal fun LazyListScope.swapTransactionsItems(
             val item = swapTxs[it]
             val (iconRes, tint) = when (item.activeStatus) {
                 ExchangeStatus.Verifying -> R.drawable.ic_alert_triangle_20 to TangemTheme.colors.icon.attention
-                ExchangeStatus.Failed -> R.drawable.ic_alert_circle_24 to TangemTheme.colors.icon.warning
+                ExchangeStatus.Failed, ExchangeStatus.Cancelled -> {
+                    R.drawable.ic_alert_circle_24 to TangemTheme.colors.icon.warning
+                }
                 else -> null to null
             }
 
