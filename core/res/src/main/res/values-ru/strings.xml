@@ -193,6 +193,7 @@
     <string name="exchange_send_view_header">Вы отправляете</string>
     <string name="exchange_tokens_available_tokens_header">Мои токены</string>
     <string name="exchange_tokens_empty_tokens">У вас нет добавленных токенов. Добавьте токены для обмена</string>
+    <string name="express_token_list_empty_search">Токены не найдены. Пожалуйста, попробуйте другой запрос</string>
     <string name="exchange_tokens_unavailable_tokens_header">Недоступен для обмена с %s</string>
     <string name="express_cex_fee_explanation">Кроме того, в курс обмена включена комиссия сети за отправку обмененных средств на ваш адрес</string>
     <string name="express_cex_status_button_title">Статус</string>
