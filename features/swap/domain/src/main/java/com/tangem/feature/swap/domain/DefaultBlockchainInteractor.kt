@@ -18,7 +18,7 @@ internal class DefaultBlockchainInteractor @Inject constructor(
         }
     }
 
-    override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
-        return transactionManager.getExplorerTransactionLink(networkId, txAddress)
+    override fun getExplorerTransactionLink(networkId: String, txHash: String): String {
+        return transactionManager.getExplorerTransactionLink(networkId, txHash)
     }
 }
