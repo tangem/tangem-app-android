@@ -853,14 +853,10 @@ internal class SwapViewModel @Inject constructor(
                 startLoadingQuotesFromLastState()
             },
             onPolicyClick = {
-                uiState = stateBuilder.showWebViewBottomSheet(uiState, it) {
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
-                }
+                swapRouter.openUrl(it)
             },
             onTosClick = {
-                uiState = stateBuilder.showWebViewBottomSheet(uiState, it) {
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
-                }
+                swapRouter.openUrl(it)
             },
         )
     }
