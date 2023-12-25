@@ -732,4 +732,7 @@
     <string name="welcome_unlock_card">Сканировать карту</string>
     <string name="welcome_unlock_description">Используйте %s или отсканируйте карту для входа в приложение</string>
     <string name="welcome_unlock_title">C возвращением!</string>
+    <string name="express_exchange_by">Обмен через %s</string>
+    <string name="express_exchange_status_subtitle">Данные провайдера. Сумма к получению может измениться в зависимости от рыночных условий.</string>
+    <string name="express_exchange_status_title">Статус обмена</string>
 </resources>
