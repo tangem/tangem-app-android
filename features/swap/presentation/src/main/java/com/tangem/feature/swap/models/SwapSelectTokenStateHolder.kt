@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.ImmutableList
 data class SwapSelectTokenStateHolder(
     val availableTokens: ImmutableList<TokenToSelectState>,
     val unavailableTokens: ImmutableList<TokenToSelectState>,
+    val afterSearch: Boolean,
     val onSearchEntered: (String) -> Unit,
     val onTokenSelected: (String) -> Unit,
 )
