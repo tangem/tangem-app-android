@@ -19,5 +19,4 @@ class ListenToQrScanningUseCase(
             e.left()
         }
     }
-
 }
