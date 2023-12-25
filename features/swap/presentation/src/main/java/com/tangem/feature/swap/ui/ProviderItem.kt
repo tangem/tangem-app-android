@@ -260,7 +260,9 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
                 ),
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(TangemTheme.dimens.size16),
+                    modifier = Modifier
+                        .size(TangemTheme.dimens.size16)
+                        .align(Alignment.CenterVertically),
                     color = TangemTheme.colors.icon.informative,
                     strokeWidth = TangemTheme.dimens.size2,
                 )
