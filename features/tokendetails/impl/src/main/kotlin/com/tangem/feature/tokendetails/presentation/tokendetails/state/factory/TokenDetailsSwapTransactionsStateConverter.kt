@@ -66,7 +66,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                     SwapTransactionsState(
                         txId = transaction.txId,
                         provider = transaction.provider,
-                        txUrl = transaction.status?.txUrl,
+                        txUrl = transaction.status?.txExternalUrl,
                         timestamp = TextReference.Str("${timestamp.toDateFormat()}, ${timestamp.toTimeFormat()}"),
                         fiatSymbol = appCurrency.symbol,
                         statuses = getStatuses(transaction.status?.status),
@@ -74,7 +74,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         activeStatus = transaction.status?.status,
                         notification = getNotification(
                             transaction.status?.status,
-                            transaction.status?.txUrl,
+                            transaction.status?.txExternalUrl,
                         ),
                         toCryptoCurrencyId = toCurrency.currency.id,
                         toCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
@@ -112,9 +112,9 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return tx.copy(
             activeStatus = statusModel.status,
             hasFailed = hasFailed,
-            notification = getNotification(statusModel.status, statusModel.txUrl),
+            notification = getNotification(statusModel.status, statusModel.txExternalUrl),
             statuses = getStatuses(statusModel.status, hasFailed),
-            txUrl = statusModel.txUrl,
+            txUrl = statusModel.txExternalUrl,
         )
     }
 
