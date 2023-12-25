@@ -420,16 +420,21 @@ internal class SwapViewModel @Inject constructor(
         } else {
             dataState.copy(
                 swapDataModel = swapDataModel,
-                selectedFee = selectDefaultFee(state),
+                selectedFee = updateOrSelectFee(state),
             )
         }
     }
 
-    private fun selectDefaultFee(state: SwapState.QuotesLoadedState): TxFee? {
-        return dataState.selectedFee ?: when (val txFee = state.txFee) {
+    private fun updateOrSelectFee(state: SwapState.QuotesLoadedState): TxFee? {
+        val selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL
+        return when (val txFee = state.txFee) {
             TxFeeState.Empty -> null
             is TxFeeState.MultipleFeeState -> {
-                txFee.normalFee
+                if (selectedFeeType == FeeType.NORMAL) {
+                    txFee.normalFee
+                } else {
+                    txFee.priorityFee
+                }
             }
             is TxFeeState.SingleFeeState -> {
                 txFee.fee
