@@ -66,6 +66,6 @@ interface TangemTechApi {
     suspend fun getQuotes(
         @Query("currencyId") currencyId: String,
         @Query("coinIds") coinIds: String,
-        @Query("fields") fields: String = "price,priceChange24h,lastUpdatedAt",
+        @Query("fields") fields: String = "price,priceChange24h,lastUpdatedAt,prices24h",
     ): ApiResponse<QuotesResponse>
 }

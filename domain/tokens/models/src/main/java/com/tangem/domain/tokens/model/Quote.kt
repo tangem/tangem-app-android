@@ -15,5 +15,5 @@ data class Quote(
     val rawCurrencyId: String,
     val fiatRate: BigDecimal,
     val priceChange: BigDecimal,
-    val values: List<Double>? = null,
+    val values: List<Float>? = null,
 )
