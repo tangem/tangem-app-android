@@ -692,19 +692,22 @@ internal class SwapViewModel @Inject constructor(
     private fun onAmountChanged(value: String) {
         val fromToken = dataState.fromCryptoCurrency
         val toToken = dataState.toCryptoCurrency
-        if (fromToken != null && toToken != null) {
+        if (fromToken != null) {
             val decimals = fromToken.currency.decimals
             val cutValue = cutAmountWithDecimals(decimals, value)
             lastAmount.value = cutValue
             uiState =
                 stateBuilder.updateSwapAmount(uiState, inputNumberFormatter.formatWithThousands(cutValue, decimals))
-            amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
-                startLoadingQuotes(
-                    fromToken = fromToken,
-                    toToken = toToken,
-                    amount = lastAmount.value,
-                    toProvidersList = findSwapProviders(fromToken, toToken),
-                )
+
+            if (toToken != null) {
+                amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
+                    startLoadingQuotes(
+                        fromToken = fromToken,
+                        toToken = toToken,
+                        amount = lastAmount.value,
+                        toProvidersList = findSwapProviders(fromToken, toToken),
+                    )
+                }
             }
         }
     }
