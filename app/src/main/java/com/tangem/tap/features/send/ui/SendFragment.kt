@@ -17,6 +17,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
@@ -174,6 +175,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private fun listenToQrCode() {
         lifecycleScope.launch {
             listenToQrScanningUseCase(SourceType.SEND)
+                .getOrElse { emptyFlow() }
                 .flowWithLifecycle(this@SendFragment.lifecycle, minActiveState = Lifecycle.State.CREATED)
                 .collect {
                     delay(200)

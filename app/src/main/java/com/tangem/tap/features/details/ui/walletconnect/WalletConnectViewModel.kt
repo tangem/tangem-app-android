@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
 import androidx.lifecycle.*
+import arrow.core.getOrElse
 import com.tangem.feature.qrscanning.SourceType
 import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -9,6 +10,7 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -21,6 +23,7 @@ internal class WalletConnectViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         viewModelScope.launch {
             listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
+                .getOrElse { emptyFlow() }
                 .flowWithLifecycle(owner.lifecycle, minActiveState = Lifecycle.State.CREATED)
                 .collect { store.dispatch(WalletConnectAction.OpenSession(it)) }
         }
