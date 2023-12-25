@@ -9,9 +9,8 @@ sealed class TxState {
         val fromAmountValue: BigDecimal? = null,
         val toAmount: String? = null,
         val toAmountValue: BigDecimal? = null,
-        val txAddress: String,
+        val txHash: String,
         val txExternalUrl: String? = null,
-        val txUrl: String? = null,
         val timestamp: Long,
     ) : TxState()
 
