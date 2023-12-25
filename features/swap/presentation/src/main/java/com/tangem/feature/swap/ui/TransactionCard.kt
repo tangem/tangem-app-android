@@ -418,7 +418,7 @@ private fun TokenIcon(
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
-                    modifier = Modifier.padding(all = TangemTheme.dimens.spacing0_5),
+                    modifier = Modifier.padding(all = TangemTheme.dimens.spacing2),
                     painter = painterResource(id = networkIconRes),
                     contentDescription = null,
                 )
