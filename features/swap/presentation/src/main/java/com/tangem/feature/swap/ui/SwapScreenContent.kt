@@ -494,12 +494,12 @@ private val state = SwapStateHolder(
     priceImpact = PriceImpact.Empty(),
     tosState = TosState(
         tosLink = LegalState(
-            title = stringReference("Tangem"),
+            title = stringReference("Terms of Use"),
             link = "https://tangem.com",
             onClick = {},
         ),
         policyLink = LegalState(
-            title = stringReference("Tangem"),
+            title = stringReference("Privacy Policy"),
             link = "https://tangem.com",
             onClick = {},
         ),
