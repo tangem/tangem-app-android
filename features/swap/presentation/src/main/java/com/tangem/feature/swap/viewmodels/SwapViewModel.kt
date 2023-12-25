@@ -98,6 +98,11 @@ internal class SwapViewModel @Inject constructor(
     private var isOrderReversed = false
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private var swapRouter: SwapRouter by Delegates.notNull()
+
+    private val isExchangeTooSmallAmountError: (SwapState) -> Boolean = {
+        it is SwapState.SwapError && it.error is DataError.ExchangeTooSmallAmountError
+    }
+
     val currentScreen: SwapNavScreen
         get() = swapRouter.currentScreen
 
@@ -385,13 +390,17 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun selectProvider(state: Map<SwapProvider, SwapState>): SwapProvider {
-        val stateSuccess = state.getLastLoadedSuccessStates()
-        return if (stateSuccess.isNotEmpty()) {
+        val consideredProviders = state.filter {
+            it.value is SwapState.QuotesLoadedState || isExchangeTooSmallAmountError(it.value)
+        }
+
+        return if (consideredProviders.isNotEmpty()) {
             val currentSelected = dataState.selectedProvider
-            if (currentSelected != null && stateSuccess.keys.contains(currentSelected)) {
+            if (currentSelected != null && consideredProviders.keys.contains(currentSelected)) {
                 currentSelected
             } else {
-                findBestQuoteProvider(stateSuccess) ?: stateSuccess.keys.first()
+                findBestQuoteProvider(consideredProviders.getLastLoadedSuccessStates())
+                    ?: consideredProviders.keys.first()
             }
         } else {
             state.keys.first()
