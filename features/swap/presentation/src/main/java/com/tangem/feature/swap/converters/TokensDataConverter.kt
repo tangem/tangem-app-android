@@ -49,6 +49,7 @@ class TokensDataConverter(
                 .toImmutableList(),
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,
+            afterSearch = value.afterSearch,
         )
     }
 
