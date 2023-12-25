@@ -223,7 +223,18 @@ private fun getAnnotatedStringForLegalsWithClick(
         val tosIndex = fullString.indexOf(tosTitle)
         val policyIndex = fullString.indexOf(policyTitle)
         val string = buildAnnotatedString {
-
+            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                append(fullString.substring(0, tosIndex))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+                append(fullString.substring(tosIndex, tosIndex + tosTitle.length))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                append(fullString.substring(tosIndex + tosTitle.length, policyIndex))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+                append(fullString.substring(policyIndex, policyIndex + policyTitle.length))
+            }
         }
         val click = { i: Int ->
             val tosStyle = requireNotNull(string.spanStyles.getOrNull(1))
