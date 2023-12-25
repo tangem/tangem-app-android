@@ -302,6 +302,7 @@ internal class StateBuilder(
         )
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun getWarningsForSuccessState(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
@@ -327,7 +328,8 @@ internal class StateBuilder(
             else -> Unit
         }
         if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
-            quoteModel.preparedSwapConfigState.isBalanceEnough
+            quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.permissionState !is PermissionDataState.PermissionLoading
         ) {
             warnings.add(
                 SwapWarning.UnableToCoverFeeWarning(
