@@ -125,6 +125,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             clickIntents = this,
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
             analyticsEventsHandlerProvider = Provider { analyticsEventsHandler },
+            currentStateProvider = Provider { uiState },
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
         )
@@ -229,7 +230,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                             delay = EXCHANGE_STATUS_UPDATE_DELAY,
                             task = {
                                 runCatching(dispatchers.io) {
-                                    exchangeStatusFactory.updateSwapTxStatuses(swapTxs)
+                                    exchangeStatusFactory.updateSwapTxStatuses(uiState.swapTxs)
                                 }
                             },
                             onSuccess = ::updateSwapTx,
