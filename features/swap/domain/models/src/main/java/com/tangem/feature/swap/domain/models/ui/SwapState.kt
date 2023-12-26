@@ -6,6 +6,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.Warning
 import java.math.BigDecimal
 
 sealed interface SwapState {
@@ -25,6 +26,7 @@ sealed interface SwapState {
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapDataModel? = null,
         val txFee: TxFeeState,
+        val warnings: List<Warning> = emptyList(),
     ) : SwapState
 
     data class EmptyAmountState(
