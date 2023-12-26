@@ -14,7 +14,6 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRe
 import com.tangem.tap.features.details.ui.details.DetailsFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
-import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
@@ -171,7 +170,11 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
                 .getEntryFragment()
         }
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
-        AppScreen.QrScan -> QrScanFragment()
+        AppScreen.QrScanning -> {
+            store.state.daggerGraphState
+                .get(getDependency = DaggerGraphState::qrScanningRouter)
+                .getEntryFragment()
+        }
         AppScreen.ReferralProgram -> ReferralFragment()
         AppScreen.Swap -> SwapFragment()
         AppScreen.Welcome -> WelcomeFragment()

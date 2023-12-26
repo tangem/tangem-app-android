@@ -36,7 +36,5 @@
     <dimen name="access_code_info_items_space">16dp</dimen>
     <dimen name="access_code_btn_continue_margin_bottom">38dp</dimen>
 
-    <dimen name="qr_border_stroke_width">4dp</dimen>
-    <dimen name="qr_border_corner_radius">8dp</dimen>
 
 </resources>
