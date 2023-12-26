@@ -19,10 +19,7 @@ import org.burnoutcrew.reorderable.detectReorder
 
 @Composable
 internal fun NetworkGroupItem(networkName: String, modifier: Modifier = Modifier) {
-    InternalNetworkGroupItem(
-        modifier = modifier,
-        networkName = networkName,
-    )
+    InternalNetworkGroupItem(modifier = modifier, networkName = networkName)
 }
 
 @Composable
@@ -69,12 +66,13 @@ private fun InternalNetworkGroupItem(
                 .background(TangemTheme.colors.background.primary)
                 .padding(horizontal = TangemTheme.dimens.spacing14)
                 .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size48),
+                .heightIn(min = TangemTheme.dimens.size40),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = stringResource(id = R.string.wallet_network_group_title, networkName),
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12, bottom = TangemTheme.dimens.spacing8),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
