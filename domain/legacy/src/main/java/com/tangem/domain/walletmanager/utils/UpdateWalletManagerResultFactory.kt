@@ -1,9 +1,7 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.common.extensions.amountToCreateAccount
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
@@ -111,13 +109,14 @@ internal class UpdateWalletManagerResultFactory {
         walletAddresses: Set<Address>,
         data: TransactionData,
     ): CryptoCurrencyTransaction? {
+        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(walletAddresses)
         return when (val type = data.amount.type) {
             is AmountType.Coin -> {
-                val txHistoryItem = createTxHistoryItem(walletAddresses, data) ?: return null
+                val txHistoryItem = txHistoryItemConverter.convert(data) ?: return null
                 CryptoCurrencyTransaction.Coin(txHistoryItem)
             }
             is AmountType.Token -> {
-                val txHistoryItem = createTxHistoryItem(walletAddresses, data) ?: return null
+                val txHistoryItem = txHistoryItemConverter.convert(data) ?: return null
                 CryptoCurrencyTransaction.Token(
                     tokenId = type.token.id,
                     tokenContractAddress = type.token.contractAddress,
@@ -128,42 +127,8 @@ internal class UpdateWalletManagerResultFactory {
         }
     }
 
-    private fun createTxHistoryItem(walletAddresses: Set<Address>, data: TransactionData): TxHistoryItem? {
-        val hash = data.hash ?: return null
-        val millis = data.date?.timeInMillis ?: return null
-        val amount = getTransactionAmountValue(data.amount) ?: return null
-        val isOutgoing = data.sourceAddress in walletAddresses.map { it.value }
-
-        return TxHistoryItem(
-            txHash = hash,
-            timestampInMillis = millis,
-            isOutgoing = isOutgoing,
-            destinationType = TxHistoryItem.DestinationType.Single(
-                TxHistoryItem.AddressType.User(data.destinationAddress),
-            ),
-            sourceType = TxHistoryItem.SourceType.Single(data.sourceAddress),
-            interactionAddressType = TxHistoryItem.InteractionAddressType.User(
-                if (isOutgoing) data.destinationAddress else data.sourceAddress,
-            ),
-            status = when (data.status) {
-                TransactionStatus.Confirmed -> TxHistoryItem.TransactionStatus.Confirmed
-                TransactionStatus.Unconfirmed -> TxHistoryItem.TransactionStatus.Unconfirmed
-            },
-            type = TxHistoryItem.TransactionType.Transfer,
-            amount = amount,
-        )
-    }
-
     private fun getAvailableAddresses(addresses: Set<SdkAddress>): Set<Address> {
-        return addresses.mapTo(hashSetOf()) { sdkAddress ->
-            Address(
-                value = sdkAddress.value,
-                type = when (sdkAddress.type) {
-                    AddressType.Default -> Address.Type.Primary
-                    AddressType.Legacy -> Address.Type.Secondary
-                },
-            )
-        }
+        return SdkAddressToAddressConverter.convertList(addresses).toSet()
     }
 
     private fun getCurrencyAmountValue(amount: Amount): BigDecimal? {
@@ -171,16 +136,6 @@ internal class UpdateWalletManagerResultFactory {
 
         if (value == null) {
             Timber.w("Currency amount must not be null: ${amount.currencySymbol}")
-        }
-
-        return value
-    }
-
-    private fun getTransactionAmountValue(amount: Amount): BigDecimal? {
-        val value = amount.value
-
-        if (value == null) {
-            Timber.w("Transaction amount must not be null: ${amount.currencySymbol}")
         }
 
         return value

@@ -25,6 +25,7 @@ import java.util.EnumSet
 /**
  * A facade for managing wallets.
  */
+@Suppress("TooManyFunctions")
 interface WalletManagersFacade {
 
     /**
@@ -218,4 +219,11 @@ interface WalletManagersFacade {
         userWalletId: UserWalletId,
         network: Network,
     ): SimpleResult
+
+    /** Get recent transactions of [userWalletId] for [blockchain] with [derivationPath] */
+    suspend fun getRecentTransactions(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): List<TxHistoryItem>
 }
