@@ -548,6 +548,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onDismissBottomSheet() {
+        if (uiState.bottomSheetConfig?.content is ExchangeStatusBottomSheetConfig) {
+            viewModelScope.launch(dispatchers.main) {
+                uiState = exchangeStatusFactory.removeTransactionOnBottomSheetClosed()
+            }
+        }
         uiState = stateFactory.getStateWithClosedBottomSheet()
     }
 
