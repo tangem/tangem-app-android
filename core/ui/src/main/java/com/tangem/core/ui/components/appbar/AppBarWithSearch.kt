@@ -95,7 +95,6 @@ private fun CollapsedSearchView(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
