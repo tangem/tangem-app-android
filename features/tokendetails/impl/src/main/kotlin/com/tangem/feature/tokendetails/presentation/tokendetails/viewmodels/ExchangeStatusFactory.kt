@@ -18,7 +18,9 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -41,6 +43,7 @@ internal class ExchangeStatusFactory(
     private val clickIntents: TokenDetailsClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
+    private val currentStateProvider: Provider<TokenDetailsState>,
     private val userWalletId: UserWalletId,
     private val cryptoCurrency: CryptoCurrency,
 ) {
@@ -64,6 +67,27 @@ internal class ExchangeStatusFactory(
         )
     }
 
+    suspend fun removeTransactionOnBottomSheetClosed(): TokenDetailsState {
+        val state = currentStateProvider()
+        val bottomSheetConfig = state.bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig ?: return state
+        val selectedTx = bottomSheetConfig.value
+
+        return if (selectedTx.activeStatus.isTerminal()) {
+            swapTransactionRepository.removeTransaction(
+                userWalletId = userWalletId,
+                fromCryptoCurrencyId = selectedTx.fromCryptoCurrencyId,
+                toCryptoCurrencyId = selectedTx.toCryptoCurrencyId,
+                txId = selectedTx.txId,
+            )
+            val filteredTxs = state.swapTxs
+                .filterNot { it.txId == selectedTx.txId }
+                .toPersistentList()
+            state.copy(swapTxs = filteredTxs)
+        } else {
+            state
+        }
+    }
+
     private fun getWalletCryptoCurrencies() = flow {
         val selectedWallet = getSelectedWalletSyncUseCase().fold(
             ifLeft = { null },
@@ -80,14 +104,16 @@ internal class ExchangeStatusFactory(
     suspend fun updateSwapTxStatuses(swapTxList: PersistentList<SwapTransactionsState>) = withContext(dispatchers.io) {
         swapTxList.map { tx ->
             async {
-                val statusModel = getExchangeStatus(tx.txId)
-                swapTransactionsStateConverter
-                    .updateTxStatus(tx, statusModel)
-                    .removeIfFinished(statusModel?.status)
+                if (tx.activeStatus.isTerminal()) {
+                    tx
+                } else {
+                    val statusModel = getExchangeStatus(tx.txId)
+                    swapTransactionsStateConverter
+                        .updateTxStatus(tx, statusModel)
+                }
             }
         }
             .awaitAll()
-            .filterNotNull()
             .toPersistentList()
     }
 
@@ -130,21 +156,8 @@ internal class ExchangeStatusFactory(
         )
     }
 
-    private suspend fun SwapTransactionsState.removeIfFinished(status: ExchangeStatus?) = when (status) {
-        null -> null // not found
-        ExchangeStatus.Refunded, ExchangeStatus.Finished -> {
-            swapTransactionRepository.removeTransaction(
-                userWalletId = userWalletId,
-                fromCryptoCurrencyId = fromCryptoCurrencyId,
-                toCryptoCurrencyId = toCryptoCurrencyId,
-                txId = txId,
-            )
-            null
-        }
-        else -> {
-            this
-        }
-    }
+    private fun ExchangeStatus?.isTerminal() =
+        this == ExchangeStatus.Refunded || this == ExchangeStatus.Finished || this == ExchangeStatus.Cancelled
 
     private fun toAnalyticStatus(status: ExchangeStatus?): ExchangeAnalyticsStatus? {
         return when (status) {
