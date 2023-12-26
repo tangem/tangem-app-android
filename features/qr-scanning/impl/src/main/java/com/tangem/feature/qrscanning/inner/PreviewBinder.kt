@@ -1,4 +1,4 @@
-package com.tangem.tap.features.details.ui.walletconnect.dialogs
+package com.tangem.feature.qrscanning.inner
 
 import android.content.Context
 import android.util.Size
@@ -9,8 +9,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.lifecycle.LifecycleOwner
-import com.tangem.tap.common.qrCodeScan.MLKitBarcodeAnalyzer
-import com.tangem.wallet.databinding.LayoutQrScanningBinding
+import com.tangem.feature.qrscanning.impl.databinding.LayoutQrScanningBinding
 import java.util.concurrent.ExecutorService
 
 internal class PreviewBinder {
