@@ -145,6 +145,7 @@ sealed interface SwapWarning {
     data class TooSmallAmountWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class UnableToCoverFeeWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class GeneralWarning(val notificationConfig: NotificationConfig) : SwapWarning
+    data class GeneralInformational(val notificationConfig: NotificationConfig) : SwapWarning
     data class TransactionInProgressWarning(val title: TextReference, val description: TextReference) : SwapWarning
 }
 
