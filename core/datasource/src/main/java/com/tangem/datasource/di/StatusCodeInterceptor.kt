@@ -36,13 +36,14 @@ class StatusCodeInterceptor : Interceptor {
     }
 
     private fun getBody(): String {
-        return "\"error\": {\n" +
-            "        \"code\": 2290,\n" +
-            "        \"description\": \"Core: receivedDecimals is not equal to expressDecimals\",\n" +
+        return "{\n" +
+            "    \"error\": {\n" +
+            "        \"code\": 2250,\n" +
+            "        \"description\": \"Core: exchange too small amount\",\n" +
             "        \"message\": \"Not valid\",\n" +
-            "        \"receivedToDecimals\": 5,\n" +
-            "        \"expressToDecimals\": 5\n" +
-            "    }"
+            "        \"minAmount\": 5\n" +
+            "    }\n" +
+            "}"
     }
 
     companion object {
