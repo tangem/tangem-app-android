@@ -166,18 +166,18 @@ private fun RecipientBlock(recipientState: SendStates.RecipientState, isSuccess:
 
 @Composable
 private fun FeeBlock(feeState: SendStates.FeeState, isSuccess: State<Boolean>, onClick: () -> Unit) {
-    val feeSelector =
-        feeState.feeSelectorState.collectAsStateWithLifecycle().value as? FeeSelectorState.Content ?: return
-    val customValue = feeSelector.customValues.collectAsStateWithLifecycle().value.getOrNull(0)
+    val feeSelector = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
+    val customValue = feeSelector.customValues.getOrNull(0)
+    val selectedFee = feeSelector.selectedFee
 
     val feeValue = formatCryptoAmount(
         cryptoCurrency = feeState.cryptoCurrencyStatus.currency,
-        cryptoAmount = when (val selectedFee = feeSelector.fees) {
-            is TransactionFee.Single -> selectedFee.normal.amount.value
-            is TransactionFee.Choosable -> when (feeSelector.selectedFee) {
-                FeeType.SLOW -> selectedFee.minimum.amount.value
-                FeeType.MARKET -> selectedFee.normal.amount.value
-                FeeType.FAST -> selectedFee.priority.amount.value
+        cryptoAmount = when (val fees = feeSelector.fees) {
+            is TransactionFee.Single -> fees.normal.amount.value
+            is TransactionFee.Choosable -> when (selectedFee) {
+                FeeType.SLOW -> fees.minimum.amount.value
+                FeeType.MARKET -> fees.normal.amount.value
+                FeeType.FAST -> fees.priority.amount.value
                 FeeType.CUSTOM -> customValue?.value.toBigDecimalOrDefault()
             }
         },
