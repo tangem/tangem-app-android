@@ -127,8 +127,6 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        item { SpacerH8() }
-
         tokensToSelectItems(state.availableTokens, state.onTokenSelected)
 
         item { SpacerH12() }
@@ -182,6 +180,7 @@ private fun TitleHeader(item: TokenToSelectState.Title, modifier: Modifier = Mod
         Text(
             text = item.title.resolveReference().uppercase(),
             style = TangemTheme.typography.overline,
+            color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
                 .padding(
                     top = TangemTheme.dimens.spacing16,

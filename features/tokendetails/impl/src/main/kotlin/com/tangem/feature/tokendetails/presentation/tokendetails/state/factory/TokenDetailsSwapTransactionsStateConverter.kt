@@ -62,6 +62,8 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 val toFiatAmount = toAmount.multiply(toCurrency.value.fiatRate)
                 val fromFiatAmount = fromAmount.multiply(fromCurrency.value.fiatRate)
                 val timestamp = transaction.timestamp
+                val notifications = getNotification(transaction.status?.status, transaction.status?.txExternalUrl)
+                val showProviderLink = getShowProviderLink(notifications, transaction.status)
                 result.add(
                     SwapTransactionsState(
                         txId = transaction.txId,
@@ -92,6 +94,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         fromCryptoSymbol = fromCurrency.currency.symbol,
                         fromFiatAmount = getFiatAmount(fromFiatAmount),
                         fromCurrencyIcon = iconStateConverter.convert(fromCurrency),
+                        showProviderLink = showProviderLink,
                         onClick = { clickIntents.onSwapTransactionClick(transaction.txId) },
                         onGoToProviderClick = { url ->
                             analyticsEventsHandlerProvider().send(
@@ -109,12 +112,15 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     fun updateTxStatus(tx: SwapTransactionsState, statusModel: ExchangeStatusModel?): SwapTransactionsState {
         if (statusModel == null || tx.activeStatus == statusModel.status) return tx
         val hasFailed = tx.hasFailed || statusModel.status == ExchangeStatus.Failed
+        val notifications = getNotification(statusModel.status, statusModel.txExternalUrl)
+        val showProviderLink = getShowProviderLink(notifications, statusModel)
         return tx.copy(
             activeStatus = statusModel.status,
             hasFailed = hasFailed,
-            notification = getNotification(statusModel.status, statusModel.txExternalUrl),
+            notification = notifications,
             statuses = getStatuses(statusModel.status, hasFailed),
             txUrl = statusModel.txExternalUrl,
+            showProviderLink = showProviderLink,
         )
     }
 
@@ -149,6 +155,9 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         }
     }
 
+    private fun getShowProviderLink(notifications: ExchangeStatusNotifications?, status: ExchangeStatusModel?) =
+        notifications == null && status?.txExternalUrl != null && status.status != ExchangeStatus.Cancelled
+
     private fun getStatuses(status: ExchangeStatus?, hasFailed: Boolean = false): ImmutableList<ExchangeStatusState> {
         if (status == null) return persistentListOf()
         val isWaiting = status == ExchangeStatus.New || status == ExchangeStatus.Waiting
@@ -164,25 +173,36 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         val isExchangingDone = !isExchanging && isConfirmingDone
         val isSendingDone = !isSending && !isVerifying && !isFailed && isExchangingDone
 
-        return listOf(
-            waitStep(isWaiting, isWaitingDone),
-            confirmStep(isConfirming, isConfirmingDone),
-            exchangeStep(
-                isExchanging = isExchanging,
-                isExchangingDone = isExchangingDone,
-                isRefunded = isRefunded,
-                hasFailed = hasFailed,
-                isVerifying = isVerifying,
-                isFailed = isFailed,
-            ),
-            sendStep(
-                isSending = isSending,
-                isSendingDone = isSendingDone,
-                isRefunded = isRefunded,
-                hasFailed = hasFailed,
-            ),
-        ).toPersistentList()
+        return if (status == ExchangeStatus.Cancelled) {
+            listOf(cancelledStep())
+        } else {
+            listOf(
+                waitStep(isWaiting, isWaitingDone),
+                confirmStep(isConfirming, isConfirmingDone),
+                exchangeStep(
+                    isExchanging = isExchanging,
+                    isExchangingDone = isExchangingDone,
+                    isRefunded = isRefunded,
+                    hasFailed = hasFailed,
+                    isVerifying = isVerifying,
+                    isFailed = isFailed,
+                ),
+                sendStep(
+                    isSending = isSending,
+                    isSendingDone = isSendingDone,
+                    isRefunded = isRefunded,
+                    hasFailed = hasFailed,
+                ),
+            )
+        }.toPersistentList()
     }
+
+    private fun cancelledStep() = ExchangeStatusState(
+        status = ExchangeStatus.Cancelled,
+        text = TextReference.Res(R.string.express_exchange_status_canceled),
+        isActive = true,
+        isDone = true,
+    )
 
     private fun waitStep(isNew: Boolean, isNewDone: Boolean) = ExchangeStatusState(
         status = ExchangeStatus.New,
