@@ -189,8 +189,6 @@
     <string name="disclaimer_title">Условия использования</string>
     <string name="error_update_app">К сожалению, текущая версия приложения не готова к работе с этой картой, проверьте наличие обновлений</string>
     <string name="error_wrong_wallet_tapped">Вы использовали карту от другого кошелька. Приложите карту, связанную с этим кошельком.</string>
-    <string name="exchange_receive_view_header">Вы получаете</string>
-    <string name="exchange_send_view_header">Вы отправляете</string>
     <string name="exchange_tokens_available_tokens_header">Мои токены</string>
     <string name="exchange_tokens_empty_tokens">У вас нет добавленных токенов. Добавьте токены для обмена</string>
     <string name="express_token_list_empty_search">Токены не найдены. Пожалуйста, попробуйте другой запрос</string>
@@ -205,6 +203,7 @@
     <string name="express_exchange_notification_failed_title">Операция не выполнена провайдером</string>
     <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
     <string name="express_exchange_notification_verification_title">Провайдер запрашивает прохождение верификации</string>
+    <string name="express_exchange_status_canceled">Отменен</string>
     <string name="express_exchange_status_confirmed">Подтверждено</string>
     <string name="express_exchange_status_confirming">Подтверждение</string>
     <string name="express_exchange_status_confirming_active">Подтверждение...</string>
@@ -523,6 +522,7 @@
     <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
     <string name="swapping_approve_information_title">Подтвердить</string>
     <string name="swapping_error_wrapper">Ошибка: %s</string>
+    <string name="swapping_from_title">Вы отправляете</string>
     <string name="swapping_generic_error">Произошла ошибка. Пожалуйста, попробуйте еще раз.</string>
     <string name="swapping_give_permission">Дать разрешение</string>
     <string name="swapping_high_price_impact">Сильные колебания цены!</string>
@@ -541,13 +541,12 @@
     <string name="swapping_permission_rows_your_wallet">Ваш кошелек</string>
     <string name="swapping_permission_subheader">Чтобы продолжить, вам нужно разрешить смарт-контракту 1inch использовать ваш %s</string>
     <string name="swapping_permission_unlimited">Безлимитно</string>
-    <string name="swapping_success_from_title">Вы отправляете</string>
-    <string name="swapping_success_to_title">Вы получите</string>
     <string name="swapping_success_view_explorer_button_title">Открыть в обозревателе</string>
     <string name="swapping_success_view_title">В процессе</string>
     <string name="swapping_swap_action">Обменять</string>
     <string name="swapping_swap_of_to">Обмен %s на</string>
     <string name="swapping_tangem_fee_disclaimer">Котировки включают дополнительную комиссию Tangem в размере %s. Это помогает нам предоставлять первоклассный продукт.</string>
+    <string name="swapping_to_title">Вы получите</string>
     <string name="swapping_token_list_other_tokens">Другие токены</string>
     <string name="swapping_token_list_title">Выберите токен</string>
     <string name="swapping_token_list_your_tokens">Ваши токены</string>
@@ -732,4 +731,7 @@
     <string name="welcome_unlock_card">Сканировать карту</string>
     <string name="welcome_unlock_description">Используйте %s или отсканируйте карту для входа в приложение</string>
     <string name="welcome_unlock_title">C возвращением!</string>
+    <string name="express_exchange_by">Обмен через %s</string>
+    <string name="express_exchange_status_subtitle">Данные провайдера. Сумма к получению может измениться в зависимости от рыночных условий.</string>
+    <string name="express_exchange_status_title">Статус обмена</string>
 </resources>
