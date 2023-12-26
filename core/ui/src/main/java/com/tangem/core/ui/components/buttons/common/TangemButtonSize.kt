@@ -111,7 +111,7 @@ internal fun TangemButtonSize.toHorizontalContentPadding(icon: TangemButtonIconP
         TangemButtonSize.Default,
         TangemButtonSize.WideAction,
         TangemButtonSize.TwoLines,
-        -> TangemTheme.dimens.spacing32 to TangemTheme.dimens.spacing32
+        -> TangemTheme.dimens.spacing16 to TangemTheme.dimens.spacing16
         TangemButtonSize.Text -> when (icon) {
             is TangemButtonIconPosition.None -> TangemTheme.dimens.spacing16 to TangemTheme.dimens.spacing16
             is TangemButtonIconPosition.Start -> TangemTheme.dimens.spacing14 to TangemTheme.dimens.spacing16
