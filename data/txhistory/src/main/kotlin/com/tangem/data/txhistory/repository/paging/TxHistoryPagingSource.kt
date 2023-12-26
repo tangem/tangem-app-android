@@ -2,8 +2,10 @@ package com.tangem.data.txhistory.repository.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -19,6 +21,8 @@ internal class TxHistoryPagingSource(
 ) : PagingSource<Int, TxHistoryItem>() {
 
     private val storeKey = TxHistoryItemsStore.Key(sourceParams.userWalletId, sourceParams.currency)
+
+    override val keyReuseSupported: Boolean get() = true
 
     override fun getRefreshKey(state: PagingState<Int, TxHistoryItem>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
@@ -70,14 +74,54 @@ internal class TxHistoryPagingSource(
     }
 
     private suspend fun fetch(pageToLoad: Int, pageSize: Int) {
-        val wrappedItems = walletManagersFacade.getTxHistoryItems(
+        var wrappedItems = walletManagersFacade.getTxHistoryItems(
             userWalletId = sourceParams.userWalletId,
             currency = sourceParams.currency,
             page = pageToLoad,
             pageSize = pageSize,
         )
 
-        txHistoryItemsStore.store(storeKey, wrappedItems)
+        if (pageToLoad == 1) {
+            wrappedItems = wrappedItems.addRecentTransactions()
+        }
+
+        txHistoryItemsStore.store(key = storeKey, value = wrappedItems)
+    }
+
+    private suspend fun PaginationWrapper<TxHistoryItem>.addRecentTransactions(): PaginationWrapper<TxHistoryItem> {
+        val recentTxHistoryItems = Blockchain.fromNetworkId(sourceParams.currency.network.backendId)?.let {
+            walletManagersFacade.getRecentTransactions(
+                userWalletId = sourceParams.userWalletId,
+                blockchain = it,
+                derivationPath = sourceParams.currency.network.derivationPath.value,
+            )
+                .filterUnconfirmedTransaction()
+                .filterIfApiKnowsAboutTx(apiItems = items)
+        } ?: emptyList()
+
+        return if (recentTxHistoryItems.isEmpty()) {
+            Timber.d("Nothing to add to TxHistory")
+            this
+        } else {
+            Timber.d(
+                "Recent transactions were added to TxHistory: %s",
+                recentTxHistoryItems.joinToString(
+                    prefix = "[",
+                    postfix = "]",
+                    transform = TxHistoryItem::txHash,
+                ),
+            )
+
+            return copy(items = recentTxHistoryItems + items)
+        }
+    }
+
+    private fun List<TxHistoryItem>.filterUnconfirmedTransaction(): List<TxHistoryItem> {
+        return filter { it.status == TxHistoryItem.TransactionStatus.Unconfirmed }
+    }
+
+    private fun List<TxHistoryItem>.filterIfApiKnowsAboutTx(apiItems: List<TxHistoryItem>): List<TxHistoryItem> {
+        return filter { item -> apiItems.none { it.txHash == item.txHash } }
     }
 
     private fun getTxHistoryPageKey(page: Int): String {
