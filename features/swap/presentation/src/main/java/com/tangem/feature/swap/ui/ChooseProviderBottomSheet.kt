@@ -34,6 +34,7 @@ fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetConfig) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
