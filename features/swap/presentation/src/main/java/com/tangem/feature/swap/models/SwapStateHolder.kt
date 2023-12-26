@@ -105,12 +105,12 @@ sealed interface TransactionCardType {
     data class Inputtable(
         val onAmountChanged: ((String) -> Unit),
         val onFocusChanged: ((Boolean) -> Unit),
-        @StringRes override val headerResId: Int = R.string.exchange_send_view_header,
+        @StringRes override val headerResId: Int = R.string.swapping_from_title,
     ) : TransactionCardType
 
     data class ReadOnly(
         val highPriceImpact: String? = null,
-        @StringRes override val headerResId: Int = R.string.exchange_receive_view_header,
+        @StringRes override val headerResId: Int = R.string.swapping_to_title,
     ) : TransactionCardType
 }
 
