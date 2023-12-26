@@ -29,7 +29,7 @@ enum class AppScreen(val isDialogFragment: Boolean = false) {
     ManageTokens,
     AddCustomToken,
     WalletConnectSessions,
-    QrScan,
+    QrScanning,
     ReferralProgram,
     Swap,
     Welcome,
