@@ -353,6 +353,16 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    private suspend fun manageWarnings(fromToken: CryptoCurrency): List<Warning> {
+        val userWalletId = getSelectedWallet()?.walletId ?: return emptyList()
+        val existentialDeposit = repository.getExistentialDeposit(userWalletId, fromToken.network)
+        val warnings = mutableListOf<Warning>()
+        if (existentialDeposit != null) {
+            warnings.add(Warning.ExistentialDepositWarning(existentialDeposit))
+        }
+        return warnings
+    }
+
     override suspend fun onSwap(
         swapProvider: SwapProvider,
         swapData: SwapDataModel?,
@@ -782,6 +792,8 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapData = null,
                     txFeeState = txFee,
                     exchangeProviderType = exchangeProviderType,
+                ).copy(
+                    warnings = manageWarnings(fromToken.currency),
                 )
 
                 when (exchangeProviderType) {
@@ -939,6 +951,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
+                    warnings = manageWarnings(fromToken.currency),
                     preparedSwapConfigState = PreparedSwapConfigState(
                         isAllowedToSpend = true,
                         isBalanceEnough = isBalanceIncludeFeeEnough,
