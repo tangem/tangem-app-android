@@ -34,16 +34,16 @@ fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetConfig) {
-    Column {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = stringResource(R.string.express_choose_providers_title),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing10)
-                .align(Alignment.CenterHorizontally),
+                .padding(top = TangemTheme.dimens.spacing10),
         )
         Text(
             text = stringResource(R.string.express_choose_providers_subtitle),
@@ -51,8 +51,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
             color = TangemTheme.colors.text.secondary,
             modifier = Modifier
                 .padding(top = TangemTheme.dimens.spacing10)
-                .padding(horizontal = TangemTheme.dimens.spacing56)
-                .align(Alignment.CenterHorizontally),
+                .padding(horizontal = TangemTheme.dimens.spacing56),
             textAlign = TextAlign.Center,
         )
         Column(
@@ -79,7 +78,11 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                             enabled = provider.onProviderClick != null,
                             onClick = { provider.onProviderClick?.invoke(provider.id) },
                         )
-                        .padding(TangemTheme.dimens.spacing12),
+                        .padding(
+                            top = TangemTheme.dimens.spacing12,
+                            bottom = TangemTheme.dimens.spacing12,
+                            end = TangemTheme.dimens.spacing12,
+                        ),
                 )
             }
         }
@@ -87,8 +90,6 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
             painterResource(id = R.drawable.ic_lightning_16),
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally),
         )
         Text(
             text = stringResource(R.string.express_more_providers_soon),
@@ -96,8 +97,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
             color = TangemTheme.colors.icon.informative,
             modifier = Modifier
                 .padding(top = TangemTheme.dimens.spacing6, bottom = TangemTheme.dimens.spacing16)
-                .padding(horizontal = TangemTheme.dimens.spacing56)
-                .align(Alignment.CenterHorizontally),
+                .padding(horizontal = TangemTheme.dimens.spacing56),
             textAlign = TextAlign.Center,
         )
     }
