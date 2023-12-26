@@ -313,7 +313,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     }
 }
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun SwapWarnings(warnings: List<SwapWarning>) {
     Column(
@@ -367,6 +367,12 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                 is SwapWarning.GeneralWarning -> {
                     Notification(
                         config = warning.notificationConfig,
+                    )
+                }
+                is SwapWarning.GeneralInformational -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                        iconTint = TangemTheme.colors.icon.accent,
                     )
                 }
                 is SwapWarning.TransactionInProgressWarning -> {
