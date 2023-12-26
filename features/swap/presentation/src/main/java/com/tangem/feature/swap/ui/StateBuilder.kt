@@ -304,6 +304,7 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
+        addDomainWarnings(quoteModel, warnings)
         if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
             quoteModel.preparedSwapConfigState.isFeeEnough &&
             quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
@@ -361,6 +362,30 @@ internal class StateBuilder(
             )
         }
         return warnings
+    }
+
+    private fun addDomainWarnings(quoteModel: SwapState.QuotesLoadedState, warnings: MutableList<SwapWarning>) {
+        quoteModel.warnings.forEach {
+            when (it) {
+                is Warning.ExistentialDepositWarning -> {
+                    warnings.add(
+                        SwapWarning.GeneralWarning(
+                            NotificationConfig(
+                                title = resourceReference(R.string.warning_existential_deposit_title),
+                                subtitle = resourceReference(
+                                    R.string.warning_existential_deposit_message,
+                                    wrappedList(
+                                        quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.name,
+                                        it.existentialDeposit.toPlainString(),
+                                    ),
+                                ),
+                                iconResId = R.drawable.img_attention_20,
+                            ),
+                        ),
+                    )
+                }
+            }
+        }
     }
 
     private fun addUnableCoverFeeWarning(
