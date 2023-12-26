@@ -369,7 +369,7 @@ internal class StateBuilder(
             when (it) {
                 is Warning.ExistentialDepositWarning -> {
                     warnings.add(
-                        SwapWarning.GeneralWarning(
+                        SwapWarning.GeneralInformational(
                             NotificationConfig(
                                 title = resourceReference(R.string.warning_existential_deposit_title),
                                 subtitle = resourceReference(
@@ -379,7 +379,7 @@ internal class StateBuilder(
                                         it.existentialDeposit.toPlainString(),
                                     ),
                                 ),
-                                iconResId = R.drawable.img_attention_20,
+                                iconResId = R.drawable.ic_alert_circle_24,
                             ),
                         ),
                     )
