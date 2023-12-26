@@ -98,12 +98,8 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(
-                    headerResId = R.string.exchange_send_view_header,
-                ),
-                amountTextFieldValue = TextFieldValue(
-                    text = "0",
-                ),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable),
+                amountTextFieldValue = null,
                 amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
                 token = fromToken,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
@@ -111,7 +107,7 @@ internal class StateBuilder(
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
-                balance = fromToken.getFormattedAmount(),
+                balance = fromToken.getFormattedAmount(isNeedSymbol = false),
                 networkIconRes = getActiveIconRes(fromToken.currency.network.id.value),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
@@ -209,7 +205,7 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         swapProvider: SwapProvider,
         bestRatedProviderId: String,
-        isManyProviders: Boolean,
+        isNeedBestRateBadge: Boolean,
         selectedFeeType: FeeType,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
@@ -231,7 +227,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.sendCardData.networkIconRes,
-                balance = fromCurrencyStatus.getFormattedAmount(),
+                balance = fromCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -245,7 +241,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = toCurrencyStatus.getFormattedAmount(),
+                balance = toCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             networkCurrency = quoteModel.networkCurrency,
@@ -270,7 +266,7 @@ internal class StateBuilder(
                 isBestRate = bestRatedProviderId == swapProvider.providerId,
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
-                isNeedBadge = isManyProviders,
+                isNeedBestRateBadge = isNeedBestRateBadge,
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
             ),
@@ -302,6 +298,7 @@ internal class StateBuilder(
         )
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun getWarningsForSuccessState(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
@@ -326,18 +323,7 @@ internal class StateBuilder(
                 )
             else -> Unit
         }
-        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
-            quoteModel.preparedSwapConfigState.isBalanceEnough
-        ) {
-            warnings.add(
-                SwapWarning.UnableToCoverFeeWarning(
-                    createUnableToCoverFeeNotificationConfig(
-                        fromToken = fromToken,
-                        onBuyClick = actions.onBuyClick,
-                    ),
-                ),
-            )
-        }
+        addUnableCoverFeeWarning(quoteModel, fromToken, warnings)
         // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
         if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
@@ -375,6 +361,26 @@ internal class StateBuilder(
             )
         }
         return warnings
+    }
+
+    private fun addUnableCoverFeeWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        fromToken: CryptoCurrency,
+        warnings: MutableList<SwapWarning>,
+    ) {
+        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.permissionState !is PermissionDataState.PermissionLoading
+        ) {
+            warnings.add(
+                SwapWarning.UnableToCoverFeeWarning(
+                    createUnableToCoverFeeNotificationConfig(
+                        fromToken = fromToken,
+                        onBuyClick = actions.onBuyClick,
+                    ),
+                ),
+            )
+        }
     }
 
     private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
@@ -431,7 +437,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = toToken.getFormattedAmount(),
+                balance = toToken.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             )
         } ?: SwapCardState.Empty(
@@ -445,6 +451,7 @@ internal class StateBuilder(
         return uiStateHolder.copy(
             sendCardData = uiStateHolder.sendCardData.copy(
                 amountEquivalent = getFormattedFiatAmount(fromToken.amountFiat),
+                balance = fromToken.cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
             ),
             receiveCardData = receiveCardData,
             warnings = warnings,
@@ -583,10 +590,17 @@ internal class StateBuilder(
         )
     }
 
-    fun addTokensToState(uiState: SwapStateHolder, tokensDataState: CurrenciesGroup): SwapStateHolder {
+    fun addTokensToState(
+        uiState: SwapStateHolder,
+        fromToken: CryptoCurrency,
+        tokensDataState: CurrenciesGroup,
+    ): SwapStateHolder {
         return uiState.copy(
             selectTokenState = tokensDataConverter.convert(
-                value = tokensDataState,
+                value = CurrenciesGroupWithFromCurrency(
+                    fromCurrency = fromToken,
+                    group = tokensDataState,
+                ),
             ),
         )
     }
@@ -1121,7 +1135,7 @@ internal class StateBuilder(
         fromTokenInfo: TokenSwapInfo,
         toTokenInfo: TokenSwapInfo,
         selectionType: ProviderState.SelectionType,
-        isNeedBadge: Boolean,
+        isNeedBestRateBadge: Boolean,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
         val rate = toTokenInfo.tokenAmount.value.calculateRate(
@@ -1131,7 +1145,7 @@ internal class StateBuilder(
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
         val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
-        val badge = if (isNeedBadge && isBestRate) {
+        val badge = if (isNeedBestRateBadge && isBestRate) {
             ProviderState.AdditionalBadge.BestTrade
         } else {
             ProviderState.AdditionalBadge.Empty
@@ -1214,10 +1228,10 @@ internal class StateBuilder(
         )
     }
 
-    private fun CryptoCurrencyStatus.getFormattedAmount(): String {
+    private fun CryptoCurrencyStatus.getFormattedAmount(isNeedSymbol: Boolean): String {
         val amount = value.amount ?: return UNKNOWN_AMOUNT_SIGN
-
-        return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
+        val symbol = if (isNeedSymbol) currency.symbol else ""
+        return BigDecimalFormatter.formatCryptoAmount(amount, symbol, currency.decimals)
     }
 
     @Suppress("UnusedPrivateMember")
