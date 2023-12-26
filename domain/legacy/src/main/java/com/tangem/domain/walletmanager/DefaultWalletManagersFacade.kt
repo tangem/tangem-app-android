@@ -38,7 +38,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
@@ -479,6 +479,29 @@ class DefaultWalletManagersFacade(
             derivationPath = network.derivationPath.value,
         )
         return (walletManager as TransactionSender).send(txData, signer)
+    }
+
+    override suspend fun getRecentTransactions(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): List<TxHistoryItem> {
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+        )
+
+        if (walletManager == null) {
+            Timber.e("Unable to get a wallet manager for blockchain: $blockchain")
+            return emptyList()
+        }
+
+        val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
+            walletAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
+        )
+
+        return walletManager.wallet.recentTransactions.mapNotNull(transactionDataConverter::convert)
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
