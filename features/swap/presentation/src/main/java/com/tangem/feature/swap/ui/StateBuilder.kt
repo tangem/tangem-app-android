@@ -107,7 +107,7 @@ internal class StateBuilder(
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
-                balance = fromToken.getFormattedAmount(),
+                balance = fromToken.getFormattedAmount(isNeedSymbol = false),
                 networkIconRes = getActiveIconRes(fromToken.currency.network.id.value),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
@@ -227,7 +227,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.sendCardData.networkIconRes,
-                balance = fromCurrencyStatus.getFormattedAmount(),
+                balance = fromCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -241,7 +241,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = toCurrencyStatus.getFormattedAmount(),
+                balance = toCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             networkCurrency = quoteModel.networkCurrency,
@@ -437,7 +437,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = toToken.getFormattedAmount(),
+                balance = toToken.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             )
         } ?: SwapCardState.Empty(
@@ -451,6 +451,7 @@ internal class StateBuilder(
         return uiStateHolder.copy(
             sendCardData = uiStateHolder.sendCardData.copy(
                 amountEquivalent = getFormattedFiatAmount(fromToken.amountFiat),
+                balance = fromToken.cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
             ),
             receiveCardData = receiveCardData,
             warnings = warnings,
@@ -589,10 +590,17 @@ internal class StateBuilder(
         )
     }
 
-    fun addTokensToState(uiState: SwapStateHolder, tokensDataState: CurrenciesGroup): SwapStateHolder {
+    fun addTokensToState(
+        uiState: SwapStateHolder,
+        fromToken: CryptoCurrency,
+        tokensDataState: CurrenciesGroup,
+    ): SwapStateHolder {
         return uiState.copy(
             selectTokenState = tokensDataConverter.convert(
-                value = tokensDataState,
+                value = CurrenciesGroupWithFromCurrency(
+                    fromCurrency = fromToken,
+                    group = tokensDataState,
+                ),
             ),
         )
     }
@@ -1220,10 +1228,10 @@ internal class StateBuilder(
         )
     }
 
-    private fun CryptoCurrencyStatus.getFormattedAmount(): String {
+    private fun CryptoCurrencyStatus.getFormattedAmount(isNeedSymbol: Boolean): String {
         val amount = value.amount ?: return UNKNOWN_AMOUNT_SIGN
-
-        return BigDecimalFormatter.formatCryptoAmount(amount, currency.symbol, currency.decimals)
+        val symbol = if (isNeedSymbol) currency.symbol else ""
+        return BigDecimalFormatter.formatCryptoAmount(amount, symbol, currency.decimals)
     }
 
     @Suppress("UnusedPrivateMember")
