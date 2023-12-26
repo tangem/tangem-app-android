@@ -75,11 +75,15 @@ internal fun ExchangeStatusBlock(
             }
         }
 
-        statuses.forEachIndexed { index, item ->
-            ExchangeStatusStep(
-                stepStatus = item,
-                isLast = index == statuses.lastIndex,
-            )
+        AnimatedContent(targetState = statuses.lastIndex, label = "Exchange Status List Change") {
+            Column {
+                statuses.forEachIndexed { index, item ->
+                    ExchangeStatusStep(
+                        stepStatus = item,
+                        isLast = index == it,
+                    )
+                }
+            }
         }
     }
 }
@@ -101,6 +105,11 @@ private fun ExchangeStatusStep(
                     .size(TangemTheme.dimens.size20),
             ) {
                 when {
+                    it.status == ExchangeStatus.Cancelled -> ExchangeStep(
+                        iconRes = R.drawable.ic_close_24,
+                        color = TangemTheme.colors.icon.warning,
+                        isDone = false,
+                    )
                     it.status == ExchangeStatus.Failed -> ExchangeStep(
                         iconRes = R.drawable.ic_close_24,
                         color = TangemTheme.colors.icon.warning,
@@ -131,6 +140,7 @@ private fun ExchangeStatusStep(
 @Composable
 private fun ExchangeStatusStepText(stepStatus: ExchangeStatusState) {
     val textColor = when {
+        stepStatus.status == ExchangeStatus.Cancelled -> TangemTheme.colors.icon.warning
         stepStatus.status == ExchangeStatus.Failed && !stepStatus.isDone -> TangemTheme.colors.icon.warning
         stepStatus.status == ExchangeStatus.Verifying && !stepStatus.isDone -> TangemTheme.colors.icon.attention
         stepStatus.isDone -> TangemTheme.colors.text.primary1

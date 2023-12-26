@@ -131,7 +131,7 @@ private fun MainInfo(state: SwapStateHolder) {
             },
             onSelectTokenClick = state.onSelectTokenClick,
         )
-        val marginCard = TangemTheme.dimens.spacing16
+        val marginCard = TangemTheme.dimens.spacing12
         TransactionCardData(
             priceImpact = priceImpact,
             swapCardState = state.receiveCardData,
@@ -140,7 +140,7 @@ private fun MainInfo(state: SwapStateHolder) {
             },
             onSelectTokenClick = state.onSelectTokenClick,
         )
-        val marginButton = TangemTheme.dimens.spacing32
+        val marginButton = TangemTheme.dimens.spacing30
         SwapButton(
             state,
             modifier = Modifier.constrainAs(button) {
@@ -413,7 +413,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
         else -> {
             PrimaryButtonIconEnd(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.common_swap),
+                text = stringResource(id = R.string.swapping_swap_action),
                 iconResId = R.drawable.ic_tangem_24,
                 enabled = state.swapButton.enabled,
                 onClick = state.swapButton.onClick,
@@ -494,12 +494,12 @@ private val state = SwapStateHolder(
     priceImpact = PriceImpact.Empty(),
     tosState = TosState(
         tosLink = LegalState(
-            title = stringReference("Tangem"),
+            title = stringReference("Terms of Use"),
             link = "https://tangem.com",
             onClick = {},
         ),
         policyLink = LegalState(
-            title = stringReference("Tangem"),
+            title = stringReference("Privacy Policy"),
             link = "https://tangem.com",
             onClick = {},
         ),
