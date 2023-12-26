@@ -127,7 +127,6 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
         tokensToSelectItems(state.availableTokens, state.onTokenSelected)
 
         item { SpacerH12() }
