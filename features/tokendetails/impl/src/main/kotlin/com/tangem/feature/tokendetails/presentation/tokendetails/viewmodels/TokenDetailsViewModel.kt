@@ -125,7 +125,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             clickIntents = this,
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
             analyticsEventsHandlerProvider = Provider { analyticsEventsHandler },
-            currentStateProvider = Provider { uiState },
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
         )
