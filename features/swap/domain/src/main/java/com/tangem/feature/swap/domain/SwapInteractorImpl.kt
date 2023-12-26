@@ -353,12 +353,18 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun manageWarnings(fromToken: CryptoCurrency): List<Warning> {
+    private suspend fun manageWarnings(fromToken: CryptoCurrency, amount: SwapAmount): List<Warning> {
         val userWalletId = getSelectedWallet()?.walletId ?: return emptyList()
         val existentialDeposit = repository.getExistentialDeposit(userWalletId, fromToken.network)
         val warnings = mutableListOf<Warning>()
         if (existentialDeposit != null) {
-            warnings.add(Warning.ExistentialDepositWarning(existentialDeposit))
+            val nativeBalance = userWalletManager.getNativeTokenBalance(
+                fromToken.network.backendId,
+                fromToken.network.derivationPath.value,
+            ) ?: ProxyAmount.empty()
+            if (nativeBalance.value.minus(amount.value) < existentialDeposit) {
+                warnings.add(Warning.ExistentialDepositWarning(existentialDeposit))
+            }
         }
         return warnings
     }
@@ -793,7 +799,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     txFeeState = txFee,
                     exchangeProviderType = exchangeProviderType,
                 ).copy(
-                    warnings = manageWarnings(fromToken.currency),
+                    warnings = manageWarnings(fromToken.currency, amount),
                 )
 
                 when (exchangeProviderType) {
@@ -951,7 +957,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
-                    warnings = manageWarnings(fromToken.currency),
+                    warnings = manageWarnings(fromToken.currency, amount),
                     preparedSwapConfigState = PreparedSwapConfigState(
                         isAllowedToSpend = true,
                         isBalanceEnough = isBalanceIncludeFeeEnough,
