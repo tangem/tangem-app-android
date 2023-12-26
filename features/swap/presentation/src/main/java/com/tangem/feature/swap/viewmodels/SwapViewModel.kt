@@ -216,11 +216,12 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun updateTokensState(dataState: TokensDataStateExpress) {
-        val tokensDataState = if (isOrderReversed) dataState.fromGroup else dataState.toGroup
+    private fun updateTokensState(tokenDataState: TokensDataStateExpress) {
+        val tokensDataState = if (isOrderReversed) tokenDataState.fromGroup else tokenDataState.toGroup
         uiState = stateBuilder.addTokensToState(
             uiState = uiState,
             tokensDataState = tokensDataState,
+            fromToken = dataState.fromCryptoCurrency?.currency ?: initialCryptoCurrency,
         )
     }
 
@@ -326,7 +327,7 @@ internal class SwapViewModel @Inject constructor(
                     fromToken = fromToken.currency,
                     swapProvider = provider,
                     bestRatedProviderId = bestRatedProviderId,
-                    isManyProviders = dataState.lastLoadedSwapStates.size > 1,
+                    isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     isReverseSwapPossible = isReverseSwapPossible(),
                 )
@@ -390,9 +391,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun selectProvider(state: Map<SwapProvider, SwapState>): SwapProvider {
-        val consideredProviders = state.filter {
-            it.value is SwapState.QuotesLoadedState || isExchangeTooSmallAmountError(it.value)
-        }
+        val consideredProviders = state.consideredProvidersStates()
 
         return if (consideredProviders.isNotEmpty()) {
             val currentSelected = dataState.selectedProvider
@@ -420,16 +419,21 @@ internal class SwapViewModel @Inject constructor(
         } else {
             dataState.copy(
                 swapDataModel = swapDataModel,
-                selectedFee = selectDefaultFee(state),
+                selectedFee = updateOrSelectFee(state),
             )
         }
     }
 
-    private fun selectDefaultFee(state: SwapState.QuotesLoadedState): TxFee? {
-        return dataState.selectedFee ?: when (val txFee = state.txFee) {
+    private fun updateOrSelectFee(state: SwapState.QuotesLoadedState): TxFee? {
+        val selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL
+        return when (val txFee = state.txFee) {
             TxFeeState.Empty -> null
             is TxFeeState.MultipleFeeState -> {
-                txFee.normalFee
+                if (selectedFeeType == FeeType.NORMAL) {
+                    txFee.normalFee
+                } else {
+                    txFee.priorityFee
+                }
             }
             is TxFeeState.SingleFeeState -> {
                 txFee.fee
@@ -689,19 +693,22 @@ internal class SwapViewModel @Inject constructor(
     private fun onAmountChanged(value: String) {
         val fromToken = dataState.fromCryptoCurrency
         val toToken = dataState.toCryptoCurrency
-        if (fromToken != null && toToken != null) {
+        if (fromToken != null) {
             val decimals = fromToken.currency.decimals
             val cutValue = cutAmountWithDecimals(decimals, value)
             lastAmount.value = cutValue
             uiState =
                 stateBuilder.updateSwapAmount(uiState, inputNumberFormatter.formatWithThousands(cutValue, decimals))
-            amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
-                startLoadingQuotes(
-                    fromToken = fromToken,
-                    toToken = toToken,
-                    amount = lastAmount.value,
-                    toProvidersList = findSwapProviders(fromToken, toToken),
-                )
+
+            if (toToken != null) {
+                amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
+                    startLoadingQuotes(
+                        fromToken = fromToken,
+                        toToken = toToken,
+                        amount = lastAmount.value,
+                        toProvidersList = findSwapProviders(fromToken, toToken),
+                    )
+                }
             }
         }
     }
@@ -853,14 +860,10 @@ internal class SwapViewModel @Inject constructor(
                 startLoadingQuotesFromLastState()
             },
             onPolicyClick = {
-                uiState = stateBuilder.showWebViewBottomSheet(uiState, it) {
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
-                }
+                swapRouter.openUrl(it)
             },
             onTosClick = {
-                uiState = stateBuilder.showWebViewBottomSheet(uiState, it) {
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
-                }
+                swapRouter.openUrl(it)
             },
         )
     }
@@ -945,6 +948,12 @@ internal class SwapViewModel @Inject constructor(
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {
         return this.filter { it.value is SwapState.QuotesLoadedState }
             .mapValues { it.value as SwapState.QuotesLoadedState }
+    }
+
+    private fun Map<SwapProvider, SwapState>.consideredProvidersStates(): Map<SwapProvider, SwapState> {
+        return this.filter {
+            it.value is SwapState.QuotesLoadedState || isExchangeTooSmallAmountError(it.value)
+        }
     }
 
     private fun isReverseSwapPossible(): Boolean {
