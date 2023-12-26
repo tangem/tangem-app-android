@@ -8,7 +8,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.CryptoCurrencySwapInfo
-import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
+import com.tangem.feature.swap.models.CurrenciesGroupWithFromCurrency
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelectState
@@ -21,17 +21,21 @@ class TokensDataConverter(
     private val onTokenSelected: (String) -> Unit,
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-) : Converter<CurrenciesGroup, SwapSelectTokenStateHolder> {
+) : Converter<CurrenciesGroupWithFromCurrency, SwapSelectTokenStateHolder> {
 
-    override fun convert(value: CurrenciesGroup): SwapSelectTokenStateHolder {
+    override fun convert(value: CurrenciesGroupWithFromCurrency): SwapSelectTokenStateHolder {
+        val group = value.group
         val availableTitle = TokenToSelectState.Title(
             resourceReference(R.string.exchange_tokens_available_tokens_header),
         )
         val unavailableTitle = TokenToSelectState.Title(
-            resourceReference(R.string.exchange_tokens_available_tokens_header),
+            resourceReference(
+                R.string.exchange_tokens_unavailable_tokens_header,
+                wrappedList(value.fromCurrency.name),
+            ),
         )
         return SwapSelectTokenStateHolder(
-            availableTokens = value.available.map { tokenWithBalanceToTokenToSelect(it, true) }
+            availableTokens = group.available.map { tokenWithBalanceToTokenToSelect(it, true) }
                 .toMutableList()
                 .apply {
                     if (this.isNotEmpty()) {
@@ -39,7 +43,7 @@ class TokensDataConverter(
                     }
                 }
                 .toImmutableList(),
-            unavailableTokens = value.unavailable.map { tokenWithBalanceToTokenToSelect(it, false) }
+            unavailableTokens = group.unavailable.map { tokenWithBalanceToTokenToSelect(it, false) }
                 .toMutableList()
                 .apply {
                     if (this.isNotEmpty()) {
@@ -49,7 +53,7 @@ class TokensDataConverter(
                 .toImmutableList(),
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,
-            afterSearch = value.afterSearch,
+            afterSearch = group.afterSearch,
         )
     }
 

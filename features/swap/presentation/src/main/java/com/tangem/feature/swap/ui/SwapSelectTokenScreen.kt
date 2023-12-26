@@ -182,6 +182,7 @@ private fun TitleHeader(item: TokenToSelectState.Title, modifier: Modifier = Mod
         Text(
             text = item.title.resolveReference().uppercase(),
             style = TangemTheme.typography.overline,
+            color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
                 .padding(
                     top = TangemTheme.dimens.spacing16,

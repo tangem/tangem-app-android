@@ -216,11 +216,12 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun updateTokensState(dataState: TokensDataStateExpress) {
-        val tokensDataState = if (isOrderReversed) dataState.fromGroup else dataState.toGroup
+    private fun updateTokensState(tokenDataState: TokensDataStateExpress) {
+        val tokensDataState = if (isOrderReversed) tokenDataState.fromGroup else tokenDataState.toGroup
         uiState = stateBuilder.addTokensToState(
             uiState = uiState,
             tokensDataState = tokensDataState,
+            fromToken = dataState.fromCryptoCurrency?.currency ?: initialCryptoCurrency,
         )
     }
 
