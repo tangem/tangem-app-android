@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
+import androidx.core.os.bundleOf
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.derivation.DerivationStyle
@@ -16,6 +17,8 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -98,7 +101,14 @@ class WalletConnectMiddleware {
                 if (uri != null && isWalletConnectUri(uri)) {
                     store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
                 } else {
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.QrScan))
+                    store.dispatchOnMain(
+                        NavigationAction.NavigateTo(
+                            screen = AppScreen.QrScanning,
+                            bundle = bundleOf(
+                                QrScanningRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
+                            ),
+                        ),
+                    )
                 }
             }
             is WalletConnectAction.SelectNetwork -> {

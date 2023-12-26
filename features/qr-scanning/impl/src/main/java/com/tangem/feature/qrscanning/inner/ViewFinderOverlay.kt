@@ -1,11 +1,11 @@
-package com.tangem.tap.common.qrCodeScan
+package com.tangem.feature.qrscanning.inner
 
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
-import com.tangem.wallet.R
+import com.tangem.feature.qrscanning.impl.R
 
 class ViewFinderOverlay(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
