@@ -42,7 +42,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing10)
+                .padding(top = TangemTheme.dimens.spacing10),
         )
         Text(
             text = stringResource(R.string.express_choose_providers_subtitle),
