@@ -88,7 +88,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
      */
     data class Swap(override val enabled: Boolean, override val onClick: () -> Unit) : WalletManageButton(
         config = ActionButtonConfig(
-            text = TextReference.Res(id = R.string.common_swap),
+            text = TextReference.Res(id = R.string.common_exchange),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
             enabled = enabled,
