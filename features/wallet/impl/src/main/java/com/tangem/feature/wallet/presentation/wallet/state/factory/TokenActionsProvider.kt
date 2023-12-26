@@ -78,7 +78,7 @@ internal class TokenActionsProvider(
                 action = { clickIntents.onMultiCurrencySendClick(cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.Swap -> {
-                title = resourceReference(R.string.common_swap)
+                title = resourceReference(R.string.common_exchange)
                 icon = R.drawable.ic_exchange_horizontal_24
                 action = { clickIntents.onSwapClick(cryptoCurrencyStatus) }
             }
