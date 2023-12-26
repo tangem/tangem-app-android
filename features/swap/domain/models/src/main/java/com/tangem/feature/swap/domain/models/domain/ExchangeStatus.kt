@@ -17,4 +17,5 @@ enum class ExchangeStatus {
     Sending,
     Finished,
     Refunded,
+    Cancelled,
 }

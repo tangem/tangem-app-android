@@ -98,12 +98,8 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(
-                    headerResId = R.string.exchange_send_view_header,
-                ),
-                amountTextFieldValue = TextFieldValue(
-                    text = "0",
-                ),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable),
+                amountTextFieldValue = null,
                 amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
                 token = fromToken,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
@@ -209,7 +205,7 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         swapProvider: SwapProvider,
         bestRatedProviderId: String,
-        isManyProviders: Boolean,
+        isNeedBestRateBadge: Boolean,
         selectedFeeType: FeeType,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
@@ -270,7 +266,7 @@ internal class StateBuilder(
                 isBestRate = bestRatedProviderId == swapProvider.providerId,
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
-                isNeedBadge = isManyProviders,
+                isNeedBestRateBadge = isNeedBestRateBadge,
                 selectionType = ProviderState.SelectionType.CLICK,
                 onProviderClick = actions.onProviderClick,
             ),
@@ -302,6 +298,7 @@ internal class StateBuilder(
         )
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun getWarningsForSuccessState(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
@@ -326,18 +323,7 @@ internal class StateBuilder(
                 )
             else -> Unit
         }
-        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
-            quoteModel.preparedSwapConfigState.isBalanceEnough
-        ) {
-            warnings.add(
-                SwapWarning.UnableToCoverFeeWarning(
-                    createUnableToCoverFeeNotificationConfig(
-                        fromToken = fromToken,
-                        onBuyClick = actions.onBuyClick,
-                    ),
-                ),
-            )
-        }
+        addUnableCoverFeeWarning(quoteModel, fromToken, warnings)
         // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
         if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
@@ -375,6 +361,26 @@ internal class StateBuilder(
             )
         }
         return warnings
+    }
+
+    private fun addUnableCoverFeeWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        fromToken: CryptoCurrency,
+        warnings: MutableList<SwapWarning>,
+    ) {
+        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.permissionState !is PermissionDataState.PermissionLoading
+        ) {
+            warnings.add(
+                SwapWarning.UnableToCoverFeeWarning(
+                    createUnableToCoverFeeNotificationConfig(
+                        fromToken = fromToken,
+                        onBuyClick = actions.onBuyClick,
+                    ),
+                ),
+            )
+        }
     }
 
     private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
@@ -1121,7 +1127,7 @@ internal class StateBuilder(
         fromTokenInfo: TokenSwapInfo,
         toTokenInfo: TokenSwapInfo,
         selectionType: ProviderState.SelectionType,
-        isNeedBadge: Boolean,
+        isNeedBestRateBadge: Boolean,
         onProviderClick: (String) -> Unit,
     ): ProviderState {
         val rate = toTokenInfo.tokenAmount.value.calculateRate(
@@ -1131,7 +1137,7 @@ internal class StateBuilder(
         val fromCurrencySymbol = fromTokenInfo.cryptoCurrencyStatus.currency.symbol
         val toCurrencySymbol = toTokenInfo.cryptoCurrencyStatus.currency.symbol
         val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
-        val badge = if (isNeedBadge && isBestRate) {
+        val badge = if (isNeedBestRateBadge && isBestRate) {
             ProviderState.AdditionalBadge.BestTrade
         } else {
             ProviderState.AdditionalBadge.Empty

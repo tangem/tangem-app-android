@@ -205,6 +205,7 @@
     <string name="express_exchange_notification_failed_title">Операция не выполнена провайдером</string>
     <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
     <string name="express_exchange_notification_verification_title">Провайдер запрашивает прохождение верификации</string>
+    <string name="express_exchange_status_canceled">Отменен</string>
     <string name="express_exchange_status_confirmed">Подтверждено</string>
     <string name="express_exchange_status_confirming">Подтверждение</string>
     <string name="express_exchange_status_confirming_active">Подтверждение...</string>
@@ -732,4 +733,7 @@
     <string name="welcome_unlock_card">Сканировать карту</string>
     <string name="welcome_unlock_description">Используйте %s или отсканируйте карту для входа в приложение</string>
     <string name="welcome_unlock_title">C возвращением!</string>
+    <string name="express_exchange_by">Обмен через %s</string>
+    <string name="express_exchange_status_subtitle">Данные провайдера. Сумма к получению может измениться в зависимости от рыночных условий.</string>
+    <string name="express_exchange_status_title">Статус обмена</string>
 </resources>

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
@@ -50,6 +51,7 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
             text = stringResource(id = R.string.express_exchange_status_subtitle),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
+            textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(CenterHorizontally),
         )
@@ -74,7 +76,7 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
         SpacerH12()
         ExchangeStatusBlock(
             statuses = config.statuses,
-            showLink = config.notification == null && config.txUrl != null,
+            showLink = config.showProviderLink,
             onClick = { config.onGoToProviderClick(config.txUrl.orEmpty()) },
         )
         AnimatedContent(
