@@ -96,6 +96,8 @@ dependencies {
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
     implementation(projects.features.send.impl)
+    implementation(projects.features.qrScanning.api)
+    implementation(projects.features.qrScanning.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -143,6 +145,7 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+
     kapt(deps.hilt.kapt)
 
     /** Other libraries */
@@ -155,7 +158,6 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
-    implementation(deps.otaliastudiosCameraView)
     implementation(deps.coil)
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
