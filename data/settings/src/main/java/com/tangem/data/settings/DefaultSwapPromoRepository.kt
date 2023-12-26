@@ -40,16 +40,23 @@ class DefaultSwapPromoRepository(
         )
     }
 
-    private fun checkPromoPeriod(): Boolean {
-        val currentDate = Calendar.getInstance()
-        return currentDate.get(Calendar.DATE) in START_DATE_KEY..END_DATE_KEY &&
-            currentDate.get(Calendar.MONTH) == MONTH_KEY && currentDate.get(Calendar.YEAR) == YEAR_KEY
+    private suspend fun checkPromoPeriod(): Boolean {
+        val calendar = Calendar.getInstance()
+        val currentTime = calendar.timeInMillis
+        calendar.set(END_YEAR_KEY, END_MONTH_KEY, END_DAY_KEY, 0, 0, 0)
+        val endTime = calendar.timeInMillis
+
+        val shouldShow = endTime - currentTime > 0
+        if (!shouldShow) {
+            setNeverToShowToken()
+            setNeverToShowWallet()
+        }
+        return shouldShow
     }
 
     companion object {
-        private const val START_DATE_KEY = 15
-        private const val END_DATE_KEY = 31
-        private const val MONTH_KEY = 11 // December
-        private const val YEAR_KEY = 2023 // just in case
+        private const val END_DAY_KEY = 1
+        private const val END_MONTH_KEY = 1 // February
+        private const val END_YEAR_KEY = 2024
     }
 }
