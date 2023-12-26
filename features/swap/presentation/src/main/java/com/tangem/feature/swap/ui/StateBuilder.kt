@@ -107,7 +107,7 @@ internal class StateBuilder(
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
-                balance = fromToken.getFormattedAmount(isNeedSymbol = false), //
+                balance = fromToken.getFormattedAmount(isNeedSymbol = false),
                 networkIconRes = getActiveIconRes(fromToken.currency.network.id.value),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
