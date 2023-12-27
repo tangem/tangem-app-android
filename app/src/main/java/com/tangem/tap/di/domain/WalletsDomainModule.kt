@@ -105,4 +105,12 @@ internal object WalletsDomainModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @ViewModelScoped
+    fun providesValidateWalletMemoUseCase(
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+    ): ValidateWalletMemoUseCase {
+        return ValidateWalletMemoUseCase(walletAddressServiceRepository = walletAddressServiceRepository)
+    }
 }
