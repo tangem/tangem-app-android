@@ -175,7 +175,7 @@ private fun darkThemeColors(): TangemColors {
             key = TangemColorPalette.White,
         ),
         stroke = TangemColors.Stroke(
-            primary = TangemColorPalette.Dark5,
+            primary = TangemColorPalette.Dark4,
             secondary = TangemColorPalette.Dark1,
             transparency = TangemColorPalette.Dark6,
         ),
