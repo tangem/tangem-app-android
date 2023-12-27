@@ -15,7 +15,6 @@ import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionExtras
-import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -38,6 +37,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
@@ -78,6 +78,7 @@ internal class SendViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
+    validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
 
@@ -97,10 +98,10 @@ internal class SendViewModel @Inject constructor(
         clickIntents = this,
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
-        walletAddressesProvider = Provider { walletAddresses },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+        validateWalletMemoUseCase = validateWalletMemoUseCase,
     )
 
     var uiState: SendUiState by mutableStateOf(stateFactory.getInitialState())
@@ -109,16 +110,13 @@ internal class SendViewModel @Inject constructor(
     private var userWallet: UserWallet by Delegates.notNull()
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
-    private var walletAddresses = emptySet<Address>()
 
     private var balanceJobHolder = JobHolder()
     private var recipientsJobHolder = JobHolder()
-    private var walletAddressesJobHolder = JobHolder()
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
-        getWalletAddresses()
         subscribeOnCurrencyStatusUpdates(owner)
         getFee()
     }
@@ -310,15 +308,6 @@ internal class SendViewModel @Inject constructor(
         }.saveIn(feeJobHolder)
     }
 
-    private fun getWalletAddresses() {
-        viewModelScope.launch(dispatchers.io) {
-            walletAddresses = walletManagersFacade.getAddresses(
-                userWalletId = userWalletId,
-                network = cryptoCurrency.network,
-            )
-        }.saveIn(walletAddressesJobHolder)
-    }
-
     // region screen state navigation
     override fun popBackStack() = stateRouter.popBackStack()
     override fun onBackClick() = stateRouter.onBackClick()
@@ -370,7 +359,7 @@ internal class SendViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             uiState = stateFactory.getOnRecipientAddressValidationStarted()
             if (!checkIfXrpAddressValue(value)) {
-                val isValidAddress = validateAddress(value)
+                val isValidAddress = validateAddress(uiState.recipientState?.addressTextField?.value.orEmpty())
                 uiState = stateFactory.getOnRecipientMemoValidState(value, isValidAddress)
             }
         }.saveIn(addressValidationJobHolder)
@@ -508,7 +497,7 @@ internal class SendViewModel @Inject constructor(
             )
         }
     }
-// endregion
+    // endregion
 
     private fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
         val blockchain = Blockchain.fromId(networkId)
