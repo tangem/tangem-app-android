@@ -171,6 +171,7 @@ internal class ExchangeStatusFactory(
             ExchangeStatus.Failed -> ExchangeAnalyticsStatus.Fail
             ExchangeStatus.Finished -> ExchangeAnalyticsStatus.Done
             ExchangeStatus.Refunded -> ExchangeAnalyticsStatus.Refunded
+            ExchangeStatus.Cancelled -> ExchangeAnalyticsStatus.Cancelled
             else -> null
         }
     }
