@@ -31,12 +31,16 @@ value class ApiResponseRaise(
 /**
  * Attempts to execute an API call safely, providing error handling.
  *
+ * @param T The return type of the API call and the function.
  * @param call The API call block to execute.
  * @param onError A function to handle errors and return a fallback value of type [T].
  *
  * @return The result of the API call or the fallback value provided by [onError] if an error occurs.
  */
-inline fun <T> safeApiCall(call: ApiResponseRaise.() -> T, onError: (ApiResponseError) -> T): T {
+suspend inline fun <T> safeApiCall(
+    crossinline call: suspend ApiResponseRaise.() -> T,
+    crossinline onError: suspend (ApiResponseError) -> T,
+): T {
     return recover(
         block = { call(ApiResponseRaise(raise = this)) },
         recover = {
