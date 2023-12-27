@@ -15,6 +15,7 @@ interface TokensListRepository {
      *
      * @param searchText The search text used to filter tokens.
      * @return A [Flow] emitting [PagingData] containing the tokens with quotes matching the search criteria.
+     * @throws com.tangem.datasource.api.common.response.ApiResponseError
      */
     fun getTokens(searchText: String?): Flow<PagingData<Token>>
 }
