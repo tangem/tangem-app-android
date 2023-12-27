@@ -20,7 +20,7 @@ interface TangemTechApi {
         @Query("searchText") searchText: String? = null,
         @Query("offset") offset: Int? = null,
         @Query("limit") limit: Int? = null,
-    ): CoinsResponse
+    ): ApiResponse<CoinsResponse>
 
     @GET("rates")
     suspend fun getRates(@Query("currencyId") currencyId: String, @Query("coinIds") coinIds: String): RatesResponse
@@ -35,7 +35,10 @@ interface TangemTechApi {
     suspend fun getUserTokens(@Path(value = "user-id") userId: String): ApiResponse<UserTokensResponse>
 
     @PUT("user-tokens/{user-id}")
-    suspend fun saveUserTokens(@Path(value = "user-id") userId: String, @Body userTokens: UserTokensResponse)
+    suspend fun saveUserTokens(
+        @Path(value = "user-id") userId: String,
+        @Body userTokens: UserTokensResponse,
+    ): ApiResponse<Unit>
 
     /** Returns referral status by [walletId] */
     @GET("referral/{walletId}")
