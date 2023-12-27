@@ -14,7 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -77,13 +76,11 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
     val isSending = uiState.sendState?.isSending?.collectAsStateWithLifecycle()?.value ?: false
     val txUrl = uiState.sendState?.txUrl?.collectAsStateWithLifecycle()?.value.orEmpty()
 
-    val (buttonTextId, buttonClick) = remember {
-        getButtonData(
-            currentState = currentState,
-            isSuccess = isSuccess,
-            uiState = uiState,
-        )
-    }
+    val (buttonTextId, buttonClick) = getButtonData(
+        currentState = currentState,
+        isSuccess = isSuccess,
+        uiState = uiState,
+    )
 
     val isButtonEnabled = isButtonEnabled(
         currentState = currentState,

@@ -143,5 +143,6 @@ include(":data:settings")
 include(":data:txhistory")
 include(":data:wallets")
 include(":data:analytics")
+include(":data:transaction")
 // endregion Data modules
 

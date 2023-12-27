@@ -6,15 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.PagingData
 import arrow.core.getOrElse
-import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
-import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
-import com.tangem.blockchain.blockchains.stellar.StellarMemo
-import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
-import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
-import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -25,6 +18,7 @@ import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.utils.convertToAmount
+import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -57,6 +51,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -75,6 +70,7 @@ internal class SendViewModel @Inject constructor(
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val createTransactionUseCase: CreateTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
@@ -428,32 +424,38 @@ internal class SendViewModel @Inject constructor(
         //     network = cryptoCurrency.network,
         // )
 
-        val txData = walletManagersFacade.createTransaction(
+        createTransactionUseCase(
             amount = amountToSend,
             fee = fee,
             memo = memo,
             destination = recipient,
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
-        )?.copy(extras = getMemoExtras(cryptoCurrency.network.id.value, memo)) ?: return
-
-        sendTransactionUseCase(
-            txData = txData,
-            userWallet = userWallet,
-            network = cryptoCurrency.network,
         ).fold(
             ifLeft = {
-                sendState.isSending.update { false }
+                Timber.e(it)
 // [REDACTED_TODO_COMMENT]
             },
-            ifRight = {
-                sendState.transactionDate.update {
-                    txData.date?.timeInMillis ?: System.currentTimeMillis()
-                }
-                sendState.isSuccess.update { true }
-                sendState.txUrl.update {
-                    getTxUrl(txData.hash.orEmpty())
-                }
+            ifRight = { txData ->
+                sendTransactionUseCase(
+                    txData = txData,
+                    userWallet = userWallet,
+                    network = cryptoCurrency.network,
+                ).fold(
+                    ifLeft = {
+                        sendState.isSending.update { false }
+// [REDACTED_TODO_COMMENT]
+                    },
+                    ifRight = {
+                        sendState.transactionDate.update {
+                            txData.date?.timeInMillis ?: System.currentTimeMillis()
+                        }
+                        sendState.isSuccess.update { true }
+                        sendState.txUrl.update {
+                            getTxUrl(txData.hash.orEmpty())
+                        }
+                    },
+                )
             },
         )
     }
@@ -497,25 +499,6 @@ internal class SendViewModel @Inject constructor(
         }
     }
     // endregion
-
-    private fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
-        val blockchain = Blockchain.fromId(networkId)
-        if (memo == null) return null
-        return when (blockchain) {
-            Blockchain.Stellar -> {
-                val xmlMemo = when (determineXlmMemoType(memo)) {
-                    XlmMemoType.TEXT -> StellarMemo.Text(memo)
-                    XlmMemoType.ID -> StellarMemo.Id(memo.toBigInteger())
-                }
-                StellarTransactionExtras(xmlMemo)
-            }
-            Blockchain.Binance -> BinanceTransactionExtras(memo)
-            Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
-            Blockchain.Cosmos -> CosmosTransactionExtras(memo)
-            Blockchain.TON -> TonTransactionExtras(memo)
-            else -> null
-        }
-    }
 
     companion object {
         private const val XRP_X_ADDRESS = 'X'
