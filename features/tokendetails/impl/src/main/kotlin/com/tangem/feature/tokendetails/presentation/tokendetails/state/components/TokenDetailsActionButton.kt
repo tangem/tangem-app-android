@@ -78,7 +78,7 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
      */
     data class Swap(val enabled: Boolean, override val onClick: () -> Unit) : TokenDetailsActionButton(
         config = ActionButtonConfig(
-            text = TextReference.Res(id = R.string.common_exchange),
+            text = TextReference.Res(id = R.string.common_swap),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
             enabled = enabled,
