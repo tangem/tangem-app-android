@@ -15,6 +15,8 @@ internal interface TokensListRepository {
      * Get available tokens list
      *
      * @param searchText search text
+     *
+     * @throws com.tangem.datasource.api.common.response.ApiResponseError
      */
     fun getAvailableTokens(searchText: String?): Flow<PagingData<Token>>
 }
