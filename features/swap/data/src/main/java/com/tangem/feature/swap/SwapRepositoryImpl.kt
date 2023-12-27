@@ -156,7 +156,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                     exchangeable = true,
                     active = true,
                     networkIds = networkId,
-                ).coins,
+                ).getOrThrow().coins,
             )
         }
     }
