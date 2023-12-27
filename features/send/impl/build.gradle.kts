@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.lifecycle.compose)
     implementation(deps.jodatime)
+    implementation(deps.timber)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
