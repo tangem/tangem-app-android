@@ -579,7 +579,7 @@
     <string name="token_item_no_rate">No rate</string>
     <string name="token_swap_promotion_message">Exchange this token for other assets in your portfolio</string>
     <string name="token_swap_promotion_title">Introducing cross-chain swaps</string>
-    <string name="token_swap_promotion_button">Exchange now</string>
+    <string name="token_swap_promotion_button">Swap now</string>
     <string name="transaction_history_contract_address">contract: %s</string>
     <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
     <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
