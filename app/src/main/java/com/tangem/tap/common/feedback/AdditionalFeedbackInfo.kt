@@ -3,6 +3,7 @@ package com.tangem.tap.common.feedback
 import android.os.Build
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
+import com.tangem.crypto.NetworkType
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletIdBuilder
@@ -35,6 +36,7 @@ class AdditionalFeedbackInfo {
     var cardIssuer: String = ""
     var cardBlockchain: String = ""
     var userWalletId: String = ""
+    var extendedPublicKey: String = ""
 
     // wallets
     val walletsInfo = CopyOnWriteArrayList<EmailWalletInfo>()
@@ -70,6 +72,9 @@ class AdditionalFeedbackInfo {
         cardIssuer = data.card.issuer.name
         signedHashesCount = formatSignedHashes(data.card.wallets)
         userWalletId = UserWalletIdBuilder.scanResponse(data).build()?.stringValue ?: ""
+        extendedPublicKey = data.card.wallets.firstOrNull { it.extendedPublicKey != null }
+            ?.extendedPublicKey
+            ?.serialize(networkType = NetworkType.Mainnet).orEmpty()
     }
 
     @Deprecated("Don't use it directly")
