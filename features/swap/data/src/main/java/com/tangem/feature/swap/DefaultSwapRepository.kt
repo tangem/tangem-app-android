@@ -293,7 +293,7 @@ internal class DefaultSwapRepository @Inject constructor(
                     if (txDetails.requestId != requestId) {
                         return@withContext DataError.InvalidRequestIdError().left()
                     }
-                    if (toAddress != txDetails.payoutAddress) {
+                    if (!toAddress.equals(txDetails.payoutAddress, ignoreCase = true)) {
                         return@withContext DataError.InvalidPayoutAddressError().left()
                     }
                     expressDataConverter.convert(
