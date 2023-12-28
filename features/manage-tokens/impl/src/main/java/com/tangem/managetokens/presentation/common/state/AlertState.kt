@@ -49,4 +49,8 @@ internal sealed class AlertState {
             formatArgs = wrappedList(tokenName, networkName),
         )
     }
+
+    object TokenAlreadyAdded : AlertState() {
+        override val message: TextReference = resourceReference(R.string.custom_token_validation_error_already_added)
+    }
 }
