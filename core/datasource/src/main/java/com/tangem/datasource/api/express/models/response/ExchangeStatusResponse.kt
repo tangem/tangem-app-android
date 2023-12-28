@@ -49,7 +49,7 @@ enum class ExchangeStatus {
     @Json(name = "verifying")
     VERIFYING,
 
-    @Json(name = "cancelled")
+    @Json(name = "expired")
     CANCELLED,
 }
 
