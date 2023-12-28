@@ -85,12 +85,10 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
         )
     }
 
-    val isButtonEnabled = remember {
-        isButtonEnabled(
-            currentState = currentState,
-            uiState = uiState,
-        )
-    }
+    val isButtonEnabled = isButtonEnabled(
+        currentState = currentState,
+        uiState = uiState,
+    )
 
     AnimatedContent(
         targetState = buttonTextId,
