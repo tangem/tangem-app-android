@@ -1,5 +1,6 @@
 package com.tangem.tap.common.feedback
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.extensions.breakLine
 
 class FeedbackDataBuilder(
@@ -27,26 +28,32 @@ class FeedbackDataBuilder(
     }
 
     fun appendWalletsInfo(): FeedbackDataBuilder {
-        infoHolder.walletsInfo.forEach {
+        infoHolder.walletsInfo.forEach { walletInfo ->
             builder.appendDelimiter()
-            builder.appendKeyValue("Blockchain", it.blockchain.fullName)
-            builder.appendKeyValue("Derivation path", it.derivationPath)
-            builder.appendKeyValue("Outputs count", it.outputsCount)
+            builder.appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
+            builder.appendKeyValue("Derivation path", walletInfo.derivationPath)
 
-            if (it.tokens.isNotEmpty()) {
+            if (walletInfo.blockchain == Blockchain.Bitcoin) {
+                builder.appendKeyValue("XPUB", infoHolder.extendedPublicKey)
+            }
+
+            builder.appendKeyValue("Outputs count", walletInfo.outputsCount)
+
+            if (walletInfo.tokens.isNotEmpty()) {
                 builder.append("Tokens:")
                 breakLine()
-                it.tokens.forEach { token ->
+                walletInfo.tokens.forEach { token ->
                     builder.appendKeyValue("ID", token.id ?: "[custom token]")
                     builder.appendKeyValue("Name", token.name)
                     builder.appendKeyValue("Contract address", token.contractAddress)
                 }
             }
 
-            builder.appendKeyValue("Host", it.host)
-            builder.appendKeyValue("Wallet address", it.addresses)
-            builder.appendKeyValue("Explorer link", it.explorerLink)
+            builder.appendKeyValue("Host", walletInfo.host)
+            builder.appendKeyValue("Wallet address", walletInfo.addresses)
+            builder.appendKeyValue("Explorer link", walletInfo.explorerLink)
         }
+
         return this
     }
 
