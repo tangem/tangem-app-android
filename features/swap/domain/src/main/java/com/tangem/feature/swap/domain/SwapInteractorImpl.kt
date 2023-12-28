@@ -852,19 +852,12 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         fromToken: CryptoCurrency,
     ): IncludeFeeInAmount {
-        if (fromToken is CryptoCurrency.Token) {
-            return IncludeFeeInAmount.Excluded
-        }
-
         val tokenForFeeBalance =
             userWalletManager.getNativeTokenBalance(
                 networkId,
                 fromToken.network.derivationPath.value,
             ) ?: ProxyAmount.empty()
 
-        if (amount.value > tokenForFeeBalance.value) {
-            return IncludeFeeInAmount.BalanceNotEnough
-        }
         val feeValue = when (txFee) {
             TxFeeState.Empty -> BigDecimal.ZERO
             is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeValue
@@ -872,18 +865,32 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
         val amountWithFee = amount.value + feeValue
-        return if (amountWithFee < tokenForFeeBalance.value) {
-            IncludeFeeInAmount.Excluded
-        } else {
-            if (feeValue < amount.value) {
-                IncludeFeeInAmount.Included(
-                    SwapAmount(
-                        tokenForFeeBalance.value - feeValue,
-                        transactionManager.getNativeTokenDecimals(networkId),
-                    ),
-                )
-            } else {
+
+        return when {
+            fromToken is CryptoCurrency.Token -> {
+                if (feeValue > tokenForFeeBalance.value) {
+                    IncludeFeeInAmount.BalanceNotEnough
+                } else {
+                    IncludeFeeInAmount.Excluded
+                }
+            }
+            amount.value > tokenForFeeBalance.value -> {
                 IncludeFeeInAmount.BalanceNotEnough
+            }
+            amountWithFee < tokenForFeeBalance.value -> {
+                IncludeFeeInAmount.Excluded
+            }
+            else -> {
+                if (feeValue < amount.value) {
+                    IncludeFeeInAmount.Included(
+                        SwapAmount(
+                            tokenForFeeBalance.value - feeValue,
+                            transactionManager.getNativeTokenDecimals(networkId),
+                        ),
+                    )
+                } else {
+                    IncludeFeeInAmount.BalanceNotEnough
+                }
             }
         }
     }
