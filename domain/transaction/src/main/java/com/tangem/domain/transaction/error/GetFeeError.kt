@@ -1,5 +1,7 @@
 package com.tangem.domain.transaction.error
 
 sealed class GetFeeError {
-    object DataError : GetFeeError()
+    data class DataError(val cause: Throwable?) : GetFeeError()
+
+    object UnknownError : GetFeeError()
 }
