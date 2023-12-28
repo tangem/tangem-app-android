@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import java.math.BigDecimal
@@ -7,20 +8,33 @@ import java.math.BigDecimal
 /**
  * Calculate receiving amount when fee is subtracted from sending amount
  */
-internal fun FeeSelectorState.Content.calculateReceiveAmount(uiState: SendUiState): BigDecimal {
+internal fun calculateReceiveAmount(uiState: SendUiState, feeAmount: Fee): BigDecimal {
     val amount = uiState.amountState?.amountTextField?.value ?: return BigDecimal.ZERO
+    val fee = feeAmount.amount.value ?: return BigDecimal.ZERO
+    return BigDecimal(amount).minus(fee)
+}
 
-    val fee = when (fees) {
+/**
+ * Returns fee amount depending on current state
+ */
+internal fun FeeSelectorState.Content.getFee(): Fee {
+    return when (fees) {
         is TransactionFee.Choosable -> {
             when (selectedFee) {
-                FeeType.SLOW -> fees.minimum.amount.value
-                FeeType.MARKET -> fees.normal.amount.value
-                FeeType.FAST -> fees.priority.amount.value
-                FeeType.CUSTOM -> customValues.firstOrNull()?.value?.let { BigDecimal(it.ifEmpty { "0" }) }
+                FeeType.SLOW -> fees.minimum
+                FeeType.MARKET -> fees.normal
+                FeeType.FAST -> fees.priority
+                FeeType.CUSTOM -> {
+                    val feeAmount =
+                        customValues.firstOrNull()?.value?.let { BigDecimal(it.ifEmpty { "0" }) } ?: BigDecimal.ZERO
+                    Fee.Common(
+                        fees.normal.amount.copy(
+                            value = feeAmount,
+                        ),
+                    )
+                }
             }
         }
-        is TransactionFee.Single -> fees.normal.amount.value
-    } ?: BigDecimal.ZERO
-
-    return BigDecimal(amount).minus(fee)
+        is TransactionFee.Single -> fees.normal
+    }
 }
