@@ -21,7 +21,7 @@ class ValidateWalletAddressUseCase(
         address: String,
     ): Either<Throwable, Boolean> = withContext(dispatchers.io) {
         Either.catch {
-            walletAddressServiceRepository.validate(userWalletId, network, address)
+            walletAddressServiceRepository.validateAddress(userWalletId, network, address)
         }
     }
 }
