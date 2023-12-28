@@ -30,4 +30,8 @@ class Debouncer {
     fun release() {
         debounceJob?.cancel()
     }
+
+    companion object {
+        const val DEFAULT_WAIT_TIME_MS = 500L
+    }
 }
