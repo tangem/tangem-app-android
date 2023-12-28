@@ -251,7 +251,7 @@ class DefaultWalletManagersFacade(
             derivationPath = derivationPath,
         )
         if (walletManager == null || blockchain == Blockchain.Unknown) {
-            Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
+            Timber.w("Unable to create or find a wallet manager for $blockchain")
             return UpdateWalletManagerResult.Unreachable
         }
 
