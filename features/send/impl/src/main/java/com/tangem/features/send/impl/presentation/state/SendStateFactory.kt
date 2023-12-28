@@ -1,7 +1,7 @@
 package com.tangem.features.send.impl.presentation.state
 
 import androidx.paging.PagingData
-import com.tangem.blockchain.common.address.Address
+import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
@@ -10,33 +10,32 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
-import com.tangem.features.send.impl.presentation.state.fee.calculateReceiveAmount
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientListConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientStateConverter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
-import com.tangem.features.send.impl.presentation.viewmodel.isNotAddressInWallet
-import com.tangem.features.send.impl.presentation.viewmodel.validateMemo
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
+import timber.log.Timber
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class SendStateFactory(
     private val clickIntents: SendClickIntents,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
-    private val walletAddressesProvider: Provider<Set<Address>>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) {
 
@@ -138,29 +137,32 @@ internal class SendStateFactory(
     }
 
     fun getOnRecipientAddressValidState(value: String, isValidAddress: Boolean): SendUiState {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val state = currentStateProvider()
         val recipientState = state.recipientState ?: return state
 
-        val isValidMemo = validateMemo(
-            memo = recipientState.addressTextField.value,
-            cryptoCurrency = cryptoCurrencyStatusProvider().currency,
-        )
-        val isAddressInWallet = isNotAddressInWallet(
-            address = value,
-            walletAddresses = walletAddressesProvider(),
-        )
+        val isValidMemo = validateWalletMemoUseCase(
+            memo = recipientState.memoTextField?.value.orEmpty(),
+            network = cryptoCurrencyStatus.currency.network,
+        ).getOrElse {
+            Timber.e("Failed to validateWalletMemoUseCase: $it")
+            false
+        }
+        val isAddressInWallet = cryptoCurrencyStatus.value.networkAddress?.availableAddresses
+            ?.any { it.value == value } ?: true
+
         return state.copy(
             recipientState = recipientState.copy(
-                isPrimaryButtonEnabled = isValidMemo && isValidAddress && isAddressInWallet,
+                isPrimaryButtonEnabled = isValidMemo && isValidAddress && !isAddressInWallet,
                 isValidating = false,
                 addressTextField = recipientState.addressTextField.copy(
                     error = when {
-                        !isValidAddress || !isAddressInWallet -> resourceReference(
+                        !isValidAddress || isAddressInWallet -> resourceReference(
                             R.string.send_recipient_address_error,
                         )
                         else -> null
                     },
-                    isError = value.isNotEmpty() && !isValidAddress || !isAddressInWallet,
+                    isError = value.isNotEmpty() && !isValidAddress || isAddressInWallet,
                 ),
             ),
         )
@@ -185,23 +187,26 @@ internal class SendStateFactory(
     }
 
     fun getOnRecipientMemoValidState(value: String, isValidAddress: Boolean): SendUiState {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val state = currentStateProvider()
         val recipientState = state.recipientState ?: return state
 
-        val isValidMemo = validateMemo(
+        val isValidMemo = validateWalletMemoUseCase(
             memo = value,
-            cryptoCurrency = cryptoCurrencyStatusProvider().currency,
-        )
-        val isAddressInWallet = isNotAddressInWallet(
-            walletAddresses = walletAddressesProvider(),
-            address = recipientState.addressTextField.value,
-        )
+            network = cryptoCurrencyStatus.currency.network,
+        ).getOrElse {
+            Timber.e("Failed to validateWalletMemoUseCase: $it")
+            false
+        }
+        val isAddressInWallet = cryptoCurrencyStatus.value.networkAddress?.availableAddresses
+            ?.any { it.value == value } ?: true
+
         return state.copy(
             recipientState = recipientState.copy(
-                isPrimaryButtonEnabled = isValidMemo && isValidAddress && isAddressInWallet,
+                isPrimaryButtonEnabled = isValidMemo && isValidAddress && !isAddressInWallet,
                 isValidating = false,
                 memoTextField = recipientState.memoTextField?.copy(
-                    isError = value.isNotEmpty() || isValidMemo && isValidAddress && isAddressInWallet,
+                    isError = value.isNotEmpty() && !isValidMemo,
                 ),
             ),
         )
