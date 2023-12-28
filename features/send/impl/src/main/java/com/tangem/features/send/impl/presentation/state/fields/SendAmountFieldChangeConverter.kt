@@ -1,10 +1,11 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import java.math.BigDecimal
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 
@@ -14,6 +15,7 @@ internal class SendAmountFieldChangeConverter(
     override fun convert(value: String): SendUiState {
         val state = currentStateProvider()
         val amountState = state.amountState ?: return state
+        val feeState = state.feeState ?: return state
 
         if (value.checkDecimalSeparatorDuplicate()) return state
         if (value.isEmpty()) return state.emptyState()
@@ -40,7 +42,8 @@ internal class SendAmountFieldChangeConverter(
             trimmedValue
         }
 
-        val isExceedBalance = value.checkExceedBalance(amountState.cryptoCurrencyStatus, amountState)
+        val isExceedBalance = cryptoValue.checkExceedBalance(amountState)
+        val isMaxAmount = cryptoValue.checkMaxAmount(amountState)
         return state.copy(
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = !isExceedBalance,
@@ -49,6 +52,9 @@ internal class SendAmountFieldChangeConverter(
                     fiatValue = fiatValue,
                     isError = isExceedBalance,
                 ),
+            ),
+            feeState = feeState.copy(
+                isSubtract = isMaxAmount,
             ),
         )
     }
@@ -73,15 +79,26 @@ internal class SendAmountFieldChangeConverter(
         return decimalSeparatorCount > 1
     }
 
-    private fun String.checkExceedBalance(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        state: SendStates.AmountState,
-    ): Boolean {
-        val currencyStatus = cryptoCurrencyStatus.value
+    private fun String.checkExceedBalance(state: SendStates.AmountState): Boolean {
+        val currencyCryptoAmount = state.cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val currencyFiatAmount = state.cryptoCurrencyStatus.value.fiatAmount ?: BigDecimal.ZERO
         return if (state.isFiatValue) {
-            toBigDecimal() > currencyStatus.fiatAmount
+            toBigDecimal() > currencyFiatAmount
         } else {
-            toBigDecimal() > currencyStatus.amount
+            toBigDecimal() > currencyCryptoAmount
+        }
+    }
+
+    private fun String.checkMaxAmount(state: SendStates.AmountState): Boolean {
+        // If current currency is Token
+        if (state.cryptoCurrencyStatus.currency is CryptoCurrency.Token) return false
+
+        val currencyCryptoAmount = state.cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val currencyFiatAmount = state.cryptoCurrencyStatus.value.fiatAmount ?: BigDecimal.ZERO
+        return if (state.isFiatValue) {
+            toBigDecimal() == currencyFiatAmount
+        } else {
+            toBigDecimal() == currencyCryptoAmount
         }
     }
 
