@@ -447,6 +447,8 @@
     <string name="send_amount_label">Сумма</string>
     <string name="send_amount_substract">Вычесть из суммы отправки</string>
     <string name="send_amount_substract_footer">Сумма к получению %s</string>
+    <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
+    <string name="send_alert_transaction_failed_text">Причина: %1$s\Код:%2$s</string>
     <string name="send_date_format">%1$s в %2$s</string>
     <string name="send_destination_hint_address">Адрес</string>
     <string name="send_destination_tag_field">Код назначения</string>
@@ -481,8 +483,8 @@
     <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
     <string name="send_notification_invalid_amount_title">Недопустимая сумма</string>
     <string name="send_notification_invalid_minimum_amount_text">Минимальная сумма отправки - %1$s. Пожалуйста, убедитесь, что остаток после отправки также не будет меньше %1$s.</string>
-    <string name="send_notification_invalid_reserve_amount_text">Пожалуйста, пополните свой баланс, чтобы продолжить</string>
-    <string name="send_notification_invalid_reserve_amount_title">Сумма резерва не может быть менее %1$s</string>
+    <string name="send_notification_invalid_reserve_amount_text">Адрес получателя не активирован. Пожалуйста, измените сумму отправки, чтобы продолжить.</string>
+    <string name="send_notification_invalid_reserve_amount_title">Сумма отправки не может быть менее %1$s</string>
     <string name="send_notification_transaction_delay_text">Обратите внимание, что при определенных параметрах комиссии возможны задержки по вашей транзакции</string>
     <string name="send_notification_transaction_delay_title">Возможны задержки по транзакции</string>
     <string name="send_optional_field">Необязательное</string>
