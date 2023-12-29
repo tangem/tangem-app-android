@@ -69,7 +69,7 @@ internal class MultiWalletCurrencyActionsConverter(
                 action = { clickIntents.onSendClick(cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.Swap -> {
-                title = resourceReference(R.string.common_swap)
+                title = resourceReference(R.string.swapping_swap_action)
                 icon = R.drawable.ic_exchange_horizontal_24
                 action = { clickIntents.onSwapClick(cryptoCurrencyStatus) }
             }
