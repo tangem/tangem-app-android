@@ -187,6 +187,7 @@ private fun isButtonEnabled(currentState: State<SendUiStateType>, uiState: SendU
         SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
         SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
         SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Send -> uiState.sendState.isPrimaryButtonEnabled
         else -> true
     }
 }
