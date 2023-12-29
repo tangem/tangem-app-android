@@ -24,6 +24,7 @@ import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientS
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -238,7 +239,7 @@ internal class SendStateFactory(
         )
 
         val fee = feeSelectorState.getFee()
-        val receivedAmount = calculateReceiveAmount(state, fee)
+        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
         val updatedState = feeState.copy(
             feeSelectorState = feeSelectorState,
             fee = fee,
@@ -260,7 +261,7 @@ internal class SendStateFactory(
 
         val updatedFeeSelectorState = feeSelectorState.copy(selectedFee = feeType)
         val fee = updatedFeeSelectorState.getFee()
-        val receivedAmount = calculateReceiveAmount(state, fee)
+        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
 
         val updatedState = feeState.copy(
             fee = fee,
@@ -288,7 +289,7 @@ internal class SendStateFactory(
         )
 
         val fee = updatedFeeSelectorState.getFee()
-        val receivedAmount = calculateReceiveAmount(state, fee)
+        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
 
         val updatedState = feeState.copy(
             feeSelectorState = updatedFeeSelectorState,
@@ -310,7 +311,7 @@ internal class SendStateFactory(
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
 
         val fee = feeSelectorState.getFee()
-        val receivedAmount = calculateReceiveAmount(state, fee)
+        val receivedAmount = calculateReceiveAmount(state, fee, value)
         val updatedState = feeState.copy(
             isSubtract = value,
             fee = fee,
@@ -372,6 +373,17 @@ internal class SendStateFactory(
                 transactionDate = txData.date?.timeInMillis ?: System.currentTimeMillis(),
                 isSuccess = true,
                 txUrl = txUrl,
+            ),
+        )
+    }
+
+    fun getSendNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
+        val state = currentStateProvider()
+        val hasErrorNotifications = notifications.any { it is SendNotification.Error }
+        return state.copy(
+            sendState = state.sendState.copy(
+                isPrimaryButtonEnabled = !hasErrorNotifications,
+                notifications = notifications,
             ),
         )
     }
