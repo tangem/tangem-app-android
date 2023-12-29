@@ -76,6 +76,7 @@ dependencies {
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
     implementation(projects.data.analytics)
+    implementation(projects.data.transaction)
 
     /** Features */
     implementation(projects.features.onboarding)
