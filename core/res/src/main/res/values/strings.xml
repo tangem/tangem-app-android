@@ -286,7 +286,6 @@
     <string name="manage_tokens_title">Coin market cap</string>
     <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
     <string name="manage_tokens_unavailable_vote">Upvote</string>
-    <string name="manage_tokens_wallet_does_not_supported_blockchain">Wallet Incompatible with selected Coin</string>
     <string name="manage_tokens_wallet_selector_title">Choose wallet</string>
     <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
     <string name="onboarding_access_code_feature_1_description">You have to set up a single access code to protect all your wallets</string>
