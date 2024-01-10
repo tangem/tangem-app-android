@@ -21,12 +21,10 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.send.impl.presentation.viewmodel.XlmMemoType
 import com.tangem.features.send.impl.presentation.viewmodel.determineXlmMemoType
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
@@ -47,7 +45,6 @@ class TransactionManagerImpl(
     private val analytics: AnalyticsEventHandler,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : TransactionManager {
 
     override suspend fun sendApproveTransaction(
@@ -440,19 +437,15 @@ class TransactionManagerImpl(
     }
 
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
-        val walletManager = if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            val selectedUserWallet = requireNotNull(
-                userWalletsListManager.selectedUserWalletSync,
-            ) { "userWallet or userWalletsListManager is null" }
-            walletManagersFacade.getOrCreateWalletManager(
-                selectedUserWallet.walletId,
-                blockchain,
-                derivationPath,
-            )
-        } else {
-            val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
-            appStateHolder.walletState?.getWalletManager(blockchainNetwork)
-        }
+        val selectedUserWallet = requireNotNull(
+            userWalletsListManager.selectedUserWalletSync,
+        ) { "userWallet or userWalletsListManager is null" }
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            selectedUserWallet.walletId,
+            blockchain,
+            derivationPath,
+        )
+
         return requireNotNull(walletManager) { "no wallet manager found" }
     }
 
