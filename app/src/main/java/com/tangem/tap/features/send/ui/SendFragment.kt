@@ -3,30 +3,38 @@
 package com.tangem.tap.features.send.ui
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.text.method.DigitsKeyListener
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.core.os.bundleOf
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.feature.qrscanning.SourceType
+import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.entities.FiatCurrency
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
-import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
@@ -40,8 +48,8 @@ import com.tangem.tap.features.send.redux.AmountActionUi.*
 import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
+import com.tangem.tap.features.send.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
-import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -49,8 +57,11 @@ import com.tangem.wallet.databinding.FragmentSendBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.text.DecimalFormatSymbols
+import javax.inject.Inject
 
 private const val EDIT_TEXT_INPUT_DEBOUNCE = 400L
 
@@ -73,11 +84,15 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     val binding: FragmentSendBinding by viewBinding(FragmentSendBinding::bind)
 
+    @Inject
+    lateinit var listenToQrScanningUseCase: ListenToQrScanningUseCase
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(viewModel)
         sendSubscriber.initViewModel(viewModel)
         Analytics.send(Token.Send.ScreenOpened())
+        listenToQrCode()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -145,10 +160,31 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
         imvQrCode.setOnClickListener {
             Analytics.send(Token.Send.ButtonQRCode())
-            startActivityForResult(
-                Intent(requireContext(), ScanQrCodeActivity::class.java),
-                ScanQrCodeActivity.SCAN_QR_REQUEST_CODE,
+
+            store.dispatchOnMain(
+                NavigationAction.NavigateTo(
+                    screen = AppScreen.QrScanning,
+                    bundle = bundleOf(
+                        QrScanningRouter.SOURCE_KEY to SourceType.SEND,
+                    ),
+                ),
             )
+        }
+    }
+
+    private fun listenToQrCode() {
+        lifecycleScope.launch {
+            listenToQrScanningUseCase(SourceType.SEND)
+                .getOrElse { emptyFlow() }
+                .flowWithLifecycle(this@SendFragment.lifecycle, minActiveState = Lifecycle.State.CREATED)
+                .collect {
+                    delay(200)
+
+                    // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
+                    // If do not use the delay, then etAmount error field is not displayed when
+                    // inserting an incorrect amount by shareUri
+                    onCodeScanned(it)
+                }
         }
     }
 
@@ -200,27 +236,16 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             .launchIn(mainScope)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode != ScanQrCodeActivity.SCAN_QR_REQUEST_CODE) return
-
-        val scannedCode = data?.getStringExtra(ScanQrCodeActivity.SCAN_RESULT) ?: ""
+    private fun onCodeScanned(scannedCode: String) {
         if (scannedCode.isEmpty()) return
 
-        // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
-        // If do not use the delay, then etAmount error field is not displayed when
-        // inserting an incorrect amount by shareUri
-        binding.lSendAddress.imvQrCode.postDelayed(
-            {
-                store.dispatch(
-                    PasteAddress(
-                        data = scannedCode,
-                        sourceType = Token.Send.AddressEntered.SourceType.QRCode,
-                    ),
-                )
-                store.dispatch(TruncateOrRestore(!binding.lSendAddress.etAddress.isFocused))
-            },
-            200,
+        store.dispatch(
+            PasteAddress(
+                data = scannedCode,
+                sourceType = Token.Send.AddressEntered.SourceType.QRCode,
+            ),
         )
+        store.dispatch(TruncateOrRestore(!binding.lSendAddress.etAddress.isFocused))
     }
 
     private fun setupAmountLayout() {
@@ -328,7 +353,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun restoreMainCurrency(): MainCurrencyType {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
-        val mainCurrency = sp.getString("mainCurrency", FiatCurrency.Default.code)
+        val mainCurrency = sp.getString("mainCurrency", AppCurrency.Default.code)
         return MainCurrencyType.values()
             .firstOrNull { it.name.equals(mainCurrency!!, ignoreCase = true) }
             ?: MainCurrencyType.CRYPTO

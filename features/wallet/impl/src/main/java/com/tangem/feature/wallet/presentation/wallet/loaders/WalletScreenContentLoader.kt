@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders
 
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
@@ -30,14 +29,12 @@ internal class WalletScreenContentLoader @Inject constructor(
      * Load content by [UserWallet]
      *
      * @param userWallet     user wallet
-     * @param appCurrency    app currency
      * @param clickIntents   click intents
      * @param isRefresh      flag that determinate if content must load again
      * @param coroutineScope coroutine scope
      */
     fun load(
         userWallet: UserWallet,
-        appCurrency: AppCurrency,
         clickIntents: WalletClickIntentsV2,
         isRefresh: Boolean = false,
         coroutineScope: CoroutineScope,
@@ -46,11 +43,11 @@ internal class WalletScreenContentLoader @Inject constructor(
 
         val id = userWallet.walletId
         if (!storage.contains(id)) {
-            loadInternal(userWallet, appCurrency, clickIntents, coroutineScope, isRefresh)
+            loadInternal(userWallet, clickIntents, coroutineScope, isRefresh)
         } else {
             if (isRefresh) {
                 storage.remove(id)
-                loadInternal(userWallet, appCurrency, clickIntents, coroutineScope, true)
+                loadInternal(userWallet, clickIntents, coroutineScope, true)
             } else {
                 Timber.d("$id content loading has already started")
             }
@@ -63,16 +60,19 @@ internal class WalletScreenContentLoader @Inject constructor(
         storage.remove(id)
     }
 
+    fun cancelAll() {
+        Timber.d("All content loading is canceled")
+        storage.clear()
+    }
+
     private fun loadInternal(
         userWallet: UserWallet,
-        appCurrency: AppCurrency,
         clickIntents: WalletClickIntentsV2,
         coroutineScope: CoroutineScope,
         isRefresh: Boolean,
     ) {
         val loader = factory.create(
             userWallet = userWallet,
-            appCurrency = appCurrency,
             clickIntents = clickIntents,
             isRefresh = isRefresh,
         )
