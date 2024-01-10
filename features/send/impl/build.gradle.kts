@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.lifecycle.compose)
     implementation(deps.jodatime)
+    implementation(deps.timber)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
@@ -37,9 +38,6 @@ dependencies {
     /** Tangem SDKs */
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
-
-    /** Common */
-    implementation(projects.common)
 
     /** Core modules */
     implementation(projects.core.featuretoggles)
@@ -64,6 +62,7 @@ dependencies {
 
     /** Feature modules */
     implementation(projects.features.send.api)
+    implementation(projects.features.tokendetails.api)
 
     /** DI */
     implementation(deps.hilt.android)

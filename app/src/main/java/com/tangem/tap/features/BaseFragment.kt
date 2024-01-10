@@ -23,7 +23,7 @@ import com.tangem.wallet.R
  */
 abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackPressedHandler {
 
-    protected lateinit var mainView: View
+    private lateinit var mainView: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

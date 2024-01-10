@@ -20,6 +20,18 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideAddCryptoCurrenciesUseCase(
+        currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
+    ): AddCryptoCurrenciesUseCase {
+        return AddCryptoCurrenciesUseCase(
+            currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideFetchTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -241,5 +253,45 @@ internal object TokensDomainModule {
     @ViewModelScoped
     fun provideGetGlobalTokenListUseCase(tokensListRepository: TokensListRepository): GetGlobalTokenListUseCase {
         return GetGlobalTokenListUseCase(repository = tokensListRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideCheckTokenCompatibilityUseCase(
+        repository: NetworksCompatibilityRepository,
+    ): CheckCurrencyCompatibilityUseCase {
+        return CheckCurrencyCompatibilityUseCase(repository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideFindTokenByContractAddressUseCase(
+        tokensListRepository: TokensListRepository,
+    ): FindTokenByContractAddressUseCase {
+        return FindTokenByContractAddressUseCase(repository = tokensListRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideValidateContractAddressUseCase(
+        tokensListRepository: TokensListRepository,
+    ): ValidateContractAddressUseCase {
+        return ValidateContractAddressUseCase(tokensListRepository = tokensListRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideAreTokensSupportedByNetworkUseCase(
+        repository: NetworksCompatibilityRepository,
+    ): AreTokensSupportedByNetworkUseCase {
+        return AreTokensSupportedByNetworkUseCase(repository = repository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetNetworksSupportedByWallet(
+        repository: NetworksCompatibilityRepository,
+    ): GetNetworksSupportedByWallet {
+        return GetNetworksSupportedByWallet(repository = repository)
     }
 }
