@@ -68,6 +68,7 @@ internal class FeeNotificationFactory(
         feeSelectorState: FeeSelectorState.Content,
     ) {
         val coinCryptoCurrency = coinCryptoCurrencyStatusProvider()
+        val cryptoAmount = coinCryptoCurrency.value.amount ?: BigDecimal.ZERO
         val choosableFee = feeSelectorState.fees as? TransactionFee.Choosable
         val fee = when (feeSelectorState.selectedFee) {
             FeeType.SLOW -> choosableFee?.minimum?.amount?.value
@@ -76,7 +77,7 @@ internal class FeeNotificationFactory(
             FeeType.CUSTOM -> feeSelectorState.customValues.firstOrNull()?.value?.toBigDecimalOrNull()
         } ?: return
 
-        if (fee > coinCryptoCurrency.value.amount) {
+        if (fee > cryptoAmount) {
             add(
                 SendFeeNotification.Error.ExceedsBalance(
                     coinCryptoCurrency.currency.networkIconResId,
