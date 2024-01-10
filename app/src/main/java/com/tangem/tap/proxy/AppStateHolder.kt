@@ -11,6 +11,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
@@ -61,6 +62,10 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, ReduxNavControl
 
     override fun dispatch(action: Action) {
         mainStore?.dispatch(action)
+    }
+
+    override suspend fun dispatchWithMain(action: Action) {
+        mainStore?.dispatchWithMain(action)
     }
 
     override suspend fun onUserWalletSelected(userWallet: UserWallet) {

@@ -35,14 +35,12 @@ class ConfigValueModel(
     val sprinklr: SprinklrConfig?,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
-    val swapReferrerAccount: SwapReferrerAccount?,
     val kaspaSecondaryApiUrl: String,
     val walletConnectProjectId: String,
     val tangemComAuthorization: String?,
     val chiaFireAcademyApiKey: String?,
     val chiaTangemApiKey: String?,
-    val tangemExpressApiKey: String,
-    val oneInchApiKey: String,
+    val express: ExpressModel?,
 )
 
 @JsonClass(generateAdapter = true)
@@ -82,11 +80,6 @@ data class GetBlockToken(
 data class AppsFlyer(
     val appsFlyerDevKey: String,
     val appsFlyerAppID: String,
-)
-
-data class SwapReferrerAccount(
-    val address: String,
-    val fee: String,
 )
 
 class ConfigModel(
