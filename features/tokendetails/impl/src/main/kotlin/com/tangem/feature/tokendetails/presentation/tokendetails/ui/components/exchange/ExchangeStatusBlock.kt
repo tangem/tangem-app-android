@@ -18,23 +18,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.ExchangeStatusState
 import com.tangem.features.tokendetails.impl.R
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun ExchangeStatusBlock(
-    statuses: MutableStateFlow<List<ExchangeStatusState>>,
+    statuses: ImmutableList<ExchangeStatusState>,
     showLink: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val statusValues = statuses.collectAsStateWithLifecycle()
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -77,11 +75,15 @@ internal fun ExchangeStatusBlock(
             }
         }
 
-        statusValues.value.forEachIndexed { index, item ->
-            ExchangeStatusStep(
-                stepStatus = item,
-                isLast = index == statusValues.value.lastIndex,
-            )
+        AnimatedContent(targetState = statuses.lastIndex, label = "Exchange Status List Change") {
+            Column {
+                statuses.forEachIndexed { index, item ->
+                    ExchangeStatusStep(
+                        stepStatus = item,
+                        isLast = index == it,
+                    )
+                }
+            }
         }
     }
 }
@@ -103,6 +105,11 @@ private fun ExchangeStatusStep(
                     .size(TangemTheme.dimens.size20),
             ) {
                 when {
+                    it.status == ExchangeStatus.Cancelled -> ExchangeStep(
+                        iconRes = R.drawable.ic_close_24,
+                        color = TangemTheme.colors.icon.warning,
+                        isDone = false,
+                    )
                     it.status == ExchangeStatus.Failed -> ExchangeStep(
                         iconRes = R.drawable.ic_close_24,
                         color = TangemTheme.colors.icon.warning,
@@ -133,6 +140,7 @@ private fun ExchangeStatusStep(
 @Composable
 private fun ExchangeStatusStepText(stepStatus: ExchangeStatusState) {
     val textColor = when {
+        stepStatus.status == ExchangeStatus.Cancelled -> TangemTheme.colors.icon.warning
         stepStatus.status == ExchangeStatus.Failed && !stepStatus.isDone -> TangemTheme.colors.icon.warning
         stepStatus.status == ExchangeStatus.Verifying && !stepStatus.isDone -> TangemTheme.colors.icon.attention
         stepStatus.isDone -> TangemTheme.colors.text.primary1
