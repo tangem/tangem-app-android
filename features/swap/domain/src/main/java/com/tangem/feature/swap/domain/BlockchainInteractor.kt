@@ -11,5 +11,5 @@ interface BlockchainInteractor {
      */
     fun getBlockchainInfo(networkId: String): NetworkInfo
 
-    fun getExplorerTransactionLink(networkId: String, txAddress: String): String
+    fun getExplorerTransactionLink(networkId: String, txHash: String): String
 }

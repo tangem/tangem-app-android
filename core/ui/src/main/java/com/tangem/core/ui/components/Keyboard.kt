@@ -1,13 +1,10 @@
 package com.tangem.core.ui.components
 
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -25,23 +22,9 @@ sealed interface Keyboard {
 /**
  * Allows to subscribe to a soft keyboard to detect when it's open/closed
  */
-@Deprecated("Use Modifier.imePadding() on pure Compose screens (without XML layouts)")
 @Composable
 fun keyboardAsState(): State<Keyboard> {
-    val density = LocalDensity.current
-    val imeInsets = WindowInsets.ime
-        .exclude(WindowInsets.navigationBars)
-        .getBottom(density)
-
-    return remember(imeInsets) {
-        derivedStateOf {
-            if (imeInsets > 0) {
-                Keyboard.Opened(
-                    height = with(density) { imeInsets.toDp() },
-                )
-            } else {
-                Keyboard.Closed
-            }
-        }
-    }
+    val bottom = WindowInsets.ime.getBottom(LocalDensity.current)
+    val isImeVisible = bottom > 0
+    return rememberUpdatedState(if (isImeVisible) Keyboard.Opened(bottom.dp) else Keyboard.Closed)
 }

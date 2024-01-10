@@ -39,6 +39,23 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class SwapPromo(
+        val onSwapClick: () -> Unit,
+        val onCloseClick: () -> Unit,
+    ) : TokenDetailsNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.token_swap_promotion_title),
+            subtitle = resourceReference(id = R.string.token_swap_promotion_message),
+            iconResId = R.drawable.img_swap_promo,
+            backgroundResId = R.drawable.img_swap_promo_banner_background,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(id = com.tangem.core.ui.R.string.token_swap_promotion_button),
+                onClick = onSwapClick,
+            ),
+        ),
+    )
+
     object NetworksUnreachable : Warning(
         title = resourceReference(R.string.warning_network_unreachable_title),
         subtitle = resourceReference(R.string.warning_network_unreachable_message),
