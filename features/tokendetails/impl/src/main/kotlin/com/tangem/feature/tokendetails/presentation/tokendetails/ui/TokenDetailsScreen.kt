@@ -28,6 +28,7 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationWithBackground
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.event.EventEffect
@@ -104,14 +105,21 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                     key = { it::class.java },
                     contentType = { it.config::class.java },
                     itemContent = {
-                        Notification(
-                            modifier = itemModifier.animateItemPlacement(),
-                            config = it.config,
-                            iconTint = when (it) {
-                                is TokenDetailsNotification.Warning -> null
-                                is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
-                            },
-                        )
+                        if (it is TokenDetailsNotification.SwapPromo) {
+                            NotificationWithBackground(
+                                config = it.config,
+                                modifier = itemModifier.animateItemPlacement(),
+                            )
+                        } else {
+                            Notification(
+                                modifier = itemModifier.animateItemPlacement(),
+                                config = it.config,
+                                iconTint = when (it) {
+                                    is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
+                                    else -> null
+                                },
+                            )
+                        }
                     },
                 )
                 if (state.isMarketPriceAvailable) {
