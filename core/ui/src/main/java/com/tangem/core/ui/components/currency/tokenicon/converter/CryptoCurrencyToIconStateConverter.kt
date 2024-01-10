@@ -1,12 +1,12 @@
 package com.tangem.core.ui.components.currency.tokenicon.converter
 
-import com.tangem.common.Converter
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.extensions.getTintForTokenIcon
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.tryGetBackgroundForTokenIcon
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.utils.converter.Converter
 
 /**
  * Converts [CryptoCurrencyStatus] to [TokenIconState]

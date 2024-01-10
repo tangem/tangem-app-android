@@ -3,8 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.BalancesAndLimitsBlockState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.DepositButtonState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 
@@ -27,8 +29,16 @@ internal class SetRefreshStateTransformer(
                     buttons = prevState.buttons.toUpdatedState(),
                 )
             }
+            is WalletState.Visa.Content -> {
+                prevState.copy(
+                    pullToRefreshConfig = prevState.pullToRefreshConfig.toUpdatedState(isRefreshing),
+                    depositButtonState = prevState.depositButtonState.toUpdatedState(isRefreshing),
+                    balancesAndLimitBlockState = prevState.balancesAndLimitBlockState.toUpdatedState(isRefreshing),
+                )
+            }
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
+            is WalletState.Visa.Locked,
             -> prevState
         }
     }
@@ -62,6 +72,19 @@ internal class SetRefreshStateTransformer(
                     is WalletManageButton.Swap -> null
                 }
             }
+        }
+    }
+
+    private fun DepositButtonState.toUpdatedState(isRefreshing: Boolean): DepositButtonState {
+        return copy(isEnabled = !isRefreshing)
+    }
+
+    private fun BalancesAndLimitsBlockState.toUpdatedState(isRefreshing: Boolean): BalancesAndLimitsBlockState {
+        return when (this) {
+            is BalancesAndLimitsBlockState.Content -> copy(isEnabled = !isRefreshing)
+            is BalancesAndLimitsBlockState.Error,
+            is BalancesAndLimitsBlockState.Loading,
+            -> this
         }
     }
 }
