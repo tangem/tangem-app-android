@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.SubcomposeAsyncImage
@@ -24,6 +25,7 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.swap.models.states.PercentLowerThanBest
 import com.tangem.feature.swap.models.states.ProviderState
 
 /**
@@ -151,8 +153,10 @@ private fun ProviderContentState(
                             maxLines = 1,
                         )
                     }
-                    if (state.percentLowerThenBest > 0f) {
-                        AnimatedContent(targetState = state.percentLowerThenBest, label = "") {
+                    if (state.percentLowerThenBest is PercentLowerThanBest.Value &&
+                        state.percentLowerThenBest.value > 0
+                    ) {
+                        AnimatedContent(targetState = state.percentLowerThenBest.value, label = "") {
                             Text(
                                 text = "-$it%",
                                 style = TangemTheme.typography.body2,
@@ -243,7 +247,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxWidth()) {
         Column {
             Text(
-                text = "Provider",
+                text = stringResource(R.string.express_provider),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.secondary,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
@@ -256,11 +260,14 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
                 ),
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(TangemTheme.dimens.size16),
+                    modifier = Modifier
+                        .size(TangemTheme.dimens.size16)
+                        .align(Alignment.CenterVertically),
                     color = TangemTheme.colors.icon.informative,
+                    strokeWidth = TangemTheme.dimens.size2,
                 )
                 Text(
-                    text = "Fetching best rates ...",
+                    text = stringResource(R.string.express_fetch_best_rates),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
@@ -370,7 +377,7 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
         ),
     ) {
         Text(
-            text = "Permission required",
+            text = stringResource(id = R.string.express_provider_permission_needed),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
@@ -404,7 +411,7 @@ private fun ProviderItem_Content_Preview() {
         iconUrl = "",
         subtitle = stringReference("1 000 000"),
         additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
-        percentLowerThenBest = -1.0f,
+        percentLowerThenBest = PercentLowerThanBest.Value(-1.0f),
         selectionType = ProviderState.SelectionType.SELECT,
         onProviderClick = {},
     )
