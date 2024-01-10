@@ -40,7 +40,11 @@ internal fun TokensList(tokens: LazyPagingItems<TokenItemState>, addCustomTokenB
                         text = stringResource(id = R.string.manage_tokens_nothing_found),
                         style = TangemTheme.typography.caption2,
                         color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                        modifier = Modifier.padding(
+                            top = TangemTheme.dimens.spacing8,
+                            start = TangemTheme.dimens.spacing16,
+                            end = TangemTheme.dimens.spacing16,
+                        ),
                     )
                 }
             }
@@ -51,7 +55,7 @@ internal fun TokensList(tokens: LazyPagingItems<TokenItemState>, addCustomTokenB
 
             if (addCustomTokenButton.isVisible) {
                 item {
-                    AddCustomTokenButton(onButtonClick = { addCustomTokenButton.onClick })
+                    AddCustomTokenButton(onButtonClick = addCustomTokenButton.onClick)
                 }
             }
         }
