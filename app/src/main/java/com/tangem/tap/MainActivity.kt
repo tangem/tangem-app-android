@@ -23,6 +23,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.feature.qrscanning.QrScanningRouter
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.navigation.AppScreen
@@ -134,6 +135,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var sendRouter: SendRouter
 
+    @Inject
+    lateinit var qrScanningRouter: QrScanningRouter
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -206,6 +210,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 manageTokensRouter = manageTokensRouter,
                 cardSdkConfigRepository = cardSdkConfigRepository,
                 sendRouter = sendRouter,
+                qrScanningRouter = qrScanningRouter,
             ),
         )
     }
@@ -247,20 +252,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode?> {
         val tapApplication = application as TapApplication
-        val featureToggle = tapApplication.darkThemeFeatureToggle
 
-        return if (featureToggle.isDarkThemeEnabled) {
-            tapApplication.getAppThemeModeUseCase()
-                .map { maybeMode ->
-                    maybeMode.getOrElse { AppThemeMode.DEFAULT }
-                }
-                .shareIn(
-                    scope = lifecycleScope + Dispatchers.IO,
-                    started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-                )
-        } else {
-            MutableStateFlow(AppThemeMode.FORCE_LIGHT)
-        }
+        return tapApplication.getAppThemeModeUseCase()
+            .map { maybeMode ->
+                maybeMode.getOrElse { AppThemeMode.DEFAULT }
+            }
+            .shareIn(
+                scope = lifecycleScope + Dispatchers.IO,
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+            )
     }
 
     override fun onStart() {
@@ -454,7 +454,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun checkForNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            BuildConfig.DEBUG &&
+            BuildConfig.LOG_ENABLED &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
         ) {

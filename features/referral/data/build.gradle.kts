@@ -8,14 +8,22 @@ plugins {
 
 dependencies {
 
-    /** Project*/
-    implementation(project(":core:datasource"))
-    implementation(project(":core:utils"))
-    implementation(project(":features:referral:domain"))
-    
+    /** Project */
+    implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+
+    /** Data modules */
+    implementation(projects.data.tokens)
+
+    /** Domain modules */
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.features.referral.domain)
 
     /** Libs */
-    implementation(project(":libs:auth"))
+    implementation(projects.libs.auth)
 
     /** Time */
     implementation(deps.jodatime)
@@ -23,4 +31,7 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Tangem deps */
+    implementation(deps.tangem.blockchain)
 }
