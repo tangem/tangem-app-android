@@ -22,7 +22,13 @@ object BigDecimalFormatter {
             roundingMode = RoundingMode.DOWN
         }
 
-        return formatter.format(cryptoAmount) + "\u2009$cryptoCurrency"
+        return formatter.format(cryptoAmount).let {
+            if (cryptoCurrency.isEmpty()) {
+                it
+            } else {
+                it + "\u2009$cryptoCurrency"
+            }
+        }
     }
 
     fun formatCryptoAmount(cryptoAmount: BigDecimal?, cryptoCurrency: CryptoCurrency): String {

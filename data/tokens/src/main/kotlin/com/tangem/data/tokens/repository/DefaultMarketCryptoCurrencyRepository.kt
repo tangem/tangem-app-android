@@ -11,6 +11,10 @@ class DefaultMarketCryptoCurrencyRepository(
 ) : MarketCryptoCurrencyRepository {
 
     override suspend fun isExchangeable(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
+        return getExchangeableFlag(userWalletId, cryptoCurrency) && !cryptoCurrency.isCustom
+    }
+
+    private suspend fun getExchangeableFlag(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
         val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE
 
         return assetsStore.getSyncOrNull(userWalletId)?.find {

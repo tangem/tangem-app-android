@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
@@ -36,8 +36,6 @@ internal fun ExchangeStatusBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetConfig) {
     val config = content.value
-    val status = config.activeStatus.collectAsStateWithLifecycle()
-    val notification = config.notification.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
@@ -53,6 +51,7 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
             text = stringResource(id = R.string.express_exchange_status_subtitle),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
+            textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(CenterHorizontally),
         )
@@ -77,15 +76,15 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
         SpacerH12()
         ExchangeStatusBlock(
             statuses = config.statuses,
-            showLink = notification.value == null && config.txUrl != null,
+            showLink = config.showProviderLink,
             onClick = { config.onGoToProviderClick(config.txUrl.orEmpty()) },
         )
         AnimatedContent(
-            targetState = notification.value,
+            targetState = config.notification,
             label = "Exchange Status Notification Change",
         ) {
             it?.let {
-                val tint = when (status.value) {
+                val tint = when (config.activeStatus) {
                     ExchangeStatus.Verifying -> TangemTheme.colors.icon.attention
                     ExchangeStatus.Failed -> TangemTheme.colors.icon.warning
                     else -> null
