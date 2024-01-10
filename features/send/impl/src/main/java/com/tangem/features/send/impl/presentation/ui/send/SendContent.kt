@@ -114,14 +114,14 @@ private fun FromWallet(walletName: String, walletBalance: String) {
 
 @Composable
 private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: State<Boolean>, onClick: () -> Unit) {
-    val amount = amountState.amountTextField.collectAsStateWithLifecycle()
+    val amount = amountState.amountTextField
 
     val cryptoAmount = formatCryptoAmount(
         cryptoCurrency = amountState.cryptoCurrencyStatus.currency,
-        cryptoAmount = amount.value.value.toBigDecimalOrDefault(),
+        cryptoAmount = amount.value.toBigDecimalOrDefault(),
     )
     val fiatAmount = BigDecimalFormatter.formatFiatAmount(
-        fiatAmount = amount.value.fiatValue.toBigDecimalOrDefault(),
+        fiatAmount = amount.fiatValue.toBigDecimalOrDefault(),
         fiatCurrencyCode = amountState.appCurrency.code,
         fiatCurrencySymbol = amountState.appCurrency.symbol,
     )
@@ -140,8 +140,8 @@ private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: State<Bo
 
 @Composable
 private fun RecipientBlock(recipientState: SendStates.RecipientState, isSuccess: State<Boolean>, onClick: () -> Unit) {
-    val address = recipientState.addressTextField.collectAsStateWithLifecycle()
-    val memo = recipientState.memoTextField?.collectAsStateWithLifecycle()
+    val address = recipientState.addressTextField
+    val memo = recipientState.memoTextField
 
     Column(
         modifier = Modifier
@@ -149,16 +149,16 @@ private fun RecipientBlock(recipientState: SendStates.RecipientState, isSuccess:
             .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isSuccess.value) { onClick() },
     ) {
-        val showMemo = memo != null && memo.value.value.isNotBlank()
+        val showMemo = memo != null && memo.value.isNotBlank()
         InputRowRecipientDefault(
             title = TextReference.Res(R.string.send_recipient),
-            value = address.value.value,
+            value = address.value,
             showDivider = showMemo,
         )
         if (showMemo) {
             InputRowDefault(
                 title = TextReference.Res(R.string.send_extras_hint_memo),
-                text = TextReference.Str(memo?.value?.value.orEmpty()),
+                text = TextReference.Str(memo?.value.orEmpty()),
             )
         }
     }
@@ -166,18 +166,18 @@ private fun RecipientBlock(recipientState: SendStates.RecipientState, isSuccess:
 
 @Composable
 private fun FeeBlock(feeState: SendStates.FeeState, isSuccess: State<Boolean>, onClick: () -> Unit) {
-    val feeSelector =
-        feeState.feeSelectorState.collectAsStateWithLifecycle().value as? FeeSelectorState.Content ?: return
-    val customValue = feeSelector.customValues.collectAsStateWithLifecycle().value.getOrNull(0)
+    val feeSelector = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
+    val customValue = feeSelector.customValues.getOrNull(0)
+    val selectedFee = feeSelector.selectedFee
 
     val feeValue = formatCryptoAmount(
         cryptoCurrency = feeState.cryptoCurrencyStatus.currency,
-        cryptoAmount = when (val selectedFee = feeSelector.fees) {
-            is TransactionFee.Single -> selectedFee.normal.amount.value
-            is TransactionFee.Choosable -> when (feeSelector.selectedFee) {
-                FeeType.SLOW -> selectedFee.minimum.amount.value
-                FeeType.MARKET -> selectedFee.normal.amount.value
-                FeeType.FAST -> selectedFee.priority.amount.value
+        cryptoAmount = when (val fees = feeSelector.fees) {
+            is TransactionFee.Single -> fees.normal.amount.value
+            is TransactionFee.Choosable -> when (selectedFee) {
+                FeeType.SLOW -> fees.minimum.amount.value
+                FeeType.MARKET -> fees.normal.amount.value
+                FeeType.FAST -> fees.priority.amount.value
                 FeeType.CUSTOM -> customValue?.value.toBigDecimalOrDefault()
             }
         },
