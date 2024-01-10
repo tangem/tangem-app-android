@@ -11,6 +11,7 @@ sealed class FeeItemState {
         val amountCrypto: String,
         val symbolCrypto: String,
         val amountFiatFormatted: String,
+        val explanation: TextReference?,
         val isClickable: Boolean,
         val onClick: () -> Unit,
     ) : FeeItemState()
