@@ -1,11 +1,10 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
-import com.tangem.common.Provider
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
-import kotlinx.coroutines.flow.update
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 
@@ -42,31 +41,27 @@ internal class SendAmountFieldChangeConverter(
         }
 
         val isExceedBalance = value.checkExceedBalance(amountState.cryptoCurrencyStatus, amountState)
-        amountState.amountTextField.update {
-            it.copy(
-                value = cryptoValue,
-                fiatValue = fiatValue,
-                isError = isExceedBalance,
-            )
-        }
         return state.copy(
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = !isExceedBalance,
+                amountTextField = amountState.amountTextField.copy(
+                    value = cryptoValue,
+                    fiatValue = fiatValue,
+                    isError = isExceedBalance,
+                ),
             ),
         )
     }
 
     private fun SendUiState.emptyState(): SendUiState {
-        amountState?.amountTextField?.update {
-            it.copy(
-                value = if (!amountState.isFiatValue) "" else DEFAULT_VALUE,
-                fiatValue = if (amountState.isFiatValue) "" else DEFAULT_VALUE,
-                isError = false,
-            )
-        }
         return copy(
             amountState = amountState?.copy(
                 isPrimaryButtonEnabled = false,
+                amountTextField = amountState.amountTextField.copy(
+                    value = if (!amountState.isFiatValue) "" else DEFAULT_VALUE,
+                    fiatValue = if (amountState.isFiatValue) "" else DEFAULT_VALUE,
+                    isError = false,
+                ),
             ),
         )
     }
