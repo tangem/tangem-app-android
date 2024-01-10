@@ -29,16 +29,16 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.NOT_INITIALIZED_WALLET_INDEX
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.controlButtons
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import kotlinx.collections.immutable.toImmutableList
 
@@ -141,6 +141,18 @@ private fun WalletContent(
                 }
             }
 
+            (selectedWallet as? WalletState.Visa.Content)?.let {
+                depositButton(
+                    modifier = itemModifier.fillMaxWidth(),
+                    state = it.depositButtonState,
+                )
+
+                balancesAndLimitsBlock(
+                    modifier = itemModifier,
+                    state = it.balancesAndLimitBlockState,
+                )
+            }
+
             contentItemsV2(
                 state = selectedWallet,
                 txHistoryItems = txHistoryItems,
@@ -158,6 +170,7 @@ private fun WalletContent(
                 is TokenReceiveBottomSheetConfig -> TokenReceiveBottomSheet(config = bottomSheetConfig)
                 is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
                 is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
+                is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
             }
         }
 

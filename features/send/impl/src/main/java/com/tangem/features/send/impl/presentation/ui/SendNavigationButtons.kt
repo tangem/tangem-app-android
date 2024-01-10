@@ -50,7 +50,7 @@ internal fun SendNavigationButtons(uiState: SendUiState) {
 private fun SendSecondaryNavigationButton(uiState: SendUiState) {
     val currentState = uiState.currentState.collectAsState()
     AnimatedVisibility(
-        visible = currentState.value == SendUiStateType.Recipient ||
+        visible = currentState.value == SendUiStateType.Amount ||
             currentState.value == SendUiStateType.Fee,
     ) {
         Icon(
@@ -82,11 +82,10 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
         uiState = uiState,
     )
 
-    val isButtonEnabled = when (currentState.value) {
-        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
-        else -> true
-    }
+    val isButtonEnabled = isButtonEnabled(
+        currentState = currentState,
+        uiState = uiState,
+    )
 
     AnimatedContent(
         targetState = buttonTextId,
@@ -180,5 +179,14 @@ private fun getButtonData(
         } else {
             R.string.common_send
         } to uiState.clickIntents::onSendClick
+    }
+}
+
+private fun isButtonEnabled(currentState: State<SendUiStateType>, uiState: SendUiState): Boolean {
+    return when (currentState.value) {
+        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled ?: false
+        else -> true
     }
 }
