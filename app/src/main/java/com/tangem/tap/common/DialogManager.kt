@@ -5,18 +5,13 @@ import android.content.Context
 import com.tangem.core.navigation.StateDialog
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
-import com.tangem.tap.common.ui.SimpleAlertDialog
-import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
+import com.tangem.tap.common.ui.*
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
-import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.products.twins.ui.dialog.TwinningProcessNotCompletedDialog
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.*
-import com.tangem.tap.features.wallet.redux.models.WalletDialog
-import com.tangem.tap.features.wallet.ui.dialogs.*
-import com.tangem.tap.features.wallet.ui.wallet.CurrencySelectionDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
@@ -50,13 +45,14 @@ class DialogManager : StoreSubscriber<GlobalState> {
         if (dialog != null) return
 
         dialog = when (state.dialog) {
-            is AppDialog.SimpleOkDialog -> SimpleOkDialog.create(state.dialog, context)
             is AppDialog.SimpleOkDialogRes -> SimpleOkDialog.create(state.dialog, context)
-            is AppDialog.SimpleOkErrorDialog -> SimpleOkDialog.create(state.dialog, context)
-            is AppDialog.SimpleOkWarningDialog -> SimpleOkDialog.create(state.dialog, context)
             is StateDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
+            is AppDialog.RussianCardholdersWarningDialog -> RussianCardholdersWarningBottomSheetDialog(
+                context,
+                state.dialog.data,
+            )
             is OnboardingDialog.TwinningProcessNotCompleted -> TwinningProcessNotCompletedDialog.create(context)
             is OnboardingDialog.InterruptOnboarding -> InterruptOnboardingDialog.create(context, state.dialog)
             is WalletConnectDialog.UnsupportedCard ->
@@ -132,11 +128,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 context = context,
                 cardId = state.dialog.cardId,
             )
-            is WalletDialog.CurrencySelectionDialog -> CurrencySelectionDialog.create(state.dialog, context)
-            is WalletDialog.ChooseTradeActionDialog -> ChooseTradeActionBottomSheetDialog(context, state.dialog)
-            is WalletDialog.SelectAmountToSendDialog -> AmountToSendBottomSheetDialog(context, state.dialog)
-            is WalletDialog.SignedHashesMultiWalletDialog -> SignedHashesWarningDialog.create(context)
-            is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
+            is AppDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
                     state.dialog.messageRes,
@@ -145,15 +137,13 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 ),
                 context = context,
             )
-            is WalletDialog.RemoveWalletDialog -> SimpleCancelableAlertDialog.create(
+            is AppDialog.RemoveWalletDialog -> SimpleCancelableAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencyTitle),
                 messageRes = state.dialog.messageRes,
                 context = context,
                 primaryButtonRes = state.dialog.primaryButtonRes,
                 primaryButtonAction = state.dialog.onOk,
             )
-            is WalletDialog.RussianCardholdersWarningDialog ->
-                RussianCardholdersWarningBottomSheetDialog(context, state.dialog.data)
             else -> null
         }
         dialog?.show()

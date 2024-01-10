@@ -16,7 +16,8 @@ dependencies {
     implementation(projects.domain.legacy)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.domain.models)
-
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
 
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain) {

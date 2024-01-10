@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.organizetokens
 
-import com.tangem.common.Provider
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -16,6 +15,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.err
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.CryptoCurrencyToDraggableItemConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.NetworkGroupToDraggableItemsConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
+import com.tangem.utils.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update

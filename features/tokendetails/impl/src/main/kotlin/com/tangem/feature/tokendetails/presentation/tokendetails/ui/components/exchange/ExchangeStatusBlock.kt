@@ -67,7 +67,7 @@ internal fun ExchangeStatusBlock(
                             .padding(end = TangemTheme.dimens.spacing2),
                     )
                     Text(
-                        text = stringResource(id = R.string.express_go_to_provider),
+                        text = stringResource(id = R.string.common_go_to_provider),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                     )

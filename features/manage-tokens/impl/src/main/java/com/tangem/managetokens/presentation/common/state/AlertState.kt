@@ -25,18 +25,32 @@ internal sealed class AlertState {
         override val message: TextReference = resourceReference(R.string.manage_tokens_network_selector_non_native_info)
     }
 
-    object TokensUnsupported : AlertState() {
-        override val message: TextReference = resourceReference(R.string.alert_manage_tokens_unsupported_message)
+    class TokensUnsupported(networkName: String) : AlertState() {
+        override val message: TextReference = resourceReference(
+            id = R.string.alert_manage_tokens_unsupported_message,
+            formatArgs = wrappedList(networkName),
+        )
     }
 
     object TokensUnsupportedCurve : AlertState() {
         override val message: TextReference = resourceReference(R.string.alert_manage_tokens_unsupported_curve_message)
     }
 
-    class TokensUnsupportedBlockchainByCard(val token: String) : AlertState() {
+    class TokensUnsupportedBlockchainByCard(networkName: String) : AlertState() {
         override val message: TextReference = resourceReference(
             id = R.string.alert_manage_tokens_unsupported_blockchain_by_card_message,
-            formatArgs = wrappedList(token),
+            formatArgs = wrappedList(networkName),
         )
+    }
+
+    class CannotHideNetworkWithTokens(tokenName: String, networkName: String) : AlertState() {
+        override val message: TextReference = resourceReference(
+            id = R.string.token_details_unable_hide_alert_message,
+            formatArgs = wrappedList(tokenName, networkName),
+        )
+    }
+
+    object TokenAlreadyAdded : AlertState() {
+        override val message: TextReference = resourceReference(R.string.custom_token_validation_error_already_added)
     }
 }

@@ -132,7 +132,7 @@ class DefaultWalletManagersFacade(
         val walletManager = getOrCreateWalletManager(userWalletId, blockchain, derivationPath)
         if (walletManager == null || blockchain == Blockchain.Unknown) {
             Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
-            return UpdateWalletManagerResult.Unreachable
+            return UpdateWalletManagerResult.UnreachableWithoutAddresses
         }
 
         return getLastWalletManagerResult(walletManager)
@@ -251,8 +251,8 @@ class DefaultWalletManagersFacade(
             derivationPath = derivationPath,
         )
         if (walletManager == null || blockchain == Blockchain.Unknown) {
-            Timber.w("Unable to create or find a wallet manager for $blockchain")
-            return UpdateWalletManagerResult.Unreachable
+            Timber.w("Unable to create or find a wallet manager for blockchain: $blockchain")
+            return UpdateWalletManagerResult.UnreachableWithoutAddresses
         }
 
         updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
@@ -285,7 +285,7 @@ class DefaultWalletManagersFacade(
         } catch (e: Throwable) {
             Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
-            UpdateWalletManagerResult.Unreachable
+            resultFactory.getUnreachableResult(walletManager)
         }
     }
 
@@ -297,7 +297,7 @@ class DefaultWalletManagersFacade(
         } catch (e: Throwable) {
             Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
-            UpdateWalletManagerResult.Unreachable
+            resultFactory.getUnreachableResult(walletManager)
         }
     }
 
@@ -503,6 +503,29 @@ class DefaultWalletManagersFacade(
             derivationPath = network.derivationPath.value,
         )
         return (walletManager as TransactionSender).send(txData, signer)
+    }
+
+    override suspend fun getRecentTransactions(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): List<TxHistoryItem> {
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+        )
+
+        if (walletManager == null) {
+            Timber.e("Unable to get a wallet manager for blockchain: $blockchain")
+            return emptyList()
+        }
+
+        val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
+            walletAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
+        )
+
+        return walletManager.wallet.recentTransactions.mapNotNull(transactionDataConverter::convert)
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {

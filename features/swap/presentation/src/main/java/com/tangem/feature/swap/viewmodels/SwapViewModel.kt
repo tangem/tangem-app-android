@@ -606,7 +606,7 @@ internal class SwapViewModel @Inject constructor(
                         afterSearch = true,
                     ),
 
-                )
+                    )
             } else {
                 tokenDataState.copy(
                     toGroup = tokenDataState.toGroup.copy(

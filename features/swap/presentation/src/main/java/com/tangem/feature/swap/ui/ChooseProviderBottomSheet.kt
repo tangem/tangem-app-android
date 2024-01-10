@@ -28,7 +28,7 @@ import kotlinx.collections.immutable.toImmutableList
 fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
-        contentColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.tertiary,
     ) { content: ChooseProviderBottomSheetConfig ->
         ChooseProviderBottomSheetContent(content = content)
     }

@@ -8,7 +8,7 @@ import java.lang.ref.WeakReference
 internal class StateRouter(
     private val fragmentManager: WeakReference<FragmentManager>,
 ) {
-    var currentState: MutableStateFlow<SendUiStateType> = MutableStateFlow(SendUiStateType.Amount)
+    var currentState: MutableStateFlow<SendUiStateType> = MutableStateFlow(SendUiStateType.Recipient)
         private set
 
     private var isFromSend: Boolean = false
@@ -22,9 +22,9 @@ internal class StateRouter(
             showSend()
         } else {
             when (currentState.value) {
-                SendUiStateType.Amount -> popBackStack()
-                SendUiStateType.Recipient -> showAmount()
-                SendUiStateType.Fee -> showRecipient()
+                SendUiStateType.Recipient -> popBackStack()
+                SendUiStateType.Amount -> showRecipient()
+                SendUiStateType.Fee -> showAmount()
                 SendUiStateType.Send -> showFee()
             }
         }
@@ -32,8 +32,8 @@ internal class StateRouter(
 
     fun onNextClick() {
         when (currentState.value) {
-            SendUiStateType.Amount -> showRecipient()
-            SendUiStateType.Recipient -> showFee()
+            SendUiStateType.Recipient -> showAmount()
+            SendUiStateType.Amount -> showFee()
             SendUiStateType.Fee -> showSend()
             SendUiStateType.Send -> onBackClick()
         }
@@ -41,9 +41,9 @@ internal class StateRouter(
 
     fun onPrevClick() {
         when (currentState.value) {
-            SendUiStateType.Amount -> popBackStack()
-            SendUiStateType.Recipient -> showAmount()
-            SendUiStateType.Fee -> showRecipient()
+            SendUiStateType.Recipient -> popBackStack()
+            SendUiStateType.Amount -> showRecipient()
+            SendUiStateType.Fee -> showAmount()
             SendUiStateType.Send -> popBackStack()
         }
     }
@@ -63,7 +63,7 @@ internal class StateRouter(
         currentState.update { SendUiStateType.Fee }
     }
 
-    fun showSend() {
+    private fun showSend() {
         currentState.update { SendUiStateType.Send }
     }
 }
