@@ -5,6 +5,7 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
+import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.tokens.GetMissedAddressesCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.error.GetCurrenciesError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -26,16 +27,21 @@ import kotlinx.coroutines.flow.flowOf
  * @property isDemoCardUseCase           use case that checks if card is demo
  * @property isReadyToShowRateAppUseCase use case that checks if card is user already rate app
  * @property isNeedToBackupUseCase       use case that checks if wallet need backup cards
+ * @property getMissedAddressCryptoCurrenciesUseCase use case that gets missed address crypto currencies
+ * @property hasSingleWalletSignedHashesUseCase use case that checks if single wallet signed hashes
+ * @property shouldShowSwapPromoWalletUseCase use case that checks if should show swap promo
  * @property clickIntents                screen click intents
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class WalletNotificationsListFactory(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val getMissedAddressCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
+    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     private val clickIntents: WalletClickIntents,
 ) {
 
@@ -51,9 +57,12 @@ internal class WalletNotificationsListFactory(
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(selectedWallet.walletId).conflate(),
             flow4 = getMissedAddressCryptoCurrenciesUseCase(selectedWallet.walletId).conflate(),
-        ) { hasSignedHashes, isReadyToShowRating, isNeedToBackup, maybeMissedAddressCurrencies ->
+            flow5 = shouldShowSwapPromoWalletUseCase().conflate(),
+        ) { hasSignedHashes, isReadyToShowRating, isNeedToBackup, maybeMissedAddressCurrencies, isShowSwapPromo ->
             readyForRateAppNotification = true
             buildList {
+                addSwapPromoNotification(isShowSwapPromo, cardTypesResolver)
+
                 addCriticalNotifications(cardTypesResolver)
 
                 addInformationalNotifications(cardTypesResolver, maybeMissedAddressCurrencies)
@@ -75,6 +84,18 @@ internal class WalletNotificationsListFactory(
             val network = requireNotNull(cryptoCurrencyList.firstOrNull()?.currency?.network)
             hasSingleWalletSignedHashesUseCase(userWallet = selectedWallet, network = network).conflate()
         }
+    }
+
+    private fun MutableList<WalletNotification>.addSwapPromoNotification(
+        showSwapPromo: Boolean,
+        cardTypesResolver: CardTypesResolver,
+    ) {
+        addIf(
+            element = WalletNotification.SwapPromo(
+                clickIntents::onCloseSwapPromoNotificationClick,
+            ),
+            condition = showSwapPromo && cardTypesResolver.isMultiwalletAllowed(),
+        )
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(cardTypesResolver: CardTypesResolver) {
