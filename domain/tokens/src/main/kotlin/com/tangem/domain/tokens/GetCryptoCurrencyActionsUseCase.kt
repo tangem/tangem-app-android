@@ -1,6 +1,5 @@
 package com.tangem.domain.tokens
 
-import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -12,7 +11,6 @@ import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,10 +51,9 @@ class GetCryptoCurrencyActionsUseCase(
 
             val flow = networkFlow.mapLatest { maybeCoinStatus ->
                 createTokenActionsState(
-                    userWalletId = userWallet.walletId,
+                    userWallet = userWallet,
                     coinStatus = maybeCoinStatus.getOrNull(),
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
                 )
             }
 
@@ -65,19 +62,17 @@ class GetCryptoCurrencyActionsUseCase(
     }
 
     private suspend fun createTokenActionsState(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        cardTypesResolver: CardTypesResolver,
     ): TokenActionsState {
         return TokenActionsState(
-            walletId = userWalletId,
+            walletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             states = createListOfActions(
-                userWalletId,
+                userWallet,
                 coinStatus,
                 cryptoCurrencyStatus,
-                cardTypesResolver,
             ),
         )
     }
@@ -87,10 +82,9 @@ class GetCryptoCurrencyActionsUseCase(
      * Actions priority: [Buy Send Receive Sell Swap]
      */
     private suspend fun createListOfActions(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        cardTypesResolver: CardTypesResolver,
     ): List<TokenActionsState.ActionState> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
@@ -116,14 +110,13 @@ class GetCryptoCurrencyActionsUseCase(
             activeList.add(TokenActionsState.ActionState.Send(true))
         }
 
-        val isMulticurrencyWallet = cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()
         // swap
-        if (isMulticurrencyWallet &&
-            marketCryptoCurrencyRepository.isExchangeable(userWalletId, cryptoCurrency)
-        ) {
-            activeList.add(TokenActionsState.ActionState.Swap(true))
-        } else {
-            disabledList.add(TokenActionsState.ActionState.Swap(false))
+        if (userWallet.isMultiCurrency) {
+            if (marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency)) {
+                activeList.add(TokenActionsState.ActionState.Swap(true))
+            } else {
+                disabledList.add(TokenActionsState.ActionState.Swap(false))
+            }
         }
 
         // buy
@@ -164,11 +157,13 @@ class GetCryptoCurrencyActionsUseCase(
         return activeList + disabledList
     }
 
-    private fun isSendDisabled(cryptoCurrencyStatus: CryptoCurrencyStatus, coinStatus: CryptoCurrencyStatus?): Boolean =
-        cryptoCurrencyStatus.value.amount.isNullOrZero() ||
-            coinStatus?.value?.amount.isNullOrZero() ||
-            currenciesRepository.hasPendingTransactions(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                coinStatus = coinStatus,
-            )
+    private fun isSendDisabled(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus?,
+    ): Boolean = cryptoCurrencyStatus.value.amount.isNullOrZero() ||
+        coinStatus?.value?.amount.isNullOrZero() ||
+        currenciesRepository.hasPendingTransactions(
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            coinStatus = coinStatus,
+        )
 }
