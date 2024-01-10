@@ -1,9 +1,9 @@
 package com.tangem.feature.swap.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -11,19 +11,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
+import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
@@ -39,70 +44,53 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-        Column {
-            AppBarWithBackButton(
-                text = stringResource(R.string.common_swap),
-                onBackClick = state.onBackClicked,
-                iconRes = R.drawable.ic_close_24,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing16,
+                    top = TangemTheme.dimens.spacing16,
+                    bottom = TangemTheme.dimens.spacing32,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        ) {
+            MainInfo(state)
+
+            ProviderItemBlock(
+                state = state.providerState,
+                modifier = Modifier
+                    .clickable(
+                        enabled = state.providerState.onProviderClick != null,
+                        onClick = { state.providerState.onProviderClick?.invoke(state.providerState.id) },
+                    ),
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(
-                        start = TangemTheme.dimens.spacing16,
-                        end = TangemTheme.dimens.spacing16,
-                        top = TangemTheme.dimens.spacing16,
-                        bottom = TangemTheme.dimens.spacing32,
-                    ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
-            ) {
-                MainInfo(state)
+            FeeItemBlock(state = state.fee)
 
-                ProviderItemBlock(
-                    state = state.providerState,
+            if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
+
+            MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
+
+            state.tosState?.let {
+                ProviderTos(
+                    tosState = it,
                     modifier = Modifier
-                        .clickable(
-                            enabled = state.providerState.onProviderClick != null,
-                            onClick = { state.providerState.onProviderClick?.invoke(state.providerState.id) },
-                        ),
+                        .padding(top = TangemTheme.dimens.spacing16),
                 )
-
-                FeeItemBlock(state = state.fee)
-
-                if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
-
-                AnimatedVisibility(visible = state.permissionState is SwapPermissionState.InProgress) {
-                    CardWithIcon(
-                        title = stringResource(id = R.string.swapping_pending_transaction_title),
-                        description = stringResource(id = R.string.swapping_pending_transaction_subtitle),
-                        icon = {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .size(TangemTheme.dimens.size16),
-                                color = TangemTheme.colors.icon.primary1,
-                                strokeWidth = TangemTheme.dimens.size2,
-                            )
-                        },
-                    )
-                }
-                MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
             }
         }
 
-        AnimatedVisibility(
-            visible = keyboard is Keyboard.Opened,
-            modifier = Modifier
-                .imePadding()
-                .align(Alignment.BottomCenter),
-        ) {
+        if (keyboard is Keyboard.Opened) {
             Text(
                 text = stringResource(id = R.string.send_max_amount_label),
                 style = TangemTheme.typography.button,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .imePadding()
                     .fillMaxWidth()
                     .background(TangemTheme.colors.button.secondary)
                     .clickable { state.onMaxAmountSelected?.invoke() }
@@ -134,25 +122,25 @@ private fun MainInfo(state: SwapStateHolder) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         val (topCard, bottomCard, button) = createRefs()
-        val priceImpactWarning = state.warnings.filterIsInstance<SwapWarning.HighPriceImpact>().firstOrNull()
+        val priceImpact = state.priceImpact
         TransactionCardData(
-            priceImpactWarning = priceImpactWarning,
+            priceImpact = priceImpact,
             swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
             },
             onSelectTokenClick = state.onSelectTokenClick,
         )
-        val marginCard = TangemTheme.dimens.spacing16
+        val marginCard = TangemTheme.dimens.spacing12
         TransactionCardData(
-            priceImpactWarning = priceImpactWarning,
+            priceImpact = priceImpact,
             swapCardState = state.receiveCardData,
             modifier = Modifier.constrainAs(bottomCard) {
                 top.linkTo(topCard.bottom, margin = marginCard)
             },
             onSelectTokenClick = state.onSelectTokenClick,
         )
-        val marginButton = TangemTheme.dimens.spacing32
+        val marginButton = TangemTheme.dimens.spacing30
         SwapButton(
             state,
             modifier = Modifier.constrainAs(button) {
@@ -166,7 +154,7 @@ private fun MainInfo(state: SwapStateHolder) {
 
 @Composable
 private fun TransactionCardData(
-    priceImpactWarning: SwapWarning.HighPriceImpact?,
+    priceImpact: PriceImpact,
     swapCardState: SwapCardState,
     onSelectTokenClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -193,7 +181,7 @@ private fun TransactionCardData(
                 amountEquivalent = swapCardState.amountEquivalent,
                 tokenIconUrl = swapCardState.tokenIconUrl ?: "",
                 tokenCurrency = swapCardState.tokenCurrency,
-                priceImpact = priceImpactWarning,
+                priceImpact = priceImpact,
                 networkIconRes = if (swapCardState.isNotNativeToken) swapCardState.networkIconRes else null,
                 iconPlaceholder = swapCardState.coinId?.let {
                     getActiveIconResByCoinId(it)
@@ -202,6 +190,84 @@ private fun TransactionCardData(
                 modifier = modifier,
             )
         }
+    }
+}
+
+@Composable
+private fun ProviderTos(tosState: TosState, modifier: Modifier = Modifier) {
+    val tos = tosState.tosLink
+    val policy = tosState.policyLink
+    if (tos == null && policy == null) return
+
+    val (annotatedString, click) = getAnnotatedStringForLegalsWithClick(tos, policy)
+
+    ClickableText(
+        text = annotatedString,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = TangemTheme.dimens.spacing54),
+        style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Center),
+        onClick = click,
+    )
+}
+
+@Composable
+private fun getAnnotatedStringForLegalsWithClick(
+    tos: LegalState?,
+    policy: LegalState?,
+): Pair<AnnotatedString, (Int) -> Unit> {
+    return if (tos != null && policy != null) {
+        val tosTitle = tos.title.resolveReference()
+        val policyTitle = policy.title.resolveReference()
+        val fullString = stringResource(id = R.string.express_legal_two_placeholders, tosTitle, policyTitle)
+        val tosIndex = fullString.indexOf(tosTitle)
+        val policyIndex = fullString.indexOf(policyTitle)
+        val string = buildAnnotatedString {
+            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                append(fullString.substring(0, tosIndex))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+                append(fullString.substring(tosIndex, tosIndex + tosTitle.length))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                append(fullString.substring(tosIndex + tosTitle.length, policyIndex))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+                append(fullString.substring(policyIndex, policyIndex + policyTitle.length))
+            }
+        }
+        val click = { i: Int ->
+            val tosStyle = requireNotNull(string.spanStyles.getOrNull(1))
+            if (i in tosStyle.start..tosStyle.end) {
+                tos.onClick(tos.link)
+            }
+            val policyStyle = requireNotNull(string.spanStyles.lastOrNull())
+            if (i in policyStyle.start..policyStyle.end) {
+                policy.onClick(policy.link)
+            }
+        }
+        string to click
+    } else {
+        val legal = requireNotNull(tos ?: policy) { "tos or policy must not be null" }
+        val legalTitle = legal.title
+            .resolveReference()
+        val fullString = stringResource(id = R.string.express_legal_one_placeholder, legal)
+        val legalIndex = fullString.indexOf(legalTitle)
+        val string = buildAnnotatedString {
+            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                append(fullString.substring(0, legalIndex))
+            }
+            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+                append(fullString.substring(legalIndex, legalIndex + legalTitle.length))
+            }
+        }
+        val click = { i: Int ->
+            val legalStyle = requireNotNull(string.spanStyles.lastOrNull())
+            if (i in legalStyle.start..legalStyle.end) {
+                legal.onClick(legal.link)
+            }
+        }
+        string to click
     }
 }
 
@@ -215,28 +281,39 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
         contentColor = TangemTheme.colors.text.primary1,
         modifier = modifier.size(TangemTheme.dimens.size48),
         onClick = state.onChangeCardsClicked,
-        enabled = !state.updateInProgress,
+        enabled = state.changeCardsButtonState == ChangeCardsButtonState.ENABLED,
     ) {
-        if (state.updateInProgress) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size16)
-                    .padding(TangemTheme.dimens.spacing14),
-                color = TangemTheme.colors.icon.primary1,
-                strokeWidth = TangemTheme.dimens.size2,
-            )
-        } else {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
-                contentDescription = null,
-                tint = TangemTheme.colors.text.primary1,
-                modifier = Modifier.padding(TangemTheme.dimens.spacing12),
-            )
+        when (state.changeCardsButtonState) {
+            ChangeCardsButtonState.UPDATE_IN_PROGRESS -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(TangemTheme.dimens.size16)
+                        .padding(TangemTheme.dimens.spacing14),
+                    color = TangemTheme.colors.icon.primary1,
+                    strokeWidth = TangemTheme.dimens.size2,
+                )
+            }
+            ChangeCardsButtonState.ENABLED -> {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.text.primary1,
+                    modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                )
+            }
+            ChangeCardsButtonState.DISABLED -> {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.text.disabled,
+                    modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                )
+            }
         }
     }
 }
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun SwapWarnings(warnings: List<SwapWarning>) {
     Column(
@@ -292,6 +369,26 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         config = warning.notificationConfig,
                     )
                 }
+                is SwapWarning.GeneralInformational -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                        iconTint = TangemTheme.colors.icon.accent,
+                    )
+                }
+                is SwapWarning.TransactionInProgressWarning -> {
+                    CardWithIcon(
+                        title = warning.title.resolveReference(),
+                        description = warning.description.resolveReference(),
+                        icon = {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(TangemTheme.dimens.size16),
+                                color = TangemTheme.colors.icon.primary1,
+                                strokeWidth = TangemTheme.dimens.size2,
+                            )
+                        },
+                    )
+                }
                 else -> {}
             }
             SpacerH8()
@@ -308,7 +405,6 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.swapping_insufficient_funds),
                 enabled = false,
-                showProgress = state.swapButton.loading,
                 onClick = state.swapButton.onClick,
             )
         }
@@ -317,17 +413,15 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.swapping_give_permission),
                 enabled = true,
-                showProgress = state.swapButton.loading,
                 onClick = onPermissionWarningClick,
             )
         }
         else -> {
             PrimaryButtonIconEnd(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.common_swap),
+                text = stringResource(id = R.string.swapping_swap_action),
                 iconResId = R.drawable.ic_tangem_24,
                 enabled = state.swapButton.enabled,
-                showProgress = state.swapButton.loading,
                 onClick = state.swapButton.onClick,
             )
         }
@@ -337,7 +431,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
 // region preview
 
 private val sendCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.SendCard({}) {},
+    type = TransactionCardType.Inputtable({}, {}),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
@@ -352,7 +446,7 @@ private val sendCard = SwapCardState.SwapCardData(
 )
 
 private val receiveCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.ReceiveCard(),
+    type = TransactionCardType.ReadOnly(),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
@@ -375,13 +469,14 @@ private val state = SwapStateHolder(
         amountCrypto = "100",
         symbolCrypto = "1000",
         amountFiatFormatted = "(100)",
+        explanation = null,
         isClickable = true,
         onClick = {},
     ),
     warnings = listOf(
         SwapWarning.PermissionNeeded(
             notificationConfig = NotificationConfig(
-                title = stringReference("Give Premission"),
+                title = stringReference("Give Permission"),
                 subtitle = stringReference("To continue swapping you need to give permission to Tangem"),
                 iconResId = R.drawable.ic_locked_24,
             ),
@@ -395,13 +490,26 @@ private val state = SwapStateHolder(
         ),
     ),
     networkCurrency = "MATIC",
-    swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
+    swapButton = SwapButton(enabled = true, onClick = {}),
     onRefresh = {},
     onBackClicked = {},
     onChangeCardsClicked = {},
     permissionState = SwapPermissionState.InProgress,
     blockchainId = "POLYGON",
     providerState = ProviderState.Loading(),
+    priceImpact = PriceImpact.Empty(),
+    tosState = TosState(
+        tosLink = LegalState(
+            title = stringReference("Terms of Use"),
+            link = "https://tangem.com",
+            onClick = {},
+        ),
+        policyLink = LegalState(
+            title = stringReference("Privacy Policy"),
+            link = "https://tangem.com",
+            onClick = {},
+        ),
+    ),
 )
 
 @Preview
