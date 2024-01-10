@@ -1,20 +1,24 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
+import androidx.core.os.bundleOf
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.common.extensions.guard
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.BlockchainNetwork
-import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -29,11 +33,11 @@ import com.tangem.tap.domain.walletconnect2.domain.models.Account
 import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -97,7 +101,14 @@ class WalletConnectMiddleware {
                 if (uri != null && isWalletConnectUri(uri)) {
                     store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
                 } else {
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.QrScan))
+                    store.dispatchOnMain(
+                        NavigationAction.NavigateTo(
+                            screen = AppScreen.QrScanning,
+                            bundle = bundleOf(
+                                QrScanningRouter.SOURCE_KEY to SourceType.WALLET_CONNECT,
+                            ),
+                        ),
+                    )
                 }
             }
             is WalletConnectAction.SelectNetwork -> {
@@ -115,7 +126,6 @@ class WalletConnectMiddleware {
                 scope.launch {
                     prepareWalletManager(
                         scanResponse = data.scanResponse,
-                        walletState = store.state.walletState,
                         blockchain = action.blockchain,
                         session = data.session,
                         walletConnectManager = walletConnectManager,
@@ -176,8 +186,14 @@ class WalletConnectMiddleware {
                 // )
             }
             is WalletConnectAction.ScanCard -> {
-                val scanResponse = store.state.globalState.scanResponse ?: return
-                scanCard(scanResponse, action.session, action.chainId)
+                val scanResponse = userWalletsListManager.selectedUserWalletSync.guard {
+                    Timber.w("Unable to get selected user wallet for WC session")
+                    return
+                }
+
+                scope.launch(Dispatchers.Main) {
+                    scanCard(scanResponse, action.session, action.chainId)
+                }
             }
             is WalletConnectAction.ApproveSession -> {
                 walletConnectManager.approve(action.session)
@@ -274,7 +290,6 @@ class WalletConnectMiddleware {
                     val walletManager = getWalletManager(
                         wallet = action.session.wallet,
                         blockchain = blockchain,
-                        walletState = store.state.walletState,
                     ).guard {
                         store.dispatchOnMain(
                             GlobalAction.ShowDialog(
@@ -372,19 +387,14 @@ class WalletConnectMiddleware {
     }
 
     private suspend fun getWalletManagers(): List<WalletManager> {
-        val walletManagerToggles = store.state.daggerGraphState
-            .get(DaggerGraphState::walletFeatureToggles)
-        return if (walletManagerToggles.isRedesignedScreenEnabled) {
-            val walletManagerFacade = store.state.daggerGraphState
-                .get(DaggerGraphState::walletManagersFacade)
-            val userWallet = userWalletsListManager.selectedUserWalletSync ?: return emptyList()
-            walletManagerFacade.getStoredWalletManagers(userWallet.walletId)
-        } else {
-            store.state.walletState.walletManagers
-        }
+        val walletManagerFacade = store.state.daggerGraphState
+            .get(DaggerGraphState::walletManagersFacade)
+        val userWallet = userWalletsListManager.selectedUserWalletSync ?: return emptyList()
+
+        return walletManagerFacade.getStoredWalletManagers(userWallet.walletId)
     }
 
-    private fun scanCard(scanResponse: ScanResponse, session: WalletConnectSession, chainId: Int?) {
+    private suspend fun scanCard(userWallet: UserWallet, session: WalletConnectSession, chainId: Int?) {
         val blockchain = WalletConnectNetworkUtils.parseBlockchain(
             chainId = chainId,
             peer = session.peerMeta,
@@ -393,27 +403,28 @@ class WalletConnectMiddleware {
             return
         }
 
-        handleScanResponse(scanResponse = scanResponse, session = session, blockchain = blockchain)
+        handleScanResponse(userWallet, session, blockchain)
     }
 
-    private fun getAvailableBlockchains(
-        derivationStyleProvider: DerivationStyleProvider,
-        walletState: WalletState,
-    ): List<Blockchain> {
-        return walletState.currencies.filter {
-            it.isBlockchain() &&
-                !it.isCustomCurrency(derivationStyleProvider.getDerivationStyle()) && it.blockchain.isEvm()
-        }.map { it.blockchain }
+    private suspend fun getAvailableEvmBlockchains(userWalletId: UserWalletId): List<Blockchain> {
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+
+        return currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+            .asSequence()
+            .filterIsInstance<CryptoCurrency.Coin>()
+            .filterNot { it.isCustom }
+            .mapNotNull { Blockchain.fromNetworkId(it.network.id.value) }
+            .filter { it.isEvm() }
+            .toList()
     }
 
     private suspend fun prepareWalletManager(
         scanResponse: ScanResponse,
-        walletState: WalletState,
         blockchain: Blockchain,
         session: WalletConnectSession,
         walletConnectManager: WalletConnectManager,
     ) {
-        val walletManager = getWalletManager(session.wallet, blockchain, walletState).guard {
+        val walletManager = getWalletManager(session.wallet, blockchain).guard {
             store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(session.session))
             store.dispatchOnMain(
                 GlobalAction.ShowDialog(
@@ -445,20 +456,25 @@ class WalletConnectMiddleware {
         }
     }
 
-    private fun handleScanResponse(scanResponse: ScanResponse, session: WalletConnectSession, blockchain: Blockchain) {
+    private suspend fun handleScanResponse(
+        userWallet: UserWallet,
+        session: WalletConnectSession,
+        blockchain: Blockchain,
+    ) {
+        val scanResponse = userWallet.scanResponse
+
         if (!scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
             store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
             return
         }
-        val walletState = store.state.walletState
         val updatedSession = session.copy(wallet = session.wallet.copy(blockchain = blockchain))
         store.dispatch(
             WalletConnectAction.SetNewSessionData(
-                NewWcSessionData(session = updatedSession, scanResponse = scanResponse, blockchain = blockchain),
+                NewWcSessionData(updatedSession, scanResponse, blockchain),
             ),
         )
         val blockchains = if (blockchain.isEvm()) {
-            getAvailableBlockchains(scanResponse.derivationStyleProvider, walletState)
+            getAvailableEvmBlockchains(userWallet.walletId)
         } else {
             emptyList()
         }
@@ -469,11 +485,7 @@ class WalletConnectMiddleware {
         )
     }
 
-    private suspend fun getWalletManager(
-        wallet: WalletForSession,
-        blockchain: Blockchain,
-        walletState: WalletState,
-    ): WalletManager? {
+    private suspend fun getWalletManager(wallet: WalletForSession, blockchain: Blockchain): WalletManager? {
         val blockchainToMake = if (blockchain == Blockchain.Ethereum && wallet.isTestNet) {
             Blockchain.EthereumTestnet
         } else {
@@ -483,25 +495,15 @@ class WalletConnectMiddleware {
         val derivation = blockchainToMake.derivationPath(
             style = userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
         )?.rawPath
-        val walletFeatureToggles = store.state.daggerGraphState
-            .get(DaggerGraphState::walletFeatureToggles)
 
-        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            val walletManagerFacade = store.state.daggerGraphState
-                .get(DaggerGraphState::walletManagersFacade)
-            walletManagerFacade.getOrCreateWalletManager(
-                userWalletId = userWallet.walletId,
-                blockchain = blockchainToMake,
-                derivationPath = derivation,
-            )
-        } else {
-            val blockchainNetwork = BlockchainNetwork(
-                blockchain = blockchainToMake,
-                derivationPath = derivation,
-                tokens = emptyList(),
-            )
-            walletState.getWalletManager(blockchainNetwork)
-        }
+        val walletManagerFacade = store.state.daggerGraphState
+            .get(DaggerGraphState::walletManagersFacade)
+
+        return walletManagerFacade.getOrCreateWalletManager(
+            userWalletId = userWallet.walletId,
+            blockchain = blockchainToMake,
+            derivationPath = derivation,
+        )
     }
 
     private fun isWalletConnectUri(uri: String): Boolean {
