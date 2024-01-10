@@ -7,19 +7,16 @@ import android.view.View
 import android.widget.ImageView
 import androidx.core.animation.doOnEnd
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapView
-import com.tangem.sdk.ui.widget.leapfrogWidget.LeapViewState
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 
 class WalletCardsWidget(
     val leapfrogWidget: LeapfrogWidget,
     private val deviceScaleFactor: Float = 1f,
-    val getTopOfAnchorViewForActivateState: () -> Float,
 ) {
 
     private val animDuration: Long = 400
 
-    var currentState: WidgetState? = null
-        private set
+    private var currentState: WidgetState? = null
 
     fun toWelcome(animate: Boolean = true, onEnd: () -> Unit = {}) {
         if (currentState == WidgetState.WELCOME) return
@@ -239,15 +236,5 @@ private data class CardProperties(
         )
     }
 
-    companion object {
-        fun from(leapViewState: LeapViewState): CardProperties {
-            val leapViewProperties = leapViewState.properties
-
-            return CardProperties(
-                yTranslation = leapViewProperties.yTranslation,
-                elevation = leapViewProperties.elevationEnd,
-                scale = leapViewProperties.scale,
-            )
-        }
-    }
+    companion object
 }
