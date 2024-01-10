@@ -48,6 +48,9 @@ enum class ExchangeStatus {
 
     @Json(name = "verifying")
     VERIFYING,
+
+    @Json(name = "expired")
+    CANCELLED,
 }
 
 data class ExchangeStatusError(
