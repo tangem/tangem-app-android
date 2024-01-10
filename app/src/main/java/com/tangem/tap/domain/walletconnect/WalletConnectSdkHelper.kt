@@ -31,14 +31,16 @@ import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.details.redux.walletconnect.*
+import com.tangem.tap.features.details.redux.walletconnect.BinanceMessageData
+import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
+import com.tangem.tap.features.details.redux.walletconnect.WcPersonalSignData
+import com.tangem.tap.features.details.redux.walletconnect.WcTransactionData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
-import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.*
 import timber.log.Timber
 import java.math.BigDecimal
 
