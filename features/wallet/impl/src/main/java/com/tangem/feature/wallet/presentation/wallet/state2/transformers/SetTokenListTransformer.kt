@@ -5,9 +5,9 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state2.ManageTokensButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.ManageTokensButtonConfig
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.TokenListStateConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
@@ -29,14 +29,14 @@ internal class SetTokenListTransformer(
                     manageTokensButtonConfig = createManageTokensButtonConfig(),
                 )
             }
-            is WalletState.MultiCurrency.Locked,
-            -> {
-                Timber.e("Impossible to load tokens list for locked wallet")
+            is WalletState.MultiCurrency.Locked -> {
+                Timber.w("Impossible to load tokens list for locked wallet")
                 prevState
             }
+            is WalletState.Visa,
             is WalletState.SingleCurrency,
             -> {
-                Timber.e("Impossible to load tokens list for single-currency wallet")
+                Timber.w("Impossible to load tokens list for single-currency wallet")
                 prevState
             }
         }
