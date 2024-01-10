@@ -1,7 +1,9 @@
 package com.tangem.tap.features.customtoken.impl.di
 
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.features.tester.api.TesterFeatureToggles
 import com.tangem.tap.features.customtoken.impl.data.DefaultCustomTokenRepository
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.DefaultCustomTokenInteractor
@@ -25,8 +27,10 @@ internal object CustomTokenInteractorModule {
     fun provideCustomTokenInteractor(
         tangemTechApi: TangemTechApi,
         appCoroutineDispatcherProvider: AppCoroutineDispatcherProvider,
-        getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         reduxStateHolder: AppStateHolder,
+        getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+        derivePublicKeysUseCase: DerivePublicKeysUseCase,
+        testerFeatureToggles: TesterFeatureToggles,
     ): CustomTokenInteractor {
         return DefaultCustomTokenInteractor(
             featureRepository = DefaultCustomTokenRepository(
@@ -35,6 +39,8 @@ internal object CustomTokenInteractorModule {
                 reduxStateHolder = reduxStateHolder,
             ),
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            derivePublicKeysUseCase = derivePublicKeysUseCase,
+            testerFeatureToggles = testerFeatureToggles,
         )
     }
 }
