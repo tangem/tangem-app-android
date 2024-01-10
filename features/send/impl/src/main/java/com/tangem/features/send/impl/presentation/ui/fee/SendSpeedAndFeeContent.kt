@@ -3,25 +3,32 @@ package com.tangem.features.send.impl.presentation.ui.fee
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import kotlinx.collections.immutable.ImmutableList
 
 private const val FEE_SELECTOR_KEY = "FEE_SELECTOR_KEY"
 private const val FEE_CUSTOM_KEY = "FEE_CUSTOM_KEY"
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: SendClickIntents) {
     if (state == null) return
-    val feeSendState = state.feeSelectorState.collectAsStateWithLifecycle()
+    val feeSendState = state.feeSelectorState
+    val notifications = state.notifications
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -39,42 +46,90 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
                 clickIntents = clickIntents,
             )
         }
-        if (feeSendState.value is FeeSelectorState.Content) {
-            item(
-                key = FEE_CUSTOM_KEY,
-            ) {
-                AnimatedVisibility(
-                    visible = feeSendState.value is FeeSelectorState.Content,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(TangemTheme.colors.background.tertiary),
-                ) {
-                    val fee = feeSendState.value as FeeSelectorState.Content
-                    val customValues = fee.customValues.collectAsStateWithLifecycle()
-                    SendCustomFeeEthereum(
-                        customValues = customValues,
-                        selectedFee = fee.selectedFee,
-                        symbol = state.cryptoCurrencyStatus.currency.symbol,
-                        modifier = Modifier
-                            .animateItemPlacement(),
-                    )
-                }
+        notifications(notifications)
+        customFee(
+            feeSendState = feeSendState,
+            cryptoCurrencySymbol = state.cryptoCurrencyStatus.currency.symbol,
+        )
+        subtractButton(
+            feeSendState = feeSendState,
+            receivedAmount = state.receivedAmount,
+            isSubtract = state.isSubtract,
+            clickIntents = clickIntents,
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+internal fun LazyListScope.notifications(configs: ImmutableList<SendFeeNotification>, modifier: Modifier = Modifier) {
+    items(
+        items = configs,
+        key = { it::class.java },
+        contentType = { it::class.java },
+        itemContent = {
+            Notification(
+                config = it.config,
+                modifier = modifier.animateItemPlacement(),
+                containerColor = TangemTheme.colors.button.disabled,
+                iconTint = when (it) {
+                    is SendFeeNotification.Informational -> TangemTheme.colors.icon.accent
+                    else -> null
+                },
+            )
+        },
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+internal fun LazyListScope.customFee(
+    feeSendState: FeeSelectorState,
+    cryptoCurrencySymbol: String,
+    modifier: Modifier = Modifier,
+) {
+    item(
+        key = FEE_CUSTOM_KEY,
+    ) {
+        AnimatedVisibility(
+            visible = feeSendState is FeeSelectorState.Content,
+            modifier = modifier
+                .fillMaxWidth()
+                .animateItemPlacement()
+                .background(TangemTheme.colors.background.tertiary),
+        ) {
+            (feeSendState as? FeeSelectorState.Content)?.let { fee ->
+                val customValues = fee.customValues
+                SendCustomFeeEthereum(
+                    customValues = customValues,
+                    selectedFee = fee.selectedFee,
+                    symbol = cryptoCurrencySymbol,
+                )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+internal fun LazyListScope.subtractButton(
+    feeSendState: FeeSelectorState,
+    receivedAmount: String,
+    isSubtract: Boolean,
+    clickIntents: SendClickIntents,
+    modifier: Modifier = Modifier,
+) {
+    (feeSendState as? FeeSelectorState.Content)?.let { state ->
         item {
-            val topPadding = (feeSendState.value as? FeeSelectorState.Content)?.let { state ->
-                if (state.selectedFee != FeeType.CUSTOM) {
-                    TangemTheme.dimens.spacing8
-                } else {
-                    TangemTheme.dimens.spacing0
-                }
-            } ?: TangemTheme.dimens.spacing0
+            val selectedFeeValue = state.selectedFee
+            val topPadding = if (selectedFeeValue != FeeType.CUSTOM) {
+                TangemTheme.dimens.spacing8
+            } else {
+                TangemTheme.dimens.spacing0
+            }
 
             SendSpeedSubtract(
-                receivingAmount = state.receivedAmount,
-                isSubtract = state.isSubtract,
+                receivingAmount = receivedAmount,
+                isSubtract = isSubtract,
                 onSelectClick = clickIntents::onSubtractSelect,
-                modifier = Modifier
+                modifier = modifier
                     .animateItemPlacement()
                     .padding(
                         top = topPadding,
