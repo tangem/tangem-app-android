@@ -67,6 +67,7 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
+            showNetworkIcon = true,
         )
         SpacerH16()
         InputRowImage(
@@ -77,6 +78,7 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
+            showNetworkIcon = true,
         )
         SpacerH16()
         InputRowBestRate(
