@@ -72,9 +72,9 @@ private fun SendSecondaryNavigationButton(uiState: SendUiState) {
 @Composable
 private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier = Modifier) {
     val currentState = uiState.currentState.collectAsStateWithLifecycle()
-    val isSuccess = uiState.sendState?.isSuccess?.collectAsStateWithLifecycle()?.value ?: false
-    val isSending = uiState.sendState?.isSending?.collectAsStateWithLifecycle()?.value ?: false
-    val txUrl = uiState.sendState?.txUrl?.collectAsStateWithLifecycle()?.value.orEmpty()
+    val isSuccess = uiState.sendState.isSuccess
+    val isSending = uiState.sendState.isSending
+    val txUrl = uiState.sendState.txUrl
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = currentState,
