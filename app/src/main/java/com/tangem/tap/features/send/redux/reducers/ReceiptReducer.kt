@@ -2,23 +2,12 @@ package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.tap.common.extensions.scaleToFiat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.ReceiptAction.RefreshReceipt
 import com.tangem.tap.features.send.redux.SendScreenAction
-import com.tangem.tap.features.send.redux.states.AmountState
-import com.tangem.tap.features.send.redux.states.FeeState
-import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.ReceiptCrypto
-import com.tangem.tap.features.send.redux.states.ReceiptFiat
-import com.tangem.tap.features.send.redux.states.ReceiptLayoutType
-import com.tangem.tap.features.send.redux.states.ReceiptState
-import com.tangem.tap.features.send.redux.states.ReceiptSymbols
-import com.tangem.tap.features.send.redux.states.ReceiptTokenCrypto
-import com.tangem.tap.features.send.redux.states.ReceiptTokenFiat
-import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.wallet.redux.utils.CAN_BE_LOWER_SIGN
-import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.store
 import java.math.BigDecimal
 
@@ -143,9 +132,9 @@ class ReceiptReducer : SendInternalReducer {
             )
         } else {
             ReceiptTokenFiat(
-                amountFiat = UNKNOWN_AMOUNT_SIGN,
-                feeFiat = UNKNOWN_AMOUNT_SIGN,
-                totalFiat = UNKNOWN_AMOUNT_SIGN,
+                amountFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                feeFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                totalFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 willSentToken = tokensToSend.stripZeroPlainString(),
                 willSentFeeCoin = feeCoin.stripZeroPlainString(),
                 symbols = symbols,
@@ -175,7 +164,7 @@ class ReceiptReducer : SendInternalReducer {
             ReceiptTokenCrypto(
                 amountToken = tokensToSend.stripZeroPlainString(),
                 feeCoin = feeCoin.stripZeroPlainString().addPrecisionSign(),
-                totalFiat = UNKNOWN_AMOUNT_SIGN,
+                totalFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 symbols = symbols,
             )
         }
@@ -216,7 +205,7 @@ class ReceiptReducer : SendInternalReducer {
                 sendState.tokenConverter!!.toFiatWithPrecision(value).stripZeroPlainString()
             }
             else -> {
-                UNKNOWN_AMOUNT_SIGN
+                BigDecimalFormatter.EMPTY_BALANCE_SIGN
             }
         }
     }
@@ -224,5 +213,9 @@ class ReceiptReducer : SendInternalReducer {
     private fun String.addPrecisionSign(): String {
         val result = if (feeState.feeIsApproximate) "$CAN_BE_LOWER_SIGN $this" else this
         return result.trim()
+    }
+
+    private companion object {
+        const val CAN_BE_LOWER_SIGN = "<"
     }
 }
