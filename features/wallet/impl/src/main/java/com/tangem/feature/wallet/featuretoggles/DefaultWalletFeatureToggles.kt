@@ -4,7 +4,7 @@ import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 
 /**
- * Default implementation of CustomToken feature toggles
+ * Default implementation of Wallet feature toggles
  *
  * @property featureTogglesManager manager for getting information about the availability of feature toggles
  *
@@ -13,9 +13,6 @@ import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 internal class DefaultWalletFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : WalletFeatureToggles {
-
-    override val isRedesignedScreenEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "REDESIGNED_WALLET_SCREEN_ENABLED")
 
     override val isWalletsScrollingPreviewEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "WALLETS_SCROLLING_PREVIEW_ENABLED")

@@ -75,9 +75,9 @@ internal class BiometricUserWalletsListManager(
                 }
 
                 val selectedUserWallet = selectedUserWalletSync
-                if (selectedUserWallet == null || selectedUserWallet.isLocked) {
-                    findAndSetUnlockedUserWallet(userWallets)
-                        ?: throw UserWalletsListError.NoUserWalletSelected
+                if (selectedUserWallet == null) {
+                    Timber.e("Unable to find selected user wallet")
+                    throw UserWalletsListError.NoUserWalletSelected
                 } else {
                     selectedUserWallet
                 }
@@ -257,10 +257,7 @@ internal class BiometricUserWalletsListManager(
 
                         prevState.copy(
                             userWallets = wallets,
-                            selectedUserWalletId = findOrSetSelectedUserWalletId(
-                                prevSelectedWalletId = prevState.selectedUserWalletId,
-                                userWallets = wallets,
-                            ),
+                            selectedUserWalletId = findOrSetSelectedWalletId(prevState.selectedUserWalletId, wallets),
                         )
                     }
                 }
@@ -278,18 +275,22 @@ internal class BiometricUserWalletsListManager(
             }
     }
 
-    private fun findOrSetSelectedUserWalletId(
+    private fun findOrSetSelectedWalletId(
         prevSelectedWalletId: UserWalletId?,
         userWallets: List<UserWallet>,
     ): UserWalletId? {
-        return prevSelectedWalletId
-            ?: (selectedUserWalletRepository.get() ?: findAndSetUnlockedUserWallet(userWallets)?.walletId)
-    }
+        val selectedWalletId = prevSelectedWalletId ?: selectedUserWalletRepository.get()
+        var possibleSelectedUserWallet = findSelectedUserWallet(userWallets, selectedWalletId)
 
-    private fun findAndSetUnlockedUserWallet(userWallets: List<UserWallet>): UserWallet? {
-        return userWallets
-            .firstOrNull { !it.isLocked }
-            ?.also { selectedUserWalletRepository.set(it.walletId) }
+        if (possibleSelectedUserWallet == null || possibleSelectedUserWallet.isLocked) {
+            possibleSelectedUserWallet = userWallets.firstOrNull { !it.isLocked } ?: userWallets.firstOrNull()
+
+            if (possibleSelectedUserWallet != null) {
+                selectedUserWalletRepository.set(possibleSelectedUserWallet.walletId)
+            }
+        }
+
+        return possibleSelectedUserWallet?.walletId
     }
 
     private fun changeSelectedUserWalletIdIfNeeded(walletsIdsToRemove: List<UserWalletId>) {
@@ -318,10 +319,11 @@ internal class BiometricUserWalletsListManager(
         }
     }
 
-    private fun findSelectedUserWallet(userWallets: List<UserWallet> = state.value.userWallets): UserWallet? {
-        return userWallets.firstOrNull {
-            it.walletId == state.value.selectedUserWalletId
-        }
+    private fun findSelectedUserWallet(
+        userWallets: List<UserWallet> = state.value.userWallets,
+        selectedUserWalletId: UserWalletId? = state.value.selectedUserWalletId,
+    ): UserWallet? {
+        return userWallets.firstOrNull { it.walletId == selectedUserWalletId }
     }
 
     private data class State(

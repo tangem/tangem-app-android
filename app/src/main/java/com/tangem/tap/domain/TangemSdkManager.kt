@@ -27,7 +27,6 @@ import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.derivationsFinder
-import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
@@ -124,15 +123,6 @@ class TangemSdkManager(
                 Analytics.send(Basic.ScanError(error))
             }
         }
-    }
-
-    suspend fun createWallet(cardId: String?): CompletionResult<CardDTO> {
-        return runTaskAsyncReturnOnMain(
-            CreateWalletAndRescanTask(),
-            cardId,
-            initialMessage = Message(resources.getString(R.string.initial_message_create_wallet_body)),
-        )
-            .map { CardDTO(it) }
     }
 
     suspend fun derivePublicKeys(
