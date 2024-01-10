@@ -7,9 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.RadioButton
-import androidx.compose.material.RadioButtonDefaults
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
@@ -24,6 +22,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SelctorDialogParamsProvider.SelectorDialogParams
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.fields.SimpleDialogTextField
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -119,6 +119,34 @@ fun TextInputDialog(
 }
 
 @Composable
+fun TextInputDialog(
+    fieldValue: String,
+    confirmButton: DialogButton,
+    onDismissDialog: () -> Unit,
+    onValueChange: (String) -> Unit,
+    textFieldParams: AdditionalTextInputDialogParams,
+    title: String? = null,
+    dismissButton: DialogButton? = null,
+    isDismissable: Boolean = true,
+) {
+    TangemDialog(
+        type = DialogType.SimpleTextInput(
+            value = fieldValue,
+            onValueChange = onValueChange,
+            params = textFieldParams,
+        ),
+        confirmButton = confirmButton,
+        onDismissDialog = onDismissDialog,
+        title = title,
+        dismissButton = dismissButton,
+        properties = DialogProperties(
+            dismissOnBackPress = isDismissable,
+            dismissOnClickOutside = isDismissable,
+        ),
+    )
+}
+
+@Composable
 fun SelectorDialog(
     selectedItemIndex: Int,
     items: ImmutableList<String>,
@@ -164,6 +192,7 @@ data class AdditionalTextInputDialogParams(
     val caption: String? = null,
     val enabled: Boolean = true,
     val isError: Boolean = false,
+    val errorText: String? = null,
 )
 
 // region Defaults
@@ -194,6 +223,7 @@ private fun TangemDialog(
                     style = when (type) {
                         is DialogType.Message -> TangemTheme.typography.h2
                         is DialogType.TextInput -> TangemTheme.typography.h3
+                        is DialogType.SimpleTextInput -> TangemTheme.typography.h3
                         is DialogType.Selector -> TangemTheme.typography.h2
                     },
                     color = TangemTheme.colors.text.primary1,
@@ -229,6 +259,16 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
                     text = type.message,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
+                )
+            }
+            is DialogType.SimpleTextInput -> {
+                SimpleDialogTextField(
+                    value = type.value,
+                    onValueChange = type.onValueChange,
+                    isError = type.params.isError,
+                    errorText = type.params.errorText,
+                    isEnabled = type.params.enabled,
+                    placeholder = type.params.placeholder,
                 )
             }
             is DialogType.TextInput -> {
@@ -305,6 +345,7 @@ private fun DialogButton(
                 text = text,
                 enabled = enabled,
                 onClick = onClick,
+                colors = TangemButtonsDefaults.positiveButtonColors,
             )
         }
     }
@@ -368,6 +409,12 @@ private sealed class DialogType {
     data class TextInput(
         val value: TextFieldValue,
         val onValueChange: (TextFieldValue) -> Unit,
+        val params: AdditionalTextInputDialogParams = AdditionalTextInputDialogParams(),
+    ) : DialogType()
+
+    data class SimpleTextInput(
+        val value: String,
+        val onValueChange: (String) -> Unit,
         val params: AdditionalTextInputDialogParams = AdditionalTextInputDialogParams(),
     ) : DialogType()
 
