@@ -19,8 +19,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
 import kotlinx.collections.immutable.ImmutableList
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState as WalletTokensListStateV2
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState.TokensListItemState as TokensListItemStateV2
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState as WalletTokensListStateV2
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState.TokensListItemState as TokensListItemStateV2
 
 private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
 
