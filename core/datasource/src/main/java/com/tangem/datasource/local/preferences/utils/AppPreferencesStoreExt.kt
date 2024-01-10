@@ -2,6 +2,7 @@ package com.tangem.datasource.local.preferences.utils
 
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Types
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import kotlinx.coroutines.flow.Flow
@@ -11,7 +12,15 @@ import kotlinx.coroutines.flow.map
 /** Get flow of nullable data [T] by string [key] */
 inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String>): Flow<T?> {
     val adapter = moshi.adapter(T::class.java)
-    return data.map { it[key]?.let(adapter::fromJson) }
+    return data.map { preferences ->
+        preferences[key]?.let {
+            try {
+                adapter.fromJson(it)
+            } catch (e: JsonDataException) {
+                null
+            }
+        }
+    }
 }
 
 /**
@@ -23,7 +32,13 @@ inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String
  * */
 inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String>, default: T): Flow<T> {
     val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
-    return data.map { it[key]?.let(adapter::fromJson) ?: default }
+    return data.map {
+        try {
+            it[key]?.let(adapter::fromJson) ?: default
+        } catch (e: JsonDataException) {
+            default
+        }
+    }
 }
 
 /**
@@ -37,7 +52,13 @@ suspend inline fun <reified T> AppPreferencesStore.getObjectSyncOrNull(key: Pref
     val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
     return data.firstOrNull()
         ?.get(key)
-        ?.let(adapter::fromJson)
+        ?.let {
+            try {
+                adapter.fromJson(it)
+            } catch (e: JsonDataException) {
+                null
+            }
+        }
 }
 
 /** Get data [T] by string [key]. If data is not found, it returns [default] */
@@ -48,7 +69,13 @@ suspend inline fun <reified T> AppPreferencesStore.getObjectSyncOrDefault(
     val adapter = moshi.adapter(T::class.java)
     return data.firstOrNull()
         ?.get(key)
-        ?.let(adapter::fromJson)
+        ?.let {
+            try {
+                adapter.fromJson(it)
+            } catch (e: JsonDataException) {
+                default
+            }
+        }
         ?: default
 }
 
