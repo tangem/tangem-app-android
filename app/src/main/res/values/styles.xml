@@ -24,12 +24,6 @@
     <!-- Toolbar -->
 
     <!-- Toolbar - overrides the menu text color to use a selector that responds to whether it's enabled or not -->
-    <style name="ThemeOverlay.MyTheme.Toolbar" parent="ThemeOverlay.MaterialComponents.Toolbar.Surface">
-        <!-- Color used in the icons of menu actions (i.e. non-overflow menu items). This is just convention, this will affect anything that uses ?attr/colorControlNormal) -->
-        <item name="colorControlNormal">@color/text_secondary</item>
-        <!-- Color used in the text of menu actions (i.e. non-overflow menu items) -->
-        <item name="actionMenuTextColor">@color/text_secondary</item>
-    </style>
 
     <style name="ThemeOverlay.MyTheme.Toolbar.AccentColorMenu" parent="ThemeOverlay.MaterialComponents.Toolbar.Surface">
         <item name="actionMenuTextColor">@color/icon_primary_1</item>
@@ -182,19 +176,6 @@
         <item name="colorAccent">@color/accent</item>
     </style>
 
-    <style name="AlertDialogTheme" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
-        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
-        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
-        <item name="colorAccent">@color/accent</item>
-    </style>
-
-    <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/accent</item>
-    </style>
-
-    <style name="PositiveButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/accent</item>
-    </style>
 </resources>
 
     <!--    android:fontFamily="sans-serif"           // roboto regular  -->

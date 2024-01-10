@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.organizetokens
 
 import androidx.lifecycle.*
 import arrow.core.getOrElse
-import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -22,6 +21,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.common.disabl
 import com.tangem.feature.wallet.presentation.organizetokens.utils.dnd.DragAndDropAdapter
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.router.WalletRoute
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
