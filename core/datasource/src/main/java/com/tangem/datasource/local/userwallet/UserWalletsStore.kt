@@ -8,4 +8,7 @@ interface UserWalletsStore {
     val selectedUserWalletOrNull: UserWallet?
 
     suspend fun getSyncOrNull(key: UserWalletId): UserWallet?
+
+    @Throws
+    suspend fun update(userWalletId: UserWalletId, update: suspend (UserWallet) -> UserWallet)
 }
