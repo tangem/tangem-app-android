@@ -8,8 +8,6 @@ import androidx.paging.PagingData
 import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
@@ -35,12 +33,10 @@ import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
-import com.tangem.features.send.impl.presentation.state.SendStateFactory
-import com.tangem.features.send.impl.presentation.state.SendUiState
-import com.tangem.features.send.impl.presentation.state.SendUiStateType
-import com.tangem.features.send.impl.presentation.state.StateRouter
+import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.fee.getFee
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -52,7 +48,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -71,9 +66,9 @@ internal class SendViewModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
-    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
+    getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
@@ -98,6 +93,7 @@ internal class SendViewModel @Inject constructor(
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
+        getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
     )
 
     var uiState: SendUiState by mutableStateOf(stateFactory.getInitialState())
@@ -292,7 +288,7 @@ internal class SendViewModel @Inject constructor(
                         .onEach { maybeFee ->
                             maybeFee.fold(
                                 ifRight = {
-                                    uiState = stateFactory.onFeeOnLoadedState(it, true)
+                                    uiState = stateFactory.onFeeOnLoadedState(it)
                                 },
                                 ifLeft = {
                                     // todo add error handling [[REDACTED_JIRA]]
@@ -316,7 +312,7 @@ internal class SendViewModel @Inject constructor(
 
     override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) =
         innerRouter.openTokenDetails(userWalletId, currency)
-// endregion
+    // endregion
 
     // region amount state clicks
     override fun onCurrencyChangeClick(isFiat: Boolean) {
@@ -336,7 +332,7 @@ internal class SendViewModel @Inject constructor(
         }
         onAmountValueChange(amount?.toPlainString() ?: DEFAULT_VALUE)
     }
-// endregion
+    // endregion
 
     // region recipient state clicks
     override fun onRecipientAddressValueChange(value: String) {
@@ -382,7 +378,7 @@ internal class SendViewModel @Inject constructor(
     }
 // endregion
 
-    //region fee
+    // region fee
     override fun onFeeSelectorClick(feeType: FeeType) {
         uiState = stateFactory.onFeeSelectedState(feeType)
     }
@@ -394,28 +390,38 @@ internal class SendViewModel @Inject constructor(
     override fun onSubtractSelect(value: Boolean) {
         uiState = stateFactory.onSubtractSelect(value)
     }
-//endregion
+    // endregion
 
     // region send state clicks
     override fun onSendClick() {
-        val sendState = uiState.sendState ?: return
+        val sendState = uiState.sendState
+        if (sendState.isSuccess) popBackStack()
 
-        if (sendState.isSuccess.value) popBackStack()
-        sendState.isSending.update { true }
-        viewModelScope.launch(dispatchers.io) {
-            verifyAndSendTransaction()
-        }
+        uiState = stateFactory.getSendingStateUpdate(true)
+        viewModelScope.launch(dispatchers.io) { verifyAndSendTransaction() }
     }
 
+    override fun showAmount() = stateRouter.showAmount(isFromSend = true)
+
+    override fun showRecipient() = stateRouter.showRecipient(isFromSend = true)
+
+    override fun showFee() = stateRouter.showFee(isFromSend = true)
+
+    override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
+
     private suspend fun verifyAndSendTransaction() {
-        val sendState = uiState.sendState ?: return
         val amount = uiState.amountState?.amountTextField?.value ?: return
         val recipient = uiState.recipientState?.addressTextField?.value ?: return
-        val feeState = uiState.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return
+        val feeState = uiState.feeState ?: return
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
         val memo = uiState.recipientState?.memoTextField?.value
-        val fee = getFee(feeState) ?: return
+        val fee = feeSelectorState.getFee()
 
-        val amountToSend = amount.toBigDecimal().convertToAmount(cryptoCurrency)
+        val amountToSend = if (feeState.isSubtract) {
+            feeState.receivedAmountValue.convertToAmount(cryptoCurrency)
+        } else {
+            amount.toBigDecimal().convertToAmount(cryptoCurrency)
+        }
 
         // todo add error handling [[REDACTED_JIRA]]
         // val transactionErrors = walletManagersFacade.validateTransaction(
@@ -444,66 +450,20 @@ internal class SendViewModel @Inject constructor(
                     network = cryptoCurrency.network,
                 ).fold(
                     ifLeft = {
-                        sendState.isSending.update { false }
+                        uiState = stateFactory.getSendingStateUpdate(false)
                         // todo add error handling [[REDACTED_JIRA]]
                     },
                     ifRight = {
-                        sendState.transactionDate.update {
-                            txData.date?.timeInMillis ?: System.currentTimeMillis()
-                        }
-                        sendState.isSuccess.update { true }
-                        sendState.txUrl.update {
-                            getTxUrl(txData.hash.orEmpty())
-                        }
+                        uiState = stateFactory.getTransactionSendState(txData)
                     },
                 )
             },
         )
-    }
-
-    private fun getFee(feeState: FeeSelectorState.Content): Fee? {
-        return when (val selectedFee = feeState.fees) {
-            is TransactionFee.Choosable -> {
-                when (feeState.selectedFee) {
-                    FeeType.SLOW -> selectedFee.minimum
-                    FeeType.MARKET -> selectedFee.normal
-                    FeeType.FAST -> selectedFee.priority
-                    FeeType.CUSTOM -> {
-                        val feeAmount = feeState.customValues.firstOrNull()?.value
-                            ?.let { BigDecimal(it) } ?: return null
-                        Fee.Common(feeAmount.convertToAmount(cryptoCurrency))
-                    }
-                }
-            }
-            is TransactionFee.Single -> selectedFee.normal
-        }
-    }
-
-    override fun showAmount() = stateRouter.showAmount(isFromSend = true)
-
-    override fun showRecipient() = stateRouter.showRecipient(isFromSend = true)
-
-    override fun showFee() = stateRouter.showFee(isFromSend = true)
-
-    override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
-
-    private fun getTxUrl(hash: String): String {
-        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
-        // TODO: Fix ton tx urls [REDACTED_TASK_KEY]
-        return if (blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet) {
-            EMPTY
-        } else {
-            getExplorerTransactionUrlUseCase(
-                txHash = hash,
-                networkId = cryptoCurrency.network.id,
-            )
-        }
     }
     // endregion
 
     companion object {
         private const val XRP_X_ADDRESS = 'X'
         private const val DEFAULT_VALUE = "0.00"
-        private const val EMPTY = ""
     }
 }
