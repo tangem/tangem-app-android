@@ -44,7 +44,7 @@ fun TransactionDoneTitle(@StringRes titleRes: Int, date: Long, modifier: Modifie
             style = TangemTheme.typography.h3,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing32),
+                .padding(top = TangemTheme.dimens.spacing16),
         )
         Text(
             text = stringResource(id = R.string.send_date_format, date.toDateFormat(), date.toTimeFormat()),
