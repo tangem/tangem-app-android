@@ -11,25 +11,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 internal fun SendSpeedSubtract(
-    receivingAmount: StateFlow<String>,
-    isSubtract: StateFlow<Boolean>,
+    receivingAmount: String,
+    isSubtract: Boolean,
     onSelectClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isSelected = isSubtract.collectAsStateWithLifecycle()
-    val footer = receivingAmount.collectAsStateWithLifecycle()
-
-    val footerText = if (isSelected.value) {
-        stringResource(R.string.send_amount_substract_footer, footer.value)
+    val footerText = if (isSubtract) {
+        stringResource(R.string.send_amount_substract_footer, receivingAmount)
     } else {
         null
     }
@@ -58,7 +53,7 @@ internal fun SendSpeedSubtract(
                     .padding(end = TangemTheme.dimens.spacing12),
             )
             TangemSwitch(
-                checked = isSelected.value,
+                checked = isSubtract,
                 onCheckedChange = onSelectClick,
             )
         }
