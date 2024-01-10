@@ -29,11 +29,7 @@ sealed interface SwapState {
         val warnings: List<Warning> = emptyList(),
     ) : SwapState
 
-    data class EmptyAmountState(
-        val fromTokenWalletBalance: String,
-        val toTokenWalletBalance: String,
-        val zeroAmountEquivalent: String,
-    ) : SwapState
+    data class EmptyAmountState(val zeroAmountEquivalent: String) : SwapState
 
     data class SwapError(
         val fromTokenInfo: TokenSwapInfo,
