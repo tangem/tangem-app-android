@@ -60,23 +60,25 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
         TransactionDoneTitle(titleRes = R.string.swapping_success_view_title, date = state.timestamp)
         SpacerH16()
         InputRowImage(
-            title = TextReference.Res(R.string.swapping_success_from_title),
+            title = TextReference.Res(R.string.swapping_from_title),
             subtitle = state.fromTokenAmount,
             caption = state.fromTokenFiatAmount,
             tokenIconState = state.fromTokenIconState ?: TokenIconState.Loading,
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
+            showNetworkIcon = true,
         )
         SpacerH16()
         InputRowImage(
-            title = TextReference.Res(R.string.swapping_success_to_title),
+            title = TextReference.Res(R.string.swapping_to_title),
             subtitle = state.toTokenAmount,
             caption = state.toTokenFiatAmount,
             tokenIconState = state.toTokenIconState ?: TokenIconState.Loading,
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
+            showNetworkIcon = true,
         )
         SpacerH16()
         InputRowBestRate(

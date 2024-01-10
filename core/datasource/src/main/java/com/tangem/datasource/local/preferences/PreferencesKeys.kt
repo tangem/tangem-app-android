@@ -35,6 +35,8 @@ object PreferencesKeys {
 
     val SWAP_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "swapTransactions") }
 
+    val SWAP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "swapTransactionsStatuses") }
+
     val WALLETS_SCROLL_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "walletsScrollPreview") }
 
     val SENT_ONE_TIME_EVENTS_KEY by lazy { stringPreferencesKey(name = "sentOneTimeEvents") }
@@ -42,6 +44,10 @@ object PreferencesKeys {
     val WALLETS_BALANCES_STATES_KEY by lazy { stringPreferencesKey(name = "walletsBalancesStates") }
 
     val LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY by lazy { stringPreferencesKey(name = "lastSwappedCryptoCurrency") }
+
+    val IS_WALLET_SWAP_PROMO_SHOW_KEY by lazy { booleanPreferencesKey(name = "isWalletSwapPromoShown") }
+
+    val IS_TOKEN_SWAP_PROMO_SHOW_KEY by lazy { booleanPreferencesKey(name = "isTokenSwapPromoShown") }
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
