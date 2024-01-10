@@ -237,9 +237,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return providers.map { provider ->
             val amountDecimal = toBigDecimalOrNull(amountToSwap)
             if (amountDecimal == null || amountDecimal.signum() == 0) {
-                return providers.associateWith {
-                    createEmptyAmountState(fromToken, toToken)
-                }
+                return providers.associateWith { createEmptyAmountState() }
             }
             val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken.currency))
             val isBalanceWithoutFeeEnough = isBalanceEnough(fromToken, amount, null)
@@ -698,13 +696,9 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun createEmptyAmountState(fromToken: CryptoCurrencyStatus, toToken: CryptoCurrencyStatus): SwapState {
+    private fun createEmptyAmountState(): SwapState {
         val appCurrency = userWalletManager.getUserAppCurrency()
-        val fromTokenBalance = getTokenBalance(fromToken)
-        val toTokenBalance = getTokenBalance(toToken)
         return SwapState.EmptyAmountState(
-            fromTokenWalletBalance = amountFormatter.formatSwapAmountToUI(fromTokenBalance, ""),
-            toTokenWalletBalance = amountFormatter.formatSwapAmountToUI(toTokenBalance, ""),
             zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(
                 rateValue = BigDecimal.ONE,
                 fiatCurrencyName = appCurrency.symbol,
