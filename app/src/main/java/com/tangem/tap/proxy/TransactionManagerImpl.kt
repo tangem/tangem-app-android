@@ -1,10 +1,17 @@
 package com.tangem.tap.proxy
 
+import androidx.core.text.isDigitsOnly
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.Message
+import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
+import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.optimism.OptimismWalletManager
+import com.tangem.blockchain.blockchains.stellar.StellarMemo
+import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
+import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
+import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -138,6 +145,26 @@ class TransactionManagerImpl(
     override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: error("blockchain not found")
         return blockchain.getExploreTxUrl(txAddress)
+    }
+
+    override fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
+        val blockchain = Blockchain.fromNetworkId(networkId)
+        if (memo == null) return null
+        return when (blockchain) {
+            Blockchain.Stellar -> {
+                val xlmMemo = if (memo.isNotEmpty() && memo.isDigitsOnly()) {
+                    StellarMemo.Id(memo.toBigInteger())
+                } else {
+                    StellarMemo.Text(memo)
+                }
+                StellarTransactionExtras(xlmMemo)
+            }
+            Blockchain.Binance -> BinanceTransactionExtras(memo)
+            Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
+            Blockchain.Cosmos -> CosmosTransactionExtras(memo)
+            Blockchain.TON -> TonTransactionExtras(memo)
+            else -> null
+        }
     }
 
     override fun getNativeTokenDecimals(networkId: String): Int {
