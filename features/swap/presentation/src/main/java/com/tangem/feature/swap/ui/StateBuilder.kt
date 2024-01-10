@@ -558,6 +558,8 @@ internal class StateBuilder(
     fun createQuotesEmptyAmountState(
         uiStateHolder: SwapStateHolder,
         emptyAmountState: SwapState.EmptyAmountState,
+        fromTokenStatus: CryptoCurrencyStatus,
+        toTokenStatus: CryptoCurrencyStatus?,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -574,7 +576,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.sendCardData.networkIconRes,
-                balance = emptyAmountState.fromTokenWalletBalance,
+                balance = fromTokenStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -588,7 +590,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = emptyAmountState.toTokenWalletBalance,
+                balance = toTokenStatus?.getFormattedAmount(isNeedSymbol = false) ?: UNKNOWN_AMOUNT_SIGN,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             warnings = emptyList(),
