@@ -11,7 +11,6 @@ import com.tangem.feature.swap.models.ApproveType
 
 data class SwapProcessDataState(
     // Initial network id
-    val networkId: String,
     val fromCryptoCurrency: CryptoCurrencyStatus? = null,
     val toCryptoCurrency: CryptoCurrencyStatus? = null,
     // Amount from input
