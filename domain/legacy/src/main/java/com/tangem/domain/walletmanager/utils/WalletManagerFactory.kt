@@ -10,6 +10,7 @@ import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.makeWalletManagerForApp
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
+import timber.log.Timber
 
 internal class WalletManagerFactory(
     private val configManager: ConfigManager,
@@ -26,11 +27,16 @@ internal class WalletManagerFactory(
     ): WalletManager? {
         val derivationParams = getDerivationParams(derivationPath, scanResponse.derivationStyleProvider)
 
-        return sdkWalletManagerFactory.makeWalletManagerForApp(
-            scanResponse = scanResponse,
-            blockchain = blockchain,
-            derivationParams = derivationParams,
-        )
+        return try {
+            sdkWalletManagerFactory.makeWalletManagerForApp(
+                scanResponse = scanResponse,
+                blockchain = blockchain,
+                derivationParams = derivationParams,
+            )
+        } catch (e: Throwable) {
+            Timber.w(e, "Failed to create wallet manager for $blockchain")
+            null
+        }
     }
 
     private fun getDerivationParams(

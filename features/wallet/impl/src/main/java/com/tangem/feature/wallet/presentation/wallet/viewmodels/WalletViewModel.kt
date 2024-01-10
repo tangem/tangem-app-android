@@ -128,6 +128,7 @@ internal class WalletViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val scanCardToUnlockWalletUseCase: ScanCardToUnlockWalletClickHandler,
+    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isNeedToBackupUseCase: IsNeedToBackupUseCase,
     getMissedAddressesCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
@@ -146,6 +147,7 @@ internal class WalletViewModel @Inject constructor(
         isNeedToBackupUseCase = isNeedToBackupUseCase,
         getMissedAddressCryptoCurrenciesUseCase = getMissedAddressesCryptoCurrenciesUseCase,
         hasSingleWalletSignedHashesUseCase = hasSingleWalletSignedHashesUseCase,
+        shouldShowSwapPromoWalletUseCase = shouldShowSwapPromoWalletUseCase,
         clickIntents = this,
     )
 
@@ -673,7 +675,7 @@ internal class WalletViewModel @Inject constructor(
                 .collectLatest {
                     it.onRight { coinStatus ->
                         uiState = stateFactory.getStateWithClosedBottomSheet()
-                        reduxStateHolder.dispatch(
+                        reduxStateHolder.dispatchWithMain(
                             action = TradeCryptoAction.New.SendToken(
                                 userWallet = userWallet,
                                 tokenCurrency = requireNotNull(cryptoCurrencyStatus.currency as? CryptoCurrency.Token),
@@ -772,6 +774,12 @@ internal class WalletViewModel @Inject constructor(
             ?: return
 
         refreshSingleCurrencyContent(selectedWalletIndex)
+    }
+
+    override fun onCloseSwapPromoNotificationClick() {
+        viewModelScope.launch(dispatchers.main) {
+            shouldShowSwapPromoWalletUseCase.neverToShow()
+        }
     }
 
     // FIXME: refreshSingleCurrencyContent mustn't update the TxHistory and Buttons. It only must fetch primary
@@ -1155,8 +1163,8 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    private fun setupWalletConnectOnWallet(userWallet: UserWallet) {
-        reduxStateHolder.dispatch(
+    private suspend fun setupWalletConnectOnWallet(userWallet: UserWallet) {
+        reduxStateHolder.dispatchWithMain(
             action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet),
         )
     }
