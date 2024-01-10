@@ -22,7 +22,6 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getNetworkName
 import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
@@ -70,7 +69,6 @@ internal class TokensListViewModel @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     analyticsEventHandler: AnalyticsEventHandler,
     getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
-    walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val isManageAccess = store.state.tokensState.isManageAccess
@@ -88,7 +86,6 @@ internal class TokensListViewModel @Inject constructor(
     private var changedBlockchainList: MutableList<Blockchain> = mutableListOf()
 
     private val tokensListMigration = TokensListMigration(
-        walletFeatureToggles = walletFeatureToggles,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getCurrenciesUseCase = getCurrenciesUseCase,
     )
@@ -307,8 +304,6 @@ internal class TokensListViewModel @Inject constructor(
         fun onSaveButtonClick() {
             analyticsSender.sendWhenSaveButtonClicked()
             tokensListMigration.onSaveButtonClick(
-                currentTokensList = currentTokensList,
-                currentBlockchainList = currentBlockchainList,
                 changedTokensList = changedTokensList,
                 changedBlockchainList = changedBlockchainList,
             )
