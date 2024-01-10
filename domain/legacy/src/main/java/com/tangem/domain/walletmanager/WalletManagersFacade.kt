@@ -168,6 +168,15 @@ interface WalletManagersFacade {
     ): Result<TransactionFee>?
 
     /**
+     * Returns estimated fee for transaction
+     *
+     * @param amount of transaction
+     * @param userWalletId selected wallet id
+     * @param network network of currency
+     */
+    suspend fun estimateFee(amount: Amount, userWalletId: UserWalletId, network: Network): Result<TransactionFee>?
+
+    /**
      * Validates transaction
      *
      * @param amount of transaction
