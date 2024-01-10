@@ -250,7 +250,7 @@ class TestBackupAnimation(
     }
 
     @Suppress("MagicNumber")
-    fun setStep(step: Int, onStepUpdate: (Int) -> Unit = {}) {
+    private fun setStep(step: Int, onStepUpdate: (Int) -> Unit = {}) {
         steps = step
         when (steps) {
             0 -> setupCreateWalletState()
