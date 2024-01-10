@@ -8,7 +8,6 @@ import arrow.core.right
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.Provider
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.isZero
@@ -68,6 +67,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.factory.TokenListWith
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletStateFactory
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MaybeTokenListFlow
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -317,7 +317,7 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    // TODO: [REDACTED_JIRA]
+    @Deprecated("Use DerivePublicKeysUseCase instead")
     private fun deriveMissingCurrencies(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
@@ -1230,7 +1230,9 @@ internal class WalletViewModel @Inject constructor(
                             }
                         }
                         is CryptoCurrencyStatus.NoQuote -> AnalyticsParam.CardBalanceState.NoRate
-                        is CryptoCurrencyStatus.Unreachable -> AnalyticsParam.CardBalanceState.BlockchainError
+                        is CryptoCurrencyStatus.Unreachable,
+                        is CryptoCurrencyStatus.UnreachableWithoutAddresses,
+                        -> AnalyticsParam.CardBalanceState.BlockchainError
                         is CryptoCurrencyStatus.MissedDerivation,
                         is CryptoCurrencyStatus.Loading,
                         is CryptoCurrencyStatus.Custom,

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +35,7 @@ import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 @Suppress("LongMethod")
 @Composable
 internal fun SendSpeedSelector(
-    state: State<FeeSelectorState>,
+    state: FeeSelectorState,
     clickIntents: SendClickIntents,
     modifier: Modifier = Modifier,
 ) {
@@ -50,47 +49,48 @@ internal fun SendSpeedSelector(
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
         ) {
-            when (val selector = state.value) {
+            when (state) {
                 FeeSelectorState.Loading -> {
                     SendSpeedSelectorItemLoading()
                     SendSpeedSelectorItemLoading()
                     SendSpeedSelectorItemLoading()
                 }
                 is FeeSelectorState.Content -> {
-                    when (selector.fees) {
+                    when (state.fees) {
                         is TransactionFee.Choosable -> {
+                            val isSelected = state.selectedFee
                             SendSpeedSelectorItem(
                                 titleRes = R.string.common_fee_selector_option_slow,
                                 iconRes = R.drawable.ic_tortoise_24,
-                                amount = TextReference.Str(selector.fees.minimum.amount.value.toString()),
-                                symbol = TextReference.Str(selector.fees.minimum.amount.currencySymbol),
-                                isSelected = selector.selectedFee == FeeType.SLOW,
+                                amount = TextReference.Str(state.fees.minimum.amount.value.toString()),
+                                symbol = TextReference.Str(state.fees.minimum.amount.currencySymbol),
+                                isSelected = isSelected == FeeType.SLOW,
                                 onSelect = { clickIntents.onFeeSelectorClick(FeeType.SLOW) },
                             )
                             SendSpeedSelectorItem(
                                 titleRes = R.string.common_fee_selector_option_market,
                                 iconRes = R.drawable.ic_bird_24,
-                                amount = TextReference.Str(selector.fees.normal.amount.value.toString()),
-                                symbol = TextReference.Str(selector.fees.normal.amount.currencySymbol),
-                                isSelected = selector.selectedFee == FeeType.MARKET,
+                                amount = TextReference.Str(state.fees.normal.amount.value.toString()),
+                                symbol = TextReference.Str(state.fees.normal.amount.currencySymbol),
+                                isSelected = isSelected == FeeType.MARKET,
                                 onSelect = { clickIntents.onFeeSelectorClick(FeeType.MARKET) },
                             )
                             SendSpeedSelectorItem(
                                 titleRes = R.string.common_fee_selector_option_fast,
                                 iconRes = R.drawable.ic_hare_24,
-                                amount = TextReference.Str(selector.fees.priority.amount.value.toString()),
-                                symbol = TextReference.Str(selector.fees.priority.amount.currencySymbol),
-                                isSelected = selector.selectedFee == FeeType.FAST,
+                                amount = TextReference.Str(state.fees.priority.amount.value.toString()),
+                                symbol = TextReference.Str(state.fees.priority.amount.currencySymbol),
+                                isSelected = isSelected == FeeType.FAST,
                                 onSelect = { clickIntents.onFeeSelectorClick(FeeType.FAST) },
-                                showDivider = selector.fees.normal is Fee.Ethereum,
+                                showDivider = state.fees.normal is Fee.Ethereum,
                             )
-                            if (selector.fees.normal is Fee.Ethereum) {
+                            if (state.fees.normal is Fee.Ethereum) {
                                 SendSpeedSelectorItem(
                                     titleRes = R.string.common_fee_selector_option_custom,
                                     iconRes = R.drawable.ic_edit_24,
-                                    isSelected = selector.selectedFee == FeeType.CUSTOM,
+                                    isSelected = isSelected == FeeType.CUSTOM,
                                     onSelect = { clickIntents.onFeeSelectorClick(FeeType.CUSTOM) },
-                                    showDivider = selector.fees.normal !is Fee.Ethereum,
+                                    showDivider = state.fees.normal !is Fee.Ethereum,
                                 )
                             }
                         }
@@ -99,15 +99,14 @@ internal fun SendSpeedSelector(
                                 titleRes = R.string.common_fee_selector_option_market,
                                 iconRes = R.drawable.ic_bird_24,
                                 isSelected = true,
-                                amount = TextReference.Str(selector.fees.normal.amount.value.toString()),
-                                symbol = TextReference.Str(selector.fees.normal.amount.currencySymbol),
+                                amount = TextReference.Str(state.fees.normal.amount.value.toString()),
+                                symbol = TextReference.Str(state.fees.normal.amount.currencySymbol),
                                 onSelect = { clickIntents.onFeeSelectorClick(FeeType.MARKET) },
                                 showDivider = false,
                             )
                         }
                     }
                 }
-                FeeSelectorState.Empty -> Unit
             }
         }
     }
