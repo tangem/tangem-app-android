@@ -86,6 +86,7 @@ dependencies {
     implementation(projects.features.swap.api)
     implementation(projects.features.swap.presentation)
     implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.data)
     implementation(projects.features.tester.api)
     implementation(projects.features.tester.impl)
