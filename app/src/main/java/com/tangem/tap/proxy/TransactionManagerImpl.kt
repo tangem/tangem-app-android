@@ -1,5 +1,6 @@
 package com.tangem.tap.proxy
 
+import androidx.core.text.isDigitsOnly
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.Message
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
@@ -23,8 +24,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.send.impl.presentation.viewmodel.XlmMemoType
-import com.tangem.features.send.impl.presentation.viewmodel.determineXlmMemoType
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
@@ -153,11 +152,12 @@ class TransactionManagerImpl(
         if (memo == null) return null
         return when (blockchain) {
             Blockchain.Stellar -> {
-                val xmlMemo = when (determineXlmMemoType(memo)) {
-                    XlmMemoType.TEXT -> StellarMemo.Text(memo)
-                    XlmMemoType.ID -> StellarMemo.Id(memo.toBigInteger())
+                val xlmMemo = if (memo.isNotEmpty() && memo.isDigitsOnly()) {
+                    StellarMemo.Id(memo.toBigInteger())
+                } else {
+                    StellarMemo.Text(memo)
                 }
-                StellarTransactionExtras(xmlMemo)
+                StellarTransactionExtras(xlmMemo)
             }
             Blockchain.Binance -> BinanceTransactionExtras(memo)
             Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
