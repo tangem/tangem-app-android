@@ -32,6 +32,11 @@ class AppPreferencesStore(
         return edit { transform(it) }
     }
 
+    /** Get data [T] by [key]. If data is not found, it returns [default] */
+    inline fun <reified T> MutablePreferences.getOrDefault(key: Preferences.Key<T>, default: T): T {
+        return this[key] ?: default
+    }
+
     /**
      * Get nullable data [T] by string [key] from [MutablePreferences]
      *
