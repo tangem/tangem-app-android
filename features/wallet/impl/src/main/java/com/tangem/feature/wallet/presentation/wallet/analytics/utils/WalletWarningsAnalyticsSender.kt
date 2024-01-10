@@ -28,6 +28,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 is WalletNotification.Warning.LowSignatures,
                 is WalletNotification.Warning.NetworksUnreachable,
                 is WalletNotification.Warning.SomeNetworksUnreachable,
+                is WalletNotification.SwapPromo,
                 -> null
             }
         }
