@@ -13,7 +13,7 @@ import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscribe
 internal abstract class WalletContentLoader(val id: UserWalletId) {
 
     /** Loader's subscribers */
-    val subscribers: List<WalletSubscriber<*>> get() = create()
+    val subscribers: List<WalletSubscriber> get() = create()
 
-    protected abstract fun create(): List<WalletSubscriber<*>>
+    protected abstract fun create(): List<WalletSubscriber>
 }

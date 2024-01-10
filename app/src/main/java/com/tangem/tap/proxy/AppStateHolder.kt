@@ -3,21 +3,18 @@ package com.tangem.tap.proxy
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.walletStores.WalletStoresManager
-import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,12 +41,9 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, ReduxNavControl
 
     @Deprecated("Use scan response from selected user wallet")
     var scanResponse: ScanResponse? = null
-    var walletState: WalletState? = null
-    var userTokensRepository: UserTokensRepository? = null
     var mainStore: Store<AppState>? = null
     var tangemSdkManager: TangemSdkManager? = null
-    var walletStoresManager: WalletStoresManager? = null
-    var appFiatCurrency: FiatCurrency = FiatCurrency.Default
+    var appFiatCurrency: AppCurrency = AppCurrency.Default
     var exchangeService: ExchangeService? = null
 
     fun getActualCard(): CardDTO? {

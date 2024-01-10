@@ -89,5 +89,12 @@ sealed class Settings(
             event = "App Theme Switched",
             params = mapOf("State" to theme.value),
         )
+
+        object EnableBiometrics : AppSettings(event = "Notice - Enable Biometric")
+
+        class HideBalanceChanged(state: AnalyticsParam.OnOffState) : AppSettings(
+            event = "Hide Balance Changed",
+            params = mapOf("State" to state.value),
+        )
     }
 }
