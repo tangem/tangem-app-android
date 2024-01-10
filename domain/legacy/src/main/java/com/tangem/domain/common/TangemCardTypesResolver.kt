@@ -45,6 +45,8 @@ internal class TangemCardTypesResolver(
             card.settings.isKeysImportAllowed
     }
 
+    override fun isVisaWallet(): Boolean = productType == ProductType.Visa
+
     override fun isRing(): Boolean {
         return productType == ProductType.Ring
     }

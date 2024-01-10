@@ -7,7 +7,6 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
-import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
@@ -22,13 +21,10 @@ internal class AppSettingsFragment : ComposeFragment(), StoreSubscriber<DetailsS
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     @Inject
-    lateinit var detailsFeatureToggles: DetailsFeatureToggles
-
-    @Inject
     lateinit var appCurrencyRepository: AppCurrencyRepository
 
     private val viewModel by lazy(mode = LazyThreadSafetyMode.NONE) {
-        AppSettingsViewModel(store, detailsFeatureToggles, appCurrencyRepository)
+        AppSettingsViewModel(store, appCurrencyRepository)
     }
 
     @Composable
