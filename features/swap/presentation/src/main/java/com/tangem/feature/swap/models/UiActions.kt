@@ -21,4 +21,6 @@ data class UiActions(
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
     val onBuyClick: () -> Unit,
+    val onPolicyClick: (String) -> Unit,
+    val onTosClick: (String) -> Unit,
 )
