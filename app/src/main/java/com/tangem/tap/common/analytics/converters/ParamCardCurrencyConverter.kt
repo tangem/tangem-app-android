@@ -1,9 +1,9 @@
 package com.tangem.tap.common.analytics.converters
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.Converter
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.utils.converter.Converter
 
 /**
 [REDACTED_AUTHOR]
