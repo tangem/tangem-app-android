@@ -1,9 +1,11 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -95,6 +97,9 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
+        marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
+        swapRepository: SwapRepository,
+        showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCurrencyWarningsUseCase {
         return GetCurrencyWarningsUseCase(
@@ -102,6 +107,9 @@ internal object TokensDomainModule {
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
+            marketCryptoCurrencyRepository = marketCryptoCurrencyRepository,
+            swapRepository = swapRepository,
+            showSwapPromoTokenUseCase = showSwapPromoTokenUseCase,
             dispatchers = dispatchers,
         )
     }
