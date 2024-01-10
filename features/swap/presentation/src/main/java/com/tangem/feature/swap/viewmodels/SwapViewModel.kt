@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import arrow.core.getOrElse
-import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -32,6 +31,7 @@ import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -606,7 +606,7 @@ internal class SwapViewModel @Inject constructor(
                         afterSearch = true,
                     ),
 
-                    )
+                )
             } else {
                 tokenDataState.copy(
                     toGroup = tokenDataState.toGroup.copy(
