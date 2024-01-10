@@ -37,7 +37,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
-import com.tangem.feature.swap.models.SwapWarning
+import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.TransactionCardType
 import kotlinx.coroutines.launch
 
@@ -49,7 +49,7 @@ fun TransactionCard(
     tokenIconUrl: String,
     tokenCurrency: String,
     amountEquivalent: String?,
-    priceImpact: SwapWarning.HighPriceImpact?,
+    priceImpact: PriceImpact,
     textFieldValue: TextFieldValue?,
     modifier: Modifier = Modifier,
     @DrawableRes iconPlaceholder: Int? = null,
@@ -138,7 +138,7 @@ fun TransactionCardEmpty(
                 type = type,
                 amountEquivalent = amountEquivalent,
                 textFieldValue = textFieldValue,
-                priceImpact = null,
+                priceImpact = PriceImpact.Empty(),
             )
         }
 
@@ -182,16 +182,15 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val title = when (type) {
-            is TransactionCardType.ReceiveCard -> R.string.exchange_receive_view_header
-            is TransactionCardType.SendCard -> R.string.exchange_send_view_header
-        }
+        val title = type.headerResId
         Text(
             text = stringResource(id = title),
             color = TangemTheme.colors.text.tertiary,
             maxLines = 1,
             style = MaterialTheme.typography.subtitle2,
-            modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size24),
+            modifier = Modifier
+                .defaultMinSize(minHeight = TangemTheme.dimens.size24)
+                .align(Alignment.CenterVertically),
         )
         SpacerW16()
         if (balance.isNotBlank()) {
@@ -201,8 +200,8 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                     color = TangemTheme.colors.text.tertiary,
                     style = MaterialTheme.typography.body2,
                     modifier = Modifier
-                        .defaultMinSize(minHeight = TangemTheme.dimens.size20)
-                        .padding(top = TangemTheme.dimens.spacing2),
+                        .defaultMinSize(minHeight = TangemTheme.dimens.size24)
+                        .align(Alignment.CenterVertically),
                 )
             }
         } else {
@@ -221,7 +220,7 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
 private fun Content(
     type: TransactionCardType,
     amountEquivalent: String?,
-    priceImpact: SwapWarning.HighPriceImpact?,
+    priceImpact: PriceImpact,
     textFieldValue: TextFieldValue?,
 ) {
     Row(
@@ -243,7 +242,7 @@ private fun Content(
         ) {
             val sumTextModifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32)
             when (type) {
-                is TransactionCardType.ReceiveCard -> {
+                is TransactionCardType.ReadOnly -> {
                     if (textFieldValue != null) {
                         ResizableText(
                             text = textFieldValue.text,
@@ -261,7 +260,7 @@ private fun Content(
                         )
                     }
                 }
-                is TransactionCardType.SendCard -> {
+                is TransactionCardType.Inputtable -> {
                     AutoSizeTextField(
                         modifier = sumTextModifier,
                         textFieldValue = textFieldValue ?: TextFieldValue(),
@@ -274,10 +273,10 @@ private fun Content(
             SpacerH8()
 
             if (amountEquivalent != null) {
-                if (type is TransactionCardType.ReceiveCard && priceImpact != null) {
+                if (type is TransactionCardType.ReadOnly && priceImpact !is PriceImpact.Empty) {
                     Row {
                         Text(
-                            text = makePriceImpactBalanceWarning(amountEquivalent, priceImpact.priceImpact),
+                            text = makePriceImpactBalanceWarning(amountEquivalent, priceImpact.getIntPercentValue()),
                             color = TangemTheme.colors.text.tertiary,
                             style = TangemTheme.typography.body2,
                             modifier = Modifier
@@ -419,7 +418,7 @@ private fun TokenIcon(
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
-                    modifier = Modifier.padding(all = TangemTheme.dimens.spacing0_5),
+                    modifier = Modifier.padding(all = TangemTheme.dimens.spacing2),
                     painter = painterResource(id = networkIconRes),
                     contentDescription = null,
                 )
@@ -483,7 +482,7 @@ private fun Preview_SwapMainCard_InDarkTheme() {
 @Composable
 private fun TransactionCardPreview() {
     TransactionCard(
-        type = TransactionCardType.SendCard({}) {},
+        type = TransactionCardType.Inputtable({}, {}),
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",
@@ -491,7 +490,7 @@ private fun TransactionCardPreview() {
         onChangeTokenClick = {},
         balance = "123",
         textFieldValue = TextFieldValue(),
-        priceImpact = null,
+        priceImpact = PriceImpact.Empty(),
     )
 }
 

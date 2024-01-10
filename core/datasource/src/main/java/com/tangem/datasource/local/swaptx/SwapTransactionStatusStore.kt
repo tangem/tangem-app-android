@@ -15,4 +15,5 @@ enum class ExchangeAnalyticsStatus(val value: String) {
     Fail("Fail"),
     KYC("KYC"),
     Refunded("Refunded"),
+    Cancelled("Canceled"),
 }
