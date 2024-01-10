@@ -4,7 +4,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.features.send.redux.states.ButtonState
-import com.tangem.tap.features.wallet.redux.ProgressState
 import org.rekotlin.StateType
 import java.util.Locale
 
@@ -16,9 +15,6 @@ data class HomeState(
 
     val firstStory: Stories
         get() = stories[0]
-
-    val btnScanStateInProgress: Boolean
-        get() = btnScanState.progressState == ProgressState.Loading
 
     fun stepOf(story: Stories): Int = stories.indexOf(story)
 
@@ -52,7 +48,6 @@ sealed class Stories(
     val duration: Int,
     val isNewWalletAvailable: MutableState<Boolean> = mutableStateOf(HomeState.isNewWalletAvailableInit()),
 ) {
-    object OneInchPromo : Stories(duration = 8000)
     object TangemIntro : Stories(duration = 6000)
     object RevolutionaryWallet : Stories(duration = 6000)
     object UltraSecureBackup : Stories(duration = 6000)
