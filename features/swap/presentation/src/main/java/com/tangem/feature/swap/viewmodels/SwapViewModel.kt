@@ -341,9 +341,12 @@ internal class SwapViewModel @Inject constructor(
                 }
             }
             is SwapState.EmptyAmountState -> {
+                val toTokenStatus = dataState.toCryptoCurrency
                 uiState = stateBuilder.createQuotesEmptyAmountState(
                     uiStateHolder = uiState,
                     emptyAmountState = state,
+                    fromTokenStatus = fromToken,
+                    toTokenStatus = toTokenStatus,
                     isReverseSwapPossible = isReverseSwapPossible(),
                 )
             }
