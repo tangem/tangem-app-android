@@ -16,7 +16,7 @@ internal sealed class ExchangeStatusNotifications(val config: NotificationConfig
             subtitle = TextReference.Res(R.string.express_exchange_notification_verification_text),
             iconResId = R.drawable.ic_alert_triangle_20,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = TextReference.Res(R.string.express_go_to_provider),
+                text = TextReference.Res(R.string.common_go_to_provider),
                 onClick = onGoToProviderClick,
             ),
         ),
@@ -30,7 +30,7 @@ internal sealed class ExchangeStatusNotifications(val config: NotificationConfig
             subtitle = TextReference.Res(R.string.express_exchange_notification_failed_text),
             iconResId = R.drawable.ic_alert_circle_24,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = TextReference.Res(R.string.express_go_to_provider),
+                text = TextReference.Res(R.string.common_go_to_provider),
                 onClick = onGoToProviderClick,
             ),
         ),
