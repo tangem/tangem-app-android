@@ -5,17 +5,17 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
+import com.tangem.data.source.preferences.storage.UsedCardsPrefStorage
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.hasPendingTransactions
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.data.source.preferences.storage.UsedCardsPrefStorage
+import com.tangem.tap.domain.model.Currency
+import com.tangem.tap.domain.model.hasPendingTransactions
 import com.tangem.tap.features.demo.isDemoCard
 import timber.log.Timber
 import java.math.BigDecimal
@@ -25,11 +25,10 @@ import java.math.BigDecimal
  */
 class OnboardingManager(
     var scanResponse: ScanResponse,
-    val usedCardsPrefStorage: UsedCardsPrefStorage,
+    private val usedCardsPrefStorage: UsedCardsPrefStorage,
 ) {
 
-    var cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null
-        private set
+    private var cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null
 
     suspend fun loadArtworkUrl(): String {
         val cardInfo = cardInfo
@@ -83,10 +82,6 @@ class OnboardingManager(
 
     fun activationFinished(cardId: String) {
         usedCardsPrefStorage.activationFinished(cardId)
-    }
-
-    fun isActivationFinished(cardId: String): Boolean {
-        return usedCardsPrefStorage.isActivationFinished(cardId)
     }
 
     fun isActivationStarted(cardId: String): Boolean {

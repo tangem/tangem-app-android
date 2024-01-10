@@ -21,10 +21,14 @@ data class NetworkStatus(
      */
     sealed class Status
 
+    object UnreachableWithoutAddresses : Status()
+
     /**
      * Represents the state where the network is unreachable.
+     *
+     * @property address Network addresses.
      */
-    object Unreachable : Status()
+    data class Unreachable(val address: NetworkAddress) : Status()
 
     /**
      * Represents the state where a derivation has been missed.
@@ -58,14 +62,4 @@ data class NetworkStatus(
         val amountToCreateAccount: BigDecimal,
         val errorMessage: String,
     ) : Status()
-
-    /**
-     * Represents possible statuses of amount.
-     *
-     * This sealed class includes states as LoadedAmount, UnreachableAmount.
-     */
-    sealed class AmountStatus
-
-    data class LoadedAmount(val value: BigDecimal) : AmountStatus()
-    object UnreachableAmount : AmountStatus()
 }
