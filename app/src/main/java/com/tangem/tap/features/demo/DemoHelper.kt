@@ -2,13 +2,11 @@ package com.tangem.tap.features.demo
 
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.Action
@@ -22,10 +20,7 @@ object DemoHelper {
 
     private val disabledActionFeatures = listOf(
         WalletConnectAction.StartWalletConnect::class.java,
-        TradeCryptoAction.Buy::class.java,
-        TradeCryptoAction.Sell::class.java,
         BackupAction.StartBackup::class.java,
-        WalletAction.ExploreAddress::class.java,
         DetailsAction.ResetToFactory.Start::class.java,
     )
 

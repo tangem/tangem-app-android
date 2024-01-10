@@ -1,14 +1,34 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
-import com.tangem.tap.common.redux.AppState
+import androidx.lifecycle.*
+import arrow.core.getOrElse
+import com.tangem.feature.qrscanning.SourceType
+import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
+import com.tangem.tap.store
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
-import org.rekotlin.Store
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-internal class WalletConnectViewModel(private val store: Store<AppState>) {
+@HiltViewModel
+internal class WalletConnectViewModel @Inject constructor(
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+) : ViewModel(), DefaultLifecycleObserver {
+
+    override fun onCreate(owner: LifecycleOwner) {
+        viewModelScope.launch {
+            listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
+                .getOrElse { emptyFlow() }
+                .flowWithLifecycle(owner.lifecycle, minActiveState = Lifecycle.State.CREATED)
+                .collect { store.dispatch(WalletConnectAction.OpenSession(it)) }
+        }
+    }
+
     fun updateState(state: WalletConnectState): WalletConnectScreenState {
         Timber.d("WC2 Sessions: ${state.wc2Sessions}")
         val sessions = state.sessions.map { wcSession -> WcSessionForScreen.fromSession(wcSession) } + state.wc2Sessions
