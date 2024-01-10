@@ -8,12 +8,15 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.card.DerivePublicKeysUseCase
+import com.tangem.domain.card.repository.DerivationsRepository
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.tap.domain.TangemSdkManager
 
-// TODO: [REDACTED_JIRA]
 internal class DefaultDerivePublicKeysUseCase(
     private val tangemSdkManager: TangemSdkManager,
+    private val derivationsRepository: DerivationsRepository,
 ) : DerivePublicKeysUseCase {
 
     override suspend fun invoke(
@@ -25,5 +28,14 @@ internal class DefaultDerivePublicKeysUseCase(
             .doOnFailure { return Unit.left() }
 
         return Unit.left()
+    }
+
+    override suspend fun invoke(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+    ): Either<Throwable, Unit> {
+        return Either.catch {
+            derivationsRepository.derivePublicKeys(userWalletId, currencies)
+        }
     }
 }
