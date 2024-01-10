@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.walletconnect2.domain.models.binance
 
-import com.github.salomonbrys.kotson.*
+import com.github.salomonbrys.kotson.jsonSerializer
 import com.google.gson.JsonObject
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -39,19 +39,6 @@ class WcBinanceTradeOrder(
         val side: Int,
         val symbol: String,
         val timeInforce: Int,
-    )
-}
-
-val tradeOrderDeserializer = jsonDeserializer {
-    WcBinanceTradeOrder.Message(
-        id = it.json[WcBinanceTradeOrder.MessageKey.ID.key].string,
-        orderType = it.json[WcBinanceTradeOrder.MessageKey.ORDER_TYPE.key].int,
-        price = it.json[WcBinanceTradeOrder.MessageKey.PRICE.key].long,
-        quantity = it.json[WcBinanceTradeOrder.MessageKey.QUANTITY.key].long,
-        sender = it.json[WcBinanceTradeOrder.MessageKey.SENDER.key].string,
-        side = it.json[WcBinanceTradeOrder.MessageKey.SIDE.key].int,
-        symbol = it.json[WcBinanceTradeOrder.MessageKey.SYMBOL.key].string,
-        timeInforce = it.json[WcBinanceTradeOrder.MessageKey.TIME_INFORCE.key].int,
     )
 }
 

@@ -25,8 +25,6 @@ import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
-import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
 import com.tangem.tap.features.customtoken.impl.presentation.models.*
@@ -38,8 +36,6 @@ import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTok
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContactAddressValidator
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContractAddressValidatorResult
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import com.tangem.wallet.BuildConfig
@@ -71,7 +67,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val featureInteractor: CustomTokenInteractor,
     private val dispatchers: AppCoroutineDispatcherProvider,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val analyticsSender = AddCustomTokenAnalyticsSender(analyticsEventHandler)
@@ -88,18 +83,16 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private var foundToken: FoundToken? = null
 
     init {
-        if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            viewModelScope.launch(dispatchers.main) {
-                currentCryptoCurrencies = getSelectedWalletSyncUseCase().fold(
-                    ifLeft = { emptyList() },
-                    ifRight = { selectedWallet ->
-                        getCurrenciesUseCase(selectedWallet.walletId).fold(
-                            ifLeft = { emptyList() },
-                            ifRight = { it },
-                        )
-                    },
-                )
-            }
+        viewModelScope.launch(dispatchers.main) {
+            currentCryptoCurrencies = getSelectedWalletSyncUseCase().fold(
+                ifLeft = { emptyList() },
+                ifRight = { selectedWallet ->
+                    getCurrenciesUseCase(selectedWallet.walletId).fold(
+                        ifLeft = { emptyList() },
+                        ifRight = { it },
+                    )
+                },
+            )
         }
     }
 
@@ -591,14 +584,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     private fun isTokenAlreadyAdded(): Boolean {
-        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            isTokenAlreadyAddedNew()
-        } else {
-            isTokenAlreadyAddedOld()
-        }
-    }
-
-    private fun isTokenAlreadyAddedNew(): Boolean {
         return currentCryptoCurrencies
             .filterIsInstance<CryptoCurrency.Token>()
             .any { token ->
@@ -621,54 +606,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
             }
     }
 
-    private fun isTokenAlreadyAddedOld(): Boolean {
-        return store.state.walletState.walletsStores
-            .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
-            .flatten()
-            .filterIsInstance<Currency.Token>()
-            .any { wrappedCurrency ->
-                val contractAddress = uiState.form.contractAddressInputField.value
-                val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                val sameId = foundToken?.id == wrappedCurrency.token.id
-                val sameAddress = contractAddress == wrappedCurrency.token.contractAddress
-                val sameBlockchain =
-                    Blockchain.fromNetworkId(networkSelectorValue.toNetworkId()) == wrappedCurrency.blockchain
-                val isSameDerivationPath = getDerivationPath().isSameDerivationPath(wrappedCurrency.derivationPath)
-                sameId && sameAddress && sameBlockchain && isSameDerivationPath
-            }
-    }
-
     private fun isBlockchainAlreadyAdded(): Boolean {
-        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            isBlockchainAlreadyAddedNew()
-        } else {
-            isBlockchainAlreadyAddedOld()
-        }
-    }
-
-    private fun isBlockchainAlreadyAddedNew(): Boolean {
         return currentCryptoCurrencies
             .filterIsInstance<CryptoCurrency.Coin>()
             .any { coin ->
                 coin.network.id.value == uiState.form.networkSelectorField.selectedItem.blockchain.id &&
                     coin.network.derivationPath.value == getDerivationPath()?.rawPath
             }
-    }
-
-    private fun isBlockchainAlreadyAddedOld(): Boolean {
-        return store.state.walletState.walletsStores
-            .map { walletStore -> walletStore.walletsData.map(WalletDataModel::currency) }
-            .flatten()
-            .filterIsInstance<Currency.Blockchain>()
-            .any {
-                val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                networkSelectorValue == it.blockchain &&
-                    getDerivationPath().isSameDerivationPath(it.derivationPath)
-            }
-    }
-
-    private fun DerivationPath?.isSameDerivationPath(rawDerivationPath: String?): Boolean {
-        return this == rawDerivationPath?.let { DerivationPath(it) }
     }
 
     private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
