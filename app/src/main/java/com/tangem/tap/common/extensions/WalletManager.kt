@@ -3,15 +3,14 @@ package com.tangem.tap.common.extensions
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.amountToCreateAccount
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.getFirstToken
-import com.tangem.tap.domain.model.WalletDataModel
-import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
+import com.tangem.tap.domain.model.WalletAddressData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -59,7 +58,7 @@ suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try 
     }
 }
 
-fun WalletManager.getTopUpUrl(): String? {
+internal fun WalletManager.getTopUpUrl(): String? {
     val globalState = store.state.globalState
     val defaultAddress = wallet.address
 
@@ -73,9 +72,28 @@ fun WalletManager.getTopUpUrl(): String? {
     )
 }
 
-fun WalletManager?.getAddressData(): WalletDataModel.AddressData? {
+internal fun WalletManager?.getAddressData(): WalletAddressData? {
     val wallet = this?.wallet ?: return null
 
     val addressDataList = wallet.createAddressesData()
     return if (addressDataList.isEmpty()) null else addressDataList[0]
+}
+
+private fun Wallet.createAddressesData(): List<WalletAddressData> {
+    val listOfAddressData = mutableListOf<WalletAddressData>()
+    // put a defaultAddress at the first place
+    addresses.forEach {
+        val addressData = WalletAddressData(
+            it.value,
+            it.type,
+            getShareUri(it.value),
+            getExploreUrl(it.value),
+        )
+        if (it.type == AddressType.Default) {
+            listOfAddressData.add(0, addressData)
+        } else {
+            listOfAddressData.add(addressData)
+        }
+    }
+    return listOfAddressData
 }
