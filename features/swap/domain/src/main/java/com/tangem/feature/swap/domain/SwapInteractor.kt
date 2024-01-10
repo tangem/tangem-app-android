@@ -2,17 +2,17 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
+import com.tangem.feature.swap.domain.models.domain.PermissionOptions
+import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.*
 
 interface SwapInteractor {
 
     suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress
-
-    fun initDerivationPathAndNetwork(derivationPath: String?, network: Network)
 
     /**
      * Gives permission to swap, this starts scan card process
@@ -27,7 +27,6 @@ interface SwapInteractor {
      * Find best quote for given tokens to swap
      * under the hood calls different methods to receive data, depends on permission for given token
      *
-     * @param networkId network for tokens
      * @param fromToken [Currency] from which want to swap
      * @param toToken [Currency] that receive after swap
      * @param amountToSwap amount you want to swap
@@ -36,7 +35,6 @@ interface SwapInteractor {
      */
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
-        networkId: String,
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
         providers: List<SwapProvider>,
@@ -59,7 +57,6 @@ interface SwapInteractor {
     @Throws(IllegalStateException::class)
     suspend fun onSwap(
         swapProvider: SwapProvider,
-        networkId: String,
         swapData: SwapDataModel?,
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
@@ -73,7 +70,6 @@ interface SwapInteractor {
         selectedFee: FeeType,
         fromToken: CryptoCurrencyStatus,
         amountToSwap: String,
-        networkId: String,
     ): SwapState.QuotesLoadedState
 
     /**

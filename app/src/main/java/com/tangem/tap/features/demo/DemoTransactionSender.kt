@@ -21,6 +21,10 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
         )
     }
 
+    override suspend fun estimateFee(amount: Amount, destination: String): Result<TransactionFee> {
+        return getFee(amount, walletManager.wallet.address)
+    }
+
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val signerResponse = signer.sign(
             hash = getDataToSign(),
