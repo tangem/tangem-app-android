@@ -4,9 +4,11 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
+import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.SwapTransactionRepository
+import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedLastSwappedCryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
@@ -24,11 +26,11 @@ class DefaultSwapTransactionRepository(
         toCryptoCurrencyId: CryptoCurrency.ID,
         transaction: SavedSwapTransactionModel,
     ) {
+        transaction.status?.let { storeTransactionState(transaction.txId, it) }
         appPreferencesStore.editData { mutablePreferences ->
             val savedTransactions: List<SavedSwapTransactionListModel>? = mutablePreferences.getObjectList(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
             )
-
             val tokenTransactions = savedTransactions
                 ?.firstOrNull {
                     it.checkId(
@@ -62,14 +64,17 @@ class DefaultSwapTransactionRepository(
         }
     }
 
-    override fun getTransactions(
+    override suspend fun getTransactions(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<SavedSwapTransactionListModel>?> {
+        val txStatuses = appPreferencesStore.getObjectMap<ExchangeStatusModel>(
+            key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+        )
         return appPreferencesStore.getObjectList<SavedSwapTransactionListModel>(
             key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
         ).map { savedTransactions ->
-            savedTransactions
+            val currencyTxs = savedTransactions
                 ?.filter {
                     it.userWalletId == userWalletId.stringValue &&
                         (
@@ -77,6 +82,14 @@ class DefaultSwapTransactionRepository(
                                 it.fromCryptoCurrencyId == cryptoCurrencyId.value
                             )
                 }
+
+            currencyTxs?.map { currencyTx ->
+                currencyTx.copy(
+                    transactions = currencyTx.transactions.map { tx ->
+                        tx.copy(status = txStatuses[tx.txId])
+                    },
+                )
+            }
         }
     }
 
@@ -86,6 +99,7 @@ class DefaultSwapTransactionRepository(
         toCryptoCurrencyId: CryptoCurrency.ID,
         txId: String,
     ) {
+        clearTransactionsStatuses(txId = txId)
         appPreferencesStore.editData { mutablePreferences ->
             val savedList: List<SavedSwapTransactionListModel>? = mutablePreferences.getObjectList(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
@@ -127,6 +141,22 @@ class DefaultSwapTransactionRepository(
                     value = editedList,
                 )
             }
+        }
+    }
+
+    override suspend fun storeTransactionState(txId: String, status: ExchangeStatusModel) {
+        appPreferencesStore.editData { mutablePreferences ->
+            val savedMap = mutablePreferences.getObjectMap<ExchangeStatusModel>(
+                key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+            )
+
+            val updatesMap = savedMap?.toMutableMap() ?: mutableMapOf()
+            updatesMap[txId] = status
+
+            mutablePreferences.setObjectMap(
+                key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+                value = updatesMap,
+            )
         }
     }
 
@@ -193,5 +223,23 @@ class DefaultSwapTransactionRepository(
                 )
             },
         )
+    }
+
+    private suspend fun clearTransactionsStatuses(txId: String) {
+        appPreferencesStore.editData { mutablePreferences ->
+            val savedList = mutablePreferences.getObjectMap<ExchangeStatusModel>(
+                key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+            )
+            val editedList = savedList?.filterNot { it.key == txId }
+
+            if (editedList.isNullOrEmpty()) {
+                mutablePreferences.remove(key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY)
+            } else {
+                mutablePreferences.setObjectMap(
+                    key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
+                    value = editedList,
+                )
+            }
+        }
     }
 }
