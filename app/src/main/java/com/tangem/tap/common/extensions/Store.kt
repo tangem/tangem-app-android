@@ -42,16 +42,8 @@ fun Store<*>.dispatchNotification(resId: Int) {
     dispatchOnMain(GlobalAction.ShowNotification(resId))
 }
 
-suspend fun Store<AppState>.onUserWalletSelected(
-    userWallet: UserWallet,
-    refresh: Boolean = false,
-    sendAnalyticsEvent: Boolean = false,
-) {
-    state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh, sendAnalyticsEvent)
-}
-
-fun Store<*>.dispatchToastNotification(resId: Int) {
-    dispatchOnMain(GlobalAction.ShowToastNotification(resId))
+suspend fun Store<AppState>.onUserWalletSelected(userWallet: UserWallet, sendAnalyticsEvent: Boolean = false) {
+    state.globalState.tapWalletManager.onWalletSelected(userWallet, sendAnalyticsEvent)
 }
 
 fun Store<*>.dispatchErrorNotification(error: TapError) {
