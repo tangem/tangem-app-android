@@ -1,4 +1,4 @@
-package com.tangem.feature.qrscanning
+package com.tangem.feature.qrscanning.di
 
 import com.tangem.feature.qrscanning.repo.DefaultQrScanningEventsRepository
 import com.tangem.feature.qrscanning.repo.QrScanningEventsRepository
