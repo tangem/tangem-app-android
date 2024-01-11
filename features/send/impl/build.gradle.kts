@@ -58,11 +58,12 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.card)
-    implementation(projects.domain.demo)
 
     /** Feature modules */
     implementation(projects.features.send.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.qrScanning.api)
+    implementation(projects.features.qrScanning.impl)
 
     /** DI */
     implementation(deps.hilt.android)
