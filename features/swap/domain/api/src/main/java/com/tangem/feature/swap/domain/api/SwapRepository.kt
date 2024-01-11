@@ -76,4 +76,6 @@ interface SwapRepository {
     fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 
     suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
+
+    suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal?
 }
