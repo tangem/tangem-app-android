@@ -31,6 +31,7 @@ import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.isNullOrZero
 import com.tangem.utils.toFiatString
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
@@ -351,7 +352,8 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun manageWarnings(fromToken: CryptoCurrency, amount: SwapAmount): List<Warning> {
+    private suspend fun manageWarnings(fromTokenStatus: CryptoCurrencyStatus, amount: SwapAmount): List<Warning> {
+        val fromToken = fromTokenStatus.currency
         val userWalletId = getSelectedWallet()?.walletId ?: return emptyList()
         val existentialDeposit = repository.getExistentialDeposit(userWalletId, fromToken.network)
         val warnings = mutableListOf<Warning>()
@@ -363,6 +365,12 @@ internal class SwapInteractorImpl @Inject constructor(
             if (nativeBalance.value.minus(amount.value) < existentialDeposit) {
                 warnings.add(Warning.ExistentialDepositWarning(existentialDeposit))
             }
+        }
+        val dust = repository.getDustValue(userWalletId, fromToken.network)
+        val balance = fromTokenStatus.value.amount ?: BigDecimal.ZERO
+        val isLowerThenDust = amount.value < dust || balance - amount.value < dust
+        if (dust != null && !balance.isNullOrZero() && isLowerThenDust) {
+            warnings.add(Warning.MinAmountWarning(dust))
         }
         return warnings
     }
@@ -793,7 +801,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     txFeeState = txFee,
                     exchangeProviderType = exchangeProviderType,
                 ).copy(
-                    warnings = manageWarnings(fromToken.currency, amount),
+                    warnings = manageWarnings(fromToken, amount),
                 )
 
                 when (exchangeProviderType) {
@@ -958,7 +966,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
-                    warnings = manageWarnings(fromToken.currency, amount),
+                    warnings = manageWarnings(fromToken, amount),
                     preparedSwapConfigState = PreparedSwapConfigState(
                         isAllowedToSpend = true,
                         isBalanceEnough = isBalanceIncludeFeeEnough,
