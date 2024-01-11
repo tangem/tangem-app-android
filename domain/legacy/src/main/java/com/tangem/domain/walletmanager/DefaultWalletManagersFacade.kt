@@ -387,6 +387,18 @@ class DefaultWalletManagersFacade(
     }
 
     @Deprecated("Will be removed in future")
+    override suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val manager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+
+        return if (manager is ExistentialDepositProvider) manager.dustValue else null
+    }
+
+    @Deprecated("Will be removed in future")
     override suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal? {
         val manager = getOrCreateWalletManager(
             userWalletId = userWalletId,

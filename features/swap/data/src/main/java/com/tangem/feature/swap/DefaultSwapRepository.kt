@@ -315,6 +315,10 @@ internal class DefaultSwapRepository @Inject constructor(
         return walletManagersFacade.getExistentialDeposit(userWalletId, network)
     }
 
+    override suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal? {
+        return walletManagersFacade.getDustValue(userWalletId, network)
+    }
+
     private fun parseTxDetails(txDetailsJson: String): TxDetails? {
         return try {
             txDetailsMoshiAdapter.fromJson(txDetailsJson)
