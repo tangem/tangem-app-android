@@ -384,6 +384,23 @@ internal class StateBuilder(
                         ),
                     )
                 }
+                is Warning.MinAmountWarning -> {
+                    warnings.add(
+                        SwapWarning.GeneralError(
+                            NotificationConfig(
+                                title = resourceReference(R.string.send_notification_invalid_amount_title),
+                                subtitle = resourceReference(
+                                    R.string.send_notification_invalid_minimum_amount_text,
+                                    wrappedList(
+                                        it.dustValue.toPlainString(),
+                                        it.dustValue.toPlainString(),
+                                    ),
+                                ),
+                                iconResId = R.drawable.ic_alert_circle_24,
+                            ),
+                        ),
+                    )
+                }
             }
         }
     }
@@ -523,7 +540,7 @@ internal class StateBuilder(
 
     private fun getWarningForError(dataError: DataError, fromToken: CryptoCurrency): SwapWarning {
         return when (dataError) {
-            is DataError.ExchangeTooSmallAmountError -> SwapWarning.TooSmallAmountWarning(
+            is DataError.ExchangeTooSmallAmountError -> SwapWarning.GeneralError(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(
                         id = R.string.warning_express_too_minimal_amount_title,

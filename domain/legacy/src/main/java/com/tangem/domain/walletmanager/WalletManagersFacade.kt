@@ -145,6 +145,9 @@ interface WalletManagersFacade {
     @Deprecated("Will be removed in future")
     suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
 
+    @Deprecated("Will be removed in future")
+    suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal?
+
     /**
      * Returns reserve amount which is required to create an account
      *
