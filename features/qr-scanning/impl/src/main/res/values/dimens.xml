@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <dimen name="qr_border_stroke_width">4dp</dimen>
-    <dimen name="qr_border_corner_radius">8dp</dimen>
-
-</resources>
