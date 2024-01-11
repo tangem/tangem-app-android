@@ -11,13 +11,13 @@ import javax.annotation.concurrent.Immutable
 class MLKitBarcodeAnalyzer(private val onScanned: (String) -> Unit) : ImageAnalysis.Analyzer {
 
     private var isScanning: Boolean = false
+    private val scanner = BarcodeScanning.getClient()
 
     @ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
         if (mediaImage != null && !isScanning) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-            val scanner = BarcodeScanning.getClient()
 
             isScanning = true
             scanner.process(image)
