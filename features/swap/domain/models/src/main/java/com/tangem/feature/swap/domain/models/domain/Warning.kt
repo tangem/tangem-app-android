@@ -5,4 +5,6 @@ import java.math.BigDecimal
 sealed class Warning {
 
     data class ExistentialDepositWarning(val existentialDeposit: BigDecimal) : Warning()
+
+    data class MinAmountWarning(val dustValue: BigDecimal) : Warning()
 }
