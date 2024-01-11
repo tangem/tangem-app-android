@@ -571,6 +571,7 @@ internal class SwapViewModel @Inject constructor(
             }.onSuccess {
                 when (it) {
                     is TxState.TxSent -> {
+                        updateWalletBalance()
                         uiState = stateBuilder.loadingPermissionState(uiState)
                         uiState = stateBuilder.dismissBottomSheet(uiState)
                         startLoadingQuotesFromLastState(isSilent = true)
