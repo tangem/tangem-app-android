@@ -6,7 +6,6 @@ import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
-import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 
 internal class SendAmountFieldChangeConverter(
@@ -106,8 +105,7 @@ internal class SendAmountFieldChangeConverter(
         var trimmedValue = this
         if (length > 1 && firstOrNull() == '0' && get(1).isDigit()) trimmedValue = drop(1)
 
-        val separatorChar = DecimalFormatSymbols.getInstance().decimalSeparator.toString()
-        return trimmedValue.replace(TRIM_REGEX.toRegex(), separatorChar)
+        return trimmedValue.replace(TRIM_REGEX.toRegex(), ".")
     }
 
     companion object {
