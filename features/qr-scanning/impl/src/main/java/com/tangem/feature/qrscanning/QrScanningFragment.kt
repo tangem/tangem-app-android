@@ -40,6 +40,9 @@ internal class QrScanningFragment : ComposeFragment() {
     private val viewModel by viewModels<QrScanningViewModel>()
 
     private var cameraExecutor: ExecutorService by Delegates.notNull()
+    private val analyzer: MLKitBarcodeAnalyzer by lazy(LazyThreadSafetyMode.NONE) {
+        MLKitBarcodeAnalyzer(viewModel::onQrScanned)
+    }
 
     private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         if (!it) parentFragmentManager.popBackStack()
@@ -66,7 +69,7 @@ internal class QrScanningFragment : ComposeFragment() {
         }
         QrScanningContent(
             executor = { cameraExecutor },
-            analyzer = { MLKitBarcodeAnalyzer(viewModel::onQrScanned) },
+            analyzer = { analyzer },
             uiState = viewModel.uiState,
         )
         setFitSystemWindows(fit = false)
