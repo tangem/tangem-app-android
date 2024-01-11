@@ -356,7 +356,7 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         config = warning.notificationConfig,
                     )
                 }
-                is SwapWarning.TooSmallAmountWarning -> {
+                is SwapWarning.GeneralError -> {
                     Notification(
                         config = warning.notificationConfig,
                         iconTint = TangemTheme.colors.icon.warning,
