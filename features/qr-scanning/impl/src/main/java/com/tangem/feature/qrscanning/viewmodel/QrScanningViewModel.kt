@@ -38,11 +38,16 @@ internal class QrScanningViewModel @Inject constructor(
     var uiState: QrScanningState by mutableStateOf(factory.getInitialState(source, network))
         private set
 
+    private var isScanned = false
+
     override fun onBackClick() = router.popBackStack()
 
     override fun onQrScanned(qrCode: String) {
         if (qrCode.isNotBlank()) {
-            router.popBackStack()
+            if (!isScanned) {
+                router.popBackStack()
+                isScanned = true
+            }
             viewModelScope.launch(dispatcher.main) {
                 emitQrScannedEventUseCase.invoke(source, qrCode)
             }
