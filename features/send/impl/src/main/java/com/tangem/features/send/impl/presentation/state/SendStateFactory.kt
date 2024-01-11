@@ -94,11 +94,14 @@ internal class SendStateFactory(
         currentState = MutableStateFlow(SendUiStateType.Amount),
     )
 
-    fun getReadyState(): SendUiState = currentStateProvider().copy(
-        amountState = amountStateConverter.convert(Unit),
-        recipientState = recipientStateConverter.convert(Unit),
-        feeState = feeStateConverter.convert(Unit),
-    )
+    fun getReadyState(): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            amountState = state.amountState ?: amountStateConverter.convert(Unit),
+            recipientState = state.recipientState ?: recipientStateConverter.convert(Unit),
+            feeState = state.feeState ?: feeStateConverter.convert(Unit),
+        )
+    }
     //endregion
 
     //region amount state clicks
@@ -160,9 +163,8 @@ internal class SendStateFactory(
                 isValidating = false,
                 addressTextField = recipientState.addressTextField.copy(
                     error = when {
-                        !isValidAddress || isAddressInWallet -> resourceReference(
-                            R.string.send_recipient_address_error,
-                        )
+                        !isValidAddress -> resourceReference(R.string.send_recipient_address_error)
+                        isAddressInWallet -> resourceReference(R.string.send_error_address_same_as_wallet)
                         else -> null
                     },
                     isError = value.isNotEmpty() && !isValidAddress || isAddressInWallet,
