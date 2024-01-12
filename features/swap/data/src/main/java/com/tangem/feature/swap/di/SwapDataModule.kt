@@ -9,8 +9,8 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
-import com.tangem.feature.swap.DefaultSwapTransactionRepository
 import com.tangem.feature.swap.DefaultSwapRepository
+import com.tangem.feature.swap.DefaultSwapTransactionRepository
 import com.tangem.feature.swap.converters.ErrorsDataConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
