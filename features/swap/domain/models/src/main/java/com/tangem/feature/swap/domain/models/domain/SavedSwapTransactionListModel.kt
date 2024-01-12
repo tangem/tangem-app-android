@@ -1,11 +1,24 @@
 package com.tangem.feature.swap.domain.models.domain
 
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
 import java.math.BigDecimal
 
 data class SavedSwapTransactionListModel(
     val userWalletId: String,
     val fromCryptoCurrencyId: String,
     val toCryptoCurrencyId: String,
+    val fromCryptoCurrency: CryptoCurrency,
+    val toCryptoCurrency: CryptoCurrency,
+    val transactions: List<SavedSwapTransactionModel>,
+)
+
+data class SavedSwapTransactionListModelInner(
+    val userWalletId: String,
+    val fromCryptoCurrencyId: String,
+    val toCryptoCurrencyId: String,
+    val fromTokensResponse: UserTokensResponse.Token? = null,
+    val toTokensResponse: UserTokensResponse.Token? = null,
     val transactions: List<SavedSwapTransactionModel>,
 )
 
