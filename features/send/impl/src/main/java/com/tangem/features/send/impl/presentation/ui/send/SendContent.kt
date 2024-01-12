@@ -1,10 +1,13 @@
 package com.tangem.features.send.impl.presentation.ui.send
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,14 +21,17 @@ import com.tangem.blockchain.extensions.toBigDecimalOrDefault
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImage
 import com.tangem.core.ui.components.inputrow.InputRowRecipientDefault
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatCryptoAmount
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import kotlinx.collections.immutable.ImmutableList
 
 @Suppress("LongMethod")
 @Composable
@@ -75,6 +81,7 @@ internal fun SendContent(uiState: SendUiState) {
                 )
             }
         }
+        notifications(sendState.notifications)
     }
 }
 
@@ -177,5 +184,25 @@ private fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick:
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isSuccess) { onClick() },
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+internal fun LazyListScope.notifications(configs: ImmutableList<SendNotification>, modifier: Modifier = Modifier) {
+    items(
+        items = configs,
+        key = { it::class.java },
+        contentType = { it::class.java },
+        itemContent = {
+            Notification(
+                config = it.config,
+                modifier = modifier.animateItemPlacement(),
+                containerColor = TangemTheme.colors.button.disabled,
+                iconTint = when (it) {
+                    is SendNotification.Error -> TangemTheme.colors.icon.warning
+                    is SendNotification.Warning -> null
+                },
+            )
+        },
     )
 }
