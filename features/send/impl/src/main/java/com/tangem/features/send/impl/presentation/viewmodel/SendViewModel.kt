@@ -96,6 +96,14 @@ internal class SendViewModel @Inject constructor(
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
     )
 
+    private val sendNotificationFactory = SendNotificationFactory(
+        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+        currentStateProvider = Provider { uiState },
+        userWalletProvider = Provider { userWallet },
+        walletManagersFacade = walletManagersFacade,
+    )
+
     var uiState: SendUiState by mutableStateOf(stateFactory.getInitialState())
         private set
 
@@ -107,6 +115,7 @@ internal class SendViewModel @Inject constructor(
     private var recipientsJobHolder = JobHolder()
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
+    private var sendNotificationsJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
         subscribeOnCurrencyStatusUpdates(owner)
@@ -146,6 +155,7 @@ internal class SendViewModel @Inject constructor(
                         coinCryptoCurrencyStatus = it
                         getWalletsAndRecent()
                         uiState = stateFactory.getReadyState()
+                        updateNotifications()
                     }
                 }
                 .flowOn(dispatchers.main)
@@ -300,6 +310,16 @@ internal class SendViewModel @Inject constructor(
         }.saveIn(feeJobHolder)
     }
 
+    private fun updateNotifications() {
+        sendNotificationFactory.create()
+            .conflate()
+            .distinctUntilChanged()
+            .onEach { uiState = stateFactory.getSendNotificationState(notifications = it) }
+            .flowOn(dispatchers.main)
+            .launchIn(viewModelScope)
+            .saveIn(sendNotificationsJobHolder)
+    }
+
     // region screen state navigation
     override fun popBackStack() = stateRouter.popBackStack()
     override fun onBackClick() = stateRouter.onBackClick()
@@ -376,7 +396,7 @@ internal class SendViewModel @Inject constructor(
         }
         return false
     }
-// endregion
+    // endregion
 
     // region fee
     override fun onFeeSelectorClick(feeType: FeeType) {
@@ -410,18 +430,13 @@ internal class SendViewModel @Inject constructor(
     override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
 
     private suspend fun verifyAndSendTransaction() {
-        val amount = uiState.amountState?.amountTextField?.value ?: return
         val recipient = uiState.recipientState?.addressTextField?.value ?: return
         val feeState = uiState.feeState ?: return
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
         val memo = uiState.recipientState?.memoTextField?.value
         val fee = feeSelectorState.getFee()
 
-        val amountToSend = if (feeState.isSubtract) {
-            feeState.receivedAmountValue.convertToAmount(cryptoCurrency)
-        } else {
-            amount.toBigDecimal().convertToAmount(cryptoCurrency)
-        }
+        val amountToSend = feeState.receivedAmountValue.convertToAmount(cryptoCurrency)
 
         // todo add error handling [[REDACTED_JIRA]]
         // val transactionErrors = walletManagersFacade.validateTransaction(
