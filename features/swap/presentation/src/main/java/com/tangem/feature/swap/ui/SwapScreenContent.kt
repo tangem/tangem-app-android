@@ -1,9 +1,12 @@
 package com.tangem.feature.swap.ui
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -74,9 +77,9 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
             MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
 
-            state.tosState?.let {
+            if (state.tosState != null && state.providerState !is ProviderState.Empty) {
                 ProviderTos(
-                    tosState = it,
+                    tosState = state.tosState,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing16),
                 )

@@ -8,17 +8,17 @@ plugins {
 
 android {
     namespace = "com.tangem.feature.qrscanning.impl"
-
-    viewBinding {
-        enable = true
-    }
 }
 
 
 dependencies {
 
+    /** Core */
+    implementation(projects.core.ui)
+    implementation(projects.core.utils)
+    implementation(projects.core.navigation)
+
     implementation(deps.androidx.fragment.ktx)
-    implementation(deps.viewBindingDelegate)
 
     /** Camera */
     implementation(deps.camera.camera2)
@@ -42,6 +42,12 @@ dependencies {
 
     /** Compose */
     implementation(deps.compose.foundation)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.material3)
+    implementation(deps.compose.accompanist.systemUiController)
 
+    /** Other dependencies */
     implementation(deps.arrow.core)
+    implementation(deps.timber)
 }

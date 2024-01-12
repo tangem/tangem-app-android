@@ -8,10 +8,14 @@ import java.math.BigDecimal
 /**
  * Calculate receiving amount when fee is subtracted from sending amount
  */
-internal fun calculateReceiveAmount(uiState: SendUiState, feeAmount: Fee): BigDecimal {
+internal fun calculateReceiveAmount(uiState: SendUiState, feeAmount: Fee, isSubtract: Boolean): BigDecimal {
     val amount = uiState.amountState?.amountTextField?.value ?: return BigDecimal.ZERO
     val fee = feeAmount.amount.value ?: return BigDecimal.ZERO
-    return BigDecimal(amount).minus(fee)
+    return if (isSubtract) {
+        amount.toBigDecimal().minus(fee)
+    } else {
+        amount.toBigDecimal()
+    }
 }
 
 /**

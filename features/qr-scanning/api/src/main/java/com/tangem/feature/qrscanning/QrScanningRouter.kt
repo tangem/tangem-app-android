@@ -8,5 +8,6 @@ interface QrScanningRouter {
 
     companion object {
         const val SOURCE_KEY = "source"
+        const val NETWORK_KEY = "network"
     }
 }

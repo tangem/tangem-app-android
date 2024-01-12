@@ -446,6 +446,8 @@
     <string name="send_amount_label">Amount</string>
     <string name="send_amount_substract">Subtract from send amount</string>
     <string name="send_amount_substract_footer">The recipient will receive %s</string>
+    <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
+    <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode:%2$s</string>
     <string name="send_confirm_label">Confirm</string>
     <string name="send_date_format">%1$s at %2$s</string>
     <string name="send_destination_hint_address">Address</string>
@@ -486,10 +488,14 @@
     <string name="send_notification_invalid_amount_text">The included commission exceeds the transfer amount, leading to a negative value</string>
     <string name="send_notification_invalid_amount_title">Invalid amount</string>
     <string name="send_notification_invalid_minimum_amount_text">The minimum sending amount is %1$s. Please ensure that the remaining balance after sending will not be less than %1$s.</string>
-    <string name="send_notification_invalid_reserve_amount_text">Please top up your balance to continue</string>
-    <string name="send_notification_invalid_reserve_amount_title">The balance amount must be at least %1$s</string>
+    <string name="send_notification_invalid_reserve_amount_text">Target account is not created. Please change the amount to send.</string>
+    <string name="send_notification_invalid_reserve_amount_title">The amount to send must be at least %1$s</string>
     <string name="send_notification_transaction_delay_text">Kindly be aware that your transaction may experience delays under specific fee settings</string>
     <string name="send_notification_transaction_delay_title">Transaction delays are possible</string>
+    <string name="send_notifiaction_transaction_limit_title">Transaction limitation</string>
+    <string name="send_notifiaction_transaction_limit_text">Due to %1$s limitations only %2$s UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
+    <string name="send_notification_existential_deposit_title">Existential deposit</string>
+    <string name="send_notification_existential_deposit_text">The account will be wiped from the blockchain if a balance goes below the existential deposit. Please ensure that the remaining balance after sending will not be less than %s.</string>
     <string name="send_optional_field">Optional</string>
     <string name="send_qrcode_alert_change">Change</string>
     <string name="send_qrcode_alert_decline">Decline</string>
