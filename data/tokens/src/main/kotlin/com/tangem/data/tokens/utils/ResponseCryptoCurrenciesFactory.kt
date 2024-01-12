@@ -13,7 +13,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
-internal class ResponseCryptoCurrenciesFactory {
+class ResponseCryptoCurrenciesFactory {
 
     fun createCurrency(
         currencyId: CryptoCurrency.ID,
