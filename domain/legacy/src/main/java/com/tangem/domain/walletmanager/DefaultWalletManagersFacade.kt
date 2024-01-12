@@ -145,11 +145,9 @@ class DefaultWalletManagersFacade(
         contractAddress: String?,
     ): String {
         val blockchain = Blockchain.fromId(network.id.value)
-
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            network = network,
         )
 
         requireNotNull(walletManager) {
@@ -165,15 +163,13 @@ class DefaultWalletManagersFacade(
     }
 
     override suspend fun getTxHistoryState(userWalletId: UserWalletId, currency: CryptoCurrency): TxHistoryState {
-        val blockchain = Blockchain.fromId(currency.network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = currency.network.derivationPath.value,
+            network = currency.network,
         )
 
         requireNotNull(walletManager) {
-            "Unable to get a wallet manager for blockchain: $blockchain"
+            "Unable to get a wallet manager for blockchain: ${currency.network}"
         }
 
         return walletManager
@@ -193,15 +189,13 @@ class DefaultWalletManagersFacade(
         page: Int,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem> {
-        val blockchain = Blockchain.fromId(currency.network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = currency.network.derivationPath.value,
+            network = currency.network,
         )
 
         requireNotNull(walletManager) {
-            "Unable to get a wallet manager for blockchain: $blockchain"
+            "Unable to get a wallet manager for blockchain: ${currency.network}"
         }
 
         val itemsResult = walletManager.getTransactionsHistory(
@@ -301,6 +295,7 @@ class DefaultWalletManagersFacade(
         }
     }
 
+    @Deprecated("Will be removed in future")
     override suspend fun getOrCreateWalletManager(
         userWalletId: UserWalletId,
         blockchain: Blockchain,
@@ -326,33 +321,33 @@ class DefaultWalletManagersFacade(
         return walletManager
     }
 
+    @Deprecated("Will be removed in future")
     override suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager> {
         return walletManagersStore.getAllSync(userWalletId)
     }
 
+    @Deprecated(
+        "Use NetworkAddress from CryptoCurrencyStatus",
+        ReplaceWith("cryptoCurrencyStatus.value.networkAddress"),
+    )
     override suspend fun getAddress(userWalletId: UserWalletId, network: Network): List<Address> {
         return getAddresses(userWalletId, network).sortedBy { it.type }
     }
 
+    @Deprecated("Use NetworkAddress from CryptoCurrencyStatus")
     override suspend fun getAddresses(userWalletId: UserWalletId, network: Network): Set<Address> {
-        val blockchain = Blockchain.fromId(network.id.value)
-
-        return getOrCreateWalletManager(
+        val manager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            network = network,
         )
-            ?.wallet
-            ?.addresses
-            .orEmpty()
+
+        return manager?.wallet?.addresses.orEmpty()
     }
 
     override suspend fun getRentInfo(userWalletId: UserWalletId, network: Network): CryptoCurrencyWarning.Rent? {
-        val blockchain = Blockchain.fromId(network.id.value)
         val manager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            network = network,
         )
         if (manager !is RentProvider) return null
 
@@ -381,17 +376,52 @@ class DefaultWalletManagersFacade(
         }
     }
 
+    @Deprecated("Will be removed in future")
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
-        val blockchain = Blockchain.fromId(network.id.value)
         val manager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            network = network,
         )
 
         return if (manager is ExistentialDepositProvider) manager.getExistentialDeposit() else null
     }
 
+    @Deprecated("Will be removed in future")
+    override suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal? {
+        val manager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = network,
+        )
+
+        return if (manager is ReserveAmountProvider) manager.getReserveAmount() else null
+    }
+
+    @Deprecated("Will be removed in future")
+    override suspend fun checkIfAccountFunded(userWalletId: UserWalletId, network: Network, address: String): Boolean {
+        val manager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = network,
+        )
+
+        return if (manager is ReserveAmountProvider) manager.isAccountFunded(address) else true
+    }
+
+    @Deprecated("Will be removed in future")
+    override suspend fun checkUtxoAmountLimit(
+        userWalletId: UserWalletId,
+        network: Network,
+        amount: BigDecimal,
+        fee: BigDecimal,
+    ): UtxoAmountLimit? {
+        val manager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = network,
+        )
+
+        return if (manager is UtxoAmountLimitProvider) manager.checkUtxoAmountLimit(amount, fee) else null
+    }
+
+    @Deprecated("Will be removed in future")
     override fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>> {
         return walletManagersStore.getAll(userWalletId)
     }
@@ -404,8 +434,7 @@ class DefaultWalletManagersFacade(
         return either {
             val walletManager = getOrCreateWalletManager(
                 userWalletId = userWalletId,
-                blockchain = Blockchain.fromId(network.id.value),
-                derivationPath = network.derivationPath.value,
+                network = network,
             )
 
             val validator = ensureNotNull(walletManager as? SignatureCountValidator) {
@@ -419,17 +448,16 @@ class DefaultWalletManagersFacade(
         }
     }
 
+    @Deprecated("Will be removed in future")
     override suspend fun getFee(
         amount: Amount,
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
     ): Result<TransactionFee>? {
-        val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            network = network,
         )
         return (walletManager as? TransactionSender)?.getFee(
             amount = amount,
@@ -457,21 +485,21 @@ class DefaultWalletManagersFacade(
         )
     }
 
+    @Deprecated("Will be removed in future")
     override suspend fun validateTransaction(
         amount: Amount,
         fee: Amount?,
         userWalletId: UserWalletId,
         network: Network,
     ): EnumSet<TransactionError>? {
-        val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            network = network,
         )
         return walletManager?.validateTransaction(amount, fee)
     }
 
+    @Deprecated("Will be removed in future")
     override suspend fun createTransaction(
         amount: Amount,
         fee: Fee,
@@ -480,27 +508,24 @@ class DefaultWalletManagersFacade(
         userWalletId: UserWalletId,
         network: Network,
     ): TransactionData? {
-        val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            network = network,
         )
 
         return walletManager?.createTransaction(amount, fee, destination)
     }
 
+    @Deprecated("Will be removed in future")
     override suspend fun sendTransaction(
         txData: TransactionData,
         signer: CommonSigner,
         userWalletId: UserWalletId,
         network: Network,
     ): SimpleResult {
-        val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
+            network = network,
         )
         return (walletManager as TransactionSender).send(txData, signer)
     }
@@ -536,5 +561,14 @@ class DefaultWalletManagersFacade(
             .filter { it !in walletManager.cardTokens }
 
         walletManager.addTokens(tokensToAdd)
+    }
+
+    private suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        return getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
     }
 }
