@@ -490,5 +490,4 @@ internal class DefaultCurrenciesRepository(
     }
 
     private fun getTokensCacheKey(userWalletId: UserWalletId): String = "tokens_cache_key_${userWalletId.stringValue}"
-
 }

@@ -24,7 +24,6 @@ import java.math.BigDecimal
  *
  * @property rampManager Ramp manager to check ramp availability
  */
-@Suppress("LongParameterList")
 class GetCryptoCurrencyActionsUseCase(
     private val rampManager: RampStateManager,
     private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
