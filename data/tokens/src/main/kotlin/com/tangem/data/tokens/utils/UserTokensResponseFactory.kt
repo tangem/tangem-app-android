@@ -4,7 +4,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 
-internal class UserTokensResponseFactory {
+class UserTokensResponseFactory {
 
     fun createUserTokensResponse(
         currencies: List<CryptoCurrency>,
