@@ -1,11 +1,14 @@
 package com.tangem.data.wallets
 
+import android.net.Uri
 import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.near.NearWalletManager
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.models.ParsedQrCode
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.errors.ParsedQrCodeErrors
 import com.tangem.domain.wallets.repository.WalletAddressServiceRepository
 import java.math.BigInteger
 
@@ -40,6 +43,39 @@ class DefaultWalletAddressServiceRepository(
             }
             else -> true
         }
+    }
+
+    override suspend fun parseSharedAddress(input: String, network: Network): ParsedQrCode {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val addressSchemeSplit = when (blockchain) {
+            Blockchain.BitcoinCash, Blockchain.Kaspa -> listOf(input)
+            else -> input.split(":")
+        }
+
+        val noSchemeAddress = when (addressSchemeSplit.size) {
+            1 -> { // no scheme
+                input
+            }
+            2 -> { // scheme
+                if (blockchain.validateShareScheme(addressSchemeSplit[0])) {
+                    addressSchemeSplit[1]
+                } else {
+                    // to preserve old logic
+                    return ParsedQrCode(address = input)
+                }
+            }
+            else -> { // invalid URI
+                throw ParsedQrCodeErrors.InvalidUriError
+            }
+        }
+
+        val uri = Uri.parse(noSchemeAddress)
+        val address = uri.host ?: noSchemeAddress
+        val amount = uri.getQueryParameter("amount")?.toBigDecimalOrNull()
+        return ParsedQrCode(
+            address = address,
+            amount = amount,
+        )
     }
 
     private fun Blockchain.isNear(): Boolean {
