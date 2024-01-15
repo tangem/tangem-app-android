@@ -23,6 +23,7 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWallet
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import com.tangem.blockchain.common.FeePaidCurrency as FeePaidSdkCurrency
 
 @Suppress("LargeClass", "LongParameterList")
 internal class DefaultCurrenciesRepository(
@@ -323,6 +325,11 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
+    override fun getFeePaidCurrency(currency: CryptoCurrency): FeePaidCurrency {
+        val blockchain = Blockchain.fromId(currency.network.id.value)
+        return blockchain.feePaidCurrency().toDomain()
+    }
+
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
         return userTokensStore.get(userWallet.walletId).map { storedTokens ->
             responseCurrenciesFactory.createCurrencies(
@@ -461,4 +468,16 @@ internal class DefaultCurrenciesRepository(
     }
 
     private fun getTokensCacheKey(userWalletId: UserWalletId): String = "tokens_cache_key_${userWalletId.stringValue}"
+
+    private fun FeePaidSdkCurrency.toDomain(): FeePaidCurrency = when (this) {
+        FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
+        FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency
+        is FeePaidSdkCurrency.Token -> FeePaidCurrency.Token(
+            name = this.token.name,
+            symbol = this.token.symbol,
+            contractAddress = this.token.contractAddress,
+            decimals = this.token.decimals,
+            id = this.token.id,
+        )
+    }
 }

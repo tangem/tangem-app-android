@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.features.send.redux.*
@@ -90,26 +89,21 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
         val walletManager = action.walletManager
         val amountToExtract = prepareAction.tokenAmount ?: prepareAction.coinAmount!!
         val decimals = amountToExtract.decimals
-        val feePaidInNetworkCurrency = isFeePaidInNetworkCurrency(walletManager.wallet.blockchain)
 
         return sendState.copy(
             walletManager = walletManager,
             coinConverter = action.coinRate?.let { CurrencyConverter(it, decimals) },
             tokenConverter = action.tokenRate?.let { CurrencyConverter(it, decimals) },
             amountState = sendState.amountState.copy(
-                feePaidInCurrencyNetworkCurrency = feePaidInNetworkCurrency,
                 amountToExtract = amountToExtract,
                 typeOfAmount = amountToExtract.type,
                 balanceCrypto = amountToExtract.value ?: BigDecimal.ZERO,
             ),
             feeState = sendState.feeState.copy(
-                includeFeeSwitcherIsEnabled = feePaidInNetworkCurrency || isCoinAmount(amountToExtract.type),
+                includeFeeSwitcherIsEnabled = isCoinAmount(amountToExtract.type),
             ),
         )
     }
-
-    private fun isFeePaidInNetworkCurrency(blockchain: Blockchain): Boolean =
-        blockchain.tokenTransactionFeePaidInNetworkCurrency()
 
     private fun isCoinAmount(typeOfAmount: AmountType): Boolean = typeOfAmount == AmountType.Coin
 }

@@ -46,6 +46,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "chia", "chia/test" -> R.drawable.img_chia_22
         "NEAR", "NEAR/test" -> R.drawable.img_near_22
         "decimal", "decimal/test" -> R.drawable.img_decimal_22
+        "vechain", "vechain/test" -> R.drawable.img_vechain_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -137,6 +138,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "chia" -> R.drawable.img_chia_22
         "near" -> R.drawable.img_near_22
         "decimal" -> R.drawable.img_decimal_22
+        "vechain" -> R.drawable.img_vechain_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -184,6 +186,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "chia", "chia/test" -> R.drawable.ic_chia_22
         "NEAR", "NEAR/test" -> R.drawable.ic_near_22
         "decimal", "decimal/test" -> R.drawable.ic_decimal_22
+        "vechain", "vechain/test" -> R.drawable.ic_vechain_22
         else -> R.drawable.ic_alert_24
     }
 }
