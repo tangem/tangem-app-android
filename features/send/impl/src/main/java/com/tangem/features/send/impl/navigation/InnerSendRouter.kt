@@ -11,4 +11,7 @@ interface InnerSendRouter : SendRouter {
 
     /** Open token details screen by [userWalletId] and [currency] */
     fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency)
+
+    /** Open QR code scanner screen */
+    fun openQrCodeScanner(network: String)
 }
