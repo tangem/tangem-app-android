@@ -1,5 +1,7 @@
 package com.tangem.domain.tokens.model
 
+import java.math.BigDecimal
+
 sealed class FeePaidCurrency {
     object Coin : FeePaidCurrency()
     object SameCurrency : FeePaidCurrency()
@@ -7,7 +9,6 @@ sealed class FeePaidCurrency {
         val name: String,
         val symbol: String,
         val contractAddress: String,
-        val decimals: Int,
-        val id: String? = null,
+        val balance: BigDecimal,
     ) : FeePaidCurrency()
 }

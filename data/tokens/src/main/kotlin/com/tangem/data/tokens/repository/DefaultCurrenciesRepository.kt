@@ -26,6 +26,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -41,6 +42,7 @@ internal class DefaultCurrenciesRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val userTokensStore: UserTokensStore,
     private val userWalletsStore: UserWalletsStore,
+    private val walletManagersFacade: WalletManagersFacade,
     private val assetsStore: AssetsStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -325,9 +327,29 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override fun getFeePaidCurrency(currency: CryptoCurrency): FeePaidCurrency {
+    override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency {
         val blockchain = Blockchain.fromId(currency.network.id.value)
-        return blockchain.feePaidCurrency().toDomain()
+        return when (val feePaidCurrency = blockchain.feePaidCurrency()) {
+            FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
+            FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency
+            is FeePaidSdkCurrency.Token -> {
+                val balance = walletManagersFacade.tokenBalance(
+                    userWalletId = userWalletId,
+                    network = currency.network,
+                    name = feePaidCurrency.token.name,
+                    symbol = feePaidCurrency.token.symbol,
+                    contractAddress = feePaidCurrency.token.contractAddress,
+                    decimals = feePaidCurrency.token.decimals,
+                    id = feePaidCurrency.token.id,
+                )
+                FeePaidCurrency.Token(
+                    name = feePaidCurrency.token.name,
+                    symbol = feePaidCurrency.token.symbol,
+                    contractAddress = feePaidCurrency.token.contractAddress,
+                    balance = balance,
+                )
+            }
+        }
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
@@ -469,15 +491,4 @@ internal class DefaultCurrenciesRepository(
 
     private fun getTokensCacheKey(userWalletId: UserWalletId): String = "tokens_cache_key_${userWalletId.stringValue}"
 
-    private fun FeePaidSdkCurrency.toDomain(): FeePaidCurrency = when (this) {
-        FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
-        FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency
-        is FeePaidSdkCurrency.Token -> FeePaidCurrency.Token(
-            name = this.token.name,
-            symbol = this.token.symbol,
-            contractAddress = this.token.contractAddress,
-            decimals = this.token.decimals,
-            id = this.token.id,
-        )
-    }
 }

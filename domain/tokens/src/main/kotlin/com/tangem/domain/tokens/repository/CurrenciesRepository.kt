@@ -180,5 +180,5 @@ interface CurrenciesRepository {
     /**
      * Retrieves fee paid currency for specific [currency].
      */
-    fun getFeePaidCurrency(currency: CryptoCurrency): FeePaidCurrency
+    suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency
 }

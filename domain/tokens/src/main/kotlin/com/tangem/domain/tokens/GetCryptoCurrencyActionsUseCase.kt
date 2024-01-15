@@ -11,7 +11,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -28,7 +27,6 @@ import java.math.BigDecimal
 @Suppress("LongParameterList")
 class GetCryptoCurrencyActionsUseCase(
     private val rampManager: RampStateManager,
-    private val walletManagersFacade: WalletManagersFacade,
     private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
@@ -174,9 +172,8 @@ class GetCryptoCurrencyActionsUseCase(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
-        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(cryptoCurrencyStatus.currency)
+        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, cryptoCurrencyStatus.currency)
         val notEnoughBalanceForFee = isNotEnoughBalanceForFee(
-            userWalletId = userWalletId,
             feePaidCurrency = feePaidCurrency,
             tokenStatus = cryptoCurrencyStatus,
             coinStatus = coinStatus,
@@ -189,8 +186,7 @@ class GetCryptoCurrencyActionsUseCase(
             )
     }
 
-    private suspend fun isNotEnoughBalanceForFee(
-        userWalletId: UserWalletId,
+    private fun isNotEnoughBalanceForFee(
         feePaidCurrency: FeePaidCurrency,
         tokenStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
@@ -199,16 +195,8 @@ class GetCryptoCurrencyActionsUseCase(
             FeePaidCurrency.Coin -> !tokenStatus.value.amount.isZero() && coinStatus?.value?.amount.isZero()
             FeePaidCurrency.SameCurrency -> tokenStatus.value.amount.isZero()
             is FeePaidCurrency.Token -> {
-                val feeBalance = walletManagersFacade.tokenBalance(
-                    userWalletId = userWalletId,
-                    network = tokenStatus.currency.network,
-                    name = feePaidCurrency.name,
-                    symbol = feePaidCurrency.symbol,
-                    contractAddress = feePaidCurrency.contractAddress,
-                    decimals = feePaidCurrency.decimals,
-                    id = feePaidCurrency.id,
-                )
-                !tokenStatus.value.amount.isZero() && feeBalance.isZero()
+                val feePaidTokenBalance = feePaidCurrency.balance
+                !tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()
             }
         }
     }
