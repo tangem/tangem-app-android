@@ -110,8 +110,7 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
     }
 
     private fun isFeePaidInNetworkCurrency(blockchain: Blockchain): Boolean =
-        // blockchain.tokenTransactionFeePaidInNetworkCurrency()
-        blockchain.feePaidCurrency() == FeePaidCurrency.SameCurrency // TODO AND-5771
+        blockchain.tokenTransactionFeePaidInNetworkCurrency()
 
     private fun isCoinAmount(typeOfAmount: AmountType): Boolean = typeOfAmount == AmountType.Coin
 }

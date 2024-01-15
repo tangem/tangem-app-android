@@ -4,6 +4,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -11,10 +12,12 @@ import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import java.math.BigDecimal
 
 /**
  * Use case to determine which TokenActions are available for a [CryptoCurrency]
@@ -104,7 +107,13 @@ class GetCryptoCurrencyActionsUseCase(
         activeList.add(TokenActionsState.ActionState.Receive(true))
 
         // send
-        if (isSendDisabled(cryptoCurrencyStatus = cryptoCurrencyStatus, coinStatus = coinStatus)) {
+        if (
+            isSendDisabled(
+                userWalletId = userWallet.walletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                coinStatus = coinStatus,
+            )
+        ) {
             disabledList.add(TokenActionsState.ActionState.Send(false))
         } else {
             activeList.add(TokenActionsState.ActionState.Send(true))
@@ -157,13 +166,41 @@ class GetCryptoCurrencyActionsUseCase(
         return activeList + disabledList
     }
 
-    private fun isSendDisabled(
+    private suspend fun isSendDisabled(
+        userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
-    ): Boolean = cryptoCurrencyStatus.value.amount.isNullOrZero() ||
-        coinStatus?.value?.amount.isNullOrZero() ||
-        currenciesRepository.hasPendingTransactions(
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
+    ): Boolean {
+        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, cryptoCurrencyStatus.currency)
+        val notEnoughBalanceForFee = isNotEnoughBalanceForFee(
+            feePaidCurrency = feePaidCurrency,
+            tokenStatus = cryptoCurrencyStatus,
             coinStatus = coinStatus,
         )
+        return cryptoCurrencyStatus.value.amount.isNullOrZero() ||
+            notEnoughBalanceForFee ||
+            currenciesRepository.hasPendingTransactions(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                coinStatus = coinStatus,
+            )
+    }
+
+    private fun isNotEnoughBalanceForFee(
+        feePaidCurrency: FeePaidCurrency,
+        tokenStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus?,
+    ): Boolean {
+        return when (feePaidCurrency) {
+            FeePaidCurrency.Coin -> !tokenStatus.value.amount.isZero() && coinStatus?.value?.amount.isZero()
+            FeePaidCurrency.SameCurrency -> tokenStatus.value.amount.isZero()
+            is FeePaidCurrency.Token -> {
+                val feePaidTokenBalance = feePaidCurrency.balance
+                !tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()
+            }
+        }
+    }
+
+    private fun BigDecimal?.isZero(): Boolean {
+        return this?.signum() == 0
+    }
 }

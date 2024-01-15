@@ -137,7 +137,6 @@ data class AmountState(
     val decimalSeparator: String = ".",
     val error: TapError? = null,
     val inputIsEnabled: Boolean = true,
-    private val feePaidInCurrencyNetworkCurrency: Boolean = false,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.AMOUNT
@@ -146,7 +145,7 @@ data class AmountState(
 
     private fun isCoinAmount(): Boolean = typeOfAmount == AmountType.Coin
 
-    fun canIncludeFee(): Boolean = isCoinAmount() || feePaidInCurrencyNetworkCurrency
+    fun canIncludeFee(): Boolean = isCoinAmount()
 
     fun createMainCurrency(type: MainCurrencyType, canSwitched: Boolean): MainCurrency {
         return if (!canSwitched) {

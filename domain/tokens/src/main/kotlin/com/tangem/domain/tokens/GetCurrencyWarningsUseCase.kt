@@ -3,6 +3,7 @@ package com.tangem.domain.tokens
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
@@ -47,6 +48,7 @@ class GetCurrencyWarningsUseCase(
         )
         return combine(
             getCoinRelatedWarnings(
+                userWalletId = userWalletId,
                 operations = operations,
                 networkId = currency.network.id,
                 currencyId = currency.id,
@@ -136,6 +138,7 @@ class GetCurrencyWarningsUseCase(
 
     @Suppress("LongParameterList")
     private suspend fun getCoinRelatedWarnings(
+        userWalletId: UserWalletId,
         operations: CurrenciesStatusesOperations,
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
@@ -162,18 +165,81 @@ class GetCurrencyWarningsUseCase(
                         if (currenciesRepository.hasPendingTransactions(tokenStatus, coinStatus)) {
                             add(CryptoCurrencyWarning.HasPendingTransactions(coinStatus.currency.symbol))
                         }
-                        if (!tokenStatus.value.amount.isZero() && coinStatus.value.amount.isZero()) {
-                            add(
-                                CryptoCurrencyWarning.BalanceNotEnoughForFee(
-                                    tokenCurrency = tokenStatus.currency,
-                                    coinCurrency = coinStatus.currency,
-                                ),
-                            )
-                        }
+                        getFeeWarning(
+                            userWalletId = userWalletId,
+                            coinStatus = coinStatus,
+                            tokenStatus = tokenStatus,
+                        )?.let(::add)
                     }
                 }
                 else -> listOf(CryptoCurrencyWarning.SomeNetworksUnreachable)
             }
+        }
+    }
+
+    private suspend fun getFeeWarning(
+        userWalletId: UserWalletId,
+        coinStatus: CryptoCurrencyStatus,
+        tokenStatus: CryptoCurrencyStatus,
+    ): CryptoCurrencyWarning? {
+        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency)
+        return when {
+            feePaidCurrency is FeePaidCurrency.Coin &&
+                !tokenStatus.value.amount.isZero() &&
+                coinStatus.value.amount.isZero() -> {
+                CryptoCurrencyWarning.BalanceNotEnoughForFee(
+                    tokenCurrency = tokenStatus.currency,
+                    coinCurrency = coinStatus.currency,
+                )
+            }
+            feePaidCurrency is FeePaidCurrency.SameCurrency && !tokenStatus.value.amount.isZero() -> {
+                CryptoCurrencyWarning.BalanceNotEnoughForFee(
+                    tokenCurrency = tokenStatus.currency,
+                    coinCurrency = coinStatus.currency,
+                )
+            }
+            feePaidCurrency is FeePaidCurrency.Token -> {
+                val feePaidTokenBalance = feePaidCurrency.balance
+                if (!tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()) {
+                    constructTokenBalanceNotEnoughWarning(
+                        userWalletId = userWalletId,
+                        tokenStatus = tokenStatus,
+                        feePaidToken = feePaidCurrency,
+                    )
+                } else {
+                    null
+                }
+            }
+            else -> null
+        }
+    }
+
+    private suspend fun constructTokenBalanceNotEnoughWarning(
+        userWalletId: UserWalletId,
+        tokenStatus: CryptoCurrencyStatus,
+        feePaidToken: FeePaidCurrency.Token,
+    ): CryptoCurrencyWarning {
+        val token = currenciesRepository
+            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
+            .find {
+                it is CryptoCurrency.Token && it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true)
+            }
+        return if (token != null) {
+            CryptoCurrencyWarning.CustomTokenNotEnoughForFee(
+                currency = tokenStatus.currency,
+                feeCurrency = token,
+                networkName = token.network.name,
+                feeCurrencyName = feePaidToken.name,
+                feeCurrencySymbol = feePaidToken.symbol,
+            )
+        } else {
+            CryptoCurrencyWarning.CustomTokenNotEnoughForFee(
+                currency = tokenStatus.currency,
+                feeCurrency = null,
+                networkName = tokenStatus.currency.network.name,
+                feeCurrencyName = feePaidToken.name,
+                feeCurrencySymbol = feePaidToken.symbol,
+            )
         }
     }
 

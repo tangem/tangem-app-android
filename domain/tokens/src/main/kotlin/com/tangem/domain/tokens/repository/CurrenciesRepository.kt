@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.repository
 
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -175,4 +176,9 @@ interface CurrenciesRepository {
      * @param coinStatus main currency status in [cryptoCurrencyStatus] network
      */
     fun hasPendingTransactions(cryptoCurrencyStatus: CryptoCurrencyStatus, coinStatus: CryptoCurrencyStatus?): Boolean
+
+    /**
+     * Retrieves fee paid currency for specific [currency].
+     */
+    suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency
 }
