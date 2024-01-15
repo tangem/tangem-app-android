@@ -30,6 +30,7 @@ import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenSwapPromoAnalyticsEvent
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -76,10 +77,10 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
+    private val quotesRepository: QuotesRepository,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
@@ -118,8 +119,8 @@ internal class TokenDetailsViewModel @Inject constructor(
         ExchangeStatusFactory(
             swapTransactionRepository = swapTransactionRepository,
             swapRepository = swapRepository,
+            quotesRepository = quotesRepository,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
-            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             swapTransactionStatusStore = swapTransactionStatusStore,
             dispatchers = dispatchers,
             clickIntents = this,
