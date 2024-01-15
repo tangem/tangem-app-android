@@ -20,6 +20,13 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
         }
     }
 
+    fun convert(currency: CryptoCurrency): TokenIconState {
+        return when (currency) {
+            is CryptoCurrency.Coin -> getIconStateForCoin(currency, isUnreachable = false)
+            is CryptoCurrency.Token -> getIconStateForToken(currency, isErrorStatus = false)
+        }
+    }
+
     private fun getIconStateForCoin(coin: CryptoCurrency.Coin, isUnreachable: Boolean): TokenIconState.CoinIcon {
         return TokenIconState.CoinIcon(
             url = coin.iconUrl,
