@@ -113,4 +113,16 @@ internal object WalletsDomainModule {
     ): ValidateWalletMemoUseCase {
         return ValidateWalletMemoUseCase(walletAddressServiceRepository = walletAddressServiceRepository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun providesParseSharedAddressUseCase(
+        walletAddressServiceRepository: WalletAddressServiceRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): ParseSharedAddressUseCase {
+        return ParseSharedAddressUseCase(
+            walletAddressServiceRepository = walletAddressServiceRepository,
+            dispatchers = dispatchers,
+        )
+    }
 }
