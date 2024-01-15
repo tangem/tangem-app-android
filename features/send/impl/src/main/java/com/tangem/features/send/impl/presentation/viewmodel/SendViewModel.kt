@@ -26,14 +26,15 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.wallets.usecase.ValidateWalletAddressUseCase
-import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
+import com.tangem.domain.wallets.usecase.*
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
+import com.tangem.features.send.impl.presentation.state.SendNotificationFactory
+import com.tangem.features.send.impl.presentation.state.SendStateFactory
+import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fee.getFee
@@ -67,6 +68,7 @@ internal class SendViewModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
+    private val parseSharedAddressUseCase: ParseSharedAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
@@ -116,6 +118,7 @@ internal class SendViewModel @Inject constructor(
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
+    private var qrScannerJobHolder = JobHolder()
 
     override fun onCreate(owner: LifecycleOwner) {
         subscribeOnCurrencyStatusUpdates(owner)
@@ -326,9 +329,7 @@ internal class SendViewModel @Inject constructor(
     override fun onNextClick() = stateRouter.onNextClick()
     override fun onPrevClick() = stateRouter.onPrevClick()
 
-    override fun onQrCodeScanClick() {
-        // TODO Add QR code scanning
-    }
+    override fun onQrCodeScanClick() = innerRouter.openQrCodeScanner(cryptoCurrency.network.name)
 
     override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) =
         innerRouter.openTokenDetails(userWalletId, currency)
@@ -355,6 +356,21 @@ internal class SendViewModel @Inject constructor(
     // endregion
 
     // region recipient state clicks
+    fun onRecipientAddressScanned(address: String) {
+        viewModelScope.launch(dispatchers.main) {
+            parseSharedAddressUseCase(address, cryptoCurrency.network).fold(
+                ifRight = { parsedCode ->
+                    onRecipientAddressValueChange(parsedCode.address)
+                    parsedCode.amount?.let { onAmountValueChange(it.toPlainString()) }
+                    parsedCode.memo?.let { onRecipientMemoValueChange(it) }
+                },
+                ifLeft = {
+                    Timber.w(it)
+                },
+            )
+        }.saveIn(qrScannerJobHolder)
+    }
+
     override fun onRecipientAddressValueChange(value: String) {
         uiState = stateFactory.onRecipientAddressValueChange(value)
         viewModelScope.launch(dispatchers.main) {
