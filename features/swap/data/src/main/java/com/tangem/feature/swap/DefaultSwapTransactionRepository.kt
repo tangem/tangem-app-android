@@ -5,13 +5,12 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.swap.converters.SavedSwapTransactionListConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
-import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
-import com.tangem.feature.swap.domain.models.domain.SavedLastSwappedCryptoCurrency
-import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
-import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,23 +19,25 @@ class DefaultSwapTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
 ) : SwapTransactionRepository {
 
+    private val converter = SavedSwapTransactionListConverter()
+
     override suspend fun storeTransaction(
         userWalletId: UserWalletId,
-        fromCryptoCurrencyId: CryptoCurrency.ID,
-        toCryptoCurrencyId: CryptoCurrency.ID,
+        fromCryptoCurrency: CryptoCurrency,
+        toCryptoCurrency: CryptoCurrency,
         transaction: SavedSwapTransactionModel,
     ) {
         transaction.status?.let { storeTransactionState(transaction.txId, it) }
         appPreferencesStore.editData { mutablePreferences ->
-            val savedTransactions: List<SavedSwapTransactionListModel>? = mutablePreferences.getObjectList(
+            val savedTransactions: List<SavedSwapTransactionListModelInner>? = mutablePreferences.getObjectList(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
             )
             val tokenTransactions = savedTransactions
                 ?.firstOrNull {
                     it.checkId(
                         checkUserWalletId = userWalletId,
-                        fromCurrencyId = fromCryptoCurrencyId,
-                        toCurrencyId = toCryptoCurrencyId,
+                        fromCurrencyId = fromCryptoCurrency.id,
+                        toCurrencyId = toCryptoCurrency.id,
                     )
                 }
                 ?.transactions
@@ -49,15 +50,15 @@ class DefaultSwapTransactionRepository(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
                 value = savedTransactions?.updateList(
                     userWalletId = userWalletId,
-                    fromCryptoCurrencyId = fromCryptoCurrencyId,
-                    toCryptoCurrencyId = toCryptoCurrencyId,
+                    fromCryptoCurrency = fromCryptoCurrency,
+                    toCryptoCurrency = toCryptoCurrency,
                     transactions = tokenTransactions,
                 ) ?: listOf(
-                    SavedSwapTransactionListModel(
-                        userWalletId = userWalletId.stringValue,
-                        fromCryptoCurrencyId = fromCryptoCurrencyId.value,
-                        toCryptoCurrencyId = toCryptoCurrencyId.value,
-                        transactions = tokenTransactions,
+                    converter.default(
+                        userWalletId = userWalletId,
+                        fromCryptoCurrency = fromCryptoCurrency,
+                        toCryptoCurrency = toCryptoCurrency,
+                        tokenTransactions = listOf(transaction),
                     ),
                 ),
             )
@@ -67,11 +68,12 @@ class DefaultSwapTransactionRepository(
     override suspend fun getTransactions(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
+        scanResponse: ScanResponse,
     ): Flow<List<SavedSwapTransactionListModel>?> {
         val txStatuses = appPreferencesStore.getObjectMap<ExchangeStatusModel>(
             key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
         )
-        return appPreferencesStore.getObjectList<SavedSwapTransactionListModel>(
+        return appPreferencesStore.getObjectList<SavedSwapTransactionListModelInner>(
             key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
         ).map { savedTransactions ->
             val currencyTxs = savedTransactions
@@ -83,11 +85,11 @@ class DefaultSwapTransactionRepository(
                             )
                 }
 
-            currencyTxs?.map { currencyTx ->
-                currencyTx.copy(
-                    transactions = currencyTx.transactions.map { tx ->
-                        tx.copy(status = txStatuses[tx.txId])
-                    },
+            currencyTxs?.mapNotNull {
+                converter.convertBack(
+                    value = it,
+                    scanResponse = scanResponse,
+                    txStatuses = txStatuses,
                 )
             }
         }
@@ -95,21 +97,21 @@ class DefaultSwapTransactionRepository(
 
     override suspend fun removeTransaction(
         userWalletId: UserWalletId,
-        fromCryptoCurrencyId: CryptoCurrency.ID,
-        toCryptoCurrencyId: CryptoCurrency.ID,
+        fromCryptoCurrency: CryptoCurrency,
+        toCryptoCurrency: CryptoCurrency,
         txId: String,
     ) {
         clearTransactionsStatuses(txId = txId)
         appPreferencesStore.editData { mutablePreferences ->
-            val savedList: List<SavedSwapTransactionListModel>? = mutablePreferences.getObjectList(
+            val savedList: List<SavedSwapTransactionListModelInner>? = mutablePreferences.getObjectList(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
             )
             val tokenTransactions = savedList
-                ?.first {
+                ?.firstOrNull {
                     it.checkId(
                         checkUserWalletId = userWalletId,
-                        fromCurrencyId = fromCryptoCurrencyId,
-                        toCurrencyId = toCryptoCurrencyId,
+                        fromCurrencyId = fromCryptoCurrency.id,
+                        toCurrencyId = toCryptoCurrency.id,
                     )
                 }
                 ?.transactions
@@ -120,15 +122,15 @@ class DefaultSwapTransactionRepository(
                     savedList?.filterNot {
                         it.checkId(
                             checkUserWalletId = userWalletId,
-                            fromCurrencyId = fromCryptoCurrencyId,
-                            toCurrencyId = toCryptoCurrencyId,
+                            fromCurrencyId = fromCryptoCurrency.id,
+                            toCurrencyId = toCryptoCurrency.id,
                         )
                     }
                 } else {
                     savedList.updateList(
                         userWalletId = userWalletId,
-                        fromCryptoCurrencyId = fromCryptoCurrencyId,
-                        toCryptoCurrencyId = toCryptoCurrencyId,
+                        fromCryptoCurrency = fromCryptoCurrency,
+                        toCryptoCurrency = toCryptoCurrency,
                         transactions = tokenTransactions,
                     )
                 }
@@ -192,7 +194,7 @@ class DefaultSwapTransactionRepository(
         }
     }
 
-    private fun SavedSwapTransactionListModel.checkId(
+    private fun SavedSwapTransactionListModelInner.checkId(
         checkUserWalletId: UserWalletId,
         fromCurrencyId: CryptoCurrency.ID,
         toCurrencyId: CryptoCurrency.ID,
@@ -202,24 +204,24 @@ class DefaultSwapTransactionRepository(
             fromCryptoCurrencyId == fromCurrencyId.value
     }
 
-    private fun List<SavedSwapTransactionListModel>.updateList(
+    private fun List<SavedSwapTransactionListModelInner>.updateList(
         userWalletId: UserWalletId,
-        fromCryptoCurrencyId: CryptoCurrency.ID,
-        toCryptoCurrencyId: CryptoCurrency.ID,
+        fromCryptoCurrency: CryptoCurrency,
+        toCryptoCurrency: CryptoCurrency,
         transactions: List<SavedSwapTransactionModel>,
-    ): List<SavedSwapTransactionListModel> {
+    ): List<SavedSwapTransactionListModelInner> {
         return addOrReplace(
-            item = SavedSwapTransactionListModel(
-                userWalletId = userWalletId.stringValue,
-                fromCryptoCurrencyId = fromCryptoCurrencyId.value,
-                toCryptoCurrencyId = toCryptoCurrencyId.value,
-                transactions = transactions,
+            item = converter.default(
+                userWalletId = userWalletId,
+                fromCryptoCurrency = fromCryptoCurrency,
+                toCryptoCurrency = toCryptoCurrency,
+                tokenTransactions = transactions,
             ),
             predicate = {
                 it.checkId(
                     checkUserWalletId = userWalletId,
-                    fromCurrencyId = fromCryptoCurrencyId,
-                    toCurrencyId = toCryptoCurrencyId,
+                    fromCurrencyId = fromCryptoCurrency.id,
+                    toCurrencyId = toCryptoCurrency.id,
                 )
             },
         )
