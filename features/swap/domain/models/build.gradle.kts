@@ -15,6 +15,7 @@ dependencies {
 
     /** Core modules */
     implementation(projects.core.utils)
+    implementation(projects.core.datasource)
 
     /** Other Libraries **/
     implementation(deps.kotlin.serialization)
