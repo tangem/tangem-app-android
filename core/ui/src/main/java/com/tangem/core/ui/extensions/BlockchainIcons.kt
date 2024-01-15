@@ -235,7 +235,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "chia", "chia/test" -> R.drawable.ic_chia_22
         "near-protocol", "near-protocol/test" -> R.drawable.ic_near_22
         "decimal", "decimal/test" -> R.drawable.ic_decimal_22
-        "decimal", "decimal/test" -> R.drawable.ic_decimal_22
+        "xdc-network", "xdc-network/test" -> R.drawable.ic_decimal_22 // TODO
         else -> R.drawable.ic_alert_24
     }
 }
