@@ -61,9 +61,9 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
             fromTokenIconState = config.fromCurrencyIcon,
             toTokenIconState = config.toCurrencyIcon,
             fromCryptoAmount = TextReference.Str(config.fromCryptoAmount),
-            fromCryptoSymbol = config.fromCryptoSymbol,
+            fromCryptoSymbol = config.fromCryptoCurrency.symbol,
             toCryptoAmount = TextReference.Str(config.toCryptoAmount),
-            toCryptoSymbol = config.toCryptoSymbol,
+            toCryptoSymbol = config.toCryptoCurrency.symbol,
             fromFiatAmount = TextReference.Str(config.fromFiatAmount),
             toFiatAmount = TextReference.Str(config.toFiatAmount),
         )
