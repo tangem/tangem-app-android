@@ -109,11 +109,14 @@ internal class SwapViewModel @Inject constructor(
     init {
         viewModelScope.launch(dispatchers.io) {
             swapInteractor.getSelectedWallet()?.let {
-                initialCryptoCurrencyStatus =
-                    requireNotNull(getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()) {
-                        "Failed to get initial crypto currency status"
-                    }
-                initTokens()
+                val cryptoCurrencyStatus =
+                    getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()
+                if (cryptoCurrencyStatus == null) {
+                    uiState = stateBuilder.addAlert(uiState, swapRouter::back)
+                } else {
+                    initialCryptoCurrencyStatus = cryptoCurrencyStatus
+                    initTokens()
+                }
             }
         }
     }
