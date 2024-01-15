@@ -9,7 +9,7 @@ import com.tangem.core.ui.utils.toDateFormat
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
@@ -42,70 +42,70 @@ internal class TokenDetailsSwapTransactionsStateConverter(
 
     fun convert(
         savedTransactions: List<SavedSwapTransactionListModel>,
-        cryptoStatusList: List<CryptoCurrencyStatus>,
+        quotes: Set<Quote>,
     ): PersistentList<SwapTransactionsState> {
         val result = mutableListOf<SwapTransactionsState>()
 
-        savedTransactions.forEach { swapCurrency ->
-            val firstStatus = cryptoStatusList.first { it.currency.id.value == swapCurrency.fromCryptoCurrencyId }
-            val secondStatus = cryptoStatusList.first { it.currency.id.value == swapCurrency.toCryptoCurrencyId }
+        savedTransactions
+            .forEach { swapCurrency ->
+                val toCryptoCurrency = swapCurrency.toCryptoCurrency
+                val fromCryptoCurrency = swapCurrency.fromCryptoCurrency
 
-            val (fromCurrency, toCurrency) = if (swapCurrency.fromCryptoCurrencyId == firstStatus.currency.id.value) {
-                firstStatus to secondStatus
-            } else {
-                secondStatus to firstStatus
+                swapCurrency.transactions.forEach { transaction ->
+                    val toAmount = transaction.toCryptoAmount
+                    val fromAmount = transaction.fromCryptoAmount
+                    val toFiatAmount = quotes.firstOrNull {
+                        it.rawCurrencyId == swapCurrency.fromCryptoCurrency.id.rawCurrencyId
+                    }?.fiatRate?.multiply(toAmount)
+                    val fromFiatAmount = quotes.firstOrNull {
+                        it.rawCurrencyId == swapCurrency.fromCryptoCurrency.id.rawCurrencyId
+                    }?.fiatRate?.multiply(fromAmount)
+                    val timestamp = transaction.timestamp
+                    val notifications =
+                        getNotification(transaction.status?.status, transaction.status?.txExternalUrl)
+                    val showProviderLink = getShowProviderLink(notifications, transaction.status)
+                    result.add(
+                        SwapTransactionsState(
+                            txId = transaction.txId,
+                            provider = transaction.provider,
+                            txUrl = transaction.status?.txExternalUrl,
+                            timestamp = TextReference.Str(
+                                "${timestamp.toDateFormat()}, ${timestamp.toTimeFormat()}",
+                            ),
+                            fiatSymbol = appCurrency.symbol,
+                            statuses = getStatuses(transaction.status?.status),
+                            hasFailed = transaction.status?.status == ExchangeStatus.Failed,
+                            activeStatus = transaction.status?.status,
+                            notification = getNotification(
+                                transaction.status?.status,
+                                transaction.status?.txExternalUrl,
+                            ),
+                            toCryptoCurrency = toCryptoCurrency,
+                            toCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
+                                cryptoAmount = toAmount,
+                                cryptoCurrency = toCryptoCurrency,
+                            ),
+                            toFiatAmount = getFiatAmount(toFiatAmount),
+                            toCurrencyIcon = iconStateConverter.convert(toCryptoCurrency),
+                            fromCryptoCurrency = fromCryptoCurrency,
+                            fromCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
+                                cryptoAmount = fromAmount,
+                                cryptoCurrency = fromCryptoCurrency,
+                            ),
+                            fromFiatAmount = getFiatAmount(fromFiatAmount),
+                            fromCurrencyIcon = iconStateConverter.convert(fromCryptoCurrency),
+                            showProviderLink = showProviderLink,
+                            onClick = { clickIntents.onSwapTransactionClick(transaction.txId) },
+                            onGoToProviderClick = { url ->
+                                analyticsEventsHandlerProvider().send(
+                                    TokenExchangeAnalyticsEvent.GoToProviderStatus(cryptoCurrency.symbol),
+                                )
+                                clickIntents.onGoToProviderClick(url = url)
+                            },
+                        ),
+                    )
+                }
             }
-
-            swapCurrency.transactions.forEach { transaction ->
-                val toAmount = transaction.toCryptoAmount
-                val fromAmount = transaction.fromCryptoAmount
-                val toFiatAmount = toAmount.multiply(toCurrency.value.fiatRate)
-                val fromFiatAmount = fromAmount.multiply(fromCurrency.value.fiatRate)
-                val timestamp = transaction.timestamp
-                val notifications = getNotification(transaction.status?.status, transaction.status?.txExternalUrl)
-                val showProviderLink = getShowProviderLink(notifications, transaction.status)
-                result.add(
-                    SwapTransactionsState(
-                        txId = transaction.txId,
-                        provider = transaction.provider,
-                        txUrl = transaction.status?.txExternalUrl,
-                        timestamp = TextReference.Str("${timestamp.toDateFormat()}, ${timestamp.toTimeFormat()}"),
-                        fiatSymbol = appCurrency.symbol,
-                        statuses = getStatuses(transaction.status?.status),
-                        hasFailed = transaction.status?.status == ExchangeStatus.Failed,
-                        activeStatus = transaction.status?.status,
-                        notification = getNotification(
-                            transaction.status?.status,
-                            transaction.status?.txExternalUrl,
-                        ),
-                        toCryptoCurrencyId = toCurrency.currency.id,
-                        toCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
-                            cryptoAmount = toAmount,
-                            cryptoCurrency = toCurrency.currency,
-                        ),
-                        toCryptoSymbol = toCurrency.currency.symbol,
-                        toFiatAmount = getFiatAmount(toFiatAmount),
-                        toCurrencyIcon = iconStateConverter.convert(toCurrency),
-                        fromCryptoCurrencyId = fromCurrency.currency.id,
-                        fromCryptoAmount = BigDecimalFormatter.formatCryptoAmount(
-                            cryptoAmount = fromAmount,
-                            cryptoCurrency = fromCurrency.currency,
-                        ),
-                        fromCryptoSymbol = fromCurrency.currency.symbol,
-                        fromFiatAmount = getFiatAmount(fromFiatAmount),
-                        fromCurrencyIcon = iconStateConverter.convert(fromCurrency),
-                        showProviderLink = showProviderLink,
-                        onClick = { clickIntents.onSwapTransactionClick(transaction.txId) },
-                        onGoToProviderClick = { url ->
-                            analyticsEventsHandlerProvider().send(
-                                TokenExchangeAnalyticsEvent.GoToProviderStatus(cryptoCurrency.symbol),
-                            )
-                            clickIntents.onGoToProviderClick(url = url)
-                        },
-                    ),
-                )
-            }
-        }
         return result.toPersistentList()
     }
 
@@ -124,7 +124,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         )
     }
 
-    private fun getFiatAmount(toFiatAmount: BigDecimal): String {
+    private fun getFiatAmount(toFiatAmount: BigDecimal?): String {
         return BigDecimalFormatter.formatFiatAmount(
             fiatAmount = toFiatAmount,
             fiatCurrencyCode = appCurrency.code,
