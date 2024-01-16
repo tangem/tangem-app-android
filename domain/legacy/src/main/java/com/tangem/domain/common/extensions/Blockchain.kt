@@ -230,4 +230,5 @@ private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
     Blockchain.Vechain, // TODO AND-5771
+    Blockchain.VechainTestnet, // TODO AND-5771
 )
