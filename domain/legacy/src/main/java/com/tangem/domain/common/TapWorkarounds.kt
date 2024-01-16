@@ -59,8 +59,8 @@ object TapWorkarounds {
         "AB11" to Blockchain.Bitcoin,
         "AB12" to Blockchain.Ethereum,
     )
-
-    private val excludedBatches = listOf("0027", "0030", "0031", "0035")
+// [REDACTED_TODO_COMMENT]
+    private val excludedBatches = listOf("0027", "0030", "0031", "0035", "DA88")
 
     private val excludedIssuers = listOf("TTM BANK")
 
