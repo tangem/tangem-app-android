@@ -60,7 +60,8 @@ object TapWorkarounds {
         "AB12" to Blockchain.Ethereum,
     )
 
-    private val excludedBatches = listOf("0027", "0030", "0031", "0035")
+    // TODO try remove if it's possible because we can configure on init sdk com.tangem.common.core.Config
+    private val excludedBatches = listOf("0027", "0030", "0031", "0035", "DA88")
 
     private val excludedIssuers = listOf("TTM BANK")
 
