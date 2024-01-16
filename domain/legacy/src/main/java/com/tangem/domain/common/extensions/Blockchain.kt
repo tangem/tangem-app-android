@@ -149,6 +149,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.NearTestnet -> "near-protocol/test"
         Blockchain.Decimal -> "decimal"
         Blockchain.DecimalTestnet -> "decimal/test"
+        Blockchain.Vechain -> TODO() // TODO AND-5771
+        Blockchain.VechainTestnet -> TODO() // TODO AND-5771
     }
 }
 
@@ -196,6 +198,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
         Blockchain.Decimal, Blockchain.DecimalTestnet -> "decimal"
+        Blockchain.Vechain -> TODO() // TODO AND-5771
+        Blockchain.VechainTestnet -> TODO() // TODO AND-5771
         Blockchain.Unknown -> "unknown"
     }
 }
