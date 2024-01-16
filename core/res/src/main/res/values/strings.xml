@@ -474,7 +474,7 @@
     <string name="send_max_fee">Max fee</string>
     <string name="send_max_fee_footer">Maximum fee amount</string>
     <string name="send_memo_destination_tag_error">Numbers only for Destination Tag</string>
-    <string name="send_network_fee_title">Network fee</string>
+    <string name="common_network_fee_title">Network fee</string>
     <string name="send_network_fee_warning_content">Sending amount will be reduced to cover the selected fee level</string>
     <string name="send_network_fee_warning_title">Network fee coverage</string>
     <string name="send_notification_exceed_balance_text">Insufficient funds for the transfer, as the total of the fee and transfer amount exceeds the existing balance</string>

@@ -297,7 +297,7 @@
     <string name="send_fee_picker_normal">正常</string>
     <string name="send_fee_picker_priority">優先</string>
     <string name="send_max_amount_label">最大值</string>
-    <string name="send_network_fee_title">網路費</string>
+    <string name="common_network_fee_title">網路費</string>
     <string name="send_title_currency_format">發送 %s</string>
     <string name="send_total_label">總計</string>
     <string name="send_total_subtitle_asset_format">%1$s 和 %2$s 將被發送</string>

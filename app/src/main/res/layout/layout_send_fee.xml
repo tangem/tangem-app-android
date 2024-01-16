@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:text="@string/send_network_fee_title"
+        android:text="@string/common_network_fee_title"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@+id/flExpandCollapse"
         app:layout_constraintStart_toStartOf="parent"
