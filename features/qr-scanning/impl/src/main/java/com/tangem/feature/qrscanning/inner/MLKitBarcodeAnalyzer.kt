@@ -16,9 +16,14 @@ class MLKitBarcodeAnalyzer(private val onScanned: (String) -> Unit) : ImageAnaly
     @ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
-        if (mediaImage != null && !isScanning) {
+        if (mediaImage != null) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+            analyze(image, imageProxy::close)
+        }
+    }
 
+    fun analyze(image: InputImage, onClose: (() -> Unit)? = null) {
+        if (!isScanning) {
             isScanning = true
             scanner.process(image)
                 .addOnSuccessListener { codes ->
@@ -28,13 +33,12 @@ class MLKitBarcodeAnalyzer(private val onScanned: (String) -> Unit) : ImageAnaly
                             onScanned.invoke(it)
                         }
                     }
-
                     isScanning = false
-                    imageProxy.close()
+                    onClose?.invoke()
                 }
                 .addOnFailureListener {
                     isScanning = false
-                    imageProxy.close()
+                    onClose?.invoke()
                 }
         }
     }

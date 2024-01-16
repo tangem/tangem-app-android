@@ -1,10 +1,16 @@
 package com.tangem.feature.qrscanning.presentation
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -12,12 +18,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
-import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
+import com.google.mlkit.vision.common.InputImage
+import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIconContent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemColorPalette
@@ -35,6 +44,16 @@ internal fun QrScanningContent(
     analyzer: () -> MLKitBarcodeAnalyzer,
     uiState: QrScanningState,
 ) {
+    val context = LocalContext.current
+    var isFlash by remember { mutableStateOf(false) }
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        val selectedImage = it ?: Uri.EMPTY
+        if (selectedImage != Uri.EMPTY) {
+            val image = InputImage.fromFilePath(context, selectedImage)
+            analyzer().analyze(image)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize(),
@@ -42,16 +61,52 @@ internal fun QrScanningContent(
         CameraView(
             executor = executor,
             analyzer = analyzer,
+            isFlash = isFlash,
         )
         Overlay(
             message = uiState.message,
         )
-        AppBarWithBackButtonAndIcon(
+        AppBarWithBackButtonAndIconContent(
             onBackClick = uiState.onBackClick,
-            iconRes = R.drawable.ic_gallery_24,
-            onIconClick = uiState.onGalleryClicked,
-            backgroundColor = Color.Transparent,
             modifier = Modifier.statusBarsPadding(),
+            backgroundColor = Color.Transparent,
+            backIconTint = TangemColorPalette.White,
+            iconContent = {
+                Row {
+                    AnimatedContent(
+                        targetState = isFlash,
+                        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
+                        label = "Flash Change",
+                    ) {
+                        val flashIconRes = if (it) R.drawable.ic_flash_on_24 else R.drawable.ic_flash_off_24
+                        Icon(
+                            painter = painterResource(flashIconRes),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .padding(end = TangemTheme.dimens.spacing20)
+                                .size(size = TangemTheme.dimens.size24)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = rememberRipple(bounded = false),
+                                    onClick = { isFlash = !isFlash },
+                                ),
+                            tint = TangemColorPalette.White,
+                        )
+                    }
+                    Icon(
+                        painter = painterResource(R.drawable.ic_gallery_24),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(size = TangemTheme.dimens.size24)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple(bounded = false),
+                                onClick = { galleryLauncher.launch("image/*") },
+                            ),
+                        tint = TangemColorPalette.White,
+                    )
+                }
+            },
         )
     }
 }
