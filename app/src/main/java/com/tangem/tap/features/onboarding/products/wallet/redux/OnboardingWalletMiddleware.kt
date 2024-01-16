@@ -373,17 +373,22 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     }
 
                     is CompletionResult.Failure -> {
-                        val error = result.error
-                        if (error is TangemSdkError.BackupFailedNotEmptyWallets &&
-                            // todo disabled this check in task with shiba ([REDACTED_TASK_KEY]) and added  canSkipBackup
-                            // && onboardingWalletState.wallet2State != null
-                            card?.canSkipBackup == false
-                        ) {
-                            store.dispatchOnMain(
-                                GlobalAction.ShowDialog(
-                                    BackupDialog.ResetBackupCard(error.cardId),
-                                ),
-                            )
+                        when (val error = result.error) {
+                            is TangemSdkError.BackupFailedNotEmptyWallets -> {
+                                if (card?.canSkipBackup == false) {
+                                    store.dispatchOnMain(
+                                        GlobalAction.ShowDialog(
+                                            BackupDialog.ResetBackupCard(error.cardId),
+                                        ),
+                                    )
+                                }
+                            }
+                            is TangemSdkError.IssuerSignatureLoadingFailed -> {
+                                store.dispatchOnMain(
+                                    GlobalAction.ShowDialog(BackupDialog.AttestationFailed),
+                                )
+                            }
+                            else -> Unit
                         }
                     }
                 }
