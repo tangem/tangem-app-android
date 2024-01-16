@@ -120,6 +120,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     onReject = state.dialog.onReject,
                 )
             }
+            is BackupDialog.AttestationFailed -> AttestationFailedDialog.create(context)
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
