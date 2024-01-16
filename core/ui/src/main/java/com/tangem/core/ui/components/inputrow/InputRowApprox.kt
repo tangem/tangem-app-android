@@ -62,7 +62,7 @@ fun InputRowApprox(
                 modifier = Modifier.weight(1f),
             )
             Icon(
-                painter = painterResource(id = R.drawable.ic_approx_24),
+                painter = painterResource(id = R.drawable.ic_forward_12),
                 contentDescription = null,
                 tint = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
