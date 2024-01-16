@@ -76,6 +76,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "decimal/test" -> Blockchain.DecimalTestnet
         "xdc-network" -> Blockchain.XinFin
         "xdc-network/test" -> Blockchain.XinFinTestnet
+        "TODO" -> Blockchain.Vechain // TODO AND-5771
+        "TODO/test" -> Blockchain.VechainTestnet // TODO AND-5771
         else -> null
     }
 }
@@ -153,6 +155,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.DecimalTestnet -> "decimal/test"
         Blockchain.XinFin -> "xdc-network"
         Blockchain.XinFinTestnet -> "xdc-network/test"
+        Blockchain.Vechain -> "TODO" // TODO AND-5771
+        Blockchain.VechainTestnet -> "TODO/test" // TODO AND-5771
     }
 }
 
@@ -201,6 +205,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.NearTestnet -> "near/test"
         Blockchain.Decimal, Blockchain.DecimalTestnet -> "decimal"
         Blockchain.XinFin, Blockchain.XinFinTestnet -> "xdce-crowd-sale"
+        Blockchain.Vechain -> "TODO" // TODO AND-5771
+        Blockchain.VechainTestnet -> "TODO/test" // TODO AND-5771
         Blockchain.Unknown -> "unknown"
     }
 }
@@ -228,4 +234,6 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
+    Blockchain.Vechain, // TODO AND-5771
+    Blockchain.VechainTestnet, // TODO AND-5771
 )
