@@ -234,6 +234,7 @@
     <string name="express_provider_not_available">Недоступно для этой пары</string>
     <string name="express_provider_permission_needed">Требуется разрешение</string>
     <string name="express_terms_of_use">Условиями использования</string>
+    <string name="express_by_provider">Предоставлено</string>
     <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
     <string name="feedback_preface_rate_negative">Расскажите, каких функций вам не хватает, и мы постараемся вам помочь.</string>
     <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у вас карта?</string>

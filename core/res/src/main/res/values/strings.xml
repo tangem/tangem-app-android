@@ -200,6 +200,7 @@
     <string name="express_more_providers_soon">More providers are coming soon.\nStay tuned!</string>
     <string name="express_estimated_amount">Estimated amount</string>
     <string name="express_exchange_by">Exchange by %s</string>
+    <string name="express_by_provider">Provided by</string>
     <string name="express_exchange_notification_failed_text">Visit provider’s website to refund your money</string>
     <string name="express_exchange_notification_failed_title">Operation failed by provider</string>
     <string name="express_exchange_notification_verification_text">Visit provider’s website for verification</string>
