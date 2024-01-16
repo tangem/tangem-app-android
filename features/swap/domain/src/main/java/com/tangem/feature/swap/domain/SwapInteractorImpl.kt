@@ -368,9 +368,11 @@ internal class SwapInteractorImpl @Inject constructor(
         }
         val dust = repository.getDustValue(userWalletId, fromToken.network)
         val balance = fromTokenStatus.value.amount ?: BigDecimal.ZERO
-        val isLowerThenDust = amount.value < dust || balance - amount.value < dust
-        if (dust != null && !balance.isNullOrZero() && isLowerThenDust) {
-            warnings.add(Warning.MinAmountWarning(dust))
+        if (dust != null && !balance.isNullOrZero()) {
+            val isLowerThenDust = amount.value < dust || balance - amount.value < dust
+            if (isLowerThenDust) {
+                warnings.add(Warning.MinAmountWarning(dust))
+            }
         }
         return warnings
     }
