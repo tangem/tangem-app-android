@@ -395,7 +395,7 @@ class DefaultWalletManagersFacade(
             derivationPath = network.derivationPath.value,
         )
 
-        return if (manager is ExistentialDepositProvider) manager.dustValue else null
+        return manager?.dustValue
     }
 
     @Deprecated("Will be removed in future")
