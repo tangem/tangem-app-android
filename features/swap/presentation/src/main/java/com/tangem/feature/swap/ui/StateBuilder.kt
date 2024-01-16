@@ -754,7 +754,7 @@ internal class StateBuilder(
 
         return FeeItemState.Content(
             feeType = feeType,
-            title = resourceReference(R.string.common_fee_label),
+            title = resourceReference(R.string.common_network_fee_title),
             amountCrypto = fee.feeCryptoFormatted,
             symbolCrypto = fee.cryptoSymbol,
             explanation = if (swapProvider.type == ExchangeProviderType.CEX) {
@@ -1068,7 +1068,7 @@ internal class StateBuilder(
         return listOf(
             FeeItemState.Content(
                 feeType = this.normalFee.feeType,
-                title = resourceReference(R.string.common_fee_label),
+                title = resourceReference(R.string.common_network_fee_title),
                 amountCrypto = this.normalFee.feeCryptoFormatted,
                 symbolCrypto = this.normalFee.cryptoSymbol,
                 amountFiatFormatted = this.normalFee.feeFiatFormatted,
@@ -1078,7 +1078,7 @@ internal class StateBuilder(
             ),
             FeeItemState.Content(
                 feeType = this.priorityFee.feeType,
-                title = resourceReference(R.string.common_fee_label),
+                title = resourceReference(R.string.common_network_fee_title),
                 amountCrypto = this.priorityFee.feeCryptoFormatted,
                 symbolCrypto = this.priorityFee.cryptoSymbol,
                 amountFiatFormatted = this.priorityFee.feeFiatFormatted,
