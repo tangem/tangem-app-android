@@ -109,11 +109,14 @@ internal class SwapViewModel @Inject constructor(
     init {
         viewModelScope.launch(dispatchers.io) {
             swapInteractor.getSelectedWallet()?.let {
-                initialCryptoCurrencyStatus =
-                    requireNotNull(getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()) {
-                        "Failed to get initial crypto currency status"
-                    }
-                initTokens()
+                val cryptoCurrencyStatus =
+                    getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()
+                if (cryptoCurrencyStatus == null) {
+                    uiState = stateBuilder.addAlert(uiState, swapRouter::back)
+                } else {
+                    initialCryptoCurrencyStatus = cryptoCurrencyStatus
+                    initTokens()
+                }
             }
         }
     }
@@ -341,9 +344,12 @@ internal class SwapViewModel @Inject constructor(
                 }
             }
             is SwapState.EmptyAmountState -> {
+                val toTokenStatus = dataState.toCryptoCurrency
                 uiState = stateBuilder.createQuotesEmptyAmountState(
                     uiStateHolder = uiState,
                     emptyAmountState = state,
+                    fromTokenStatus = fromToken,
+                    toTokenStatus = toTokenStatus,
                     isReverseSwapPossible = isReverseSwapPossible(),
                 )
             }
@@ -565,6 +571,7 @@ internal class SwapViewModel @Inject constructor(
             }.onSuccess {
                 when (it) {
                     is TxState.TxSent -> {
+                        updateWalletBalance()
                         uiState = stateBuilder.loadingPermissionState(uiState)
                         uiState = stateBuilder.dismissBottomSheet(uiState)
                         startLoadingQuotesFromLastState(isSilent = true)

@@ -384,6 +384,23 @@ internal class StateBuilder(
                         ),
                     )
                 }
+                is Warning.MinAmountWarning -> {
+                    warnings.add(
+                        SwapWarning.GeneralError(
+                            NotificationConfig(
+                                title = resourceReference(R.string.send_notification_invalid_amount_title),
+                                subtitle = resourceReference(
+                                    R.string.send_notification_invalid_minimum_amount_text,
+                                    wrappedList(
+                                        it.dustValue.toPlainString(),
+                                        it.dustValue.toPlainString(),
+                                    ),
+                                ),
+                                iconResId = R.drawable.ic_alert_circle_24,
+                            ),
+                        ),
+                    )
+                }
             }
         }
     }
@@ -523,7 +540,7 @@ internal class StateBuilder(
 
     private fun getWarningForError(dataError: DataError, fromToken: CryptoCurrency): SwapWarning {
         return when (dataError) {
-            is DataError.ExchangeTooSmallAmountError -> SwapWarning.TooSmallAmountWarning(
+            is DataError.ExchangeTooSmallAmountError -> SwapWarning.GeneralError(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(
                         id = R.string.warning_express_too_minimal_amount_title,
@@ -558,6 +575,8 @@ internal class StateBuilder(
     fun createQuotesEmptyAmountState(
         uiStateHolder: SwapStateHolder,
         emptyAmountState: SwapState.EmptyAmountState,
+        fromTokenStatus: CryptoCurrencyStatus,
+        toTokenStatus: CryptoCurrencyStatus?,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -574,7 +593,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.sendCardData.networkIconRes,
-                balance = emptyAmountState.fromTokenWalletBalance,
+                balance = fromTokenStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -588,7 +607,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = emptyAmountState.toTokenWalletBalance,
+                balance = toTokenStatus?.getFormattedAmount(isNeedSymbol = false) ?: UNKNOWN_AMOUNT_SIGN,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             warnings = emptyList(),
