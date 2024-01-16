@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.core.navigation)
 
     implementation(deps.androidx.fragment.ktx)
+    implementation(deps.androidx.activity.compose)
 
     /** Camera */
     implementation(deps.camera.camera2)
