@@ -541,6 +541,7 @@ internal class SwapInteractorImpl @Inject constructor(
             requireNotNull(txData),
             userWallet = requireNotNull(getSelectedWallet()),
             network = currencyToSend.currency.network,
+            useAnyCardToSign = true,
         )
 
         val externalUrl = (exchangeData.transaction as? ExpressTransactionModel.CEX)?.externalTxUrl
@@ -1298,6 +1299,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private fun Fee.getGasLimit(): Int {
         return when (this) {
             is Fee.Common -> 0
+            is Fee.Vechain -> TODO()
             is Fee.Ethereum -> this.gasLimit.toInt()
             is Fee.Vechain -> TODO() // TODO AND-5771
         }

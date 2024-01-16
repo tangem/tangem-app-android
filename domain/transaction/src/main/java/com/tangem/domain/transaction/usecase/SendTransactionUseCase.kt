@@ -26,9 +26,10 @@ class SendTransactionUseCase(
         txData: TransactionData,
         userWallet: UserWallet,
         network: Network,
+        useAnyCardToSign: Boolean = false,
     ): Either<SendTransactionError?, Boolean> {
         val signer = cardSdkConfigRepository.getCommonSigner(
-            userWallet.cardId,
+            if (useAnyCardToSign) null else userWallet.cardId,
         )
 
         val linkedTerminal = cardSdkConfigRepository.isLinkedTerminal()
