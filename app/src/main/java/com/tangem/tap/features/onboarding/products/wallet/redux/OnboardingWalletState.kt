@@ -90,6 +90,7 @@ sealed class BackupStep {
 }
 
 sealed class BackupDialog : StateDialog {
+    object AttestationFailed : BackupDialog()
     object AddMoreBackupCards : BackupDialog()
     object BackupInProgress : BackupDialog()
     object UnfinishedBackupFound : BackupDialog()

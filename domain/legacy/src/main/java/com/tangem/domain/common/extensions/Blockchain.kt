@@ -78,6 +78,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "xdc-network/test" -> Blockchain.XinFinTestnet
         "TODO" -> Blockchain.Vechain // TODO AND-5771
         "TODO/test" -> Blockchain.VechainTestnet // TODO AND-5771
+        "aptos" -> Blockchain.Aptos
+        "aptos/test" -> Blockchain.AptosTestnet
         else -> null
     }
 }
@@ -157,6 +159,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.XinFinTestnet -> "xdc-network/test"
         Blockchain.Vechain -> "TODO" // TODO AND-5771
         Blockchain.VechainTestnet -> "TODO/test" // TODO AND-5771
+        Blockchain.Aptos -> "aptos"
+        Blockchain.AptosTestnet -> "aptos/test"
     }
 }
 
@@ -207,6 +211,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.XinFin, Blockchain.XinFinTestnet -> "xdce-crowd-sale"
         Blockchain.Vechain -> "TODO" // TODO AND-5771
         Blockchain.VechainTestnet -> "TODO/test" // TODO AND-5771
+        Blockchain.Aptos -> "aptos"
+        Blockchain.AptosTestnet -> "aptos/test"
         Blockchain.Unknown -> "unknown"
     }
 }

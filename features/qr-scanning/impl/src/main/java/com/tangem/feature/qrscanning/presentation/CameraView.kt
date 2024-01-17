@@ -6,6 +6,7 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -15,7 +16,7 @@ import com.tangem.feature.qrscanning.inner.MLKitBarcodeAnalyzer
 import java.util.concurrent.ExecutorService
 
 @Composable
-internal fun CameraView(executor: () -> ExecutorService, analyzer: () -> MLKitBarcodeAnalyzer) {
+internal fun CameraView(executor: () -> ExecutorService, analyzer: () -> MLKitBarcodeAnalyzer, isFlash: Boolean) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -27,6 +28,10 @@ internal fun CameraView(executor: () -> ExecutorService, analyzer: () -> MLKitBa
         cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
         setImageAnalysisAnalyzer(executor(), analyzer())
         imageAnalysisBackpressureStrategy = ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+    }
+
+    LaunchedEffect(key1 = isFlash) {
+        cameraController.cameraControl?.enableTorch(isFlash)
     }
 
     previewView.controller = cameraController
