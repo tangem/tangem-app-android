@@ -74,6 +74,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "near-protocol/test" -> Blockchain.NearTestnet
         "decimal" -> Blockchain.Decimal
         "decimal/test" -> Blockchain.DecimalTestnet
+        "xdc-network" -> Blockchain.XinFin
+        "xdc-network/test" -> Blockchain.XinFinTestnet
         "TODO" -> Blockchain.Vechain // TODO [REDACTED_TASK_KEY]
         "TODO/test" -> Blockchain.VechainTestnet // TODO [REDACTED_TASK_KEY]
         "aptos" -> Blockchain.Aptos
@@ -153,6 +155,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.NearTestnet -> "near-protocol/test"
         Blockchain.Decimal -> "decimal"
         Blockchain.DecimalTestnet -> "decimal/test"
+        Blockchain.XinFin -> "xdc-network"
+        Blockchain.XinFinTestnet -> "xdc-network/test"
         Blockchain.Vechain -> "TODO" // TODO [REDACTED_TASK_KEY]
         Blockchain.VechainTestnet -> "TODO/test" // TODO [REDACTED_TASK_KEY]
         Blockchain.Aptos -> "aptos"
@@ -204,6 +208,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
         Blockchain.Decimal, Blockchain.DecimalTestnet -> "decimal"
+        Blockchain.XinFin, Blockchain.XinFinTestnet -> "xdce-crowd-sale"
         Blockchain.Vechain -> "TODO" // TODO [REDACTED_TASK_KEY]
         Blockchain.VechainTestnet -> "TODO/test" // TODO [REDACTED_TASK_KEY]
         Blockchain.Aptos -> "aptos"
