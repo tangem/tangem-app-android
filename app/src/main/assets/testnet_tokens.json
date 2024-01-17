@@ -538,6 +538,16 @@
             ]
         },
         {
+            "id": "xdce-crowd-sale",
+            "name": "XinFin",
+            "symbol": "XDC",
+            "networks": [
+                {
+                    "networkId": "xdc-network/test"
+                }
+            ]
+        },
+        {
             "id": "aptos",
             "name": "Aptos",
             "symbol": "APT",
