@@ -543,7 +543,6 @@ internal class SwapInteractorImpl @Inject constructor(
             requireNotNull(txData),
             userWallet = requireNotNull(getSelectedWallet()),
             network = currencyToSend.currency.network,
-            useAnyCardToSign = true,
         )
 
         val externalUrl = (exchangeData.transaction as? ExpressTransactionModel.CEX)?.externalTxUrl

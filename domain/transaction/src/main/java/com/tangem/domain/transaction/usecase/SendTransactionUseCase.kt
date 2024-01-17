@@ -26,11 +26,8 @@ class SendTransactionUseCase(
         txData: TransactionData,
         userWallet: UserWallet,
         network: Network,
-        useAnyCardToSign: Boolean = false,
     ): Either<SendTransactionError?, Boolean> {
-        val signer = cardSdkConfigRepository.getCommonSigner(
-            if (useAnyCardToSign) null else userWallet.cardId,
-        )
+        val signer = cardSdkConfigRepository.getCommonSigner(cardId = null)
 
         val linkedTerminal = cardSdkConfigRepository.isLinkedTerminal()
         if (userWallet.scanResponse.card.isStart2Coin) {
