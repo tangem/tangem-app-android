@@ -1301,7 +1301,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private fun Fee.getGasLimit(): Int {
         return when (this) {
             is Fee.Common -> 0
-            is Fee.Vechain -> TODO()
             is Fee.Ethereum -> this.gasLimit.toInt()
             is Fee.Vechain -> TODO() // TODO AND-5771
         }
