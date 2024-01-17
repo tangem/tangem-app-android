@@ -536,6 +536,16 @@
                     "networkId": "decimal/test"
                 }
             ]
+        },
+        {
+            "id": "aptos",
+            "name": "Aptos",
+            "symbol": "APT",
+            "networks": [
+                {
+                    "networkId": "aptos/test"
+                }
+            ]
         }
     ]
 }
