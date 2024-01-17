@@ -76,6 +76,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "decimal/test" -> Blockchain.DecimalTestnet
         "TODO" -> Blockchain.Vechain // TODO AND-5771
         "TODO/test" -> Blockchain.VechainTestnet // TODO AND-5771
+        "aptos" -> Blockchain.Aptos
+        "aptos/test" -> Blockchain.AptosTestnet
         else -> null
     }
 }
@@ -153,6 +155,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.DecimalTestnet -> "decimal/test"
         Blockchain.Vechain -> "TODO" // TODO AND-5771
         Blockchain.VechainTestnet -> "TODO/test" // TODO AND-5771
+        Blockchain.Aptos -> "aptos"
+        Blockchain.AptosTestnet -> "aptos/test"
     }
 }
 
@@ -202,6 +206,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Decimal, Blockchain.DecimalTestnet -> "decimal"
         Blockchain.Vechain -> "TODO" // TODO AND-5771
         Blockchain.VechainTestnet -> "TODO/test" // TODO AND-5771
+        Blockchain.Aptos -> "aptos"
+        Blockchain.AptosTestnet -> "aptos/test"
         Blockchain.Unknown -> "unknown"
     }
 }
