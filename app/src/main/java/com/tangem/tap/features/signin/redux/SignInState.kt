@@ -1,6 +1,6 @@
 package com.tangem.tap.features.signin.redux
 
-import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.core.analytics.models.Basic
 
 /**
  * @author Andrew Khokhlov on 21/03/2023

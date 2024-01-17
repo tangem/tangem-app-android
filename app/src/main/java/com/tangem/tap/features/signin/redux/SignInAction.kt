@@ -1,6 +1,6 @@
 package com.tangem.tap.features.signin.redux
 
-import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.core.analytics.models.Basic
 import org.rekotlin.Action
 
 /**
