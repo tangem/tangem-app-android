@@ -254,7 +254,7 @@ internal class StateBuilder(
             ),
             fee = feeState,
             swapButton = SwapButton(
-                enabled = getSwapButtonEnabled(quoteModel.preparedSwapConfigState),
+                enabled = getSwapButtonEnabled(quoteModel),
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = if (isReverseSwapPossible) {
@@ -425,8 +425,12 @@ internal class StateBuilder(
         }
     }
 
-    private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
+    private fun getSwapButtonEnabled(quoteModel: SwapState.QuotesLoadedState): Boolean {
+        val preparedSwapConfigState = quoteModel.preparedSwapConfigState
+        // check has has outgoing transaction
         if (preparedSwapConfigState.hasOutgoingTransaction) return false
+        // check has MinAmountWarning warning
+        if (quoteModel.warnings.filterIsInstance<Warning.MinAmountWarning>().isNotEmpty()) return false
         return when (preparedSwapConfigState.includeFeeInAmount) {
             IncludeFeeInAmount.BalanceNotEnough -> false
             IncludeFeeInAmount.Excluded ->
