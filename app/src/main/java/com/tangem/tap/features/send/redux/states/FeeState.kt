@@ -2,7 +2,7 @@ package com.tangem.tap.features.send.redux.states
 
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.tap.common.entities.ProgressState
 import java.math.BigDecimal
 
