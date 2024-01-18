@@ -1,12 +1,5 @@
-package com.tangem.tap.common.analytics.events
+package com.tangem.core.analytics.models
 
-import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.core.analytics.models.OneTimeAnalyticsEvent
-import com.tangem.domain.wallets.models.UserWalletId
-
-/**
-[REDACTED_AUTHOR]
- */
 sealed class Basic(
     event: String,
     params: Map<String, String> = mapOf(),
@@ -23,7 +16,7 @@ sealed class Basic(
     )
 
     class SignedIn(
-        currency: AnalyticsParam.CardCurrency,
+        currency: AnalyticsParam.WalletType,
         batch: String,
         signInType: SignInType,
         walletsCount: String,
@@ -45,31 +38,32 @@ sealed class Basic(
         }
     }
 
-    class ToppedUp(userWalletId: UserWalletId, currency: AnalyticsParam.CardCurrency) :
+    class ToppedUp(userWalletId: String, currency: AnalyticsParam.WalletType) :
         Basic(
             event = "Topped up",
             params = mapOf(AnalyticsParam.CURRENCY to currency.value),
         ),
         OneTimeAnalyticsEvent {
 
-        override val oneTimeEventId: String = id + userWalletId.stringValue
+        override val oneTimeEventId: String = id + userWalletId
     }
 
-    class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom, memoType: MemoType) : Basic(
-        event = "Transaction sent",
-        params = buildMap {
-            this[AnalyticsParam.SOURCE] = sentFrom.value
-            if (sentFrom is AnalyticsParam.TxData) {
-                this[AnalyticsParam.BLOCKCHAIN] = sentFrom.blockchain
-                this[AnalyticsParam.TOKEN] = sentFrom.token
-                this[AnalyticsParam.FEE_TYPE] = sentFrom.feeType.value
-            }
-            if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
-                this[AnalyticsParam.PERMISSION_TYPE] = sentFrom.permissionType
-            }
-            this["Memo"] = memoType.name
-        },
-    ) {
+    class TransactionSent(sentFrom: AnalyticsParam.TxSentFrom, memoType: MemoType) :
+        Basic(
+            event = "Transaction sent",
+            params = buildMap {
+                this[AnalyticsParam.SOURCE] = sentFrom.value
+                if (sentFrom is AnalyticsParam.TxData) {
+                    this[AnalyticsParam.BLOCKCHAIN] = sentFrom.blockchain
+                    this[AnalyticsParam.TOKEN] = sentFrom.token
+                    this[AnalyticsParam.FEE_TYPE] = sentFrom.feeType.value
+                }
+                if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
+                    this[AnalyticsParam.PERMISSION_TYPE] = sentFrom.permissionType
+                }
+                this["Memo"] = memoType.name
+            },
+        ) {
         enum class MemoType {
             Empty, Full, Null
         }
