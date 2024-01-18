@@ -33,7 +33,6 @@ internal class TokenListAnalyticsSender @Inject constructor(
         sendBalanceLoadedEventIfNeeded(tokenList.totalFiatBalance, currenciesStatuses)
         sendToppedUpEventIfNeeded(userWallet, tokenList.totalFiatBalance, currenciesStatuses)
         sendUnreachableNetworksEventIfNeeded(currenciesStatuses)
-        sendMissedAddressesEventIfNeeded(currenciesStatuses)
     }
 
     private fun getCurrenciesStatuses(tokenList: TokenList): List<CryptoCurrencyStatus> = when (tokenList) {
@@ -123,16 +122,6 @@ internal class TokenListAnalyticsSender @Inject constructor(
 
         if (hasUnreachableCurrencies) {
             analyticsEventHandler.send(MainScreen.NetworksUnreachable)
-        }
-    }
-
-    private fun sendMissedAddressesEventIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
-        val hasCurrenciesWithMissedDerivation = currenciesStatuses.any {
-            it.value is CryptoCurrencyStatus.MissedDerivation
-        }
-
-        if (hasCurrenciesWithMissedDerivation) {
-            analyticsEventHandler.send(MainScreen.MissingAddresses)
         }
     }
 }
