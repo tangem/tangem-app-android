@@ -46,7 +46,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "chia", "chia/test" -> R.drawable.img_chia_22
         "NEAR", "NEAR/test" -> R.drawable.img_near_22
         "decimal", "decimal/test" -> R.drawable.img_decimal_22
-        "xinfin", "xinfin/test" -> R.drawable.img_xdc_22
+        "xdc", "xdc/test" -> R.drawable.img_xdc_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -187,7 +187,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "chia", "chia/test" -> R.drawable.ic_chia_22
         "NEAR", "NEAR/test" -> R.drawable.ic_near_22
         "decimal", "decimal/test" -> R.drawable.ic_decimal_22
-        "xdc-network", "xdc-network/test" -> R.drawable.ic_xinfin_22
+        "xdc", "xdc/test" -> R.drawable.ic_xdc_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -235,7 +235,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "chia", "chia/test" -> R.drawable.ic_chia_22
         "near-protocol", "near-protocol/test" -> R.drawable.ic_near_22
         "decimal", "decimal/test" -> R.drawable.ic_decimal_22
-        "xdc-network", "xdc-network/test" -> R.drawable.ic_xinfin_22
+        "xdc-network", "xdc-network/test" -> R.drawable.ic_xdc_22
         else -> R.drawable.ic_alert_24
     }
 }
