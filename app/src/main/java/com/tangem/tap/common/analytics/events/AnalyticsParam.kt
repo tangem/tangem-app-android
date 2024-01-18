@@ -12,12 +12,6 @@ sealed class AnalyticsParam {
         class Amount(amount: com.tangem.blockchain.common.Amount) : CurrencyType(amount.currencySymbol)
     }
 
-    // MultiCurrency or CurrencyType
-    sealed class CardCurrency(val value: String) {
-        object MultiCurrency : CardCurrency(value = "Multicurrency")
-        class SingleCurrency(type: CurrencyType) : CardCurrency(type.value)
-    }
-
     sealed class CardBalanceState(val value: String) {
         object Empty : CardBalanceState("Empty")
         object Full : CardBalanceState("Full")
@@ -76,62 +70,6 @@ sealed class AnalyticsParam {
         object App : Error("App Error")
         object CardSdk : Error("Card Sdk Error")
         object BlockchainSdk : Error("Blockchain Sdk Error")
-    }
-
-    sealed class ScannedFrom(val value: String) {
-        object Introduction : ScannedFrom("Introduction")
-        object Main : ScannedFrom("Main")
-        object SignIn : ScannedFrom("Sign In")
-        object MyWallets : ScannedFrom("My Wallets")
-    }
-
-    sealed class TxSentFrom(val value: String) {
-        data class Send(
-            override val blockchain: String,
-            override val token: String,
-            override val feeType: FeeType,
-        ) : TxSentFrom("Send"), TxData
-
-        data class Swap(
-            override val blockchain: String,
-            override val token: String,
-            override val feeType: FeeType,
-        ) : TxSentFrom("Swap"), TxData
-
-        data class Approve(
-            override val blockchain: String,
-            override val token: String,
-            override val feeType: FeeType,
-            val permissionType: String,
-        ) : TxSentFrom("Approve"), TxData
-
-        object WalletConnect : TxSentFrom("WalletConnect")
-        object Sell : TxSentFrom("Sell")
-    }
-
-    sealed interface TxData {
-        val blockchain: String
-        val token: String
-        val feeType: FeeType
-    }
-
-    sealed class FeeType(val value: String) {
-        object Fixed : FeeType("Fixed")
-        object Min : FeeType("Min")
-        object Normal : FeeType("Normal")
-        object Max : FeeType("Max")
-
-        companion object {
-            fun fromString(feeType: String): FeeType {
-                return when (feeType) {
-                    Min.value -> Min
-                    Normal.value -> Normal
-                    Max.value -> Max
-                    Fixed.value -> Fixed
-                    else -> Fixed
-                }
-            }
-        }
     }
 
     sealed class WalletCreationType(val value: String) {
