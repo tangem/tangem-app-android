@@ -352,11 +352,26 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun manageWarnings(fromTokenStatus: CryptoCurrencyStatus, amount: SwapAmount): List<Warning> {
+    private suspend fun manageWarnings(
+        fromTokenStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+        feeState: TxFeeState,
+    ): List<Warning> {
         val fromToken = fromTokenStatus.currency
         val userWalletId = getSelectedWallet()?.walletId ?: return emptyList()
-        val existentialDeposit = repository.getExistentialDeposit(userWalletId, fromToken.network)
         val warnings = mutableListOf<Warning>()
+        manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken)
+        manageDustWarning(warnings, feeState, userWalletId, fromTokenStatus, amount)
+        return warnings
+    }
+
+    private suspend fun manageExistentialDepositWarning(
+        warnings: MutableList<Warning>,
+        userWalletId: UserWalletId,
+        amount: SwapAmount,
+        fromToken: CryptoCurrency,
+    ) {
+        val existentialDeposit = repository.getExistentialDeposit(userWalletId, fromToken.network)
         if (existentialDeposit != null) {
             val nativeBalance = userWalletManager.getNativeTokenBalance(
                 fromToken.network.backendId,
@@ -366,15 +381,33 @@ internal class SwapInteractorImpl @Inject constructor(
                 warnings.add(Warning.ExistentialDepositWarning(existentialDeposit))
             }
         }
-        val dust = repository.getDustValue(userWalletId, fromToken.network)
+    }
+
+    private suspend fun manageDustWarning(
+        warnings: MutableList<Warning>,
+        feeState: TxFeeState,
+        userWalletId: UserWalletId,
+        fromTokenStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+    ) {
+        val fee = when (feeState) {
+            TxFeeState.Empty -> BigDecimal.ZERO
+            is TxFeeState.MultipleFeeState -> feeState.priorityFee.feeValue
+            is TxFeeState.SingleFeeState -> feeState.fee.feeValue
+        }
+        val dust = repository.getDustValue(userWalletId, fromTokenStatus.currency.network)
         val balance = fromTokenStatus.value.amount ?: BigDecimal.ZERO
-        if (dust != null && !balance.isNullOrZero()) {
-            val isLowerThenDust = amount.value < dust || balance - amount.value < dust
-            if (isLowerThenDust) {
+        if (dust != null &&
+            !balance.isNullOrZero() &&
+            amount.value < balance
+        ) {
+            val change = balance - (amount.value + fee)
+            val isChangeLowerThanDust = change < dust && change != BigDecimal.ZERO
+            val isShowWarning = amount.value + fee < dust || isChangeLowerThanDust
+            if (isShowWarning) {
                 warnings.add(Warning.MinAmountWarning(dust))
             }
         }
-        return warnings
     }
 
     override suspend fun onSwap(
@@ -803,7 +836,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     txFeeState = txFee,
                     exchangeProviderType = exchangeProviderType,
                 ).copy(
-                    warnings = manageWarnings(fromToken, amount),
+                    warnings = manageWarnings(fromToken, amount, txFee),
                 )
 
                 when (exchangeProviderType) {
@@ -968,7 +1001,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 )
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
-                    warnings = manageWarnings(fromToken, amount),
+                    warnings = manageWarnings(fromToken, amount, txFeeState),
                     preparedSwapConfigState = PreparedSwapConfigState(
                         isAllowedToSpend = true,
                         isBalanceEnough = isBalanceIncludeFeeEnough,
