@@ -22,7 +22,8 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.isLockedSync
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -517,7 +518,7 @@ class DetailsMiddleware {
         )
 
         store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
-            analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.MyWallets),
+            analyticsEvent = Basic.CardWasScanned(CoreAnalyticsParam.ScannedFrom.MyWallets),
             onWalletNotCreated = {
                 // No need to rollback policy, continue with the policy set before the card scan
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
