@@ -1302,6 +1302,7 @@ internal class SwapInteractorImpl @Inject constructor(
             is Fee.Common -> 0
             is Fee.Ethereum -> this.gasLimit.toInt()
             is Fee.Vechain -> TODO() // TODO [REDACTED_TASK_KEY]
+            is Fee.Aptos -> TODO()
         }
     }
 
