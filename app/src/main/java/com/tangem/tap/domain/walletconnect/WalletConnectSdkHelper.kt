@@ -16,11 +16,10 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
@@ -43,6 +42,7 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
 import timber.log.Timber
 import java.math.BigDecimal
+import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
 
 class WalletConnectSdkHelper {
 
@@ -178,7 +178,7 @@ class WalletConnectSdkHelper {
         )
         return when (result) {
             SimpleResult.Success -> {
-                val sentFrom = AnalyticsParam.TxSentFrom.WalletConnect
+                val sentFrom = CoreAnalyticsParam.TxSentFrom.WalletConnect
                 Analytics.send(Basic.TransactionSent(sentFrom = sentFrom, memoType = MemoType.Null))
                 val hash = data.walletManager.wallet.recentTransactions.last().hash
                 if (hash?.startsWith(HEX_PREFIX) == true) {
