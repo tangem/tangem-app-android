@@ -2,6 +2,7 @@ package com.tangem.tap.common.redux.legacy
 
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.tap.common.feedback.RateCanBeBetterEmail
+import com.tangem.tap.common.feedback.SendTransactionFailedEmail
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.store
@@ -18,6 +19,11 @@ internal object LegacyMiddleware {
                     is LegacyAction.StartOnboardingProcess -> {
                         store.dispatch(
                             GlobalAction.Onboarding.Start(action.scanResponse, canSkipBackup = action.canSkipBackup),
+                        )
+                    }
+                    is LegacyAction.SendEmailTransactionFailed -> {
+                        store.state.globalState.feedbackManager?.sendEmail(
+                            SendTransactionFailedEmail(action.errorMessage),
                         )
                     }
                 }
