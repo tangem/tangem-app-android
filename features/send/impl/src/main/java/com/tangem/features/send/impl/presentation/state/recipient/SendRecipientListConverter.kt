@@ -1,18 +1,20 @@
 package com.tangem.features.send.impl.presentation.state.recipient
 
 import androidx.paging.*
-import com.tangem.common.Provider
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toDateFormat
 import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.utils.Provider
 import com.tangem.utils.toFormattedCurrencyString
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.update
@@ -34,6 +36,7 @@ internal class SendRecipientListConverter(
 
         val walletsItem = getWalletItems(filteredWallets, txHistoryCount)
 
+        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
         currentStateProvider().recipientList.update {
             if (txHistoryCount == 0) {
                 PagingData.from(listOf(walletsItem))
@@ -51,8 +54,9 @@ internal class SendRecipientListConverter(
                     SendRecipientListContent.Item(
                         id = tx.txHash,
                         title = tx.extractAddress(),
-                        subtitle = TextReference.Str(tx.getAmount()),
-                        info = tx.extractTimestamp(),
+                        subtitle = stringReference(tx.getAmount(cryptoCurrency).trim()),
+                        timestamp = tx.extractTimestamp(),
+                        subtitleEndOffset = cryptoCurrency.symbol.length,
                         subtitleIconRes = tx.extractIconRes(),
                     )
                 }.insertWallets(walletsItem)
@@ -104,8 +108,7 @@ internal class SendRecipientListConverter(
         R.drawable.ic_arrow_down_24
     }
 
-    private fun TxHistoryItem.getAmount(): String {
-        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+    private fun TxHistoryItem.getAmount(cryptoCurrency: CryptoCurrency): String {
         return amount.toFormattedCurrencyString(
             currency = cryptoCurrency.symbol,
             decimals = cryptoCurrency.decimals,
