@@ -270,4 +270,15 @@ interface WalletManagersFacade {
         blockchain: Blockchain,
         derivationPath: String?,
     ): List<TxHistoryItem>
+
+    @Suppress("LongParameterList")
+    suspend fun tokenBalance(
+        userWalletId: UserWalletId,
+        network: Network,
+        name: String,
+        symbol: String,
+        contractAddress: String,
+        decimals: Int,
+        id: String? = null,
+    ): BigDecimal
 }
