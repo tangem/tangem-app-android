@@ -92,7 +92,7 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
         )
         SpacerH16()
         InputRowDefault(
-            title = TextReference.Res(R.string.common_fee_label),
+            title = TextReference.Res(R.string.common_network_fee_title),
             text = state.fee,
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)

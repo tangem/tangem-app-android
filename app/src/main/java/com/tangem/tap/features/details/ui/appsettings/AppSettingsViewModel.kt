@@ -11,16 +11,13 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.tap.features.details.redux.AppSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -32,7 +29,6 @@ import org.rekotlin.Store
 
 internal class AppSettingsViewModel(
     private val store: Store<AppState>,
-    private val detailsFeatureToggles: DetailsFeatureToggles,
     private val appCurrencyRepository: AppCurrencyRepository,
 ) {
 
@@ -45,9 +41,7 @@ internal class AppSettingsViewModel(
         private set
 
     init {
-        if (detailsFeatureToggles.isRedesignedAppCurrencySelectorEnabled) {
-            bootstrapAppCurrencyUpdates()
-        }
+        bootstrapAppCurrencyUpdates()
     }
 
     fun updateState(state: DetailsState) {
@@ -64,11 +58,12 @@ internal class AppSettingsViewModel(
     private fun buildItems(state: AppSettingsState): ImmutableList<AppSettingsScreenState.Item> {
         val items = buildList {
             if (state.needEnrollBiometrics) {
+                Analytics.send(Settings.AppSettings.EnableBiometrics)
                 itemsFactory.createEnrollBiometricsCard(onClick = ::enrollBiometrics).let(::add)
             }
 
             itemsFactory.createSelectAppCurrencyButton(
-                currentAppCurrencyName = state.selectedFiatCurrency.name,
+                currentAppCurrencyName = state.selectedAppCurrency.name,
                 onClick = ::showAppCurrencySelector,
             ).let(::add)
 
@@ -94,11 +89,9 @@ internal class AppSettingsViewModel(
                 onCheckedChange = ::onFlipToHideBalanceToggled,
             ).let(::add)
 
-            if (state.darkThemeSwitchEnabled) {
-                itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
-                    showThemeModeSelector(state.selectedThemeMode)
-                }.let(::add)
-            }
+            itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
+                showThemeModeSelector(state.selectedThemeMode)
+            }.let(::add)
         }
 
         return items.toImmutableList()
@@ -109,13 +102,7 @@ internal class AppSettingsViewModel(
     }
 
     private fun showAppCurrencySelector() {
-        val action = if (detailsFeatureToggles.isRedesignedAppCurrencySelectorEnabled) {
-            NavigationAction.NavigateTo(AppScreen.AppCurrencySelector)
-        } else {
-            WalletAction.AppCurrencyAction.ChooseAppCurrency
-        }
-
-        store.dispatchOnMain(action)
+        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.AppCurrencySelector))
     }
 
     private fun showThemeModeSelector(selectedMode: AppThemeMode) {
@@ -179,6 +166,9 @@ internal class AppSettingsViewModel(
     }
 
     private fun onFlipToHideBalanceToggled(enable: Boolean) {
+        val param = AnalyticsParam.OnOffState(enable)
+        Analytics.send(Settings.AppSettings.HideBalanceChanged(param))
+
         store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(hideBalance = enable))
     }
 
@@ -192,8 +182,7 @@ internal class AppSettingsViewModel(
             .onEach {
                 if (it.code == store.state.globalState.appCurrency.code) return@onEach
 
-                val fiatCurrency = with(it) { FiatCurrency(code, name, symbol) }
-                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(fiatCurrency))
+                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(it))
             }
             .launchIn(scope)
             .saveIn(appCurrencyUpdatesJobHolder)

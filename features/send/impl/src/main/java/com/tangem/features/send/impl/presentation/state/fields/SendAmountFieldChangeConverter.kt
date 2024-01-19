@@ -1,12 +1,11 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
-import com.tangem.common.Provider
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
-import kotlinx.coroutines.flow.update
-import java.text.DecimalFormatSymbols
+import java.math.BigDecimal
 import java.text.NumberFormat
 
 internal class SendAmountFieldChangeConverter(
@@ -15,6 +14,7 @@ internal class SendAmountFieldChangeConverter(
     override fun convert(value: String): SendUiState {
         val state = currentStateProvider()
         val amountState = state.amountState ?: return state
+        val feeState = state.feeState ?: return state
 
         if (value.checkDecimalSeparatorDuplicate()) return state
         if (value.isEmpty()) return state.emptyState()
@@ -41,32 +41,32 @@ internal class SendAmountFieldChangeConverter(
             trimmedValue
         }
 
-        val isExceedBalance = value.checkExceedBalance(amountState.cryptoCurrencyStatus, amountState)
-        amountState.amountTextField.update {
-            it.copy(
-                value = cryptoValue,
-                fiatValue = fiatValue,
-                isError = isExceedBalance,
-            )
-        }
+        val isExceedBalance = cryptoValue.checkExceedBalance(amountState)
+        val isMaxAmount = cryptoValue.checkMaxAmount(amountState)
         return state.copy(
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = !isExceedBalance,
+                amountTextField = amountState.amountTextField.copy(
+                    value = cryptoValue,
+                    fiatValue = fiatValue,
+                    isError = isExceedBalance,
+                ),
+            ),
+            feeState = feeState.copy(
+                isSubtract = isMaxAmount,
             ),
         )
     }
 
     private fun SendUiState.emptyState(): SendUiState {
-        amountState?.amountTextField?.update {
-            it.copy(
-                value = if (!amountState.isFiatValue) "" else DEFAULT_VALUE,
-                fiatValue = if (amountState.isFiatValue) "" else DEFAULT_VALUE,
-                isError = false,
-            )
-        }
         return copy(
             amountState = amountState?.copy(
                 isPrimaryButtonEnabled = false,
+                amountTextField = amountState.amountTextField.copy(
+                    value = if (!amountState.isFiatValue) "" else DEFAULT_VALUE,
+                    fiatValue = if (amountState.isFiatValue) "" else DEFAULT_VALUE,
+                    isError = false,
+                ),
             ),
         )
     }
@@ -78,15 +78,26 @@ internal class SendAmountFieldChangeConverter(
         return decimalSeparatorCount > 1
     }
 
-    private fun String.checkExceedBalance(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        state: SendStates.AmountState,
-    ): Boolean {
-        val currencyStatus = cryptoCurrencyStatus.value
+    private fun String.checkExceedBalance(state: SendStates.AmountState): Boolean {
+        val currencyCryptoAmount = state.cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val currencyFiatAmount = state.cryptoCurrencyStatus.value.fiatAmount ?: BigDecimal.ZERO
         return if (state.isFiatValue) {
-            toBigDecimal() > currencyStatus.fiatAmount
+            toBigDecimal() > currencyFiatAmount
         } else {
-            toBigDecimal() > currencyStatus.amount
+            toBigDecimal() > currencyCryptoAmount
+        }
+    }
+
+    private fun String.checkMaxAmount(state: SendStates.AmountState): Boolean {
+        // If current currency is Token
+        if (state.cryptoCurrencyStatus.currency is CryptoCurrency.Token) return false
+
+        val currencyCryptoAmount = state.cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val currencyFiatAmount = state.cryptoCurrencyStatus.value.fiatAmount ?: BigDecimal.ZERO
+        return if (state.isFiatValue) {
+            toBigDecimal() == currencyFiatAmount
+        } else {
+            toBigDecimal() == currencyCryptoAmount
         }
     }
 
@@ -94,8 +105,7 @@ internal class SendAmountFieldChangeConverter(
         var trimmedValue = this
         if (length > 1 && firstOrNull() == '0' && get(1).isDigit()) trimmedValue = drop(1)
 
-        val separatorChar = DecimalFormatSymbols.getInstance().decimalSeparator.toString()
-        return trimmedValue.replace(TRIM_REGEX.toRegex(), separatorChar)
+        return trimmedValue.replace(TRIM_REGEX.toRegex(), ".")
     }
 
     companion object {

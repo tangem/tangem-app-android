@@ -1,40 +1,46 @@
 package com.tangem.features.send.impl.presentation.state
 
 import androidx.paging.PagingData
-import com.tangem.blockchain.common.address.Address
+import arrow.core.getOrElse
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
-import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
-import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.state.fee.SendFeeCustomFieldConverter
-import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
+import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientListConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientStateConverter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
-import com.tangem.features.send.impl.presentation.viewmodel.isNotAddressInWallet
-import com.tangem.features.send.impl.presentation.viewmodel.validateMemo
-import com.tangem.features.send.impl.presentation.viewmodel.verifyAddress
+import com.tangem.utils.Provider
+import com.tangem.utils.isNullOrZero
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import timber.log.Timber
+import java.math.BigDecimal
 
+@Suppress("LongParameterList", "LargeClass")
 internal class SendStateFactory(
     private val clickIntents: SendClickIntents,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
-    private val walletAddressesProvider: Provider<Set<Address>>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -47,6 +53,12 @@ internal class SendStateFactory(
             appCurrencyProvider = appCurrencyProvider,
         )
     }
+
+    private val feeNotificationFactory = FeeNotificationFactory(
+        coinCryptoCurrencyStatusProvider = coinCryptoCurrencyStatusProvider,
+        userWalletProvider = userWalletProvider,
+        clickIntents = clickIntents,
+    )
 
     private val amountStateConverter by lazy {
         SendAmountStateConverter(
@@ -82,12 +94,14 @@ internal class SendStateFactory(
         currentState = MutableStateFlow(SendUiStateType.Amount),
     )
 
-    fun getReadyState(): SendUiState = currentStateProvider().copy(
-        amountState = amountStateConverter.convert(Unit),
-        recipientState = recipientStateConverter.convert(Unit),
-        feeState = feeStateConverter.convert(Unit),
-        sendState = SendStates.SendState(),
-    )
+    fun getReadyState(): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            amountState = state.amountState ?: amountStateConverter.convert(Unit),
+            recipientState = state.recipientState ?: recipientStateConverter.convert(Unit),
+            feeState = state.feeState ?: feeStateConverter.convert(Unit),
+        )
+    }
     //endregion
 
     //region amount state clicks
@@ -118,91 +132,262 @@ internal class SendStateFactory(
         )
     }
 
-    fun getOnRecipientAddressValueChangeState(value: String): SendUiState {
+    fun onRecipientAddressValueChange(value: String): SendUiState {
         val state = currentStateProvider()
         val recipientState = state.recipientState ?: return state
-
-        val isValidMemo = validateMemo(
-            memo = recipientState.addressTextField.value.value,
-            cryptoCurrency = cryptoCurrencyStatusProvider().currency,
-        )
-        val isAddressInWallet = isNotAddressInWallet(
-            address = value,
-            walletAddresses = walletAddressesProvider(),
-        )
-        val isValidAddress = verifyAddress(
-            address = value,
-            cryptoCurrency = cryptoCurrencyStatusProvider().currency,
-        )
-
-        recipientState.addressTextField.update {
-            it.copy(
-                value = value,
-                error = when {
-                    !isValidAddress || !isAddressInWallet -> TextReference.Res(R.string.send_recipient_address_error)
-                    else -> null
-                },
-                isError = !isValidAddress || !isAddressInWallet,
-            )
-        }
         return state.copy(
             recipientState = recipientState.copy(
-                isPrimaryButtonEnabled = isValidMemo && isValidAddress && isAddressInWallet,
+                addressTextField = recipientState.addressTextField.copy(value = value),
             ),
         )
     }
 
-    fun getOnRecipientMemoValueChangeState(value: String): SendUiState {
+    fun getOnRecipientAddressValidState(value: String, isValidAddress: Boolean): SendUiState {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val state = currentStateProvider()
         val recipientState = state.recipientState ?: return state
 
-        val isValidMemo = validateMemo(
+        val isValidMemo = validateWalletMemoUseCase(
+            memo = recipientState.memoTextField?.value.orEmpty(),
+            network = cryptoCurrencyStatus.currency.network,
+        ).getOrElse {
+            Timber.e("Failed to validateWalletMemoUseCase: $it")
+            false
+        }
+        val isAddressInWallet = cryptoCurrencyStatus.value.networkAddress?.availableAddresses
+            ?.any { it.value == value } ?: true
+
+        return state.copy(
+            recipientState = recipientState.copy(
+                isPrimaryButtonEnabled = isValidMemo && isValidAddress && !isAddressInWallet,
+                isValidating = false,
+                addressTextField = recipientState.addressTextField.copy(
+                    error = when {
+                        !isValidAddress -> resourceReference(R.string.send_recipient_address_error)
+                        isAddressInWallet -> resourceReference(R.string.send_error_address_same_as_wallet)
+                        else -> null
+                    },
+                    isError = value.isNotEmpty() && !isValidAddress || isAddressInWallet,
+                ),
+            ),
+        )
+    }
+
+    fun getOnRecipientAddressValidationStarted(): SendUiState {
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+        return state.copy(
+            recipientState = recipientState.copy(isValidating = true),
+        )
+    }
+
+    fun getOnRecipientMemoValueChange(value: String): SendUiState {
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+        return state.copy(
+            recipientState = recipientState.copy(
+                memoTextField = recipientState.memoTextField?.copy(value = value),
+            ),
+        )
+    }
+
+    fun getOnRecipientMemoValidState(value: String, isValidAddress: Boolean): SendUiState {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+
+        val isValidMemo = validateWalletMemoUseCase(
             memo = value,
-            cryptoCurrency = cryptoCurrencyStatusProvider().currency,
-        )
-        val isAddressInWallet = isNotAddressInWallet(
-            walletAddresses = walletAddressesProvider(),
-            address = recipientState.addressTextField.value.value,
-        )
-        val isValidAddress = verifyAddress(
-            address = recipientState.addressTextField.value.value,
-            cryptoCurrency = cryptoCurrencyStatusProvider().currency,
-        )
-
-        recipientState.memoTextField?.update {
-            it.copy(
-                value = value,
-                isError = !isValidMemo,
-            )
+            network = cryptoCurrencyStatus.currency.network,
+        ).getOrElse {
+            Timber.e("Failed to validateWalletMemoUseCase: $it")
+            false
         }
+        val isAddressInWallet = cryptoCurrencyStatus.value.networkAddress?.availableAddresses
+            ?.any { it.value == value } ?: true
+
         return state.copy(
             recipientState = recipientState.copy(
-                isPrimaryButtonEnabled = isValidMemo && isValidAddress && isAddressInWallet,
+                isPrimaryButtonEnabled = isValidMemo && isValidAddress && !isAddressInWallet,
+                isValidating = false,
+                memoTextField = recipientState.memoTextField?.copy(
+                    isError = value.isNotEmpty() && !isValidMemo,
+                ),
             ),
         )
-    }
-
-    fun onFeeOnLoadingState() {
-        currentStateProvider().feeState?.feeSelectorState?.update {
-            FeeSelectorState.Loading
-        }
-    }
-
-    fun onFeeOnLoadedState(fees: TransactionFee) {
-        currentStateProvider().feeState?.feeSelectorState?.update {
-            FeeSelectorState.Content(
-                fees = fees,
-                customValues = customFeeFieldConverter.convert(fees.normal),
-            )
-        }
     }
     //endregion
 
     //region fee
-    fun onFeeSelectedState(feeType: FeeType) {
-        currentStateProvider().feeState?.feeSelectorState?.update {
-            (it as? FeeSelectorState.Content)?.copy(selectedFee = feeType) ?: it
+    fun onFeeOnLoadingState(): SendUiState {
+        val state = currentStateProvider()
+        val feeState = state.feeState ?: return state
+        val feeSelectorState = FeeSelectorState.Loading
+        return state.copy(
+            feeState = feeState.copy(
+                feeSelectorState = feeSelectorState,
+                notifications = persistentListOf(),
+                isPrimaryButtonEnabled = feeSelectorState.isPrimaryButtonEnabled(),
+            ),
+        )
+    }
+
+    fun onFeeOnLoadedState(fees: TransactionFee): SendUiState {
+        val state = currentStateProvider()
+        val feeState = state.feeState ?: return state
+        val feeSelectorState = FeeSelectorState.Content(
+            fees = fees,
+            customValues = customFeeFieldConverter.convert(fees.normal),
+        )
+
+        val fee = feeSelectorState.getFee()
+        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
+        val updatedState = feeState.copy(
+            feeSelectorState = feeSelectorState,
+            fee = fee,
+            receivedAmountValue = receivedAmount,
+            receivedAmount = getFormattedValue(receivedAmount),
+        )
+        return state.copy(
+            feeState = updatedState.copy(
+                notifications = feeNotificationFactory(feeState = updatedState),
+                isPrimaryButtonEnabled = feeSelectorState.isPrimaryButtonEnabled(),
+            ),
+        )
+    }
+
+    fun onFeeSelectedState(feeType: FeeType): SendUiState {
+        val state = currentStateProvider()
+        val feeState = state.feeState ?: return state
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
+
+        val updatedFeeSelectorState = feeSelectorState.copy(selectedFee = feeType)
+        val fee = updatedFeeSelectorState.getFee()
+        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
+
+        val updatedState = feeState.copy(
+            fee = fee,
+            receivedAmountValue = receivedAmount,
+            receivedAmount = getFormattedValue(receivedAmount),
+            feeSelectorState = updatedFeeSelectorState,
+            isPrimaryButtonEnabled = updatedFeeSelectorState.isPrimaryButtonEnabled(),
+        )
+
+        return state.copy(
+            feeState = updatedState.copy(
+                notifications = feeNotificationFactory(feeState = updatedState),
+            ),
+        )
+    }
+
+    fun onCustomFeeValueChange(index: Int, value: String): SendUiState {
+        val state = currentStateProvider()
+        val feeState = state.feeState ?: return state
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
+        val updatedFeeSelectorState = feeSelectorState.copy(
+            customValues = feeSelectorState.customValues.toMutableList().apply {
+                set(index, feeSelectorState.customValues[index].copy(value = value))
+            }.toImmutableList(),
+        )
+
+        val fee = updatedFeeSelectorState.getFee()
+        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
+
+        val updatedState = feeState.copy(
+            feeSelectorState = updatedFeeSelectorState,
+            fee = fee,
+            receivedAmountValue = receivedAmount,
+            receivedAmount = getFormattedValue(receivedAmount),
+            isPrimaryButtonEnabled = updatedFeeSelectorState.isPrimaryButtonEnabled(),
+        )
+        return state.copy(
+            feeState = updatedState.copy(
+                notifications = feeNotificationFactory(feeState = updatedState),
+            ),
+        )
+    }
+
+    fun onSubtractSelect(value: Boolean): SendUiState {
+        val state = currentStateProvider()
+        val feeState = state.feeState ?: return state
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
+
+        val fee = feeSelectorState.getFee()
+        val receivedAmount = calculateReceiveAmount(state, fee, value)
+        val updatedState = feeState.copy(
+            isSubtract = value,
+            fee = fee,
+            receivedAmountValue = receivedAmount,
+            receivedAmount = if (value) {
+                getFormattedValue(receivedAmount)
+            } else {
+                feeState.receivedAmount
+            },
+        )
+        return state.copy(
+            feeState = updatedState.copy(
+                notifications = feeNotificationFactory(feeState = updatedState),
+            ),
+        )
+    }
+
+    private fun FeeSelectorState.isPrimaryButtonEnabled(): Boolean {
+        return when (this) {
+            is FeeSelectorState.Loading -> false
+            is FeeSelectorState.Content -> {
+                val customValue = customValues.firstOrNull()?.value?.toBigDecimalOrNull()
+                val balance = cryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
+                val fee = getFee().amount.value ?: BigDecimal.ZERO
+
+                val isNotEmptyCustom = !customValue.isNullOrZero() && selectedFee == FeeType.CUSTOM
+                val isNotCustom = selectedFee != FeeType.CUSTOM
+                fee < balance && (isNotEmptyCustom || isNotCustom)
+            }
         }
+    }
+
+    private fun getFormattedValue(value: BigDecimal): String {
+        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+        return BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = value,
+            cryptoCurrency = cryptoCurrency.symbol,
+            decimals = cryptoCurrency.decimals,
+        )
+    }
+    //endregion
+
+    //region send
+    fun getSendingStateUpdate(isSending: Boolean): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(sendState = state.sendState.copy(isSending = isSending))
+    }
+
+    fun getTransactionSendState(txData: TransactionData): SendUiState {
+        val state = currentStateProvider()
+        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+
+        val txUrl = getExplorerTransactionUrlUseCase(
+            txHash = txData.hash.orEmpty(),
+            networkId = cryptoCurrency.network.id,
+        )
+        return state.copy(
+            sendState = state.sendState.copy(
+                transactionDate = txData.date?.timeInMillis ?: System.currentTimeMillis(),
+                isSuccess = true,
+                txUrl = txUrl,
+            ),
+        )
+    }
+
+    fun getSendNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
+        val state = currentStateProvider()
+        val hasErrorNotifications = notifications.any { it is SendNotification.Error }
+        return state.copy(
+            sendState = state.sendState.copy(
+                isPrimaryButtonEnabled = !hasErrorNotifications,
+                notifications = notifications,
+            ),
+        )
     }
     //endregion
 }

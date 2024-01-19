@@ -1,9 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
@@ -11,52 +13,58 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetPrimaryCurrencyTransformer
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
+import timber.log.Timber
 import java.math.BigDecimal
-import kotlin.coroutines.CoroutineContext
 
 internal class PrimaryCurrencySubscriber(
     private val userWallet: UserWallet,
-    private val appCurrency: AppCurrency,
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-) : WalletSubscriber<Either<CurrencyStatusError, CryptoCurrencyStatus>>(name = "primary_currency") {
+) : WalletSubscriber() {
 
     override fun create(
         coroutineScope: CoroutineScope,
-        uiDispatcher: CoroutineContext,
-    ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
-        return getPrimaryCurrencyStatusUpdatesUseCase(userWallet.walletId)
-            .conflate()
-            .distinctUntilChanged()
-            .onEach(::updateContent)
-            .onEach(::sendAnalyticsEvent)
-            .onEach(::checkWalletWithFunds)
+    ): Flow<Pair<Either<CurrencyStatusError, CryptoCurrencyStatus>, AppCurrency>> {
+        return combine(
+            flow = getPrimaryCurrencyStatusUpdatesUseCase(userWallet.walletId)
+                .conflate()
+                .distinctUntilChanged(),
+            flow2 = getSelectedAppCurrencyUseCase()
+                .conflate()
+                .distinctUntilChanged()
+                .map { maybeAppCurrency -> maybeAppCurrency.getOrElse { AppCurrency.Default } },
+            transform = { maybeCurrencyStatus, appCurrency -> maybeCurrencyStatus to appCurrency },
+        )
+            .onEach { maybeCurrencyStatusAndAppCurrency ->
+                val status = maybeCurrencyStatusAndAppCurrency.first.getOrElse {
+                    Timber.e("Unable to get primary currency status: $it")
+                    return@onEach
+                }
+
+                updateContent(status, maybeCurrencyStatusAndAppCurrency.second)
+                sendAnalyticsEvent(status)
+                checkWalletWithFunds(status)
+            }
     }
 
-    private fun updateContent(maybeCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>) {
-        val status = (maybeCurrencyStatus as? Either.Right)?.value ?: return
-
+    private fun updateContent(status: CryptoCurrencyStatus, appCurrency: AppCurrency) {
         stateHolder.update(
             SetPrimaryCurrencyTransformer(
-                status = status.value,
+                status = status,
                 userWallet = userWallet,
                 appCurrency = appCurrency,
             ),
         )
     }
 
-    private fun sendAnalyticsEvent(maybeCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>) {
-        val status = (maybeCurrencyStatus as? Either.Right)?.value ?: return
-
+    private fun sendAnalyticsEvent(status: CryptoCurrencyStatus) {
         val fiatAmount = status.value.fiatAmount
         val cardBalanceState = when (status.value) {
             is CryptoCurrencyStatus.Loaded,
@@ -64,7 +72,8 @@ internal class PrimaryCurrencySubscriber(
             is CryptoCurrencyStatus.NoAmount,
             -> createCardBalanceState(fiatAmount)
             is CryptoCurrencyStatus.NoQuote -> AnalyticsParam.CardBalanceState.NoRate
-            is CryptoCurrencyStatus.Unreachable -> AnalyticsParam.CardBalanceState.BlockchainError
+            is CryptoCurrencyStatus.Unreachable,
+            -> AnalyticsParam.CardBalanceState.BlockchainError
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Loading,
             is CryptoCurrencyStatus.Custom,
@@ -84,9 +93,7 @@ internal class PrimaryCurrencySubscriber(
         }
     }
 
-    private suspend fun checkWalletWithFunds(maybeCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>) {
-        val status = (maybeCurrencyStatus as? Either.Right)?.value ?: return
-
+    private suspend fun checkWalletWithFunds(status: CryptoCurrencyStatus) {
         if (status.value.amount?.isZero() == false) setWalletWithFundsFoundUseCase()
     }
 }

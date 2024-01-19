@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
 import com.tangem.common.extensions.remove
+import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
@@ -19,11 +21,8 @@ import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.send.ui.SendViewModel
+import com.tangem.tap.features.send.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.send.ui.dialogs.*
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.utils.ROUGH_SIGN
-import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
-import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.wallet.R
 
 /**
@@ -307,7 +306,7 @@ internal class SendStateSubscriber(
     }
 
     @Suppress("LongMethod", "ComplexMethod")
-    private fun handleReceiptState(fg: SendFragment, state: ReceiptState, feeProgressState: ProgressState) =
+    private fun handleReceiptState(fg: SendFragment, state: ReceiptState, feeProgressState: ProgressState) {
         with(fg.binding.clReceiptContainer) {
             val mainLayout = clReceiptContainer as ViewGroup
             val totalLayout = llTotalContainer.llTotal as ViewGroup
@@ -316,7 +315,7 @@ internal class SendStateSubscriber(
             fun getString(id: Int, vararg formatStrings: String): String = mainLayout.getString(id, *formatStrings)
 
             fun roughOrEmpty(value: String): String {
-                return if (value == UNKNOWN_AMOUNT_SIGN) value else "$ROUGH_SIGN $value"
+                return if (value == BigDecimalFormatter.EMPTY_BALANCE_SIGN) value else "$ROUGH_SIGN $value"
             }
 
             when (feeProgressState) {
@@ -362,7 +361,7 @@ internal class SendStateSubscriber(
                         llTotalContainer.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
                     }
 
-                    if (receipt.willSentFiat == UNKNOWN_AMOUNT_SIGN) {
+                    if (receipt.willSentFiat == BigDecimalFormatter.EMPTY_BALANCE_SIGN) {
                         llTotalContainer.tvWillBeSentValue.hide()
                     } else {
                         llTotalContainer.tvWillBeSentValue.show()
@@ -411,7 +410,98 @@ internal class SendStateSubscriber(
                         }
                     llTotalContainer.tvTotalTokenCryptoValue.update(willSent.toString())
                 }
-                else -> {}
+                ReceiptLayoutType.FEE_IN_CUSTOM_TOKEN -> {
+                    val receipt = state.customTokenCrypto ?: return
+
+                    totalLayout.show(false)
+                    totalTokenLayout.show(true)
+
+                    tvReceiptAmountValue.update(
+                        "${receipt.amountToken} ${receipt.symbols.token ?: receipt.symbols.crypto}",
+                    )
+                    tvReceiptFeeValue.update("${receipt.feeCoin} ${receipt.symbols.fee}")
+
+                    val willSent = SpannableStringBuilder()
+                        .bold {
+                            append(roughOrEmpty(receipt.totalFiat)).append(" ")
+                            append(receipt.symbols.fiat)
+                        }
+                    llTotalContainer.tvTotalTokenCryptoValue.update(willSent.toString())
+                }
+                ReceiptLayoutType.FEE_IN_CUSTOM_TOKEN_FIAT -> {
+                    val receipt = state.customTokenFiat ?: return
+
+                    totalLayout.show(true)
+                    totalTokenLayout.show(false)
+                    tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
+                    tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
+                    llTotalContainer.tvTotalValue.post {
+                        llTotalContainer.tvTotalValue.update(
+                            "${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}",
+                        )
+                    }
+
+                    val willSent = getString(
+                        R.string.send_total_subtitle_asset_format,
+                        "${receipt.symbols.token ?: receipt.symbols.crypto} ${receipt.willSentToken}",
+                        "${receipt.symbols.fee} ${receipt.willSentFeeCoin}",
+                    )
+                    llTotalContainer.tvWillBeSentValue.update(willSent)
+                }
+
+                ReceiptLayoutType.SAME_CURRENCY -> {
+                    val receipt = state.sameCurrencyCrypto ?: return
+
+                    totalLayout.show(true)
+                    totalTokenLayout.show(false)
+                    tvReceiptAmountValue.update(
+                        "${receipt.amountCrypto} ${receipt.symbols.token ?: receipt.symbols.crypto}",
+                    )
+                    tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.token ?: receipt.symbols.crypto}")
+                    llTotalContainer.tvTotalValue.post {
+                        llTotalContainer.tvTotalValue.update(
+                            "${receipt.totalCrypto} ${receipt.symbols.token ?: receipt.symbols.crypto}",
+                        )
+                    }
+
+                    if (receipt.willSentFiat == BigDecimalFormatter.EMPTY_BALANCE_SIGN) {
+                        llTotalContainer.tvWillBeSentValue.hide()
+                    } else {
+                        llTotalContainer.tvWillBeSentValue.show()
+                        llTotalContainer.tvWillBeSentValue.update(
+                            getString(
+                                R.string.send_total_subtitle_fiat_format,
+                                "${receipt.willSentFiat} ${receipt.symbols.fiat}",
+                                "${receipt.feeFiat} ${receipt.symbols.fiat}",
+                            ),
+                        )
+                    }
+                }
+                ReceiptLayoutType.SAME_CURRENCY_FIAT -> {
+                    val receipt = state.sameCurrencyFiat ?: return
+
+                    totalLayout.show(true)
+                    totalTokenLayout.show(false)
+                    tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
+                    tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
+                    llTotalContainer.tvTotalValue.post {
+                        llTotalContainer.tvTotalValue.update(
+                            "${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}",
+                        )
+                    }
+
+                    val willSent = getString(
+                        R.string.send_total_subtitle_format,
+                        "${receipt.willSentCrypto} ${receipt.symbols.token ?: receipt.symbols.crypto}",
+                    )
+                    llTotalContainer.tvWillBeSentValue.update(willSent)
+                }
+                ReceiptLayoutType.UNKNOWN, null -> {}
             }
         }
+    }
+
+    private companion object {
+        const val ROUGH_SIGN = "≈"
+    }
 }

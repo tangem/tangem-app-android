@@ -62,7 +62,7 @@ data class GetBlockAccessTokens(
     @Json(name = "tron") val tron: GetBlockToken?,
     @Json(name = "cosmos-hub") val cosmos: GetBlockToken?,
     @Json(name = "near") val near: GetBlockToken?,
-    @Json(name = "terra-2") val luna: GetBlockToken?,
+    @Json(name = "aptos") val aptos: GetBlockToken?,
     @Json(name = "dogecoin") val dogecoin: GetBlockToken?,
     @Json(name = "litecoin") val litecoin: GetBlockToken?,
     @Json(name = "dash") val dash: GetBlockToken?,

@@ -5,8 +5,9 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.CurrencyConverter
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.TapError
@@ -31,8 +32,10 @@ interface SendScreenState : StateType, IdStateHolder
 
 data class SendState(
     val walletManager: WalletManager? = null,
+    val currency: CryptoCurrency? = null,
     val coinConverter: CurrencyConverter? = null,
     val tokenConverter: CurrencyConverter? = null,
+    val customFeeConverter: CurrencyConverter? = null,
     val lastChangedStates: LinkedHashSet<StateId> = linkedSetOf(),
     val addressState: AddressState = AddressState(),
     val transactionExtrasState: TransactionExtrasState = TransactionExtrasState(),
@@ -44,6 +47,7 @@ data class SendState(
     val dialog: StateDialog? = null,
     val externalTransactionData: ExternalTransactionData? = null,
     val isSuccessSend: Boolean = false,
+    val canIncludeFee: Boolean = false,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.SEND_SCREEN
@@ -99,6 +103,9 @@ data class SendState(
     fun coinIsConvertible(): Boolean = coinConverter != null
     fun tokenIsConvertible(): Boolean = tokenConverter != null
 
+    fun currencyIsConvertible(): Boolean = coinConverter != null || tokenConverter != null
+    fun feeIsConvertible(): Boolean = customFeeConverter != null
+
     fun mainCurrencyCanBeSwitched(): Boolean {
         return when (amountState.typeOfAmount) {
             AmountType.Coin -> coinIsConvertible()
@@ -128,7 +135,7 @@ data class AmountState(
     val typeOfAmount: AmountType = AmountType.Coin,
     val viewAmountValue: InputViewValue = InputViewValue(BigDecimal.ZERO.toPlainString()),
     val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
-    val mainCurrency: MainCurrency = MainCurrency(MainCurrencyType.FIAT, FiatCurrency.Default.code),
+    val mainCurrency: MainCurrency = MainCurrency(MainCurrencyType.FIAT, AppCurrency.Default.code),
     val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
     val balanceCrypto: BigDecimal = BigDecimal.ZERO,
     val hideBalance: Boolean = false,
@@ -137,16 +144,13 @@ data class AmountState(
     val decimalSeparator: String = ".",
     val error: TapError? = null,
     val inputIsEnabled: Boolean = true,
-    private val feePaidInCurrencyNetworkCurrency: Boolean = false,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.AMOUNT
 
     fun isReady(): Boolean = error == null && !amountToSendCrypto.isZero()
 
-    private fun isCoinAmount(): Boolean = typeOfAmount == AmountType.Coin
-
-    fun canIncludeFee(): Boolean = isCoinAmount() || feePaidInCurrencyNetworkCurrency
+    fun canIncludeFee(): Boolean = store.state.sendState.canIncludeFee
 
     fun createMainCurrency(type: MainCurrencyType, canSwitched: Boolean): MainCurrency {
         return if (!canSwitched) {

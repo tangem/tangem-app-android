@@ -11,17 +11,15 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.analytics.events.Token.Send.SelectedCurrency.CurrencyType
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -39,20 +37,15 @@ import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.states.*
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletCurrenciesManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.wallet.R
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
-import timber.log.Timber
 import java.util.EnumSet
 
 /**
@@ -277,9 +270,6 @@ private fun sendTransaction(
                         Analytics.sendSelectedCurrencyEvent(mainCurrencyType)
                         dispatch(NavigationAction.PopBackTo())
                     }
-                    scope.launch(Dispatchers.IO) {
-                        updateAfterTransaction(walletManager)
-                    }
                 }
                 is SimpleResult.Failure -> {
                     updateFeedbackManagerInfo(
@@ -349,11 +339,11 @@ private fun sendTransaction(
     }
 }
 
-private fun getMemoType(transactionExtras: TransactionExtrasState): MemoType {
+private fun getMemoType(transactionExtras: TransactionExtrasState): Basic.TransactionSent.MemoType {
     return when {
-        transactionExtras.isEmpty() -> MemoType.Empty
-        transactionExtras.isNull() -> MemoType.Null
-        else -> MemoType.Full
+        transactionExtras.isEmpty() -> Basic.TransactionSent.MemoType.Empty
+        transactionExtras.isNull() -> Basic.TransactionSent.MemoType.Null
+        else -> Basic.TransactionSent.MemoType.Full
     }
 }
 
@@ -418,32 +408,4 @@ private fun updateWarnings(dispatch: (Action) -> Unit) {
 
     val warnings = warningsManager.getWarnings(WarningMessage.Location.SendScreen, listOf(blockchain))
     dispatch(SendAction.Warnings.Set(warnings))
-}
-
-private suspend fun updateAfterTransaction(walletManager: WalletManager) {
-    val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
-    if (!walletFeatureToggles.isRedesignedScreenEnabled) {
-        updateWalletsLegacy(walletManager)
-    }
-}
-
-private suspend fun updateWalletsLegacy(walletManager: WalletManager) {
-    updateWallet(walletManager)
-    delay(timeMillis = 11000) // more than 10000 to avoid throttling
-    updateWallet(walletManager)
-}
-
-private suspend fun updateWallet(walletManager: WalletManager) {
-    val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
-        Timber.e("Unable to update wallet, no user wallet selected")
-        return
-    }
-    val wallet = walletManager.wallet
-    walletCurrenciesManager.update(
-        userWallet = selectedUserWallet,
-        currency = Currency.Blockchain(
-            blockchain = wallet.blockchain,
-            derivationPath = wallet.publicKey.derivationPath?.rawPath,
-        ),
-    )
 }

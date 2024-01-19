@@ -1,5 +1,6 @@
 package com.tangem.managetokens.di
 
+import com.tangem.core.navigation.ReduxNavController
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
 import com.tangem.managetokens.presentation.router.DefaultManageTokensRouter
 import dagger.Module
@@ -14,7 +15,7 @@ internal object ManageTokensRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideManageTokensRouter(): ManageTokensRouter {
-        return DefaultManageTokensRouter()
+    fun provideManageTokensRouter(reduxNavController: ReduxNavController): ManageTokensRouter {
+        return DefaultManageTokensRouter(reduxNavController)
     }
 }

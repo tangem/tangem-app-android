@@ -5,9 +5,9 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state2.NOT_INITIALIZED_WALLET_INDEX
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.NOT_INITIALIZED_WALLET_INDEX
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import dagger.hilt.android.scopes.ViewModelScoped
 import timber.log.Timber
 import javax.inject.Inject
@@ -212,9 +212,9 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
             override fun toString(): String {
                 return """
                     Initialize(
-                        selectedWalletIndex=$selectedWalletIndex,
-                        selectedWallet=${selectedWallet.walletId},
-                        wallets=${wallets.joinToString { it.walletId.toString() }}
+                        selectedWalletIndex = $selectedWalletIndex,
+                        selectedWallet = ${selectedWallet.walletId},
+                        wallets = ${wallets.joinToString { it.walletId.toString() }}
                     )
                 """.trimIndent()
             }
@@ -228,7 +228,7 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
         data class ReinitializeWallets(val selectedWallet: UserWallet) : Action() {
 
             override fun toString(): String {
-                return "Reinitialize(selectedWallet=${selectedWallet.walletId})"
+                return "ReinitializeWallets(selectedWallet = ${selectedWallet.walletId})"
             }
         }
 
@@ -241,14 +241,14 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
         data class ReinitializeWallet(val prevWalletId: UserWalletId, val selectedWallet: UserWallet) : Action() {
 
             override fun toString(): String {
-                return "ReinitializeWallet(prevWalletId=$prevWalletId, selectedWallet=${selectedWallet.walletId})"
+                return "ReinitializeWallet(prevWalletId = $prevWalletId, selectedWallet = ${selectedWallet.walletId})"
             }
         }
 
         data class UpdateWalletName(val selectedWalletId: UserWalletId, val name: String) : Action() {
 
             override fun toString(): String {
-                return "UpdateWalletName(selectedWalletId=$selectedWalletId, name=$name)"
+                return "UpdateWalletName(selectedWalletId = $selectedWalletId, name = $name)"
             }
         }
 
@@ -257,8 +257,8 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
             override fun toString(): String {
                 return """
                     UnlockWallet(
-                        selectedWallet=${selectedWallet.walletId},
-                        unlockedWallets=${unlockedWallets.joinToString { it.walletId.toString() }}
+                        selectedWallet = ${selectedWallet.walletId},
+                        unlockedWallets = ${unlockedWallets.joinToString { it.walletId.toString() }}
                     )
                 """.trimIndent()
             }
@@ -273,9 +273,9 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
             override fun toString(): String {
                 return """
                     DeleteWallet(
-                        selectedWallet=${selectedWallet.walletId},
-                        selectedWalletIndex=$selectedWalletIndex,
-                        deletedWalletId=$deletedWalletId
+                        selectedWallet = ${selectedWallet.walletId},
+                        selectedWalletIndex = $selectedWalletIndex,
+                        deletedWalletId = $deletedWalletId
                     )
                 """.trimIndent()
             }
@@ -284,7 +284,12 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
         data class AddWallet(val selectedWalletIndex: Int, val selectedWallet: UserWallet) : Action() {
 
             override fun toString(): String {
-                return "AddWallet(selectedWalletIndex=$selectedWalletIndex, selectedWallet=${selectedWallet.walletId})"
+                return """
+                    AddWallet(
+                        selectedWalletIndex = $selectedWalletIndex,
+                        selectedWallet = ${selectedWallet.walletId}
+                    )
+                """.trimIndent()
             }
         }
 
@@ -296,10 +301,12 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
         data class UpdateWalletCardCount(val selectedWallet: UserWallet) : Action() {
 
             override fun toString(): String {
-                return "UpdateWalletCardCount(selectedWallet=${selectedWallet.walletId})"
+                return "UpdateWalletCardCount(selectedWallet = ${selectedWallet.walletId})"
             }
         }
 
-        object Unknown : Action()
+        object Unknown : Action() {
+            override fun toString(): String = "Unknown"
+        }
     }
 }
