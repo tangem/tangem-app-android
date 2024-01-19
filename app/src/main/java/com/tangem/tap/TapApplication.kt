@@ -10,8 +10,6 @@ import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
-import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
@@ -30,23 +28,22 @@ import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.WalletManagersRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
+import com.tangem.features.tester.api.TesterFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.analytics.topup.TopUpController
 import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
@@ -59,24 +56,11 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.shop.TangemShopService
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.tokens.UserTokensStorageService
-import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
-import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
-import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
-import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
-import com.tangem.tap.domain.walletStores.WalletStoresManager
-import com.tangem.tap.domain.walletStores.di.provideDefaultImplementation
-import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
-import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
-import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
-import com.tangem.tap.features.details.DarkThemeFeatureToggle
-import com.tangem.tap.features.details.featuretoggles.DetailsFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -95,46 +79,7 @@ lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
-internal lateinit var userTokensRepository: UserTokensRepository
 internal lateinit var derivationsFinder: DerivationsFinder
-
-private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
-private val walletManagersRepository by lazy {
-    WalletManagersRepository.provideDefaultImplementation(
-        walletManagerFactory = WalletManagerFactory(
-            config = store.state.globalState.configManager
-                ?.config
-                ?.blockchainSdkConfig
-                ?: BlockchainSdkConfig(),
-        ),
-    )
-}
-private val walletAmountsRepository by lazy {
-    WalletAmountsRepository.provideDefaultImplementation(
-        tangemTechService = store.state.domainNetworks.tangemTechService,
-    )
-}
-val walletStoresManager by lazy {
-    WalletStoresManager.provideDefaultImplementation(
-        userTokensRepository = userTokensRepository,
-        walletStoresRepository = walletStoresRepository,
-        walletManagersRepository = walletManagersRepository,
-        walletAmountsRepository = walletAmountsRepository,
-        appCurrencyProvider = { store.state.globalState.appCurrency },
-    )
-}
-val walletCurrenciesManager by lazy {
-    WalletCurrenciesManager.provideDefaultImplementation(
-        userTokensRepository = userTokensRepository,
-        walletStoresRepository = walletStoresRepository,
-        walletManagersRepository = walletManagersRepository,
-        walletAmountsRepository = walletAmountsRepository,
-        appCurrencyProvider = { store.state.globalState.appCurrency },
-    )
-}
-val totalFiatBalanceCalculator by lazy {
-    TotalFiatBalanceCalculator.provideDefaultImplementation()
-}
 
 @HiltAndroidApp
 internal class TapApplication : Application(), ImageLoaderFactory {
@@ -162,16 +107,10 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var preferencesDataSource: PreferencesDataSource
 
     @Inject
-    lateinit var walletFeatureToggles: WalletFeatureToggles
-
-    @Inject
     lateinit var walletConnect2Repository: WalletConnect2Repository
 
     @Inject
     lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepository
-
-    // @Inject
-    // lateinit var learn2earnInteractor: Learn2earnInteractor
 
     @Inject
     lateinit var manageTokensFeatureToggles: ManageTokensFeatureToggles
@@ -201,12 +140,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var balanceHidingRepository: BalanceHidingRepository
 
     @Inject
-    lateinit var detailsFeatureToggles: DetailsFeatureToggles
-
-    @Inject
-    lateinit var darkThemeFeatureToggle: DarkThemeFeatureToggle
-
-    @Inject
     lateinit var userTokensStore: UserTokensStore
 
     @Inject
@@ -220,6 +153,12 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var oneTimeEventFilter: OneTimeEventFilter
+
+    @Inject
+    lateinit var derivationsRepository: DerivationsRepository
+
+    @Inject
+    lateinit var testerFeatureToggles: TesterFeatureToggles
     // endregion Injected
 
     override fun onCreate() {
@@ -227,7 +166,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
         store = createReduxStore()
 
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.LOG_ENABLED) {
             Logger.addLogAdapter(AndroidLogAdapter(TimberFormatStrategy()))
             Timber.plant(
                 object : Timber.DebugTree() {
@@ -250,7 +189,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         runBlocking {
             initUserWalletsListManager()
             featureTogglesManager.init()
-            // learn2earnInteractor.init()
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
@@ -266,23 +204,12 @@ internal class TapApplication : Application(), ImageLoaderFactory {
             )
         }
 
-        val userTokensStorageService = UserTokensStorageService.init(context = this)
-        userTokensRepository = UserTokensRepository.init(
-            tangemTechService = store.state.domainNetworks.tangemTechService,
-            networkConnectionManager = networkConnectionManager,
-            storageService = userTokensStorageService,
-        )
         derivationsFinder = DerivationsFinder(
-            legacyTokensStore = userTokensStorageService,
             newTokensStore = userTokensStore,
-            walletFeatureToggles = walletFeatureToggles,
             dispatchers = AppCoroutineDispatcherProvider(),
         )
         appStateHolder.mainStore = store
-        appStateHolder.userTokensRepository = userTokensRepository
-        appStateHolder.walletStoresManager = walletStoresManager
 
-        initTopUpController()
         walletConnect2Repository.init(projectId = configManager.config.walletConnectProjectId)
     }
 
@@ -292,10 +219,8 @@ internal class TapApplication : Application(), ImageLoaderFactory {
             middleware = AppState.getMiddleware(),
             state = AppState(
                 daggerGraphState = DaggerGraphState(
-                    assetReader = assetReader,
                     networkConnectionManager = networkConnectionManager,
                     customTokenFeatureToggles = customTokenFeatureToggles,
-                    walletFeatureToggles = walletFeatureToggles,
                     walletConnectRepository = walletConnect2Repository,
                     walletConnectSessionsRepository = walletConnectSessionsRepository,
                     manageTokensFeatureToggles = manageTokensFeatureToggles,
@@ -307,24 +232,13 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     currenciesRepository = currenciesRepository,
                     appThemeModeRepository = appThemeModeRepository,
                     balanceHidingRepository = balanceHidingRepository,
-                    detailsFeatureToggles = detailsFeatureToggles,
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
+                    derivationsRepository = derivationsRepository,
+                    testerFeatureToggles = testerFeatureToggles,
                 ),
             ),
         )
-    }
-
-    private fun initTopUpController() {
-        val topUpController = TopUpController(
-            scanResponseProvider = {
-                store.state.globalState.scanResponse
-                    ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
-            },
-            walletStoresManagerProvider = { walletStoresManager },
-            topupWalletStorage = preferencesStorage.toppedUpWalletStorage,
-        )
-        store.dispatch(GlobalAction.SetTopUpController(topUpController))
     }
 
     override fun newImageLoader(): ImageLoader {
