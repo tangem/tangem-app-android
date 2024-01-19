@@ -6,11 +6,9 @@ sealed class UpdateWalletManagerResult {
 
     object MissedDerivation : UpdateWalletManagerResult()
 
-    object UnreachableWithoutAddresses : UpdateWalletManagerResult()
-
     data class Unreachable(
-        val selectedAddress: String,
-        val addresses: Set<Address>,
+        val selectedAddress: String? = null,
+        val addresses: Set<Address>? = null,
     ) : UpdateWalletManagerResult()
 
     data class Verified(
