@@ -28,12 +28,12 @@ abstract class BaseTruncate : Truncate {
     protected var hasBeenTruncated = false
 
     override fun apply(tv: TextView, text: String, with: String): String {
-        val roughLength = getRoughFitLength(tv, text, with)
+        val roughLength = getRoughFitLength(tv, text)
         val fittedText = preciseFitting(tv, roughTruncate(text, roughLength), with)
         return if (hasBeenTruncated) attachWith(fittedText, with) else fittedText
     }
 
-    protected fun getRoughFitLength(tv: TextView, text: String, with: String): Int {
+    private fun getRoughFitLength(tv: TextView, text: String): Int {
         val existingSpace = tv.measuredWidth - (tv.paddingStart + tv.paddingEnd)
         val textWillTakeSpace = tv.paint.measureText(text)
         val overSizeRatio: Float = textWillTakeSpace / existingSpace
@@ -44,7 +44,7 @@ abstract class BaseTruncate : Truncate {
         return maxLengthOfText.toInt()
     }
 
-    protected fun preciseFitting(tv: TextView, text: String, with: String): String {
+    private fun preciseFitting(tv: TextView, text: String, with: String): String {
         if (!hasBeenTruncated) return text
 
         val spaceForText = tv.measuredWidth - (tv.paddingStart + tv.paddingEnd)
@@ -126,11 +126,5 @@ fun TextView.truncateWith(text: String, type: TruncateType, with: String = "..."
     return truncate.apply(this, text, with)
 }
 
-fun TextView.truncateStartWith(text: String, with: String = "..."): String =
-    this.truncateWith(text, TruncateType.START, with)
-
 fun TextView.truncateMiddleWith(text: String, with: String = "..."): String =
     this.truncateWith(text, TruncateType.MIDDLE, with)
-
-fun TextView.truncateEndWith(text: String, with: String = "..."): String =
-    this.truncateWith(text, TruncateType.END, with)
