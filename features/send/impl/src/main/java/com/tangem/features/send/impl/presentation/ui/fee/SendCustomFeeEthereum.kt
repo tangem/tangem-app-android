@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
@@ -16,20 +15,21 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
+import kotlinx.collections.immutable.ImmutableList
 
 private const val ETHEREUM_UNIT = "GWEI"
 
 @Composable
 internal fun SendCustomFeeEthereum(
-    customValues: State<List<SendTextField.CustomFee>>,
+    customValues: ImmutableList<SendTextField.CustomFee>,
     selectedFee: FeeType,
     symbol: String,
     modifier: Modifier = Modifier,
 ) {
-    if (selectedFee == FeeType.CUSTOM && customValues.value.isNotEmpty()) {
-        val fee = customValues.value[0]
-        val gasPrice = customValues.value[1]
-        val gasLimit = customValues.value[2]
+    if (selectedFee == FeeType.CUSTOM && customValues.isNotEmpty()) {
+        val fee = customValues[0]
+        val gasPrice = customValues[1]
+        val gasLimit = customValues[2]
 
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),

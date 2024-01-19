@@ -1,5 +1,6 @@
 package com.tangem.tap.proxy
 
+import androidx.core.text.isDigitsOnly
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.Message
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
@@ -21,18 +22,11 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.BlockchainNetwork
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.send.impl.presentation.viewmodel.XlmMemoType
-import com.tangem.features.send.impl.presentation.viewmodel.determineXlmMemoType
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.userWalletsListManager
@@ -47,7 +41,6 @@ class TransactionManagerImpl(
     private val analytics: AnalyticsEventHandler,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : TransactionManager {
 
     override suspend fun sendApproveTransaction(
@@ -67,12 +60,6 @@ class TransactionManagerImpl(
             gasLimit = txData.gasLimit,
             destinationAddress = txData.destinationAddress,
             dataToSign = txData.dataToSign,
-            successEvent = AnalyticsParam.TxSentFrom.Approve(
-                blockchain = blockchain.fullName,
-                token = analyticsData.tokenSymbol,
-                feeType = AnalyticsParam.FeeType.fromString(analyticsData.feeType),
-                permissionType = analyticsData.permissionType ?: "",
-            ),
         )
     }
 
@@ -90,19 +77,6 @@ class TransactionManagerImpl(
         } else {
             createAmount(txData.amountToSend, txData.currencyToSend, blockchain)
         }
-        val successEvent = if (isSwap) {
-            AnalyticsParam.TxSentFrom.Swap(
-                blockchain = blockchain.fullName,
-                token = analyticsData.tokenSymbol,
-                feeType = AnalyticsParam.FeeType.fromString(analyticsData.feeType),
-            )
-        } else {
-            AnalyticsParam.TxSentFrom.Send(
-                blockchain = blockchain.fullName,
-                token = analyticsData.tokenSymbol,
-                feeType = AnalyticsParam.FeeType.fromString(analyticsData.feeType),
-            )
-        }
         return sendTransactionInternal(
             walletManager = walletManager,
             amount = amount,
@@ -111,7 +85,6 @@ class TransactionManagerImpl(
             gasLimit = txData.gasLimit,
             destinationAddress = txData.destinationAddress,
             dataToSign = txData.dataToSign,
-            successEvent = successEvent,
         )
     }
 
@@ -124,7 +97,6 @@ class TransactionManagerImpl(
         gasLimit: Int,
         destinationAddress: String,
         dataToSign: String,
-        successEvent: AnalyticsParam.TxSentFrom,
     ): SendTxResult {
         val txData = walletManager.createTransaction(
             amount = amount,
@@ -140,10 +112,7 @@ class TransactionManagerImpl(
             FirebaseCrashlytics.getInstance().recordException(ex)
             return SendTxResult.UnknownError(ex)
         }
-        return handleSendResult(
-            result = sendResult,
-            successEvent = successEvent,
-        )
+        return handleSendResult(result = sendResult)
     }
 
     override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
@@ -156,11 +125,12 @@ class TransactionManagerImpl(
         if (memo == null) return null
         return when (blockchain) {
             Blockchain.Stellar -> {
-                val xmlMemo = when (determineXlmMemoType(memo)) {
-                    XlmMemoType.TEXT -> StellarMemo.Text(memo)
-                    XlmMemoType.ID -> StellarMemo.Id(memo.toBigInteger())
+                val xlmMemo = if (memo.isNotEmpty() && memo.isDigitsOnly()) {
+                    StellarMemo.Id(memo.toBigInteger())
+                } else {
+                    StellarMemo.Text(memo)
                 }
-                StellarTransactionExtras(xmlMemo)
+                StellarTransactionExtras(xlmMemo)
             }
             Blockchain.Binance -> BinanceTransactionExtras(memo)
             Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
@@ -384,10 +354,9 @@ class TransactionManagerImpl(
         }
     }
 
-    private fun handleSendResult(result: SimpleResult, successEvent: AnalyticsParam.TxSentFrom): SendTxResult {
+    private fun handleSendResult(result: SimpleResult): SendTxResult {
         when (result) {
             is SimpleResult.Success -> {
-                analytics.send(Basic.TransactionSent(sentFrom = successEvent, memoType = MemoType.Null))
                 return SendTxResult.Success
             }
             is SimpleResult.Failure -> {
@@ -440,19 +409,15 @@ class TransactionManagerImpl(
     }
 
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
-        val walletManager = if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            val selectedUserWallet = requireNotNull(
-                userWalletsListManager.selectedUserWalletSync,
-            ) { "userWallet or userWalletsListManager is null" }
-            walletManagersFacade.getOrCreateWalletManager(
-                selectedUserWallet.walletId,
-                blockchain,
-                derivationPath,
-            )
-        } else {
-            val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
-            appStateHolder.walletState?.getWalletManager(blockchainNetwork)
-        }
+        val selectedUserWallet = requireNotNull(
+            userWalletsListManager.selectedUserWalletSync,
+        ) { "userWallet or userWalletsListManager is null" }
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            selectedUserWallet.walletId,
+            blockchain,
+            derivationPath,
+        )
+
         return requireNotNull(walletManager) { "no wallet manager found" }
     }
 
