@@ -66,4 +66,14 @@ internal object TangemButtonsDefaults {
             disabledBackgroundColor = Color.Transparent,
             disabledContentColor = TangemTheme.colors.text.disabled,
         )
+
+    val positiveButtonColors: ButtonColors
+        @Composable
+        @ReadOnlyComposable
+        get() = TangemButtonColors(
+            backgroundColor = Color.Transparent,
+            contentColor = TangemTheme.colors.text.accent,
+            disabledBackgroundColor = Color.Transparent,
+            disabledContentColor = TangemTheme.colors.text.disabled,
+        )
 }

@@ -16,7 +16,7 @@ internal class CurrencyStatusOperations(
         return when (val status = networkStatus?.value) {
             null -> CryptoCurrencyStatus.Loading
             is NetworkStatus.MissedDerivation -> createMissedDerivationStatus()
-            is NetworkStatus.Unreachable -> createUnreachableStatus()
+            is NetworkStatus.Unreachable -> createUnreachableStatus(status)
             is NetworkStatus.NoAccount -> createNoAccountStatus(status)
             is NetworkStatus.Verified -> createStatus(status)
         }
@@ -25,8 +25,13 @@ internal class CurrencyStatusOperations(
     private fun createMissedDerivationStatus(): CryptoCurrencyStatus.MissedDerivation =
         CryptoCurrencyStatus.MissedDerivation(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
 
-    private fun createUnreachableStatus(): CryptoCurrencyStatus.Unreachable =
-        CryptoCurrencyStatus.Unreachable(priceChange = quote?.priceChange, fiatRate = quote?.fiatRate)
+    private fun createUnreachableStatus(status: NetworkStatus.Unreachable): CryptoCurrencyStatus.Unreachable {
+        return CryptoCurrencyStatus.Unreachable(
+            priceChange = quote?.priceChange,
+            fiatRate = quote?.fiatRate,
+            networkAddress = status.address,
+        )
+    }
 
     private fun createNoAccountStatus(status: NetworkStatus.NoAccount): CryptoCurrencyStatus.NoAccount =
         CryptoCurrencyStatus.NoAccount(
