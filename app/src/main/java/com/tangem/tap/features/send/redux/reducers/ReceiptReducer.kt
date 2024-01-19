@@ -1,30 +1,21 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchain.common.Wallet
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.tap.common.extensions.scaleToFiat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.ReceiptAction.RefreshReceipt
 import com.tangem.tap.features.send.redux.SendScreenAction
-import com.tangem.tap.features.send.redux.states.AmountState
-import com.tangem.tap.features.send.redux.states.FeeState
-import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.ReceiptCrypto
-import com.tangem.tap.features.send.redux.states.ReceiptFiat
-import com.tangem.tap.features.send.redux.states.ReceiptLayoutType
-import com.tangem.tap.features.send.redux.states.ReceiptState
-import com.tangem.tap.features.send.redux.states.ReceiptSymbols
-import com.tangem.tap.features.send.redux.states.ReceiptTokenCrypto
-import com.tangem.tap.features.send.redux.states.ReceiptTokenFiat
-import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.wallet.redux.utils.CAN_BE_LOWER_SIGN
-import com.tangem.tap.features.wallet.redux.utils.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.store
 import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("LargeClass")
 class ReceiptReducer : SendInternalReducer {
 
     private lateinit var sendState: SendState
@@ -44,9 +35,10 @@ class ReceiptReducer : SendInternalReducer {
 
     private fun handleRefresh(state: ReceiptState): SendState {
         val wallet = sendState.walletManager?.wallet ?: return sendState
+        val feePaidCurrency = wallet.blockchain.feePaidCurrency()
 
-        val layoutType = determineLayoutType(amountState.mainCurrency.type, amountState.typeOfAmount)
-        val symbols = determineSymbols(wallet, amountState.typeOfAmount)
+        val layoutType = determineLayoutType(amountState.mainCurrency.type, amountState.typeOfAmount, feePaidCurrency)
+        val symbols = determineSymbols(wallet, amountState.typeOfAmount, feePaidCurrency)
         val showBlank = !SendState.isReadyToSend()
         val result = state.copy(
             visibleTypeOfReceipt = layoutType,
@@ -55,6 +47,10 @@ class ReceiptReducer : SendInternalReducer {
             crypto = createCryptoType(symbols, showBlank),
             tokenFiat = createTokenFiatType(symbols, showBlank),
             tokenCrypto = createTokenCryptoType(symbols, showBlank),
+            customTokenFiat = createCustomTokenFiat(symbols, showBlank),
+            customTokenCrypto = createCustomTokenCrypto(symbols, showBlank),
+            sameCurrencyFiat = createSameCurrencyFiat(symbols, showBlank),
+            sameCurrencyCrypto = createSameCurrencyCrypto(symbols, showBlank),
         )
         return updateLastState(sendState.copy(receiptState = result), result)
     }
@@ -143,9 +139,9 @@ class ReceiptReducer : SendInternalReducer {
             )
         } else {
             ReceiptTokenFiat(
-                amountFiat = UNKNOWN_AMOUNT_SIGN,
-                feeFiat = UNKNOWN_AMOUNT_SIGN,
-                totalFiat = UNKNOWN_AMOUNT_SIGN,
+                amountFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                feeFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                totalFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 willSentToken = tokensToSend.stripZeroPlainString(),
                 willSentFeeCoin = feeCoin.stripZeroPlainString(),
                 symbols = symbols,
@@ -175,13 +171,149 @@ class ReceiptReducer : SendInternalReducer {
             ReceiptTokenCrypto(
                 amountToken = tokensToSend.stripZeroPlainString(),
                 feeCoin = feeCoin.stripZeroPlainString().addPrecisionSign(),
-                totalFiat = UNKNOWN_AMOUNT_SIGN,
+                totalFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
                 symbols = symbols,
             )
         }
     }
 
-    private fun determineSymbols(wallet: Wallet, amountType: AmountType): ReceiptSymbols {
+    private fun createCustomTokenCrypto(symbols: ReceiptSymbols, showBlank: Boolean): ReceiptTokenCrypto {
+        val feeValue = feeState.getCurrentFeeValue()
+        if (showBlank) {
+            return ReceiptTokenCrypto("0", feeValue.stripZeroPlainString(), "0", symbols)
+        }
+        val tokensToSend = amountState.amountToSendCrypto
+
+        return if (sendState.currencyIsConvertible() && sendState.feeIsConvertible()) {
+            val currencyConverter = when (amountState.typeOfAmount) {
+                is AmountType.Token -> sendState.tokenConverter!!
+                else -> sendState.coinConverter!!
+            }
+            val currencyFiat = currencyConverter.toFiatUnscaled(tokensToSend)
+            val feeFiat = sendState.customFeeConverter!!.toFiatUnscaled(feeValue)
+            val totalFiat = currencyFiat.plus(feeFiat)
+
+            ReceiptTokenCrypto(
+                amountToken = tokensToSend.stripZeroPlainString(),
+                feeCoin = feeValue.stripZeroPlainString().addPrecisionSign(),
+                totalFiat = totalFiat.scaleToFiat(true).stripZeroPlainString(),
+                symbols = symbols,
+            )
+        } else {
+            ReceiptTokenCrypto(
+                amountToken = tokensToSend.stripZeroPlainString(),
+                feeCoin = feeValue.stripZeroPlainString().addPrecisionSign(),
+                totalFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                symbols = symbols,
+            )
+        }
+    }
+
+    private fun createCustomTokenFiat(symbols: ReceiptSymbols, showBlank: Boolean): ReceiptTokenFiat {
+        val feeCoin = feeState.getCurrentFeeValue()
+        if (showBlank) {
+            val feeFiat = convertToFiatPrecision(feeCoin)
+            return ReceiptTokenFiat("0", feeFiat, "0", "0", "0", symbols)
+        }
+
+        val tokensToSend = amountState.amountToSendCrypto
+
+        return if (sendState.currencyIsConvertible() && sendState.feeIsConvertible()) {
+            val currencyConverter = when (amountState.typeOfAmount) {
+                is AmountType.Token -> sendState.tokenConverter!!
+                else -> sendState.coinConverter!!
+            }
+            val feeFiat = sendState.customFeeConverter!!.toFiatUnscaled(feeCoin)
+            val amountFiat = currencyConverter.toFiatUnscaled(tokensToSend)
+            val totalFiat = amountFiat.plus(feeFiat)
+            ReceiptTokenFiat(
+                amountFiat = amountFiat.scaleToFiat(true).stripZeroPlainString(),
+                feeFiat = feeFiat.scaleToFiat(true).stripZeroPlainString().addPrecisionSign(),
+                totalFiat = totalFiat.scaleToFiat(true).stripZeroPlainString(),
+                willSentToken = tokensToSend.scaleToFiat(true).stripZeroPlainString(),
+                willSentFeeCoin = feeCoin.stripZeroPlainString(),
+                symbols = symbols,
+            )
+        } else {
+            ReceiptTokenFiat(
+                amountFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                feeFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                totalFiat = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
+                willSentToken = tokensToSend.stripZeroPlainString(),
+                willSentFeeCoin = feeCoin.stripZeroPlainString(),
+                symbols = symbols,
+            )
+        }
+    }
+
+    private fun createSameCurrencyCrypto(symbols: ReceiptSymbols, showBlank: Boolean): ReceiptCrypto {
+        val feeCrypto = feeState.getCurrentFeeValue()
+        val feeFiat = convertToFiatPrecision(feeCrypto)
+        if (showBlank) {
+            return ReceiptCrypto("0", feeCrypto.stripZeroPlainString(), "0", "0", "0", symbols)
+        }
+        val isToken = amountState.typeOfAmount is AmountType.Token
+
+        if (feeState.feeIsIncluded) {
+            return ReceiptCrypto(
+                amountCrypto = amountState.amountToSendCrypto.minus(feeCrypto).stripZeroPlainString(),
+                feeCrypto = feeCrypto.stripZeroPlainString().addPrecisionSign(),
+                totalCrypto = amountState.amountToSendCrypto.stripZeroPlainString(),
+                feeFiat = feeFiat,
+                willSentFiat = convertToFiatPrecision(value = amountState.amountToSendCrypto, isToken = isToken),
+                symbols = symbols,
+            )
+        } else {
+            val totalCrypto = amountState.amountToSendCrypto.plus(feeCrypto)
+            return ReceiptCrypto(
+                amountCrypto = amountState.amountToSendCrypto.stripZeroPlainString(),
+                feeCrypto = feeCrypto.stripZeroPlainString().addPrecisionSign(),
+                totalCrypto = totalCrypto.stripZeroPlainString(),
+                feeFiat = feeFiat,
+                willSentFiat = convertToFiatPrecision(value = totalCrypto, isToken = isToken),
+                symbols = symbols,
+            )
+        }
+    }
+
+    private fun createSameCurrencyFiat(symbols: ReceiptSymbols, showBlank: Boolean): ReceiptFiat {
+        val feeCrypto = feeState.getCurrentFeeValue()
+        val isToken = amountState.typeOfAmount is AmountType.Token
+        val feeFiat = convertToFiatPrecision(feeCrypto, isToken = isToken)
+
+        if (showBlank) {
+            return ReceiptFiat("0", feeFiat, "0", "0", symbols)
+        }
+
+        return if (feeState.feeIsIncluded) {
+            val amountFiat = convertToFiatPrecision(amountState.amountToSendCrypto.minus(feeCrypto), isToken = isToken)
+            val totalFiat = convertToFiatPrecision(amountState.amountToSendCrypto, isToken = isToken)
+            ReceiptFiat(
+                amountFiat = amountFiat,
+                feeFiat = feeFiat,
+                totalFiat = totalFiat,
+                willSentCrypto = amountState.amountToSendCrypto.scaleToFiat(true).stripZeroPlainString(),
+                symbols = symbols,
+            )
+        } else {
+            val totalAmountCrypto = amountState.amountToSendCrypto.plus(feeCrypto)
+            val amountFiat = convertToFiatPrecision(amountState.amountToSendCrypto, isToken = isToken)
+            val totalFiat = convertToFiatPrecision(totalAmountCrypto, isToken = isToken)
+            ReceiptFiat(
+                amountFiat = amountFiat,
+                feeFiat = feeFiat,
+                totalFiat = totalFiat,
+                willSentCrypto = totalAmountCrypto.scaleToFiat().stripZeroPlainString(),
+                symbols = symbols,
+            )
+        }
+    }
+
+    private fun determineSymbols(
+        wallet: Wallet,
+        amountType: AmountType,
+        feePaidCurrency: FeePaidCurrency,
+    ): ReceiptSymbols {
         return ReceiptSymbols(
             fiat = store.state.globalState.appCurrency.code,
             crypto = wallet.blockchain.currency,
@@ -189,17 +321,52 @@ class ReceiptReducer : SendInternalReducer {
                 is AmountType.Token -> amountType.token.symbol
                 else -> null
             },
+            fee = when (feePaidCurrency) {
+                FeePaidCurrency.Coin -> wallet.blockchain.currency
+                FeePaidCurrency.SameCurrency -> store.state.sendState.currency?.symbol
+                is FeePaidCurrency.Token -> feePaidCurrency.token.symbol
+            },
         )
     }
 
-    private fun determineLayoutType(mainCurrencyType: MainCurrencyType, amountType: AmountType): ReceiptLayoutType {
+    private fun determineLayoutType(
+        mainCurrencyType: MainCurrencyType,
+        amountType: AmountType,
+        feePaidCurrency: FeePaidCurrency,
+    ): ReceiptLayoutType {
         return when (mainCurrencyType) {
-            MainCurrencyType.FIAT -> when (amountType) {
+            MainCurrencyType.FIAT -> determineFiatLayoutType(feePaidCurrency, amountType)
+            MainCurrencyType.CRYPTO -> determineCryptoLayoutType(feePaidCurrency, amountType)
+        }
+    }
+
+    private fun determineFiatLayoutType(feePaidCurrency: FeePaidCurrency, amountType: AmountType): ReceiptLayoutType {
+        return when (feePaidCurrency) {
+            is FeePaidCurrency.Token -> {
+                val amountToken = (amountType as? AmountType.Token)?.token
+                val sameToken =
+                    feePaidCurrency.token.contractAddress.equals(amountToken?.contractAddress, ignoreCase = true)
+                if (sameToken) ReceiptLayoutType.SAME_CURRENCY_FIAT else ReceiptLayoutType.FEE_IN_CUSTOM_TOKEN_FIAT
+            }
+            FeePaidCurrency.Coin -> when (amountType) {
                 AmountType.Coin -> ReceiptLayoutType.FIAT
                 is AmountType.Token -> ReceiptLayoutType.TOKEN_FIAT
                 AmountType.Reserve -> ReceiptLayoutType.UNKNOWN
             }
-            MainCurrencyType.CRYPTO -> when (amountType) {
+            FeePaidCurrency.SameCurrency -> ReceiptLayoutType.SAME_CURRENCY_FIAT
+        }
+    }
+
+    private fun determineCryptoLayoutType(feePaidCurrency: FeePaidCurrency, amountType: AmountType): ReceiptLayoutType {
+        return when (feePaidCurrency) {
+            is FeePaidCurrency.Token -> {
+                val amountToken = (amountType as? AmountType.Token)?.token
+                val sameToken =
+                    feePaidCurrency.token.contractAddress.equals(amountToken?.contractAddress, ignoreCase = true)
+                if (sameToken) ReceiptLayoutType.SAME_CURRENCY else ReceiptLayoutType.FEE_IN_CUSTOM_TOKEN
+            }
+            FeePaidCurrency.SameCurrency -> ReceiptLayoutType.SAME_CURRENCY
+            FeePaidCurrency.Coin -> when (amountType) {
                 AmountType.Coin -> ReceiptLayoutType.CRYPTO
                 is AmountType.Token -> ReceiptLayoutType.TOKEN_CRYPTO
                 AmountType.Reserve -> ReceiptLayoutType.UNKNOWN
@@ -216,7 +383,7 @@ class ReceiptReducer : SendInternalReducer {
                 sendState.tokenConverter!!.toFiatWithPrecision(value).stripZeroPlainString()
             }
             else -> {
-                UNKNOWN_AMOUNT_SIGN
+                BigDecimalFormatter.EMPTY_BALANCE_SIGN
             }
         }
     }
@@ -224,5 +391,9 @@ class ReceiptReducer : SendInternalReducer {
     private fun String.addPrecisionSign(): String {
         val result = if (feeState.feeIsApproximate) "$CAN_BE_LOWER_SIGN $this" else this
         return result.trim()
+    }
+
+    private companion object {
+        const val CAN_BE_LOWER_SIGN = "<"
     }
 }

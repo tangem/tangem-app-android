@@ -6,11 +6,10 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemError
 import com.tangem.common.extensions.ByteArrayKey
-import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
-import com.tangem.common.flatMap
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -20,21 +19,22 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.features.tester.api.TesterFeatureToggles
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userWalletsListManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -47,6 +47,8 @@ import timber.log.Timber
 class DefaultCustomTokenInteractor(
     private val featureRepository: CustomTokenRepository,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
+    private val testerFeatureToggles: TesterFeatureToggles,
 ) : CustomTokenInteractor {
 
     // TODO: Move to DI
@@ -66,19 +68,29 @@ class DefaultCustomTokenInteractor(
 
     override suspend fun saveToken(customCurrency: CustomCurrency) {
         val userWallet = getSelectedWalletSyncUseCase().fold(ifLeft = { return }, ifRight = { it })
-
         val currency = Currency.fromCustomCurrency(customCurrency)
-        val isNeedToDerive = isNeedToDerive(userWallet, currency)
-        if (isNeedToDerive) {
-            deriveMissingBlockchains(
-                userWallet = userWallet,
-                currencyList = listOf(currency),
-                onSuccess = { submitAdd(userWallet = userWallet.copy(scanResponse = it), currency = currency) },
-            ) {
-                throw it
-            }
+
+        if (testerFeatureToggles.isDerivePublicKeysRefactoringEnabled) {
+            val currencies = listOfNotNull(element = currency.toCryptoCurrency(userWallet.scanResponse))
+            derivePublicKeysUseCase(userWalletId = userWallet.walletId, currencies = currencies)
+                .onRight {
+                    addCryptoCurrenciesUseCase(userWalletId = userWallet.walletId, currencies = currencies)
+                }
+                .onLeft { Timber.e("Failed to derive public keys: $it") }
         } else {
-            submitAdd(userWallet, currency)
+            // TODO: delete [REDACTED_JIRA]
+            val isNeedToDerive = isNeedToDerive(userWallet, currency)
+            if (isNeedToDerive) {
+                deriveMissingBlockchains(
+                    userWallet = userWallet,
+                    currencyList = listOf(currency),
+                    onSuccess = { submitAdd(userWallet = userWallet.copy(scanResponse = it), currency = currency) },
+                ) {
+                    throw it
+                }
+            } else {
+                submitAdd(userWallet, currency)
+            }
         }
     }
 
@@ -179,69 +191,36 @@ class DefaultCustomTokenInteractor(
 
     private suspend fun submitAdd(userWallet: UserWallet, currency: Currency) {
         val scanResponse = userWallet.scanResponse
-        val walletFeatureToggles = store.state.daggerGraphState.get(DaggerGraphState::walletFeatureToggles)
+        val userWalletId = userWallet.walletId
 
-        if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            val cryptoCurrencyFactory = CryptoCurrencyFactory()
+        val currencyList = listOfNotNull(element = currency.toCryptoCurrency(scanResponse))
 
-            submitNewAdd(
-                userWalletId = userWallet.walletId,
-                updatedScanResponse = scanResponse,
-                currencyList = listOfNotNull(
-                    when (currency) {
-                        is Currency.Blockchain -> {
-                            cryptoCurrencyFactory.createCoin(
-                                blockchain = currency.blockchain,
-                                extraDerivationPath = currency.derivationPath,
-                                derivationStyleProvider = scanResponse.derivationStyleProvider,
-                            )
-                        }
-                        is Currency.Token -> {
-                            cryptoCurrencyFactory.createToken(
-                                sdkToken = currency.token,
-                                blockchain = currency.blockchain,
-                                extraDerivationPath = currency.derivationPath,
-                                derivationStyleProvider = scanResponse.derivationStyleProvider,
-                            )
-                        }
-                    },
-                ),
-            )
-        } else {
-            submitLegacyAdd(scanResponse = scanResponse, currency = currency)
+        userWalletsListManager.update(userWalletId) {
+            it.copy(scanResponse = scanResponse)
         }
+
+        addCryptoCurrenciesUseCase(userWalletId, currencyList)
     }
 
-    private suspend fun submitLegacyAdd(scanResponse: ScanResponse, currency: Currency) {
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
-            Timber.e("Unable to add currencies, no user wallet selected")
-            return
-        }
+    private fun Currency.toCryptoCurrency(scanResponse: ScanResponse): CryptoCurrency? {
+        val cryptoCurrencyFactory = CryptoCurrencyFactory()
 
-        userWalletsListManager.update(
-            userWalletId = selectedUserWallet.walletId,
-            update = { userWallet -> userWallet.copy(scanResponse = scanResponse) },
-        )
-            .flatMap { updatedUserWallet ->
-                walletCurrenciesManager.addCurrencies(
-                    userWallet = updatedUserWallet,
-                    currenciesToAdd = listOf(currency),
+        return when (this) {
+            is Currency.Blockchain -> {
+                cryptoCurrencyFactory.createCoin(
+                    blockchain = blockchain,
+                    extraDerivationPath = derivationPath,
+                    derivationStyleProvider = scanResponse.derivationStyleProvider,
                 )
             }
-    }
-
-    private fun submitNewAdd(
-        userWalletId: UserWalletId,
-        updatedScanResponse: ScanResponse,
-        currencyList: List<CryptoCurrency>,
-    ) {
-        scope.launch {
-            userWalletsListManager.update(
-                userWalletId = userWalletId,
-                update = { it.copy(scanResponse = updatedScanResponse) },
-            )
-
-            addCryptoCurrenciesUseCase(userWalletId, currencyList)
+            is Currency.Token -> {
+                cryptoCurrencyFactory.createToken(
+                    sdkToken = token,
+                    blockchain = blockchain,
+                    extraDerivationPath = derivationPath,
+                    derivationStyleProvider = scanResponse.derivationStyleProvider,
+                )
+            }
         }
     }
 }
