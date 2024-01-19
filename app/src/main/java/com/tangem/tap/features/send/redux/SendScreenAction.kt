@@ -3,10 +3,12 @@ package com.tangem.tap.features.send.redux
 import com.tangem.Message
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.navigation.StateDialog
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.analytics.events.Token.Send.AddressEntered
 import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
@@ -28,10 +30,14 @@ object ReleaseSendState : Action
 
 data class PrepareSendScreen(
     val walletManager: WalletManager,
+    val feePaidCurrency: FeePaidCurrency,
+    val currency: CryptoCurrency,
     val coinAmount: Amount?,
     val coinRate: BigDecimal?,
     val tokenAmount: Amount? = null,
     val tokenRate: BigDecimal? = null,
+    val feeCurrencyRate: BigDecimal? = null,
+    val feeCurrencyDecimals: Int = 0,
 ) : SendScreenAction
 
 // Address

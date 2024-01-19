@@ -217,6 +217,22 @@ internal object TokensDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun provideGetFeePaidCryptoCurrencyStatusSyncUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetFeePaidCryptoCurrencyStatusSyncUseCase {
+        return GetFeePaidCryptoCurrencyStatusSyncUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
     fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
         return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
     }
