@@ -5,15 +5,18 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
 @ViewModelScoped
 internal class WalletWarningsAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val screenLifecycleProvider: ScreenLifecycleProvider,
 ) {
 
     fun send(displayedUiState: WalletState?, newWarnings: List<WalletNotification>) {
+        if (screenLifecycleProvider.isBackground) return
         if (newWarnings.isEmpty()) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
 
