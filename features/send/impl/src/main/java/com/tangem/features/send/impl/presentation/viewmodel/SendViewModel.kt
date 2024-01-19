@@ -35,6 +35,7 @@ import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fee.getFee
 import com.tangem.utils.Provider
@@ -93,10 +94,20 @@ internal class SendViewModel @Inject constructor(
         userWalletProvider = Provider { userWallet },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
     )
+
+    private val feeStateFactory by lazy {
+        FeeStateFactory(
+            clickIntents = this,
+            currentStateProvider = Provider { uiState },
+            coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+            appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+            userWalletProvider = Provider { userWallet },
+        )
+    }
 
     private val eventStateFactory = SendEventStateFactory(
         clickIntents = this,
@@ -129,7 +140,7 @@ internal class SendViewModel @Inject constructor(
 
     override fun onCreate(owner: LifecycleOwner) {
         subscribeOnCurrencyStatusUpdates(owner)
-        getFee()
+        onFeeStateActive()
     }
 
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
@@ -289,37 +300,11 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private fun getFee() {
-        viewModelScope.launch(dispatchers.main) {
-            uiState.currentState
-                .filter { it == SendUiStateType.Fee }
-                .onEach {
-                    val amountState = uiState.amountState ?: return@onEach
-                    val recipientState = uiState.recipientState ?: return@onEach
-                    val amount = amountState.amountTextField.value.toBigDecimal()
-
-                    uiState = stateFactory.onFeeOnLoadingState()
-                    getFeeUseCase.invoke(
-                        amount = amount,
-                        destination = recipientState.addressTextField.value,
-                        userWalletId = userWalletId,
-                        cryptoCurrency = cryptoCurrency,
-                    )
-                        .conflate()
-                        .distinctUntilChanged()
-                        .onEach { maybeFee ->
-                            maybeFee.fold(
-                                ifRight = {
-                                    uiState = stateFactory.onFeeOnLoadedState(it)
-                                },
-                                ifLeft = {
-                                    // todo add error handling [[REDACTED_JIRA]]
-                                },
-                            )
-                        }
-                        .launchIn(viewModelScope)
-                }.launchIn(viewModelScope)
-        }.saveIn(feeJobHolder)
+    private fun onFeeStateActive() {
+        uiState.currentState
+            .filter { it == SendUiStateType.Fee }
+            .onEach { loadFee() }
+            .launchIn(viewModelScope)
     }
 
     private fun updateNotifications() {
@@ -428,16 +413,41 @@ internal class SendViewModel @Inject constructor(
     // endregion
 
     // region fee
+    override fun feeReload() = loadFee()
+
     override fun onFeeSelectorClick(feeType: FeeType) {
-        uiState = stateFactory.onFeeSelectedState(feeType)
+        uiState = feeStateFactory.onFeeSelectedState(feeType)
     }
 
     override fun onCustomFeeValueChange(index: Int, value: String) {
-        uiState = stateFactory.onCustomFeeValueChange(index, value)
+        uiState = feeStateFactory.onCustomFeeValueChange(index, value)
     }
 
     override fun onSubtractSelect(value: Boolean) {
-        uiState = stateFactory.onSubtractSelect(value)
+        uiState = feeStateFactory.onSubtractSelect(value)
+    }
+
+    private fun loadFee() {
+        viewModelScope.launch(dispatchers.main) {
+            val amountState = uiState.amountState ?: return@launch
+            val recipientState = uiState.recipientState ?: return@launch
+            val amount = amountState.amountTextField.value.toBigDecimal()
+
+            uiState = feeStateFactory.onFeeOnLoadingState()
+            getFeeUseCase.invoke(
+                amount = amount,
+                destination = recipientState.addressTextField.value,
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+            ).fold(
+                ifRight = {
+                    uiState = feeStateFactory.onFeeOnLoadedState(it)
+                },
+                ifLeft = {
+                    uiState = feeStateFactory.onFeeOnErrorState()
+                },
+            )
+        }.saveIn(feeJobHolder)
     }
     // endregion
 
@@ -461,7 +471,7 @@ internal class SendViewModel @Inject constructor(
     override fun onAmountReduceClick(reducedAmount: String) {
         uiState = stateFactory.getOnAmountValueChange(reducedAmount)
         uiState = sendNotificationFactory.dismissHighFeeWarningState()
-        getFee()
+        loadFee()
     }
 
     override fun onAmountReduceIgnoreClick() {
@@ -474,12 +484,13 @@ internal class SendViewModel @Inject constructor(
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
         val memo = uiState.recipientState?.memoTextField?.value
         val fee = feeSelectorState.getFee()
+        val amountValue = uiState.amountState?.amountValue ?: return
 
-        val amountToSend = feeState.receivedAmountValue.convertToAmount(cryptoCurrency)
+        val amountToSend = if (feeState.isSubtract) feeState.receivedAmountValue else amountValue
 
         viewModelScope.launch(dispatchers.main) {
             createTransactionUseCase(
-                amount = amountToSend,
+                amount = amountToSend.convertToAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
                 destination = recipient,
