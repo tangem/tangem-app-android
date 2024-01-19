@@ -36,9 +36,14 @@ sealed class TradeCryptoAction : Action {
             val tokenCurrency: CryptoCurrency.Token,
             val tokenFiatRate: BigDecimal?,
             val coinFiatRate: BigDecimal?,
+            val feeCurrencyStatus: CryptoCurrencyStatus?,
         ) : New()
 
-        data class SendCoin(val userWallet: UserWallet, val coinStatus: CryptoCurrencyStatus) : New()
+        data class SendCoin(
+            val userWallet: UserWallet,
+            val coinStatus: CryptoCurrencyStatus,
+            val feeCurrencyStatus: CryptoCurrencyStatus?,
+        ) : New()
 
         data class Swap(val cryptoCurrency: CryptoCurrency) : New()
     }
