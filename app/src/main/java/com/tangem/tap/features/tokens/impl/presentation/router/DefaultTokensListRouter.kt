@@ -6,7 +6,6 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppDialog
-import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
@@ -32,13 +31,13 @@ internal class DefaultTokensListRouter : TokensListRouter {
 
     override fun openUnableHideMainTokenAlert(tokenName: String, tokenSymbol: String) {
         store.dispatchDialogShow(
-            dialog = WalletDialog.TokensAreLinkedDialog(currencyTitle = tokenName, currencySymbol = tokenSymbol),
+            dialog = AppDialog.TokensAreLinkedDialog(currencyTitle = tokenName, currencySymbol = tokenSymbol),
         )
     }
 
     override fun openRemoveWalletAlert(tokenName: String, onOkClick: () -> Unit) {
         store.dispatchDialogShow(
-            dialog = WalletDialog.RemoveWalletDialog(currencyTitle = tokenName, onOk = onOkClick),
+            dialog = AppDialog.RemoveWalletDialog(currencyTitle = tokenName, onOk = onOkClick),
         )
     }
 
