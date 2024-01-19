@@ -30,7 +30,9 @@ internal class TokenDetailsNotificationsAnalyticsSender(
 
     private fun getEvent(notification: TokenDetailsNotification): AnalyticsEvent? {
         return when (notification) {
-            is TokenDetailsNotification.NetworkFee -> TokenDetailsAnalyticsEvent.Notice.NotEnoughFee(
+            is TokenDetailsNotification.NetworkFee,
+            is TokenDetailsNotification.NetworkFeeWithBuyButton,
+            -> TokenDetailsAnalyticsEvent.Notice.NotEnoughFee(
                 currency = cryptoCurrency,
             )
             is TokenDetailsNotification.NetworksUnreachable,
