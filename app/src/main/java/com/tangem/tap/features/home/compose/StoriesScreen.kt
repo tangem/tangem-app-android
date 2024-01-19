@@ -20,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.learn2earn.presentation.ui.Learn2earnStoriesScreen
 import com.tangem.tap.features.home.compose.content.*
 import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.SearchCurrenciesButton
@@ -33,7 +32,6 @@ import kotlin.math.max
 @Composable
 fun StoriesScreen(
     homeState: MutableState<HomeState>,
-    onLearn2earnClick: () -> Unit,
     onScanButtonClick: () -> Unit,
     onShopButtonClick: () -> Unit,
     onSearchTokensClick: () -> Unit,
@@ -65,7 +63,6 @@ fun StoriesScreen(
             isScanInProgress = homeState.value.scanInProgress,
             onGoToPreviousStory = goToPreviousStory,
             onGoToNextStory = goToNextStory,
-            onLearn2earnClick = onLearn2earnClick,
             onSearchTokensClick = onSearchTokensClick,
             onScanButtonClick = onScanButtonClick,
             onShopButtonClick = onShopButtonClick,
@@ -152,7 +149,6 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
                     .align(Alignment.Start),
             )
             when (config.currentStory) {
-                Stories.OneInchPromo -> Learn2earnStoriesScreen(config.onLearn2earnClick)
                 Stories.TangemIntro -> FirstStoriesContent(
                     isPaused = isPaused,
                     duration = currentStoryDuration,
@@ -187,18 +183,12 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
                 )
             }
 
-            AnimatedVisibility(
-                visible = config.currentStory != Stories.OneInchPromo,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                HomeButtons(
-                    modifier = Modifier.fillMaxWidth(),
-                    btnScanStateInProgress = config.isScanInProgress,
-                    onScanButtonClick = config.onScanButtonClick,
-                    onShopButtonClick = config.onShopButtonClick,
-                )
-            }
+            HomeButtons(
+                modifier = Modifier.fillMaxWidth(),
+                btnScanStateInProgress = config.isScanInProgress,
+                onScanButtonClick = config.onScanButtonClick,
+                onShopButtonClick = config.onShopButtonClick,
+            )
         }
     }
 }
@@ -210,7 +200,6 @@ private data class StoriesScreenContentConfig(
     val isScanInProgress: Boolean,
     val onGoToPreviousStory: () -> Unit = {},
     val onGoToNextStory: () -> Unit = {},
-    val onLearn2earnClick: () -> Unit = {},
     val onSearchTokensClick: () -> Unit = {},
     val onScanButtonClick: () -> Unit = {},
     val onShopButtonClick: () -> Unit = {},
@@ -263,12 +252,6 @@ private class StoriesScreenContentConfigProvider : CollectionPreviewParameterPro
             storiesSize = 6,
             currentStoryIndex = 5,
             currentStory = Stories.WalletForEveryone,
-            isScanInProgress = false,
-        ),
-        StoriesScreenContentConfig(
-            storiesSize = 6,
-            currentStoryIndex = 6,
-            currentStory = Stories.OneInchPromo,
             isScanInProgress = false,
         ),
     ),
