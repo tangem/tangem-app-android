@@ -472,7 +472,7 @@ private val state = SwapStateHolder(
     warnings = listOf(
         SwapWarning.PermissionNeeded(
             notificationConfig = NotificationConfig(
-                title = stringReference("Give Premission"),
+                title = stringReference("Give Permission"),
                 subtitle = stringReference("To continue swapping you need to give permission to Tangem"),
                 iconResId = R.drawable.ic_locked_24,
             ),
