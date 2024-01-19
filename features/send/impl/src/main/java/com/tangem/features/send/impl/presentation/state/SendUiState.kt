@@ -88,6 +88,7 @@ internal sealed class SendStates {
         val isSuccess: Boolean = false,
         val transactionDate: Long = 0L,
         val txUrl: String = "",
+        val ignoreAmountReduce: Boolean = false,
         val notifications: ImmutableList<SendNotification> = persistentListOf(),
     ) : SendStates()
 }
