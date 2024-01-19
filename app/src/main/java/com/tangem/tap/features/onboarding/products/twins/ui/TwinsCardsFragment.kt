@@ -207,7 +207,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         tvHeader.setText(R.string.common_warning)
         tvBody.setText(R.string.twins_recreate_warning)
 
-        chbUnderstand.setOnCheckedChangeListener { buttonView, isChecked ->
+        chbUnderstand.setOnCheckedChangeListener { _, isChecked ->
             store.dispatch(TwinCardsAction.SetUserUnderstand(isChecked))
         }
         btnMainAction.isEnabled = state.userWasUnderstandIfWalletRecreate

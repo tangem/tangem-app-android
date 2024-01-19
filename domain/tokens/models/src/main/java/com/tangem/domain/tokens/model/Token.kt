@@ -26,6 +26,7 @@ data class Token(
      *
      * @property networkId           The unique identifier of the network.
      * @property standardType        The type of blockchain associated with the network.
+     * @property name                The full name of the network.
      * @property address             The contract address of the token on the current network.
      *                              It is null for the main currencies of the network.
      * @property iconUrl             URL of the network's icon.
@@ -34,6 +35,7 @@ data class Token(
     data class Network(
         val networkId: String,
         val standardType: String,
+        val name: String,
         val address: String?,
         val iconUrl: String,
         val decimalCount: Int?,
