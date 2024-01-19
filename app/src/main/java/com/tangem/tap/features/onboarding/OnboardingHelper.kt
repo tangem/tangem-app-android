@@ -14,7 +14,7 @@ import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
-import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.extensions.removeContext
@@ -54,7 +54,7 @@ object OnboardingHelper {
     }
 
     fun whereToNavigate(scanResponse: ScanResponse): AppScreen {
-        return when (scanResponse.productType) {
+        return when (val type = scanResponse.productType) {
             ProductType.Note -> AppScreen.OnboardingNote
             ProductType.Wallet,
             ProductType.Wallet2,
@@ -65,9 +65,9 @@ object OnboardingHelper {
                 AppScreen.OnboardingOther
             }
             ProductType.Twins -> AppScreen.OnboardingTwins
-            ProductType.Start2Coin -> throw java.lang.UnsupportedOperationException(
-                "Onboarding for Start2Coin cards is not supported",
-            )
+            ProductType.Start2Coin,
+            ProductType.Visa,
+            -> throw UnsupportedOperationException("Onboarding for ${type.name} cards is not supported")
         }
     }
 
@@ -125,7 +125,7 @@ object OnboardingHelper {
         val currency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)
 
         if (userWalletId != null && currency != null) {
-            Analytics.send(Basic.ToppedUp(userWalletId, currency))
+            Analytics.send(Basic.ToppedUp(userWalletId.stringValue, currency))
         }
     }
 

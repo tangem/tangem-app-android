@@ -4,7 +4,7 @@ import com.tangem.Message
 import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
-import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.Companion.toKeccak
+import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
@@ -16,11 +16,10 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.common.analytics.events.Basic.TransactionSent.MemoType
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
@@ -31,16 +30,19 @@ import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.details.redux.walletconnect.*
+import com.tangem.tap.features.details.redux.walletconnect.BinanceMessageData
+import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
+import com.tangem.tap.features.details.redux.walletconnect.WcPersonalSignData
+import com.tangem.tap.features.details.redux.walletconnect.WcTransactionData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
-import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.*
 import timber.log.Timber
 import java.math.BigDecimal
+import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
 
 class WalletConnectSdkHelper {
 
@@ -176,7 +178,7 @@ class WalletConnectSdkHelper {
         )
         return when (result) {
             SimpleResult.Success -> {
-                val sentFrom = AnalyticsParam.TxSentFrom.WalletConnect
+                val sentFrom = CoreAnalyticsParam.TxSentFrom.WalletConnect
                 Analytics.send(Basic.TransactionSent(sentFrom = sentFrom, memoType = MemoType.Null))
                 val hash = data.walletManager.wallet.recentTransactions.last().hash
                 if (hash?.startsWith(HEX_PREFIX) == true) {
