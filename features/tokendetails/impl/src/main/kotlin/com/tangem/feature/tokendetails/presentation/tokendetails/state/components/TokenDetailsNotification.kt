@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
 
@@ -62,28 +63,55 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
     )
 
     data class NetworkFee(
-        private val feeInfo: CryptoCurrencyWarning.BalanceNotEnoughForFee,
-        private val onBuyClick: () -> Unit,
+        private val currency: CryptoCurrency,
+        private val networkName: String,
+        private val feeCurrencyName: String,
+        private val feeCurrencySymbol: String,
     ) : Warning(
         title = TextReference.Res(
             id = R.string.warning_send_blocked_funds_for_fee_title,
-            formatArgs = wrappedList(feeInfo.coinCurrency.name),
+            formatArgs = wrappedList(feeCurrencyName),
         ),
         subtitle = TextReference.Res(
             id = R.string.warning_send_blocked_funds_for_fee_message,
             formatArgs = wrappedList(
-                feeInfo.tokenCurrency.name,
-                feeInfo.coinCurrency.name,
-                feeInfo.tokenCurrency.name,
-                feeInfo.coinCurrency.name,
-                feeInfo.coinCurrency.symbol,
+                currency.name,
+                networkName,
+                currency.name,
+                feeCurrencyName,
+                feeCurrencySymbol,
             ),
         ),
-        iconResId = feeInfo.tokenCurrency.networkIconResId,
-        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+        iconResId = currency.networkIconResId,
+    )
+
+    data class NetworkFeeWithBuyButton(
+        private val currency: CryptoCurrency,
+        private val networkName: String,
+        private val feeCurrencyName: String,
+        private val feeCurrencySymbol: String,
+        private val onBuyClick: () -> Unit,
+    ) : Warning(
+        title = TextReference.Res(
+            id = R.string.warning_send_blocked_funds_for_fee_title,
+            formatArgs = wrappedList(feeCurrencyName),
+        ),
+        subtitle = TextReference.Res(
+            id = R.string.warning_send_blocked_funds_for_fee_message,
+            formatArgs = wrappedList(
+                currency.name,
+                networkName,
+                currency.name,
+                feeCurrencyName,
+                feeCurrencySymbol,
+            ),
+        ),
+        iconResId = currency.networkIconResId,
+        buttonsState =
+        NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(
                 id = R.string.common_buy_currency,
-                formatArgs = wrappedList(feeInfo.coinCurrency.symbol),
+                formatArgs = wrappedList(feeCurrencySymbol),
             ),
             onClick = onBuyClick,
         ),

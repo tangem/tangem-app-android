@@ -1,7 +1,6 @@
 package com.tangem.tap.common.entities
 
 import com.tangem.tap.features.send.redux.states.ButtonState
-import com.tangem.tap.features.wallet.redux.ProgressState
 
 open class Button(val enabled: Boolean)
 
