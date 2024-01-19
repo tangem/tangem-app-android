@@ -14,20 +14,18 @@ import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.isLockedSync
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -202,7 +200,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     is Result.Success -> {
                         Analytics.send(Onboarding.Twins.SetupFinished())
                         updateScanResponse(result.data)
-                        store.state.globalState.topUpController?.registerEmptyWallet(result.data)
 
                         delay(DELAY_SDK_DIALOG_CLOSE)
                         withMainContext {
@@ -261,8 +258,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         is TwinCardsAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
                 OnboardingHelper.sendToppedUpEvent(getScanResponse())
-
-                store.state.globalState.topUpController?.send(getScanResponse(), AnalyticsParam.CardBalanceState.Full)
                 store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done))
             }
         }
@@ -285,8 +280,8 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
 
             if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
-                val dialogData = WalletDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
-                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(dialogData))
+                val dialogData = AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
+                store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(dialogData))
             } else {
                 store.dispatchOpenUrl(topUpUrl)
             }
