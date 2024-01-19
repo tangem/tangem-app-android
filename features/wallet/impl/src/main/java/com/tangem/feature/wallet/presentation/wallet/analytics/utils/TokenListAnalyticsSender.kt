@@ -12,6 +12,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -20,9 +21,11 @@ import javax.inject.Inject
 internal class TokenListAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val checkIsWalletToppedUpUseCase: CheckIsWalletToppedUpUseCase,
+    private val screenLifecycleProvider: ScreenLifecycleProvider,
 ) {
 
     suspend fun send(displayedUiState: WalletState?, userWallet: UserWallet, tokenList: TokenList) {
+        if (screenLifecycleProvider.isBackground) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
         if (tokenList.totalFiatBalance is TokenList.FiatBalance.Loading) return
 
@@ -117,8 +120,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
 
     private fun sendUnreachableNetworksEventIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
         val hasUnreachableCurrencies = currenciesStatuses.any {
-            it.value is CryptoCurrencyStatus.Unreachable ||
-                it.value is CryptoCurrencyStatus.UnreachableWithoutAddresses
+            it.value is CryptoCurrencyStatus.Unreachable
         }
 
         if (hasUnreachableCurrencies) {
