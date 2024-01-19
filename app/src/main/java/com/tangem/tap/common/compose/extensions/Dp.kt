@@ -14,6 +14,4 @@ fun Dp.toPx(): Float {
     return with(LocalDensity.current) { currentDp.toPx() }
 }
 
-fun DpSize.halfWidth(): Dp = this.width / 2
-
 fun DpSize.halfHeight(): Dp = this.height / 2
