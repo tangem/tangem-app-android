@@ -536,6 +536,26 @@
                     "networkId": "decimal/test"
                 }
             ]
+        },
+        {
+            "id": "xdce-crowd-sale",
+            "name": "XDC",
+            "symbol": "XDC",
+            "networks": [
+                {
+                    "networkId": "xdc-network/test"
+                }
+            ]
+        },
+        {
+            "id": "aptos",
+            "name": "Aptos",
+            "symbol": "APT",
+            "networks": [
+                {
+                    "networkId": "aptos/test"
+                }
+            ]
         }
     ]
 }

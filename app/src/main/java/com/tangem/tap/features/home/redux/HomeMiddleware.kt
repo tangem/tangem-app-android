@@ -10,7 +10,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
-import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.entities.IndeterminateProgressButton
