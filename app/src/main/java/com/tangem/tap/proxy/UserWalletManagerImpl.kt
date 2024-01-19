@@ -4,34 +4,28 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.common.doOnFailure
-import com.tangem.common.extensions.guard
-import com.tangem.domain.common.BlockchainNetwork
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.Currency.NativeToken
 import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.ProxyFiatCurrency
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.userWalletsListManager
-import com.tangem.tap.walletCurrenciesManager
-import com.tangem.tap.walletStoresManager
-import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 import java.math.BigDecimal
-import com.tangem.tap.features.wallet.models.Currency as WalletCurrency
 
 class UserWalletManagerImpl(
     private val appStateHolder: AppStateHolder,
     private val walletManagersFacade: WalletManagersFacade,
-    private val walletFeatureToggles: WalletFeatureToggles,
+    private val currenciesRepository: CurrenciesRepository,
+    private val userWalletsStore: UserWalletsStore,
 ) : UserWalletManager {
 
     override suspend fun getUserTokens(
@@ -39,43 +33,44 @@ class UserWalletManagerImpl(
         derivationPath: String?,
         isExcludeCustom: Boolean,
     ): List<Currency> {
-        val card = appStateHolder.getActualCard()
-        val userTokensRepository =
-            requireNotNull(appStateHolder.userTokensRepository) { "userTokensRepository is null" }
-        return if (card != null) {
-            userTokensRepository.getUserTokens(card, null) // refactor in [REDACTED_JIRA]
-                .filter {
-                    val checkCustom = if (isExcludeCustom) {
-                        !it.isCustomCurrency(null)
-                    } else {
-                        true
-                    }
-                    it.blockchain.toNetworkId() == networkId &&
-                        checkCustom &&
-                        it.derivationPath == derivationPath
-                }
-                .map {
-                    if (it is com.tangem.tap.features.wallet.models.Currency.Token) {
-                        NonNativeToken(
-                            id = it.coinId ?: "",
-                            name = it.currencyName,
-                            symbol = it.currencySymbol,
-                            networkId = it.blockchain.toNetworkId(),
-                            contractAddress = it.token.contractAddress,
-                            decimalCount = it.token.decimals,
-                        )
-                    } else {
-                        NativeToken(
-                            id = it.coinId ?: "",
-                            name = it.currencyName,
-                            symbol = it.currencySymbol,
-                            networkId = it.blockchain.toNetworkId(),
-                        )
-                    }
-                }
-        } else {
-            emptyList()
+        // FIXME: Find user wallet by ID
+        val userWallet = requireNotNull(userWalletsStore.selectedUserWalletOrNull) {
+            "No user wallet selected"
         }
+        return currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWallet.walletId)
+            .filter {
+                val checkCustom = if (isExcludeCustom) {
+                    !it.isCustom
+                } else {
+                    true
+                }
+                val blockchain = Blockchain.fromId(it.network.id.value)
+
+                blockchain.toNetworkId() == networkId &&
+                    checkCustom &&
+                    it.network.derivationPath.value == derivationPath
+            }
+            .map {
+                val blockchain = Blockchain.fromId(it.network.id.value)
+
+                if (it is CryptoCurrency.Token) {
+                    NonNativeToken(
+                        id = it.id.rawCurrencyId ?: "",
+                        name = it.name,
+                        symbol = it.symbol,
+                        networkId = blockchain.toNetworkId(),
+                        contractAddress = it.contractAddress,
+                        decimalCount = it.decimals,
+                    )
+                } else {
+                    NativeToken(
+                        id = it.id.rawCurrencyId ?: "",
+                        name = it.name,
+                        symbol = it.symbol,
+                        networkId = blockchain.toNetworkId(),
+                    )
+                }
+            }
     }
 
     override fun getNativeTokenForNetwork(networkId: String): Currency {
@@ -107,40 +102,9 @@ class UserWalletManagerImpl(
         }
     }
 
-    override suspend fun addToken(currency: Currency, derivationPath: String?) {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(currency.networkId)) { "blockchain not found" }
-        val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
-
-        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
-            Timber.e("Unable to add token, no user wallet selected")
-            return
-        }
-        walletCurrenciesManager.addCurrencies(
-            userWallet = selectedUserWallet,
-            currenciesToAdd = listOf(currency.toWalletCurrency(blockchainNetwork)),
-        )
-    }
-
     override suspend fun hideAllTokens() {
-        val userWallet = userWalletsListManager.selectedUserWalletSync.guard {
-            Timber.e("No user wallets selected")
-            return
-        }
-
-        val currencies = walletStoresManager.get(userWallet.walletId)
-            .firstOrNull()
-            ?.flatMap { walletStore ->
-                walletStore.walletsData.map { it.currency }
-            }
-            .guard {
-                Timber.d("No currencies found")
-                return
-            }
-
-        walletCurrenciesManager.removeCurrencies(userWallet, currenciesToRemove = currencies)
-            .doOnFailure { e ->
-                Timber.e(e, "Unable to delete all currencies")
-            }
+        // FIXME: Used only in Tester Actions
+        Timber.w("Not implemented")
     }
 
     override suspend fun getWalletAddress(networkId: String, derivationPath: String?): String {
@@ -216,28 +180,17 @@ class UserWalletManagerImpl(
         )
     }
 
-    override fun refreshWallet() {
-        // workaround, should update wallet after transaction
-        appStateHolder.mainStore?.dispatchOnMain(WalletAction.LoadData.Refresh)
-    }
-
     @Throws(IllegalArgumentException::class)
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
-        val walletManager = if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            val selectedUserWallet = requireNotNull(
-                userWalletsListManager.selectedUserWalletSync,
-            ) { "userWallet or userWalletsListManager is null" }
-            walletManagersFacade.getOrCreateWalletManager(
-                selectedUserWallet.walletId,
-                blockchain,
-                derivationPath,
-            )
-        } else {
-            val blockchainNetwork = BlockchainNetwork(blockchain, derivationPath, emptyList())
-            return requireNotNull(appStateHolder.walletState?.getWalletManager(blockchainNetwork)) {
-                "No wallet manager found"
-            }
-        }
+        val selectedUserWallet = requireNotNull(
+            userWalletsListManager.selectedUserWalletSync,
+        ) { "userWallet or userWalletsListManager is null" }
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            selectedUserWallet.walletId,
+            blockchain,
+            derivationPath,
+        )
+
         return requireNotNull(walletManager) {
             "No wallet manager found"
         }
@@ -252,18 +205,4 @@ private fun NonNativeToken.toSdkToken(): Token {
         contractAddress = this.contractAddress,
         decimals = this.decimalCount,
     )
-}
-
-private fun Currency.toWalletCurrency(network: BlockchainNetwork): WalletCurrency {
-    return when (this) {
-        is NativeToken -> WalletCurrency.Blockchain(
-            blockchain = network.blockchain,
-            derivationPath = network.derivationPath,
-        )
-        is NonNativeToken -> WalletCurrency.Token(
-            token = this.toSdkToken(),
-            blockchain = network.blockchain,
-            derivationPath = network.derivationPath,
-        )
-    }
 }
