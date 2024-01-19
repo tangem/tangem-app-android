@@ -35,10 +35,7 @@ import com.tangem.tap.features.signin.redux.SignInMiddleware
 import com.tangem.tap.features.signin.redux.SignInState
 import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.legacy.redux.TokensState
-import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
-import com.tangem.tap.features.walletSelector.redux.WalletSelectorMiddleware
-import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
+import com.tangem.tap.features.wallet.redux.middlewares.TradeCryptoMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeState
 import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
@@ -54,7 +51,6 @@ data class AppState(
     val onboardingNoteState: OnboardingNoteState = OnboardingNoteState(),
     val onboardingWalletState: OnboardingWalletState = OnboardingWalletState(),
     val onboardingOtherCardsState: OnboardingOtherCardsState = OnboardingOtherCardsState(),
-    val walletState: WalletState = WalletState(),
     val twinCardsState: TwinCardsState = TwinCardsState(),
     val sendState: SendState = SendState(),
     val detailsState: DetailsState = DetailsState(),
@@ -64,7 +60,6 @@ data class AppState(
     val shopState: ShopState = ShopState(),
     val welcomeState: WelcomeState = WelcomeState(),
     val saveWalletState: SaveWalletState = SaveWalletState(),
-    val walletSelectorState: WalletSelectorState = WalletSelectorState(),
     val signInState: SignInState = SignInState(),
     val daggerGraphState: DaggerGraphState = DaggerGraphState(),
 ) : StateType {
@@ -72,7 +67,7 @@ data class AppState(
     private val domainState: DomainState
         get() = domainStore.state
 
-    val domainNetworks: NetworkServices
+    private val domainNetworks: NetworkServices
         get() = domainState.globalState.networkServices
 
     val featureRepositoryProvider: FeatureRepositoryProvider
@@ -92,7 +87,6 @@ data class AppState(
                 OnboardingNoteMiddleware.handler,
                 OnboardingWalletMiddleware.handler,
                 OnboardingOtherCardsMiddleware.handler,
-                WalletMiddleware().walletMiddleware,
                 TwinCardsMiddleware.handler,
                 SendMiddleware().sendMiddleware,
                 DetailsMiddleware().detailsMiddleware,
@@ -103,12 +97,12 @@ data class AppState(
                 ShopMiddleware().shopMiddleware,
                 WelcomeMiddleware().middleware,
                 SaveWalletMiddleware().middleware,
-                WalletSelectorMiddleware().middleware,
                 LockUserWalletsTimerMiddleware().middleware,
                 AccessCodeRequestPolicyMiddleware().middleware,
                 SignInMiddleware.middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,
                 LegacyMiddleware.legacyMiddleware,
+                TradeCryptoMiddleware.middleware,
             )
         }
     }
