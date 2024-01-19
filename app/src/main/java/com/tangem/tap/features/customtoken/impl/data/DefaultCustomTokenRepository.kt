@@ -1,6 +1,7 @@
 package com.tangem.tap.features.customtoken.impl.data
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.toNetworkId
@@ -39,6 +40,7 @@ class DefaultCustomTokenRepository(
                 contractAddress = address,
                 networkIds = networkId ?: supportedTokenNetworkIds.joinToString(separator = ","),
             )
+                .getOrThrow()
                 .coins.firstNotNullOfOrNull { coin ->
                     val networksWithTheSameAddress = coin.networks.filter { network ->
                         (network.contractAddress != null || network.decimalCount != null) &&
