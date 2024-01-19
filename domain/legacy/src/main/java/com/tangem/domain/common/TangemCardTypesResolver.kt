@@ -26,6 +26,12 @@ internal class TangemCardTypesResolver(
             card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
     }
 
+    override fun isWhiteWallet2(): Boolean = card.batchId == WHITE_WALLET2_BATCH_ID
+
+    override fun isAvroraWallet(): Boolean = card.batchId == AVRORA_WALLET_BATCH_ID
+
+    override fun isTraillantWallet(): Boolean = card.batchId == TRILLIANT_WALLET_BATCH_ID
+
     override fun isShibaWallet(): Boolean {
         return card.firmwareVersion.compareTo(FirmwareVersion.KeysImportAvailable) == 0
     }
@@ -132,5 +138,8 @@ internal class TangemCardTypesResolver(
         const val TRON_WALLET_BATCH_ID = "AF07"
         const val KASPA_WALLET_BATCH_ID = "AF08"
         const val BAD_WALLET_BATCH_ID = "AF09"
+        const val WHITE_WALLET2_BATCH_ID = "AF15"
+        const val TRILLIANT_WALLET_BATCH_ID = "AF16"
+        const val AVRORA_WALLET_BATCH_ID = "AF18"
     }
 }
