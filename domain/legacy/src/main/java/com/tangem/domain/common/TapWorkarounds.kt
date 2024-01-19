@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
-import java.util.*
+import java.util.Locale
 
 /**
 [REDACTED_AUTHOR]
@@ -21,6 +21,9 @@ object TapWorkarounds {
 
     val CardDTO.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
+
+    val CardDTO.isVisa: Boolean
+        get() = firmwareVersion.doubleValue in FirmwareVersion.visaRange
 
     val CardDTO.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
@@ -57,7 +60,8 @@ object TapWorkarounds {
         "AB12" to Blockchain.Ethereum,
     )
 
-    private val excludedBatches = listOf("0027", "0030", "0031", "0035")
+    // TODO try remove if it's possible because we can configure on init sdk com.tangem.common.core.Config
+    private val excludedBatches = listOf("0027", "0030", "0031", "0035", "DA88")
 
     private val excludedIssuers = listOf("TTM BANK")
 

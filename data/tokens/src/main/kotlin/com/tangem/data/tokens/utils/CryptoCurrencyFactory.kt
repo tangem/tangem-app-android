@@ -2,6 +2,7 @@ package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.DerivationStyleProvider
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import timber.log.Timber
@@ -57,4 +58,43 @@ class CryptoCurrencyFactory {
             isCustom = isCustomCoin(network),
         )
     }
+
+    fun createCoin(
+        networkId: String,
+        extraDerivationPath: String?,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): CryptoCurrency.Coin? {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: Blockchain.Unknown
+        return createCoin(blockchain, extraDerivationPath, derivationStyleProvider)
+    }
+
+    fun createToken(
+        token: Token,
+        networkId: String,
+        extraDerivationPath: String?,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): CryptoCurrency.Token? {
+        val sdkToken = SdkToken(
+            name = token.name,
+            symbol = token.symbol,
+            contractAddress = token.contractAddress,
+            decimals = token.decimals,
+            id = token.id,
+        )
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: Blockchain.Unknown
+        return createToken(
+            sdkToken = sdkToken,
+            blockchain = blockchain,
+            extraDerivationPath = extraDerivationPath,
+            derivationStyleProvider = derivationStyleProvider,
+        )
+    }
+
+    data class Token(
+        val name: String,
+        val symbol: String,
+        val contractAddress: String,
+        val decimals: Int,
+        val id: String? = null,
+    )
 }

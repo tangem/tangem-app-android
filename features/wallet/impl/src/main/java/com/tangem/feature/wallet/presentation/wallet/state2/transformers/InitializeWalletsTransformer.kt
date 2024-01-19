@@ -6,8 +6,8 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopBarConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.createStateByWalletType
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
@@ -66,6 +66,15 @@ internal class InitializeWalletsTransformer(
                 WalletState.SingleCurrency.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
                     buttons = createDisabledButtons(),
+                    onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
+                    onUnlockClick = clickIntents::onUnlockWalletClick,
+                    onScanClick = clickIntents::onScanToUnlockWalletClick,
+                    onExploreClick = clickIntents::onExploreClick,
+                )
+            },
+            visaWalletCreator = {
+                WalletState.Visa.Locked(
+                    walletCardState = userWallet.toLockedWalletCardState(),
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                     onUnlockClick = clickIntents::onUnlockWalletClick,
                     onScanClick = clickIntents::onScanToUnlockWalletClick,

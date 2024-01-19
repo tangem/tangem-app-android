@@ -7,8 +7,5 @@ package com.tangem.features.wallet.featuretoggles
  */
 interface WalletFeatureToggles {
 
-    /** Availability of redesigned screen */
-    val isRedesignedScreenEnabled: Boolean
-
     val isWalletsScrollingPreviewEnabled: Boolean
 }
