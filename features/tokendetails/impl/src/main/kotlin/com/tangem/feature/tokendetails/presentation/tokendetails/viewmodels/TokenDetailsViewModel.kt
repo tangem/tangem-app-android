@@ -40,6 +40,8 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
+import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
+import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
@@ -57,7 +59,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @HiltViewModel
@@ -95,7 +96,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val cryptoCurrency: CryptoCurrency = savedStateHandle[TokenDetailsRouter.CRYPTO_CURRENCY_KEY]
         ?: error("This screen can't open without `CryptoCurrency`")
 
-    var router by Delegates.notNull<InnerTokenDetailsRouter>()
+    lateinit var router: InnerTokenDetailsRouter
 
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
@@ -115,7 +116,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         decimals = cryptoCurrency.decimals,
     )
 
-    private val exchangeStatusFactory by lazy {
+    private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         ExchangeStatusFactory(
             swapTransactionRepository = swapTransactionRepository,
             swapRepository = swapRepository,
@@ -130,6 +131,17 @@ internal class TokenDetailsViewModel @Inject constructor(
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
         )
+    }
+
+    private val notificationsAnalyticsSender by lazy(mode = LazyThreadSafetyMode.NONE) {
+        TokenDetailsNotificationsAnalyticsSender(
+            cryptoCurrency = cryptoCurrency,
+            analyticsEventHandler = analyticsEventsHandler,
+        )
+    }
+
+    private val currencyStatusAnalyticsSender by lazy(mode = LazyThreadSafetyMode.NONE) {
+        TokenDetailsCurrencyStatusAnalyticsSender(analyticsEventsHandler)
     }
 
     var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
@@ -188,7 +200,11 @@ internal class TokenDetailsViewModel @Inject constructor(
                 isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
-                .onEach { uiState = stateFactory.getStateWithNotifications(it) }
+                .onEach {
+                    val updatedState = stateFactory.getStateWithNotifications(it)
+                    notificationsAnalyticsSender.send(uiState, updatedState.notifications)
+                    uiState = updatedState
+                }
                 .launchIn(viewModelScope)
                 .saveIn(warningsJobHolder)
         }
@@ -203,13 +219,14 @@ internal class TokenDetailsViewModel @Inject constructor(
                 isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
-                .onEach { either ->
-                    uiState = stateFactory.getCurrencyLoadedBalanceState(either)
-                    either.onRight { status ->
+                .onEach { maybeCurrencyStatus ->
+                    uiState = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
+                    maybeCurrencyStatus.onRight { status ->
                         cryptoCurrencyStatus = status
                         updateButtons(userWalletId = userWalletId, currencyStatus = status)
                         updateWarnings(status)
                     }
+                    currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
                 }
                 .flowOn(dispatchers.io)
                 .launchIn(viewModelScope)

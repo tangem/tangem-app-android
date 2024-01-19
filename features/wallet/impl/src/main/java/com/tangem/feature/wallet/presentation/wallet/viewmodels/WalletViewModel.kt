@@ -1231,7 +1231,6 @@ internal class WalletViewModel @Inject constructor(
                         }
                         is CryptoCurrencyStatus.NoQuote -> AnalyticsParam.CardBalanceState.NoRate
                         is CryptoCurrencyStatus.Unreachable,
-                        is CryptoCurrencyStatus.UnreachableWithoutAddresses,
                         -> AnalyticsParam.CardBalanceState.BlockchainError
                         is CryptoCurrencyStatus.MissedDerivation,
                         is CryptoCurrencyStatus.Loading,
