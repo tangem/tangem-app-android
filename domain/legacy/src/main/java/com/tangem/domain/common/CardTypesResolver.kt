@@ -10,6 +10,12 @@ interface CardTypesResolver {
 
     fun isTangemWallet(): Boolean
 
+    fun isWhiteWallet2(): Boolean
+
+    fun isAvroraWallet(): Boolean
+
+    fun isTraillantWallet(): Boolean
+
     fun isShibaWallet(): Boolean
 
     fun isTronWallet(): Boolean
