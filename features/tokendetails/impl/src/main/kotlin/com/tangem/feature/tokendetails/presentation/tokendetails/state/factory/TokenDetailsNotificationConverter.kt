@@ -25,10 +25,32 @@ internal class TokenDetailsNotificationConverter(
 
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
-            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFee(
-                feeInfo = warning,
+            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFeeWithBuyButton(
+                currency = warning.tokenCurrency,
+                networkName = warning.coinCurrency.name,
+                feeCurrencyName = warning.coinCurrency.name,
+                feeCurrencySymbol = warning.coinCurrency.symbol,
                 onBuyClick = { clickIntents.onBuyCoinClick(warning.coinCurrency) },
             )
+            is CryptoCurrencyWarning.CustomTokenNotEnoughForFee -> {
+                val feeCurrency = warning.feeCurrency
+                if (feeCurrency != null) {
+                    TokenDetailsNotification.NetworkFeeWithBuyButton(
+                        currency = warning.currency,
+                        networkName = feeCurrency.network.name,
+                        feeCurrencyName = warning.feeCurrencyName,
+                        feeCurrencySymbol = warning.feeCurrencySymbol,
+                        onBuyClick = { clickIntents.onBuyCoinClick(feeCurrency) },
+                    )
+                } else {
+                    TokenDetailsNotification.NetworkFee(
+                        currency = warning.currency,
+                        networkName = warning.networkName,
+                        feeCurrencyName = warning.feeCurrencyName,
+                        feeCurrencySymbol = warning.feeCurrencySymbol,
+                    )
+                }
+            }
             is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDeposit(
                 existentialInfo = warning,
             )
