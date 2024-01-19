@@ -565,6 +565,35 @@ class DefaultWalletManagersFacade(
         return walletManager.wallet.recentTransactions.mapNotNull(transactionDataConverter::convert)
     }
 
+    override suspend fun tokenBalance(
+        userWalletId: UserWalletId,
+        network: Network,
+        name: String,
+        symbol: String,
+        contractAddress: String,
+        decimals: Int,
+        id: String?,
+    ): BigDecimal {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+        requireNotNull(walletManager) { "Unable to get a wallet manager for blockchain: $blockchain" }
+        return walletManager.wallet.fundsAvailable(
+            AmountType.Token(
+                token = Token(
+                    name = name,
+                    symbol = symbol,
+                    contractAddress = contractAddress,
+                    decimals = decimals,
+                    id = id,
+                ),
+            ),
+        )
+    }
+
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
         if (tokens.isEmpty()) return
 
