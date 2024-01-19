@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -21,6 +22,7 @@ import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateControlle
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
+import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -33,7 +35,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 @Suppress("LongParameterList")
 @HiltViewModel
@@ -53,11 +54,12 @@ internal class WalletViewModelV2 @Inject constructor(
     analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
+    private val screenLifecycleProvider: ScreenLifecycleProvider,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
 
-    private var router: InnerWalletRouter by Delegates.notNull()
+    private lateinit var router: InnerWalletRouter
     private var walletsUpdateJobHolder: JobHolder = JobHolder()
 
     init {
@@ -73,6 +75,10 @@ internal class WalletViewModelV2 @Inject constructor(
     fun setWalletRouter(router: InnerWalletRouter) {
         this.router = router
         clickIntents.initialize(router, viewModelScope)
+    }
+
+    fun subscribeToLifecycle(lifecycleOwner: LifecycleOwner) {
+        lifecycleOwner.lifecycle.addObserver(screenLifecycleProvider)
     }
 
     override fun onCleared() {
