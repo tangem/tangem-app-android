@@ -19,7 +19,9 @@ internal class NetworkStatusFactory {
             network = network,
             value = when (result) {
                 is UpdateWalletManagerResult.MissedDerivation -> NetworkStatus.MissedDerivation
-                is UpdateWalletManagerResult.Unreachable -> NetworkStatus.Unreachable
+                is UpdateWalletManagerResult.Unreachable -> NetworkStatus.Unreachable(
+                    address = getNetworkAddressOrNull(result.selectedAddress, result.addresses),
+                )
                 is UpdateWalletManagerResult.NoAccount -> NetworkStatus.NoAccount(
                     address = getNetworkAddress(result.selectedAddress, result.addresses),
                     amountToCreateAccount = result.amountToCreateAccount,
@@ -91,6 +93,14 @@ internal class NetworkStatusFactory {
 
     private fun createCurrentTransactions(transactions: Set<CryptoCurrencyTransaction>): Set<TxHistoryItem> {
         return transactions.mapTo(hashSetOf()) { it.txHistoryItem }
+    }
+
+    private fun getNetworkAddressOrNull(selectedAddress: String?, availableAddresses: Set<Address>?): NetworkAddress? {
+        if (selectedAddress == null || availableAddresses == null) {
+            return null
+        }
+
+        return getNetworkAddress(selectedAddress, availableAddresses)
     }
 
     private fun getNetworkAddress(selectedAddress: String, availableAddresses: Set<Address>): NetworkAddress {
