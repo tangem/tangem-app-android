@@ -178,7 +178,7 @@ private fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick:
         decimals = fee.amount.decimals,
     )
     InputRowDefault(
-        title = TextReference.Res(R.string.send_network_fee_title),
+        title = TextReference.Res(R.string.common_network_fee_title),
         text = TextReference.Str(feeValue),
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
