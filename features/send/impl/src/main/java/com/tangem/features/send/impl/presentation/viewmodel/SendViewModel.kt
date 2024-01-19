@@ -109,6 +109,7 @@ internal class SendViewModel @Inject constructor(
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
         walletManagersFacade = walletManagersFacade,
+        clickIntents = this,
     )
 // [REDACTED_TODO_COMMENT]
     var uiState: SendUiState by mutableStateOf(stateFactory.getInitialState())
@@ -455,6 +456,16 @@ internal class SendViewModel @Inject constructor(
     override fun showFee() = stateRouter.showFee(isFromSend = true)
 
     override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
+
+    override fun onAmountReduceClick(reducedAmount: String) {
+        uiState = stateFactory.getOnAmountValueChange(reducedAmount)
+        uiState = sendNotificationFactory.dismissHighFeeWarningState()
+        getFee()
+    }
+
+    override fun onAmountReduceIgnoreClick() {
+        uiState = sendNotificationFactory.dismissHighFeeWarningState()
+    }
 
     private fun verifyAndSendTransaction() {
         val recipient = uiState.recipientState?.addressTextField?.value ?: return
