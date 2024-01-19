@@ -57,16 +57,28 @@ internal sealed class SendNotification(val config: NotificationConfig) {
     sealed class Warning(
         title: TextReference,
         subtitle: TextReference,
+        buttonsState: NotificationConfig.ButtonsState? = null,
     ) : SendNotification(
         config = NotificationConfig(
             title = title,
             subtitle = subtitle,
             iconResId = R.drawable.img_attention_20,
+            buttonsState = buttonsState,
         ),
     ) {
-        data class HighFeeError(val amount: String) : Warning(
+        data class HighFeeError(
+            val amount: String,
+            val onConfirmClick: () -> Unit,
+            val onDismissClick: () -> Unit,
+        ) : Warning(
             title = resourceReference(R.string.send_notification_high_fee_title),
             subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(amount)),
+            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
+                primaryText = resourceReference(R.string.send_notification_fee_too_high_accept, wrappedList(amount)),
+                onPrimaryClick = onConfirmClick,
+                secondaryText = resourceReference(R.string.send_notification_fee_too_high_ignore),
+                onSecondaryClick = onDismissClick,
+            ),
         )
 
         data class ExistentialDeposit(val deposit: String) : Warning(
