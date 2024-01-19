@@ -12,7 +12,7 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.collectLatest
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryCountErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryCountTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryItemsErrorTransformer
@@ -21,7 +21,6 @@ import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletCl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlin.coroutines.CoroutineContext
 
 typealias MaybeTxHistoryCount = Either<TxHistoryStateError, Int>
 typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>
@@ -30,17 +29,14 @@ typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxHis
 internal class TxHistorySubscriber(
     private val userWallet: UserWallet,
     private val isRefresh: Boolean,
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntentsV2,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
-) : WalletSubscriber<PagingData<TxHistoryItem>>(name = "tx_history") {
+) : WalletSubscriber() {
 
-    override fun create(
-        coroutineScope: CoroutineScope,
-        uiDispatcher: CoroutineContext,
-    ): Flow<PagingData<TxHistoryItem>> {
+    override fun create(coroutineScope: CoroutineScope): Flow<PagingData<TxHistoryItem>> {
         return flow {
             getPrimaryCurrencyStatusUpdatesUseCase.collectLatest(userWalletId = userWallet.walletId) { status ->
                 val maybeTxHistoryItemCount = txHistoryItemsCountUseCase(
