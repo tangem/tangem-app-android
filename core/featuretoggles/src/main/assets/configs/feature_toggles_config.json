@@ -1,31 +1,11 @@
 [
     {
-        "name": "OPTIMISM_SWAP_FEATURE_ENABLED",
-        "version": "4.3.1"
-    },
-    {
         "name": "NEW_CARD_SCANNING_ENABLED",
-        "version": "undefined"
-    },
-    {
-        "name": "REDESIGNED_WALLET_SCREEN_ENABLED",
-        "version": "5.0.0"
-    },
-    {
-        "name": "1INCH_LEARN_2_EARN_ENABLED",
         "version": "undefined"
     },
     {
         "name": "SHOPIFY_DYNAMIC_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "REDESIGNED_APP_CURRENCY_SELECTOR_ENABLED",
-        "version": "5.0.0"
-    },
-    {
-        "name": "DARK_THEME_ENABLED",
-        "version": "5.0.0"
     },
     {
         "name": "REDESIGNED_MANAGE_TOKENS_SCREEN_ENABLED",
@@ -37,6 +17,10 @@
     },
     {
         "name": "WALLETS_SCROLLING_PREVIEW_ENABLED",
-        "version": "undefined"
+        "version": "5.5.0"
+    },
+    {
+        "name": "DERIVE_PUBLIC_KEYS_REFACTORING_ENABLED",
+        "version": "5.5.0"
     }
 ]
