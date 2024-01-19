@@ -110,6 +110,7 @@ internal class WalletViewModel @Inject constructor(
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
@@ -636,9 +637,17 @@ internal class WalletViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonSend(coinStatus.currency.symbol),
         )
 
-        reduxStateHolder.dispatch(
-            action = TradeCryptoAction.New.SendCoin(userWallet = userWallet, coinStatus = coinStatus),
-        )
+        viewModelScope.launch(dispatchers.main) {
+            val maybeFeeCurrencyStatus =
+                getFeePaidCryptoCurrencyStatusSyncUseCase(userWallet.walletId, coinStatus).getOrNull()
+            reduxStateHolder.dispatch(
+                action = TradeCryptoAction.New.SendCoin(
+                    userWallet = userWallet,
+                    coinStatus = coinStatus,
+                    feeCurrencyStatus = maybeFeeCurrencyStatus,
+                ),
+            )
+        }
     }
 
     override fun onMultiCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
@@ -649,21 +658,30 @@ internal class WalletViewModel @Inject constructor(
         )
 
         val userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex)
-        when (cryptoCurrencyStatus.currency) {
-            is CryptoCurrency.Coin -> {
-                uiState = stateFactory.getStateWithClosedBottomSheet()
-                reduxStateHolder.dispatch(
-                    action = TradeCryptoAction.New.SendCoin(
-                        userWallet = userWallet,
-                        coinStatus = cryptoCurrencyStatus,
-                    ),
-                )
+        viewModelScope.launch(dispatchers.main) {
+            val maybeFeeCurrencyStatus =
+                getFeePaidCryptoCurrencyStatusSyncUseCase(userWallet.walletId, cryptoCurrencyStatus).getOrNull()
+            when (cryptoCurrencyStatus.currency) {
+                is CryptoCurrency.Coin -> {
+                    uiState = stateFactory.getStateWithClosedBottomSheet()
+                    reduxStateHolder.dispatch(
+                        action = TradeCryptoAction.New.SendCoin(
+                            userWallet = userWallet,
+                            coinStatus = cryptoCurrencyStatus,
+                            feeCurrencyStatus = maybeFeeCurrencyStatus,
+                        ),
+                    )
+                }
+                is CryptoCurrency.Token -> sendToken(userWallet, cryptoCurrencyStatus, maybeFeeCurrencyStatus)
             }
-            is CryptoCurrency.Token -> sendToken(userWallet, cryptoCurrencyStatus)
         }
     }
 
-    private fun sendToken(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    private fun sendToken(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
+    ) {
         viewModelScope.launch(dispatchers.io) {
             getNetworkCoinStatusUseCase(
                 userWalletId = userWallet.walletId,
@@ -681,6 +699,7 @@ internal class WalletViewModel @Inject constructor(
                                 tokenCurrency = requireNotNull(cryptoCurrencyStatus.currency as? CryptoCurrency.Token),
                                 tokenFiatRate = cryptoCurrencyStatus.value.fiatRate,
                                 coinFiatRate = coinStatus.value.fiatRate,
+                                feeCurrencyStatus = feeCurrencyStatus,
                             ),
                         )
                     }
