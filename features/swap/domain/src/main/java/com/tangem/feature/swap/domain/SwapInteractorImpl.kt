@@ -801,7 +801,6 @@ internal class SwapInteractorImpl @Inject constructor(
                     toTokenAmount = quoteModel.toTokenAmount,
                     swapData = null,
                     txFeeState = txFee,
-                    exchangeProviderType = exchangeProviderType,
                 ).copy(
                     warnings = manageWarnings(fromToken, amount),
                 )
@@ -964,7 +963,6 @@ internal class SwapInteractorImpl @Inject constructor(
                     toTokenAmount = swapData.toTokenAmount,
                     swapData = swapData,
                     txFeeState = txFeeState,
-                    exchangeProviderType = ExchangeProviderType.DEX,
                 )
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
@@ -1004,7 +1002,6 @@ internal class SwapInteractorImpl @Inject constructor(
         toTokenAmount: SwapAmount,
         swapData: SwapDataModel?,
         txFeeState: TxFeeState,
-        exchangeProviderType: ExchangeProviderType,
     ): SwapState.QuotesLoadedState {
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency

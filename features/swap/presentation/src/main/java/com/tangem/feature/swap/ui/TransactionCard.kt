@@ -295,10 +295,9 @@ private fun Content(
                                 painter = painterResource(id = R.drawable.ic_alert_24),
                                 contentDescription = null,
                                 tint = TangemTheme.colors.icon.attention,
-                                modifier = Modifier.align(Alignment.CenterVertically)
+                                modifier = Modifier.align(Alignment.CenterVertically),
                             )
                         }
-
                     }
                 } else {
                     AnimatedContent(targetState = amountEquivalent, label = "") {
@@ -504,6 +503,7 @@ private fun TransactionCardPreview() {
 }
 
 @Composable
+@Suppress("MagicNumber")
 private fun TransactionCardPreviewWithPriceImpact() {
     TransactionCard(
         type = TransactionCardType.ReadOnly(),
