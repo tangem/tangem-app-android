@@ -24,6 +24,9 @@ internal object WalletImageResolver {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         return when {
             cardTypesResolver.isDevKit() -> R.drawable.ill_dev_120_106
+            cardTypesResolver.isWhiteWallet2() -> userWallet.resolveWhiteWallet2()
+            cardTypesResolver.isAvroraWallet() -> userWallet.resolveAvroraWallet()
+            cardTypesResolver.isTraillantWallet() -> userWallet.resolveTraillantWallet()
             cardTypesResolver.isTronWallet() -> userWallet.resolveTronWallet()
             cardTypesResolver.isKaspaWallet() -> userWallet.resolveKaspaWallet()
             cardTypesResolver.isBadWallet() -> userWallet.resolveBadWallet()
@@ -78,6 +81,27 @@ internal object WalletImageResolver {
         return resolveWallet2(
             oneBackupResId = R.drawable.ill_shiba_card2_120_106,
             twoBackupResId = R.drawable.ill_shiba_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveWhiteWallet2(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_white_card2_120_106,
+            twoBackupResId = R.drawable.ill_white_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveAvroraWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_avrora_card2_120_106,
+            twoBackupResId = R.drawable.ill_avrora_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveTraillantWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_traillant_card2_120_106,
+            twoBackupResId = R.drawable.ill_traillant_card3_120_106,
         )
     }
 
