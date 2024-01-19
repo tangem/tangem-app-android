@@ -9,7 +9,6 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.CoroutineScope
@@ -21,7 +20,7 @@ private val scope = CoroutineScope(Dispatchers.IO)
 
 internal class TxHistoryItemFlowConverter(
     private val userWallet: UserWallet,
-    private val currentState: WalletState.SingleCurrency.Content,
+    private val currentState: TxHistoryState,
     private val clickIntents: WalletClickIntentsV2,
 ) : Converter<Flow<PagingData<TxHistoryItem>>, TxHistoryState?> {
 
@@ -35,7 +34,7 @@ internal class TxHistoryItemFlowConverter(
     }
 
     override fun convert(value: Flow<PagingData<TxHistoryItem>>): TxHistoryState {
-        val txHistoryContent = currentState.txHistoryState as? TxHistoryState.Content
+        val txHistoryContent = currentState as? TxHistoryState.Content
             ?: TxHistoryState.Content(contentItems = MutableStateFlow(PagingData.empty()))
 
         // FIXME: TxHistoryRepository should send loading transactions
