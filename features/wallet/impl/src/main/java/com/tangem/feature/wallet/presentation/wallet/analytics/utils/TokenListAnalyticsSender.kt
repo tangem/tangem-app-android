@@ -120,8 +120,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
 
     private fun sendUnreachableNetworksEventIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
         val hasUnreachableCurrencies = currenciesStatuses.any {
-            it.value is CryptoCurrencyStatus.Unreachable ||
-                it.value is CryptoCurrencyStatus.UnreachableWithoutAddresses
+            it.value is CryptoCurrencyStatus.Unreachable
         }
 
         if (hasUnreachableCurrencies) {
