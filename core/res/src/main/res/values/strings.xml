@@ -728,7 +728,7 @@
     <string name="warning_rate_app_message">Your review keeps us motivated to make Tangem Wallet even better</string>
     <string name="warning_rate_app_title">Enjoying Tangem?</string>
     <string name="warning_rent_fee_title">Network rent fee required</string>
-    <string name="warning_send_blocked_funds_for_fee_message">%1$s is a token in the %2$s network. To make a %3$s transaction, you must deposit some %4$s (%5$s) to cover the network fee.</string>
+    <string name="warning_send_blocked_funds_for_fee_message">%1$s is an asset in the %2$s network. To make a %3$s transaction, you must deposit some %4$s (%5$s) to cover the network fee.</string>
     <string name="warning_send_blocked_funds_for_fee_title">Insufficient %1$s to cover network fee</string>
     <string name="warning_send_blocked_pending_transactions_message">Sending funds will be available once the %s transaction is complete</string>
     <string name="warning_send_blocked_pending_transactions_title">Transaction pending</string>

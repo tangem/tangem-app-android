@@ -76,8 +76,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "decimal/test" -> Blockchain.DecimalTestnet
         "xdc-network" -> Blockchain.XDC
         "xdc-network/test" -> Blockchain.XDCTestnet
-        "vechain" -> Blockchain.Vechain // TODO AND-5771
-        "vechain/test" -> Blockchain.VechainTestnet // TODO AND-5771
+        "vechain" -> Blockchain.Vechain
+        "vechain/test" -> Blockchain.VechainTestnet
         "aptos" -> Blockchain.Aptos
         "aptos/test" -> Blockchain.AptosTestnet
         else -> null

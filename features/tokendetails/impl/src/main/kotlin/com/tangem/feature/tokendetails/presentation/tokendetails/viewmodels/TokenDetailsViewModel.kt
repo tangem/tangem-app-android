@@ -74,6 +74,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -356,23 +357,35 @@ internal class TokenDetailsViewModel @Inject constructor(
         val cryptoCurrencyStatus = cryptoCurrencyStatus ?: return
 
         viewModelScope.launch(dispatchers.main) {
+            val maybeFeeCurrencyStatus =
+                getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+
             when (val currency = cryptoCurrencyStatus.currency) {
                 is CryptoCurrency.Coin -> {
                     reduxStateHolder.dispatch(
                         action = TradeCryptoAction.New.SendCoin(
                             userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
                             coinStatus = cryptoCurrencyStatus,
+                            feeCurrencyStatus = maybeFeeCurrencyStatus,
                         ),
                     )
                 }
                 is CryptoCurrency.Token -> {
-                    sendToken(tokenCurrency = currency, tokenFiatRate = cryptoCurrencyStatus.value.fiatRate)
+                    sendToken(
+                        tokenCurrency = currency,
+                        tokenFiatRate = cryptoCurrencyStatus.value.fiatRate,
+                        feeCurrencyStatus = maybeFeeCurrencyStatus,
+                    )
                 }
             }
         }
     }
 
-    private fun sendToken(tokenCurrency: CryptoCurrency.Token, tokenFiatRate: BigDecimal?) {
+    private fun sendToken(
+        tokenCurrency: CryptoCurrency.Token,
+        tokenFiatRate: BigDecimal?,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
+    ) {
         viewModelScope.launch(dispatchers.io) {
             val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             val maybeCoinStatus = getNetworkCoinStatusUseCase(
@@ -394,6 +407,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                         ifLeft = { null },
                         ifRight = { it.value.fiatRate },
                     ),
+                    feeCurrencyStatus = feeCurrencyStatus,
                 ),
             )
         }

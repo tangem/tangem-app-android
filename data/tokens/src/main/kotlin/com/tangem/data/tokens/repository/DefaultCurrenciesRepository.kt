@@ -343,6 +343,7 @@ internal class DefaultCurrenciesRepository(
                     id = feePaidCurrency.token.id,
                 )
                 FeePaidCurrency.Token(
+                    tokenId = getTokenId(network = currency.network, sdkToken = feePaidCurrency.token),
                     name = feePaidCurrency.token.name,
                     symbol = feePaidCurrency.token.symbol,
                     contractAddress = feePaidCurrency.token.contractAddress,
