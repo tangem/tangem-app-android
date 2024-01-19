@@ -27,7 +27,7 @@ internal class MultiWalletWarningsSubscriber(
             .conflate()
             .distinctUntilChanged()
             .onEach { warnings ->
-                val displayedState = stateHolder.getWallet(userWalletId)
+                val displayedState = stateHolder.getWalletIfSelected(userWalletId)
 
                 stateHolder.update(SetWarningsTransformer(userWalletId, warnings))
                 walletWarningsAnalyticsSender.send(displayedState, warnings)
