@@ -1,8 +1,8 @@
 package com.tangem.tap.features.home.redux
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action

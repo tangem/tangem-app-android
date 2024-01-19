@@ -9,6 +9,10 @@ import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
  */
 interface CustomTokenRepository {
 
-    /** Find token by [address] and [networkId] */
+    /**
+     * Find token by [address] and [networkId]
+     *
+     * @throws com.tangem.datasource.api.common.response.ApiResponseError
+     * */
     suspend fun findToken(address: String, networkId: String?): FoundToken
 }
