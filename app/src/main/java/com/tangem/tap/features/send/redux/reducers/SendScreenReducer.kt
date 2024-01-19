@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.features.send.redux.*
@@ -109,7 +110,8 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
     }
 
     private fun isFeePaidInNetworkCurrency(blockchain: Blockchain): Boolean =
-        blockchain.tokenTransactionFeePaidInNetworkCurrency()
+        // blockchain.tokenTransactionFeePaidInNetworkCurrency()
+        blockchain.feePaidCurrency() == FeePaidCurrency.SameCurrency // TODO [REDACTED_TASK_KEY]
 
     private fun isCoinAmount(typeOfAmount: AmountType): Boolean = typeOfAmount == AmountType.Coin
 }
