@@ -19,6 +19,7 @@ internal object WalletImageResolver {
     private const val WALLET_WITH_TWO_BACKUPS_COUNT = 3
 
     /** Get a specified wallet [userWallet] image */
+    @Suppress("CyclomaticComplexMethod")
     @DrawableRes
     fun resolve(userWallet: UserWallet): Int? {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver

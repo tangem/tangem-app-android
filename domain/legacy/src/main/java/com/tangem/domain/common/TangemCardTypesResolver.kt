@@ -28,9 +28,9 @@ internal class TangemCardTypesResolver(
 
     override fun isWhiteWallet2(): Boolean = card.batchId == WHITE_WALLET2_BATCH_ID
 
-    override fun isAvroraWallet() : Boolean = card.batchId == AVRORA_WALLET_BATCH_ID
+    override fun isAvroraWallet(): Boolean = card.batchId == AVRORA_WALLET_BATCH_ID
 
-    override fun isTraillantWallet() : Boolean = card.batchId == TRILLIANT_WALLET_BATCH_ID
+    override fun isTraillantWallet(): Boolean = card.batchId == TRILLIANT_WALLET_BATCH_ID
 
     override fun isShibaWallet(): Boolean {
         return card.firmwareVersion.compareTo(FirmwareVersion.KeysImportAvailable) == 0
