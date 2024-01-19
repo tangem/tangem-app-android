@@ -35,7 +35,6 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.tangem.card.core)
-    implementation(deps.tangem.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -51,7 +50,6 @@ dependencies {
     implementation(projects.data.tokens)
 
     /** Domain modules */
-    implementation(projects.common)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)

@@ -6,12 +6,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.components.states.Item
-import com.tangem.core.ui.components.states.SelectableItemsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
-import com.tangem.feature.swap.domain.models.ui.TxFee
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -75,29 +72,6 @@ data class SwapButton(
     val onClick: () -> Unit,
 )
 
-sealed class FeeState(open val tangemFee: Double) {
-
-    object Empty : FeeState(0.0)
-
-    data class Loaded(
-        override val tangemFee: Double,
-        override val state: SelectableItemsState<TxFee>?,
-        val onSelectItem: (Item<TxFee>) -> Unit,
-    ) : FeeState(tangemFee), FeeSelectState
-
-    object Loading : FeeState(0.0)
-
-    data class NotEnoughFundsWarning(
-        override val tangemFee: Double,
-        override val state: SelectableItemsState<TxFee>?,
-        val onSelectItem: (Item<TxFee>) -> Unit,
-    ) : FeeState(tangemFee), FeeSelectState
-}
-
-sealed interface FeeSelectState {
-    val state: SelectableItemsState<TxFee>?
-}
-
 sealed interface TransactionCardType {
 
     val headerResId: Int
@@ -109,7 +83,7 @@ sealed interface TransactionCardType {
     ) : TransactionCardType
 
     data class ReadOnly(
-        val highPriceImpact: String? = null,
+        val onWarningClick: (() -> Unit)? = null,
         @StringRes override val headerResId: Int = R.string.swapping_to_title,
     ) : TransactionCardType
 }
@@ -130,19 +104,13 @@ sealed interface SwapWarning {
     object InsufficientFunds : SwapWarning
     data class NoAvailableTokensToSwap(val notificationConfig: NotificationConfig) : SwapWarning
     data class GenericWarning(
-        val message: String? = null,
+        val message: TextReference? = null,
         val type: GenericWarningType = GenericWarningType.OTHER,
         val shouldWrapMessage: Boolean = false,
         val onClick: () -> Unit,
     ) : SwapWarning
     // data class RateExpired(val onClick: () -> Unit) : SwapWarning
-    /**
-     * High price impact warning
-     *
-     * @property priceImpact in format = 10 (means 10%)
-     */
-    data class HighPriceImpact(val priceImpact: Int, val notificationConfig: NotificationConfig) : SwapWarning
-    data class TooSmallAmountWarning(val notificationConfig: NotificationConfig) : SwapWarning
+    data class GeneralError(val notificationConfig: NotificationConfig) : SwapWarning
     data class UnableToCoverFeeWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class GeneralWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class GeneralInformational(val notificationConfig: NotificationConfig) : SwapWarning

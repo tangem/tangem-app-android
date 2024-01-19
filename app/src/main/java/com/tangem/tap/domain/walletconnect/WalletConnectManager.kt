@@ -36,7 +36,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import timber.log.Timber
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 
@@ -191,7 +191,7 @@ class WalletConnectManager {
         }
     }
 
-    fun removeSimilarSessions(activeData: WalletConnectActiveData) {
+    private fun removeSimilarSessions(activeData: WalletConnectActiveData) {
         val sessionsToRemove = sessions.filter {
             it.value.wallet.walletPublicKey?.equals(activeData.wallet.walletPublicKey) == true &&
                 it.value.peerMeta?.url == activeData.peerMeta?.url &&
@@ -206,7 +206,7 @@ class WalletConnectManager {
         activeData.client.rejectRequest(id)
     }
 
-    fun acceptRequest(topic: String, id: Long, data: String) {
+    private fun acceptRequest(topic: String, id: Long, data: String) {
         val activeData = sessions[topic] ?: return
         activeData.client.approveRequest(id, data)
     }
@@ -368,7 +368,7 @@ class WalletConnectManager {
     }
 
     @Suppress("LongMethod", "ComplexMethod")
-    fun setListeners(client: WCClient) {
+    private fun setListeners(client: WCClient) {
         client.onSessionRequest = { id: Long, peer: WCPeerMeta ->
             Timber.d("OnSessionRequest: $peer")
             val session = client.session
