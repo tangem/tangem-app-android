@@ -122,7 +122,6 @@ internal data class SocialNetworkLink(
 
 internal sealed class EventError {
     object Empty : EventError()
-    data class DemoReferralNotAvailable(val onErrorShow: () -> Unit) : EventError()
 }
 
 sealed class SocialNetwork(val id: String, val iconRes: Int) {
