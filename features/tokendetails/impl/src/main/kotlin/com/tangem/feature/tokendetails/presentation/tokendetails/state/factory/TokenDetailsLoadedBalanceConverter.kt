@@ -78,7 +78,6 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(currentState.actionButtons)
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
-            is CryptoCurrencyStatus.UnreachableWithoutAddresses,
             is CryptoCurrencyStatus.NoAmount,
             -> TokenDetailsBalanceBlockState.Error(currentState.actionButtons)
         }
@@ -102,7 +101,6 @@ internal class TokenDetailsLoadedBalanceConverter(
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
-            is CryptoCurrencyStatus.UnreachableWithoutAddresses,
             is CryptoCurrencyStatus.NoAmount,
             -> status.toContentConfig(currencySymbol)
         }
