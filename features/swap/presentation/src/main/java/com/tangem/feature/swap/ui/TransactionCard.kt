@@ -286,7 +286,6 @@ private fun Content(
                         )
                         SpacerW4()
                         IconButton(
-                            enabled = priceImpact is PriceImpact.Value,
                             onClick = {
                                 type.onWarningClick?.invoke()
                             },

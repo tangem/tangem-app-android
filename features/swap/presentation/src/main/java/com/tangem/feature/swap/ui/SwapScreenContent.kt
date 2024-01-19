@@ -326,12 +326,6 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
     ) {
         warnings.forEach { warning ->
             when (warning) {
-                is SwapWarning.HighPriceImpact -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                        iconTint = TangemTheme.colors.icon.warning,
-                    )
-                }
                 is SwapWarning.PermissionNeeded -> {
                     Notification(
                         config = warning.notificationConfig,

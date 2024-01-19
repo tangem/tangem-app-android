@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.ui
 
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -232,13 +231,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(
-                    onWarningClick = if (swapProvider.type == ExchangeProviderType.CEX) {
-                        actions.onReceiveCardWarningClick
-                    } else {
-                        null
-                    }
-                ),
+                type = TransactionCardType.ReadOnly(actions.onReceiveCardWarningClick),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 token = toCurrencyStatus,
@@ -339,15 +332,6 @@ internal class StateBuilder(
             warnings.add(SwapWarning.InsufficientFunds)
         }
 
-        val priceImpact = quoteModel.priceImpact
-        if (priceImpact is PriceImpact.ValueWithNotify && priceImpact.value > PRICE_IMPACT_THRESHOLD) {
-            warnings.add(
-                SwapWarning.HighPriceImpact(
-                    priceImpact = priceImpact.getIntPercentValue(),
-                    notificationConfig = highPriceImpactNotificationConfig(),
-                ),
-            )
-        }
         if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
             warnings.add(
                 SwapWarning.TransactionInProgressWarning(
@@ -837,13 +821,18 @@ internal class StateBuilder(
         )
     }
 
-    fun createCexAlert(
+    fun createImpactAlert(
         uiState: SwapStateHolder,
+        providerType: ExchangeProviderType,
         onAlertClick: () -> Unit,
     ): SwapStateHolder {
+        val message = when (providerType) {
+            ExchangeProviderType.CEX -> resourceReference(R.string.express_cex_fee_explanation)
+            ExchangeProviderType.DEX -> resourceReference(R.string.swapping_high_price_impact_description)
+        }
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
-                message = resourceReference(R.string.express_cex_fee_explanation),
+                message = message,
                 onClick = onAlertClick,
                 type = GenericWarningType.OTHER,
             ),
@@ -1136,14 +1125,6 @@ internal class StateBuilder(
                 formatArgs = wrappedList(fromTokenSymbol),
             ),
             iconResId = R.drawable.ic_locked_24,
-        )
-    }
-
-    private fun highPriceImpactNotificationConfig(): NotificationConfig {
-        return NotificationConfig(
-            title = resourceReference(R.string.swapping_high_price_impact),
-            subtitle = resourceReference(R.string.swapping_high_price_impact_description),
-            iconResId = R.drawable.ic_alert_circle_24,
         )
     }
 

@@ -1029,7 +1029,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromRate = rates[fromToken.id]?.fiatRate?.toDouble() ?: 0.0,
                 toTokenAmount = toTokenAmount.value,
                 toRate = rates[toToken.id]?.fiatRate?.toDouble() ?: 0.0,
-                exchangeProviderType = exchangeProviderType,
             ),
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             swapDataModel = swapData,
@@ -1376,15 +1375,11 @@ internal class SwapInteractorImpl @Inject constructor(
         fromRate: Double,
         toTokenAmount: BigDecimal,
         toRate: Double,
-        exchangeProviderType: ExchangeProviderType,
     ): PriceImpact {
         val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal())
         val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal())
         val value = (BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)).toFloat()
-        if (exchangeProviderType == ExchangeProviderType.CEX) {
-            return PriceImpact.Value(value)
-        }
-        return PriceImpact.ValueWithNotify(value)
+        return PriceImpact.Value(value)
     }
 
     private suspend fun getApproveData(

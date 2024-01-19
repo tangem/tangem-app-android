@@ -613,7 +613,7 @@ internal class SwapViewModel @Inject constructor(
                         afterSearch = true,
                     ),
 
-                )
+                    )
             } else {
                 tokenDataState.copy(
                     toGroup = tokenDataState.toGroup.copy(
@@ -873,7 +873,11 @@ internal class SwapViewModel @Inject constructor(
                 swapRouter.openUrl(it)
             },
             onReceiveCardWarningClick = {
-                uiState = stateBuilder.createCexAlert(uiState) {
+                val selectedProvider = dataState.selectedProvider ?: return@UiActions
+                uiState = stateBuilder.createImpactAlert(
+                    uiState = uiState,
+                    providerType = selectedProvider.type
+                ) {
                     uiState = stateBuilder.clearAlert(uiState)
                 }
             }
