@@ -186,7 +186,6 @@ internal class DefaultNetworksRepository(
             is UpdateWalletManagerResult.NoAccount,
             -> Unit
             is UpdateWalletManagerResult.Unreachable,
-            is UpdateWalletManagerResult.UnreachableWithoutAddresses,
             is UpdateWalletManagerResult.MissedDerivation,
             -> {
                 Timber.w(
