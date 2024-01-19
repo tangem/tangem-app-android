@@ -102,4 +102,13 @@ internal object TokensDataModule {
             quotesRepository = quotesRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideCardNetworksRepository(
+        userWalletsStore: UserWalletsStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): NetworksCompatibilityRepository {
+        return DefaultNetworksCompatibilityRepository(userWalletsStore = userWalletsStore, dispatchers = dispatchers)
+    }
 }

@@ -5,8 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import arrow.core.getOrElse
-import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -22,9 +23,7 @@ import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.ExpressException
-import com.tangem.feature.swap.domain.models.domain.PermissionOptions
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
-import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.*
@@ -32,6 +31,7 @@ import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -109,11 +109,14 @@ internal class SwapViewModel @Inject constructor(
     init {
         viewModelScope.launch(dispatchers.io) {
             swapInteractor.getSelectedWallet()?.let {
-                initialCryptoCurrencyStatus =
-                    requireNotNull(getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()) {
-                        "Failed to get initial crypto currency status"
-                    }
-                initTokens()
+                val cryptoCurrencyStatus =
+                    getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()
+                if (cryptoCurrencyStatus == null) {
+                    uiState = stateBuilder.addAlert(uiState, swapRouter::back)
+                } else {
+                    initialCryptoCurrencyStatus = cryptoCurrencyStatus
+                    initTokens()
+                }
             }
         }
     }
@@ -341,9 +344,12 @@ internal class SwapViewModel @Inject constructor(
                 }
             }
             is SwapState.EmptyAmountState -> {
+                val toTokenStatus = dataState.toCryptoCurrency
                 uiState = stateBuilder.createQuotesEmptyAmountState(
                     uiStateHolder = uiState,
                     emptyAmountState = state,
+                    fromTokenStatus = fromToken,
+                    toTokenStatus = toTokenStatus,
                     isReverseSwapPossible = isReverseSwapPossible(),
                 )
             }
@@ -452,6 +458,7 @@ internal class SwapViewModel @Inject constructor(
             return
         }
         val fromCurrency = requireNotNull(dataState.fromCryptoCurrency)
+        val fee = requireNotNull(dataState.selectedFee)
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
@@ -461,11 +468,12 @@ internal class SwapViewModel @Inject constructor(
                     currencyToGet = requireNotNull(dataState.toCryptoCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
                     includeFeeInAmount = lastLoadedQuotesState.preparedSwapConfigState.includeFeeInAmount,
-                    fee = requireNotNull(dataState.selectedFee),
+                    fee = fee,
                 )
             }.onSuccess {
                 when (it) {
                     is TxState.TxSent -> {
+                        sendSuccessSwapEvent(fromCurrency.currency, fee.feeType)
                         val url = blockchainInteractor.getExplorerTransactionLink(
                             networkId = fromCurrency.currency.network.backendId,
                             txHash = it.txHash,
@@ -534,16 +542,19 @@ internal class SwapViewModel @Inject constructor(
 
     private fun givePermissionsToSwap() {
         viewModelScope.launch(dispatchers.main) {
+            val fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
+                "dataState.fromCurrency might not be null"
+            }
+            val feeForPermission = when (val fee = dataState.approveDataModel?.fee) {
+                TxFeeState.Empty -> error("Fee should not be Empty")
+                is TxFeeState.MultipleFeeState -> fee.priorityFee
+                is TxFeeState.SingleFeeState -> fee.fee
+                null -> error("Fee should not be null")
+            }
+            val approveType = requireNotNull(dataState.approveType) {
+                "uiState.permissionState should not be null"
+            }.toDomainApproveType()
             runCatching(dispatchers.io) {
-                val feeForPermission = when (val fee = dataState.approveDataModel?.fee) {
-                    TxFeeState.Empty -> error("Fee should not be Empty")
-                    is TxFeeState.MultipleFeeState -> fee.priorityFee
-                    is TxFeeState.SingleFeeState -> fee.fee
-                    null -> error("Fee should not be null")
-                }
-                val fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
-                    "dataState.fromCurrency might not be null"
-                }
                 swapInteractor.givePermissionToSwap(
                     networkId = fromToken.network.backendId,
                     permissionOptions = PermissionOptions(
@@ -553,9 +564,7 @@ internal class SwapViewModel @Inject constructor(
                         forTokenContractAddress = (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Token)
                             ?.contractAddress ?: "",
                         fromToken = fromToken,
-                        approveType = requireNotNull(dataState.approveType) {
-                            "uiState.permissionState should not be null"
-                        }.toDomainApproveType(),
+                        approveType = approveType,
                         txFee = feeForPermission,
                         spenderAddress = requireNotNull(dataState.approveDataModel?.spenderAddress) {
                             "dataState.approveDataModel.spenderAddress shouldn't be null"
@@ -565,6 +574,8 @@ internal class SwapViewModel @Inject constructor(
             }.onSuccess {
                 when (it) {
                     is TxState.TxSent -> {
+                        sendApproveSuccessEvent(fromToken, feeForPermission.feeType, approveType)
+                        updateWalletBalance()
                         uiState = stateBuilder.loadingPermissionState(uiState)
                         uiState = stateBuilder.dismissBottomSheet(uiState)
                         startLoadingQuotesFromLastState(isSilent = true)
@@ -865,6 +876,44 @@ internal class SwapViewModel @Inject constructor(
             onTosClick = {
                 swapRouter.openUrl(it)
             },
+            onReceiveCardWarningClick = {
+                val selectedProvider = dataState.selectedProvider ?: return@UiActions
+                uiState = stateBuilder.createImpactAlert(
+                    uiState = uiState,
+                    providerType = selectedProvider.type,
+                ) {
+                    uiState = stateBuilder.clearAlert(uiState)
+                }
+            },
+        )
+    }
+
+    private fun sendSuccessSwapEvent(fromToken: CryptoCurrency, feeType: FeeType) {
+        val event = AnalyticsParam.TxSentFrom.Swap(
+            blockchain = fromToken.network.name,
+            token = fromToken.symbol,
+            feeType = AnalyticsParam.FeeType.fromString(feeType.getNameForAnalytics()),
+        )
+        analyticsEventHandler.send(
+            Basic.TransactionSent(
+                sentFrom = event,
+                memoType = Basic.TransactionSent.MemoType.Null,
+            ),
+        )
+    }
+
+    private fun sendApproveSuccessEvent(fromToken: CryptoCurrency, feeType: FeeType, approveType: SwapApproveType) {
+        val event = AnalyticsParam.TxSentFrom.Approve(
+            blockchain = fromToken.network.name,
+            token = fromToken.symbol,
+            feeType = AnalyticsParam.FeeType.fromString(feeType.getNameForAnalytics()),
+            permissionType = approveType.getNameForAnalytics(),
+        )
+        analyticsEventHandler.send(
+            Basic.TransactionSent(
+                sentFrom = event,
+                memoType = Basic.TransactionSent.MemoType.Null,
+            ),
         )
     }
 

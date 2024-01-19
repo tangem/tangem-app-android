@@ -22,7 +22,8 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.isLockedSync
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.Basic
+import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -36,8 +37,6 @@ import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -233,9 +232,8 @@ class DetailsMiddleware {
                     changeBalanceHiding(action.hideBalance)
                 }
                 is DetailsAction.AppSettings.ChangeAppCurrency -> {
-                    store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
-                    store.dispatch(DetailsAction.ChangeAppCurrency(action.fiatCurrency))
-                    store.dispatch(WalletSelectorAction.ChangeAppCurrency(action.fiatCurrency))
+                    store.dispatch(GlobalAction.ChangeAppCurrency(action.currency))
+                    store.dispatch(DetailsAction.ChangeAppCurrency(action.currency))
                 }
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
@@ -381,8 +379,6 @@ class DetailsMiddleware {
                     preferencesStorage.shouldShowSaveUserWalletScreen = false
                     store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
                         .saveShouldSaveUserWallets(item = true)
-
-                    store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
@@ -391,7 +387,6 @@ class DetailsMiddleware {
 
         private suspend fun deleteSavedWalletsAndAccessCodes(): CompletionResult<Unit> {
             return userWalletsListManager.clear()
-                .flatMap { walletStoresManager.clear() }
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
                     deleteSavedAccessCodes()
@@ -399,7 +394,6 @@ class DetailsMiddleware {
                     store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
                         .saveShouldSaveUserWallets(item = false)
 
-                    store.dispatchWithMain(WalletAction.UpdateCanSaveUserWallets(canSaveUserWallets = true))
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
                 }
                 .doOnFailure { error ->
@@ -524,7 +518,7 @@ class DetailsMiddleware {
         )
 
         store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
-            analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.MyWallets),
+            analyticsEvent = Basic.CardWasScanned(CoreAnalyticsParam.ScannedFrom.MyWallets),
             onWalletNotCreated = {
                 // No need to rollback policy, continue with the policy set before the card scan
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
