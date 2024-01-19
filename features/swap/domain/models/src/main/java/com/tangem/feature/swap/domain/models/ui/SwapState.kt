@@ -44,7 +44,6 @@ sealed class PriceImpact {
 
     fun getIntPercentValue() = (value * HUNDRED_PERCENTS).toInt()
     data class Empty(override val value: Float = 0f) : PriceImpact()
-    data class ValueWithNotify(override val value: Float) : PriceImpact()
     data class Value(override val value: Float) : PriceImpact()
 
     companion object {

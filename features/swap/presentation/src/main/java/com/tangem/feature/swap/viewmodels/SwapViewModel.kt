@@ -876,6 +876,15 @@ internal class SwapViewModel @Inject constructor(
             onTosClick = {
                 swapRouter.openUrl(it)
             },
+            onReceiveCardWarningClick = {
+                val selectedProvider = dataState.selectedProvider ?: return@UiActions
+                uiState = stateBuilder.createImpactAlert(
+                    uiState = uiState,
+                    providerType = selectedProvider.type,
+                ) {
+                    uiState = stateBuilder.clearAlert(uiState)
+                }
+            },
         )
     }
 
