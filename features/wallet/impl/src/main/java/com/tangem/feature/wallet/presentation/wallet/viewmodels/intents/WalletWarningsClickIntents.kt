@@ -32,14 +32,15 @@ import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWall
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
+import com.tangem.features.tester.api.TesterFeatureToggles
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 internal interface WalletWarningsClickIntents {
@@ -66,7 +67,7 @@ internal interface WalletWarningsClickIntents {
 @Suppress("LongParameterList")
 @ViewModelScoped
 internal class WalletWarningsClickIntentsImplementer @Inject constructor(
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
@@ -79,12 +80,26 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val reduxStateHolder: ReduxStateHolder,
+    private val testerFeatureToggles: TesterFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped)
+
+        prepareOnboardingProcess()
         router.openOnboardingScreen()
+    }
+
+    private fun prepareOnboardingProcess() {
+        getSelectedWalletSyncUseCase.unwrap()?.let {
+            reduxStateHolder.dispatch(
+                LegacyAction.StartOnboardingProcess(
+                    scanResponse = it.scanResponse,
+                    canSkipBackup = false,
+                ),
+            )
+        }
     }
 
     override fun onCloseAlreadySignedHashesWarningClick() {
@@ -102,20 +117,29 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped)
 
         viewModelScope.launch(dispatchers.main) {
-            deriveMissingCurrencies(
-                scanResponse = userWallet.scanResponse,
-                currencyList = missedAddressCurrencies,
-            ) { scannedCardResponse ->
-                updateWalletUseCase(
+            if (testerFeatureToggles.isDerivePublicKeysRefactoringEnabled) {
+                derivePublicKeysUseCase(
                     userWalletId = userWallet.walletId,
-                    update = { it.copy(scanResponse = scannedCardResponse) },
+                    currencies = missedAddressCurrencies,
                 )
-                    .onRight { fetchTokenListUseCase(userWalletId = it.walletId) }
+                    .onRight { fetchTokenListUseCase(userWalletId = userWallet.walletId) }
+                    .onLeft { Timber.e("Failed to derive public keys: $it") }
+            } else {
+                // TODO: delete [REDACTED_JIRA]
+                deriveMissingCurrencies(
+                    scanResponse = userWallet.scanResponse,
+                    currencyList = missedAddressCurrencies,
+                ) { scannedCardResponse ->
+                    updateWalletUseCase(
+                        userWalletId = userWallet.walletId,
+                        update = { it.copy(scanResponse = scannedCardResponse) },
+                    )
+                        .onRight { fetchTokenListUseCase(userWalletId = it.walletId) }
+                }
             }
         }
     }
 
-    // TODO: [REDACTED_JIRA]
     private fun deriveMissingCurrencies(
         scanResponse: ScanResponse,
         currencyList: List<CryptoCurrency>,
@@ -199,21 +223,15 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
     override fun onOpenUnlockWalletsBottomSheetClick() {
-        stateHolder.update(
-            OpenBottomSheetTransformer(
-                content = requireNotNull(stateHolder.getSelectedWallet().bottomSheetConfig).content,
-                userWalletId = stateHolder.getSelectedWalletId(),
-                onDismissBottomSheet = {
-                    stateHolder.update(
-                        CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()),
-                    )
-                },
-            ),
-        )
+        val config = requireNotNull(stateHolder.getSelectedWallet().bottomSheetConfig) {
+            "Impossible to open unlock wallet bottom sheet if it's null"
+        }
+
+        stateHolder.showBottomSheet(config.content)
     }
 
     override fun onUnlockWalletClick() {
-        analyticsEventHandler.send(MainScreen.NoticeWalletLocked)
+        analyticsEventHandler.send(MainScreen.UnlockAllWithFaceID)
 
         viewModelScope.launch(dispatchers.main) {
             unlockWalletsUseCase(throwIfNotAllWalletsUnlocked = true)
@@ -236,7 +254,7 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     }
 
     override fun onScanToUnlockWalletClick() {
-        analyticsEventHandler.send(event = MainScreen.WalletUnlockTapped)
+        analyticsEventHandler.send(MainScreen.UnlockWithCardScan)
 
         viewModelScope.launch(dispatchers.main) {
             scanCardToUnlockWalletClickHandler(walletId = stateHolder.getSelectedWalletId())

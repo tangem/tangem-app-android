@@ -2,6 +2,7 @@ package com.tangem.data.tokens.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -41,7 +42,7 @@ internal class CoinsPagingSource(
                 searchText = searchText,
                 offset = page * params.loadSize,
                 limit = params.loadSize,
-            )
+            ).getOrThrow()
         }.fold(
             onSuccess = { response ->
                 val coinsIds = response.coins.map { coin ->

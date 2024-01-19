@@ -140,7 +140,7 @@ class OnboardingWalletFragment :
     }
 
     private fun initCardsWidget(leapfrogWidget: LeapfrogWidget, deviceScaleFactor: Float, isTest: Boolean = false) {
-        cardsWidget = WalletCardsWidget(leapfrogWidget, deviceScaleFactor) { 200f * deviceScaleFactor }
+        cardsWidget = WalletCardsWidget(leapfrogWidget, deviceScaleFactor)
         animator = if (isTest) {
             TestBackupAnimation(WalletBackupAnimator(cardsWidget), binding)
         } else {
