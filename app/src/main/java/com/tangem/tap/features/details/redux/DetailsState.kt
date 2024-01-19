@@ -1,11 +1,11 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.entities.Button
-import com.tangem.tap.common.entities.FiatCurrency
 import org.rekotlin.StateType
 import java.util.EnumSet
 
@@ -62,9 +62,8 @@ data class AppSettingsState(
     val needEnrollBiometrics: Boolean = false,
     val isHidingEnabled: Boolean = false,
     val isInProgress: Boolean = false,
-    val selectedFiatCurrency: FiatCurrency = FiatCurrency.Default,
+    val selectedAppCurrency: AppCurrency = AppCurrency.Default,
     val selectedThemeMode: AppThemeMode = AppThemeMode.DEFAULT,
-    val darkThemeSwitchEnabled: Boolean = false,
 )
 
 enum class SecurityOption { LongTap, PassCode, AccessCode }

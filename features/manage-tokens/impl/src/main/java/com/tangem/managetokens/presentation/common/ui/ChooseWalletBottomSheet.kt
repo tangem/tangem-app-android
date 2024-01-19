@@ -11,7 +11,7 @@ import com.tangem.managetokens.presentation.common.state.ChooseWalletState
 internal fun ChooseWalletBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<ChooseWalletBottomSheetConfig>(
         config = config,
-        contentColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.tertiary,
     ) {
         ChooseWalletScreen(state = it.chooseWalletState)
     }
