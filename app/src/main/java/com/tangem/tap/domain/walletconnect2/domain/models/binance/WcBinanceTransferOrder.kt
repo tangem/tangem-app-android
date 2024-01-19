@@ -17,11 +17,6 @@ class WcBinanceTransferOrder(
     msgs: List<Message>,
 ) : WcBinanceOrder<WcBinanceTransferOrder.Message>(accountNumber, chainId, data, memo, sequence, source, msgs) {
 
-    enum class MessageKey(val key: String) {
-        INPUTS("inputs"),
-        OUTPUTS("outputs"),
-    }
-
     data class Message(
         val inputs: List<Item>,
         val outputs: List<Item>,

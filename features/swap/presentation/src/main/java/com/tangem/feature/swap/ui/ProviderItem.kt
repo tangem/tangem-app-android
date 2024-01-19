@@ -113,6 +113,12 @@ private fun ProviderContentState(
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             ) {
                 Row {
+                    Text(
+                        text = stringResource(id = R.string.express_by_provider),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
+                    )
                     AnimatedContent(targetState = state.name, label = "") {
                         Text(
                             text = it,
