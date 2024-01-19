@@ -45,7 +45,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         }
         is DetailsAction.ChangeAppCurrency -> detailsState.copy(
             appSettingsState = detailsState.appSettingsState.copy(
-                selectedFiatCurrency = action.fiatCurrency,
+                selectedAppCurrency = action.currency,
             ),
         )
         is DetailsAction.AccessCodeRecovery -> handleAccessCodeRecoveryAction(action, detailsState)
@@ -74,7 +74,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
             isBiometricsAvailable = tangemSdkManager.canUseBiometry,
             saveWallets = action.shouldSaveUserWallets,
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
-            selectedFiatCurrency = store.state.globalState.appCurrency,
+            selectedAppCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = runBlocking {
                 store.state.daggerGraphState
                     .get { appThemeModeRepository }.getAppThemeMode().firstOrNull() ?: AppThemeMode.DEFAULT
@@ -83,7 +83,6 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
                 store.state.daggerGraphState
                     .get { balanceHidingRepository }.getBalanceHidingSettings().isHidingEnabledInSettings
             },
-            darkThemeSwitchEnabled = action.darkThemeSwitchEnabled,
         ),
     )
 }
@@ -258,7 +257,7 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         )
         is DetailsAction.AppSettings.ChangeAppCurrency -> state.copy(
             appSettingsState = state.appSettingsState.copy(
-                selectedFiatCurrency = action.fiatCurrency,
+                selectedAppCurrency = action.currency,
             ),
         )
         is DetailsAction.AppSettings.ChangeBalanceHiding -> state.copy(
