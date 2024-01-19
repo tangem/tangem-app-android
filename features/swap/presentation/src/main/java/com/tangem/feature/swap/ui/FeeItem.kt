@@ -3,8 +3,6 @@ package com.tangem.feature.swap.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
-import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,13 +24,12 @@ fun FeeItemBlock(state: FeeItemState) {
 
 @Composable
 fun FeeItem(state: FeeItemState.Content) {
-    Column(
+    Box(
         modifier = Modifier
             .background(
                 color = TangemTheme.colors.background.action,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
-            .padding(start = TangemTheme.dimens.spacing12)
             .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
             .clickable(
                 onClick = state.onClick,
@@ -43,32 +40,13 @@ fun FeeItem(state: FeeItemState.Content) {
         val description = "${state.amountCrypto} ${state.symbolCrypto} (${state.amountFiatFormatted})"
         SimpleActionRow(
             modifier = Modifier.padding(
+                start = TangemTheme.dimens.spacing12,
                 top = TangemTheme.dimens.spacing12,
             ),
             title = state.title.resolveReference(),
             description = description,
             isClickable = state.isClickable,
         )
-        state.explanation?.let {
-            Divider(
-                color = TangemTheme.colors.stroke.primary,
-                thickness = TangemTheme.dimens.size0_5,
-                modifier = Modifier.padding(
-                    top = TangemTheme.dimens.spacing10,
-                    bottom = TangemTheme.dimens.spacing10,
-                    end = TangemTheme.dimens.spacing2,
-                ),
-            )
-            Text(
-                text = it.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.padding(
-                    bottom = TangemTheme.dimens.spacing10,
-                    end = TangemTheme.dimens.spacing16,
-                ),
-            )
-        }
     }
 }
 
@@ -81,10 +59,6 @@ private fun FeeItemPreview() {
         amountCrypto = "1000",
         symbolCrypto = "MATIC",
         amountFiatFormatted = "(1000$)",
-        explanation = stringReference(
-            "Additionally, the network fee for sending the exchanged funds back to your address is " +
-                "included in the rate",
-        ),
         isClickable = false,
         onClick = {},
     )
