@@ -50,8 +50,6 @@ data class CryptoCurrencyStatus(
     /** Represents the Loading state of a cryptocurrency, typically while fetching its details. */
     object Loading : Status(isError = false)
 
-    object UnreachableWithoutAddresses : Status(isError = true)
-
     /**
      * Represents a state where the cryptocurrency is not reachable.
      *
@@ -62,7 +60,7 @@ data class CryptoCurrencyStatus(
     data class Unreachable(
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
-        override val networkAddress: NetworkAddress,
+        override val networkAddress: NetworkAddress?,
     ) : Status(isError = true)
 
     /** Represents a state where the cryptocurrency's network amount not found. */
