@@ -50,7 +50,7 @@ internal fun SendNavigationButtons(uiState: SendUiState) {
 private fun SendSecondaryNavigationButton(uiState: SendUiState) {
     val currentState = uiState.currentState.collectAsState()
     AnimatedVisibility(
-        visible = currentState.value == SendUiStateType.Recipient ||
+        visible = currentState.value == SendUiStateType.Amount ||
             currentState.value == SendUiStateType.Fee,
     ) {
         Icon(
@@ -72,9 +72,9 @@ private fun SendSecondaryNavigationButton(uiState: SendUiState) {
 @Composable
 private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier = Modifier) {
     val currentState = uiState.currentState.collectAsStateWithLifecycle()
-    val isSuccess = uiState.sendState?.isSuccess?.collectAsStateWithLifecycle()?.value ?: false
-    val isSending = uiState.sendState?.isSending?.collectAsStateWithLifecycle()?.value ?: false
-    val txUrl = uiState.sendState?.txUrl?.collectAsStateWithLifecycle()?.value.orEmpty()
+    val isSuccess = uiState.sendState.isSuccess
+    val isSending = uiState.sendState.isSending
+    val txUrl = uiState.sendState.txUrl
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = currentState,
@@ -82,11 +82,10 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
         uiState = uiState,
     )
 
-    val isButtonEnabled = when (currentState.value) {
-        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
-        else -> true
-    }
+    val isButtonEnabled = isButtonEnabled(
+        currentState = currentState,
+        uiState = uiState,
+    )
 
     AnimatedContent(
         targetState = buttonTextId,
@@ -180,5 +179,15 @@ private fun getButtonData(
         } else {
             R.string.common_send
         } to uiState.clickIntents::onSendClick
+    }
+}
+
+private fun isButtonEnabled(currentState: State<SendUiStateType>, uiState: SendUiState): Boolean {
+    return when (currentState.value) {
+        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Send -> uiState.sendState.isPrimaryButtonEnabled
+        else -> true
     }
 }
