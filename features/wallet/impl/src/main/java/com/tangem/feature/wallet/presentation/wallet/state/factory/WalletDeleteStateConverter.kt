@@ -1,11 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
-import com.tangem.common.Provider
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.factory.WalletDeleteStateConverter.DeleteWalletModel
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletsUpdateActionResolver
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
