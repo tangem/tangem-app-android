@@ -22,7 +22,6 @@ internal class VisaWalletCardStateConverter(
             is CryptoCurrencyStatus.Custom,
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.Unreachable,
-            is CryptoCurrencyStatus.UnreachableWithoutAddresses,
             -> value.toErrorState()
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
