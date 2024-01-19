@@ -45,7 +45,7 @@ internal object MockNetworks {
 
     val networkStatus1 = NetworkStatus(
         network = network1,
-        value = NetworkStatus.UnreachableWithoutAddresses,
+        value = NetworkStatus.Unreachable(address = null),
     )
 
     val networkStatus2 = NetworkStatus(
