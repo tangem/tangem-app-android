@@ -45,7 +45,7 @@
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priorität</string>
     <string name="send_max_amount_label">Höchstbetrag</string>
-    <string name="send_network_fee_title">Netzgebühr</string>
+    <string name="common_network_fee_title">Netzgebühr</string>
     <string name="send_total_label">Gesamt</string>
     <string name="send_total_subtitle_asset_format">%1$s und %2$s werden gesendet</string>
     <string name="send_total_subtitle_fiat_format">≈ %1$s (inkl. Gebühr: %2$s)</string>
