@@ -1,32 +1,25 @@
 package com.tangem.tap.proxy.di
 
-import com.tangem.common.Provider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.feature.learn2earn.domain.api.Learn2earnDependencyProvider
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
-import com.tangem.tap.features.details.DarkThemeFeatureToggle
 import com.tangem.tap.proxy.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class ProxyModule {
+internal object ProxyModule {
 
     @Provides
     @Singleton
@@ -39,12 +32,14 @@ class ProxyModule {
     fun provideUserWalletManager(
         appStateHolder: AppStateHolder,
         walletManagersFacade: WalletManagersFacade,
-        walletFeatureToggles: WalletFeatureToggles,
+        currenciesRepository: CurrenciesRepository,
+        userWalletsStore: UserWalletsStore,
     ): UserWalletManager {
         return UserWalletManagerImpl(
             appStateHolder = appStateHolder,
             walletManagersFacade = walletManagersFacade,
-            walletFeatureToggles = walletFeatureToggles,
+            currenciesRepository = currenciesRepository,
+            userWalletsStore = userWalletsStore,
         )
     }
 
@@ -55,14 +50,12 @@ class ProxyModule {
         analytics: AnalyticsEventHandler,
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
-        walletFeatureToggles: WalletFeatureToggles,
     ): TransactionManager {
         return TransactionManagerImpl(
             appStateHolder = appStateHolder,
             analytics = analytics,
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
-            walletFeatureToggles = walletFeatureToggles,
         )
     }
 
@@ -79,33 +72,4 @@ class ProxyModule {
             networksRepository = networksRepository,
         )
     }
-
-    @Provides
-    @Singleton
-    fun provideDarkThemeFeatureToggle(featureTogglesManager: FeatureTogglesManager): DarkThemeFeatureToggle {
-        return DarkThemeFeatureToggle(featureTogglesManager)
-    }
-
-    // regions FeatureConsumers
-    @Provides
-    @Singleton
-    fun provideLear2earnDependencies(appStateHolder: AppStateHolder): Learn2earnDependencyProvider {
-        return object : Learn2earnDependencyProvider {
-
-            @OptIn(ExperimentalCoroutinesApi::class)
-            override fun getCardTypeResolverFlow(): Flow<CardTypesResolver?> {
-                return appStateHolder.userWalletListManagerFlow
-                    .flatMapLatest { manager ->
-                        manager?.selectedUserWallet
-                            ?.map { it.scanResponse.cardTypesResolver }
-                            ?: flowOf(null)
-                    }
-            }
-
-            override fun getWebViewAuthCredentialsProvider(): Provider<String?> = Provider {
-                appStateHolder.mainStore?.state?.globalState?.configManager?.config?.tangemComAuthorization
-            }
-        }
-    }
-    // endregion FeatureConsumers
 }
