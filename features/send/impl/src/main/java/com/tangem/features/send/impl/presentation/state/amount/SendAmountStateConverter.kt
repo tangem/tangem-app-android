@@ -1,6 +1,5 @@
 package com.tangem.features.send.impl.presentation.state.amount
 
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatCryptoAmount
@@ -10,9 +9,9 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class SendAmountStateConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -35,7 +34,7 @@ internal class SendAmountStateConverter(
             walletName = userWallet.name,
             walletBalance = "$crypto ($fiat)",
             tokenIconState = iconStateConverter.convert(status),
-            amountTextField = MutableStateFlow(sendAmountFieldConverter.convert(Unit)),
+            amountTextField = sendAmountFieldConverter.convert(Unit),
             isFiatValue = false,
             isPrimaryButtonEnabled = false,
             segmentedButtonConfig = persistentListOf(
