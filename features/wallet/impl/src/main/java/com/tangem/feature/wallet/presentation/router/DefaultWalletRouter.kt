@@ -56,6 +56,7 @@ internal class DefaultWalletRouter(
                 if (walletFeatureToggles.isWalletsScrollingPreviewEnabled) {
                     val viewModel = hiltViewModel<WalletViewModelV2>().apply {
                         setWalletRouter(router = this@DefaultWalletRouter)
+                        subscribeToLifecycle(LocalLifecycleOwner.current)
                     }
 
                     WalletScreenV2(state = viewModel.uiState.collectAsStateWithLifecycle().value)
