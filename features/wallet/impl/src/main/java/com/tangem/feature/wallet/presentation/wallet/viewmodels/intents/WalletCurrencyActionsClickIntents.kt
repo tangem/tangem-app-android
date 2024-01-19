@@ -13,10 +13,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
-import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
-import com.tangem.domain.tokens.RemoveCurrencyUseCase
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -76,6 +73,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -91,22 +89,39 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
 
         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
-
-        when (val currency = cryptoCurrencyStatus.currency) {
-            is CryptoCurrency.Coin -> sendCoin(cryptoCurrencyStatus, userWallet)
-            is CryptoCurrency.Token -> sendToken(currency, cryptoCurrencyStatus.value, userWallet)
+        viewModelScope.launch(dispatchers.main) {
+            val maybeFeeCurrencyStatus =
+                getFeePaidCryptoCurrencyStatusSyncUseCase(userWallet.walletId, cryptoCurrencyStatus).getOrNull()
+            when (val currency = cryptoCurrencyStatus.currency) {
+                is CryptoCurrency.Coin -> sendCoin(cryptoCurrencyStatus, userWallet, maybeFeeCurrencyStatus)
+                is CryptoCurrency.Token -> sendToken(
+                    cryptoCurrency = currency,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus.value,
+                    feeCurrencyStatus = maybeFeeCurrencyStatus,
+                    userWallet = userWallet,
+                )
+            }
         }
     }
 
-    private fun sendCoin(cryptoCurrencyStatus: CryptoCurrencyStatus, userWallet: UserWallet) {
+    private fun sendCoin(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        userWallet: UserWallet,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
+    ) {
         reduxStateHolder.dispatch(
-            action = TradeCryptoAction.New.SendCoin(userWallet = userWallet, coinStatus = cryptoCurrencyStatus),
+            action = TradeCryptoAction.New.SendCoin(
+                userWallet = userWallet,
+                coinStatus = cryptoCurrencyStatus,
+                feeCurrencyStatus = feeCurrencyStatus,
+            ),
         )
     }
 
     private fun sendToken(
         cryptoCurrency: CryptoCurrency.Token,
         cryptoCurrencyStatus: CryptoCurrencyStatus.Status,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
         userWallet: UserWallet,
     ) {
         viewModelScope.launch(dispatchers.main) {
@@ -125,6 +140,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                                 tokenCurrency = cryptoCurrency,
                                 tokenFiatRate = cryptoCurrencyStatus.fiatRate,
                                 coinFiatRate = coinStatus.value.fiatRate,
+                                feeCurrencyStatus = feeCurrencyStatus,
                             ),
                         )
                     }
