@@ -1,14 +1,13 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
-import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swaptx.ExchangeAnalyticsStatus
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.models.analytics.TokenExchangeAnalyticsEvent
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
@@ -27,17 +26,18 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
 internal class ExchangeStatusFactory(
     private val swapTransactionRepository: SwapTransactionRepository,
     private val swapRepository: SwapRepository,
+    private val quotesRepository: QuotesRepository,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val clickIntents: TokenDetailsClickIntents,
@@ -57,14 +57,27 @@ internal class ExchangeStatusFactory(
         )
     }
 
-    suspend operator fun invoke() = combine(
-        flow = swapTransactionRepository.getTransactions(userWalletId, cryptoCurrency.id),
-        flow2 = getWalletCryptoCurrencies().conflate(),
-    ) { savedTransactions, cryptoCurrenciesStatusList ->
-        getExchangeStatusState(
-            savedTransactions = savedTransactions,
-            cryptoCurrencyStatusList = cryptoCurrenciesStatusList,
+    suspend operator fun invoke(): Flow<PersistentList<SwapTransactionsState>> {
+        val selectedWallet = getSelectedWalletSyncUseCase().fold(
+            ifLeft = { return emptyFlow() },
+            ifRight = { it },
         )
+        return swapTransactionRepository.getTransactions(
+            userWalletId = userWalletId,
+            cryptoCurrencyId = cryptoCurrency.id,
+            scanResponse = selectedWallet.scanResponse,
+        ).conflate()
+            .map { savedTransactions ->
+                val quotes = savedTransactions
+                    ?.flatMap { setOf(it.fromCryptoCurrency.id, it.toCryptoCurrency.id) }
+                    ?.let { quotesRepository.getQuotesSync(it.toSet(), true) }
+                    ?: emptySet()
+
+                getExchangeStatusState(
+                    savedTransactions = savedTransactions,
+                    quotes = quotes,
+                )
+            }
     }
 
     suspend fun removeTransactionOnBottomSheetClosed(): TokenDetailsState {
@@ -75,8 +88,8 @@ internal class ExchangeStatusFactory(
         return if (selectedTx.activeStatus.isTerminal()) {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWalletId,
-                fromCryptoCurrencyId = selectedTx.fromCryptoCurrencyId,
-                toCryptoCurrencyId = selectedTx.toCryptoCurrencyId,
+                fromCryptoCurrency = selectedTx.fromCryptoCurrency,
+                toCryptoCurrency = selectedTx.toCryptoCurrency,
                 txId = selectedTx.txId,
             )
             val filteredTxs = state.swapTxs
@@ -86,19 +99,6 @@ internal class ExchangeStatusFactory(
         } else {
             state
         }
-    }
-
-    private fun getWalletCryptoCurrencies() = flow {
-        val selectedWallet = getSelectedWalletSyncUseCase().fold(
-            ifLeft = { null },
-            ifRight = { it },
-        )
-        requireNotNull(selectedWallet) { "No selected wallet" }
-
-        val cryptoCurrenciesList = getMultiCryptoCurrencyStatusUseCase(selectedWallet.walletId)
-            .getOrElse { emptyList() }
-
-        emit(cryptoCurrenciesList)
     }
 
     suspend fun updateSwapTxStatuses(swapTxList: PersistentList<SwapTransactionsState>) = withContext(dispatchers.io) {
@@ -144,15 +144,15 @@ internal class ExchangeStatusFactory(
 
     private fun getExchangeStatusState(
         savedTransactions: List<SavedSwapTransactionListModel>?,
-        cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
+        quotes: Set<Quote>,
     ): PersistentList<SwapTransactionsState> {
-        if (savedTransactions == null || cryptoCurrencyStatusList.isEmpty()) {
+        if (savedTransactions == null) {
             return persistentListOf()
         }
 
         return swapTransactionsStateConverter.convert(
             savedTransactions = savedTransactions,
-            cryptoStatusList = cryptoCurrencyStatusList,
+            quotes = quotes,
         )
     }
 
