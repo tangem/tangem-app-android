@@ -25,11 +25,6 @@ class WalletConnectRepository(val context: Application) {
         saveSessions(sessions)
     }
 
-    fun removeSession(session: WalletConnectSession) {
-        val sessions = loadSavedSessions().filterNot { it == session }
-        saveSessions(sessions)
-    }
-
     fun removeSession(session: WCSession) {
         val sessions = loadSavedSessions().filterNot { it.session == session }
         saveSessions(sessions)
