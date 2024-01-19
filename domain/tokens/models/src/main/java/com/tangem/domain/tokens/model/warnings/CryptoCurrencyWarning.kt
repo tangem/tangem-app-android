@@ -15,6 +15,14 @@ sealed class CryptoCurrencyWarning {
         val coinCurrency: CryptoCurrency,
     ) : CryptoCurrencyWarning()
 
+    data class CustomTokenNotEnoughForFee(
+        val currency: CryptoCurrency,
+        val feeCurrency: CryptoCurrency?,
+        val networkName: String,
+        val feeCurrencyName: String,
+        val feeCurrencySymbol: String,
+    ) : CryptoCurrencyWarning()
+
     object SomeNetworksUnreachable : CryptoCurrencyWarning()
 
     data class SomeNetworksNoAccount(
