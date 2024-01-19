@@ -8,10 +8,6 @@ import java.math.BigDecimal
 
 sealed class TradeCryptoAction : Action {
 
-    data class Buy(val checkUserLocation: Boolean = true) : TradeCryptoAction()
-
-    object Sell : TradeCryptoAction()
-
     data class SendCrypto(
         val currencyId: String,
         val amount: String,
@@ -20,8 +16,6 @@ sealed class TradeCryptoAction : Action {
     ) : TradeCryptoAction()
 
     data class FinishSelling(val transactionId: String) : TradeCryptoAction()
-
-    object Swap : TradeCryptoAction()
 
     sealed class New : TradeCryptoAction() {
 
