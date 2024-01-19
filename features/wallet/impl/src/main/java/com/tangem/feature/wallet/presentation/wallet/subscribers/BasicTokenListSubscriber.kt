@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
@@ -15,37 +14,40 @@ import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetToke
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListTransformer
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onEach
 
-typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
+internal typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
 
 @Suppress("LongParameterList")
-internal class TokenListSubscriber(
+internal abstract class BasicTokenListSubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntentsV2,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
-    private val getTokenListUseCase: GetTokenListUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : WalletSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<Pair<Either<TokenListError, TokenList>, AppCurrency>> {
+    protected abstract fun tokenListFlow(): MaybeTokenListFlow
+
+    override fun create(coroutineScope: CoroutineScope): Flow<*> {
         return combine(
-            flow = getTokenListUseCase(userWalletId = userWallet.walletId)
-                .conflate()
+            flow = tokenListFlow()
+                .onEach {
+                    val displayedState = stateHolder.getWalletIfSelected(userWallet.walletId)
+
+                    tokenListAnalyticsSender.send(displayedState, userWallet, it.getOrElse { return@onEach })
+                }
                 .distinctUntilChanged(),
-            flow2 = getSelectedAppCurrencyUseCase()
-                .conflate()
-                .distinctUntilChanged()
-                .map { maybeAppCurrency -> maybeAppCurrency.getOrElse { AppCurrency.Default } },
-            transform = { tokenList, appCurrency -> tokenList to appCurrency },
-        )
-            .onEach { (maybeTokenList, appCurrency) ->
-                updateContent(maybeTokenList, appCurrency)
-                tokenListAnalyticsSender.send(userWallet, maybeTokenList)
+            flow2 = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
+            transform = { maybeTokenList, maybeAppCurrency ->
+                updateContent(maybeTokenList, maybeAppCurrency.getOrElse { AppCurrency.Default })
                 walletWithFundsChecker.check(maybeTokenList)
-            }
+            },
+        )
     }
 
     private fun updateContent(maybeTokenList: Either<TokenListError, TokenList>, appCurrency: AppCurrency) {
