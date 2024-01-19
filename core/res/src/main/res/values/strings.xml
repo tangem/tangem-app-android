@@ -200,6 +200,7 @@
     <string name="express_more_providers_soon">More providers are coming soon.\nStay tuned!</string>
     <string name="express_estimated_amount">Estimated amount</string>
     <string name="express_exchange_by">Exchange by %s</string>
+    <string name="express_by_provider">Provided by</string>
     <string name="express_exchange_notification_failed_text">Visit provider’s website to refund your money</string>
     <string name="express_exchange_notification_failed_title">Operation failed by provider</string>
     <string name="express_exchange_notification_verification_text">Visit provider’s website for verification</string>
@@ -474,7 +475,7 @@
     <string name="send_max_fee">Max fee</string>
     <string name="send_max_fee_footer">Maximum fee amount</string>
     <string name="send_memo_destination_tag_error">Numbers only for Destination Tag</string>
-    <string name="send_network_fee_title">Network fee</string>
+    <string name="common_network_fee_title">Network fee</string>
     <string name="send_network_fee_warning_content">Sending amount will be reduced to cover the selected fee level</string>
     <string name="send_network_fee_warning_title">Network fee coverage</string>
     <string name="send_notification_exceed_balance_text">Insufficient funds for the transfer, as the total of the fee and transfer amount exceeds the existing balance</string>
@@ -546,7 +547,6 @@
     <string name="swapping_from_title">You swap</string>
     <string name="swapping_generic_error">There was an error. Please try again.</string>
     <string name="swapping_give_permission">Give Permission</string>
-    <string name="swapping_high_price_impact">High price impact!</string>
     <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
     <string name="swapping_insufficient_funds">Insufficient funds</string>
     <string name="swapping_not_enough_funds_for_fee">Insufficient funds in your %1$s  wallet to cover fees. Top up your %2$s wallet first.</string>
