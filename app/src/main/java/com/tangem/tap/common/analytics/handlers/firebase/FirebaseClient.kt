@@ -2,7 +2,6 @@ package com.tangem.tap.common.analytics.handlers.firebase
 
 import android.os.Bundle
 import androidx.core.os.bundleOf
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
@@ -29,8 +28,4 @@ internal class FirebaseClient : FirebaseAnalyticsClient {
     }
 
     private fun Map<String, String>.toBundle(): Bundle = bundleOf(*this.toList().toTypedArray())
-
-    companion object {
-        const val ORDER_EVENT = FirebaseAnalytics.Event.PURCHASE
-    }
 }
