@@ -1,18 +1,17 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
-import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
 import com.tangem.domain.analytics.model.WalletBalanceState
-import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import dagger.hilt.android.scopes.ViewModelScoped
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -23,9 +22,8 @@ internal class TokenListAnalyticsSender @Inject constructor(
     private val checkIsWalletToppedUpUseCase: CheckIsWalletToppedUpUseCase,
 ) {
 
-    suspend fun send(userWallet: UserWallet, maybeTokenList: Either<TokenListError, TokenList>) {
-        val tokenList = maybeTokenList.getOrElse { return }
-
+    suspend fun send(displayedUiState: WalletState?, userWallet: UserWallet, tokenList: TokenList) {
+        if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
         if (tokenList.totalFiatBalance is TokenList.FiatBalance.Loading) return
 
         val currenciesStatuses = getCurrenciesStatuses(tokenList)
@@ -33,7 +31,6 @@ internal class TokenListAnalyticsSender @Inject constructor(
         sendBalanceLoadedEventIfNeeded(tokenList.totalFiatBalance, currenciesStatuses)
         sendToppedUpEventIfNeeded(userWallet, tokenList.totalFiatBalance, currenciesStatuses)
         sendUnreachableNetworksEventIfNeeded(currenciesStatuses)
-        sendMissedAddressesEventIfNeeded(currenciesStatuses)
     }
 
     private fun getCurrenciesStatuses(tokenList: TokenList): List<CryptoCurrencyStatus> = when (tokenList) {
@@ -119,20 +116,13 @@ internal class TokenListAnalyticsSender @Inject constructor(
     }
 
     private fun sendUnreachableNetworksEventIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
-        val hasUnreachableCurrencies = currenciesStatuses.any { it.value is CryptoCurrencyStatus.Unreachable }
+        val hasUnreachableCurrencies = currenciesStatuses.any {
+            it.value is CryptoCurrencyStatus.Unreachable ||
+                it.value is CryptoCurrencyStatus.UnreachableWithoutAddresses
+        }
 
         if (hasUnreachableCurrencies) {
             analyticsEventHandler.send(MainScreen.NetworksUnreachable)
-        }
-    }
-
-    private fun sendMissedAddressesEventIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
-        val hasCurrenciesWithMissedDerivation = currenciesStatuses.any {
-            it.value is CryptoCurrencyStatus.MissedDerivation
-        }
-
-        if (hasCurrenciesWithMissedDerivation) {
-            analyticsEventHandler.send(MainScreen.MissingAddresses)
         }
     }
 }
