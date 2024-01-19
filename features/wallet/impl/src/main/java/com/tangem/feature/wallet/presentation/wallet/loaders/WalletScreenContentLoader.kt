@@ -47,7 +47,7 @@ internal class WalletScreenContentLoader @Inject constructor(
         } else {
             if (isRefresh) {
                 storage.remove(id)
-                loadInternal(userWallet, clickIntents, coroutineScope, true)
+                loadInternal(userWallet, clickIntents, coroutineScope, isRefresh = true)
             } else {
                 Timber.d("$id content loading has already started")
             }
