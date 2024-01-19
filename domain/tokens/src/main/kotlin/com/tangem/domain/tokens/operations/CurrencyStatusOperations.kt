@@ -16,7 +16,6 @@ internal class CurrencyStatusOperations(
         return when (val status = networkStatus?.value) {
             null -> CryptoCurrencyStatus.Loading
             is NetworkStatus.MissedDerivation -> createMissedDerivationStatus()
-            is NetworkStatus.UnreachableWithoutAddresses -> CryptoCurrencyStatus.UnreachableWithoutAddresses
             is NetworkStatus.Unreachable -> createUnreachableStatus(status)
             is NetworkStatus.NoAccount -> createNoAccountStatus(status)
             is NetworkStatus.Verified -> createStatus(status)
