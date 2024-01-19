@@ -11,14 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 
 @Composable
 internal fun AmountFieldContainer(amountState: SendStates.AmountState, modifier: Modifier = Modifier) {
-    val amountTextField = amountState.amountTextField.collectAsStateWithLifecycle()
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -54,7 +52,7 @@ internal fun AmountFieldContainer(amountState: SendStates.AmountState, modifier:
                 .align(Alignment.CenterHorizontally),
         )
         AmountField(
-            sendField = amountTextField.value,
+            sendField = amountState.amountTextField,
             isFiat = amountState.isFiatValue,
             cryptoSymbol = amountState.cryptoCurrencyStatus.currency.symbol,
             fiatSymbol = amountState.appCurrency.symbol,

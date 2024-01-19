@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 
 internal class OpenBottomSheetTransformer(
     userWalletId: UserWalletId,
@@ -37,6 +37,17 @@ internal class OpenBottomSheetTransformer(
             is WalletState.SingleCurrency.Locked -> {
                 prevState.copy(isBottomSheetShow = true, onBottomSheetDismiss = onDismissBottomSheet)
             }
+            is WalletState.Visa.Content -> prevState.copy(
+                bottomSheetConfig = TangemBottomSheetConfig(
+                    isShow = true,
+                    onDismissRequest = onDismissBottomSheet,
+                    content = content,
+                ),
+            )
+            is WalletState.Visa.Locked -> prevState.copy(
+                isBottomSheetShow = true,
+                onBottomSheetDismiss = onDismissBottomSheet,
+            )
         }
     }
 }

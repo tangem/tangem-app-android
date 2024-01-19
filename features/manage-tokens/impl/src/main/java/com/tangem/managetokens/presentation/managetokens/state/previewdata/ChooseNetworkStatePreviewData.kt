@@ -1,7 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.state.previewdata
 
 import androidx.compose.runtime.mutableStateOf
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
 import com.tangem.managetokens.presentation.managetokens.state.ChooseNetworkState
@@ -26,7 +25,6 @@ internal val nativeNetworks = listOf(
         isAdded = mutableStateOf(true),
         id = "",
         onToggleClick = { _, _ -> },
-        blockchain = Blockchain.Ethereum,
         address = "",
         decimals = 0,
     ),
@@ -41,7 +39,6 @@ internal val nonNativeNetworks = listOf(
         isAdded = mutableStateOf(true),
         id = "",
         onToggleClick = { _, _ -> },
-        blockchain = Blockchain.Ethereum,
         address = "",
         decimals = 0,
     ),
@@ -53,7 +50,6 @@ internal val nonNativeNetworks = listOf(
         isAdded = mutableStateOf(false),
         id = "",
         onToggleClick = { _, _ -> },
-        blockchain = Blockchain.BSC,
         address = "",
         decimals = 0,
     ),

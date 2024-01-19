@@ -27,7 +27,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTrans
 internal fun ExchangeStatusBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
-        contentColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.tertiary,
     ) { content: ExchangeStatusBottomSheetConfig ->
         ExchangeStatusBottomSheetContent(content = content)
     }
