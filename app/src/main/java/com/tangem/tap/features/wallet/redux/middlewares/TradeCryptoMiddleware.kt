@@ -210,10 +210,14 @@ object TradeCryptoMiddleware {
             store.dispatchOnMain(
                 action = PrepareSendScreen(
                     walletManager = walletManager,
+                    feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
+                    currency = currency,
                     coinAmount = walletManager.wallet.amounts[AmountType.Coin],
                     coinRate = action.coinFiatRate,
                     tokenAmount = sendableAmount,
                     tokenRate = action.tokenFiatRate,
+                    feeCurrencyRate = action.feeCurrencyStatus?.value?.fiatRate,
+                    feeCurrencyDecimals = action.feeCurrencyStatus?.currency?.decimals ?: 0,
                 ),
             )
 
@@ -262,8 +266,12 @@ object TradeCryptoMiddleware {
                     store.dispatchOnMain(
                         action = PrepareSendScreen(
                             walletManager = walletManager,
+                            feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
+                            currency = currency,
                             coinAmount = amountToSend,
                             coinRate = cryptoStatus.value.fiatRate,
+                            feeCurrencyRate = action.feeCurrencyStatus?.value?.fiatRate,
+                            feeCurrencyDecimals = action.feeCurrencyStatus?.currency?.decimals ?: 0,
                         ),
                     )
                 }
