@@ -20,7 +20,7 @@ import com.tangem.feature.swap.models.states.WebViewBottomSheetConfig
 fun WebViewBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
-        contentColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.tertiary,
     ) { content: WebViewBottomSheetConfig ->
         WebViewBottomSheetContent(
             WebViewBottomSheetConfig(url = content.url),
