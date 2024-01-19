@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.factory
 
 import arrow.core.Either
-import com.tangem.common.Provider
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
@@ -11,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.wallet.utils.TokenListToWalletStateConverter
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
 /**
