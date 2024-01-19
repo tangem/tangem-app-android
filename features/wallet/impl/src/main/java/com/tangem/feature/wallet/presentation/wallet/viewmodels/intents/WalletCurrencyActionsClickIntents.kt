@@ -23,7 +23,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
-import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -33,9 +32,8 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -69,7 +67,7 @@ interface WalletCurrencyActionsClickIntents {
 @Suppress("LongParameterList", "LargeClass")
 @ViewModelScoped
 internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
-    private val stateHolder: WalletStateHolderV2,
+    private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val walletManagersFacade: WalletManagersFacade,
@@ -141,22 +139,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrencyStatus.currency.symbol),
         )
 
-        viewModelScope.launch(dispatchers.main) {
-            analyticsEventHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
+        analyticsEventHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
 
-            stateHolder.update(
-                OpenBottomSheetTransformer(
-                    userWalletId = userWalletId,
-                    content = createReceiveBottomSheetContent(
-                        currency = cryptoCurrencyStatus.currency,
-                        addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return@launch,
-                    ),
-                    onDismissBottomSheet = {
-                        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
-                    },
-                ),
-            )
-        }
+        stateHolder.showBottomSheet(
+            createReceiveBottomSheetContent(
+                currency = cryptoCurrencyStatus.currency,
+                addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return,
+            ),
+            userWalletId,
+        )
     }
 
     private fun createReceiveBottomSheetContent(
@@ -260,12 +251,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                         )
                     },
                     ifRight = {
-                        getSelectedWalletSyncUseCase.unwrap()?.let { userWallet ->
-                            reduxStateHolder.dispatch(
-                                action = WalletConnectActions.New.SetupUserChains(userWallet = userWallet),
-                            )
-                        }
-
                         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
                     },
                 )
@@ -350,25 +335,18 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         addresses: Set<NetworkAddress.Address>,
         currency: CryptoCurrency,
     ) {
-        stateHolder.update(
-            OpenBottomSheetTransformer(
-                userWalletId = userWalletId,
-                content = ChooseAddressBottomSheetConfig(
-                    addressModels = addresses.mapToAddressModels(currency).toImmutableList(),
-                    onClick = {
-                        onAddressTypeSelected(
-                            userWalletId = userWalletId,
-                            currency = currency,
-                            addressModel = it,
-                        )
-                    },
-                ),
-                onDismissBottomSheet = {
-                    stateHolder.update(
-                        CloseBottomSheetTransformer(userWalletId = userWalletId),
+        stateHolder.showBottomSheet(
+            ChooseAddressBottomSheetConfig(
+                addressModels = addresses.mapToAddressModels(currency).toImmutableList(),
+                onClick = {
+                    onAddressTypeSelected(
+                        userWalletId = userWalletId,
+                        currency = currency,
+                        addressModel = it,
                     )
                 },
             ),
+            userWalletId,
         )
     }
 
