@@ -30,6 +30,7 @@ internal object TokensDataModule {
         tangemExpressApi: TangemExpressApi,
         userTokensStore: UserTokensStore,
         userWalletsStore: UserWalletsStore,
+        walletManagersFacade: WalletManagersFacade,
         assetsStore: AssetsStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
@@ -38,6 +39,7 @@ internal object TokensDataModule {
             tangemTechApi = tangemTechApi,
             tangemExpressApi = tangemExpressApi,
             userTokensStore = userTokensStore,
+            walletManagersFacade = walletManagersFacade,
             userWalletsStore = userWalletsStore,
             assetsStore = assetsStore,
             cacheRegistry = cacheRegistry,
@@ -101,5 +103,14 @@ internal object TokensDataModule {
             dispatchers = dispatchers,
             quotesRepository = quotesRepository,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCardNetworksRepository(
+        userWalletsStore: UserWalletsStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): NetworksCompatibilityRepository {
+        return DefaultNetworksCompatibilityRepository(userWalletsStore = userWalletsStore, dispatchers = dispatchers)
     }
 }
