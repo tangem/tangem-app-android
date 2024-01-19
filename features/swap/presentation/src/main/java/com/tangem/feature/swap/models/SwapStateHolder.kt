@@ -83,6 +83,7 @@ sealed interface TransactionCardType {
     ) : TransactionCardType
 
     data class ReadOnly(
+        val onWarningClick: (() -> Unit)? = null,
         val highPriceImpact: String? = null,
         @StringRes override val headerResId: Int = R.string.swapping_to_title,
     ) : TransactionCardType
@@ -104,7 +105,7 @@ sealed interface SwapWarning {
     object InsufficientFunds : SwapWarning
     data class NoAvailableTokensToSwap(val notificationConfig: NotificationConfig) : SwapWarning
     data class GenericWarning(
-        val message: String? = null,
+        val message: TextReference? = null,
         val type: GenericWarningType = GenericWarningType.OTHER,
         val shouldWrapMessage: Boolean = false,
         val onClick: () -> Unit,

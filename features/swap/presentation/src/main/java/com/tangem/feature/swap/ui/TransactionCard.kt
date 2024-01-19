@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
@@ -284,14 +285,21 @@ private fun Content(
                                 .align(Alignment.CenterVertically),
                         )
                         SpacerW4()
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_alert_24),
-                            contentDescription = null,
-                            tint = TangemTheme.colors.icon.attention,
-                            modifier = Modifier
-                                .size(size = TangemTheme.dimens.size20)
-                                .align(Alignment.CenterVertically),
-                        )
+                        IconButton(
+                            enabled = priceImpact is PriceImpact.Value,
+                            onClick = {
+                                type.onWarningClick?.invoke()
+                            },
+                            modifier = Modifier.size(size = TangemTheme.dimens.size20),
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_alert_24),
+                                contentDescription = null,
+                                tint = TangemTheme.colors.icon.attention,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
+
                     }
                 } else {
                     AnimatedContent(targetState = amountEquivalent, label = "") {
@@ -468,6 +476,7 @@ private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: In
 private fun Preview_SwapMainCard_InLightTheme() {
     TangemTheme(isDark = false) {
         TransactionCardPreview()
+        TransactionCardPreviewWithPriceImpact()
     }
 }
 
@@ -476,6 +485,7 @@ private fun Preview_SwapMainCard_InLightTheme() {
 private fun Preview_SwapMainCard_InDarkTheme() {
     TangemTheme(isDark = true) {
         TransactionCardPreview()
+        TransactionCardPreviewWithPriceImpact()
     }
 }
 
@@ -491,6 +501,21 @@ private fun TransactionCardPreview() {
         balance = "123",
         textFieldValue = TextFieldValue(),
         priceImpact = PriceImpact.Empty(),
+    )
+}
+
+@Composable
+private fun TransactionCardPreviewWithPriceImpact() {
+    TransactionCard(
+        type = TransactionCardType.ReadOnly(),
+        amountEquivalent = "1 000 000",
+        tokenIconUrl = "",
+        tokenCurrency = "DAI",
+        networkIconRes = R.drawable.img_polygon_22,
+        onChangeTokenClick = {},
+        balance = "123",
+        textFieldValue = TextFieldValue(),
+        priceImpact = PriceImpact.Value(0.15F),
     )
 }
 

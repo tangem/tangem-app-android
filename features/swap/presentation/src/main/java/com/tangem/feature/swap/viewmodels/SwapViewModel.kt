@@ -872,6 +872,11 @@ internal class SwapViewModel @Inject constructor(
             onTosClick = {
                 swapRouter.openUrl(it)
             },
+            onReceiveCardWarningClick = {
+                uiState = stateBuilder.createCexAlert(uiState) {
+                    uiState = stateBuilder.clearAlert(uiState)
+                }
+            }
         )
     }
 

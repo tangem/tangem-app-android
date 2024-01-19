@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -231,7 +232,13 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(),
+                type = TransactionCardType.ReadOnly(
+                    onWarningClick = if (swapProvider.type == ExchangeProviderType.CEX) {
+                        actions.onReceiveCardWarningClick
+                    } else {
+                        null
+                    }
+                ),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 token = toCurrencyStatus,
@@ -830,6 +837,20 @@ internal class StateBuilder(
         )
     }
 
+    fun createCexAlert(
+        uiState: SwapStateHolder,
+        onAlertClick: () -> Unit,
+    ): SwapStateHolder {
+        return uiState.copy(
+            alert = SwapWarning.GenericWarning(
+                message = resourceReference(R.string.express_cex_fee_explanation),
+                onClick = onAlertClick,
+                type = GenericWarningType.OTHER,
+            ),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+        )
+    }
+
     fun addAlert(uiState: SwapStateHolder, onClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
@@ -843,7 +864,7 @@ internal class StateBuilder(
 
     fun addWarning(
         uiState: SwapStateHolder,
-        message: String?,
+        message: TextReference?,
         shouldWrapMessage: Boolean = false,
         onClick: () -> Unit,
     ): SwapStateHolder {
