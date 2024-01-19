@@ -715,7 +715,7 @@
     <string name="warning_rate_app_message">Ваш отзыв мотивирует нас сделать кошелек Tangem еще лучше</string>
     <string name="warning_rate_app_title">Нравится Tangem?</string>
     <string name="warning_rent_fee_title">Необходима плата за аренду сети</string>
-    <string name="warning_send_blocked_funds_for_fee_message">%1$s - это токен в сети %2$s. Для совершения транзакции %3$s, вам необходимо внести депозит в размере %4$s (%5$s), чтобы покрыть комиссию сети.</string>
+    <string name="warning_send_blocked_funds_for_fee_message">%1$s - это монета в сети %2$s. Для совершения транзакции %3$s, вам необходимо внести немного %4$s (%5$s), чтобы покрыть комиссию сети.</string>
     <string name="warning_send_blocked_funds_for_fee_title">Недостаточно %1$s для оплаты комиссии сети</string>
     <string name="warning_send_blocked_pending_transactions_message">Отправка средств станет доступной после завершения транзакции %s</string>
     <string name="warning_send_blocked_pending_transactions_title">Транзакция в обработке</string>
