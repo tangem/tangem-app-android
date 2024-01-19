@@ -220,7 +220,7 @@ internal class DefaultSwapRepository @Inject constructor(
                     exchangeable = true,
                     active = true,
                     networkIds = networkId,
-                ).coins,
+                ).getOrThrow().coins,
             )
         }
     }
@@ -313,6 +313,10 @@ internal class DefaultSwapRepository @Inject constructor(
 
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
         return walletManagersFacade.getExistentialDeposit(userWalletId, network)
+    }
+
+    override suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal? {
+        return walletManagersFacade.getDustValue(userWalletId, network)
     }
 
     private fun parseTxDetails(txDetailsJson: String): TxDetails? {

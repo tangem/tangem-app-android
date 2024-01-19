@@ -5,17 +5,15 @@ import com.tangem.common.CompletionResult
 import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.models.ChatConfig
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.tap.common.analytics.topup.TopUpController
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.redux.DebugErrorAction
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
@@ -26,7 +24,6 @@ sealed class GlobalAction : Action {
 
     // notifications
     data class ShowNotification(override val messageResource: Int) : GlobalAction(), NotificationAction
-    data class ShowToastNotification(override val messageResource: Int) : GlobalAction(), ToastNotificationAction
     data class ShowErrorNotification(override val error: TapError) : GlobalAction(), ErrorAction
     data class DebugShowErrorNotification(override val error: TapError) : GlobalAction(), DebugErrorAction
 
@@ -61,9 +58,9 @@ sealed class GlobalAction : Action {
 
     data class SetIfCardVerifiedOnline(val verified: Boolean) : GlobalAction()
 
-    data class ChangeAppCurrency(val appCurrency: FiatCurrency) : GlobalAction()
+    data class ChangeAppCurrency(val appCurrency: AppCurrency) : GlobalAction()
     object RestoreAppCurrency : GlobalAction() {
-        data class Success(val appCurrency: FiatCurrency) : GlobalAction()
+        data class Success(val appCurrency: AppCurrency) : GlobalAction()
     }
 
     data class UpdateWalletSignedHashes(
@@ -78,7 +75,6 @@ sealed class GlobalAction : Action {
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
     data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
-    data class SetTopUpController(val topUpController: TopUpController) : GlobalAction()
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val chatConfig: ChatConfig? = null) : GlobalAction()
