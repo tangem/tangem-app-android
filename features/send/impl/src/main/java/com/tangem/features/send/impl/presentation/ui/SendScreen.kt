@@ -27,7 +27,7 @@ import com.tangem.features.send.impl.presentation.ui.send.SendContent
 @Composable
 internal fun SendScreen(uiState: SendUiState) {
     val currentState = uiState.currentState.collectAsStateWithLifecycle()
-    val isSuccess = uiState.sendState?.isSuccess?.collectAsStateWithLifecycle()
+    val isSuccess = uiState.sendState.isSuccess
     BackHandler { uiState.clickIntents.onBackClick() }
     Column(
         modifier = Modifier
@@ -38,16 +38,15 @@ internal fun SendScreen(uiState: SendUiState) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val titleRes = when (currentState.value) {
-            SendUiStateType.Amount -> R.string.common_send
-            SendUiStateType.Recipient -> R.string.send_recipient
+            SendUiStateType.Amount -> R.string.send_amount_label
+            SendUiStateType.Recipient -> R.string.send_recipient_label
             SendUiStateType.Fee -> R.string.common_fee_selector_title
-            SendUiStateType.Send -> if (isSuccess?.value == false) R.string.common_send else null
+            SendUiStateType.Send -> if (!isSuccess) R.string.send_confirm_label else null
         }
-        val iconRes = when (currentState.value) {
-            SendUiStateType.Amount,
-            SendUiStateType.Recipient,
-            -> R.drawable.ic_qrcode_scan_24
-            else -> null
+        val iconRes = if (currentState.value == SendUiStateType.Recipient) {
+            R.drawable.ic_qrcode_scan_24
+        } else {
+            null
         }
 
         AppBarWithBackButtonAndIcon(
