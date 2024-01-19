@@ -3,6 +3,7 @@ package com.tangem.tap.features.tokens.impl.data
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.toNetworkId
@@ -50,7 +51,7 @@ internal class TangemApiTokensPagingSource(
                 searchText = searchText,
                 offset = page * params.loadSize,
                 limit = params.loadSize,
-            )
+            ).getOrThrow()
         }.fold(
             onSuccess = { response ->
                 LoadResult.Page(

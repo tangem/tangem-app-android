@@ -66,7 +66,12 @@ class DefaultTxHistoryRepository(
 
     override fun getTxExploreUrl(txHash: String, networkId: Network.ID): String {
         val blockchain = Blockchain.fromId(networkId.value)
-        return blockchain.getExploreTxUrl(txHash)
+        // TODO: Fix ton tx urls [REDACTED_TASK_KEY]
+        return if (blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet) {
+            ""
+        } else {
+            blockchain.getExploreTxUrl(txHash)
+        }
     }
 
     private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
