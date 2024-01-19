@@ -74,6 +74,12 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "near-protocol/test" -> Blockchain.NearTestnet
         "decimal" -> Blockchain.Decimal
         "decimal/test" -> Blockchain.DecimalTestnet
+        "xdc-network" -> Blockchain.XDC
+        "xdc-network/test" -> Blockchain.XDCTestnet
+        "TODO" -> Blockchain.Vechain // TODO [REDACTED_TASK_KEY]
+        "TODO/test" -> Blockchain.VechainTestnet // TODO [REDACTED_TASK_KEY]
+        "aptos" -> Blockchain.Aptos
+        "aptos/test" -> Blockchain.AptosTestnet
         else -> null
     }
 }
@@ -149,6 +155,12 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.NearTestnet -> "near-protocol/test"
         Blockchain.Decimal -> "decimal"
         Blockchain.DecimalTestnet -> "decimal/test"
+        Blockchain.XDC -> "xdc-network"
+        Blockchain.XDCTestnet -> "xdc-network/test"
+        Blockchain.Vechain -> "TODO" // TODO [REDACTED_TASK_KEY]
+        Blockchain.VechainTestnet -> "TODO/test" // TODO [REDACTED_TASK_KEY]
+        Blockchain.Aptos -> "aptos"
+        Blockchain.AptosTestnet -> "aptos/test"
     }
 }
 
@@ -196,6 +208,11 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Near -> "near"
         Blockchain.NearTestnet -> "near/test"
         Blockchain.Decimal, Blockchain.DecimalTestnet -> "decimal"
+        Blockchain.XDC, Blockchain.XDCTestnet -> "xdce-crowd-sale"
+        Blockchain.Vechain -> "TODO" // TODO [REDACTED_TASK_KEY]
+        Blockchain.VechainTestnet -> "TODO/test" // TODO [REDACTED_TASK_KEY]
+        Blockchain.Aptos -> "aptos"
+        Blockchain.AptosTestnet -> "aptos/test"
         Blockchain.Unknown -> "unknown"
     }
 }
@@ -223,4 +240,6 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
+    Blockchain.Vechain, // TODO [REDACTED_TASK_KEY]
+    Blockchain.VechainTestnet, // TODO [REDACTED_TASK_KEY]
 )
