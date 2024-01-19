@@ -669,8 +669,8 @@ internal class SwapInteractorImpl @Inject constructor(
     ) {
         swapTransactionRepository.storeTransaction(
             userWalletId = UserWalletId(userWalletManager.getWalletId()),
-            fromCryptoCurrencyId = currencyToSend.currency.id,
-            toCryptoCurrencyId = currencyToGet.currency.id,
+            fromCryptoCurrency = currencyToSend.currency,
+            toCryptoCurrency = currencyToGet.currency,
             transaction = SavedSwapTransactionModel(
                 txId = swapDataModel.transaction.txId,
                 provider = swapProvider,
