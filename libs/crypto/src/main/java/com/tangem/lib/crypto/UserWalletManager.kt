@@ -31,18 +31,7 @@ interface UserWalletManager {
     @Throws(IllegalStateException::class)
     suspend fun isTokenAdded(currency: Currency, derivationPath: String?): Boolean
 
-    /**
-     * Adds token to wallet if its not
-     *
-     * @param currency to add to wallet
-     * @param derivationPath if null uses default
-     */
-    @Throws(IllegalStateException::class)
-    suspend fun addToken(currency: Currency, derivationPath: String?)
-
     suspend fun hideAllTokens()
-
-    fun refreshWallet()
 
     /**
      * Returns wallet public address for token

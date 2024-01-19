@@ -76,11 +76,10 @@ dependencies {
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
     implementation(projects.data.analytics)
+    implementation(projects.data.transaction)
 
     /** Features */
     implementation(projects.features.onboarding)
-    implementation(projects.features.learn2earn.api)
-    implementation(projects.features.learn2earn.impl)
     implementation(projects.features.referral.presentation)
     implementation(projects.features.referral.domain)
     implementation(projects.features.referral.data)
@@ -99,6 +98,8 @@ dependencies {
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
     implementation(projects.features.send.impl)
+    implementation(projects.features.qrScanning.api)
+    implementation(projects.features.qrScanning.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -146,6 +147,7 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
+
     kapt(deps.hilt.kapt)
 
     /** Other libraries */
@@ -158,7 +160,6 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
-    implementation(deps.otaliastudiosCameraView)
     implementation(deps.coil)
     implementation(deps.appsflyer)
     implementation(deps.amplitude)
@@ -186,7 +187,9 @@ dependencies {
     }
 
     /** Testing libraries */
+    testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
@@ -208,7 +211,7 @@ dependencies {
     /** Excluded dependencies */
     implementation("com.google.guava:guava:30.0-android") {
         // excludes version 9999.0-empty-to-avoid-conflict-with-guava
-        exclude(group="com.google.guava", module = "listenablefuture")
+        exclude(group = "com.google.guava", module = "listenablefuture")
     }
 
 }
