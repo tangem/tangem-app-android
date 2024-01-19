@@ -23,7 +23,7 @@ internal class TransactionDataToTxHistoryItemConverter(
     override fun convert(value: TransactionData): TxHistoryItem? {
         val hash = value.hash ?: return null
         val millis = value.date?.timeInMillis ?: return null
-        val amount = getTransactionAmountValue(value.amount) ?: return null
+        val amount = getTransactionAmountValue(value.amount, value.fee?.amount) ?: return null
         val isOutgoing = value.sourceAddress in walletAddresses.map(Address::value)
 
         return TxHistoryItem(
@@ -46,8 +46,9 @@ internal class TransactionDataToTxHistoryItemConverter(
         )
     }
 
-    private fun getTransactionAmountValue(amount: Amount): BigDecimal? {
-        val value = amount.value
+    private fun getTransactionAmountValue(amount: Amount, feeAmount: Amount?): BigDecimal? {
+        val feeValue = feeAmount?.value ?: BigDecimal.ZERO
+        val value = amount.value?.plus(feeValue)
 
         if (value == null) {
             Timber.w("Transaction amount must not be null: ${amount.currencySymbol}")
