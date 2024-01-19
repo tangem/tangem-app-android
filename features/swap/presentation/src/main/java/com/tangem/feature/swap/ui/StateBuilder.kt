@@ -2,7 +2,6 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import com.tangem.common.Provider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -21,6 +20,7 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.viewmodels.SwapProcessDataState
+import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -212,7 +212,7 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         val warnings = getWarningsForSuccessState(quoteModel, fromToken)
-        val feeState = createFeeState(quoteModel.txFee, selectedFeeType, swapProvider)
+        val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
         return uiStateHolder.copy(
@@ -231,7 +231,7 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(),
+                type = TransactionCardType.ReadOnly(actions.onReceiveCardWarningClick),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 token = toCurrencyStatus,
@@ -254,7 +254,7 @@ internal class StateBuilder(
             ),
             fee = feeState,
             swapButton = SwapButton(
-                enabled = getSwapButtonEnabled(quoteModel.preparedSwapConfigState),
+                enabled = getSwapButtonEnabled(quoteModel),
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = if (isReverseSwapPossible) {
@@ -332,15 +332,6 @@ internal class StateBuilder(
             warnings.add(SwapWarning.InsufficientFunds)
         }
 
-        val priceImpact = quoteModel.priceImpact
-        if (priceImpact is PriceImpact.ValueWithNotify && priceImpact.value > PRICE_IMPACT_THRESHOLD) {
-            warnings.add(
-                SwapWarning.HighPriceImpact(
-                    priceImpact = priceImpact.getIntPercentValue(),
-                    notificationConfig = highPriceImpactNotificationConfig(),
-                ),
-            )
-        }
         if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
             warnings.add(
                 SwapWarning.TransactionInProgressWarning(
@@ -384,6 +375,23 @@ internal class StateBuilder(
                         ),
                     )
                 }
+                is Warning.MinAmountWarning -> {
+                    warnings.add(
+                        SwapWarning.GeneralError(
+                            NotificationConfig(
+                                title = resourceReference(R.string.send_notification_invalid_amount_title),
+                                subtitle = resourceReference(
+                                    R.string.send_notification_invalid_minimum_amount_text,
+                                    wrappedList(
+                                        it.dustValue.toPlainString(),
+                                        it.dustValue.toPlainString(),
+                                    ),
+                                ),
+                                iconResId = R.drawable.ic_alert_circle_24,
+                            ),
+                        ),
+                    )
+                }
             }
         }
     }
@@ -408,8 +416,12 @@ internal class StateBuilder(
         }
     }
 
-    private fun getSwapButtonEnabled(preparedSwapConfigState: PreparedSwapConfigState): Boolean {
+    private fun getSwapButtonEnabled(quoteModel: SwapState.QuotesLoadedState): Boolean {
+        val preparedSwapConfigState = quoteModel.preparedSwapConfigState
+        // check has has outgoing transaction
         if (preparedSwapConfigState.hasOutgoingTransaction) return false
+        // check has MinAmountWarning warning
+        if (quoteModel.warnings.filterIsInstance<Warning.MinAmountWarning>().isNotEmpty()) return false
         return when (preparedSwapConfigState.includeFeeInAmount) {
             IncludeFeeInAmount.BalanceNotEnough -> false
             IncludeFeeInAmount.Excluded ->
@@ -523,7 +535,7 @@ internal class StateBuilder(
 
     private fun getWarningForError(dataError: DataError, fromToken: CryptoCurrency): SwapWarning {
         return when (dataError) {
-            is DataError.ExchangeTooSmallAmountError -> SwapWarning.TooSmallAmountWarning(
+            is DataError.ExchangeTooSmallAmountError -> SwapWarning.GeneralError(
                 notificationConfig = NotificationConfig(
                     title = resourceReference(
                         id = R.string.warning_express_too_minimal_amount_title,
@@ -558,6 +570,8 @@ internal class StateBuilder(
     fun createQuotesEmptyAmountState(
         uiStateHolder: SwapStateHolder,
         emptyAmountState: SwapState.EmptyAmountState,
+        fromTokenStatus: CryptoCurrencyStatus,
+        toTokenStatus: CryptoCurrencyStatus?,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -574,7 +588,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.sendCardData.networkIconRes,
-                balance = emptyAmountState.fromTokenWalletBalance,
+                balance = fromTokenStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
@@ -588,7 +602,7 @@ internal class StateBuilder(
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 networkIconRes = uiStateHolder.receiveCardData.networkIconRes,
-                balance = emptyAmountState.toTokenWalletBalance,
+                balance = toTokenStatus?.getFormattedAmount(isNeedSymbol = false) ?: UNKNOWN_AMOUNT_SIGN,
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             warnings = emptyList(),
@@ -712,7 +726,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType, swapProvider: SwapProvider): FeeItemState {
+    private fun createFeeState(txFeeState: TxFeeState, feeType: FeeType): FeeItemState {
         val isClickable: Boolean
         val fee = when (txFeeState) {
             TxFeeState.Empty -> return FeeItemState.Empty
@@ -735,14 +749,9 @@ internal class StateBuilder(
 
         return FeeItemState.Content(
             feeType = feeType,
-            title = resourceReference(R.string.common_fee_label),
+            title = resourceReference(R.string.common_network_fee_title),
             amountCrypto = fee.feeCryptoFormatted,
             symbolCrypto = fee.cryptoSymbol,
-            explanation = if (swapProvider.type == ExchangeProviderType.CEX) {
-                resourceReference(R.string.express_cex_fee_explanation)
-            } else {
-                null
-            },
             amountFiatFormatted = fee.feeFiatFormatted,
             isClickable = isClickable,
             onClick = actions.onClickFee,
@@ -816,6 +825,25 @@ internal class StateBuilder(
         )
     }
 
+    fun createImpactAlert(
+        uiState: SwapStateHolder,
+        providerType: ExchangeProviderType,
+        onAlertClick: () -> Unit,
+    ): SwapStateHolder {
+        val message = when (providerType) {
+            ExchangeProviderType.CEX -> resourceReference(R.string.express_cex_fee_explanation)
+            ExchangeProviderType.DEX -> resourceReference(R.string.swapping_high_price_impact_description)
+        }
+        return uiState.copy(
+            alert = SwapWarning.GenericWarning(
+                message = message,
+                onClick = onAlertClick,
+                type = GenericWarningType.OTHER,
+            ),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+        )
+    }
+
     fun addAlert(uiState: SwapStateHolder, onClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
@@ -829,7 +857,7 @@ internal class StateBuilder(
 
     fun addWarning(
         uiState: SwapStateHolder,
-        message: String?,
+        message: TextReference?,
         shouldWrapMessage: Boolean = false,
         onClick: () -> Unit,
     ): SwapStateHolder {
@@ -1049,21 +1077,19 @@ internal class StateBuilder(
         return listOf(
             FeeItemState.Content(
                 feeType = this.normalFee.feeType,
-                title = resourceReference(R.string.common_fee_label),
+                title = resourceReference(R.string.common_network_fee_title),
                 amountCrypto = this.normalFee.feeCryptoFormatted,
                 symbolCrypto = this.normalFee.cryptoSymbol,
                 amountFiatFormatted = this.normalFee.feeFiatFormatted,
-                explanation = null,
                 isClickable = true,
                 onClick = {},
             ),
             FeeItemState.Content(
                 feeType = this.priorityFee.feeType,
-                title = resourceReference(R.string.common_fee_label),
+                title = resourceReference(R.string.common_network_fee_title),
                 amountCrypto = this.priorityFee.feeCryptoFormatted,
                 symbolCrypto = this.priorityFee.cryptoSymbol,
                 amountFiatFormatted = this.priorityFee.feeFiatFormatted,
-                explanation = null,
                 isClickable = true,
                 onClick = {},
             ),
@@ -1103,14 +1129,6 @@ internal class StateBuilder(
                 formatArgs = wrappedList(fromTokenSymbol),
             ),
             iconResId = R.drawable.ic_locked_24,
-        )
-    }
-
-    private fun highPriceImpactNotificationConfig(): NotificationConfig {
-        return NotificationConfig(
-            title = resourceReference(R.string.swapping_high_price_impact),
-            subtitle = resourceReference(R.string.swapping_high_price_impact_description),
-            iconResId = R.drawable.ic_alert_circle_24,
         )
     }
 
