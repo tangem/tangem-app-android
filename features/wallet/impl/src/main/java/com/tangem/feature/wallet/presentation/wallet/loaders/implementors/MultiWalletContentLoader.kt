@@ -9,8 +9,8 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarni
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletTokenListSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.TokenListSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletConnectNetworksSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
@@ -31,7 +31,7 @@ internal class MultiWalletContentLoader(
 
     override fun create(): List<WalletSubscriber> {
         return listOf(
-            TokenListSubscriber(
+            MultiWalletTokenListSubscriber(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
                 clickIntents = clickIntents,
