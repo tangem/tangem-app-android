@@ -3,7 +3,6 @@ package com.tangem.tap.features.tokens.impl.data.converters
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.tap.domain.tokens.getIconUrl
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.utils.converter.Converter
 
@@ -13,6 +12,8 @@ import com.tangem.utils.converter.Converter
 [REDACTED_AUTHOR]
  */
 internal object CoinsResponseConverter : Converter<CoinsResponse, List<Token>> {
+
+    private const val DEFAULT_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/"
 
     override fun convert(value: CoinsResponse): List<Token> {
         return value.coins.map { token ->
@@ -34,5 +35,9 @@ internal object CoinsResponseConverter : Converter<CoinsResponse, List<Token>> {
                 },
             )
         }
+    }
+
+    fun getIconUrl(id: String, imageHost: String? = null): String {
+        return "${imageHost ?: DEFAULT_IMAGE_HOST}large/$id.png"
     }
 }
