@@ -4,7 +4,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
@@ -21,14 +21,16 @@ internal class SetCryptoCurrencyActionsTransformer(
             is WalletState.SingleCurrency.Content -> {
                 prevState.copy(buttons = tokenActionsState.toManageButtons())
             }
-            is WalletState.SingleCurrency.Locked,
-            -> {
-                Timber.e("Impossible to load primary currency status for locked wallet")
+            is WalletState.SingleCurrency.Locked -> {
+                Timber.w("Impossible to load primary currency status for locked wallet")
                 prevState
             }
-            is WalletState.MultiCurrency,
-            -> {
-                Timber.e("Impossible to load crypto currency actions for multi-currency wallet")
+            is WalletState.MultiCurrency -> {
+                Timber.w("Impossible to load crypto currency actions for multi-currency wallet")
+                prevState
+            }
+            is WalletState.Visa -> {
+                Timber.w("Impossible to load crypto currency actions for VISA wallet")
                 prevState
             }
         }

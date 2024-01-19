@@ -12,8 +12,8 @@ import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import java.math.BigDecimal

@@ -8,9 +8,13 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.sdk.extensions.dpToPx
 import com.tangem.wallet.R
 
 /**
@@ -27,12 +31,26 @@ class MaxAmountSnackbar(
             val parent = view.findSuitableParent() ?: throw IllegalArgumentException(
                 "No suitable parent found from the given view. Please provide a valid view.",
             )
-            val inflater = LayoutInflater.from(view.context)
+            val inflater = LayoutInflater.from(parent.context)
             val customView = inflater.inflate(R.layout.view_snackbar_max_amount, parent, false) as MaxAmountSnackbarView
             customView.setOnClickListener { onClick() }
 
             return MaxAmountSnackbar(parent, customView).apply {
+                updateBottomMargin()
                 duration = Snackbar.LENGTH_INDEFINITE
+            }
+        }
+
+        private fun MaxAmountSnackbar.updateBottomMargin() {
+            ViewCompat.setOnApplyWindowInsetsListener(this.view) { _, insets ->
+                val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+                val bottomInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+
+                this.view.updateLayoutParams<CoordinatorLayout.LayoutParams> {
+                    bottomMargin = imeInsets - bottomInsets + context.dpToPx(dp = 8f).toInt()
+                }
+
+                insets
             }
         }
 

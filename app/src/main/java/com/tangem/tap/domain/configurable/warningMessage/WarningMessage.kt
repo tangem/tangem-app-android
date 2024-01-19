@@ -51,14 +51,12 @@ data class WarningMessage(
     }
 
     enum class Location {
-        @Json(name = "main")
-        MainScreen,
 
         @Json(name = "send")
         SendScreen,
     }
 
     enum class Origin {
-        Local, Remote
+        Remote,
     }
 }
