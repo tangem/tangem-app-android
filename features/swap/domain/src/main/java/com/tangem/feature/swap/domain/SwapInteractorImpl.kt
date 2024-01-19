@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
@@ -31,6 +32,7 @@ import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.isNullOrZero
 import com.tangem.utils.toFiatString
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
@@ -237,9 +239,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return providers.map { provider ->
             val amountDecimal = toBigDecimalOrNull(amountToSwap)
             if (amountDecimal == null || amountDecimal.signum() == 0) {
-                return providers.associateWith {
-                    createEmptyAmountState(fromToken, toToken)
-                }
+                return providers.associateWith { createEmptyAmountState() }
             }
             val amount = SwapAmount(amountDecimal, getTokenDecimals(fromToken.currency))
             val isBalanceWithoutFeeEnough = isBalanceEnough(fromToken, amount, null)
@@ -353,10 +353,26 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private suspend fun manageWarnings(fromToken: CryptoCurrency, amount: SwapAmount): List<Warning> {
+    private suspend fun manageWarnings(
+        fromTokenStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+        feeState: TxFeeState,
+    ): List<Warning> {
+        val fromToken = fromTokenStatus.currency
         val userWalletId = getSelectedWallet()?.walletId ?: return emptyList()
-        val existentialDeposit = repository.getExistentialDeposit(userWalletId, fromToken.network)
         val warnings = mutableListOf<Warning>()
+        manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken)
+        manageDustWarning(warnings, feeState, userWalletId, fromTokenStatus, amount)
+        return warnings
+    }
+
+    private suspend fun manageExistentialDepositWarning(
+        warnings: MutableList<Warning>,
+        userWalletId: UserWalletId,
+        amount: SwapAmount,
+        fromToken: CryptoCurrency,
+    ) {
+        val existentialDeposit = repository.getExistentialDeposit(userWalletId, fromToken.network)
         if (existentialDeposit != null) {
             val nativeBalance = userWalletManager.getNativeTokenBalance(
                 fromToken.network.backendId,
@@ -366,7 +382,33 @@ internal class SwapInteractorImpl @Inject constructor(
                 warnings.add(Warning.ExistentialDepositWarning(existentialDeposit))
             }
         }
-        return warnings
+    }
+
+    private suspend fun manageDustWarning(
+        warnings: MutableList<Warning>,
+        feeState: TxFeeState,
+        userWalletId: UserWalletId,
+        fromTokenStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+    ) {
+        val fee = when (feeState) {
+            TxFeeState.Empty -> BigDecimal.ZERO
+            is TxFeeState.MultipleFeeState -> feeState.priorityFee.feeValue
+            is TxFeeState.SingleFeeState -> feeState.fee.feeValue
+        }
+        val dust = repository.getDustValue(userWalletId, fromTokenStatus.currency.network)
+        val balance = fromTokenStatus.value.amount ?: BigDecimal.ZERO
+        if (dust != null &&
+            !balance.isNullOrZero() &&
+            amount.value < balance
+        ) {
+            val change = balance - (amount.value + fee)
+            val isChangeLowerThanDust = change < dust && change != BigDecimal.ZERO
+            val isShowWarning = amount.value + fee < dust || isChangeLowerThanDust
+            if (isShowWarning) {
+                warnings.add(Warning.MinAmountWarning(dust))
+            }
+        }
     }
 
     override suspend fun onSwap(
@@ -522,7 +564,10 @@ internal class SwapInteractorImpl @Inject constructor(
         }
         val txData = walletManagersFacade.createTransaction(
             amount = amount.value.convertToAmount(currencyToSend.currency),
-            fee = getFeeForTransaction(txFee),
+            fee = getFeeForTransaction(
+                fee = txFee,
+                blockchain = Blockchain.fromId(currencyToSend.currency.network.id.value),
+            ),
             memo = null,
             destination = exchangeDataCex.txTo,
             userWalletId = userWalletId,
@@ -584,7 +629,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun getFeeForTransaction(fee: TxFee): Fee {
+    private fun getFeeForTransaction(fee: TxFee, blockchain: Blockchain): Fee {
         val feeAmountValue = fee.feeValue
         val feeAmount = Amount(
             value = fee.feeValue,
@@ -593,15 +638,26 @@ internal class SwapInteractorImpl @Inject constructor(
             type = AmountType.Coin,
         )
 
-        return if (fee.gasLimit != 0) {
-            val feeAmountWithDecimals = feeAmountValue.movePointRight(fee.decimals)
-            Fee.Ethereum(
+        return when (blockchain) {
+            Blockchain.Ethereum -> {
+                val feeAmountWithDecimals = feeAmountValue.movePointRight(fee.decimals)
+                Fee.Ethereum(
+                    amount = feeAmount,
+                    gasLimit = fee.gasLimit.toBigInteger(),
+                    gasPrice = (feeAmountWithDecimals / fee.gasLimit.toBigDecimal()).toBigInteger(),
+                )
+            }
+            Blockchain.Vechain -> Fee.Vechain(
                 amount = feeAmount,
-                gasLimit = fee.gasLimit.toBigInteger(),
-                gasPrice = (feeAmountWithDecimals / fee.gasLimit.toBigDecimal()).toBigInteger(),
+                gasPriceCoef = fee.gasLimit,
             )
-        } else {
-            Fee.Common(feeAmount)
+            Blockchain.Aptos -> {
+                Fee.Aptos(
+                    amount = feeAmount,
+                    gasUnitPrice = fee.feeValue.toLong() / fee.gasLimit,
+                )
+            }
+            else -> Fee.Common(feeAmount)
         }
     }
 
@@ -698,13 +754,9 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun createEmptyAmountState(fromToken: CryptoCurrencyStatus, toToken: CryptoCurrencyStatus): SwapState {
+    private fun createEmptyAmountState(): SwapState {
         val appCurrency = userWalletManager.getUserAppCurrency()
-        val fromTokenBalance = getTokenBalance(fromToken)
-        val toTokenBalance = getTokenBalance(toToken)
         return SwapState.EmptyAmountState(
-            fromTokenWalletBalance = amountFormatter.formatSwapAmountToUI(fromTokenBalance, ""),
-            toTokenWalletBalance = amountFormatter.formatSwapAmountToUI(toTokenBalance, ""),
             zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(
                 rateValue = BigDecimal.ONE,
                 fiatCurrencyName = appCurrency.symbol,
@@ -797,9 +849,8 @@ internal class SwapInteractorImpl @Inject constructor(
                     toTokenAmount = quoteModel.toTokenAmount,
                     swapData = null,
                     txFeeState = txFee,
-                    exchangeProviderType = exchangeProviderType,
                 ).copy(
-                    warnings = manageWarnings(fromToken.currency, amount),
+                    warnings = manageWarnings(fromToken, amount, txFee),
                 )
 
                 when (exchangeProviderType) {
@@ -960,11 +1011,10 @@ internal class SwapInteractorImpl @Inject constructor(
                     toTokenAmount = swapData.toTokenAmount,
                     swapData = swapData,
                     txFeeState = txFeeState,
-                    exchangeProviderType = ExchangeProviderType.DEX,
                 )
                 swapState.copy(
                     permissionState = PermissionDataState.Empty,
-                    warnings = manageWarnings(fromToken.currency, amount),
+                    warnings = manageWarnings(fromToken, amount, txFeeState),
                     preparedSwapConfigState = PreparedSwapConfigState(
                         isAllowedToSpend = true,
                         isBalanceEnough = isBalanceIncludeFeeEnough,
@@ -1000,7 +1050,6 @@ internal class SwapInteractorImpl @Inject constructor(
         toTokenAmount: SwapAmount,
         swapData: SwapDataModel?,
         txFeeState: TxFeeState,
-        exchangeProviderType: ExchangeProviderType,
     ): SwapState.QuotesLoadedState {
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
@@ -1025,7 +1074,6 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromRate = rates[fromToken.id]?.fiatRate?.toDouble() ?: 0.0,
                 toTokenAmount = toTokenAmount.value,
                 toRate = rates[toToken.id]?.fiatRate?.toDouble() ?: 0.0,
-                exchangeProviderType = exchangeProviderType,
             ),
             networkCurrency = userWalletManager.getNetworkCurrency(networkId),
             swapDataModel = swapData,
@@ -1296,7 +1344,9 @@ internal class SwapInteractorImpl @Inject constructor(
     private fun Fee.getGasLimit(): Int {
         return when (this) {
             is Fee.Common -> 0
-            is Fee.Ethereum -> this.gasLimit.toInt()
+            is Fee.Ethereum -> gasLimit.toInt()
+            is Fee.Vechain -> gasPriceCoef
+            is Fee.Aptos -> amount.longValue?.div(gasUnitPrice)?.toInt() ?: 0
         }
     }
 
@@ -1372,15 +1422,11 @@ internal class SwapInteractorImpl @Inject constructor(
         fromRate: Double,
         toTokenAmount: BigDecimal,
         toRate: Double,
-        exchangeProviderType: ExchangeProviderType,
     ): PriceImpact {
         val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal())
         val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal())
         val value = (BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)).toFloat()
-        if (exchangeProviderType == ExchangeProviderType.CEX) {
-            return PriceImpact.Value(value)
-        }
-        return PriceImpact.ValueWithNotify(value)
+        return PriceImpact.Value(value)
     }
 
     private suspend fun getApproveData(

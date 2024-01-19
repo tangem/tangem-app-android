@@ -11,10 +11,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
-import com.tangem.tap.domain.tokens.UserTokensStorageService
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
@@ -25,9 +22,7 @@ internal data class BlockchainToDerive(
 
 // FIXME: May be move to DI, currently unnecessary
 internal class DerivationsFinder(
-    private val legacyTokensStore: UserTokensStorageService,
     private val newTokensStore: UserTokensStore,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -40,11 +35,7 @@ internal class DerivationsFinder(
         val derivationStyle = derivationStyleProvider.getDerivationStyle()
 
         var blockchains = withContext(dispatchers.io) {
-            if (walletFeatureToggles.isRedesignedScreenEnabled) {
-                getBlockchainsNew(userWalletId)
-            } else {
-                getBlockchainsLegacy(userWalletId)
-            }
+            getBlockchains(userWalletId)
         }
 
         if (blockchains.isEmpty()) {
@@ -72,7 +63,7 @@ internal class DerivationsFinder(
         return blockchains
     }
 
-    private suspend fun getBlockchainsNew(userWalletId: UserWalletId): MutableSet<BlockchainToDerive> {
+    private suspend fun getBlockchains(userWalletId: UserWalletId): MutableSet<BlockchainToDerive> {
         val responseTokens = newTokensStore.getSyncOrNull(userWalletId)
             ?.tokens
             ?: return hashSetOf()
@@ -81,22 +72,6 @@ internal class DerivationsFinder(
             .filter { it.contractAddress == null }
             .mapNotNull { coin ->
                 val blockchain = Blockchain.fromNetworkId(coin.networkId) ?: return@mapNotNull null
-                val derivationPath = coin.derivationPath?.let(::DerivationPath)
-
-                BlockchainToDerive(blockchain, derivationPath)
-            }
-            .toMutableSet()
-    }
-
-    private fun getBlockchainsLegacy(userWalletId: UserWalletId): MutableSet<BlockchainToDerive> {
-        val currencies = legacyTokensStore.getUserTokens(userWalletId.stringValue)
-            ?.takeIf { it.isNotEmpty() }
-            ?: return hashSetOf()
-
-        return currencies.asSequence()
-            .filterIsInstance<Currency.Blockchain>()
-            .map { coin ->
-                val blockchain = coin.blockchain
                 val derivationPath = coin.derivationPath?.let(::DerivationPath)
 
                 BlockchainToDerive(blockchain, derivationPath)
