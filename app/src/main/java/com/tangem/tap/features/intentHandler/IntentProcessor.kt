@@ -15,15 +15,11 @@ class IntentProcessor {
         intentHandlers.add(handler)
     }
 
-    fun removeIntentHandler(handler: IntentHandler) {
-        intentHandlers.remove(handler)
-    }
-
     fun removeAll() {
         intentHandlers.clear()
     }
 
-    suspend fun handleIntent(intent: Intent?) {
+    fun handleIntent(intent: Intent?) {
         intentHandlers.forEach {
             it.handleIntent(intent)
         }
