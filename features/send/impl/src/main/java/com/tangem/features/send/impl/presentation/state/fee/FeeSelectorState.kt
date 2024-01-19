@@ -16,6 +16,8 @@ internal sealed class FeeSelectorState {
         val selectedFee: FeeType = FeeType.MARKET,
         val customValues: ImmutableList<SendTextField.CustomFee> = persistentListOf(),
     ) : FeeSelectorState()
+
+    object Error : FeeSelectorState()
 }
 
 enum class FeeType {
