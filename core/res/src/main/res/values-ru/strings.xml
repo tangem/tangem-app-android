@@ -234,6 +234,7 @@
     <string name="express_provider_not_available">Недоступно для этой пары</string>
     <string name="express_provider_permission_needed">Требуется разрешение</string>
     <string name="express_terms_of_use">Условиями использования</string>
+    <string name="express_by_provider">Предоставлено</string>
     <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
     <string name="feedback_preface_rate_negative">Расскажите, каких функций вам не хватает, и мы постараемся вам помочь.</string>
     <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у вас карта?</string>
@@ -469,7 +470,7 @@
     <string name="send_max_amount_label">Максимальная сумма</string>
     <string name="send_max_fee">Комиссия не превысит </string>
     <string name="send_max_fee_footer">Максимальная cумма комиссии</string>
-    <string name="send_network_fee_title">Сетевая комиссия</string>
+    <string name="common_network_fee_title">Сетевая комиссия</string>
     <string name="send_network_fee_warning_content">Сумма отправки будет уменьшена для покрытия выбранного уровня комиссии</string>
     <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
     <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
@@ -529,7 +530,6 @@
     <string name="swapping_from_title">Вы отправляете</string>
     <string name="swapping_generic_error">Произошла ошибка. Пожалуйста, попробуйте еще раз.</string>
     <string name="swapping_give_permission">Дать разрешение</string>
-    <string name="swapping_high_price_impact">Сильные колебания цены!</string>
     <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
     <string name="swapping_insufficient_funds">Недостаточно средств</string>
     <string name="swapping_not_enough_funds_for_fee">Недостаточно средств для оплаты комиссии на вашем %1$s кошельке для создания транзакции. Сначала пополните свой %2$s кошелек.</string>
