@@ -23,8 +23,10 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import com.tangem.blockchain.common.FeePaidCurrency as FeePaidSdkCurrency
 
 @Suppress("LargeClass", "LongParameterList")
 internal class DefaultCurrenciesRepository(
@@ -39,6 +42,7 @@ internal class DefaultCurrenciesRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val userTokensStore: UserTokensStore,
     private val userWalletsStore: UserWalletsStore,
+    private val walletManagersFacade: WalletManagersFacade,
     private val assetsStore: AssetsStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -320,6 +324,32 @@ internal class DefaultCurrenciesRepository(
             outgoingTransactions.isNotEmpty()
         } else {
             coinStatus?.value?.hasCurrentNetworkTransactions == true
+        }
+    }
+
+    override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency {
+        val blockchain = Blockchain.fromId(currency.network.id.value)
+        return when (val feePaidCurrency = blockchain.feePaidCurrency()) {
+            FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
+            FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency
+            is FeePaidSdkCurrency.Token -> {
+                val balance = walletManagersFacade.tokenBalance(
+                    userWalletId = userWalletId,
+                    network = currency.network,
+                    name = feePaidCurrency.token.name,
+                    symbol = feePaidCurrency.token.symbol,
+                    contractAddress = feePaidCurrency.token.contractAddress,
+                    decimals = feePaidCurrency.token.decimals,
+                    id = feePaidCurrency.token.id,
+                )
+                FeePaidCurrency.Token(
+                    tokenId = getTokenId(network = currency.network, sdkToken = feePaidCurrency.token),
+                    name = feePaidCurrency.token.name,
+                    symbol = feePaidCurrency.token.symbol,
+                    contractAddress = feePaidCurrency.token.contractAddress,
+                    balance = balance,
+                )
+            }
         }
     }
 
