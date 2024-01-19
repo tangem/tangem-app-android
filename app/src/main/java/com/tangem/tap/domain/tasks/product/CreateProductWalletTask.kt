@@ -21,7 +21,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
-import com.tangem.operations.backup.StartPrimaryCardLinkingTask
+import com.tangem.operations.backup.StartPrimaryCardLinkingCommand
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.wallet.CreateWalletTask
@@ -210,7 +210,7 @@ private class CreateWalletTangemWallet(
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        StartPrimaryCardLinkingTask().run(session) { result ->
+        StartPrimaryCardLinkingCommand().run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     primaryCard = result.data
@@ -309,7 +309,5 @@ private class CreateWalletTangemWallet(
         }
     }
 
-    private companion object {
-        val CURVES_FOR_WALLETS = listOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519)
-    }
+    private companion object
 }

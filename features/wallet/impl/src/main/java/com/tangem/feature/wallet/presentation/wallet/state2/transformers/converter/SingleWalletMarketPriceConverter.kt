@@ -25,6 +25,7 @@ internal class SingleWalletMarketPriceConverter(
             is CryptoCurrencyStatus.MissedDerivation,
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.UnreachableWithoutAddresses,
             -> MarketPriceBlockState.Error(value.currencySymbol)
         }
     }

@@ -30,20 +30,26 @@ class GetFeeUseCase(
         destination: String,
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): Flow<Either<GetFeeError.DataError, TransactionFee>> {
+    ): Flow<Either<GetFeeError, TransactionFee>> {
         return flow {
-            val result = walletManagersFacade.getFee(
-                amount = convertCryptoCurrencyToAmount(cryptoCurrency, amount),
-                destination = destination,
-                userWalletId = userWalletId,
-                network = cryptoCurrency.network,
-            )
+            try {
+                val result = requireNotNull(
+                    walletManagersFacade.getFee(
+                        amount = convertCryptoCurrencyToAmount(cryptoCurrency, amount),
+                        destination = destination,
+                        userWalletId = userWalletId,
+                        network = cryptoCurrency.network,
+                    ),
+                ) { "Fee is null" }
 
-            val maybeFee = when (result) {
-                is Result.Success -> result.data.right()
-                else -> GetFeeError.DataError.left()
+                val maybeFee = when (result) {
+                    is Result.Success -> result.data.right()
+                    is Result.Failure -> GetFeeError.DataError(result.error).left()
+                }
+                emit(maybeFee)
+            } catch (e: Exception) {
+                emit(GetFeeError.DataError(e.cause).left())
             }
-            emit(maybeFee)
         }.flowOn(dispatcher.io)
     }
 
