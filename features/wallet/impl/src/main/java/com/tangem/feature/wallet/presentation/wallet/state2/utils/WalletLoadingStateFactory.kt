@@ -9,9 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.ManageTokensButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.*
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -28,6 +26,7 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
         return userWallet.createStateByWalletType(
             multiCurrencyCreator = { createLoadingMultiCurrencyContent(userWallet) },
             singleCurrencyCreator = { createLoadingSingleCurrencyContent(userWallet) },
+            visaWalletCreator = { createLoadingVisaWalletContent(userWallet) },
         )
     }
 
@@ -56,6 +55,22 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
+        )
+    }
+
+    private fun createLoadingVisaWalletContent(userWallet: UserWallet): WalletState.Visa.Content {
+        return WalletState.Visa.Content(
+            pullToRefreshConfig = createPullToRefreshConfig(),
+            walletCardState = userWallet.toLoadingWalletCardState(),
+            warnings = persistentListOf(),
+            bottomSheetConfig = null,
+            balancesAndLimitBlockState = BalancesAndLimitsBlockState.Loading,
+            txHistoryState = TxHistoryState.Content(
+                contentItems = MutableStateFlow(
+                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
+                ),
+            ),
+            depositButtonState = DepositButtonState(isEnabled = false, clickIntents::onDepositClick),
         )
     }
 

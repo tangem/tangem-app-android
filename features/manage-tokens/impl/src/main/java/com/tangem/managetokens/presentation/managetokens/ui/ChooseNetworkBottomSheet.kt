@@ -12,7 +12,7 @@ import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
 internal fun ChooseNetworkBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<ChooseNetworkBottomSheetConfig>(
         config = config,
-        contentColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors.background.tertiary,
     ) {
         ChooseNetworkScreen(state = it.selectedToken, walletState = it.chooseWalletState)
     }
