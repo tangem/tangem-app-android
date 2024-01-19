@@ -109,7 +109,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             val message = if (state.alert.type == GenericWarningType.NETWORK) {
                 stringResource(id = R.string.disclaimer_error_loading)
             } else {
-                state.alert.message ?: stringResource(id = R.string.swapping_generic_error)
+                state.alert.message?.resolveReference() ?: stringResource(id = R.string.swapping_generic_error)
             }
             SimpleOkDialog(
                 message = message,
@@ -326,12 +326,6 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
     ) {
         warnings.forEach { warning ->
             when (warning) {
-                is SwapWarning.HighPriceImpact -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                        iconTint = TangemTheme.colors.icon.warning,
-                    )
-                }
                 is SwapWarning.PermissionNeeded -> {
                     Notification(
                         config = warning.notificationConfig,
@@ -340,9 +334,9 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                 is SwapWarning.GenericWarning -> {
                     val message = warning.message?.let {
                         if (warning.shouldWrapMessage) {
-                            String.format(stringResource(id = R.string.swapping_error_wrapper), it)
+                            String.format(stringResource(id = R.string.swapping_error_wrapper), it.resolveReference())
                         } else {
-                            it
+                            it.resolveReference()
                         }
                     } ?: stringResource(id = R.string.swapping_generic_error)
                     RefreshableWaringCard(
@@ -472,7 +466,6 @@ private val state = SwapStateHolder(
         amountCrypto = "100",
         symbolCrypto = "1000",
         amountFiatFormatted = "(100)",
-        explanation = null,
         isClickable = true,
         onClick = {},
     ),
