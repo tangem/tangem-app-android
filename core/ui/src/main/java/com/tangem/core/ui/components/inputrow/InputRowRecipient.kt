@@ -1,8 +1,10 @@
 package com.tangem.core.ui.components.inputrow
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -48,6 +50,7 @@ fun InputRowRecipient(
     error: TextReference? = null,
     isError: Boolean = false,
     showDivider: Boolean = false,
+    isLoading: Boolean = false,
 ) {
     val (titleText, color) = if (isError && error != null) {
         error to TangemTheme.colors.text.warning
@@ -63,23 +66,36 @@ fun InputRowRecipient(
                 .fillMaxWidth()
                 .padding(TangemTheme.dimens.spacing12),
         ) {
-            Text(
-                text = titleText.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = color,
-            )
+            AnimatedContent(targetState = titleText, label = "Title Change") {
+                Text(
+                    text = it.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = color,
+                )
+            }
             Row(
                 modifier = Modifier
                     .padding(top = TangemTheme.dimens.spacing8),
             ) {
-                IdentIcon(
-                    address = value,
+                AnimatedContent(
+                    targetState = isLoading,
+                    label = "Indicator Show Change",
                     modifier = Modifier
                         .align(CenterVertically)
                         .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
                         .size(TangemTheme.dimens.size36)
                         .background(TangemTheme.colors.background.tertiary),
-                )
+                ) { showIndicator ->
+                    if (showIndicator) {
+                        CircularProgressIndicator(
+                            color = TangemTheme.colors.icon.informative,
+                            modifier = Modifier
+                                .padding(TangemTheme.dimens.spacing8),
+                        )
+                    } else {
+                        IdentIcon(address = value)
+                    }
+                }
                 SimpleTextField(
                     value = value,
                     placeholder = placeholder,
@@ -115,6 +131,7 @@ private fun InputRowRecipientPreview_Light(
             placeholder = TextReference.Res(R.string.send_optional_field),
             error = TextReference.Str("Error"),
             isError = value.isError,
+            isLoading = value.isLoading,
             showDivider = true,
             onValueChange = {},
             onPasteClick = {},
@@ -134,6 +151,7 @@ private fun InputRowRecipientPreview_Dark(
             title = TextReference.Res(R.string.send_recipient),
             placeholder = TextReference.Res(R.string.send_optional_field),
             error = TextReference.Str("Error"),
+            isLoading = value.isLoading,
             isError = value.isError,
             showDivider = true,
             onValueChange = {},
@@ -146,6 +164,7 @@ private fun InputRowRecipientPreview_Dark(
 private data class InputRowRecipientPreviewData(
     val value: String,
     val isError: Boolean,
+    val isLoading: Boolean = false,
 )
 
 private class InputRowRecipientPreviewDataProvider : PreviewParameterProvider<InputRowRecipientPreviewData> {
@@ -161,6 +180,7 @@ private class InputRowRecipientPreviewDataProvider : PreviewParameterProvider<In
             ),
             InputRowRecipientPreviewData(
                 value = "0x391316d97a07027a0702c8A002c8A0C25d8470",
+                isLoading = true,
                 isError = true,
             ),
         )

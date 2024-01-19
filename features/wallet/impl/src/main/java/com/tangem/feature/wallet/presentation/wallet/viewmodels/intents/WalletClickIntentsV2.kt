@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
@@ -13,8 +12,8 @@ import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateHolderV2
+import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetRefreshStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListErrorTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -30,11 +29,11 @@ internal class WalletClickIntentsV2 @Inject constructor(
     private val warningsClickIntentsImplementer: WalletWarningsClickIntentsImplementer,
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
     private val contentClickIntentsImplementor: WalletContentClickIntentsImplementor,
-    private val stateHolder: WalletStateHolderV2,
+    private val visaWalletIntentsImplementor: VisaWalletIntentsImplementor,
+    private val stateHolder: WalletStateController,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val fetchCardTokenListUseCase: FetchCardTokenListUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
@@ -45,7 +44,8 @@ internal class WalletClickIntentsV2 @Inject constructor(
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
     WalletCurrencyActionsClickIntents by currencyActionsClickIntentsImplementor,
-    WalletContentClickIntents by contentClickIntentsImplementor {
+    WalletContentClickIntents by contentClickIntentsImplementor,
+    VisaWalletIntents by visaWalletIntentsImplementor {
 
     override fun initialize(router: InnerWalletRouter, coroutineScope: CoroutineScope) {
         super.initialize(router, coroutineScope)
@@ -54,6 +54,7 @@ internal class WalletClickIntentsV2 @Inject constructor(
         warningsClickIntentsImplementer.initialize(router, coroutineScope)
         currencyActionsClickIntentsImplementor.initialize(router, coroutineScope)
         contentClickIntentsImplementor.initialize(router, coroutineScope)
+        visaWalletIntentsImplementor.initialize(router, coroutineScope)
     }
 
     fun onWalletChange(index: Int) {
@@ -69,7 +70,6 @@ internal class WalletClickIntentsV2 @Inject constructor(
             maybeUserWallet.onRight {
                 walletScreenContentLoader.load(
                     userWallet = it,
-                    appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
                     clickIntents = this@WalletClickIntentsV2,
                     coroutineScope = viewModelScope,
                 )
@@ -83,14 +83,21 @@ internal class WalletClickIntentsV2 @Inject constructor(
                 analyticsEventHandler.send(PortfolioEvent.Refreshed)
                 refreshMultiCurrencyContent()
             }
-            is WalletState.SingleCurrency.Content -> {
+            is WalletState.SingleCurrency.Content,
+            is WalletState.Visa.Content,
+            -> {
                 analyticsEventHandler.send(PortfolioEvent.Refreshed)
                 refreshSingleCurrencyContent()
             }
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
+            is WalletState.Visa.Locked,
             -> Unit
         }
+    }
+
+    fun onReloadClick() {
+        refreshSingleCurrencyContent()
     }
 
     private fun refreshMultiCurrencyContent() {
@@ -117,10 +124,6 @@ internal class WalletClickIntentsV2 @Inject constructor(
         }
     }
 
-    fun onReloadClick() {
-        refreshSingleCurrencyContent()
-    }
-
     // FIXME: refreshSingleCurrencyContent mustn't update the TxHistory and Buttons. It only must fetch primary
     //  currency. Now it not works because GetPrimaryCurrency's subscriber uses .distinctUntilChanged()
     private fun refreshSingleCurrencyContent() {
@@ -135,10 +138,9 @@ internal class WalletClickIntentsV2 @Inject constructor(
 
             walletScreenContentLoader.load(
                 userWallet = userWallet,
-                appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
                 clickIntents = this@WalletClickIntentsV2,
-                coroutineScope = viewModelScope,
                 isRefresh = true,
+                coroutineScope = viewModelScope,
             )
 
             stateHolder.update(

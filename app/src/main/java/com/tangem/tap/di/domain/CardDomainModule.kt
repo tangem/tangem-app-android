@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.card.*
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
@@ -61,8 +62,14 @@ internal object CardDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideDerivePublicKeysUseCase(tangemSdkManager: TangemSdkManager): DerivePublicKeysUseCase {
-        return DefaultDerivePublicKeysUseCase(tangemSdkManager = tangemSdkManager)
+    fun provideDerivePublicKeysUseCase(
+        tangemSdkManager: TangemSdkManager,
+        derivationsRepository: DerivationsRepository,
+    ): DerivePublicKeysUseCase {
+        return DefaultDerivePublicKeysUseCase(
+            tangemSdkManager = tangemSdkManager,
+            derivationsRepository = derivationsRepository,
+        )
     }
 
     @Provides

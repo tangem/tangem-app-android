@@ -45,7 +45,7 @@
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priorité</string>
     <string name="send_max_amount_label">Somme maximale</string>
-    <string name="send_network_fee_title">Commissions du réseau</string>
+    <string name="common_network_fee_title">Commissions du réseau</string>
     <string name="send_total_label">Total</string>
     <string name="send_total_subtitle_asset_format">Sera envoyé %1$s et %2$s</string>
     <string name="send_total_subtitle_fiat_format">≈ %1$s (incl. les commissions : %2$s)</string>

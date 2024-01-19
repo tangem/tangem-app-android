@@ -29,11 +29,7 @@ sealed interface SwapState {
         val warnings: List<Warning> = emptyList(),
     ) : SwapState
 
-    data class EmptyAmountState(
-        val fromTokenWalletBalance: String,
-        val toTokenWalletBalance: String,
-        val zeroAmountEquivalent: String,
-    ) : SwapState
+    data class EmptyAmountState(val zeroAmountEquivalent: String) : SwapState
 
     data class SwapError(
         val fromTokenInfo: TokenSwapInfo,
@@ -48,7 +44,6 @@ sealed class PriceImpact {
 
     fun getIntPercentValue() = (value * HUNDRED_PERCENTS).toInt()
     data class Empty(override val value: Float = 0f) : PriceImpact()
-    data class ValueWithNotify(override val value: Float) : PriceImpact()
     data class Value(override val value: Float) : PriceImpact()
 
     companion object {
