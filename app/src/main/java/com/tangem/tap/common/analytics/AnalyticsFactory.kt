@@ -22,10 +22,6 @@ class AnalyticsFactory {
         filters.add(filter)
     }
 
-    fun addParamsInterceptor(interceptor: ParamsInterceptor) {
-        interceptors.add(interceptor)
-    }
-
     fun build(analytics: Analytics, data: AnalyticsHandlerBuilder.Data) {
         builders.mapNotNull { it.build(data) }.forEach { analytics.addHandler(it.id(), it) }
         filters.forEach { analytics.addFilter(it) }

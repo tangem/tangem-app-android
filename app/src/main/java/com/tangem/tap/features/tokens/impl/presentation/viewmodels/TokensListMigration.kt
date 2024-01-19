@@ -3,7 +3,6 @@ package com.tangem.tap.features.tokens.impl.presentation.viewmodels
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
@@ -12,9 +11,6 @@ import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
-import com.tangem.tap.domain.model.WalletDataModel
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.store
 import timber.log.Timber
 import kotlin.properties.Delegates
@@ -22,12 +18,10 @@ import kotlin.properties.Delegates
 /**
  * Class that divide a new and legacy logic when user uses tokens list screen
  *
- * @property walletFeatureToggles         wallet feature toggles
  * @property getSelectedWalletSyncUseCase use case that returns selected wallet
  * @property getCurrenciesUseCase         use case that returns crypto currencies of a specified wallet
  */
 internal class TokensListMigration(
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
 ) {
@@ -39,14 +33,6 @@ internal class TokensListMigration(
     private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory() }
 
     suspend fun getCurrentCryptoCurrencies(): TokensListCryptoCurrencies {
-        return if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            getNewCryptoCurrencies()
-        } else {
-            getLegacyCryptoCurrencies()
-        }
-    }
-
-    private suspend fun getNewCryptoCurrencies(): TokensListCryptoCurrencies {
         return when (val selectedWalletEither = getSelectedWalletSyncUseCase()) {
             is Either.Left -> {
                 Timber.e(selectedWalletEither.value.toString())
@@ -90,60 +76,12 @@ internal class TokensListMigration(
         }
     }
 
-    private fun getLegacyCryptoCurrencies(): TokensListCryptoCurrencies {
-        val wallets = store.state.walletState.walletsDataFromStores
-        val derivationStyle = store.state.globalState.scanResponse?.derivationStyleProvider?.getDerivationStyle()
-
-        return TokensListCryptoCurrencies(
-            coins = wallets.toNonCustomBlockchains(derivationStyle),
-            tokens = wallets.toNonCustomTokensWithBlockchains(derivationStyle),
-        )
-    }
-
-    private fun List<WalletDataModel>.toNonCustomBlockchains(derivationStyle: DerivationStyle?): List<Blockchain> {
-        return this
-            .mapNotNull { walletDataModel ->
-                if (walletDataModel.currency.isCustomCurrency(derivationStyle)) {
-                    null
-                } else {
-                    (walletDataModel.currency as? Currency.Blockchain)?.blockchain
-                }
-            }
-            .distinct()
-    }
-
-    private fun List<WalletDataModel>.toNonCustomTokensWithBlockchains(
-        derivationStyle: DerivationStyle?,
-    ): List<TokenWithBlockchain> {
-        return this
-            .mapNotNull { walletDataModel ->
-                if (walletDataModel.currency !is Currency.Token) return@mapNotNull null
-                if (walletDataModel.currency.isCustomCurrency(derivationStyle)) return@mapNotNull null
-
-                TokenWithBlockchain(walletDataModel.currency.token, walletDataModel.currency.blockchain)
-            }
-            .distinct()
-    }
-
     fun onSaveButtonClick(
-        currentTokensList: List<TokenWithBlockchain>,
-        currentBlockchainList: List<Blockchain>,
-        changedTokensList: MutableList<TokenWithBlockchain>,
-        changedBlockchainList: List<Blockchain>,
-    ) {
-        if (walletFeatureToggles.isRedesignedScreenEnabled) {
-            saveByNewWay(changedTokensList = changedTokensList, changedBlockchainList = changedBlockchainList)
-        } else {
-            saveByOldWay(currentTokensList, currentBlockchainList, changedTokensList, changedBlockchainList)
-        }
-    }
-
-    private fun saveByNewWay(
         changedTokensList: MutableList<TokenWithBlockchain>,
         changedBlockchainList: List<Blockchain>,
     ) {
         store.dispatch(
-            action = TokensAction.NewSaveChanges(
+            action = TokensAction.SaveChanges(
                 currentTokens = currentNewTokens,
                 currentCoins = currentNewCoins,
                 changedTokens = changedTokensList.mapNotNull {
@@ -162,25 +100,6 @@ internal class TokensListMigration(
                     )
                 },
                 userWallet = currentUserWallet,
-            ),
-        )
-    }
-
-    private fun saveByOldWay(
-        currentTokensList: List<TokenWithBlockchain>,
-        currentBlockchainList: List<Blockchain>,
-        changedTokensList: MutableList<TokenWithBlockchain>,
-        changedBlockchainList: List<Blockchain>,
-    ) {
-        val scanResponse = store.state.globalState.scanResponse ?: return
-
-        store.dispatch(
-            action = TokensAction.LegacySaveChanges(
-                currentTokens = currentTokensList,
-                currentBlockchains = currentBlockchainList,
-                changedTokens = changedTokensList,
-                changedBlockchains = changedBlockchainList,
-                scanResponse = scanResponse,
             ),
         )
     }

@@ -20,5 +20,5 @@ data class ScanResponse(
 typealias KeyWalletPublicKey = ByteArrayKey
 
 enum class ProductType {
-    Note, Twins, Wallet, Start2Coin, Wallet2, Ring
+    Note, Twins, Wallet, Start2Coin, Wallet2, Ring, Visa,
 }

@@ -5,13 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.*
-import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.res.TangemTheme
 
 // region TextButton
@@ -19,7 +19,13 @@ import com.tangem.core.ui.res.TangemTheme
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=97%3A103&t=TmfD6UBHPg9uYfev-4)
  * */
 @Composable
-fun TextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun TextButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colors: ButtonColors = TangemButtonsDefaults.defaultTextButtonColors,
+    enabled: Boolean = true,
+) {
     TangemButton(
         modifier = modifier,
         text = text,
@@ -27,7 +33,7 @@ fun TextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier,
         onClick = onClick,
         enabled = enabled,
         showProgress = false,
-        colors = TangemButtonsDefaults.defaultTextButtonColors,
+        colors = colors,
         size = TangemButtonSize.Text,
     )
 }
@@ -41,6 +47,7 @@ fun TextButtonIconStart(
     @DrawableRes iconResId: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    colors: ButtonColors = TangemButtonsDefaults.defaultTextButtonColors,
     enabled: Boolean = true,
 ) {
     TangemButton(
@@ -50,7 +57,7 @@ fun TextButtonIconStart(
         onClick = onClick,
         enabled = enabled,
         showProgress = false,
-        colors = TangemButtonsDefaults.defaultTextButtonColors,
+        colors = colors,
         size = TangemButtonSize.Text,
     )
 }

@@ -3,8 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopBarConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
 import kotlinx.collections.immutable.toImmutableList
@@ -41,9 +41,11 @@ internal class UnlockWalletTransformer(
         return when (prevState) {
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
+            is WalletState.Visa.Locked,
             -> walletLoadingStateFactory.create(userWallet = unlockedWallet)
             is WalletState.MultiCurrency.Content,
             is WalletState.SingleCurrency.Content,
+            is WalletState.Visa.Content,
             -> {
                 Timber.e("Impossible to unlock wallet with content state")
                 prevState

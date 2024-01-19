@@ -29,7 +29,7 @@ class EstimateFeeUseCase(
         amount: BigDecimal,
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): Flow<Either<GetFeeError.DataError, TransactionFee>> {
+    ): Flow<Either<GetFeeError, TransactionFee>> {
         return flow {
             val result = walletManagersFacade.estimateFee(
                 amount = convertCryptoCurrencyToAmount(cryptoCurrency, amount),
@@ -39,7 +39,8 @@ class EstimateFeeUseCase(
 
             val maybeFee = when (result) {
                 is Result.Success -> result.data.right()
-                else -> GetFeeError.DataError.left()
+                is Result.Failure -> GetFeeError.DataError(result.error).left()
+                null -> GetFeeError.UnknownError.left()
             }
             emit(maybeFee)
         }.flowOn(dispatcher.io)

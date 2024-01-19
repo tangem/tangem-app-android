@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 
 internal class CloseBottomSheetTransformer(userWalletId: UserWalletId) : WalletStateTransformer(userWalletId) {
 
@@ -15,6 +15,10 @@ internal class CloseBottomSheetTransformer(userWalletId: UserWalletId) : WalletS
                 prevState.copy(bottomSheetConfig = prevState.bottomSheetConfig?.copy(isShow = false))
             }
             is WalletState.SingleCurrency.Locked -> prevState.copy(isBottomSheetShow = false)
+            is WalletState.Visa.Content -> prevState.copy(
+                bottomSheetConfig = prevState.bottomSheetConfig?.copy(isShow = false),
+            )
+            is WalletState.Visa.Locked -> prevState.copy(isBottomSheetShow = false)
         }
     }
 }
