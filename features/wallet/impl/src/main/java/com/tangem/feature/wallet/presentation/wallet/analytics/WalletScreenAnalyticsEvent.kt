@@ -62,5 +62,33 @@ sealed class WalletScreenAnalyticsEvent {
         object NoticeScanYourCardTapped : MainScreen(event = "Notice - Scan Your Card Tapped")
         object NoticeWalletLocked : MainScreen(event = "Notice - Wallet Locked")
         object WalletUnlockTapped : MainScreen(event = "Button - Wallet Unlock Tapped")
+
+        object NetworksUnreachable : MainScreen(event = "Notice - Networks Unreachable")
+
+        object MissingAddresses : MainScreen(event = "Notice - Missing Addresses")
+
+        object CardSignedTransactions : MainScreen(event = "Notice - Card Signed Transactions")
+
+        object HowDoYouLikeTangem : MainScreen(event = "Notice - How Do You Like Tangem")
+
+        object ProductSampleCard : MainScreen(event = "Notice - Product Sample Card")
+
+        object TestnetCard : MainScreen(event = "Notice - Testnet Card")
+
+        object DemoCard : MainScreen(event = "Notice - Demo Card")
+
+        object DevelopmentCard : MainScreen(event = "Notice - Development Card")
+
+        object WalletUnlock : MainScreen(event = "Notice - Wallet Unlock")
+
+        object BackupYourWallet : MainScreen(event = "Notice - Backup Your Wallet")
+
+        object UnlockAllWithFaceID : MainScreen(event = "Button - Unlock All With Face ID")
+
+        object UnlockWithCardScan : MainScreen(event = "Button - Unlock With Card Scan")
+
+        object EditWalletTapped : MainScreen(event = "Button - Edit Wallet Tapped")
+
+        object DeleteWalletTapped : MainScreen(event = "Button - Delete Wallet Tapped")
     }
 }

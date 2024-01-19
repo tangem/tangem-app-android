@@ -1,9 +1,9 @@
 package com.tangem.tap.common.analytics.converters
 
 import com.shopify.buy3.Storefront
-import com.tangem.common.Converter
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.features.shop.domain.models.ProductType
+import com.tangem.utils.converter.Converter
 
 /**
 [REDACTED_AUTHOR]
