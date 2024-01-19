@@ -54,6 +54,7 @@ internal sealed class SendStates {
         val isFiatValue: Boolean,
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
         val amountTextField: SendTextField.Amount,
+        val amountValue: BigDecimal,
     ) : SendStates()
 
     /** Recipient state */
@@ -74,6 +75,7 @@ internal sealed class SendStates {
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val feeSelectorState: FeeSelectorState = FeeSelectorState.Loading,
         val isSubtract: Boolean = false,
+        val isUserSubtracted: Boolean = false,
         val fee: Fee? = null,
         val receivedAmountValue: BigDecimal = BigDecimal.ZERO,
         val receivedAmount: String = "",
