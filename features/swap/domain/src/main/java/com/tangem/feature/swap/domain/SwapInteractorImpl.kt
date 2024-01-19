@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
@@ -563,7 +564,10 @@ internal class SwapInteractorImpl @Inject constructor(
         }
         val txData = walletManagersFacade.createTransaction(
             amount = amount.value.convertToAmount(currencyToSend.currency),
-            fee = getFeeForTransaction(txFee),
+            fee = getFeeForTransaction(
+                fee = txFee,
+                blockchain = Blockchain.fromId(currencyToSend.currency.network.id.value),
+            ),
             memo = null,
             destination = exchangeDataCex.txTo,
             userWalletId = userWalletId,
@@ -625,7 +629,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun getFeeForTransaction(fee: TxFee): Fee {
+    private fun getFeeForTransaction(fee: TxFee, blockchain: Blockchain): Fee {
         val feeAmountValue = fee.feeValue
         val feeAmount = Amount(
             value = fee.feeValue,
@@ -634,15 +638,23 @@ internal class SwapInteractorImpl @Inject constructor(
             type = AmountType.Coin,
         )
 
-        return if (fee.gasLimit != 0) {
-            val feeAmountWithDecimals = feeAmountValue.movePointRight(fee.decimals)
-            Fee.Ethereum(
-                amount = feeAmount,
-                gasLimit = fee.gasLimit.toBigInteger(),
-                gasPrice = (feeAmountWithDecimals / fee.gasLimit.toBigDecimal()).toBigInteger(),
-            )
-        } else {
-            Fee.Common(feeAmount)
+        return when (blockchain) {
+            Blockchain.Ethereum -> {
+                val feeAmountWithDecimals = feeAmountValue.movePointRight(fee.decimals)
+                Fee.Ethereum(
+                    amount = feeAmount,
+                    gasLimit = fee.gasLimit.toBigInteger(),
+                    gasPrice = (feeAmountWithDecimals / fee.gasLimit.toBigDecimal()).toBigInteger(),
+                )
+            }
+            Blockchain.Vechain -> TODO("[REDACTED_TASK_KEY]")
+            Blockchain.Aptos -> {
+                Fee.Aptos(
+                    amount = feeAmount,
+                    gasUnitPrice = fee.feeValue.toLong() / fee.gasLimit,
+                )
+            }
+            else -> Fee.Common(feeAmount)
         }
     }
 
@@ -1329,9 +1341,9 @@ internal class SwapInteractorImpl @Inject constructor(
     private fun Fee.getGasLimit(): Int {
         return when (this) {
             is Fee.Common -> 0
-            is Fee.Ethereum -> this.gasLimit.toInt()
-            is Fee.Vechain -> TODO() // TODO [REDACTED_TASK_KEY]
-            is Fee.Aptos -> TODO()
+            is Fee.Ethereum -> gasLimit.toInt()
+            is Fee.Vechain -> TODO("[REDACTED_TASK_KEY]")
+            is Fee.Aptos -> amount.longValue?.div(gasUnitPrice)?.toInt() ?: 0
         }
     }
 
