@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.IndeterminateProgressButton
@@ -91,29 +90,40 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
         val walletManager = action.walletManager
         val amountToExtract = prepareAction.tokenAmount ?: prepareAction.coinAmount!!
         val decimals = amountToExtract.decimals
-        val feePaidInNetworkCurrency = isFeePaidInNetworkCurrency(walletManager.wallet.blockchain)
+        val canIncludeFee = canIncludeFee(
+            typeOfAmount = amountToExtract.type,
+            feePaidCurrency = action.feePaidCurrency,
+        )
 
         return sendState.copy(
             walletManager = walletManager,
             coinConverter = action.coinRate?.let { CurrencyConverter(it, decimals) },
             tokenConverter = action.tokenRate?.let { CurrencyConverter(it, decimals) },
+            customFeeConverter = action.feeCurrencyRate?.let { CurrencyConverter(it, action.feeCurrencyDecimals) },
             amountState = sendState.amountState.copy(
-                feePaidInCurrencyNetworkCurrency = feePaidInNetworkCurrency,
                 amountToExtract = amountToExtract,
                 typeOfAmount = amountToExtract.type,
                 balanceCrypto = amountToExtract.value ?: BigDecimal.ZERO,
             ),
-            feeState = sendState.feeState.copy(
-                includeFeeSwitcherIsEnabled = feePaidInNetworkCurrency || isCoinAmount(amountToExtract.type),
-            ),
+            feeState = sendState.feeState.copy(includeFeeSwitcherIsEnabled = canIncludeFee),
+            canIncludeFee = canIncludeFee,
+            currency = action.currency,
         )
     }
 
-    private fun isFeePaidInNetworkCurrency(blockchain: Blockchain): Boolean =
-        // blockchain.tokenTransactionFeePaidInNetworkCurrency()
-        blockchain.feePaidCurrency() == FeePaidCurrency.SameCurrency // TODO [REDACTED_TASK_KEY]
+    private fun canIncludeFee(typeOfAmount: AmountType, feePaidCurrency: FeePaidCurrency): Boolean {
+        return when (feePaidCurrency) {
+            FeePaidCurrency.Coin -> typeOfAmount == AmountType.Coin
+            FeePaidCurrency.SameCurrency -> true
+            is FeePaidCurrency.Token -> {
+                val sendToken = (typeOfAmount as? AmountType.Token)?.token ?: return false
 
-    private fun isCoinAmount(typeOfAmount: AmountType): Boolean = typeOfAmount == AmountType.Coin
+                sendToken.contractAddress.equals(feePaidCurrency.token.contractAddress, ignoreCase = true) &&
+                    sendToken.name.equals(feePaidCurrency.token.name, ignoreCase = true) &&
+                    sendToken.symbol.equals(feePaidCurrency.token.symbol, ignoreCase = true)
+            }
+        }
+    }
 }
 
 internal fun updateLastState(sendState: SendState, lastChangedState: IdStateHolder): SendState {
