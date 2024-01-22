@@ -31,13 +31,13 @@ internal object TransactionDomainModule {
     @ViewModelScoped
     fun provideSendTransactionUseCase(
         isDemoCardUseCase: IsDemoCardUseCase,
-        walletManagersFacade: WalletManagersFacade,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        transactionRepository: TransactionRepository,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
-            walletManagersFacade = walletManagersFacade,
+            transactionRepository = transactionRepository,
         )
     }
 
