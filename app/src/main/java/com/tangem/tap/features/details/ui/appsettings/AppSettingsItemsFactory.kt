@@ -10,7 +10,7 @@ internal class AppSettingsItemsFactory {
 
     fun createEnrollBiometricsCard(onClick: () -> Unit): Item.Card {
         return Item.Card(
-            id = "enroll_biometrics_card",
+            id = ID_ENROLL_BIOMETRICS_CARD,
             title = resourceReference(R.string.app_settings_enable_biometrics_title),
             description = resourceReference(R.string.app_settings_enable_biometrics_description),
             iconResId = R.drawable.ic_alert_circle_24,
@@ -24,7 +24,7 @@ internal class AppSettingsItemsFactory {
         onCheckedChange: (Boolean) -> Unit,
     ): Item.Switch {
         return Item.Switch(
-            id = "save_wallets_switch",
+            id = ID_SAVE_WALLETS_SWITCH,
             title = resourceReference(R.string.app_settings_saved_wallet),
             description = resourceReference(R.string.app_settings_saved_wallet_footer),
             isEnabled = isEnabled,
@@ -39,7 +39,7 @@ internal class AppSettingsItemsFactory {
         onCheckedChange: (Boolean) -> Unit,
     ): Item.Switch {
         return Item.Switch(
-            id = "save_access_codes_switch",
+            id = ID_SAVE_ACCESS_CODES_SWITCH,
             title = resourceReference(R.string.app_settings_saved_access_codes),
             description = resourceReference(R.string.app_settings_saved_access_codes_footer),
             isEnabled = isEnabled,
@@ -54,7 +54,7 @@ internal class AppSettingsItemsFactory {
         onCheckedChange: (Boolean) -> Unit,
     ): Item.Switch {
         return Item.Switch(
-            id = "flip_to_hide_balance_switch",
+            id = ID_FLIP_TO_HIDE_BALANCE_SWITCH,
             title = resourceReference(R.string.details_row_title_flip_to_hide),
             description = resourceReference(R.string.details_row_description_flip_to_hide),
             isEnabled = isEnabled,
@@ -65,7 +65,7 @@ internal class AppSettingsItemsFactory {
 
     fun createSelectAppCurrencyButton(currentAppCurrencyName: String, onClick: () -> Unit): Item.Button {
         return Item.Button(
-            id = "select_app_currency_button",
+            id = ID_SELECT_APP_CURRENCY_BUTTON,
             title = resourceReference(R.string.details_row_title_currency),
             description = stringReference(currentAppCurrencyName),
             isEnabled = true,
@@ -75,7 +75,7 @@ internal class AppSettingsItemsFactory {
 
     fun createSelectThemeModeButton(currentThemeMode: AppThemeMode, onClick: () -> Unit): Item.Button {
         return Item.Button(
-            id = "select_theme_mode_button",
+            id = ID_SELECT_THEME_MODE_BUTTON,
             title = resourceReference(R.string.app_settings_theme_selector_title),
             description = resourceReference(
                 id = when (currentThemeMode) {
@@ -87,5 +87,14 @@ internal class AppSettingsItemsFactory {
             isEnabled = true,
             onClick = onClick,
         )
+    }
+
+    companion object {
+        const val ID_ENROLL_BIOMETRICS_CARD = "enroll_biometrics_card"
+        const val ID_SAVE_WALLETS_SWITCH = "save_wallets_switch"
+        const val ID_SAVE_ACCESS_CODES_SWITCH = "save_access_codes_switch"
+        const val ID_FLIP_TO_HIDE_BALANCE_SWITCH = "flip_to_hide_balance_switch"
+        const val ID_SELECT_APP_CURRENCY_BUTTON = "select_app_currency_button"
+        const val ID_SELECT_THEME_MODE_BUTTON = "select_theme_mode_button"
     }
 }
