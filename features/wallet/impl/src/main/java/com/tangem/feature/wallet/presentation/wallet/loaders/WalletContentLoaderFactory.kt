@@ -21,7 +21,9 @@ internal class WalletContentLoaderFactory @Inject constructor(
         isRefresh: Boolean = false,
     ): WalletContentLoader? {
         return when {
-            userWallet.isMultiCurrency -> multiWalletContentLoaderFactory.create(userWallet, clickIntents)
+            userWallet.isMultiCurrency -> {
+                multiWalletContentLoaderFactory.create(userWallet, clickIntents)
+            }
             userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> {
                 singleWalletWithTokenContentLoaderFactory.create(userWallet, clickIntents)
             }
