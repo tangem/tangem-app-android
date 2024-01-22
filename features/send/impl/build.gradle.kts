@@ -23,6 +23,7 @@ dependencies {
     implementation(deps.lifecycle.compose)
     implementation(deps.jodatime)
     implementation(deps.timber)
+    implementation(deps.reKotlin)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
