@@ -55,7 +55,6 @@ internal class DefaultSwapRepository @Inject constructor(
     moshi: Moshi,
 ) : SwapRepository {
 
-    private val tokensConverter = TokensConverter()
     private val expressDataConverter = ExpressDataConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
@@ -210,18 +209,6 @@ internal class DefaultSwapRepository @Inject constructor(
             } else {
                 rates
             }
-        }
-    }
-
-    override suspend fun getExchangeableTokens(networkId: String): List<Currency> {
-        return withContext(coroutineDispatcher.io) {
-            tokensConverter.convertList(
-                tangemTechApi.getCoins(
-                    exchangeable = true,
-                    active = true,
-                    networkIds = networkId,
-                ).getOrThrow().coins,
-            )
         }
     }
 
