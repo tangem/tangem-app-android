@@ -112,8 +112,8 @@ internal class WalletViewModelV2 @Inject constructor(
 
     private fun subscribeToUserWalletsUpdates(shouldSaveUserWallet: Boolean) {
         getWalletsUseCase()
-            .distinctUntilChanged()
             .conflate()
+            .distinctUntilChanged()
             .map {
                 walletsUpdateActionResolver.resolve(
                     wallets = it,
