@@ -553,7 +553,7 @@ internal class StateBuilder(
                         resourceReference(R.string.warning_express_refresh_required_title)
                     },
                     subtitle = if (dataError is DataError.UnknownError) {
-                        resourceReference(R.string.swapping_generic_error)
+                        resourceReference(R.string.common_unknown_error)
                     } else {
                         resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString()))
                     },
