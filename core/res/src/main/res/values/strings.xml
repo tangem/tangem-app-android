@@ -135,6 +135,7 @@
     <string name="common_transfer">Transfer</string>
     <string name="common_understand">I understand</string>
     <string name="common_unreachable">Unreachable</string>
+    <string name="common_unknown_error">There was an error. Please try again.</string>
     <string name="common_yes">Yes</string>
     <string name="contract_address_copied_message">Contract address copied!</string>
     <string name="currency_subtitle_expanded">Available networks</string>
@@ -447,8 +448,9 @@
     <string name="send_amount_label">Amount</string>
     <string name="send_amount_substract">Subtract from send amount</string>
     <string name="send_amount_substract_footer">The recipient will receive %s</string>
+    <string name="send_alert_button_request_support">Support</string>
     <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
-    <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode:%2$s</string>
+    <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
     <string name="send_confirm_label">Confirm</string>
     <string name="send_date_format">%1$s at %2$s</string>
     <string name="send_destination_hint_address">Address</string>
@@ -519,6 +521,7 @@
     <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
     <string name="send_validation_invalid_address">Invalid address</string>
     <string name="sent_transaction_sent_title">Transaction sent</string>
+    <string name="send_wallet_balance_format">%s (%s)</string>
     <string name="shop_buy_now">Buy now</string>
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
@@ -545,7 +548,6 @@
     <string name="swapping_approve_information_title">Approve</string>
     <string name="swapping_error_wrapper">Error: %s</string>
     <string name="swapping_from_title">You swap</string>
-    <string name="swapping_generic_error">There was an error. Please try again.</string>
     <string name="swapping_give_permission">Give Permission</string>
     <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
     <string name="swapping_insufficient_funds">Insufficient funds</string>
