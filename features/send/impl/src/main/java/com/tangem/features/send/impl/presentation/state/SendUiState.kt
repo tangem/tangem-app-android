@@ -5,6 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.paging.PagingData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
+import com.tangem.core.ui.event.StateEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
@@ -31,6 +32,7 @@ internal data class SendUiState(
     val sendState: SendStates.SendState = SendStates.SendState(),
     val recipientList: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
     val currentState: MutableStateFlow<SendUiStateType>,
+    val event: StateEvent<SendEvent>,
 )
 
 @Stable
