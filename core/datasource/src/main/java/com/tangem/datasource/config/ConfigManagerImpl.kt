@@ -124,7 +124,6 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 gnosis = GetBlockAccessToken(jsonRpc = accessTokens.gnosis?.jsonRPC),
                 cronos = GetBlockAccessToken(jsonRpc = accessTokens.cronos?.jsonRPC),
                 solana = GetBlockAccessToken(jsonRpc = accessTokens.solana?.jsonRPC),
-                stellar = GetBlockAccessToken(rest = accessTokens.stellar?.rest),
                 ton = GetBlockAccessToken(jsonRpc = accessTokens.ton?.jsonRPC),
                 tron = GetBlockAccessToken(rest = accessTokens.tron?.rest),
                 cosmos = GetBlockAccessToken(rest = accessTokens.cosmos?.rest),
