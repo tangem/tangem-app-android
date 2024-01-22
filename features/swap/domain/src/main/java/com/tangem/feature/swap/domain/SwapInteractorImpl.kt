@@ -919,7 +919,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
         return when {
             fromToken is CryptoCurrency.Token -> {
-                if (feeValue > tokenForFeeBalance.value) {
+                if (feeValue > tokenForFeeBalance.value || tokenForFeeBalance.value.signum() == 0) {
                     IncludeFeeInAmount.BalanceNotEnough
                 } else {
                     IncludeFeeInAmount.Excluded
