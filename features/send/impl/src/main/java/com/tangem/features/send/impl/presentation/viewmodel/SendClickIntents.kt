@@ -4,6 +4,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 
+@Suppress("TooManyFunctions")
 interface SendClickIntents {
 
     fun popBackStack()
@@ -15,6 +16,8 @@ interface SendClickIntents {
     fun onPrevClick()
 
     fun onQrCodeScanClick()
+
+    fun onFailedTxEmailClick(errorMessage: String)
 
     fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency)
 
