@@ -53,5 +53,9 @@ interface SendClickIntents {
     fun showFee()
 
     fun onExploreClick(txUrl: String)
+
+    fun onAmountReduceClick(reducedAmount: String)
+
+    fun onAmountReduceIgnoreClick()
     // endregion
 }
