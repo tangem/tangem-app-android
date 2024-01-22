@@ -13,9 +13,13 @@ dependencies {
     implementation(deps.arrow.core)
 
     implementation(projects.core.utils)
+    implementation(projects.core.ui)
 
     /** Tangem SDKs */
     implementation(deps.tangem.card.core)
+    implementation(deps.tangem.card.android) {
+        exclude(module = "joda-time")
+    }
     implementation(deps.tangem.blockchain)
 
     implementation(projects.domain.models)
