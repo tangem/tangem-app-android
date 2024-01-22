@@ -8,8 +8,11 @@ import androidx.paging.PagingData
 import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.redux.LegacyAction
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
@@ -31,10 +34,6 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
-import com.tangem.features.send.impl.presentation.state.SendNotificationFactory
-import com.tangem.features.send.impl.presentation.state.SendStateFactory
-import com.tangem.features.send.impl.presentation.state.SendUiState
-import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fee.getFee
@@ -70,6 +69,7 @@ internal class SendViewModel @Inject constructor(
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val parseSharedAddressUseCase: ParseSharedAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
+    private val reduxStateHolder: ReduxStateHolder,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     savedStateHandle: SavedStateHandle,
@@ -98,6 +98,11 @@ internal class SendViewModel @Inject constructor(
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
     )
 
+    private val eventStateFactory = SendEventStateFactory(
+        clickIntents = this,
+        currentStateProvider = Provider { uiState },
+    )
+
     private val sendNotificationFactory = SendNotificationFactory(
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
@@ -106,6 +111,7 @@ internal class SendViewModel @Inject constructor(
         walletManagersFacade = walletManagersFacade,
     )
 
+    // todo convert to StateFlow
     var uiState: SendUiState by mutableStateOf(stateFactory.getInitialState())
         private set
 
@@ -139,7 +145,9 @@ internal class SendViewModel @Inject constructor(
                     getCurrenciesStatusUpdates(owner, wallet)
                 },
                 ifLeft = {
-                    // todo add error handling [[REDACTED_JIRA]]
+                    uiState = eventStateFactory.getGenericErrorState(
+                        onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                    )
                     return@launch
                 },
             )
@@ -331,6 +339,10 @@ internal class SendViewModel @Inject constructor(
 
     override fun onQrCodeScanClick() = innerRouter.openQrCodeScanner(cryptoCurrency.network.name)
 
+    override fun onFailedTxEmailClick(errorMessage: String) {
+        reduxStateHolder.dispatch(LegacyAction.SendEmailTransactionFailed(errorMessage))
+    }
+
     override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) =
         innerRouter.openTokenDetails(userWalletId, currency)
     // endregion
@@ -433,8 +445,8 @@ internal class SendViewModel @Inject constructor(
         val sendState = uiState.sendState
         if (sendState.isSuccess) popBackStack()
 
-        uiState = stateFactory.getSendingStateUpdate(true)
-        viewModelScope.launch(dispatchers.io) { verifyAndSendTransaction() }
+        uiState = stateFactory.getSendingStateUpdate(isSending = true)
+        verifyAndSendTransaction()
     }
 
     override fun showAmount() = stateRouter.showAmount(isFromSend = true)
@@ -445,7 +457,7 @@ internal class SendViewModel @Inject constructor(
 
     override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
 
-    private suspend fun verifyAndSendTransaction() {
+    private fun verifyAndSendTransaction() {
         val recipient = uiState.recipientState?.addressTextField?.value ?: return
         val feeState = uiState.feeState ?: return
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
@@ -454,40 +466,45 @@ internal class SendViewModel @Inject constructor(
 
         val amountToSend = feeState.receivedAmountValue.convertToAmount(cryptoCurrency)
 
-        // todo add error handling [[REDACTED_JIRA]]
-        // val transactionErrors = walletManagersFacade.validateTransaction(
-        //     amount = amountToSend,
-        //     fee = fee.amount,
-        //     userWalletId = userWalletId,
-        //     network = cryptoCurrency.network,
-        // )
+        viewModelScope.launch(dispatchers.main) {
+            createTransactionUseCase(
+                amount = amountToSend,
+                fee = fee,
+                memo = memo,
+                destination = recipient,
+                userWalletId = userWalletId,
+                network = cryptoCurrency.network,
+            ).fold(
+                ifLeft = {
+                    Timber.e(it)
+                    uiState = eventStateFactory.getGenericErrorState(
+                        error = it,
+                        onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                    )
+                },
+                ifRight = { txData ->
+                    sendTransaction(txData)
+                },
+            )
+        }
+    }
 
-        createTransactionUseCase(
-            amount = amountToSend,
-            fee = fee,
-            memo = memo,
-            destination = recipient,
-            userWalletId = userWalletId,
+    private suspend fun sendTransaction(txData: TransactionData) {
+        sendTransactionUseCase(
+            txData = txData,
+            userWallet = userWallet,
             network = cryptoCurrency.network,
         ).fold(
-            ifLeft = {
-                Timber.e(it)
-                // todo add error handling [[REDACTED_JIRA]]
-            },
-            ifRight = { txData ->
-                sendTransactionUseCase(
-                    txData = txData,
-                    userWallet = userWallet,
-                    network = cryptoCurrency.network,
-                ).fold(
-                    ifLeft = {
-                        uiState = stateFactory.getSendingStateUpdate(false)
-                        // todo add error handling [[REDACTED_JIRA]]
-                    },
-                    ifRight = {
-                        uiState = stateFactory.getTransactionSendState(txData)
-                    },
+            ifLeft = { error ->
+                uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                uiState = eventStateFactory.getSendTransactionErrorState(
+                    error = error,
+                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
                 )
+            },
+            ifRight = {
+                uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                uiState = stateFactory.getTransactionSendState(txData)
             },
         )
     }
