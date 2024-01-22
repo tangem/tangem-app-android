@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -44,7 +45,6 @@ internal class SendStateFactory(
 ) {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
-
     private val amountFieldConverter by lazy { SendAmountFieldConverter(clickIntents) }
     private val amountFieldChangeConverter by lazy { SendAmountFieldChangeConverter(currentStateProvider) }
     private val customFeeFieldConverter by lazy {
@@ -92,6 +92,7 @@ internal class SendStateFactory(
     fun getInitialState(): SendUiState = SendUiState(
         clickIntents = clickIntents,
         currentState = MutableStateFlow(SendUiStateType.Amount),
+        event = consumedEvent(),
     )
 
     fun getReadyState(): SendUiState {
