@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -9,7 +10,6 @@ import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
@@ -19,17 +19,28 @@ internal class FeeNotificationFactory(
     private val clickIntents: SendClickIntents,
 ) {
 
-    operator fun invoke(feeState: SendStates.FeeState): ImmutableList<SendFeeNotification> {
-        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return persistentListOf()
-        val customFee = feeSelectorState.customValues
-        val selectedFee = feeSelectorState.selectedFee
-
-        return buildList {
-            addTooLowNotification(feeSelectorState.fees, selectedFee, customFee)
-            addTooHighNotification(feeSelectorState.fees, selectedFee, customFee)
-            addFeeCoverageNotification()
-            addExceedsBalanceNotification(feeSelectorState)
+    operator fun invoke(feeState: SendStates.FeeState, amountValue: BigDecimal?): ImmutableList<SendFeeNotification> =
+        buildList {
+            when (val feeSelectorState = feeState.feeSelectorState) {
+                FeeSelectorState.Loading -> Unit
+                FeeSelectorState.Error -> {
+                    addFeeUnreachableNotification(feeSelectorState)
+                }
+                is FeeSelectorState.Content -> {
+                    val customFee = feeSelectorState.customValues
+                    val selectedFee = feeSelectorState.selectedFee
+                    addTooLowNotification(feeSelectorState.fees, selectedFee, customFee)
+                    addTooHighNotification(feeSelectorState.fees, selectedFee, customFee)
+                    addFeeCoverageNotification(feeState, amountValue)
+                    addExceedsBalanceNotification(feeState.fee)
+                }
+            }
         }.toImmutableList()
+
+    private fun MutableList<SendFeeNotification>.addFeeUnreachableNotification(feeSelectorState: FeeSelectorState) {
+        if (feeSelectorState is FeeSelectorState.Error) {
+            add(SendFeeNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload))
+        }
     }
 
     private fun MutableList<SendFeeNotification>.addTooLowNotification(
@@ -59,25 +70,24 @@ internal class FeeNotificationFactory(
         }
     }
 
-    private fun MutableList<SendFeeNotification>.addFeeCoverageNotification() {
-        // TODO add fee coverage condition [REDACTED_JIRA]
-        add(SendFeeNotification.Warning.NetworkCoverage)
+    private fun MutableList<SendFeeNotification>.addFeeCoverageNotification(
+        feeState: SendStates.FeeState,
+        amountValue: BigDecimal?,
+    ) {
+        val cryptoAmount = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
+        val feeValue = feeState.fee?.amount?.value ?: BigDecimal.ZERO
+        val value = amountValue ?: BigDecimal.ZERO
+        if (cryptoAmount <= value + feeValue && feeState.isSubtract && !feeState.isUserSubtracted) {
+            add(SendFeeNotification.Warning.NetworkCoverage)
+        }
     }
 
-    private fun MutableList<SendFeeNotification>.addExceedsBalanceNotification(
-        feeSelectorState: FeeSelectorState.Content,
-    ) {
+    private fun MutableList<SendFeeNotification>.addExceedsBalanceNotification(fee: Fee?) {
         val coinCryptoCurrency = coinCryptoCurrencyStatusProvider()
         val cryptoAmount = coinCryptoCurrency.value.amount ?: BigDecimal.ZERO
-        val choosableFee = feeSelectorState.fees as? TransactionFee.Choosable
-        val fee = when (feeSelectorState.selectedFee) {
-            FeeType.SLOW -> choosableFee?.minimum?.amount?.value
-            FeeType.MARKET -> feeSelectorState.fees.normal.amount.value
-            FeeType.FAST -> choosableFee?.priority?.amount?.value
-            FeeType.CUSTOM -> feeSelectorState.customValues.firstOrNull()?.value?.toBigDecimalOrNull()
-        } ?: return
+        val feeValue = fee?.amount?.value ?: BigDecimal.ZERO
 
-        if (fee > cryptoAmount) {
+        if (feeValue > cryptoAmount) {
             add(
                 SendFeeNotification.Error.ExceedsBalance(
                     coinCryptoCurrency.currency.networkIconResId,
