@@ -12,6 +12,7 @@ import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldCo
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 internal class SendAmountStateConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -37,6 +38,7 @@ internal class SendAmountStateConverter(
             amountTextField = sendAmountFieldConverter.convert(Unit),
             isFiatValue = false,
             isPrimaryButtonEnabled = false,
+            amountValue = BigDecimal.ZERO,
             segmentedButtonConfig = persistentListOf(
                 SendAmountSegmentedButtonsConfig(
                     title = stringReference(status.currency.symbol),
