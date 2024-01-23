@@ -1,10 +1,10 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.LifecycleCoroutineScope
-import com.tangem.core.analytics.Analytics
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -13,53 +13,78 @@ import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.tap.features.details.redux.AppSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
+import com.tangem.tap.features.details.ui.appsettings.analytics.AppSettingsItemsAnalyticsSender
 import com.tangem.tap.scope
+import com.tangem.tap.store
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import org.rekotlin.Store
+import kotlinx.coroutines.flow.*
+import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
-internal class AppSettingsViewModel(
-    private val store: Store<AppState>,
+@HiltViewModel
+internal class AppSettingsViewModel @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
-) {
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appSettingsItemsAnalyticsSender: AppSettingsItemsAnalyticsSender,
+) : ViewModel(),
+    StoreSubscriber<DetailsState>,
+    DefaultLifecycleObserver {
 
     private val itemsFactory = AppSettingsItemsFactory()
     private val dialogsFactory = AppSettingsDialogsFactory()
 
     private val appCurrencyUpdatesJobHolder = JobHolder()
 
-    var uiState: AppSettingsScreenState by mutableStateOf(AppSettingsScreenState.Loading)
-        private set
+    private val _uiState: MutableStateFlow<AppSettingsScreenState> = MutableStateFlow(
+        value = AppSettingsScreenState.Loading,
+    )
+    val uiState: StateFlow<AppSettingsScreenState> = _uiState
 
     init {
         bootstrapAppCurrencyUpdates()
+
+        subscribeToStoreChanges()
+        sendItemsAnalytics()
     }
 
-    fun updateState(state: DetailsState) {
-        uiState = AppSettingsScreenState.Content(
-            items = buildItems(state.appSettingsState),
-            dialog = (uiState as? AppSettingsScreenState.Content)?.dialog,
-        )
+    override fun newState(state: DetailsState) {
+        val items = buildItems(state.appSettingsState)
+
+        _uiState.update { prevState ->
+            when (prevState) {
+                is AppSettingsScreenState.Content -> prevState.copy(
+                    items = items,
+                )
+                is AppSettingsScreenState.Loading -> AppSettingsScreenState.Content(
+                    items = items,
+                    dialog = null,
+                )
+            }
+        }
     }
 
-    fun checkBiometricsStatus(lifecycleScope: LifecycleCoroutineScope) {
-        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(lifecycleScope))
+    override fun onResume(owner: LifecycleOwner) {
+        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(owner.lifecycleScope))
+    }
+
+    override fun onCleared() {
+        store.unsubscribe(subscriber = this)
     }
 
     private fun buildItems(state: AppSettingsState): ImmutableList<AppSettingsScreenState.Item> {
         val items = buildList {
             if (state.needEnrollBiometrics) {
-                Analytics.send(Settings.AppSettings.EnableBiometrics)
-                itemsFactory.createEnrollBiometricsCard(onClick = ::enrollBiometrics).let(::add)
+                itemsFactory.createEnrollBiometricsCard(
+                    onClick = ::enrollBiometrics,
+                ).let(::add)
             }
 
             itemsFactory.createSelectAppCurrencyButton(
@@ -89,9 +114,10 @@ internal class AppSettingsViewModel(
                 onCheckedChange = ::onFlipToHideBalanceToggled,
             ).let(::add)
 
-            itemsFactory.createSelectThemeModeButton(state.selectedThemeMode) {
-                showThemeModeSelector(state.selectedThemeMode)
-            }.let(::add)
+            itemsFactory.createSelectThemeModeButton(
+                currentThemeMode = state.selectedThemeMode,
+                onClick = { showThemeModeSelector(state.selectedThemeMode) },
+            ).let(::add)
         }
 
         return items.toImmutableList()
@@ -111,7 +137,7 @@ internal class AppSettingsViewModel(
                 dialog = dialogsFactory.createThemeModeSelectorDialog(
                     selectedModeIndex = selectedMode.ordinal,
                     onSelect = { mode ->
-                        Analytics.send(
+                        analyticsEventHandler.send(
                             event = Settings.AppSettings.ThemeSwitched(
                                 theme = AnalyticsParam.AppTheme.fromAppThemeMode(mode),
                             ),
@@ -167,7 +193,7 @@ internal class AppSettingsViewModel(
 
     private fun onFlipToHideBalanceToggled(enable: Boolean) {
         val param = AnalyticsParam.OnOffState(enable)
-        Analytics.send(Settings.AppSettings.HideBalanceChanged(param))
+        analyticsEventHandler.send(Settings.AppSettings.HideBalanceChanged(param))
 
         store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(hideBalance = enable))
     }
@@ -188,10 +214,28 @@ internal class AppSettingsViewModel(
             .saveIn(appCurrencyUpdatesJobHolder)
     }
 
+    private fun subscribeToStoreChanges() {
+        store.subscribe(subscriber = this) { state ->
+            state.skipRepeats { oldState, newState ->
+                oldState.detailsState == newState.detailsState
+            }.select { it.detailsState }
+        }
+    }
+
+    private fun sendItemsAnalytics() {
+        uiState
+            .filterIsInstance<AppSettingsScreenState.Content>()
+            .distinctUntilChangedBy(AppSettingsScreenState.Content::items)
+            .onEach { appSettingsItemsAnalyticsSender.send(it.items) }
+            .launchIn(scope)
+    }
+
     private fun updateContentState(block: AppSettingsScreenState.Content.() -> AppSettingsScreenState.Content) {
-        uiState = when (val state = uiState) {
-            is AppSettingsScreenState.Content -> block(state)
-            is AppSettingsScreenState.Loading -> state
+        _uiState.update { prevState ->
+            when (prevState) {
+                is AppSettingsScreenState.Content -> block(prevState)
+                is AppSettingsScreenState.Loading -> prevState
+            }
         }
     }
 }

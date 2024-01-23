@@ -25,6 +25,8 @@ internal object CoinsResponseConverter : Converter<CoinsResponse, List<Token>> {
                 networks = token.networks.mapNotNull { network ->
                     val blockchain = Blockchain.fromNetworkId(network.networkId) ?: return@mapNotNull null
 
+                    if (!blockchain.canHandleTokens()) return@mapNotNull null
+
                     Token.Network(
                         id = network.networkId,
                         blockchain = blockchain,
