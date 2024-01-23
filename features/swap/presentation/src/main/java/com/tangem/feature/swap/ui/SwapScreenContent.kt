@@ -109,7 +109,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             val message = if (state.alert.type == GenericWarningType.NETWORK) {
                 stringResource(id = R.string.disclaimer_error_loading)
             } else {
-                state.alert.message?.resolveReference() ?: stringResource(id = R.string.swapping_generic_error)
+                state.alert.message?.resolveReference() ?: stringResource(id = R.string.common_unknown_error)
             }
             SimpleOkDialog(
                 message = message,
@@ -338,7 +338,7 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         } else {
                             it.resolveReference()
                         }
-                    } ?: stringResource(id = R.string.swapping_generic_error)
+                    } ?: stringResource(id = R.string.common_unknown_error)
                     RefreshableWaringCard(
                         title = stringResource(id = R.string.common_warning),
                         description = message,
