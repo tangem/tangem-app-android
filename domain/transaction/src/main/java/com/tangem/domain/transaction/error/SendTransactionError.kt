@@ -1,5 +1,7 @@
 package com.tangem.domain.transaction.error
 
+import com.tangem.core.ui.extensions.TextReference
+
 sealed class SendTransactionError {
 
     object DemoCardError : SendTransactionError()
@@ -8,9 +10,12 @@ sealed class SendTransactionError {
 
     data class NetworkError(val message: String?) : SendTransactionError()
 
-    data class BlockchainSdkError(val code: Int, val cause: Throwable?) : SendTransactionError()
+    data class BlockchainSdkError(val code: Int, val message: String?) : SendTransactionError()
+
     object UserCancelledError : SendTransactionError()
-    data class TangemSdkError(val code: Int, val cause: Throwable?) : SendTransactionError()
+
+    data class TangemSdkError(val code: Int, val messageReference: TextReference) : SendTransactionError()
+
     data class UnknownError(val ex: Exception? = null) : SendTransactionError()
 
     companion object {
