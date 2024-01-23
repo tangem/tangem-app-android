@@ -7,10 +7,7 @@ import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
@@ -42,6 +39,21 @@ internal class DefaultTransactionRepository(
         return@withContext walletManager?.createTransaction(amount, fee, destination)?.copy(
             extras = getMemoExtras(network.id.value, memo),
         )
+    }
+
+    override suspend fun sendTransaction(
+        txData: TransactionData,
+        signer: CommonSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ) = withContext(coroutineDispatcherProvider.io) {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+        (walletManager as TransactionSender).send(txData, signer)
     }
 
     private fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
