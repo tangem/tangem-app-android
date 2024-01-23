@@ -43,7 +43,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Informational.DemoCard -> MainScreen.DemoCard
             is WalletNotification.Informational.MissingAddresses -> MainScreen.MissingAddresses
             is WalletNotification.RateApp -> MainScreen.HowDoYouLikeTangem
-            is WalletNotification.UnlockWallets -> MainScreen.WalletUnlock
+            is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
             is WalletNotification.Warning.LowSignatures,
             is WalletNotification.Warning.SomeNetworksUnreachable,
