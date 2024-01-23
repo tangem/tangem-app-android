@@ -15,6 +15,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent.DemonstrateWalletsScrollPreview.Direction
@@ -55,6 +56,7 @@ internal class WalletViewModelV2 @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
+    private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
@@ -110,8 +112,8 @@ internal class WalletViewModelV2 @Inject constructor(
 
     private fun subscribeToUserWalletsUpdates(shouldSaveUserWallet: Boolean) {
         getWalletsUseCase()
-            .distinctUntilChanged()
             .conflate()
+            .distinctUntilChanged()
             .map {
                 walletsUpdateActionResolver.resolve(
                     wallets = it,
@@ -152,6 +154,8 @@ internal class WalletViewModelV2 @Inject constructor(
                         reduxStateHolder.dispatch(
                             action = WalletConnectActions.New.SetupUserChains(userWallet = selectedWallet),
                         )
+
+                        selectedWalletAnalyticsSender.send(selectedWallet)
                     }
                 }
                 .flowOn(dispatchers.main)
