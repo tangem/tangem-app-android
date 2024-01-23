@@ -39,7 +39,7 @@ import javax.inject.Inject
 
 @Suppress("LargeClass")
 @AndroidEntryPoint
-class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
+internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     @Inject
     lateinit var assetReader: AssetReader
