@@ -36,6 +36,8 @@ interface SendClickIntents {
     // endregion
 
     // region Fee
+    fun feeReload()
+
     fun onFeeSelectorClick(feeType: FeeType)
 
     fun onCustomFeeValueChange(index: Int, value: String)
