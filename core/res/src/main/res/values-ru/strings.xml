@@ -136,6 +136,7 @@
     <string name="common_transfer">Перевод</string>
     <string name="common_understand">Я понял</string>
     <string name="common_unreachable">Недоступно</string>
+    <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
     <string name="common_yes">Да</string>
     <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
     <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -448,8 +449,9 @@
     <string name="send_amount_label">Сумма</string>
     <string name="send_amount_substract">Вычесть из суммы отправки</string>
     <string name="send_amount_substract_footer">Сумма к получению %s</string>
+    <string name="send_alert_button_request_support">Поддержка</string>
     <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
-    <string name="send_alert_transaction_failed_text">Причина: %1$s\Код:%2$s</string>
+    <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
     <string name="send_date_format">%1$s в %2$s</string>
     <string name="send_destination_hint_address">Адрес</string>
     <string name="send_destination_tag_field">Код назначения</string>
@@ -477,8 +479,10 @@
     <string name="send_notification_exceed_balance_title">Недостаточно средств</string>
     <string name="send_notification_exceed_fee_text">Размер комиссии превышает баланс сети. Для продолжения необходимо пополнить баланс сети.</string>
     <string name="send_notification_exceed_fee_title">Комиссия превышает баланс</string>
-    <string name="send_notification_high_fee_text">Комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить 0.01.</string>
     <string name="send_notification_high_fee_title">Увеличение комиссии</string>
+    <string name="send_notification_high_fee_text">Комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить 0.01.</string>
+    <string name="send_notification_fee_too_high_accept">Оставить %s XTZ</string>
+    <string name="send_notification_fee_too_high_ignore">Отправить все</string>
     <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
     <string name="send_notification_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
     <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
@@ -528,7 +532,6 @@
     <string name="swapping_approve_information_title">Подтвердить</string>
     <string name="swapping_error_wrapper">Ошибка: %s</string>
     <string name="swapping_from_title">Вы отправляете</string>
-    <string name="swapping_generic_error">Произошла ошибка. Пожалуйста, попробуйте еще раз.</string>
     <string name="swapping_give_permission">Дать разрешение</string>
     <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
     <string name="swapping_insufficient_funds">Недостаточно средств</string>

@@ -3,10 +3,9 @@ package com.tangem.features.send.impl.presentation.state
 import androidx.paging.PagingData
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -16,22 +15,19 @@ import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
-import com.tangem.features.send.impl.presentation.state.fee.*
+import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientListConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientStateConverter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
-import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
-import java.math.BigDecimal
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList")
 internal class SendStateFactory(
     private val clickIntents: SendClickIntents,
     private val currentStateProvider: Provider<SendUiState>,
@@ -40,25 +36,11 @@ internal class SendStateFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
-
     private val amountFieldConverter by lazy { SendAmountFieldConverter(clickIntents) }
     private val amountFieldChangeConverter by lazy { SendAmountFieldChangeConverter(currentStateProvider) }
-    private val customFeeFieldConverter by lazy {
-        SendFeeCustomFieldConverter(
-            clickIntents = clickIntents,
-            appCurrencyProvider = appCurrencyProvider,
-        )
-    }
-
-    private val feeNotificationFactory = FeeNotificationFactory(
-        coinCryptoCurrencyStatusProvider = coinCryptoCurrencyStatusProvider,
-        userWalletProvider = userWalletProvider,
-        clickIntents = clickIntents,
-    )
 
     private val amountStateConverter by lazy {
         SendAmountStateConverter(
@@ -92,6 +74,7 @@ internal class SendStateFactory(
     fun getInitialState(): SendUiState = SendUiState(
         clickIntents = clickIntents,
         currentState = MutableStateFlow(SendUiStateType.Amount),
+        event = consumedEvent(),
     )
 
     fun getReadyState(): SendUiState {
@@ -218,144 +201,6 @@ internal class SendStateFactory(
     }
     //endregion
 
-    //region fee
-    fun onFeeOnLoadingState(): SendUiState {
-        val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
-        val feeSelectorState = FeeSelectorState.Loading
-        return state.copy(
-            feeState = feeState.copy(
-                feeSelectorState = feeSelectorState,
-                notifications = persistentListOf(),
-                isPrimaryButtonEnabled = feeSelectorState.isPrimaryButtonEnabled(),
-            ),
-        )
-    }
-
-    fun onFeeOnLoadedState(fees: TransactionFee): SendUiState {
-        val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
-        val feeSelectorState = FeeSelectorState.Content(
-            fees = fees,
-            customValues = customFeeFieldConverter.convert(fees.normal),
-        )
-
-        val fee = feeSelectorState.getFee()
-        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
-        val updatedState = feeState.copy(
-            feeSelectorState = feeSelectorState,
-            fee = fee,
-            receivedAmountValue = receivedAmount,
-            receivedAmount = getFormattedValue(receivedAmount),
-        )
-        return state.copy(
-            feeState = updatedState.copy(
-                notifications = feeNotificationFactory(feeState = updatedState),
-                isPrimaryButtonEnabled = feeSelectorState.isPrimaryButtonEnabled(),
-            ),
-        )
-    }
-
-    fun onFeeSelectedState(feeType: FeeType): SendUiState {
-        val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
-        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
-
-        val updatedFeeSelectorState = feeSelectorState.copy(selectedFee = feeType)
-        val fee = updatedFeeSelectorState.getFee()
-        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
-
-        val updatedState = feeState.copy(
-            fee = fee,
-            receivedAmountValue = receivedAmount,
-            receivedAmount = getFormattedValue(receivedAmount),
-            feeSelectorState = updatedFeeSelectorState,
-            isPrimaryButtonEnabled = updatedFeeSelectorState.isPrimaryButtonEnabled(),
-        )
-
-        return state.copy(
-            feeState = updatedState.copy(
-                notifications = feeNotificationFactory(feeState = updatedState),
-            ),
-        )
-    }
-
-    fun onCustomFeeValueChange(index: Int, value: String): SendUiState {
-        val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
-        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
-        val updatedFeeSelectorState = feeSelectorState.copy(
-            customValues = feeSelectorState.customValues.toMutableList().apply {
-                set(index, feeSelectorState.customValues[index].copy(value = value))
-            }.toImmutableList(),
-        )
-
-        val fee = updatedFeeSelectorState.getFee()
-        val receivedAmount = calculateReceiveAmount(state, fee, feeState.isSubtract)
-
-        val updatedState = feeState.copy(
-            feeSelectorState = updatedFeeSelectorState,
-            fee = fee,
-            receivedAmountValue = receivedAmount,
-            receivedAmount = getFormattedValue(receivedAmount),
-            isPrimaryButtonEnabled = updatedFeeSelectorState.isPrimaryButtonEnabled(),
-        )
-        return state.copy(
-            feeState = updatedState.copy(
-                notifications = feeNotificationFactory(feeState = updatedState),
-            ),
-        )
-    }
-
-    fun onSubtractSelect(value: Boolean): SendUiState {
-        val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
-        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
-
-        val fee = feeSelectorState.getFee()
-        val receivedAmount = calculateReceiveAmount(state, fee, value)
-        val updatedState = feeState.copy(
-            isSubtract = value,
-            fee = fee,
-            receivedAmountValue = receivedAmount,
-            receivedAmount = if (value) {
-                getFormattedValue(receivedAmount)
-            } else {
-                feeState.receivedAmount
-            },
-        )
-        return state.copy(
-            feeState = updatedState.copy(
-                notifications = feeNotificationFactory(feeState = updatedState),
-            ),
-        )
-    }
-
-    private fun FeeSelectorState.isPrimaryButtonEnabled(): Boolean {
-        return when (this) {
-            is FeeSelectorState.Loading -> false
-            is FeeSelectorState.Content -> {
-                val customValue = customValues.firstOrNull()?.value?.toBigDecimalOrNull()
-                val balance = cryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
-                val fee = getFee().amount.value ?: BigDecimal.ZERO
-
-                val isNotEmptyCustom = !customValue.isNullOrZero() && selectedFee == FeeType.CUSTOM
-                val isNotCustom = selectedFee != FeeType.CUSTOM
-                fee < balance && (isNotEmptyCustom || isNotCustom)
-            }
-        }
-    }
-
-    private fun getFormattedValue(value: BigDecimal): String {
-        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
-        return BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = value,
-            cryptoCurrency = cryptoCurrency.symbol,
-            decimals = cryptoCurrency.decimals,
-        )
-    }
-    //endregion
-
     //region send
     fun getSendingStateUpdate(isSending: Boolean): SendUiState {
         val state = currentStateProvider()
@@ -375,6 +220,7 @@ internal class SendStateFactory(
                 transactionDate = txData.date?.timeInMillis ?: System.currentTimeMillis(),
                 isSuccess = true,
                 txUrl = txUrl,
+                notifications = persistentListOf(),
             ),
         )
     }
