@@ -3,7 +3,6 @@ package com.tangem.features.send.impl.presentation.ui.fee
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +15,6 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
-import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -36,7 +34,6 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
             .padding(
                 horizontal = TangemTheme.dimens.spacing16,
             ),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         item(
             key = FEE_SELECTOR_KEY,
@@ -46,13 +43,12 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
                 clickIntents = clickIntents,
             )
         }
-        notifications(notifications)
         customFee(
             feeSendState = feeSendState,
             cryptoCurrencySymbol = state.cryptoCurrencyStatus.currency.symbol,
         )
+        notifications(notifications)
         subtractButton(
-            feeSendState = feeSendState,
             receivedAmount = state.receivedAmount,
             isSubtract = state.isSubtract,
             clickIntents = clickIntents,
@@ -69,8 +65,15 @@ internal fun LazyListScope.notifications(configs: ImmutableList<SendFeeNotificat
         itemContent = {
             Notification(
                 config = it.config,
-                modifier = modifier.animateItemPlacement(),
-                containerColor = TangemTheme.colors.button.disabled,
+                modifier = modifier
+                    .padding(top = TangemTheme.dimens.spacing12)
+                    .animateItemPlacement(),
+                containerColor = when (it) {
+                    is SendFeeNotification.Error.ExceedsBalance,
+                    is SendFeeNotification.Warning.NetworkFeeUnreachable,
+                    -> TangemTheme.colors.background.primary
+                    else -> TangemTheme.colors.button.disabled
+                },
                 iconTint = when (it) {
                     is SendFeeNotification.Informational -> TangemTheme.colors.icon.accent
                     else -> null
@@ -102,6 +105,7 @@ internal fun LazyListScope.customFee(
                     customValues = customValues,
                     selectedFee = fee.selectedFee,
                     symbol = cryptoCurrencySymbol,
+                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
                 )
             }
         }
@@ -110,32 +114,19 @@ internal fun LazyListScope.customFee(
 
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.subtractButton(
-    feeSendState: FeeSelectorState,
     receivedAmount: String,
     isSubtract: Boolean,
     clickIntents: SendClickIntents,
     modifier: Modifier = Modifier,
 ) {
-    (feeSendState as? FeeSelectorState.Content)?.let { state ->
-        item {
-            val selectedFeeValue = state.selectedFee
-            val topPadding = if (selectedFeeValue != FeeType.CUSTOM) {
-                TangemTheme.dimens.spacing8
-            } else {
-                TangemTheme.dimens.spacing0
-            }
-
-            SendSpeedSubtract(
-                receivingAmount = receivedAmount,
-                isSubtract = isSubtract,
-                onSelectClick = clickIntents::onSubtractSelect,
-                modifier = modifier
-                    .animateItemPlacement()
-                    .padding(
-                        top = topPadding,
-                        bottom = TangemTheme.dimens.spacing12,
-                    ),
-            )
-        }
+    item {
+        SendSpeedSubtract(
+            receivingAmount = receivedAmount,
+            isSubtract = isSubtract,
+            onSelectClick = clickIntents::onSubtractSelect,
+            modifier = modifier
+                .padding(vertical = TangemTheme.dimens.spacing12)
+                .animateItemPlacement(),
+        )
     }
 }

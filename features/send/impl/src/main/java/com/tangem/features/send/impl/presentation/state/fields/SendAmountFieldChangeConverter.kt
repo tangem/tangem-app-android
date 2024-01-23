@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
+import com.tangem.blockchain.extensions.toBigDecimalOrDefault
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
@@ -41,8 +42,9 @@ internal class SendAmountFieldChangeConverter(
             trimmedValue
         }
 
-        val isExceedBalance = cryptoValue.checkExceedBalance(amountState)
-        val isMaxAmount = cryptoValue.checkMaxAmount(amountState)
+        val checkValue = if (amountState.isFiatValue) fiatValue else cryptoValue
+        val isExceedBalance = checkValue.checkExceedBalance(amountState)
+        val isMaxAmount = checkValue.checkMaxAmount(amountState)
         return state.copy(
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = !isExceedBalance,
@@ -51,6 +53,7 @@ internal class SendAmountFieldChangeConverter(
                     fiatValue = fiatValue,
                     isError = isExceedBalance,
                 ),
+                amountValue = cryptoValue.toBigDecimalOrDefault(),
             ),
             feeState = feeState.copy(
                 isSubtract = isMaxAmount,
