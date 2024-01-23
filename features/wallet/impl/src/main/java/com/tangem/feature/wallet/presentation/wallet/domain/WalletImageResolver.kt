@@ -31,6 +31,9 @@ internal object WalletImageResolver {
             cardTypesResolver.isTronWallet() -> userWallet.resolveTronWallet()
             cardTypesResolver.isKaspaWallet() -> userWallet.resolveKaspaWallet()
             cardTypesResolver.isBadWallet() -> userWallet.resolveBadWallet()
+            cardTypesResolver.isJrWallet() -> userWallet.resolveJrWallet()
+            cardTypesResolver.isGrimWallet() -> userWallet.resolveGrimWallet()
+            cardTypesResolver.isSatoshiFriendsWallet() -> userWallet.resolveSatoshiWallet()
             cardTypesResolver.isWallet2() -> userWallet.resolveWallet2()
             cardTypesResolver.isShibaWallet() -> userWallet.resolveShibaWallet()
             cardTypesResolver.isTangemWallet() -> userWallet.resolveWallet1()
@@ -75,6 +78,27 @@ internal object WalletImageResolver {
         return resolveWallet2(
             oneBackupResId = R.drawable.ill_bad_card2_120_106,
             twoBackupResId = R.drawable.ill_bad_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveJrWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_jr_card2_120_106,
+            twoBackupResId = R.drawable.ill_jr_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveGrimWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_grim_card2_120_106,
+            twoBackupResId = R.drawable.ill_grim_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveSatoshiWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_satoshi_card2_120_106,
+            twoBackupResId = R.drawable.ill_satoshi_card3_120_106,
         )
     }
 
