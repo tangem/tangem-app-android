@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
@@ -118,13 +119,13 @@ class SwapDomainModule {
     @Singleton
     fun provideSendTransactionUseCase(
         @SwapScope isDemoCardUseCase: IsDemoCardUseCase,
-        walletManagersFacade: WalletManagersFacade,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        transactionRepository: TransactionRepository,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
-            walletManagersFacade = walletManagersFacade,
+            transactionRepository = transactionRepository,
         )
     }
 
