@@ -1,21 +1,15 @@
 package com.tangem.domain.transaction.usecase
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.catch
+import arrow.core.raise.either
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import java.math.BigDecimal
 
 /**
@@ -23,16 +17,15 @@ import java.math.BigDecimal
  */
 class GetFeeUseCase(
     private val walletManagersFacade: WalletManagersFacade,
-    private val dispatcher: CoroutineDispatcherProvider,
 ) {
     suspend operator fun invoke(
         amount: BigDecimal,
         destination: String,
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): Flow<Either<GetFeeError, TransactionFee>> {
-        return flow {
-            try {
+    ) = either {
+        catch(
+            block = {
                 val result = requireNotNull(
                     walletManagersFacade.getFee(
                         amount = convertCryptoCurrencyToAmount(cryptoCurrency, amount),
@@ -43,14 +36,15 @@ class GetFeeUseCase(
                 ) { "Fee is null" }
 
                 val maybeFee = when (result) {
-                    is Result.Success -> result.data.right()
-                    is Result.Failure -> GetFeeError.DataError(result.error).left()
+                    is Result.Success -> result.data
+                    is Result.Failure -> raise(GetFeeError.DataError(result.error))
                 }
-                emit(maybeFee)
-            } catch (e: Exception) {
-                emit(GetFeeError.DataError(e.cause).left())
-            }
-        }.flowOn(dispatcher.io)
+                maybeFee
+            },
+            catch = {
+                raise(GetFeeError.DataError(it))
+            },
+        )
     }
 
     private fun convertCryptoCurrencyToAmount(cryptoCurrency: CryptoCurrency, amount: BigDecimal) = Amount(
