@@ -4,6 +4,7 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
@@ -14,7 +15,6 @@ import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
-import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.extensions.removeContext
@@ -106,14 +106,17 @@ object OnboardingHelper {
                             backupCardsIds = backupCardsIds?.toSet(),
                         ),
                     )
+                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                    delay(timeMillis = 1_800)
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.SaveWallet))
                 }
                 // If device has no biometry and save wallet screen has been shown, then go through old scenario
-                else -> proceedWithScanResponse(scanResponse, backupCardsIds)
+                else -> {
+                    proceedWithScanResponse(scanResponse, backupCardsIds)
+                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                }
             }
         }
-
-        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
     }
 
     fun onInterrupted() {
@@ -143,7 +146,7 @@ object OnboardingHelper {
                 Timber.e(error, "Unable to save user wallet")
             }
             .doOnSuccess {
-                scope.launch { store.onUserWalletSelected(userWallet) }
+                mainScope.launch { store.onUserWalletSelected(userWallet) }
             }
     }
 }
