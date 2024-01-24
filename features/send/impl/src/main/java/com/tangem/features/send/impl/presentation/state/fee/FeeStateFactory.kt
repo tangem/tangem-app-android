@@ -55,7 +55,10 @@ internal class FeeStateFactory(
         val state = currentStateProvider()
         val balance = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
         val feeState = state.feeState ?: return state
-        val feeSelectorState = FeeSelectorState.Content(
+        val feeSelectorState = (feeState.feeSelectorState as? FeeSelectorState.Content)?.copy(
+            fees = fees,
+            customValues = customFeeFieldConverter.convert(fees.normal),
+        ) ?: FeeSelectorState.Content(
             fees = fees,
             customValues = customFeeFieldConverter.convert(fees.normal),
         )
@@ -182,14 +185,17 @@ internal class FeeStateFactory(
         return when (feeSelectorState) {
             is FeeSelectorState.Content -> {
                 val customValue = feeSelectorState.customValues.firstOrNull()?.value?.toBigDecimalOrNull()
-                val balance = cryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
-                val fee = feeSelectorState.getFee().amount.value ?: BigDecimal.ZERO
+                val balance = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
+                val fee = feeSelectorState.getFee()
+                val feeValue = fee.amount.value ?: BigDecimal.ZERO
 
                 val isNotCustom = feeSelectorState.selectedFee != FeeType.CUSTOM
                 val isNotEmptyCustom = !customValue.isNullOrZero() && !isNotCustom
-                val isSubtractRequired = if (fee + receivedAmountValue >= balance) isSubtract else true
-                val isBalanceEnough = fee + receivedAmountValue <= balance
-                isBalanceEnough && isSubtractRequired && (isNotEmptyCustom || isNotCustom)
+                val isFiatAnotherCurrency = cryptoCurrencyStatusProvider().currency.symbol != fee.amount.currencySymbol
+                val isSubtractRequired = if (feeValue + receivedAmountValue >= balance) isSubtract else true
+                val isBalanceEnough = feeValue + receivedAmountValue <= balance
+
+                (isFiatAnotherCurrency || isBalanceEnough && isSubtractRequired) && (isNotEmptyCustom || isNotCustom)
             }
             else -> false
         }
