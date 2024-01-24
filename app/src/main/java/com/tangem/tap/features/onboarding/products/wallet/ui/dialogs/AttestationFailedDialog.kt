@@ -11,8 +11,8 @@ internal object AttestationFailedDialog {
 
     fun create(context: Context): AlertDialog {
         return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog).apply {
-            setTitle(R.string.attestation_online_failed_title)
-            setMessage(R.string.attestation_online_failed_body)
+            setTitle(R.string.common_error)
+            setMessage(R.string.issuer_signature_loading_failed)
             setPositiveButton(R.string.ok) { dialog, _ ->
                 dialog.dismiss()
             }
