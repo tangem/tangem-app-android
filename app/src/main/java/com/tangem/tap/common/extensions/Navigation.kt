@@ -20,7 +20,7 @@ import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.main.ui.ModalNotificationBottomSheetFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
-import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
+import com.tangem.tap.features.onboarding.products.twins.ui.OnboardingTwinsFragment
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
@@ -125,7 +125,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Shop -> ShopFragment()
         AppScreen.OnboardingNote -> OnboardingNoteFragment()
         AppScreen.OnboardingWallet -> OnboardingWalletFragment()
-        AppScreen.OnboardingTwins -> TwinsCardsFragment()
+        AppScreen.OnboardingTwins -> OnboardingTwinsFragment()
         AppScreen.OnboardingOther -> OnboardingOtherCardsFragment()
         AppScreen.Wallet -> {
             store.state.daggerGraphState
