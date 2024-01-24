@@ -17,11 +17,6 @@ interface SwapRepository {
 
     suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double>
 
-    /**
-     * @throws com.tangem.datasource.api.common.response.ApiResponseError
-     * */
-    suspend fun getExchangeableTokens(networkId: String): List<Currency>
-
     suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel>
 
     @Suppress("LongParameterList")
