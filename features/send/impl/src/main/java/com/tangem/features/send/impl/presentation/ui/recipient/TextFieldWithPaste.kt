@@ -55,6 +55,7 @@ internal fun TextFieldWithPaste(
                     placeholder = placeholder,
                     onValueChange = onValueChange,
                     modifier = Modifier
+                        .weight(1f)
                         .padding(top = TangemTheme.dimens.spacing6),
                 )
             }
