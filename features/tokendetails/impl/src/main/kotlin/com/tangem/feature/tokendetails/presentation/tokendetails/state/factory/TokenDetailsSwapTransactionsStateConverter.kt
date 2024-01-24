@@ -55,7 +55,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                     val toAmount = transaction.toCryptoAmount
                     val fromAmount = transaction.fromCryptoAmount
                     val toFiatAmount = quotes.firstOrNull {
-                        it.rawCurrencyId == swapCurrency.fromCryptoCurrency.id.rawCurrencyId
+                        it.rawCurrencyId == swapCurrency.toCryptoCurrency.id.rawCurrencyId
                     }?.fiatRate?.multiply(toAmount)
                     val fromFiatAmount = quotes.firstOrNull {
                         it.rawCurrencyId == swapCurrency.fromCryptoCurrency.id.rawCurrencyId
