@@ -54,13 +54,6 @@ platform :android do
            'versionName' => options[:versionName],
          })
      gradle(
-       task: "clean assemble",
-       build_type: "Internal",
-       properties: {
-            'versionCode' => options[:versionCode],
-            'versionName' => options[:versionName],
-         })
-     gradle(
        task: "bundle",
        build_type: "Release",
        properties: {
