@@ -87,6 +87,7 @@ internal class StateBuilder(
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             providerState = ProviderState.Empty(),
+            shouldShowMaxAmount = false,
             priceImpact = PriceImpact.Empty(),
         )
     }
@@ -187,6 +188,7 @@ internal class StateBuilder(
             permissionState = uiStateHolder.permissionState,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             priceImpact = PriceImpact.Empty(),
+            shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toToken),
         )
     }
 
@@ -276,7 +278,12 @@ internal class StateBuilder(
                 PriceImpact.Empty()
             },
             tosState = createTosState(swapProvider),
+            shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrencyStatus.currency),
         )
+    }
+
+    private fun shouldShowMaxAmount(fromToken: CryptoCurrency, toCurrency: CryptoCurrency): Boolean {
+        return !(fromToken is CryptoCurrency.Coin && fromToken.network.id == toCurrency.network.id)
     }
 
     private fun createTosState(swapProvider: SwapProvider): TosState {
