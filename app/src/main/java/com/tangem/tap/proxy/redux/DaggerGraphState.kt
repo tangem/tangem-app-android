@@ -1,6 +1,5 @@
 package com.tangem.tap.proxy.redux
 
-import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -13,6 +12,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
