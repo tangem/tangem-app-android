@@ -31,6 +31,7 @@ data class SwapStateHolder(
     val bottomSheetConfig: TangemBottomSheetConfig? = null,
 
     val swapButton: SwapButton,
+    val shouldShowMaxAmount: Boolean,
     val tosState: TosState? = null,
 
     val onRefresh: () -> Unit,
