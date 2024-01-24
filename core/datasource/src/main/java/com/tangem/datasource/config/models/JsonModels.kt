@@ -57,7 +57,6 @@ data class GetBlockAccessTokens(
     @Json(name = "xdai") val gnosis: GetBlockToken?,
     @Json(name = "cronos") val cronos: GetBlockToken?,
     @Json(name = "solana") val solana: GetBlockToken?,
-    @Json(name = "stellar") val stellar: GetBlockToken?,
     @Json(name = "ton") val ton: GetBlockToken?,
     @Json(name = "tron") val tron: GetBlockToken?,
     @Json(name = "cosmos-hub") val cosmos: GetBlockToken?,
