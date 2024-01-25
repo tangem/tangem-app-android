@@ -757,8 +757,8 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun createEmptyAmountState(): SwapState {
-        val appCurrency = userWalletManager.getUserAppCurrency()
+    private suspend fun createEmptyAmountState(): SwapState {
+        val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         return SwapState.EmptyAmountState(
             zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(
                 rateValue = BigDecimal.ONE,
