@@ -231,7 +231,7 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     }
 
     override fun onUnlockWalletClick() {
-        analyticsEventHandler.send(MainScreen.UnlockAllWithFaceID)
+        analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics)
 
         viewModelScope.launch(dispatchers.main) {
             unlockWalletsUseCase(throwIfNotAllWalletsUnlocked = true)
