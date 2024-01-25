@@ -44,4 +44,9 @@ internal sealed class SendAlertState {
         override val title: TextReference = resourceReference(id = R.string.warning_demo_mode_title)
         override val message: TextReference = resourceReference(id = R.string.warning_demo_mode_message)
     }
+
+    object FeeIncreased : SendAlertState() {
+        override val title: TextReference? = null
+        override val message: TextReference = resourceReference(id = R.string.send_notification_high_fee_title)
+    }
 }
