@@ -5,20 +5,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.PagingData
+import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.utils.convertToAmount
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -39,15 +43,10 @@ import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fee.getFee
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -58,6 +57,7 @@ internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -98,20 +98,19 @@ internal class SendViewModel @Inject constructor(
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
     )
 
-    private val feeStateFactory by lazy {
-        FeeStateFactory(
-            clickIntents = this,
-            currentStateProvider = Provider { uiState },
-            coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
-            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-            appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-            userWalletProvider = Provider { userWallet },
-        )
-    }
+    private val feeStateFactory = FeeStateFactory(
+        clickIntents = this,
+        currentStateProvider = Provider { uiState },
+        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        userWalletProvider = Provider { userWallet },
+    )
 
     private val eventStateFactory = SendEventStateFactory(
         clickIntents = this,
         currentStateProvider = Provider { uiState },
+        feeStateFactory = feeStateFactory,
     )
 
     private val sendNotificationFactory = SendNotificationFactory(
@@ -138,9 +137,17 @@ internal class SendViewModel @Inject constructor(
     private var sendNotificationsJobHolder = JobHolder()
     private var qrScannerJobHolder = JobHolder()
 
+    private var checkFeeUpdateScheduler = SingleTaskScheduler<Either<GetFeeError, TransactionFee>?>()
+
     override fun onCreate(owner: LifecycleOwner) {
         subscribeOnCurrencyStatusUpdates(owner)
         onFeeStateActive()
+        onCheckFeeUpdate()
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        super.onStop(owner)
+        checkFeeUpdateScheduler.cancelTask()
     }
 
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
@@ -429,25 +436,29 @@ internal class SendViewModel @Inject constructor(
 
     private fun loadFee() {
         viewModelScope.launch(dispatchers.main) {
-            val amountState = uiState.amountState ?: return@launch
-            val recipientState = uiState.recipientState ?: return@launch
-            val amount = amountState.amountTextField.value.toBigDecimal()
-
             uiState = feeStateFactory.onFeeOnLoadingState()
-            getFeeUseCase.invoke(
-                amount = amount,
-                destination = recipientState.addressTextField.value,
-                userWalletId = userWalletId,
-                cryptoCurrency = cryptoCurrency,
-            ).fold(
+            uiState = callFeeUseCase()?.fold(
                 ifRight = {
-                    uiState = feeStateFactory.onFeeOnLoadedState(it)
+                    feeStateFactory.onFeeOnLoadedState(it)
                 },
                 ifLeft = {
-                    uiState = feeStateFactory.onFeeOnErrorState()
+                    feeStateFactory.onFeeOnErrorState()
                 },
-            )
+            ) ?: feeStateFactory.onFeeOnErrorState()
         }.saveIn(feeJobHolder)
+    }
+
+    private suspend fun callFeeUseCase(): Either<GetFeeError, TransactionFee>? {
+        val amountState = uiState.amountState ?: return null
+        val recipientState = uiState.recipientState ?: return null
+        val amount = amountState.amountTextField.value.toBigDecimal()
+
+        return getFeeUseCase.invoke(
+            amount = amount,
+            destination = recipientState.addressTextField.value,
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+        )
     }
     // endregion
 
@@ -527,13 +538,86 @@ internal class SendViewModel @Inject constructor(
             ifRight = {
                 uiState = stateFactory.getSendingStateUpdate(isSending = false)
                 uiState = stateFactory.getTransactionSendState(txData)
+                scheduleBalanceUpdate()
             },
         )
     }
+
+    private fun scheduleBalanceUpdate() {
+        viewModelScope.launch(dispatchers.io) {
+            delay(BALANCE_UPDATE_DELAY)
+            fetchCurrencyStatusUseCase.invoke(
+                userWalletId = userWalletId,
+                id = cryptoCurrency.id,
+                refresh = true,
+            )
+        }
+    }
+
+    private fun onCheckFeeUpdate() {
+        uiState.currentState
+            .onEach { activeState ->
+                val isSending = uiState.sendState.isSending
+                val isSuccess = uiState.sendState.isSuccess
+                val isNoNotifications = uiState.sendState.notifications.isEmpty()
+                val isSendIdle = !isSending && !isSuccess && isNoNotifications
+                if (activeState == SendUiStateType.Send && isSendIdle) {
+                    checkFeeUpdateScheduler.scheduleTask(
+                        scope = viewModelScope,
+                        task = getFeePeriodicTask(),
+                    )
+                } else {
+                    checkFeeUpdateScheduler.cancelTask()
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun getFeePeriodicTask() = PeriodicTask(
+        delay = CHECK_FEE_UPDATE_DELAY,
+        isDelayFirst = true,
+        task = {
+            runCatching(dispatchers.main) {
+                if (uiState.sendState.isSuccess) {
+                    checkFeeUpdateScheduler.cancelTask()
+                    null
+                } else {
+                    callFeeUseCase()
+                }
+            }
+        },
+        onSuccess = { maybeFee ->
+            if (maybeFee == null) {
+                checkFeeUpdateScheduler.cancelTask()
+                uiState = eventStateFactory.getGenericErrorState(
+                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                )
+            } else {
+                maybeFee.fold(
+                    ifRight = {
+                        uiState = eventStateFactory.getFeeUpdatedAlert(
+                            fee = it,
+                            onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                        )
+                    },
+                    ifLeft = {
+                        checkFeeUpdateScheduler.cancelTask()
+                        uiState = eventStateFactory.getGenericErrorState(
+                            error = (it as? GetFeeError.DataError)?.cause,
+                            onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                        )
+                    },
+                )
+            }
+        },
+        onError = { /* no-op */ },
+    )
     // endregion
 
     companion object {
         private const val XRP_X_ADDRESS = 'X'
         private const val DEFAULT_VALUE = "0.00"
+        private const val CHECK_FEE_UPDATE_DELAY = 60_000L
+        private const val BALANCE_UPDATE_DELAY = 10_000L
     }
 }
