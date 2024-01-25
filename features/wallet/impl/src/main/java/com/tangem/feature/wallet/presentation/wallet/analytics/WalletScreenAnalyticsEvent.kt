@@ -83,7 +83,7 @@ sealed class WalletScreenAnalyticsEvent {
 
         object BackupYourWallet : MainScreen(event = "Notice - Backup Your Wallet")
 
-        object UnlockAllWithFaceID : MainScreen(event = "Button - Unlock All With Face ID")
+        object UnlockAllWithBiometrics : MainScreen(event = "Button - Unlock All With Biometrics")
 
         object UnlockWithCardScan : MainScreen(event = "Button - Unlock With Card Scan")
 
