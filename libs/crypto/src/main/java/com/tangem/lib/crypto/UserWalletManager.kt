@@ -67,11 +67,6 @@ interface UserWalletManager {
     @Throws(IllegalStateException::class)
     fun getNetworkCurrency(networkId: String): String
 
-    /**
-     * Returns selected app currency
-     */
-    fun getUserAppCurrency(): ProxyFiatCurrency
-
     @Throws(IllegalStateException::class)
     suspend fun getLastTransactionHash(networkId: String, derivationPath: String?): String?
 }
