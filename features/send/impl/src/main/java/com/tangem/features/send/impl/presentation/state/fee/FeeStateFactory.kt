@@ -76,7 +76,7 @@ internal class FeeStateFactory(
             feeState = updatedState.copy(
                 notifications = feeNotificationFactory(
                     feeState = updatedState,
-                    amountValue = state.amountState?.amountValue,
+                    amountValue = state.amountState?.amountTextField?.cryptoAmount?.value,
                 ),
                 isPrimaryButtonEnabled = updatedState.isPrimaryButtonEnabled(),
             ),
@@ -92,7 +92,7 @@ internal class FeeStateFactory(
             feeState = updatedState?.copy(
                 notifications = feeNotificationFactory(
                     feeState = updatedState,
-                    amountValue = state.amountState?.amountValue,
+                    amountValue = state.amountState?.amountTextField?.cryptoAmount?.value,
                 ),
             ),
         )
@@ -119,7 +119,7 @@ internal class FeeStateFactory(
             feeState = updatedState.copy(
                 notifications = feeNotificationFactory(
                     feeState = updatedState,
-                    amountValue = state.amountState?.amountValue,
+                    amountValue = state.amountState?.amountTextField?.cryptoAmount?.value,
                 ),
                 isPrimaryButtonEnabled = updatedState.isPrimaryButtonEnabled(),
             ),
@@ -150,7 +150,7 @@ internal class FeeStateFactory(
             feeState = updatedState.copy(
                 notifications = feeNotificationFactory(
                     feeState = updatedState,
-                    amountValue = state.amountState?.amountValue,
+                    amountValue = state.amountState?.amountTextField?.cryptoAmount?.value,
                 ),
                 isPrimaryButtonEnabled = updatedState.isPrimaryButtonEnabled(),
             ),
@@ -174,7 +174,7 @@ internal class FeeStateFactory(
             feeState = updatedState.copy(
                 notifications = feeNotificationFactory(
                     feeState = updatedState,
-                    amountValue = state.amountState?.amountValue,
+                    amountValue = state.amountState?.amountTextField?.cryptoAmount?.value,
                 ),
                 isPrimaryButtonEnabled = updatedState.isPrimaryButtonEnabled(),
             ),
@@ -203,7 +203,7 @@ internal class FeeStateFactory(
 
     private fun checkAutoSubtract(state: SendUiState, fee: Fee, balance: BigDecimal): Boolean {
         val feeState = state.feeState ?: return false
-        val amountValue = state.amountState?.amountValue ?: BigDecimal.ZERO
+        val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
         val feeAmount = fee.amount.value ?: BigDecimal.ZERO
         return if (feeState.isUserSubtracted) {
             feeState.isSubtract

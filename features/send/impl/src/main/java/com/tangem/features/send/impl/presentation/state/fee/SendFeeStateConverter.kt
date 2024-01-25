@@ -1,17 +1,21 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendStates
-import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
-internal class SendFeeStateConverter(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Converter<Unit, SendStates.FeeState> {
+internal class SendFeeStateConverter : Converter<Unit, SendStates.FeeState> {
 
     override fun convert(value: Unit): SendStates.FeeState {
         return SendStates.FeeState(
-            cryptoCurrencyStatus = cryptoCurrencyStatusProvider(),
+            feeSelectorState = FeeSelectorState.Loading,
+            isSubtract = false,
+            isUserSubtracted = false,
+            fee = null,
+            receivedAmountValue = BigDecimal.ZERO,
+            receivedAmount = "",
+            notifications = persistentListOf(),
         )
     }
 }
