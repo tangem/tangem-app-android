@@ -22,6 +22,24 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.*
 import java.text.DecimalFormat
 
+/**
+ * Simple text field for amount input.
+ * Validates and trims input text using [DecimalFormat]. Formats visual output using [AmountVisualTransformation].
+ * Can display aligned placeholder and currency symbol [symbol].
+ *
+ * @param value initial text
+ * @param decimals number of decimal places
+ * @param onValueChange callback
+ * @param textStyle text and placeholder styles
+ * @param modifier modifier
+ * @param symbol currency symbol
+ * @param color text color
+ * @param placeholderAlignment alignment of placeholder
+ * @param showPlaceholder show placeholder
+ * @param keyboardOptions keyboard options
+ *
+ * @see [SimpleTextField] for standard text field
+ */
 @Composable
 fun AmountTextField(
     value: String,
