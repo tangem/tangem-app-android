@@ -43,7 +43,6 @@ class AppStateHolder @Inject constructor() : WalletsStateHolder, ReduxNavControl
     var scanResponse: ScanResponse? = null
     var mainStore: Store<AppState>? = null
     var tangemSdkManager: TangemSdkManager? = null
-    var appFiatCurrency: AppCurrency = AppCurrency.Default
     var exchangeService: ExchangeService? = null
 
     fun getActualCard(): CardDTO? {
