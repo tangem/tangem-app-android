@@ -15,24 +15,28 @@ internal class UpdateWalletManagerResultFactory {
     fun getResult(walletManager: WalletManager): UpdateWalletManagerResult.Verified {
         val wallet = walletManager.wallet
         val addresses = getAvailableAddresses(wallet.addresses)
+        val feePaidCurrency = wallet.blockchain.feePaidCurrency()
+        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses, feePaidCurrency)
 
         return UpdateWalletManagerResult.Verified(
             selectedAddress = wallet.address,
             addresses = addresses,
             currenciesAmounts = getTokensAmounts(wallet.amounts.values.toSet()),
-            currentTransactions = getCurrentTransactions(addresses, wallet.recentTransactions.toSet()),
+            currentTransactions = getCurrentTransactions(txHistoryItemConverter, wallet.recentTransactions.toSet()),
         )
     }
 
     fun getDemoResult(walletManager: WalletManager, demoAmount: Amount): UpdateWalletManagerResult.Verified {
         val wallet = walletManager.wallet
         val addresses = getAvailableAddresses(wallet.addresses)
+        val feePaidCurrency = wallet.blockchain.feePaidCurrency()
+        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(addresses, feePaidCurrency)
 
         return UpdateWalletManagerResult.Verified(
             selectedAddress = wallet.address,
             addresses = addresses,
             currenciesAmounts = getDemoTokensAmounts(demoAmount, walletManager.cardTokens),
-            currentTransactions = getCurrentTransactions(addresses, wallet.recentTransactions.toSet()),
+            currentTransactions = getCurrentTransactions(txHistoryItemConverter, wallet.recentTransactions.toSet()),
         )
     }
 
@@ -81,14 +85,19 @@ internal class UpdateWalletManagerResultFactory {
     }
 
     private fun getCurrentTransactions(
-        walletAddresses: Set<Address>,
+        txHistoryItemConverter: TransactionDataToTxHistoryItemConverter,
         recentTransactions: Set<TransactionData>,
     ): Set<CryptoCurrencyTransaction> {
         val unconfirmedTransactions = recentTransactions.filter {
             it.status == TransactionStatus.Unconfirmed
         }
 
-        return unconfirmedTransactions.mapNotNullTo(hashSetOf()) { createCurrencyTransaction(walletAddresses, it) }
+        return unconfirmedTransactions.mapNotNullTo(hashSetOf()) {
+            createCurrencyTransaction(
+                txHistoryItemConverter = txHistoryItemConverter,
+                data = it,
+            )
+        }
     }
 
     private fun createCurrencyAmount(amount: Amount): CryptoCurrencyAmount? {
@@ -106,10 +115,9 @@ internal class UpdateWalletManagerResultFactory {
     }
 
     private fun createCurrencyTransaction(
-        walletAddresses: Set<Address>,
+        txHistoryItemConverter: TransactionDataToTxHistoryItemConverter,
         data: TransactionData,
     ): CryptoCurrencyTransaction? {
-        val txHistoryItemConverter = TransactionDataToTxHistoryItemConverter(walletAddresses)
         return when (val type = data.amount.type) {
             is AmountType.Coin -> {
                 val txHistoryItem = txHistoryItemConverter.convert(data) ?: return null
