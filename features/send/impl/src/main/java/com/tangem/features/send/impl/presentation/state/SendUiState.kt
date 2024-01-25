@@ -6,8 +6,7 @@ import androidx.paging.PagingData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.event.StateEvent
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
@@ -46,15 +45,11 @@ internal sealed class SendStates {
     data class AmountState(
         override val type: SendUiStateType = SendUiStateType.Amount,
         override val isPrimaryButtonEnabled: Boolean,
-        val cryptoCurrencyStatus: CryptoCurrencyStatus,
-        val appCurrency: AppCurrency,
         val walletName: String,
-        val walletBalance: String,
+        val walletBalance: TextReference,
         val tokenIconState: TokenIconState,
-        val isFiatValue: Boolean,
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
-        val amountTextField: SendTextField.Amount,
-        val amountValue: BigDecimal,
+        val amountTextField: SendTextField.AmountField,
     ) : SendStates()
 
     /** Recipient state */
@@ -72,14 +67,13 @@ internal sealed class SendStates {
     data class FeeState(
         override val type: SendUiStateType = SendUiStateType.Fee,
         override val isPrimaryButtonEnabled: Boolean = false,
-        val cryptoCurrencyStatus: CryptoCurrencyStatus,
-        val feeSelectorState: FeeSelectorState = FeeSelectorState.Loading,
-        val isSubtract: Boolean = false,
-        val isUserSubtracted: Boolean = false,
-        val fee: Fee? = null,
-        val receivedAmountValue: BigDecimal = BigDecimal.ZERO,
-        val receivedAmount: String = "",
-        val notifications: ImmutableList<SendFeeNotification> = persistentListOf(),
+        val feeSelectorState: FeeSelectorState,
+        val isSubtract: Boolean,
+        val isUserSubtracted: Boolean,
+        val fee: Fee?,
+        val receivedAmountValue: BigDecimal,
+        val receivedAmount: String,
+        val notifications: ImmutableList<SendFeeNotification>,
     ) : SendStates()
 
     /** Send state */
