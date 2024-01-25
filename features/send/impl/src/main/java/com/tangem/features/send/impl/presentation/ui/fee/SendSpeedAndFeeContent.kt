@@ -43,10 +43,7 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
                 clickIntents = clickIntents,
             )
         }
-        customFee(
-            feeSendState = feeSendState,
-            cryptoCurrencySymbol = state.cryptoCurrencyStatus.currency.symbol,
-        )
+        customFee(feeSendState)
         notifications(notifications)
         subtractButton(
             receivedAmount = state.receivedAmount,
@@ -84,11 +81,7 @@ internal fun LazyListScope.notifications(configs: ImmutableList<SendFeeNotificat
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-internal fun LazyListScope.customFee(
-    feeSendState: FeeSelectorState,
-    cryptoCurrencySymbol: String,
-    modifier: Modifier = Modifier,
-) {
+internal fun LazyListScope.customFee(feeSendState: FeeSelectorState, modifier: Modifier = Modifier) {
     item(
         key = FEE_CUSTOM_KEY,
     ) {
@@ -104,7 +97,6 @@ internal fun LazyListScope.customFee(
                 SendCustomFeeEthereum(
                     customValues = customValues,
                     selectedFee = fee.selectedFee,
-                    symbol = cryptoCurrencySymbol,
                     modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
                 )
             }
