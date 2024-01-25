@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.di
 
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -35,6 +36,7 @@ class SwapDomainModule {
         userWalletManager: UserWalletManager,
         transactionManager: TransactionManager,
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+        getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
         getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
         quotesRepository: QuotesRepository,
@@ -49,6 +51,7 @@ class SwapDomainModule {
             repository = swapRepository,
             allowPermissionsHandler = AllowPermissionsHandlerImpl(),
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
             quotesRepository = quotesRepository,

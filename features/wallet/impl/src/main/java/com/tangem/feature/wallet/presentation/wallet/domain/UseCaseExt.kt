@@ -38,15 +38,6 @@ internal suspend fun GetPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId:
         )
 }
 
-internal suspend fun GetSelectedAppCurrencyUseCase.unwrap(): AppCurrency {
-    return this()
-        .map { maybeAppCurrency ->
-            maybeAppCurrency.getOrElse { AppCurrency.Default }
-        }
-        .firstOrNull()
-        ?: AppCurrency.Default
-}
-
 internal suspend fun GetPrimaryCurrencyStatusUpdatesUseCase.collectLatest(
     userWalletId: UserWalletId,
     onRight: suspend (CryptoCurrencyStatus) -> Unit,
