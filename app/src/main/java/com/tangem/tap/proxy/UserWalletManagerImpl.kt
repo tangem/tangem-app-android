@@ -16,7 +16,6 @@ import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.Currency.NativeToken
 import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.lib.crypto.models.ProxyAmount
-import com.tangem.lib.crypto.models.ProxyFiatCurrency
 import com.tangem.tap.userWalletsListManager
 import timber.log.Timber
 import java.math.BigDecimal

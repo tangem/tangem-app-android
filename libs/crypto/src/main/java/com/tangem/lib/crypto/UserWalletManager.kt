@@ -2,7 +2,6 @@ package com.tangem.lib.crypto
 
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.ProxyAmount
-import com.tangem.lib.crypto.models.ProxyFiatCurrency
 
 /**
  * Provider for user tokens data

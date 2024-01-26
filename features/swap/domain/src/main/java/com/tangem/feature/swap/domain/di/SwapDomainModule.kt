@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.domain.di
 
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
