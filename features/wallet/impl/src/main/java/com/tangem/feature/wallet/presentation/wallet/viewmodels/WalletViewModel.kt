@@ -609,7 +609,7 @@ internal class WalletViewModel @Inject constructor(
 
         showErrorIfDemoModeOrElse {
             reduxStateHolder.dispatch(
-                TradeCryptoAction.New.Buy(
+                TradeCryptoAction.Buy(
                     userWallet = getWallet(index = state.walletsListConfig.selectedWalletIndex),
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     appCurrencyCode = selectedAppCurrencyFlow.value.code,
@@ -623,7 +623,7 @@ internal class WalletViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrencyStatus.currency.symbol),
         )
 
-        reduxStateHolder.dispatch(TradeCryptoAction.New.Swap(cryptoCurrencyStatus.currency))
+        reduxStateHolder.dispatch(TradeCryptoAction.Swap(cryptoCurrencyStatus.currency))
     }
 
     override fun onSingleCurrencySendClick(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
@@ -641,7 +641,7 @@ internal class WalletViewModel @Inject constructor(
             val maybeFeeCurrencyStatus =
                 getFeePaidCryptoCurrencyStatusSyncUseCase(userWallet.walletId, coinStatus).getOrNull()
             reduxStateHolder.dispatch(
-                action = TradeCryptoAction.New.SendCoin(
+                action = TradeCryptoAction.SendCoin(
                     userWallet = userWallet,
                     coinStatus = coinStatus,
                     feeCurrencyStatus = maybeFeeCurrencyStatus,
@@ -665,7 +665,7 @@ internal class WalletViewModel @Inject constructor(
                 is CryptoCurrency.Coin -> {
                     uiState = stateFactory.getStateWithClosedBottomSheet()
                     reduxStateHolder.dispatch(
-                        action = TradeCryptoAction.New.SendCoin(
+                        action = TradeCryptoAction.SendCoin(
                             userWallet = userWallet,
                             coinStatus = cryptoCurrencyStatus,
                             feeCurrencyStatus = maybeFeeCurrencyStatus,
@@ -694,7 +694,7 @@ internal class WalletViewModel @Inject constructor(
                     it.onRight { coinStatus ->
                         uiState = stateFactory.getStateWithClosedBottomSheet()
                         reduxStateHolder.dispatchWithMain(
-                            action = TradeCryptoAction.New.SendToken(
+                            action = TradeCryptoAction.SendToken(
                                 userWallet = userWallet,
                                 tokenCurrency = requireNotNull(cryptoCurrencyStatus.currency as? CryptoCurrency.Token),
                                 tokenFiatRate = cryptoCurrencyStatus.value.fiatRate,
@@ -772,7 +772,7 @@ internal class WalletViewModel @Inject constructor(
 
         showErrorIfDemoModeOrElse {
             reduxStateHolder.dispatch(
-                action = TradeCryptoAction.New.Sell(
+                action = TradeCryptoAction.Sell(
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     appCurrencyCode = selectedAppCurrencyFlow.value.code,
                 ),

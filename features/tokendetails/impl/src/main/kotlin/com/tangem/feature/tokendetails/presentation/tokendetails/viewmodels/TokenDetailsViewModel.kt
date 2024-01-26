@@ -330,7 +330,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             viewModelScope.launch(dispatchers.main) {
                 reduxStateHolder.dispatch(
-                    TradeCryptoAction.New.Buy(
+                    TradeCryptoAction.Buy(
                         userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
                         cryptoCurrencyStatus = status,
                         appCurrencyCode = selectedAppCurrencyFlow.value.code,
@@ -363,7 +363,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             when (val currency = cryptoCurrencyStatus.currency) {
                 is CryptoCurrency.Coin -> {
                     reduxStateHolder.dispatch(
-                        action = TradeCryptoAction.New.SendCoin(
+                        action = TradeCryptoAction.SendCoin(
                             userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
                             coinStatus = cryptoCurrencyStatus,
                             feeCurrencyStatus = maybeFeeCurrencyStatus,
@@ -399,7 +399,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .firstOrNull()
 
             reduxStateHolder.dispatchWithMain(
-                action = TradeCryptoAction.New.SendToken(
+                action = TradeCryptoAction.SendToken(
                     userWallet = wallet,
                     tokenCurrency = tokenCurrency,
                     tokenFiatRate = tokenFiatRate,
@@ -440,7 +440,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
 
             reduxStateHolder.dispatch(
-                TradeCryptoAction.New.Sell(
+                TradeCryptoAction.Sell(
                     cryptoCurrencyStatus = status,
                     appCurrencyCode = selectedAppCurrencyFlow.value.code,
                 ),
@@ -451,7 +451,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onSwapClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrency.symbol))
 
-        reduxStateHolder.dispatch(TradeCryptoAction.New.Swap(cryptoCurrency))
+        reduxStateHolder.dispatch(TradeCryptoAction.Swap(cryptoCurrency))
     }
 
     override fun onDismissDialog() {
