@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.di
 
+import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -39,6 +40,7 @@ class SwapDomainModule {
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
         quotesRepository: QuotesRepository,
         swapTransactionRepository: SwapTransactionRepository,
+        appCurrencyRepository: AppCurrencyRepository,
         walletManagersFacade: WalletManagersFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
         initialToCurrencyResolver: InitialToCurrencyResolver,
@@ -55,6 +57,7 @@ class SwapDomainModule {
             walletManagersFacade = walletManagersFacade,
             dispatcher = coroutineDispatcherProvider,
             swapTransactionRepository = swapTransactionRepository,
+            appCurrencyRepository = appCurrencyRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
         )
     }
