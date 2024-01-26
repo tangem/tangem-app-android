@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
+import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -51,18 +52,22 @@ internal class SwapInteractorImpl @Inject constructor(
     private val repository: SwapRepository,
     private val allowPermissionsHandler: AllowPermissionsHandler,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val quotesRepository: QuotesRepository,
     private val dispatcher: CoroutineDispatcherProvider,
     private val swapTransactionRepository: SwapTransactionRepository,
+    private val appCurrencyRepository: AppCurrencyRepository,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
 ) : SwapInteractor {
 
     private val estimateFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
         EstimateFeeUseCase(walletManagersFacade, dispatcher)
+    }
+
+    private val getSelectedAppCurrencyUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        GetSelectedAppCurrencyUseCase(appCurrencyRepository)
     }
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
