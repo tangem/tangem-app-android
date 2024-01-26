@@ -7,7 +7,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.*
+import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonDefaults
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
@@ -210,7 +212,7 @@ private fun TangemDialog(
             modifier = Modifier
                 .background(
                     shape = TangemTheme.shapes.roundedCornersLarge,
-                    color = TangemTheme.colors.background.plain,
+                    color = TangemTheme.colors.background.primary,
                 )
                 .padding(vertical = TangemTheme.dimens.spacing24),
         ) {
@@ -386,7 +388,7 @@ private fun SelectorDialogContent(
                     selected = index == selectedItemIndex,
                     onClick = onClick,
                     colors = RadioButtonDefaults.colors(
-                        selectedColor = TangemTheme.colors.icon.accent,
+                        selectedColor = TangemTheme.colors.control.checked,
                         unselectedColor = TangemTheme.colors.icon.secondary,
                     ),
                     interactionSource = interactionSource,
