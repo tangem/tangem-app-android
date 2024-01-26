@@ -52,7 +52,7 @@ object TradeCryptoMiddleware {
 
         when (action) {
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
-            is TradeCryptoAction.Buy -> proceedNewBuyAction(state, action)
+            is TradeCryptoAction.Buy -> proceedBuyAction(state, action)
             is TradeCryptoAction.Sell -> proceedSellAction(action)
             is TradeCryptoAction.Swap -> openSwap(
                 currency = action.cryptoCurrency,
@@ -62,7 +62,7 @@ object TradeCryptoMiddleware {
         }
     }
 
-    private fun proceedNewBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
+    private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
         val networkAddress = action.cryptoCurrencyStatus.value.networkAddress
             ?.defaultAddress
             ?.let(NetworkAddress.Address::value)
