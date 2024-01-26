@@ -646,8 +646,8 @@ internal class SwapInteractorImpl @Inject constructor(
             type = AmountType.Coin,
         )
 
-        return when (blockchain) {
-            Blockchain.Ethereum -> {
+        return when {
+            blockchain.isEvm() -> {
                 val feeAmountWithDecimals = feeAmountValue.movePointRight(fee.decimals)
                 Fee.Ethereum(
                     amount = feeAmount,
@@ -655,12 +655,12 @@ internal class SwapInteractorImpl @Inject constructor(
                     gasPrice = (feeAmountWithDecimals / fee.gasLimit.toBigDecimal()).toBigInteger(),
                 )
             }
-            Blockchain.Vechain -> Fee.Vechain(
+            blockchain == Blockchain.Vechain -> Fee.Vechain(
                 amount = feeAmount,
                 gasPriceCoef = Fee.Vechain.getGasPriceCoef(fee.gasLimit.toLong(), fee.feeValue),
                 gasLimit = fee.gasLimit.toLong(),
             )
-            Blockchain.Aptos -> {
+            blockchain == Blockchain.Aptos -> {
                 Fee.Aptos(
                     amount = feeAmount,
                     gasUnitPrice = fee.feeValue.toLong() / fee.gasLimit,
