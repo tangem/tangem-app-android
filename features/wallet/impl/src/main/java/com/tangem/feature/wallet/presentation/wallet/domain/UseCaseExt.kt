@@ -1,9 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import arrow.core.Either
-import arrow.core.getOrElse
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -36,15 +33,6 @@ internal suspend fun GetPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId:
             },
             ifRight = { it },
         )
-}
-
-internal suspend fun GetSelectedAppCurrencyUseCase.unwrap(): AppCurrency {
-    return this()
-        .map { maybeAppCurrency ->
-            maybeAppCurrency.getOrElse { AppCurrency.Default }
-        }
-        .firstOrNull()
-        ?: AppCurrency.Default
 }
 
 internal suspend fun GetPrimaryCurrencyStatusUpdatesUseCase.collectLatest(
