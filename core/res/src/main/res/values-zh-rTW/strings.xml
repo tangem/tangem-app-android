@@ -425,7 +425,7 @@
     <string name="wallet_connect_service_no_chain_id">Dapp 沒有提供必要的數據來建立 WalletConnect 連接</string>
     <string name="wallet_connect_session_not_found">找不到請求的連接</string>
     <string name="wallet_connect_sessions_title">WalletConnect 連接</string>
-    <string name="wallet_connect_subtitle">連結到Dapps</string>
+    <string name="wallet_connect_subtitle">連結到dApps</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_transaction_signed">交易已成功簽署並發送至 Dapp</string>
     <string name="wallet_connect_transaction_signed_and_send">交易已成功簽署並發送至區塊鏈</string>
