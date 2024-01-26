@@ -649,7 +649,8 @@ internal class SwapInteractorImpl @Inject constructor(
             }
             Blockchain.Vechain -> Fee.Vechain(
                 amount = feeAmount,
-                gasPriceCoef = fee.gasLimit,
+                gasPriceCoef = Fee.Vechain.getGasPriceCoef(fee.gasLimit.toLong(), fee.feeValue),
+                gasLimit = fee.gasLimit.toLong(),
             )
             Blockchain.Aptos -> {
                 Fee.Aptos(
@@ -1345,7 +1346,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return when (this) {
             is Fee.Common -> 0
             is Fee.Ethereum -> gasLimit.toInt()
-            is Fee.Vechain -> gasPriceCoef
+            is Fee.Vechain -> gasLimit.toInt()
             is Fee.Aptos -> amount.longValue?.div(gasUnitPrice)?.toInt() ?: 0
         }
     }
