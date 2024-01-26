@@ -16,13 +16,11 @@ import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.Currency.NativeToken
 import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.lib.crypto.models.ProxyAmount
-import com.tangem.lib.crypto.models.ProxyFiatCurrency
 import com.tangem.tap.userWalletsListManager
 import timber.log.Timber
 import java.math.BigDecimal
 
 class UserWalletManagerImpl(
-    private val appStateHolder: AppStateHolder,
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
     private val userWalletsStore: UserWalletsStore,
@@ -169,15 +167,6 @@ class UserWalletManagerImpl(
     override fun getNetworkCurrency(networkId: String): String {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         return blockchain.currency
-    }
-
-    override fun getUserAppCurrency(): ProxyFiatCurrency {
-        val appCurrency = appStateHolder.appFiatCurrency
-        return ProxyFiatCurrency(
-            code = appCurrency.code,
-            name = appCurrency.name,
-            symbol = appCurrency.symbol,
-        )
     }
 
     @Throws(IllegalArgumentException::class)
