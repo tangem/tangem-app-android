@@ -7,6 +7,9 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.extenstions.unwrap
+import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -55,11 +58,16 @@ internal class SwapInteractorImpl @Inject constructor(
     private val quotesRepository: QuotesRepository,
     private val dispatcher: CoroutineDispatcherProvider,
     private val swapTransactionRepository: SwapTransactionRepository,
+    private val appCurrencyRepository: AppCurrencyRepository,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
 ) : SwapInteractor {
 
     private val estimateFeeUseCase by lazy(LazyThreadSafetyMode.NONE) {
         EstimateFeeUseCase(walletManagersFacade, dispatcher)
+    }
+
+    private val getSelectedAppCurrencyUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        GetSelectedAppCurrencyUseCase(appCurrencyRepository)
     }
 
     private val swapCurrencyConverter = SwapCurrencyConverter()
@@ -755,8 +763,8 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    private fun createEmptyAmountState(): SwapState {
-        val appCurrency = userWalletManager.getUserAppCurrency()
+    private suspend fun createEmptyAmountState(): SwapState {
+        val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         return SwapState.EmptyAmountState(
             zeroAmountEquivalent = BigDecimal.ZERO.toFiatString(
                 rateValue = BigDecimal.ONE,
@@ -948,7 +956,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private suspend fun getFormattedFiatFees(networkId: String, vararg fees: BigDecimal): List<String> {
-        val appCurrency = userWalletManager.getUserAppCurrency()
+        val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         val nativeToken = repository.getNativeTokenForNetwork(networkId)
         val rates = getQuotes(nativeToken.id)
         return rates[nativeToken.id]?.fiatRate?.let { rate ->
