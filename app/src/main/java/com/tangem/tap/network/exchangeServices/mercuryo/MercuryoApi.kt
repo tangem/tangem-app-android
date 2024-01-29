@@ -22,20 +22,16 @@ data class MercuryoCurrenciesResponse(
     )
 
     data class Config(
-        val base: Map<String, String>,
-        @Json(name = "has_withdrawal_fee")
-        val hasWithdrawalFee: Map<String, Boolean>,
-        @Json(name = "display_options")
-        val displayOptions: Map<String, DisplayOption>,
-        val icons: Map<String, Any>,
+        @Json(name = "crypto_currencies")
+        val cryptoCurrencies: List<MercuryoCryptoCurrency>,
     )
 
-    data class DisplayOption(
-        @Json(name = "fullname")
-        val fullName: String,
-        @Json(name = "total_digits")
-        val totalDigits: Int,
-        @Json(name = "display_digits")
-        val displayDigits: Int,
+    data class MercuryoCryptoCurrency(
+        @Json(name = "currency")
+        val currencySymbol: String,
+        @Json(name = "network")
+        val network: String,
+        @Json(name = "contract")
+        val contractAddress: String,
     )
 }
