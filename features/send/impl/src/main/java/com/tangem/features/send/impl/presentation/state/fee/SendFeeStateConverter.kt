@@ -10,6 +10,7 @@ internal class SendFeeStateConverter : Converter<Unit, SendStates.FeeState> {
     override fun convert(value: Unit): SendStates.FeeState {
         return SendStates.FeeState(
             feeSelectorState = FeeSelectorState.Loading,
+            isSubtractAvailable = false,
             isSubtract = false,
             isUserSubtracted = false,
             fee = null,
