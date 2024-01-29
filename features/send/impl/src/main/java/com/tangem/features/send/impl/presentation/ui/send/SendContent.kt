@@ -17,16 +17,17 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
-import com.tangem.blockchain.extensions.toBigDecimalOrDefault
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImage
 import com.tangem.core.ui.components.inputrow.InputRowRecipientDefault
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatCryptoAmount
+import com.tangem.domain.tokens.model.AmountType
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendStates
@@ -61,7 +62,7 @@ internal fun SendContent(uiState: SendUiState) {
                 AnimatedVisibility(visible = !isSuccess) {
                     FromWallet(
                         walletName = amountState.walletName,
-                        walletBalance = amountState.walletBalance,
+                        walletBalance = amountState.walletBalance.resolveReference(),
                     )
                 }
                 AmountBlock(
@@ -122,13 +123,14 @@ private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: Boolean,
     val amount = amountState.amountTextField
 
     val cryptoAmount = formatCryptoAmount(
-        cryptoCurrency = amountState.cryptoCurrencyStatus.currency,
-        cryptoAmount = amount.value.toBigDecimalOrDefault(),
+        cryptoAmount = amount.cryptoAmount.value,
+        cryptoCurrency = amount.cryptoAmount.currencySymbol,
+        decimals = amount.cryptoAmount.decimals,
     )
     val fiatAmount = BigDecimalFormatter.formatFiatAmount(
-        fiatAmount = amount.fiatValue.toBigDecimalOrDefault(),
-        fiatCurrencyCode = amountState.appCurrency.code,
-        fiatCurrencySymbol = amountState.appCurrency.symbol,
+        fiatAmount = amount.fiatAmount.value,
+        fiatCurrencyCode = (amount.fiatAmount.type as AmountType.FiatType).code,
+        fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
     )
     InputRowImage(
         title = TextReference.Res(R.string.send_amount_label),
