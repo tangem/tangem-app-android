@@ -68,6 +68,7 @@ internal sealed class SendStates {
         override val type: SendUiStateType = SendUiStateType.Fee,
         override val isPrimaryButtonEnabled: Boolean = false,
         val feeSelectorState: FeeSelectorState,
+        val isSubtractAvailable: Boolean,
         val isSubtract: Boolean,
         val isUserSubtracted: Boolean,
         val fee: Fee?,
