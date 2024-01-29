@@ -14,6 +14,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
+import com.tangem.features.send.impl.presentation.state.amount.SendAmountCurrencyConverter
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
@@ -39,8 +40,25 @@ internal class SendStateFactory(
 ) {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
-    private val amountFieldConverter by lazy { SendAmountFieldConverter(clickIntents) }
-    private val amountFieldChangeConverter by lazy { SendAmountFieldChangeConverter(currentStateProvider) }
+    private val amountFieldConverter by lazy {
+        SendAmountFieldConverter(
+            clickIntents = clickIntents,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            appCurrencyProvider = appCurrencyProvider,
+        )
+    }
+    private val amountFieldChangeConverter by lazy {
+        SendAmountFieldChangeConverter(
+            currentStateProvider = currentStateProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
+    private val amountCurrencyConverter by lazy {
+        SendAmountCurrencyConverter(
+            currentStateProvider = currentStateProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
 
     private val amountStateConverter by lazy {
         SendAmountStateConverter(
@@ -57,11 +75,7 @@ internal class SendStateFactory(
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
-    private val feeStateConverter by lazy {
-        SendFeeStateConverter(
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-        )
-    }
+    private val feeStateConverter by lazy { SendFeeStateConverter() }
 
     private val recipientListStateConverter by lazy {
         SendRecipientListConverter(
@@ -90,16 +104,7 @@ internal class SendStateFactory(
     //region amount state clicks
     fun getOnAmountValueChange(value: String) = amountFieldChangeConverter.convert(value)
 
-    fun getOnCurrencyChangedState(isFiat: Boolean): SendUiState {
-        val state = currentStateProvider()
-        val amountState = state.amountState ?: return state
-
-        return if (amountState.isFiatValue == isFiat) {
-            state
-        } else {
-            return state.copy(amountState = amountState.copy(isFiatValue = isFiat))
-        }
-    }
+    fun getOnCurrencyChangedState(isFiat: Boolean) = amountCurrencyConverter.convert(isFiat)
     //endregion
 
     //region recipient
