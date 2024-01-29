@@ -22,9 +22,9 @@ data class FoundToken(
     /**
      * Found token network
      *
-     * @property id           id
-     * @property address      address
-     * @property decimalCount decimal count
+     * @property id              id
+     * @property contractAddress address
+     * @property decimalCount    decimal count
      */
-    data class Network(val id: String, val address: String, val decimalCount: String)
+    data class Network(val id: String, val contractAddress: String, val decimalCount: String)
 }
