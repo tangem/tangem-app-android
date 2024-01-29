@@ -10,7 +10,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.domain.tokens.models)
 
     /** AndroidX */
     implementation(deps.androidx.fragment.ktx)
