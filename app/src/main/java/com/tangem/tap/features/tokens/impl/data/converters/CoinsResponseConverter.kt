@@ -3,7 +3,6 @@ package com.tangem.tap.features.tokens.impl.data.converters
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.utils.converter.Converter
 
@@ -26,7 +25,8 @@ internal object CoinsResponseConverter : Converter<CoinsResponse, List<Token>> {
                 networks = token.networks.mapNotNull { network ->
                     val blockchain = Blockchain.fromNetworkId(network.networkId) ?: return@mapNotNull null
 
-                    if (network.networkId != blockchain.toNetworkId() &&
+                    // filter tokens, if contractAddress != null, assume that it is a token
+                    if (network.contractAddress != null &&
                         !blockchain.canHandleTokens()
                     ) {
                         return@mapNotNull null
