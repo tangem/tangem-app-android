@@ -3,48 +3,49 @@ package com.tangem.features.send.impl.presentation.ui.amount
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomCenter
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
-import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
+import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.defaultFormat
+import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 
 @Composable
-internal fun ColumnScope.AmountField(
-    sendField: SendTextField.Amount,
-    cryptoSymbol: String,
-    fiatSymbol: String,
-    isFiat: Boolean,
-) {
-    val value = if (isFiat) sendField.fiatValue else sendField.value
-    val secondaryValue = if (!isFiat) sendField.fiatValue else sendField.value
-    val symbol = if (isFiat) fiatSymbol else cryptoSymbol
-    val secondarySymbol = if (!isFiat) fiatSymbol else cryptoSymbol
+internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) {
+    val decimalFormat = rememberDecimalFormat()
+    val (primaryValue, secondaryValue) = if (isFiat) {
+        sendField.fiatValue to sendField.value
+    } else {
+        sendField.value to sendField.fiatValue
+    }
 
-    AmountFieldInner(
-        value = value,
-        placeholder = sendField.placeholder,
-        symbol = symbol,
+    val (primaryAmount, secondaryAmount) = if (!isFiat) {
+        sendField.cryptoAmount to sendField.fiatAmount
+    } else {
+        sendField.fiatAmount to sendField.cryptoAmount
+    }
+
+    AmountTextField(
+        value = primaryValue,
+        decimals = primaryAmount.decimals,
+        symbol = primaryAmount.currencySymbol,
         onValueChange = sendField.onValueChange,
         keyboardOptions = sendField.keyboardOptions,
+        textStyle = TangemTheme.typography.h2.copy(
+            color = TangemTheme.colors.text.primary1,
+            textAlign = TextAlign.Center,
+        ),
+        placeholderAlignment = TopCenter,
         modifier = Modifier
-            .align(CenterHorizontally)
             .padding(
                 top = TangemTheme.dimens.spacing24,
                 start = TangemTheme.dimens.spacing12,
@@ -54,15 +55,15 @@ internal fun ColumnScope.AmountField(
 
     Box(
         modifier = Modifier
-            .align(CenterHorizontally)
             .padding(
                 top = TangemTheme.dimens.spacing8,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
             ),
     ) {
+        val text = "${secondaryValue.ifEmpty { decimalFormat.defaultFormat() }}  ${secondaryAmount.currencySymbol}"
         Text(
-            text = "$secondaryValue $secondarySymbol",
+            text = text,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
@@ -78,47 +79,6 @@ internal fun ColumnScope.AmountField(
                 .padding(bottom = TangemTheme.dimens.spacing12),
         )
     }
-}
-
-@Composable
-private fun AmountFieldInner(
-    value: String,
-    placeholder: TextReference,
-    symbol: String,
-    onValueChange: (String) -> Unit,
-    keyboardOptions: KeyboardOptions,
-    modifier: Modifier = Modifier,
-) {
-    val focusRequester = remember { FocusRequester() }
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier
-            .focusRequester(focusRequester)
-            .background(TangemTheme.colors.background.action),
-        textStyle = TangemTheme.typography.h2.copy(
-            color = TangemTheme.colors.text.primary1,
-            textAlign = TextAlign.Center,
-        ),
-        keyboardOptions = keyboardOptions,
-        singleLine = true,
-        visualTransformation = AmountVisualTransformation(symbol),
-        decorationBox = { innerTextField ->
-            Box {
-                if (value.isBlank()) {
-                    Text(
-                        text = "${placeholder.resolveReference()} $symbol",
-                        style = TangemTheme.typography.h2,
-                        color = TangemTheme.colors.text.disabled,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter),
-                    )
-                }
-                innerTextField()
-            }
-        },
-    )
 }
 
 @Composable
