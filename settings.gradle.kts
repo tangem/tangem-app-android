@@ -70,6 +70,7 @@ include(":core:navigation")
 include(":core:res")
 include(":core:ui")
 include(":core:utils")
+include(":core:deep-links")
 // endregion Core modules
 
 // region Libs modules
