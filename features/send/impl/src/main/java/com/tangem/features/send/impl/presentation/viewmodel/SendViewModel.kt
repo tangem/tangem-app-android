@@ -11,6 +11,8 @@ import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.extensions.isZero
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.redux.LegacyAction
@@ -351,12 +353,15 @@ internal class SendViewModel @Inject constructor(
 
     override fun onMaxValueClick() {
         val amountState = uiState.amountState ?: return
-        val amount = if (amountState.isFiatValue) {
-            amountState.cryptoCurrencyStatus.value.fiatAmount
+        val amountTextField = amountState.amountTextField
+        val (amount, decimals) = if (amountTextField.isFiatValue) {
+            cryptoCurrencyStatus.value.fiatAmount to amountTextField.fiatAmount.decimals
         } else {
-            amountState.cryptoCurrencyStatus.value.amount
+            cryptoCurrencyStatus.value.amount to amountTextField.cryptoAmount.decimals
         }
-        onAmountValueChange(amount?.toPlainString() ?: DEFAULT_VALUE)
+        if (amount != null && !amount.isZero()) {
+            onAmountValueChange(amount.parseBigDecimal(decimals))
+        }
     }
     // endregion
 
@@ -451,7 +456,7 @@ internal class SendViewModel @Inject constructor(
     private suspend fun callFeeUseCase(): Either<GetFeeError, TransactionFee>? {
         val amountState = uiState.amountState ?: return null
         val recipientState = uiState.recipientState ?: return null
-        val amount = amountState.amountTextField.value.toBigDecimal()
+        val amount = amountState.amountTextField.cryptoAmount.value ?: return null
 
         return getFeeUseCase.invoke(
             amount = amount,
@@ -495,7 +500,7 @@ internal class SendViewModel @Inject constructor(
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
         val memo = uiState.recipientState?.memoTextField?.value
         val fee = feeSelectorState.getFee()
-        val amountValue = uiState.amountState?.amountValue ?: return
+        val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
 
         val amountToSend = if (feeState.isSubtract) feeState.receivedAmountValue else amountValue
 
@@ -616,7 +621,6 @@ internal class SendViewModel @Inject constructor(
 
     companion object {
         private const val XRP_X_ADDRESS = 'X'
-        private const val DEFAULT_VALUE = "0.00"
         private const val CHECK_FEE_UPDATE_DELAY = 60_000L
         private const val BALANCE_UPDATE_DELAY = 10_000L
     }
