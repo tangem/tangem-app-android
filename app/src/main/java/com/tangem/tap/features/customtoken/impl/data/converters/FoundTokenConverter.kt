@@ -20,7 +20,7 @@ object FoundTokenConverter : Converter<CoinsResponse.Coin, FoundToken> {
             network = value.networks.firstOrNull()?.let { network ->
                 FoundToken.Network(
                     id = network.networkId,
-                    address = requireNotNull(network.contractAddress),
+                    contractAddress = requireNotNull(network.contractAddress),
                     decimalCount = requireNotNull(network.decimalCount).toString(),
                 )
             } ?: error("Found token networks is empty"),
