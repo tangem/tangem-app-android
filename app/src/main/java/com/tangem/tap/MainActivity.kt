@@ -23,9 +23,9 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.feature.qrscanning.QrScanningRouter
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.event.StateEvent
@@ -36,6 +36,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
@@ -138,6 +139,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var qrScanningRouter: QrScanningRouter
 
+    @Inject
+    lateinit var deepLinksRegistry: DeepLinksRegistry
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -167,6 +171,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         checkForNotificationPermission()
         observeStateUpdates()
+
+        if (intent != null) {
+            deepLinksRegistry.launch(intent)
+        }
     }
 
     private fun observeStateUpdates() {
@@ -331,6 +339,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         lifecycleScope.launch {
             intentProcessor.handleIntent(intent)
+        }
+
+        if (intent != null) {
+            deepLinksRegistry.launch(intent)
         }
     }
 
