@@ -548,7 +548,17 @@ internal class StateBuilder(
                         id = R.string.warning_express_too_minimal_amount_title,
                         formatArgs = wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
-                    subtitle = resourceReference(R.string.warning_express_too_minimal_amount_description),
+                    subtitle = resourceReference(R.string.warning_express_wrong_amount_description),
+                    iconResId = R.drawable.ic_alert_circle_24,
+                ),
+            )
+            is DataError.ExchangeTooBigAmountError -> SwapWarning.GeneralError(
+                notificationConfig = NotificationConfig(
+                    title = resourceReference(
+                        id = R.string.warning_express_too_maximum_amount_title,
+                        formatArgs = wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                    ),
+                    subtitle = resourceReference(R.string.warning_express_wrong_amount_description),
                     iconResId = R.drawable.ic_alert_circle_24,
                 ),
             )
