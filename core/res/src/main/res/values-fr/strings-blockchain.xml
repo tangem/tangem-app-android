@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="common_fee_error">Échec de réception des commissions</string>
+  <string name="no_account_bnb">Pour créer un compte, envoyez des fonds monétaires à cette adresse</string>
   <string name="send_error_dust_amount_format">Le montant minimal est de %s</string>
   <string name="send_error_dust_change">Le reste est trop petit</string>
   <string name="send_error_invalid_fee_value">Commission non valide</string>
