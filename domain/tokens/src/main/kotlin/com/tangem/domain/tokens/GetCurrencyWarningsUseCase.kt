@@ -200,7 +200,8 @@ class GetCurrencyWarningsUseCase(
             }
             feePaidCurrency is FeePaidCurrency.Token -> {
                 val feePaidTokenBalance = feePaidCurrency.balance
-                if (!tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()) {
+                val amount = tokenStatus.value.amount ?: return null
+                if (!amount.isZero() && feePaidTokenBalance.isZero()) {
                     constructTokenBalanceNotEnoughWarning(
                         userWalletId = userWalletId,
                         tokenStatus = tokenStatus,
@@ -222,7 +223,9 @@ class GetCurrencyWarningsUseCase(
         val token = currenciesRepository
             .getMultiCurrencyWalletCurrenciesSync(userWalletId)
             .find {
-                it is CryptoCurrency.Token && it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true)
+                it is CryptoCurrency.Token &&
+                    it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
+                    it.network.derivationPath == tokenStatus.currency.network.derivationPath
             }
         return if (token != null) {
             CryptoCurrencyWarning.CustomTokenNotEnoughForFee(
