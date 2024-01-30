@@ -91,7 +91,11 @@ internal object AddCustomTokenPreviewData {
             ),
             form = createDefaultForm(),
             warnings = createWarnings(),
-            floatingButton = AddCustomTokenFloatingButton(isEnabled = false, onClick = {}),
+            floatingButton = AddCustomTokenFloatingButton(
+                isEnabled = false,
+                showProgress = false,
+                onClick = {}
+            ),
             testBlock = AddCustomTokenTestBlock(
                 chooseTokenButtonText = "Choose token",
                 clearButtonText = "Clear address",
@@ -112,7 +116,10 @@ internal object AddCustomTokenPreviewData {
             ),
             form = createDefaultForm(),
             warnings = createWarnings(),
-            floatingButton = AddCustomTokenFloatingButton(isEnabled = false, onClick = {}),
+            floatingButton = AddCustomTokenFloatingButton(
+                isEnabled = false,
+                showProgress = false,
+                onClick = {}),
         )
     }
 }
