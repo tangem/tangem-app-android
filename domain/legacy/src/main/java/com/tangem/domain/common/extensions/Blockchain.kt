@@ -225,6 +225,7 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
         Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
         Blockchain.XRP -> BigDecimal.TEN
         Blockchain.Near, Blockchain.NearTestnet -> 0.00182.toBigDecimal()
+        Blockchain.Aptos, Blockchain.AptosTestnet -> BigDecimal.ZERO
         else -> null
     }
 }
@@ -239,4 +240,5 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
+    Blockchain.Aptos,
 )
