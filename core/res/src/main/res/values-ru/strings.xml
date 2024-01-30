@@ -232,6 +232,7 @@
     <string name="express_provider">Провайдер</string>
     <string name="express_provider_best_rate">Лучший курс</string>
     <string name="express_provider_min_amount">Доступно с %s</string>
+    <string name="express_provider_max_amount">Доступно до %s</string>
     <string name="express_provider_not_available">Недоступно для этой пары</string>
     <string name="express_provider_permission_needed">Требуется разрешение</string>
     <string name="express_terms_of_use">Условиями использования</string>

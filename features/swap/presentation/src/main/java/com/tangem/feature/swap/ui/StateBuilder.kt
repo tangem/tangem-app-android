@@ -534,6 +534,16 @@ internal class StateBuilder(
                     onProviderClick = onProviderClick,
                 )
             }
+            is DataError.ExchangeTooBigAmountError -> {
+                swapProvider.convertToAvailableFromProviderState(
+                    alertText = resourceReference(
+                        R.string.express_provider_max_amount,
+                        wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                    ),
+                    selectionType = selectionType,
+                    onProviderClick = onProviderClick,
+                )
+            }
             else -> {
                 ProviderState.Empty()
             }
