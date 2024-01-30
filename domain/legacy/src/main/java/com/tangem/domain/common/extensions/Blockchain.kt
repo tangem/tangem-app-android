@@ -76,8 +76,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "decimal/test" -> Blockchain.DecimalTestnet
         "xdc-network" -> Blockchain.XDC
         "xdc-network/test" -> Blockchain.XDCTestnet
-        "vechain" -> Blockchain.Vechain
-        "vechain/test" -> Blockchain.VechainTestnet
+        "vechain" -> Blockchain.VeChain
+        "vechain/test" -> Blockchain.VeChainTestnet
         "aptos" -> Blockchain.Aptos
         "aptos/test" -> Blockchain.AptosTestnet
         else -> null
@@ -157,8 +157,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.DecimalTestnet -> "decimal/test"
         Blockchain.XDC -> "xdc-network"
         Blockchain.XDCTestnet -> "xdc-network/test"
-        Blockchain.Vechain -> "vechain"
-        Blockchain.VechainTestnet -> "vechain/test"
+        Blockchain.VeChain -> "vechain"
+        Blockchain.VeChainTestnet -> "vechain/test"
         Blockchain.Aptos -> "aptos"
         Blockchain.AptosTestnet -> "aptos/test"
     }
@@ -209,7 +209,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.NearTestnet -> "near/test"
         Blockchain.Decimal, Blockchain.DecimalTestnet -> "decimal"
         Blockchain.XDC, Blockchain.XDCTestnet -> "xdce-crowd-sale"
-        Blockchain.Vechain, Blockchain.VechainTestnet -> "vechain"
+        Blockchain.VeChain, Blockchain.VeChainTestnet -> "vechain"
         Blockchain.Aptos -> "aptos"
         Blockchain.AptosTestnet -> "aptos/test"
         Blockchain.Unknown -> "unknown"
