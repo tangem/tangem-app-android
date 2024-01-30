@@ -32,6 +32,7 @@ internal fun AddCustomTokenFloatingButton(model: AddCustomTokenFloatingButton, m
         text = stringResource(id = R.string.custom_token_add_token),
         iconResId = R.drawable.ic_plus_24,
         enabled = model.isEnabled,
+        showProgress = model.showProgress,
         onClick = model.onClick,
     )
 }
@@ -48,7 +49,7 @@ private fun Preview_AddCustomTokenFloatingButton(
 
 private class AddCustomTokenFloatingButtonProvider : CollectionPreviewParameterProvider<AddCustomTokenFloatingButton>(
     listOf(
-        AddCustomTokenFloatingButton(isEnabled = true, onClick = {}),
-        AddCustomTokenFloatingButton(isEnabled = false, onClick = {}),
+        AddCustomTokenFloatingButton(isEnabled = true, showProgress = false, onClick = {}),
+        AddCustomTokenFloatingButton(isEnabled = false, showProgress = false, onClick = {}),
     ),
 )
