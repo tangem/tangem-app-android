@@ -1,5 +1,6 @@
 package com.tangem.data.tokens.repository
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
@@ -7,6 +8,7 @@ import com.tangem.data.tokens.utils.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -66,6 +68,11 @@ internal class DefaultNetworksRepository(
     ): Set<NetworkStatus> = withContext(dispatchers.io) {
         fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
         networksStatusesStore.getSyncOrNull(userWalletId).orEmpty()
+    }
+
+    override fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean {
+        val blockchain = Blockchain.fromNetworkId(network.id.value)
+        return blockchain == Blockchain.Aptos
     }
 
     private suspend fun fetchNetworksStatusesIfCacheExpired(
