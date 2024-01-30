@@ -43,4 +43,6 @@ interface NetworksRepository {
         networks: Set<Network>,
         refresh: Boolean,
     ): Set<NetworkStatus>
+
+    fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean
 }
