@@ -313,7 +313,12 @@ internal sealed class AddCustomTokenWarning(val description: TextReference) {
 /**
  * Floating button of add custom token screen
  *
- * @property isEnabled button availability
- * @property onClick   lambda be invoked when button is been pressed
+ * @property isEnabled    button availability
+ * @property showProgress whether circle progress indication is enabled
+ * @property onClick      lambda be invoked when button is been pressed
  */
-internal data class AddCustomTokenFloatingButton(val isEnabled: Boolean, val onClick: () -> Unit)
+internal data class AddCustomTokenFloatingButton(
+    val isEnabled: Boolean,
+    val showProgress: Boolean,
+    val onClick: () -> Unit
+)
