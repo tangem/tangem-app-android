@@ -11,7 +11,7 @@ internal class ErrorsDataConverter(
     private val jsonAdapter: JsonAdapter<ExpressErrorResponse>,
 ) : Converter<String, DataError> {
 
-    @Suppress("MagicNumber")
+    @Suppress("MagicNumber", "CyclomaticComplexMethod")
     override fun convert(value: String): DataError {
         try {
             val error = jsonAdapter.fromJson(value)?.error ?: return DataError.UnknownError
