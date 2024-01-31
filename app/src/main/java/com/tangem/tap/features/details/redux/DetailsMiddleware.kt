@@ -7,6 +7,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.extensions.TextReference
@@ -22,8 +23,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.isLockedSync
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
-import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -48,6 +47,7 @@ import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
+import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
 
 class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
@@ -522,7 +522,6 @@ class DetailsMiddleware {
             onWalletNotCreated = {
                 // No need to rollback policy, continue with the policy set before the card scan
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
-                store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
             },
             disclaimerWillShow = {
                 store.dispatchOnMain(NavigationAction.PopBackTo())
