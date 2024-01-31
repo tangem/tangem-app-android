@@ -7,6 +7,7 @@ import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
@@ -118,25 +119,37 @@ internal class FeeNotificationFactory(
                 add(
                     SendFeeNotification.Error.ExceedsBalance(
                         warning.coinCurrency.networkIconResId,
-                    ) {
-                        clickIntents.onTokenDetailsClick(
-                            userWalletProvider().walletId,
-                            warning.coinCurrency,
-                        )
-                    },
+                        networkName = warning.coinCurrency.name,
+                        currencyName = cryptoCurrencyStatus.currency.name,
+                        feeName = warning.coinCurrency.name,
+                        feeSymbol = warning.coinCurrency.symbol,
+                        onClick = {
+                            clickIntents.onTokenDetailsClick(
+                                userWalletId = userWalletId,
+                                currency = warning.coinCurrency,
+                            )
+                        },
+                    ),
                 )
             }
             is CryptoCurrencyWarning.CustomTokenNotEnoughForFee -> {
-                val currency = warning.feeCurrency ?: warning.currency
+                val currency = warning.feeCurrency
                 add(
                     SendFeeNotification.Error.ExceedsBalance(
-                        currency.networkIconResId,
-                    ) {
-                        clickIntents.onTokenDetailsClick(
-                            userWalletId,
-                            currency,
-                        )
-                    },
+                        networkIconId = currency?.networkIconResId ?: R.drawable.ic_alert_24,
+                        currencyName = warning.currency.name,
+                        feeName = warning.feeCurrencyName,
+                        feeSymbol = warning.feeCurrencySymbol,
+                        networkName = warning.networkName,
+                        onClick = currency?.let {
+                            {
+                                clickIntents.onTokenDetailsClick(
+                                    userWalletId,
+                                    currency,
+                                )
+                            }
+                        },
+                    ),
                 )
             }
             else -> Unit
