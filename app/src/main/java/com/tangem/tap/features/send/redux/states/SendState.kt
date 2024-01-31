@@ -102,8 +102,6 @@ data class SendState(
 
     fun coinIsConvertible(): Boolean = coinConverter != null
     fun tokenIsConvertible(): Boolean = tokenConverter != null
-
-    fun currencyIsConvertible(): Boolean = coinConverter != null || tokenConverter != null
     fun feeIsConvertible(): Boolean = customFeeConverter != null
 
     fun mainCurrencyCanBeSwitched(): Boolean {
