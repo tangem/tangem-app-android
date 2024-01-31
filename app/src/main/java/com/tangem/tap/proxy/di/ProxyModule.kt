@@ -30,13 +30,11 @@ internal object ProxyModule {
     @Provides
     @Singleton
     fun provideUserWalletManager(
-        appStateHolder: AppStateHolder,
         walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
         userWalletsStore: UserWalletsStore,
     ): UserWalletManager {
         return UserWalletManagerImpl(
-            appStateHolder = appStateHolder,
             walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
             userWalletsStore = userWalletsStore,
