@@ -671,7 +671,7 @@
     <string name="wallet_connect_service_no_chain_id">Dapp didn\'t provide essential data to establish WalletConnect session</string>
     <string name="wallet_connect_session_not_found">Failed to find session for request</string>
     <string name="wallet_connect_sessions_title">WalletConnect Sessions</string>
-    <string name="wallet_connect_subtitle">Connect to Dapps</string>
+    <string name="wallet_connect_subtitle">Connect to dApps</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_transaction_signed">The transaction has been successfully signed and sent to the Dapp</string>
     <string name="wallet_connect_transaction_signed_and_send">The transaction has been succesfully signed and sent to the blockchain</string>
