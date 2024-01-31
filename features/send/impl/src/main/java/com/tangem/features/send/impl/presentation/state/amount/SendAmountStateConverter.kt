@@ -1,12 +1,15 @@
 package com.tangem.features.send.impl.presentation.state.amount
 
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatCryptoAmount
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.utils.Provider
@@ -29,13 +32,10 @@ internal class SendAmountStateConverter(
         val crypto = formatCryptoAmount(status.value.amount, status.currency.symbol, status.currency.decimals)
 
         return SendStates.AmountState(
-            appCurrency = appCurrency,
-            cryptoCurrencyStatus = status,
             walletName = userWallet.name,
-            walletBalance = "$crypto ($fiat)",
+            walletBalance = resourceReference(R.string.send_wallet_balance_format, wrappedList(crypto, fiat)),
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = sendAmountFieldConverter.convert(Unit),
-            isFiatValue = false,
             isPrimaryButtonEnabled = false,
             segmentedButtonConfig = persistentListOf(
                 SendAmountSegmentedButtonsConfig(
