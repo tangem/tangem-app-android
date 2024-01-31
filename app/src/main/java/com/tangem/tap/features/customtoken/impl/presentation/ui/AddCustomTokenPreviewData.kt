@@ -94,7 +94,7 @@ internal object AddCustomTokenPreviewData {
             floatingButton = AddCustomTokenFloatingButton(
                 isEnabled = false,
                 showProgress = false,
-                onClick = {}
+                onClick = {},
             ),
             testBlock = AddCustomTokenTestBlock(
                 chooseTokenButtonText = "Choose token",
@@ -119,7 +119,8 @@ internal object AddCustomTokenPreviewData {
             floatingButton = AddCustomTokenFloatingButton(
                 isEnabled = false,
                 showProgress = false,
-                onClick = {}),
+                onClick = {},
+            ),
         )
     }
 }
