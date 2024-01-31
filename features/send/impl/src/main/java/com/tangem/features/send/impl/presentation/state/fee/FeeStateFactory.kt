@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
@@ -24,6 +25,7 @@ internal class FeeStateFactory(
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
 ) {
     private val customFeeFieldConverter by lazy {
         SendFeeCustomFieldConverter(
@@ -66,6 +68,7 @@ internal class FeeStateFactory(
                 receivedAmountValue = receivedAmount,
                 receivedAmount = getFormattedValue(receivedAmount),
                 isSubtract = isSubtractAvailable && checkAutoSubtract(state, fee, balance),
+                isFeeApproximate = isFeeApproximate(fee),
             ),
         )
     }
@@ -204,6 +207,14 @@ internal class FeeStateFactory(
         } else {
             amountValue + feeAmount >= balance
         }
+    }
+
+    private fun isFeeApproximate(fee: Fee): Boolean {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        return isFeeApproximateUseCase(
+            networkId = cryptoCurrencyStatus.currency.network.id,
+            amountType = fee.amount.type,
+        )
     }
 
     private fun getFormattedValue(value: BigDecimal): String {
