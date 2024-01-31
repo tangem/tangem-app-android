@@ -22,6 +22,7 @@ import kotlinx.collections.immutable.ImmutableList
 private const val FEE_SELECTOR_KEY = "FEE_SELECTOR_KEY"
 private const val FEE_CUSTOM_KEY = "FEE_CUSTOM_KEY"
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: SendClickIntents) {
     if (state == null) return
@@ -41,6 +42,7 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
             SendSpeedSelector(
                 state = feeSendState,
                 clickIntents = clickIntents,
+                modifier = Modifier.animateItemPlacement(),
             )
         }
         customFee(feeSendState)
@@ -48,6 +50,7 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
         subtractButton(
             receivedAmount = state.receivedAmount,
             isSubtract = state.isSubtract,
+            isSubtractAvailable = state.isSubtractAvailable,
             clickIntents = clickIntents,
         )
     }
@@ -73,6 +76,13 @@ internal fun LazyListScope.notifications(configs: ImmutableList<SendFeeNotificat
                 },
                 iconTint = when (it) {
                     is SendFeeNotification.Informational -> TangemTheme.colors.icon.accent
+                    is SendFeeNotification.Error.ExceedsBalance -> {
+                        if (it.config.buttonsState == null) {
+                            TangemTheme.colors.icon.warning
+                        } else {
+                            null
+                        }
+                    }
                     else -> null
                 },
             )
@@ -108,17 +118,20 @@ internal fun LazyListScope.customFee(feeSendState: FeeSelectorState, modifier: M
 internal fun LazyListScope.subtractButton(
     receivedAmount: String,
     isSubtract: Boolean,
+    isSubtractAvailable: Boolean,
     clickIntents: SendClickIntents,
     modifier: Modifier = Modifier,
 ) {
-    item {
-        SendSpeedSubtract(
-            receivingAmount = receivedAmount,
-            isSubtract = isSubtract,
-            onSelectClick = clickIntents::onSubtractSelect,
-            modifier = modifier
-                .padding(vertical = TangemTheme.dimens.spacing12)
-                .animateItemPlacement(),
-        )
+    if (isSubtractAvailable) {
+        item {
+            SendSpeedSubtract(
+                receivingAmount = receivedAmount,
+                isSubtract = isSubtract,
+                onSelectClick = clickIntents::onSubtractSelect,
+                modifier = modifier
+                    .padding(vertical = TangemTheme.dimens.spacing12)
+                    .animateItemPlacement(),
+            )
+        }
     }
 }
