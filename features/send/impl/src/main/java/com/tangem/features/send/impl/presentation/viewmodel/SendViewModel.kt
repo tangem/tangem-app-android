@@ -24,6 +24,7 @@ import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -70,6 +71,7 @@ internal class SendViewModel @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
@@ -104,6 +106,7 @@ internal class SendViewModel @Inject constructor(
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        isFeeApproximateUseCase = isFeeApproximateUseCase,
     )
 
     private val eventStateFactory = SendEventStateFactory(
