@@ -9,6 +9,9 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.deeplink.DeepLinksRegistry
+import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
+import com.tangem.core.deeplink.global.SellCurrencyDeepLink
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.resourceReference
@@ -22,6 +25,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -87,6 +91,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
 
@@ -147,6 +152,34 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     var uiState: TokenDetailsState by mutableStateOf(stateFactory.getInitialState(cryptoCurrency))
         private set
+
+    init {
+        deepLinksRegistry.registerWithViewModel(
+            viewModel = this,
+            deepLinks = listOf(
+                BuyCurrencyDeepLink(::onBuyCurrencyDeepLink),
+                SellCurrencyDeepLink(::onSellCurrencyDeepLink),
+            ),
+        )
+    }
+
+    private fun onBuyCurrencyDeepLink() {
+        val currency = cryptoCurrencyStatus?.currency ?: return
+        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
+    }
+
+    private fun onSellCurrencyDeepLink(data: SellCurrencyDeepLink.Data) {
+        sendCurrency(
+            status = cryptoCurrencyStatus ?: return,
+            transactionInfo = data.let {
+                TransactionInfo(
+                    amount = it.baseCurrencyAmount,
+                    transactionId = it.transactionId,
+                    destinationAddress = it.depositWalletAddress,
+                )
+            },
+        )
+    }
 
     override fun onCreate(owner: LifecycleOwner) {
         analyticsEventsHandler.send(
@@ -330,7 +363,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             viewModelScope.launch(dispatchers.main) {
                 reduxStateHolder.dispatch(
-                    TradeCryptoAction.New.Buy(
+                    TradeCryptoAction.Buy(
                         userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
                         cryptoCurrencyStatus = status,
                         appCurrencyCode = selectedAppCurrencyFlow.value.code,
@@ -354,27 +387,31 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onSendClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrency.symbol))
 
-        val cryptoCurrencyStatus = cryptoCurrencyStatus ?: return
+        sendCurrency(status = cryptoCurrencyStatus ?: return)
+    }
 
+    private fun sendCurrency(status: CryptoCurrencyStatus, transactionInfo: TransactionInfo? = null) {
         viewModelScope.launch(dispatchers.main) {
             val maybeFeeCurrencyStatus =
-                getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+                getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
 
-            when (val currency = cryptoCurrencyStatus.currency) {
+            when (val currency = status.currency) {
                 is CryptoCurrency.Coin -> {
                     reduxStateHolder.dispatch(
-                        action = TradeCryptoAction.New.SendCoin(
+                        action = TradeCryptoAction.SendCoin(
                             userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
-                            coinStatus = cryptoCurrencyStatus,
+                            coinStatus = status,
                             feeCurrencyStatus = maybeFeeCurrencyStatus,
+                            transactionInfo = transactionInfo,
                         ),
                     )
                 }
                 is CryptoCurrency.Token -> {
                     sendToken(
                         tokenCurrency = currency,
-                        tokenFiatRate = cryptoCurrencyStatus.value.fiatRate,
+                        tokenFiatRate = status.value.fiatRate,
                         feeCurrencyStatus = maybeFeeCurrencyStatus,
+                        transactionInfo = transactionInfo,
                     )
                 }
             }
@@ -385,6 +422,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         tokenCurrency: CryptoCurrency.Token,
         tokenFiatRate: BigDecimal?,
         feeCurrencyStatus: CryptoCurrencyStatus?,
+        transactionInfo: TransactionInfo?,
     ) {
         viewModelScope.launch(dispatchers.io) {
             val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
@@ -399,7 +437,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .firstOrNull()
 
             reduxStateHolder.dispatchWithMain(
-                action = TradeCryptoAction.New.SendToken(
+                action = TradeCryptoAction.SendToken(
                     userWallet = wallet,
                     tokenCurrency = tokenCurrency,
                     tokenFiatRate = tokenFiatRate,
@@ -408,6 +446,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                         ifRight = { it.value.fiatRate },
                     ),
                     feeCurrencyStatus = feeCurrencyStatus,
+                    transactionInfo = transactionInfo,
                 ),
             )
         }
@@ -440,7 +479,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
 
             reduxStateHolder.dispatch(
-                TradeCryptoAction.New.Sell(
+                TradeCryptoAction.Sell(
                     cryptoCurrencyStatus = status,
                     appCurrencyCode = selectedAppCurrencyFlow.value.code,
                 ),
@@ -451,7 +490,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onSwapClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrency.symbol))
 
-        reduxStateHolder.dispatch(TradeCryptoAction.New.Swap(cryptoCurrency))
+        reduxStateHolder.dispatch(TradeCryptoAction.Swap(cryptoCurrency))
     }
 
     override fun onDismissDialog() {
