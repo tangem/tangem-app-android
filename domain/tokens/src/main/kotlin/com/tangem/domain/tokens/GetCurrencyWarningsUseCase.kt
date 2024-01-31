@@ -254,10 +254,14 @@ class GetCurrencyWarningsUseCase(
 
     private fun getNetworkNoAccountWarning(currencyStatus: CryptoCurrencyStatus): CryptoCurrencyWarning? {
         return (currencyStatus.value as? CryptoCurrencyStatus.NoAccount)?.let {
-            CryptoCurrencyWarning.SomeNetworksNoAccount(
-                amountToCreateAccount = it.amountToCreateAccount,
-                amountCurrency = currencyStatus.currency,
-            )
+            if (networksRepository.isNeedToCreateAccountWithoutReserve(network = currencyStatus.currency.network)) {
+                CryptoCurrencyWarning.TopUpWithoutReserve
+            } else {
+                CryptoCurrencyWarning.SomeNetworksNoAccount(
+                    amountToCreateAccount = it.amountToCreateAccount,
+                    amountCurrency = currencyStatus.currency,
+                )
+            }
         }
     }
 
