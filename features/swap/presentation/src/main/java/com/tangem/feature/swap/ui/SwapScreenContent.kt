@@ -86,7 +86,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             }
         }
 
-        if (keyboard is Keyboard.Opened) {
+        if (state.shouldShowMaxAmount && keyboard is Keyboard.Opened) {
             Text(
                 text = stringResource(id = R.string.send_max_amount_label),
                 style = TangemTheme.typography.button,
@@ -109,7 +109,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             val message = if (state.alert.type == GenericWarningType.NETWORK) {
                 stringResource(id = R.string.disclaimer_error_loading)
             } else {
-                state.alert.message?.resolveReference() ?: stringResource(id = R.string.swapping_generic_error)
+                state.alert.message?.resolveReference() ?: stringResource(id = R.string.common_unknown_error)
             }
             SimpleOkDialog(
                 message = message,
@@ -338,7 +338,7 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         } else {
                             it.resolveReference()
                         }
-                    } ?: stringResource(id = R.string.swapping_generic_error)
+                    } ?: stringResource(id = R.string.common_unknown_error)
                     RefreshableWaringCard(
                         title = stringResource(id = R.string.common_warning),
                         description = message,
@@ -494,6 +494,7 @@ private val state = SwapStateHolder(
     blockchainId = "POLYGON",
     providerState = ProviderState.Loading(),
     priceImpact = PriceImpact.Empty(),
+    shouldShowMaxAmount = true,
     tosState = TosState(
         tosLink = LegalState(
             title = stringReference("Terms of Use"),

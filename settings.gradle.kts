@@ -70,6 +70,8 @@ include(":core:navigation")
 include(":core:res")
 include(":core:ui")
 include(":core:utils")
+include(":core:deep-links")
+include(":core:deep-links:global")
 // endregion Core modules
 
 // region Libs modules
@@ -149,4 +151,3 @@ include(":data:wallets")
 include(":data:analytics")
 include(":data:transaction")
 // endregion Data modules
-
