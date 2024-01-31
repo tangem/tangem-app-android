@@ -70,7 +70,7 @@
     <string name="common_biometric_authentication">биометрическую аутентификацию</string>
     <string name="common_biometrics">биометрией</string>
     <string name="common_buy">Купить</string>
-    <string name="common_buy_currency">Купить %1$s</string>
+    <string name="common_buy_currency">Перейти на %1$s</string>
     <string name="common_camera_denied_alert_message">Вы не предоставили доступ к камере, пожалуйста, измените настройки конфиденциальности.</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_close">Закрыть</string>
@@ -478,8 +478,6 @@
     <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
     <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
     <string name="send_notification_exceed_balance_title">Недостаточно средств</string>
-    <string name="send_notification_exceed_fee_text">Размер комиссии превышает баланс сети. Для продолжения необходимо пополнить баланс сети.</string>
-    <string name="send_notification_exceed_fee_title">Комиссия превышает баланс</string>
     <string name="send_notification_high_fee_title">Увеличение комиссии</string>
     <string name="send_notification_high_fee_text">Комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить 0.01.</string>
     <string name="send_notification_fee_too_high_accept">Оставить %s XTZ</string>
@@ -494,7 +492,6 @@
     <string name="send_notification_transaction_delay_text">Обратите внимание, что при определенных параметрах комиссии возможны задержки по вашей транзакции</string>
     <string name="send_notification_transaction_delay_title">Возможны задержки по транзакции</string>
     <string name="send_optional_field">Необязательное</string>
-    <string name="send_qrcode_scan_amount_alert_title">QR код содержит информацию о сумме отправки равной %s</string>
     <string name="send_recent_transactions">Последние</string>
     <string name="send_recipient">Получатель</string>
     <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов</string>
