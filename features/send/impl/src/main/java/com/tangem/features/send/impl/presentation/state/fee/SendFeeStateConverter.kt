@@ -26,6 +26,7 @@ internal class SendFeeStateConverter(
             notifications = persistentListOf(),
             rate = cryptoCurrencyStatus.value.fiatRate,
             appCurrency = appCurrencyProvider(),
+            isFeeApproximate = false,
         )
     }
 }
