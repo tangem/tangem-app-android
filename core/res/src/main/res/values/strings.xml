@@ -235,6 +235,7 @@
     <string name="express_provider">Provider</string>
     <string name="express_provider_best_rate">Best rate</string>
     <string name="express_provider_min_amount">Available from %s</string>
+    <string name="express_provider_max_amount">Available up to %s</string>
     <string name="express_provider_not_available">Unavailable for this pair</string>
     <string name="express_provider_permission_needed">Permission Required</string>
     <string name="express_terms_of_use">Terms of Use</string>
@@ -709,8 +710,9 @@
     <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
     <string name="warning_express_not_enough_fee_for_token_tx_title">Unable to cover %s fee</string>
     <string name="warning_express_refresh_required_title">Service temporarily unavailable</string>
-    <string name="warning_express_too_minimal_amount_description">Please change the amount to swap</string>
+    <string name="warning_express_wrong_amount_description">Please change the amount to swap</string>
     <string name="warning_express_too_minimal_amount_title">The amount to swap must be at least %s</string>
+    <string name="warning_express_too_maximum_amount_title">The amount of tokens to be swapped must not exceed %s</string>
     <string name="warning_failed_to_verify_card_message">This card might be a production sample or counterfeit</string>
     <string name="warning_failed_to_verify_card_title">Authenticity check failed</string>
     <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
