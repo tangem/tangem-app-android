@@ -6,6 +6,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -21,6 +22,7 @@ internal class SendNotificationFactory(
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val walletManagersFacade: WalletManagersFacade,
+    private val clickIntents: SendClickIntents,
 ) {
 
     fun create(): Flow<ImmutableList<SendNotification>> = currentStateProvider().currentState
@@ -30,18 +32,32 @@ internal class SendNotificationFactory(
             val feeState = state.feeState ?: return@map persistentListOf()
             val recipientState = state.recipientState ?: return@map persistentListOf()
             val feeAmount = feeState.fee?.amount?.value ?: BigDecimal.ZERO
+            val amountValue = state.amountState?.amountTextField?.value?.toBigDecimalOrNull() ?: BigDecimal.ZERO
+            val sendAmount = if (feeState.isSubtract) feeState.receivedAmountValue else amountValue
             buildList {
                 // errors
-                addExceedBalanceNotification(feeAmount, feeState.receivedAmountValue)
-                addInvalidAmountNotification(feeState.isSubtract, feeState.receivedAmountValue)
-                addMinimumAmountErrorNotification(feeAmount, feeState.receivedAmountValue)
+                addExceedBalanceNotification(feeAmount, sendAmount)
+                addInvalidAmountNotification(feeState.isSubtract, sendAmount)
+                addMinimumAmountErrorNotification(feeAmount, sendAmount)
                 addReserveAmountErrorNotification(recipientState.addressTextField.value)
-                addTransactionLimitErrorNotification(feeAmount, feeState.receivedAmountValue)
+                addTransactionLimitErrorNotification(feeAmount, sendAmount)
                 // warnings
-                addExistentialWarningNotification(feeAmount, feeState.receivedAmountValue)
-                addHighFeeWarningNotification()
+                addExistentialWarningNotification(feeAmount, sendAmount)
+                addHighFeeWarningNotification(amountValue, state.sendState.ignoreAmountReduce)
             }.toImmutableList()
         }
+
+    fun dismissHighFeeWarningState(): SendUiState {
+        val state = currentStateProvider()
+        val sendState = state.sendState
+        val updatedNotifications = sendState.notifications.filterNot { it is SendNotification.Warning.HighFeeError }
+        return state.copy(
+            sendState = sendState.copy(
+                ignoreAmountReduce = true,
+                notifications = updatedNotifications.toImmutableList(),
+            ),
+        )
+    }
 
     private fun MutableList<SendNotification>.addExceedBalanceNotification(
         feeAmount: BigDecimal,
@@ -173,16 +189,30 @@ internal class SendNotificationFactory(
         }
     }
 
-    private fun MutableList<SendNotification>.addHighFeeWarningNotification() {
-        // TODO Move Blockchain check elsewhere
-        if (cryptoCurrencyStatusProvider().currency.network.id.value == Blockchain.Tezos.id) {
-            add(SendNotification.Warning.HighFeeError(TEZOS_FEE_THRESHOLD))
+    private fun MutableList<SendNotification>.addHighFeeWarningNotification(
+        sendAmount: BigDecimal,
+        ignoreAmountReduce: Boolean,
+    ) {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val isTezos = cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
+        if (!ignoreAmountReduce && sendAmount == balance && isTezos) {
+            add(
+                SendNotification.Warning.HighFeeError(
+                    amount = TEZOS_FEE_THRESHOLD.toPlainString(),
+                    onConfirmClick = {
+                        val reduceTo = sendAmount.minus(TEZOS_FEE_THRESHOLD).toPlainString()
+                        clickIntents.onAmountReduceClick(reduceTo)
+                    },
+                    onDismissClick = clickIntents::onAmountReduceIgnoreClick,
+                ),
+            )
         }
     }
 
     companion object {
         private const val CARDANO_MINIMUM = "1"
         private const val DOGECOIN_MINIMUM = "0.01"
-        private const val TEZOS_FEE_THRESHOLD = "0.01"
+        private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
     }
 }
