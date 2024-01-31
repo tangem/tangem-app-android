@@ -7,7 +7,6 @@ import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,24 +19,21 @@ internal object TransactionDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetFeeUseCase(
-        walletManagersFacade: WalletManagersFacade,
-        dispatchers: CoroutineDispatcherProvider,
-    ): GetFeeUseCase {
-        return GetFeeUseCase(walletManagersFacade, dispatchers)
+    fun provideGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetFeeUseCase {
+        return GetFeeUseCase(walletManagersFacade)
     }
 
     @Provides
     @ViewModelScoped
     fun provideSendTransactionUseCase(
         isDemoCardUseCase: IsDemoCardUseCase,
-        walletManagersFacade: WalletManagersFacade,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        transactionRepository: TransactionRepository,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
-            walletManagersFacade = walletManagersFacade,
+            transactionRepository = transactionRepository,
         )
     }
 
