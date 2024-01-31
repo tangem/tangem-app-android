@@ -110,9 +110,7 @@ private fun ProviderContentState(
             )
 
             Column(
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing12)
-                    .height(TangemTheme.dimens.size40),
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             ) {
                 Row {
                     Text(
@@ -146,9 +144,9 @@ private fun ProviderContentState(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
                 Row(
                     modifier = Modifier.padding(
+                        top = TangemTheme.dimens.spacing8,
                         end = TangemTheme.dimens.spacing56,
                     ),
                 ) {
@@ -216,9 +214,7 @@ private fun ProviderUnavailableState(
             )
 
             Column(
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing12)
-                    .height(TangemTheme.dimens.size40),
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             ) {
                 Row {
                     AnimatedContent(targetState = state.name, label = "") {
@@ -237,12 +233,12 @@ private fun ProviderUnavailableState(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
                 AnimatedContent(targetState = state.alertText, label = "") {
                     Text(
                         text = it.resolveReference(),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
+                        modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
                     )
                 }
             }
