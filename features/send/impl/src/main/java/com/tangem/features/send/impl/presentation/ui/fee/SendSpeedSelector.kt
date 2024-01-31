@@ -28,10 +28,12 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.utils.BigDecimalFormatter.CAN_BE_LOWER_SIGN
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
@@ -79,7 +81,7 @@ internal fun SendSpeedSelector(
                             SendSpeedSelectorItem(
                                 titleRes = R.string.common_fee_selector_option_slow,
                                 iconRes = R.drawable.ic_tortoise_24,
-                                amount = getCryptoReference(minimumAmount),
+                                amount = getCryptoReference(minimumAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(minimumAmount, state.rate, state.appCurrency),
                                 symbolLength = minimumAmount.currencySymbol.length,
                                 isSelected = isSelected == FeeType.SLOW,
@@ -89,7 +91,7 @@ internal fun SendSpeedSelector(
                             SendSpeedSelectorItem(
                                 titleRes = R.string.common_fee_selector_option_market,
                                 iconRes = R.drawable.ic_bird_24,
-                                amount = getCryptoReference(normalAmount),
+                                amount = getCryptoReference(normalAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(normalAmount, state.rate, state.appCurrency),
                                 symbolLength = normalAmount.currencySymbol.length,
                                 isSelected = isSelected == FeeType.MARKET,
@@ -99,7 +101,7 @@ internal fun SendSpeedSelector(
                             SendSpeedSelectorItem(
                                 titleRes = R.string.common_fee_selector_option_fast,
                                 iconRes = R.drawable.ic_hare_24,
-                                amount = getCryptoReference(priorityAmount),
+                                amount = getCryptoReference(priorityAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(priorityAmount, state.rate, state.appCurrency),
                                 symbolLength = priorityAmount.currencySymbol.length,
                                 isSelected = isSelected == FeeType.FAST,
@@ -125,7 +127,7 @@ internal fun SendSpeedSelector(
                                 titleRes = R.string.common_fee_selector_option_market,
                                 iconRes = R.drawable.ic_bird_24,
                                 isSelected = true,
-                                amount = getCryptoReference(normalAmount),
+                                amount = getCryptoReference(normalAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(normalAmount, state.rate, state.appCurrency),
                                 symbolLength = normalAmount.currencySymbol.length,
                                 onSelect = { clickIntents.onFeeSelectorClick(FeeType.MARKET) },
@@ -140,11 +142,14 @@ internal fun SendSpeedSelector(
 }
 
 // todo remove after refactoring [REDACTED_JIRA]
-private fun getCryptoReference(amount: Amount) = stringReference(
-    BigDecimalFormatter.formatCryptoAmount(
-        cryptoAmount = amount.value,
-        cryptoCurrency = amount.currencySymbol,
-        decimals = amount.decimals,
+private fun getCryptoReference(amount: Amount, isFeeApproximate: Boolean) = combinedReference(
+    if (isFeeApproximate) stringReference("$CAN_BE_LOWER_SIGN ") else TextReference.EMPTY,
+    stringReference(
+        BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = amount.value,
+            cryptoCurrency = amount.currencySymbol,
+            decimals = amount.decimals,
+        ),
     ),
 )
 
