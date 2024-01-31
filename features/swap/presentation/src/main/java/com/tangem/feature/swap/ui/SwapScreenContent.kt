@@ -280,7 +280,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     Card(
         elevation = TangemTheme.dimens.elevation3,
         shape = CircleShape,
-        backgroundColor = TangemTheme.colors.background.plain,
+        backgroundColor = TangemTheme.colors.background.action,
         contentColor = TangemTheme.colors.text.primary1,
         modifier = modifier.size(TangemTheme.dimens.size48),
         onClick = state.onChangeCardsClicked,
