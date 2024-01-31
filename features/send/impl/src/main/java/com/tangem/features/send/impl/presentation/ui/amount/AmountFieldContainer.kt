@@ -12,12 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 
 @Composable
 internal fun AmountFieldContainer(amountState: SendStates.AmountState, modifier: Modifier = Modifier) {
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxWidth()
             .padding(
@@ -33,29 +35,24 @@ internal fun AmountFieldContainer(amountState: SendStates.AmountState, modifier:
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing14)
-                .align(Alignment.CenterHorizontally),
+                .padding(top = TangemTheme.dimens.spacing14),
         )
         Text(
-            text = amountState.walletBalance,
+            text = amountState.walletBalance.resolveReference(),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing2)
-                .align(Alignment.CenterHorizontally),
+                .padding(top = TangemTheme.dimens.spacing2),
         )
         TokenIcon(
             state = amountState.tokenIconState,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing32)
-                .align(Alignment.CenterHorizontally),
+                .padding(top = TangemTheme.dimens.spacing32),
         )
         AmountField(
             sendField = amountState.amountTextField,
-            isFiat = amountState.isFiatValue,
-            cryptoSymbol = amountState.cryptoCurrencyStatus.currency.symbol,
-            fiatSymbol = amountState.appCurrency.symbol,
+            isFiat = amountState.amountTextField.isFiatValue,
         )
     }
 }
