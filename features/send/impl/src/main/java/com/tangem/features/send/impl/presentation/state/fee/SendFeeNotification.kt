@@ -62,7 +62,7 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
         val title: TextReference,
         val subtitle: TextReference,
         val iconResId: Int,
-        val buttonsState: NotificationConfig.ButtonsState,
+        val buttonsState: NotificationConfig.ButtonsState? = null,
     ) : SendFeeNotification(
         config = NotificationConfig(
             title = title,
@@ -73,15 +73,27 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
     ) {
         data class ExceedsBalance(
             val networkIconId: Int,
-            val onClick: () -> Unit,
+            val currencyName: String,
+            val feeName: String,
+            val feeSymbol: String,
+            val networkName: String,
+            val onClick: (() -> Unit)? = null,
         ) : Error(
-            title = resourceReference(id = R.string.send_notification_exceed_fee_title),
-            subtitle = resourceReference(id = R.string.send_notification_exceed_fee_text),
-            iconResId = networkIconId,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.common_go_to_provider),
-                onClick = onClick,
+            title = resourceReference(
+                id = R.string.warning_send_blocked_funds_for_fee_title,
+                wrappedList(feeName),
             ),
+            subtitle = resourceReference(
+                id = R.string.warning_send_blocked_funds_for_fee_message,
+                formatArgs = wrappedList(currencyName, networkName, currencyName, feeName, feeSymbol),
+            ),
+            iconResId = networkIconId,
+            buttonsState = onClick?.let {
+                NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = resourceReference(R.string.common_buy_currency, wrappedList(feeName)),
+                    onClick = onClick,
+                )
+            },
         )
     }
 }
