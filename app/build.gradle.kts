@@ -62,6 +62,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.deepLinks)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
 
