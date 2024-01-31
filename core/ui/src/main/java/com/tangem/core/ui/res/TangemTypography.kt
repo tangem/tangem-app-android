@@ -78,7 +78,7 @@ data class TangemTypography internal constructor(
         fontSize = 14.sp,
         fontWeight = FontWeight.Medium,
         letterSpacing = TextUnit(value = 0.1f, type = TextUnitType.Sp),
-        lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
     ),
     val caption1: TextStyle = TextStyle(
         fontFamily = RobotoFamily,
