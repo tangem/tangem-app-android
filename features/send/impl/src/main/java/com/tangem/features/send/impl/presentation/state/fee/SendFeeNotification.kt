@@ -1,13 +1,11 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
-import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.send.impl.R
 
-@Immutable
 sealed class SendFeeNotification(val config: NotificationConfig) {
 
     sealed class Informational(
@@ -29,11 +27,13 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
     sealed class Warning(
         val title: TextReference,
         val subtitle: TextReference,
+        val buttonsState: NotificationConfig.ButtonsState? = null,
     ) : SendFeeNotification(
         config = NotificationConfig(
             title = title,
             subtitle = subtitle,
             iconResId = R.drawable.img_attention_20,
+            buttonsState = buttonsState,
         ),
     ) {
         data class TooHigh(
@@ -46,6 +46,15 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
         object NetworkCoverage : Warning(
             title = resourceReference(id = R.string.send_network_fee_warning_title),
             subtitle = resourceReference(id = R.string.send_network_fee_warning_content),
+        )
+
+        data class NetworkFeeUnreachable(val onRefresh: () -> Unit) : Warning(
+            title = resourceReference(R.string.send_fee_unreachable_error_title),
+            subtitle = resourceReference(R.string.send_fee_unreachable_error_text),
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.warning_button_refresh),
+                onClick = onRefresh,
+            ),
         )
     }
 

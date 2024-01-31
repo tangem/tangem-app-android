@@ -41,6 +41,8 @@ interface NetworksRepository {
     suspend fun getNetworkStatusesSync(
         userWalletId: UserWalletId,
         networks: Set<Network>,
-        refresh: Boolean,
+        refresh: Boolean = false,
     ): Set<NetworkStatus>
+
+    fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean
 }
