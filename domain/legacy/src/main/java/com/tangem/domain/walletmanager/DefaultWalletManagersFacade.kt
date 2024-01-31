@@ -552,6 +552,7 @@ class DefaultWalletManagersFacade(
             blockchain = blockchain,
             derivationPath = derivationPath,
         )
+        val feePaidCurrency = blockchain.feePaidCurrency()
 
         if (walletManager == null) {
             Timber.e("Unable to get a wallet manager for blockchain: $blockchain")
@@ -560,6 +561,7 @@ class DefaultWalletManagersFacade(
 
         val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
             walletAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
+            feePaidCurrency = feePaidCurrency,
         )
 
         return walletManager.wallet.recentTransactions.mapNotNull(transactionDataConverter::convert)

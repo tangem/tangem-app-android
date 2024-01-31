@@ -183,12 +183,14 @@ class ReceiptReducer : SendInternalReducer {
             return ReceiptTokenCrypto("0", feeValue.stripZeroPlainString(), "0", symbols)
         }
         val tokensToSend = amountState.amountToSendCrypto
+        val amountType = amountState.typeOfAmount
+        val currencyConverter = when {
+            amountType is AmountType.Token && sendState.feeIsConvertible() -> sendState.tokenConverter
+            amountType is AmountType.Coin && sendState.feeIsConvertible() -> sendState.coinConverter
+            else -> null
+        }
 
-        return if (sendState.currencyIsConvertible() && sendState.feeIsConvertible()) {
-            val currencyConverter = when (amountState.typeOfAmount) {
-                is AmountType.Token -> sendState.tokenConverter!!
-                else -> sendState.coinConverter!!
-            }
+        return if (currencyConverter != null) {
             val currencyFiat = currencyConverter.toFiatUnscaled(tokensToSend)
             val feeFiat = sendState.customFeeConverter!!.toFiatUnscaled(feeValue)
             val totalFiat = currencyFiat.plus(feeFiat)
@@ -218,11 +220,14 @@ class ReceiptReducer : SendInternalReducer {
 
         val tokensToSend = amountState.amountToSendCrypto
 
-        return if (sendState.currencyIsConvertible() && sendState.feeIsConvertible()) {
-            val currencyConverter = when (amountState.typeOfAmount) {
-                is AmountType.Token -> sendState.tokenConverter!!
-                else -> sendState.coinConverter!!
-            }
+        val amountType = amountState.typeOfAmount
+        val currencyConverter = when {
+            amountType is AmountType.Token && sendState.feeIsConvertible() -> sendState.tokenConverter
+            amountType is AmountType.Coin && sendState.feeIsConvertible() -> sendState.coinConverter
+            else -> null
+        }
+
+        return if (currencyConverter != null) {
             val feeFiat = sendState.customFeeConverter!!.toFiatUnscaled(feeCoin)
             val amountFiat = currencyConverter.toFiatUnscaled(tokensToSend)
             val totalFiat = amountFiat.plus(feeFiat)
