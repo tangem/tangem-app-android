@@ -10,12 +10,16 @@ class PeriodicTask<T>(
     private val task: suspend () -> Result<T>,
     private val onSuccess: (T) -> Unit,
     private val onError: (Throwable) -> Unit,
+    private val isDelayFirst: Boolean = false,
 ) {
 
     private var isActive: AtomicBoolean = AtomicBoolean(false)
 
     suspend fun runTaskWithDelay() {
         isActive.set(true)
+        if (isDelayFirst) {
+            delay(delay)
+        }
         while (isActive.get()) {
             task.invoke()
                 .onSuccess {
