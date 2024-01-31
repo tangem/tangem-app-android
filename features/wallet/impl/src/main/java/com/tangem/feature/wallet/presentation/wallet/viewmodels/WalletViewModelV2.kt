@@ -13,6 +13,7 @@ import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
@@ -57,6 +58,7 @@ internal class WalletViewModelV2 @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
+    private val walletDeepLinksHandler: WalletDeepLinksHandler,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
@@ -157,6 +159,11 @@ internal class WalletViewModelV2 @Inject constructor(
 
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
+
+                    walletDeepLinksHandler.registerForSingleCurrencyWallets(
+                        viewModel = this,
+                        userWallet = selectedWallet,
+                    )
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
