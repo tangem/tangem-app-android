@@ -1,8 +1,8 @@
 package com.tangem.domain.tokens
 
 import arrow.core.Either
-import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.error.mapper.mapToTokenListError
+import com.tangem.domain.tokens.error.CurrencyStatusError
+import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
@@ -22,7 +22,7 @@ class GetCryptoCurrencyStatusSyncUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
-    ): Either<TokenListError, CryptoCurrencyStatus> {
+    ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             currenciesRepository = currenciesRepository,
@@ -31,6 +31,18 @@ class GetCryptoCurrencyStatusSyncUseCase(
         )
 
         return operations.getCurrencyStatusSync(cryptoCurrencyId)
-            .mapLeft { error -> error.mapToTokenListError() }
+            .mapLeft { error -> error.mapToCurrencyError() }
+    }
+
+    suspend operator fun invoke(userWalletId: UserWalletId): Either<CurrencyStatusError, CryptoCurrencyStatus> {
+        val operations = CurrenciesStatusesOperations(
+            userWalletId = userWalletId,
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+        )
+
+        return operations.getPrimaryCurrencyStatusSync()
+            .mapLeft { error -> error.mapToCurrencyError() }
     }
 }
