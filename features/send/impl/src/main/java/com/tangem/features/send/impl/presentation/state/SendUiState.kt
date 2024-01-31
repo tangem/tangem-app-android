@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
@@ -74,6 +75,8 @@ internal sealed class SendStates {
         val fee: Fee?,
         val receivedAmountValue: BigDecimal,
         val receivedAmount: String,
+        val rate: BigDecimal?,
+        val appCurrency: AppCurrency,
         val notifications: ImmutableList<SendFeeNotification>,
     ) : SendStates()
 
