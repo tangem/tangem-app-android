@@ -232,6 +232,7 @@
     <string name="express_provider">Провайдер</string>
     <string name="express_provider_best_rate">Лучший курс</string>
     <string name="express_provider_min_amount">Доступно с %s</string>
+    <string name="express_provider_max_amount">Доступно до %s</string>
     <string name="express_provider_not_available">Недоступно для этой пары</string>
     <string name="express_provider_permission_needed">Требуется разрешение</string>
     <string name="express_terms_of_use">Условиями использования</string>
@@ -693,8 +694,9 @@
     <string name="warning_express_not_enough_fee_for_token_tx_description">Чтобы совершить транзакцию, вам необходимо внести немного %1$s %2$s</string>
     <string name="warning_express_not_enough_fee_for_token_tx_title">Невозможно покрыть комиссию %s</string>
     <string name="warning_express_refresh_required_title">Cервис временно недоступен</string>
-    <string name="warning_express_too_minimal_amount_description">Пожалуйста, измените сумму для обмена</string>
+    <string name="warning_express_wrong_amount_description">Пожалуйста, измените сумму для обмена</string>
     <string name="warning_express_too_minimal_amount_title">Сумма для обмена должна быть не менее %s</string>
+    <string name="warning_express_too_maximum_amount_title">Сумма для обмена должна быть не более %s</string>
     <string name="warning_failed_to_verify_card_message">Возможно, данная карта - образец или подделка</string>
     <string name="warning_failed_to_verify_card_title">Ошибка проверки подлинности</string>
     <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
