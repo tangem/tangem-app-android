@@ -22,6 +22,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.buyErc20TestnetTokens
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -50,19 +51,18 @@ object TradeCryptoMiddleware {
         if (DemoHelper.tryHandle(state, action)) return
 
         when (action) {
-            is TradeCryptoAction.SendCrypto -> preconfigureAndOpenSendScreen()
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
-            is TradeCryptoAction.New.Buy -> proceedNewBuyAction(state, action)
-            is TradeCryptoAction.New.Sell -> proceedNewSellAction(action)
-            is TradeCryptoAction.New.Swap -> openSwap(
+            is TradeCryptoAction.Buy -> proceedBuyAction(state, action)
+            is TradeCryptoAction.Sell -> proceedSellAction(action)
+            is TradeCryptoAction.Swap -> openSwap(
                 currency = action.cryptoCurrency,
             )
-            is TradeCryptoAction.New.SendToken -> handleNewSendToken(action = action)
-            is TradeCryptoAction.New.SendCoin -> handleNewSendCoin(action = action)
+            is TradeCryptoAction.SendToken -> handleSendToken(action = action)
+            is TradeCryptoAction.SendCoin -> handleSendCoin(action = action)
         }
     }
 
-    private fun proceedNewBuyAction(state: () -> AppState?, action: TradeCryptoAction.New.Buy) {
+    private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
         val networkAddress = action.cryptoCurrencyStatus.value.networkAddress
             ?.defaultAddress
             ?.let(NetworkAddress.Address::value)
@@ -119,7 +119,7 @@ object TradeCryptoMiddleware {
         }
     }
 
-    private fun proceedNewSellAction(action: TradeCryptoAction.New.Sell) {
+    private fun proceedSellAction(action: TradeCryptoAction.Sell) {
         val networkAddress = action.cryptoCurrencyStatus.value.networkAddress
             ?.defaultAddress
             ?.let(NetworkAddress.Address::value)
@@ -139,33 +139,6 @@ object TradeCryptoMiddleware {
         }
     }
 
-    private fun preconfigureAndOpenSendScreen() = scope.launch {
-        // FIXME: [REDACTED_JIRA]
-        // val selectedWalletData = store.state.walletState.selectedWalletData ?: return
-        //
-        // Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(selectedWalletData.currency)))
-        // val walletManager = store.state.walletState.getWalletManager(selectedWalletData.currency).guard {
-        //     FirebaseCrashlytics.getInstance().recordException(IllegalStateException("WalletManager is null"))
-        //     return
-        // }
-        //
-        // store.dispatchOnMain(
-        //     PrepareSendScreen(
-        //         walletManager = walletManager,
-        //         coinAmount = walletManager.wallet.amounts[AmountType.Coin],
-        //         coinRate = selectedWalletData.fiatRate,
-        //     ),
-        // )
-        // store.dispatchOnMain(
-        //     SendAction.SendSpecificTransaction(
-        //         sendAmount = action.amount,
-        //         destinationAddress = action.destinationAddress,
-        //         transactionId = action.transactionId,
-        //     ),
-        // )
-        // store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Send))
-    }
-
     private fun openReceiptUrl(transactionId: String) {
         store.dispatchOnMain(NavigationAction.PopBackTo())
         store.state.globalState.exchangeManager.getSellCryptoReceiptUrl(
@@ -182,7 +155,7 @@ object TradeCryptoMiddleware {
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Swap, bundle = bundle))
     }
 
-    private fun handleNewSendToken(action: TradeCryptoAction.New.SendToken) {
+    private fun handleSendToken(action: TradeCryptoAction.SendToken) {
         val currency = action.tokenCurrency
         val blockchain = Blockchain.fromId(currency.network.id.value)
 
@@ -221,6 +194,17 @@ object TradeCryptoMiddleware {
                 ),
             )
 
+            val txInfo = action.transactionInfo
+            if (txInfo != null) {
+                store.dispatchOnMain(
+                    SendAction.SendSpecificTransaction(
+                        sendAmount = txInfo.amount,
+                        destinationAddress = txInfo.destinationAddress,
+                        transactionId = txInfo.transactionId,
+                    ),
+                )
+            }
+
             val bundle = bundleOf(
                 SendRouter.CRYPTO_CURRENCY_KEY to currency,
                 SendRouter.USER_WALLET_ID_KEY to action.userWallet.walletId.stringValue,
@@ -229,7 +213,7 @@ object TradeCryptoMiddleware {
         }
     }
 
-    private fun handleNewSendCoin(action: TradeCryptoAction.New.SendCoin) {
+    private fun handleSendCoin(action: TradeCryptoAction.SendCoin) {
         val cryptoStatus = action.coinStatus
         val currency = cryptoStatus.currency
         val blockchain = Blockchain.fromId(currency.network.id.value)
@@ -276,6 +260,17 @@ object TradeCryptoMiddleware {
                     )
                 }
                 is CryptoCurrency.Token -> error("Action.tokenStatus.currency is Token")
+            }
+
+            val txInfo = action.transactionInfo
+            if (txInfo != null) {
+                store.dispatchOnMain(
+                    SendAction.SendSpecificTransaction(
+                        sendAmount = txInfo.amount,
+                        destinationAddress = txInfo.destinationAddress,
+                        transactionId = txInfo.transactionId,
+                    ),
+                )
             }
 
             val bundle = bundleOf(
