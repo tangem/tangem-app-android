@@ -24,9 +24,11 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.BigDecimalFormatter.formatCryptoAmount
+import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendNotification
@@ -127,7 +129,7 @@ private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: Boolean,
         cryptoCurrency = amount.cryptoAmount.currencySymbol,
         decimals = amount.cryptoAmount.decimals,
     )
-    val fiatAmount = BigDecimalFormatter.formatFiatAmount(
+    val fiatAmount = formatFiatAmount(
         fiatAmount = amount.fiatAmount.value,
         fiatCurrencyCode = (amount.fiatAmount.type as AmountType.FiatType).code,
         fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
@@ -174,14 +176,22 @@ private fun RecipientBlock(recipientState: SendStates.RecipientState, isSuccess:
 @Composable
 private fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick: () -> Unit) {
     val fee = feeState.fee ?: return
-    val feeValue = formatCryptoAmount(
+    val feeCryptoValue = formatCryptoAmount(
         cryptoAmount = fee.amount.value,
         cryptoCurrency = fee.amount.currencySymbol,
         decimals = fee.amount.decimals,
     )
+    val feeFiatValue = formatFiatAmount(
+        fiatAmount = feeState.rate?.let { fee.amount.value?.multiply(it) },
+        fiatCurrencyCode = feeState.appCurrency.code,
+        fiatCurrencySymbol = feeState.appCurrency.symbol,
+    )
     InputRowDefault(
-        title = TextReference.Res(R.string.common_network_fee_title),
-        text = TextReference.Str(feeValue),
+        title = resourceReference(R.string.common_network_fee_title),
+        text = resourceReference(
+            id = R.string.send_wallet_balance_format,
+            wrappedList(feeCryptoValue, feeFiatValue),
+        ),
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
