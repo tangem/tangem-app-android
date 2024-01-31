@@ -4,8 +4,9 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
+import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fee.getFee
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
@@ -41,7 +42,7 @@ internal class SendEventStateFactory(
         )
     }
 
-    fun getFeeUpdatedAlert(fee: TransactionFee, onConsume: () -> Unit): SendUiState {
+    fun getFeeUpdatedAlert(fee: TransactionFee, onConsume: () -> Unit, onFeeNotIncreased: () -> Unit): SendUiState {
         val state = currentStateProvider()
         val feeSelector = state.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return state
         val newFee = when (fee) {
@@ -67,6 +68,7 @@ internal class SendEventStateFactory(
                 ),
             )
         } else {
+            onFeeNotIncreased()
             updateFeeState
         }
     }
