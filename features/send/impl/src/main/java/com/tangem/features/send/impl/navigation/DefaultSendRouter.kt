@@ -23,6 +23,7 @@ internal class DefaultSendRouter(
     }
 
     override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
+        reduxNavController.popBackStack()
         reduxNavController.navigate(
             action = NavigationAction.NavigateTo(
                 screen = AppScreen.WalletDetails,

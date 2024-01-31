@@ -39,7 +39,9 @@ import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -145,17 +147,11 @@ internal class SendViewModel @Inject constructor(
     private var feeNotificationsJobHolder = JobHolder()
     private var qrScannerJobHolder = JobHolder()
 
-    private var checkFeeUpdateScheduler = SingleTaskScheduler<Either<GetFeeError, TransactionFee>?>()
+    private var sendIdleTimer = 0L
 
     override fun onCreate(owner: LifecycleOwner) {
         subscribeOnCurrencyStatusUpdates(owner)
-        onFeeStateActive()
-        onCheckFeeUpdate()
-    }
-
-    override fun onStop(owner: LifecycleOwner) {
-        super.onStop(owner)
-        checkFeeUpdateScheduler.cancelTask()
+        onStateActive()
     }
 
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
@@ -316,10 +312,15 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private fun onFeeStateActive() {
+    private fun onStateActive() {
         uiState.currentState
-            .filter { it == SendUiStateType.Fee }
-            .onEach { loadFee() }
+            .onEach {
+                when (it) {
+                    SendUiStateType.Fee -> loadFee()
+                    SendUiStateType.Send -> sendIdleTimer = System.currentTimeMillis()
+                    else -> Unit
+                }
+            }
             .launchIn(viewModelScope)
     }
 
@@ -501,14 +502,19 @@ internal class SendViewModel @Inject constructor(
         if (sendState.isSuccess) popBackStack()
 
         uiState = stateFactory.getSendingStateUpdate(isSending = true)
-        verifyAndSendTransaction()
+        if (System.currentTimeMillis() - sendIdleTimer < CHECK_FEE_UPDATE_DELAY) {
+            verifyAndSendTransaction()
+        } else {
+            onCheckFeeUpdate()
+        }
+        sendIdleTimer = System.currentTimeMillis()
     }
 
-    override fun showAmount() = stateRouter.showAmount(isFromSend = true)
+    override fun showAmount() = stateRouter.showAmount()
 
-    override fun showRecipient() = stateRouter.showRecipient(isFromSend = true)
+    override fun showRecipient() = stateRouter.showRecipient()
 
-    override fun showFee() = stateRouter.showFee(isFromSend = true)
+    override fun showFee() = stateRouter.showFee()
 
     override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
 
@@ -591,63 +597,44 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun onCheckFeeUpdate() {
-        uiState.currentState
-            .onEach { activeState ->
-                val isSending = uiState.sendState.isSending
-                val isSuccess = uiState.sendState.isSuccess
-                val isNoNotifications = uiState.sendState.notifications.isEmpty()
-                val isSendIdle = !isSending && !isSuccess && isNoNotifications
-                if (activeState == SendUiStateType.Send && isSendIdle) {
-                    checkFeeUpdateScheduler.scheduleTask(
-                        scope = viewModelScope,
-                        task = getFeePeriodicTask(),
-                    )
-                } else {
-                    checkFeeUpdateScheduler.cancelTask()
-                }
-            }
-            .launchIn(viewModelScope)
-    }
+        val isSending = uiState.sendState.isSending
+        val isSuccess = uiState.sendState.isSuccess
+        val noErrorNotifications = uiState.sendState.notifications.none { it is SendNotification.Error }
 
-    private fun getFeePeriodicTask() = PeriodicTask(
-        delay = CHECK_FEE_UPDATE_DELAY,
-        isDelayFirst = true,
-        task = {
-            runCatching(dispatchers.main) {
-                if (uiState.sendState.isSuccess) {
-                    checkFeeUpdateScheduler.cancelTask()
-                    null
-                } else {
-                    callFeeUseCase()
-                }
-            }
-        },
-        onSuccess = { maybeFee ->
-            if (maybeFee == null) {
-                checkFeeUpdateScheduler.cancelTask()
-                uiState = eventStateFactory.getGenericErrorState(
-                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
-                )
-            } else {
-                maybeFee.fold(
+        if (!isSending && !isSuccess && noErrorNotifications) {
+            viewModelScope.launch(dispatchers.main) {
+                val feeUpdatedState = callFeeUseCase()?.fold(
                     ifRight = {
-                        uiState = eventStateFactory.getFeeUpdatedAlert(
+                        uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                        eventStateFactory.getFeeUpdatedAlert(
                             fee = it,
                             onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                            onFeeNotIncreased = {
+                                uiState = stateFactory.getSendingStateUpdate(isSending = true)
+                                verifyAndSendTransaction()
+                            },
                         )
                     },
                     ifLeft = {
-                        checkFeeUpdateScheduler.cancelTask()
-                        uiState = eventStateFactory.getGenericErrorState(
+                        uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                        eventStateFactory.getGenericErrorState(
                             error = (it as? GetFeeError.DataError)?.cause,
                             onConsume = { uiState = eventStateFactory.onConsumeEventState() },
                         )
                     },
                 )
+
+                uiState = if (feeUpdatedState != null) {
+                    feeUpdatedState
+                } else {
+                    uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                    eventStateFactory.getGenericErrorState(
+                        onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                    )
+                }
             }
-        },
-        onError = { /* no-op */ },
-    )
+        }
+    }
     // endregion
 
     companion object {
