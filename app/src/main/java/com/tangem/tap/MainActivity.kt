@@ -23,9 +23,9 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.feature.qrscanning.QrScanningRouter
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.event.StateEvent
@@ -36,6 +36,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
@@ -57,8 +58,6 @@ import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsL
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
-import com.tangem.tap.features.intentHandler.handlers.BuyCurrencyIntentHandler
-import com.tangem.tap.features.intentHandler.handlers.SellCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
@@ -138,6 +137,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var qrScanningRouter: QrScanningRouter
 
+    @Inject
+    lateinit var deepLinksRegistry: DeepLinksRegistry
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -167,6 +169,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         checkForNotificationPermission()
         observeStateUpdates()
+
+        if (intent != null) {
+            deepLinksRegistry.launch(intent)
+        }
     }
 
     private fun observeStateUpdates() {
@@ -293,8 +299,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         val hasSavedWalletsProvider = { store.state.globalState.userWalletsListManager?.hasUserWallets == true }
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
-        intentProcessor.addHandler(BuyCurrencyIntentHandler())
-        intentProcessor.addHandler(SellCurrencyIntentHandler())
     }
 
     private fun updateAppTheme(appThemeMode: AppThemeMode) {
@@ -331,6 +335,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         lifecycleScope.launch {
             intentProcessor.handleIntent(intent)
+        }
+
+        if (intent != null) {
+            deepLinksRegistry.launch(intent)
         }
     }
 
