@@ -40,7 +40,7 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
             key = FEE_SELECTOR_KEY,
         ) {
             SendSpeedSelector(
-                state = feeSendState,
+                state = state,
                 clickIntents = clickIntents,
                 modifier = Modifier.animateItemPlacement(),
             )
