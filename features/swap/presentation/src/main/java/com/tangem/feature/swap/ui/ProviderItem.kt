@@ -146,7 +146,7 @@ private fun ProviderContentState(
                 }
                 Row(
                     modifier = Modifier.padding(
-                        top = TangemTheme.dimens.spacing8,
+                        top = TangemTheme.dimens.spacing6,
                         end = TangemTheme.dimens.spacing56,
                     ),
                 ) {
@@ -238,7 +238,7 @@ private fun ProviderUnavailableState(
                         text = it.resolveReference(),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+                        modifier = Modifier.padding(top = TangemTheme.dimens.spacing6),
                     )
                 }
             }
