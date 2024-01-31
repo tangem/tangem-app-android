@@ -59,7 +59,6 @@ internal fun SendRecipientContent(
                     placeholder = address.placeholder,
                     onValueChange = address.onValueChange,
                     onPasteClick = clickIntents::onRecipientAddressValueChange,
-                    singleLine = true,
                     isError = isError,
                     isLoading = isValidating,
                     error = address.error,
