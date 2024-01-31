@@ -18,6 +18,8 @@ sealed class DataError {
 
     data class ExchangeTooSmallAmountError(override val code: Int, val amount: SwapAmount) : DataError()
 
+    data class ExchangeTooBigAmountError(override val code: Int, val amount: SwapAmount) : DataError()
+
     data class ExchangeNotEnoughAllowanceError(override val code: Int, val currentAllowance: BigDecimal) : DataError()
 
     data class ExchangeNotEnoughBalanceError(override val code: Int) : DataError()
