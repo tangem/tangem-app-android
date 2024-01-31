@@ -49,6 +49,8 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.common)
+    implementation(projects.core.deepLinks)
+    implementation(projects.core.deepLinks.global)
 
     /** Domain modules */
     implementation(projects.domain.card)
