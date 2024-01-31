@@ -320,5 +320,5 @@ internal sealed class AddCustomTokenWarning(val description: TextReference) {
 internal data class AddCustomTokenFloatingButton(
     val isEnabled: Boolean,
     val showProgress: Boolean,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
 )
