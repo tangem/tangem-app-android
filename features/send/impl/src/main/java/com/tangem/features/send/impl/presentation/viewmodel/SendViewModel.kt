@@ -17,10 +17,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
-import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.utils.convertToAmount
@@ -40,10 +37,7 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
-import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
-import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
-import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.state.fee.getFee
+import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -73,8 +67,10 @@ internal class SendViewModel @Inject constructor(
     private val parseSharedAddressUseCase: ParseSharedAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
+    private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
+    getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
 
@@ -106,13 +102,21 @@ internal class SendViewModel @Inject constructor(
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        userWalletProvider = Provider { userWallet },
     )
 
     private val eventStateFactory = SendEventStateFactory(
         clickIntents = this,
         currentStateProvider = Provider { uiState },
         feeStateFactory = feeStateFactory,
+    )
+
+    private val feeNotificationFactory = FeeNotificationFactory(
+        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+        currentStateProvider = Provider { uiState },
+        userWalletProvider = Provider { userWallet },
+        clickIntents = this,
+        getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
     )
 
     private val sendNotificationFactory = SendNotificationFactory(
@@ -129,6 +133,7 @@ internal class SendViewModel @Inject constructor(
         private set
 
     private var userWallet: UserWallet by Delegates.notNull()
+    private var isAmountSubtractAvailable: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
 
@@ -137,6 +142,7 @@ internal class SendViewModel @Inject constructor(
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
+    private var feeNotificationsJobHolder = JobHolder()
     private var qrScannerJobHolder = JobHolder()
 
     private var checkFeeUpdateScheduler = SingleTaskScheduler<Either<GetFeeError, TransactionFee>?>()
@@ -163,6 +169,7 @@ internal class SendViewModel @Inject constructor(
             getUserWalletUseCase(userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
+                    checkIfSubtractAvailable()
                     getCurrenciesStatusUpdates(owner, wallet)
                 },
                 ifLeft = {
@@ -326,6 +333,16 @@ internal class SendViewModel @Inject constructor(
             .saveIn(sendNotificationsJobHolder)
     }
 
+    private fun updateFeeNotifications() {
+        feeNotificationFactory.create()
+            .conflate()
+            .distinctUntilChanged()
+            .onEach { uiState = feeStateFactory.getFeeNotificationState(notifications = it) }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(feeNotificationsJobHolder)
+    }
+
     // region screen state navigation
     override fun popBackStack() = stateRouter.popBackStack()
     override fun onBackClick() = stateRouter.onBackClick()
@@ -429,28 +446,39 @@ internal class SendViewModel @Inject constructor(
 
     override fun onFeeSelectorClick(feeType: FeeType) {
         uiState = feeStateFactory.onFeeSelectedState(feeType)
+        updateFeeNotifications()
     }
 
     override fun onCustomFeeValueChange(index: Int, value: String) {
         uiState = feeStateFactory.onCustomFeeValueChange(index, value)
+        updateFeeNotifications()
     }
 
     override fun onSubtractSelect(value: Boolean) {
         uiState = feeStateFactory.onSubtractSelect(value)
+        updateFeeNotifications()
     }
 
     private fun loadFee() {
         viewModelScope.launch(dispatchers.main) {
             uiState = feeStateFactory.onFeeOnLoadingState()
             uiState = callFeeUseCase()?.fold(
-                ifRight = {
-                    feeStateFactory.onFeeOnLoadedState(it)
+                ifRight = { fees ->
+                    feeStateFactory.onFeeOnLoadedState(fees, isAmountSubtractAvailable)
                 },
                 ifLeft = {
                     feeStateFactory.onFeeOnErrorState()
                 },
             ) ?: feeStateFactory.onFeeOnErrorState()
+            updateFeeNotifications()
         }.saveIn(feeJobHolder)
+    }
+
+    private suspend fun checkIfSubtractAvailable() {
+        isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, cryptoCurrency).fold(
+            ifRight = { it },
+            ifLeft = { false },
+        )
     }
 
     private suspend fun callFeeUseCase(): Either<GetFeeError, TransactionFee>? {
@@ -501,8 +529,11 @@ internal class SendViewModel @Inject constructor(
         val memo = uiState.recipientState?.memoTextField?.value
         val fee = feeSelectorState.getFee()
         val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
-
-        val amountToSend = if (feeState.isSubtract) feeState.receivedAmountValue else amountValue
+        val amountToSend = if (feeState.isSubtract && isAmountSubtractAvailable) {
+            feeState.receivedAmountValue
+        } else {
+            amountValue
+        }
 
         viewModelScope.launch(dispatchers.main) {
             createTransactionUseCase(
