@@ -827,11 +827,13 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
             val currency = when (getCustomTokenType()) {
                 CustomTokenType.TOKEN -> {
+                    val contractAddress = foundToken?.network?.contractAddress
+                        ?: uiState.form.contractAddressInputField.value
                     CustomCurrency.CustomToken(
                         token = Token(
                             name = uiState.form.tokenNameInputField.value,
                             symbol = uiState.form.tokenSymbolInputField.value,
-                            contractAddress = uiState.form.contractAddressInputField.value,
+                            contractAddress = contractAddress,
                             decimals = requireNotNull(uiState.form.decimalsInputField.value.toIntOrNull()),
                             id = foundToken?.id,
                         ),
