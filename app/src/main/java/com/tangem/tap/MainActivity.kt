@@ -58,8 +58,6 @@ import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsL
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
-import com.tangem.tap.features.intentHandler.handlers.BuyCurrencyIntentHandler
-import com.tangem.tap.features.intentHandler.handlers.SellCurrencyIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
@@ -301,8 +299,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         val hasSavedWalletsProvider = { store.state.globalState.userWalletsListManager?.hasUserWallets == true }
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
-        intentProcessor.addHandler(BuyCurrencyIntentHandler())
-        intentProcessor.addHandler(SellCurrencyIntentHandler())
     }
 
     private fun updateAppTheme(appThemeMode: AppThemeMode) {
