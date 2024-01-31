@@ -23,6 +23,9 @@ data class ExpressErrorValue(
     @Json(name = "minAmount")
     val minAmount: String?,
 
+    @Json(name = "maxAmount")
+    val maxAmount: String?,
+
     @Json(name = "decimals")
     val decimals: Int?,
 
