@@ -42,7 +42,7 @@ class TangemColors internal constructor(
         warning: Color,
         attention: Color,
         accent: Color = TangemColorPalette.Azure,
-        constantWhite: Color = TangemColorPalette.White,
+        constant: Color = TangemColorPalette.White,
     ) {
         var primary1 by mutableStateOf(primary1)
             private set
@@ -60,7 +60,7 @@ class TangemColors internal constructor(
             private set
         var attention by mutableStateOf(attention)
             private set
-        var constantWhite by mutableStateOf(constantWhite)
+        var constantWhite by mutableStateOf(constant)
             private set
 
         fun update(other: Text) {
@@ -83,6 +83,7 @@ class TangemColors internal constructor(
         warning: Color,
         attention: Color,
         accent: Color = TangemColorPalette.Azure,
+        constant: Color = TangemColorPalette.White,
     ) {
         var primary1 by mutableStateOf(primary1)
             private set
@@ -118,8 +119,7 @@ class TangemColors internal constructor(
         primary: Color,
         secondary: Color,
         disabled: Color,
-        positive: Color = TangemColorPalette.Meadow,
-        positiveDisabled: Color,
+        positive: Color = TangemColorPalette.Azure,
     ) {
         var primary by mutableStateOf(primary)
             private set
@@ -129,15 +129,12 @@ class TangemColors internal constructor(
             private set
         var positive by mutableStateOf(positive)
             private set
-        var positiveDisabled by mutableStateOf(positiveDisabled)
-            private set
 
         fun update(other: Button) {
             primary = other.primary
             secondary = other.secondary
             disabled = other.disabled
             positive = other.positive
-            positiveDisabled = other.positiveDisabled
         }
     }
 
@@ -146,9 +143,7 @@ class TangemColors internal constructor(
         primary: Color,
         secondary: Color,
         tertiary: Color,
-        plain: Color,
         action: Color,
-        fade: Color,
     ) {
         var primary by mutableStateOf(primary)
             private set
@@ -156,20 +151,14 @@ class TangemColors internal constructor(
             private set
         var tertiary by mutableStateOf(tertiary)
             private set
-        var plain by mutableStateOf(plain)
-            private set
         var action by mutableStateOf(action)
-            private set
-        var fade by mutableStateOf(fade)
             private set
 
         fun update(other: Background) {
             primary = other.primary
             secondary = other.secondary
             tertiary = other.tertiary
-            plain = other.plain
             action = other.action
-            fade = other.fade
         }
     }
 
