@@ -19,6 +19,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Domain */
+    implementation(projects.domain.appCurrency)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
