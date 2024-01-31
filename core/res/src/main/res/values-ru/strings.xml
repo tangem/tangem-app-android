@@ -655,7 +655,7 @@
     <string name="wallet_connect_service_no_chain_id">Dapp не предоставил необходимые данные для открытия сессии WalletConnect</string>
     <string name="wallet_connect_session_not_found">Не удалось найти сессию для обработки запроса</string>
     <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
-    <string name="wallet_connect_subtitle">Подключение к Dapps</string>
+    <string name="wallet_connect_subtitle">Подключение к dApps</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_transaction_signed">Транзакция успешно подписана и отправлена ​​в Dapp</string>
     <string name="wallet_connect_transaction_signed_and_send">Транзакция успешно подписана и отправлена ​​в блокчейн</string>
