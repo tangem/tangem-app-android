@@ -68,7 +68,7 @@
     <string name="common_biometric_authentication">biometric authentication</string>
     <string name="common_biometrics">biometrics</string>
     <string name="common_buy">Buy</string>
-    <string name="common_buy_currency">Buy %1$s</string>
+    <string name="common_buy_currency">Go to %1$s</string>
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_close">Close</string>
@@ -483,8 +483,6 @@
     <string name="send_network_fee_warning_title">Network fee coverage</string>
     <string name="send_notification_exceed_balance_text">Insufficient funds for the transfer, as the total of the fee and transfer amount exceeds the existing balance</string>
     <string name="send_notification_exceed_balance_title">Total exceeds balance</string>
-    <string name="send_notification_exceed_fee_text">The commission fee exceeds the network balance. To continue, it is necessary to replenish the network balance.</string>
-    <string name="send_notification_exceed_fee_title">Fee exceeds balance</string>
     <string name="send_notification_high_fee_title">Fee is increased</string>
     <string name="send_notification_high_fee_text">The fee for transferring the entire balance is higher. To reduce the commission, you can leave 0.01.</string>
     <string name="send_notification_fee_too_high_accept">Reduce by %s XTZ</string>
@@ -503,11 +501,6 @@
     <string name="send_notification_existential_deposit_title">Existential deposit</string>
     <string name="send_notification_existential_deposit_text">The account will be wiped from the blockchain if a balance goes below the existential deposit. Please ensure that the remaining balance after sending will not be less than %s.</string>
     <string name="send_optional_field">Optional</string>
-    <string name="send_qrcode_alert_change">Change</string>
-    <string name="send_qrcode_alert_decline">Decline</string>
-    <string name="send_qrcode_scan_address_success">Recipient’s address scanned</string>
-    <string name="send_qrcode_scan_amount_alert_text">Change the entered amount?</string>
-    <string name="send_qrcode_scan_amount_alert_title">QR code contains information about the sending amount equal to %s</string>
     <string name="send_qrcode_scan_info">Please align your QR code with the square to scan it. Ensure you scan %s network address.</string>
     <string name="send_recent_transactions">Recent</string>
     <string name="send_recipient">Recipient</string>
