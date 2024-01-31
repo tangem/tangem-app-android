@@ -24,6 +24,12 @@ interface CardTypesResolver {
 
     fun isBadWallet(): Boolean
 
+    fun isJrWallet(): Boolean
+
+    fun isGrimWallet(): Boolean
+
+    fun isSatoshiFriendsWallet(): Boolean
+
     fun isWhiteWallet(): Boolean
 
     fun isWallet2(): Boolean
