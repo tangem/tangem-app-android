@@ -99,8 +99,9 @@ internal class SwapViewModel @Inject constructor(
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private var swapRouter: SwapRouter by Delegates.notNull()
 
-    private val isExchangeTooSmallAmountError: (SwapState) -> Boolean = {
-        it is SwapState.SwapError && it.error is DataError.ExchangeTooSmallAmountError
+    private val isUserResolvableError: (SwapState) -> Boolean = {
+        it is SwapState.SwapError &&
+            (it.error is DataError.ExchangeTooSmallAmountError || it.error is DataError.ExchangeTooBigAmountError)
     }
 
     val currentScreen: SwapNavScreen
@@ -1001,7 +1002,7 @@ internal class SwapViewModel @Inject constructor(
 
     private fun Map<SwapProvider, SwapState>.consideredProvidersStates(): Map<SwapProvider, SwapState> {
         return this.filter {
-            it.value is SwapState.QuotesLoadedState || isExchangeTooSmallAmountError(it.value)
+            it.value is SwapState.QuotesLoadedState || isUserResolvableError(it.value)
         }
     }
 
