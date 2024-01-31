@@ -52,7 +52,7 @@ internal class NetworkStatusFactory {
                     amounts.firstOrNull { amount ->
                         amount is CryptoCurrencyAmount.Token &&
                             currency.id.rawCurrencyId == amount.tokenId &&
-                            currency.contractAddress == amount.tokenContractAddress
+                            currency.contractAddress.equals(amount.tokenContractAddress, ignoreCase = true)
                     }
                 }
             }
