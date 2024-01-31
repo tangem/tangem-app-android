@@ -145,7 +145,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
         return AddCustomTokenFloatingButton(
             isEnabled = true,
             showProgress = false,
-            onClick = actionsHandler::onAddCustomTokenClick)
+            onClick = actionsHandler::onAddCustomTokenClick,
+        )
     }
 
     private inner class FormStateBuilder {
@@ -857,7 +858,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
             viewModelScope.launch(dispatchers.io) {
                 val oldButtonState = uiState.floatingButton
                 uiState = uiState.copySealed(
-                    floatingButton = uiState.floatingButton.copy(isEnabled = false, showProgress = true)
+                    floatingButton = uiState.floatingButton.copy(isEnabled = false, showProgress = true),
                 )
                 runCatching { featureInteractor.saveToken(currency) }
                     .onSuccess { featureRouter.openWalletScreen() }
