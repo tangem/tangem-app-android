@@ -75,7 +75,12 @@ internal class SendStateFactory(
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
-    private val feeStateConverter by lazy { SendFeeStateConverter() }
+    private val feeStateConverter by lazy {
+        SendFeeStateConverter(
+            appCurrencyProvider = appCurrencyProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
 
     private val recipientListStateConverter by lazy {
         SendRecipientListConverter(
