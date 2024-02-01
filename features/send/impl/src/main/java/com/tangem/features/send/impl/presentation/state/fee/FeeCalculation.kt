@@ -1,8 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchain.extensions.toBigDecimalOrDefault
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import java.math.BigDecimal
 
@@ -13,28 +11,4 @@ internal fun calculateReceiveAmount(state: SendUiState, feeAmount: Fee): BigDeci
     val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
     val fee = feeAmount.amount.value ?: return BigDecimal.ZERO
     return amountValue.minus(fee)
-}
-
-/**
- * Returns fee amount depending on current state
- */
-internal fun FeeSelectorState.Content.getFee(): Fee {
-    return when (fees) {
-        is TransactionFee.Choosable -> {
-            when (selectedFee) {
-                FeeType.SLOW -> fees.minimum
-                FeeType.MARKET -> fees.normal
-                FeeType.FAST -> fees.priority
-                FeeType.CUSTOM -> {
-                    val feeAmount = customValues.firstOrNull()?.value.toBigDecimalOrDefault()
-                    Fee.Common(
-                        fees.normal.amount.copy(
-                            value = feeAmount,
-                        ),
-                    )
-                }
-            }
-        }
-        is TransactionFee.Single -> fees.normal
-    }
 }
