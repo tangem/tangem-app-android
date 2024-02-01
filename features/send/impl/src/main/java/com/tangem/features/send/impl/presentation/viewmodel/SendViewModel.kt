@@ -38,7 +38,10 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
-import com.tangem.features.send.impl.presentation.state.fee.*
+import com.tangem.features.send.impl.presentation.state.fee.FeeNotificationFactory
+import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
+import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -71,7 +74,7 @@ internal class SendViewModel @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
-    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
+    isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
@@ -536,7 +539,7 @@ internal class SendViewModel @Inject constructor(
         val feeState = uiState.feeState ?: return
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
         val memo = uiState.recipientState?.memoTextField?.value
-        val fee = feeSelectorState.getFee()
+        val fee = feeStateFactory.feeConverter.convert(feeSelectorState)
         val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
         val amountToSend = if (feeState.isSubtract && isAmountSubtractAvailable) {
             feeState.receivedAmountValue
@@ -555,6 +558,7 @@ internal class SendViewModel @Inject constructor(
             ).fold(
                 ifLeft = {
                     Timber.e(it)
+                    uiState = stateFactory.getSendingStateUpdate(isSending = false)
                     uiState = eventStateFactory.getGenericErrorState(
                         error = it,
                         onConsume = { uiState = eventStateFactory.onConsumeEventState() },
