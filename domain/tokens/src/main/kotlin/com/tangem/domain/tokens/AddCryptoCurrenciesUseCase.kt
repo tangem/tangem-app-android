@@ -81,7 +81,18 @@ class AddCryptoCurrenciesUseCase(
             .filter { hasCoinForToken(existingCurrencies, it) }
             .mapTo(hashSetOf(), CryptoCurrency.Token::network)
 
-        catch({ networksRepository.getNetworkStatusesSync(userWalletId, networksToUpdate, refresh = true) }) {
+        val networkToUpdate = currenciesToAdd.map { it.network }
+            .subtract(existingCurrencies.map { it.network }.toSet())
+
+        catch(
+            {
+                networksRepository.getNetworkStatusesSync(
+                    userWalletId = userWalletId,
+                    networks = networksToUpdate + networkToUpdate,
+                    refresh = true,
+                )
+            },
+        ) {
             raise(AddCurrencyError.DataError(it))
         }
     }
