@@ -101,7 +101,17 @@ internal class SaveWalletMiddleware {
             val isFirstSavedWallet = !userWalletsListManager.hasUserWallets
 
             saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
-                .flatMap { userWalletsListManager.save(userWallet, canOverride = true) }
+                .flatMap {
+                    // Save wallet only at first time (SaveWalletBottomSheet).
+                    // Otherwise (Example, add new wallet in Details) userWalletsListManager.wallets subscribers will
+                    // receive useless updates.
+                    // See: OnboardingHelper.trySaveWalletAndNavigateToWalletScreen()
+                    if (isFirstSavedWallet) {
+                        userWalletsListManager.save(userWallet, canOverride = true)
+                    } else {
+                        CompletionResult.Success(Unit)
+                    }
+                }
                 .doOnFailure { error ->
                     store.dispatchWithMain(SaveWalletAction.Save.Error(error))
                 }
@@ -118,8 +128,8 @@ internal class SaveWalletMiddleware {
                             )
                     }
 
-                    store.dispatchWithMain(SaveWalletAction.Save.Success)
-                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                    store.dispatchOnMain(SaveWalletAction.Save.Success)
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                 }
         }
     }
