@@ -211,7 +211,7 @@ internal class WalletsUpdateActionResolverV2 @Inject constructor(
 
             override fun toString(): String {
                 return """
-                    Initialize(
+                    InitializeWallets(
                         selectedWalletIndex = $selectedWalletIndex,
                         selectedWallet = ${selectedWallet.walletId},
                         wallets = ${wallets.joinToString { it.walletId.toString() }}
