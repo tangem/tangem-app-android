@@ -77,6 +77,7 @@ internal sealed class SendStates {
         val receivedAmount: String,
         val rate: BigDecimal?,
         val appCurrency: AppCurrency,
+        val isFeeApproximate: Boolean,
         val notifications: ImmutableList<SendFeeNotification>,
     ) : SendStates()
 
