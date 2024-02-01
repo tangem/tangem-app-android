@@ -1,6 +1,8 @@
 package com.tangem.data.transaction.di
 
+import com.tangem.data.transaction.DefaultFeeRepository
 import com.tangem.data.transaction.DefaultTransactionRepository
+import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,5 +26,11 @@ internal object TransactionDataModule {
             walletManagersFacade = walletManagersFacade,
             coroutineDispatcherProvider = coroutineDispatcherProvider,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun providesFeeRepository(): FeeRepository {
+        return DefaultFeeRepository()
     }
 }
