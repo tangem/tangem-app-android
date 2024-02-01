@@ -43,6 +43,7 @@ internal sealed class SendStates {
     abstract val isPrimaryButtonEnabled: Boolean
 
     /** Amount state */
+    @Stable
     data class AmountState(
         override val type: SendUiStateType = SendUiStateType.Amount,
         override val isPrimaryButtonEnabled: Boolean,
@@ -54,6 +55,7 @@ internal sealed class SendStates {
     ) : SendStates()
 
     /** Recipient state */
+    @Stable
     data class RecipientState(
         override val type: SendUiStateType = SendUiStateType.Recipient,
         override val isPrimaryButtonEnabled: Boolean,
@@ -65,6 +67,7 @@ internal sealed class SendStates {
     ) : SendStates()
 
     /** Fee and speed state */
+    @Stable
     data class FeeState(
         override val type: SendUiStateType = SendUiStateType.Fee,
         override val isPrimaryButtonEnabled: Boolean = false,
@@ -82,6 +85,7 @@ internal sealed class SendStates {
     ) : SendStates()
 
     /** Send state */
+    @Stable
     data class SendState(
         override val type: SendUiStateType = SendUiStateType.Send,
         override val isPrimaryButtonEnabled: Boolean = true,
