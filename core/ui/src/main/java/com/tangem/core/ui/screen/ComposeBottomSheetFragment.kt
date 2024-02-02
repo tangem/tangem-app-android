@@ -45,7 +45,7 @@ abstract class ComposeBottomSheetFragment : BottomSheetDialogFragment(), Compose
                 if (expandedHeightFraction != null) it.fillMaxHeight(expandedHeightFraction!!) else it
             }
             .background(
-                color = TangemTheme.colors.background.plain,
+                color = TangemTheme.colors.background.primary,
                 shape = TangemTheme.shapes.bottomSheet,
             )
 
