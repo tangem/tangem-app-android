@@ -87,6 +87,7 @@ internal class StateBuilder(
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             providerState = ProviderState.Empty(),
+            shouldShowMaxAmount = false,
             priceImpact = PriceImpact.Empty(),
         )
     }
@@ -187,6 +188,7 @@ internal class StateBuilder(
             permissionState = uiStateHolder.permissionState,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             priceImpact = PriceImpact.Empty(),
+            shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toToken),
         )
     }
 
@@ -276,7 +278,12 @@ internal class StateBuilder(
                 PriceImpact.Empty()
             },
             tosState = createTosState(swapProvider),
+            shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrencyStatus.currency),
         )
+    }
+
+    private fun shouldShowMaxAmount(fromToken: CryptoCurrency, toCurrency: CryptoCurrency): Boolean {
+        return !(fromToken is CryptoCurrency.Coin && fromToken.network.id == toCurrency.network.id)
     }
 
     private fun createTosState(swapProvider: SwapProvider): TosState {
@@ -527,6 +534,16 @@ internal class StateBuilder(
                     onProviderClick = onProviderClick,
                 )
             }
+            is DataError.ExchangeTooBigAmountError -> {
+                swapProvider.convertToAvailableFromProviderState(
+                    alertText = resourceReference(
+                        R.string.express_provider_max_amount,
+                        wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                    ),
+                    selectionType = selectionType,
+                    onProviderClick = onProviderClick,
+                )
+            }
             else -> {
                 ProviderState.Empty()
             }
@@ -541,7 +558,17 @@ internal class StateBuilder(
                         id = R.string.warning_express_too_minimal_amount_title,
                         formatArgs = wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
-                    subtitle = resourceReference(R.string.warning_express_too_minimal_amount_description),
+                    subtitle = resourceReference(R.string.warning_express_wrong_amount_description),
+                    iconResId = R.drawable.ic_alert_circle_24,
+                ),
+            )
+            is DataError.ExchangeTooBigAmountError -> SwapWarning.GeneralError(
+                notificationConfig = NotificationConfig(
+                    title = resourceReference(
+                        id = R.string.warning_express_too_maximum_amount_title,
+                        formatArgs = wrappedList(dataError.amount.getFormattedCryptoAmount(fromToken)),
+                    ),
+                    subtitle = resourceReference(R.string.warning_express_wrong_amount_description),
                     iconResId = R.drawable.ic_alert_circle_24,
                 ),
             )
@@ -553,7 +580,7 @@ internal class StateBuilder(
                         resourceReference(R.string.warning_express_refresh_required_title)
                     },
                     subtitle = if (dataError is DataError.UnknownError) {
-                        resourceReference(R.string.swapping_generic_error)
+                        resourceReference(R.string.common_unknown_error)
                     } else {
                         resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString()))
                     },
