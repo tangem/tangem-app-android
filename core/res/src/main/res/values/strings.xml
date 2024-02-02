@@ -311,6 +311,8 @@
     <string name="onboarding_access_code_repeat_code_title">Re-enter your Access Code</string>
     <string name="onboarding_access_code_too_short">Access code must be at least 4 characters long</string>
     <string name="onboarding_access_codes_doesnt_match">Entered access code didn\'t match the initial access code</string>
+    <string name="onboarding_activation_error_message">Please repeat the operation. The card will be reset to factory settings.</string>
+    <string name="onboarding_activation_error_title">Activation error</string>
     <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card. When backup process is finished you can\'t add more backup cards. If you have one more card, add it to backup. Do you like to continue the backup process?</string>
     <string name="onboarding_backup_exit_warning">The backup process is partly complete. You can\'t exit it now.</string>
     <string name="onboarding_button_add_backup_card">Add a backup card</string>
