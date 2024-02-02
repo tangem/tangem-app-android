@@ -4,6 +4,9 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -39,6 +42,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import java.math.BigDecimal
@@ -112,12 +116,17 @@ internal fun SendSpeedSelector(
                                 visible = fees.normal is Fee.Ethereum,
                                 label = "Custom fee appearance animation",
                             ) {
+                                val showWarning = state.notifications.any {
+                                    it is SendFeeNotification.Warning.TooHigh ||
+                                        it is SendFeeNotification.Warning.TooLow
+                                }
                                 SendSpeedSelectorItem(
                                     titleRes = R.string.common_fee_selector_option_custom,
                                     iconRes = R.drawable.ic_edit_24,
                                     isSelected = isSelected == FeeType.CUSTOM,
                                     onSelect = { clickIntents.onFeeSelectorClick(FeeType.CUSTOM) },
                                     showDivider = fees.normal !is Fee.Ethereum,
+                                    showWarning = showWarning,
                                 )
                             }
                         }
@@ -224,6 +233,7 @@ private fun SendSpeedSelectorItem(
     symbolLength: Int? = null,
     isSelected: Boolean = false,
     showDivider: Boolean = true,
+    showWarning: Boolean = false,
 ) {
     val iconTint by animateColorAsState(
         targetValue = if (isSelected) {
@@ -259,7 +269,10 @@ private fun SendSpeedSelectorItem(
                     symbolLength = symbolLength,
                     textStyle = textStyle,
                 )
+            } else {
+                SpacerWMax()
             }
+            WarningIcon(showWarning = showWarning)
         }
         if (showDivider) {
             Box(
@@ -338,6 +351,26 @@ private fun RowScope.SelectorValueContent(
                 bottom = TangemTheme.dimens.spacing14,
             ),
     )
+}
+
+@Composable
+private fun WarningIcon(showWarning: Boolean = false) {
+    AnimatedVisibility(
+        visible = showWarning,
+        label = "Custom fee warning indicator",
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_alert_triangle_20),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(
+                    vertical = TangemTheme.dimens.spacing12,
+                    horizontal = TangemTheme.dimens.spacing14,
+                ),
+        )
+    }
 }
 
 //region preview
