@@ -46,6 +46,8 @@ sealed class GlobalAction : Action {
         data class StartForUnfinishedBackup(val addedBackupCardsCount: Int) : Onboarding()
 
         object Stop : Onboarding()
+
+        data class ShouldResetCardOnCreate(val shouldReset: Boolean) : Onboarding()
     }
 
     object ScanFailsCounter {
