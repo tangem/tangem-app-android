@@ -308,6 +308,8 @@
     <string name="onboarding_access_code_repeat_code_title">Повторно введите код доступа</string>
     <string name="onboarding_access_code_too_short">Код доступа должен состоять не менее чем из 4 символов.</string>
     <string name="onboarding_access_codes_doesnt_match">Введенные коды доступа не совпадают</string>
+    <string name="onboarding_activation_error_message">Необходимо повторить операцию, при этом карта будет сброшена к заводским настройкам</string>
+    <string name="onboarding_activation_error_title">Ошибка активации</string>
     <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту. После того, как процесс будет завершен, Вы больше не сможете добавить карт. Если у Вас есть еще одна карта, добавьте ее в резервную копию. Хотите продолжить?</string>
     <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
     <string name="onboarding_button_add_backup_card">Добавить резервную карту</string>
