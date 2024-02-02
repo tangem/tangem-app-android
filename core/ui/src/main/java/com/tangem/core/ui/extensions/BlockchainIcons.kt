@@ -48,6 +48,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "decimal", "decimal/test" -> R.drawable.img_decimal_22
         "xdc", "xdc/test" -> R.drawable.img_xdc_22
         "vechain", "vechain/test" -> R.drawable.img_vechain_22
+        "aptos", "aptos/test" -> R.drawable.img_aptos_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -97,6 +98,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "decimal", "decimal/test" -> R.drawable.img_decimal_22
         "xdc-network", "xdc-network/test" -> R.drawable.img_xdc_22
         "vechain", "vechain/test" -> R.drawable.img_vechain_22
+        "aptos", "aptos/test" -> R.drawable.img_aptos_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -143,6 +145,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "decimal" -> R.drawable.img_decimal_22
         "xdce-crowd-sale" -> R.drawable.img_xdc_22
         "vechain" -> R.drawable.img_vechain_22
+        "aptos" -> R.drawable.img_aptos_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -192,6 +195,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "decimal", "decimal/test" -> R.drawable.ic_decimal_22
         "xdc", "xdc/test" -> R.drawable.ic_xdc_22
         "vechain", "vechain/test" -> R.drawable.ic_vechain_22
+        "aptos", "aptos/test" -> R.drawable.ic_aptos_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -241,6 +245,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "decimal", "decimal/test" -> R.drawable.ic_decimal_22
         "xdc-network", "xdc-network/test" -> R.drawable.ic_xdc_22
         "vechain", "vechain/test" -> R.drawable.ic_vechain_22
+        "aptos", "aptos/test" -> R.drawable.ic_aptos_22
         else -> R.drawable.ic_alert_24
     }
 }
