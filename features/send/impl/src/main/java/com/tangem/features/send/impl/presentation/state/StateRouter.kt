@@ -11,22 +11,16 @@ internal class StateRouter(
     var currentState: MutableStateFlow<SendUiStateType> = MutableStateFlow(SendUiStateType.Recipient)
         private set
 
-    private var isFromSend: Boolean = false
-
     fun popBackStack() {
         fragmentManager.get()?.popBackStack()
     }
 
     fun onBackClick() {
-        if (isFromSend) {
-            showSend()
-        } else {
-            when (currentState.value) {
-                SendUiStateType.Recipient -> popBackStack()
-                SendUiStateType.Amount -> showRecipient()
-                SendUiStateType.Fee -> showAmount()
-                SendUiStateType.Send -> showFee()
-            }
+        when (currentState.value) {
+            SendUiStateType.Recipient -> popBackStack()
+            SendUiStateType.Amount -> showRecipient()
+            SendUiStateType.Fee -> showAmount()
+            SendUiStateType.Send -> showFee()
         }
     }
 
@@ -48,18 +42,15 @@ internal class StateRouter(
         }
     }
 
-    fun showAmount(isFromSend: Boolean = false) {
-        this.isFromSend = isFromSend
+    fun showAmount() {
         currentState.update { SendUiStateType.Amount }
     }
 
-    fun showRecipient(isFromSend: Boolean = false) {
-        this.isFromSend = isFromSend
+    fun showRecipient() {
         currentState.update { SendUiStateType.Recipient }
     }
 
-    fun showFee(isFromSend: Boolean = false) {
-        this.isFromSend = isFromSend
+    fun showFee() {
         currentState.update { SendUiStateType.Fee }
     }
 
