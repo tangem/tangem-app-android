@@ -1,27 +1,23 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconToggleButton
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
-import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
@@ -31,9 +27,7 @@ internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Uni
         modifier = modifier,
         content = {
             when (state) {
-                is ResetCardScreenState.ResetCardScreenContent -> {
-                    ResetCardView(state = state)
-                }
+                is ResetCardScreenState.ResetCardScreenContent -> ResetCardView(state = state)
                 ResetCardScreenState.InitialState -> {
                     // do nothing for now, just white screen
                 }
@@ -43,83 +37,86 @@ internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Uni
     )
 }
 
-@Suppress("LongMethod", "MagicNumber")
 @Composable
 private fun ResetCardView(state: ResetCardScreenState.ResetCardScreenContent) {
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.SpaceBetween,
+            .verticalScroll(scrollState) // set scrollState after fillMaxSize
+            .padding(horizontal = TangemTheme.dimens.spacing20),
     ) {
-        ScreenTitle(titleRes = R.string.card_settings_reset_card_to_factory)
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 21.dp),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.img_alert),
-                contentDescription = "",
-                tint = Color.Unspecified,
-            )
-        }
-        Column(
-            modifier = Modifier.offset(y = (-32).dp),
-            verticalArrangement = Arrangement.Bottom,
-        ) {
-            Text(
-                text = stringResource(id = R.string.common_attention),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                style = TangemTheme.typography.h3,
-                color = TangemTheme.colors.text.primary1,
-            )
+        Title()
+        SpacerH24()
+        AlertImage()
+        SpacerH24()
+        Subtitle()
+        SpacerH16()
+        Description(text = state.descriptionText)
+        SpacerH12()
+        Conditions(state)
+        DynamicSpacer(scrollState = scrollState)
+        SpacerH16()
+        ResetButton(enabled = state.resetButtonEnabled, onResetButtonClick = state.onResetButtonClick)
+        SpacerH16()
+    }
+}
 
-            Spacer(modifier = Modifier.size(24.dp))
+@Composable
+private fun Title() {
+    Text(
+        text = stringResource(id = R.string.card_settings_reset_card_to_factory),
+        style = TangemTheme.typography.h1,
+        color = TangemTheme.colors.text.primary1,
+    )
+}
 
-            Text(
-                text = state.descriptionText.resolveReference(),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
-            )
+@Composable
+private fun AlertImage() {
+    Image(
+        painter = painterResource(id = R.drawable.img_alert_80),
+        contentDescription = null,
+        modifier = Modifier.size(TangemTheme.dimens.size80),
+    )
+}
 
-            Spacer(modifier = Modifier.size(28.dp))
+@Composable
+private fun Subtitle() {
+    Text(
+        text = stringResource(id = R.string.common_attention),
+        style = TangemTheme.typography.h3,
+        color = TangemTheme.colors.text.primary1,
+    )
+}
 
-            state.warningsToShow.forEach {
-                when (it) {
-                    ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS -> {
-                        ConditionCheckBox(
-                            checkedState = state.acceptCondition1Checked,
-                            onCheckedChange = state.onAcceptCondition1ToggleClick,
-                            description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
-                        )
-                    }
-                    ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE -> {
-                        ConditionCheckBox(
-                            checkedState = state.acceptCondition2Checked,
-                            onCheckedChange = state.onAcceptCondition2ToggleClick,
-                            description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
-                        )
-                    }
-                }
+@Composable
+private fun Description(text: TextReference) {
+    Text(
+        text = text.resolveReference(),
+        style = TangemTheme.typography.body1,
+        color = TangemTheme.colors.text.secondary,
+    )
+}
+
+@Composable
+private fun Conditions(state: ResetCardScreenState.ResetCardScreenContent) {
+    state.warningsToShow.forEach {
+        when (it) {
+            ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS -> {
+                ConditionCheckBox(
+                    checkedState = state.acceptCondition1Checked,
+                    onCheckedChange = state.onAcceptCondition1ToggleClick,
+                    description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
+                )
             }
 
-            Spacer(modifier = Modifier.size(16.dp))
-            Box(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
-            ) {
-                AnimatedContent(
-                    targetState = state.resetButtonEnabled,
-                    label = "Update checked state",
-                ) { buttonEnabled ->
-                    DetailsMainButton(
-                        title = stringResource(id = R.string.reset_card_to_factory_button_title),
-                        onClick = state.onResetButtonClick,
-                        enabled = buttonEnabled,
-                    )
-                }
+            ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE -> {
+                ConditionCheckBox(
+                    checkedState = state.acceptCondition2Checked,
+                    onCheckedChange = state.onAcceptCondition2ToggleClick,
+                    description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
+                )
             }
         }
     }
@@ -130,16 +127,11 @@ private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                onClick = { onCheckedChange.invoke(!checkedState) },
-            )
-            .padding(top = TangemTheme.dimens.size16, bottom = TangemTheme.dimens.size16),
+            .clickable(onClick = { onCheckedChange.invoke(!checkedState) })
+            .padding(vertical = TangemTheme.dimens.size16),
+        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
     ) {
-        IconToggleButton(
-            checked = checkedState,
-            onCheckedChange = onCheckedChange,
-            modifier = Modifier.padding(start = TangemTheme.dimens.size20, end = TangemTheme.dimens.size20),
-        ) {
+        IconToggleButton(checked = checkedState, onCheckedChange = onCheckedChange) {
             AnimatedContent(targetState = checkedState, label = "Update checked state") { checked ->
                 Icon(
                     painter = painterResource(
@@ -151,20 +143,42 @@ private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) 
                     ),
                     contentDescription = null,
                     tint = if (checked) {
-                        TangemTheme.colors.icon.accent
+                        TangemTheme.colors.control.checked
                     } else {
                         TangemTheme.colors.icon.secondary
                     },
                 )
             }
         }
+
         Text(
             text = description.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
-            modifier = Modifier.padding(end = TangemTheme.dimens.size20),
         )
     }
+}
+
+/**
+ * It's helps to create an adaptive layout.
+ * ResetButton will be attach to the bottom of large screen or will be inside scroll layout of small screen.
+ *
+ * @param scrollState flag determines if screen is small (has scroll) or large (hasn't scroll)
+ */
+@Composable
+private fun ColumnScope.DynamicSpacer(scrollState: ScrollState) {
+    if (!scrollState.canScrollBackward && !scrollState.canScrollForward) {
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun ResetButton(enabled: Boolean, onResetButtonClick: () -> Unit) {
+    DetailsMainButton(
+        title = stringResource(id = R.string.reset_card_to_factory_button_title),
+        onClick = onResetButtonClick,
+        enabled = enabled,
+    )
 }
 
 // region Preview
