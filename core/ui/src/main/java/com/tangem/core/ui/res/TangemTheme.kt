@@ -69,7 +69,7 @@ private fun materialThemeColors(colors: TangemColors, isDark: Boolean): Colors {
         secondary = colors.button.primary,
         secondaryVariant = colors.text.accent,
         background = colors.background.primary,
-        surface = colors.background.plain,
+        surface = colors.background.secondary,
         error = colors.text.warning,
         onPrimary = colors.text.primary1,
         onSecondary = colors.text.primary1,
@@ -94,10 +94,10 @@ private fun lightThemeColors(): TangemColors {
             attention = TangemColorPalette.Tangerine,
         ),
         icon = TangemColors.Icon(
-            primary1 = TangemColorPalette.Black,
+            primary1 = TangemColorPalette.Dark6,
             primary2 = TangemColorPalette.White,
             secondary = TangemColorPalette.Dark2,
-            informative = TangemColorPalette.Light5,
+            informative = TangemColorPalette.Dark1,
             inactive = TangemColorPalette.Light4,
             warning = TangemColorPalette.Amaranth,
             attention = TangemColorPalette.Tangerine,
@@ -106,15 +106,12 @@ private fun lightThemeColors(): TangemColors {
             primary = TangemColorPalette.Dark6,
             secondary = TangemColorPalette.Light2,
             disabled = TangemColorPalette.Light2,
-            positiveDisabled = TangemColorPalette.MagicMint,
         ),
         background = TangemColors.Background(
             primary = TangemColorPalette.White,
             secondary = TangemColorPalette.Light1,
             tertiary = TangemColorPalette.Light1,
-            plain = TangemColorPalette.White,
             action = TangemColorPalette.White,
-            fade = TangemColorPalette.White,
         ),
         control = TangemColors.Control(
             checked = TangemColorPalette.Dark6,
@@ -123,7 +120,7 @@ private fun lightThemeColors(): TangemColors {
         ),
         stroke = TangemColors.Stroke(
             primary = TangemColorPalette.Light2,
-            secondary = TangemColorPalette.Dark4,
+            secondary = TangemColorPalette.Dark5,
             transparency = TangemColorPalette.White,
         ),
         field = TangemColors.Field(
@@ -149,25 +146,22 @@ private fun darkThemeColors(): TangemColors {
         icon = TangemColors.Icon(
             primary1 = TangemColorPalette.White,
             primary2 = TangemColorPalette.Dark6,
-            secondary = TangemColorPalette.Dark1,
-            informative = TangemColorPalette.Dark2,
-            inactive = TangemColorPalette.Dark4,
+            secondary = TangemColorPalette.Light5,
+            informative = TangemColorPalette.Dark1,
+            inactive = TangemColorPalette.Dark3,
             warning = TangemColorPalette.Flamingo,
             attention = TangemColorPalette.Mustard,
         ),
         button = TangemColors.Button(
-            primary = TangemColorPalette.Light4,
+            primary = TangemColorPalette.Light2,
             secondary = TangemColorPalette.Dark4,
             disabled = TangemColorPalette.Dark5,
-            positiveDisabled = TangemColorPalette.DarkGreen,
         ),
         background = TangemColors.Background(
             primary = TangemColorPalette.Dark6,
             secondary = TangemColorPalette.Black,
             tertiary = TangemColorPalette.Dark6,
-            plain = TangemColorPalette.Black,
             action = TangemColorPalette.Dark5,
-            fade = TangemColorPalette.Black,
         ),
         control = TangemColors.Control(
             checked = TangemColorPalette.Azure,
@@ -176,7 +170,7 @@ private fun darkThemeColors(): TangemColors {
         ),
         stroke = TangemColors.Stroke(
             primary = TangemColorPalette.Dark4,
-            secondary = TangemColorPalette.Dark1,
+            secondary = TangemColorPalette.Dark4,
             transparency = TangemColorPalette.Dark6,
         ),
         field = TangemColors.Field(
