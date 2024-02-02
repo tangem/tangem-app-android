@@ -51,6 +51,8 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.datasource)
+    implementation(projects.core.deepLinks)
+    implementation(projects.core.deepLinks.global)
 
     /** Domain modules */
     implementation(projects.domain.appCurrency)

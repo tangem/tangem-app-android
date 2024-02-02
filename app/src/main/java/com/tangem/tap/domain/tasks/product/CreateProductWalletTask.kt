@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
@@ -24,6 +25,7 @@ import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingCommand
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
+import com.tangem.operations.read.ReadWalletsListCommand
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.operations.wallet.CreateWalletResponse as SdkCreateWalletResponse
@@ -60,6 +62,7 @@ class CreateProductWalletTask(
     private val cardTypesResolver: CardTypesResolver,
     private val derivationStyleProvider: DerivationStyleProvider,
     private val mnemonic: Mnemonic? = null,
+    private val shouldReset: Boolean,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
@@ -79,7 +82,7 @@ class CreateProductWalletTask(
             cardTypesResolver.isTangemTwins() ->
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
-            else -> CreateWalletTangemWallet(mnemonic, derivationStyleProvider)
+            else -> CreateWalletTangemWallet(mnemonic, shouldReset, derivationStyleProvider, cardDto)
         }
         commandProcessor.proceed(cardDto, session) {
             when (it) {
@@ -139,42 +142,97 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
  */
 private class CreateWalletTangemWallet(
     private val mnemonic: Mnemonic?,
+    private val shouldReset: Boolean,
     private val derivationStyleProvider: DerivationStyleProvider,
+    cardDTO: CardDTO,
 ) : ProductCommandProcessor<CreateProductWalletTaskResponse> {
 
     private var primaryCard: PrimaryCard? = null
+    private val cardConfig = CardConfig.createConfig(cardDTO)
 
     override fun proceed(
         card: CardDTO,
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        val config = CardConfig.createConfig(card)
         val walletsOnCard = card.wallets.map { it.curve }.toSet()
-        val curves = config.mandatoryCurves.toSet()
-            .intersect(card.supportedCurves.toSet())
-            .subtract(walletsOnCard).toList()
-
-        if (curves.isEmpty()) {
-            val createWalletResponses = card.wallets.map { wallet ->
-                CreateWalletResponse(card.cardId, wallet)
-            }
-            proceedWithCreatedWallets(card, createWalletResponses, session, callback)
-            return
+        if (walletsOnCard.isEmpty()) {
+            createMultiWallet(card, session, callback)
+        } else if (shouldReset) {
+            resetCard(card, session, callback)
+        } else {
+            callback(CompletionResult.Failure(TangemSdkError.WalletAlreadyCreated()))
         }
-        CreateWalletsTask(curves, mnemonic).run(session) { result ->
+    }
+
+    private fun createMultiWallet(
+        card: CardDTO,
+        session: CardSession,
+        callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
+    ) {
+        CreateWalletsTask(cardConfig.mandatoryCurves, mnemonic).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    proceedWithCreatedWallets(
-                        card = card,
-                        createWalletResponses = result.data.createWalletResponses.map { CreateWalletResponse(it) },
-                        session = session,
-                        callback = callback,
-                    )
+                    checkIfAllWalletsCreated(card, session, result.data, callback)
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
                 }
+            }
+        }
+    }
+
+    private fun checkIfAllWalletsCreated(
+        card: CardDTO,
+        session: CardSession,
+        createResponse: CreateWalletsResponse,
+        callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
+    ) {
+        if (card.firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
+            proceedWithCreatedWallets(
+                card = card,
+                createWalletResponses = createResponse.createWalletResponses.map { CreateWalletResponse(it) },
+                session = session,
+                callback = callback,
+            )
+            return
+        }
+
+        val command = ReadWalletsListCommand()
+        command.run(session) { response ->
+            when (response) {
+                is CompletionResult.Success -> {
+                    val cardInitializationValidator = CardInitializationValidator(cardConfig.mandatoryCurves)
+                    if (cardInitializationValidator.validateWallets(response.data.wallets)) {
+                        proceedWithCreatedWallets(
+                            card = card,
+                            createWalletResponses = createResponse.createWalletResponses.map {
+                                CreateWalletResponse(it)
+                            },
+                            session = session,
+                            callback = callback,
+                        )
+                    } else {
+                        callback(CompletionResult.Failure(TangemSdkError.WalletAlreadyCreated()))
+                    }
+                }
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+            }
+        }
+    }
+
+    private fun resetCard(
+        card: CardDTO,
+        session: CardSession,
+        callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
+    ) {
+        val resetCommand = ResetToFactorySettingsTask(allowsRequestAccessCodeFromRepository = false)
+        resetCommand.run(session) {
+            when (it) {
+                is CompletionResult.Success -> {
+                    createMultiWallet(card, session, callback)
+                }
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(it.error))
             }
         }
     }

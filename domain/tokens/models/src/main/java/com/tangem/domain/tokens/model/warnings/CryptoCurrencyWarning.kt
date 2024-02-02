@@ -30,6 +30,8 @@ sealed class CryptoCurrencyWarning {
         val amountCurrency: CryptoCurrency,
     ) : CryptoCurrencyWarning()
 
+    object TopUpWithoutReserve : CryptoCurrencyWarning()
+
     /**
      * Represents wallet blockchain rent
      * @param rent Amount that will be charged in overtime if the blockchain does not have an amount greater than
