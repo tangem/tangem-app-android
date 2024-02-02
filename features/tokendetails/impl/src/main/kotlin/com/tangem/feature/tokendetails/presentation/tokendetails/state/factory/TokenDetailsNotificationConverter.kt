@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.removeBy
@@ -19,13 +20,13 @@ internal class TokenDetailsNotificationConverter(
 
     fun removeRentInfo(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
         val newNotifications = currentState.notifications.toMutableList()
-        newNotifications.removeBy { it is TokenDetailsNotification.RentInfo }
+        newNotifications.removeBy { it is RentInfo }
         return newNotifications.toImmutableList()
     }
 
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
-            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> TokenDetailsNotification.NetworkFeeWithBuyButton(
+            is CryptoCurrencyWarning.BalanceNotEnoughForFee -> NetworkFeeWithBuyButton(
                 currency = warning.tokenCurrency,
                 networkName = warning.coinCurrency.name,
                 feeCurrencyName = warning.coinCurrency.name,
@@ -35,7 +36,7 @@ internal class TokenDetailsNotificationConverter(
             is CryptoCurrencyWarning.CustomTokenNotEnoughForFee -> {
                 val feeCurrency = warning.feeCurrency
                 if (feeCurrency != null) {
-                    TokenDetailsNotification.NetworkFeeWithBuyButton(
+                    NetworkFeeWithBuyButton(
                         currency = warning.currency,
                         networkName = feeCurrency.network.name,
                         feeCurrencyName = warning.feeCurrencyName,
@@ -43,7 +44,7 @@ internal class TokenDetailsNotificationConverter(
                         onBuyClick = { clickIntents.onBuyCoinClick(feeCurrency) },
                     )
                 } else {
-                    TokenDetailsNotification.NetworkFee(
+                    NetworkFee(
                         currency = warning.currency,
                         networkName = warning.networkName,
                         feeCurrencyName = warning.feeCurrencyName,
@@ -51,23 +52,22 @@ internal class TokenDetailsNotificationConverter(
                     )
                 }
             }
-            is CryptoCurrencyWarning.ExistentialDeposit -> TokenDetailsNotification.ExistentialDeposit(
-                existentialInfo = warning,
-            )
-            is CryptoCurrencyWarning.Rent -> TokenDetailsNotification.RentInfo(
+            is CryptoCurrencyWarning.ExistentialDeposit -> ExistentialDeposit(existentialInfo = warning)
+            is CryptoCurrencyWarning.Rent -> RentInfo(
                 rentInfo = warning,
                 onCloseClick = clickIntents::onCloseRentInfoNotification,
             )
-            CryptoCurrencyWarning.SomeNetworksUnreachable -> TokenDetailsNotification.NetworksUnreachable
-            is CryptoCurrencyWarning.SomeNetworksNoAccount -> TokenDetailsNotification.NetworksNoAccount(
+            CryptoCurrencyWarning.SomeNetworksUnreachable -> NetworksUnreachable
+            is CryptoCurrencyWarning.SomeNetworksNoAccount -> NetworksNoAccount(
                 network = warning.amountCurrency.name,
                 amount = warning.amountToCreateAccount.toString(),
                 symbol = warning.amountCurrency.symbol,
             )
-            is CryptoCurrencyWarning.HasPendingTransactions -> TokenDetailsNotification.HasPendingTransactions(
+            is CryptoCurrencyWarning.TopUpWithoutReserve -> TopUpWithoutReserve
+            is CryptoCurrencyWarning.HasPendingTransactions -> HasPendingTransactions(
                 coinSymbol = warning.blockchainSymbol,
             )
-            is CryptoCurrencyWarning.SwapPromo -> TokenDetailsNotification.SwapPromo(
+            is CryptoCurrencyWarning.SwapPromo -> SwapPromo(
                 onSwapClick = clickIntents::onSwapPromoClick,
                 onCloseClick = clickIntents::onSwapPromoDismiss,
             )
