@@ -27,9 +27,9 @@ internal class ResetCardFragment : ComposeFragment(), StoreSubscriber<DetailsSta
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         ResetCardScreen(
-            modifier = modifier,
             state = screenState.value,
             onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
+            modifier = modifier,
         )
     }
 
