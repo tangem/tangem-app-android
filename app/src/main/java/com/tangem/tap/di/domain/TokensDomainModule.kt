@@ -310,4 +310,22 @@ internal object TokensDomainModule {
     ): GetNetworksSupportedByWallet {
         return GetNetworksSupportedByWallet(repository = repository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetBalanceNotEnoughForFeeWarningUseCase(
+        currenciesRepository: CurrenciesRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): GetBalanceNotEnoughForFeeWarningUseCase {
+        return GetBalanceNotEnoughForFeeWarningUseCase(currenciesRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIsAmountSubtractAvailableUseCase(
+        currenciesRepository: CurrenciesRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): IsAmountSubtractAvailableUseCase {
+        return IsAmountSubtractAvailableUseCase(currenciesRepository, dispatchers)
+    }
 }
