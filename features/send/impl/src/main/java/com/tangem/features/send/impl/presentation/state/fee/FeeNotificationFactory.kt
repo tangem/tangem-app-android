@@ -3,6 +3,7 @@ package com.tangem.features.send.impl.presentation.state.fee
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -14,6 +15,7 @@ import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
+import com.tangem.utils.toFormattedString
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.filter
@@ -65,7 +67,8 @@ internal class FeeNotificationFactory(
     ) {
         val multipleFees = transactionFee as? TransactionFee.Choosable ?: return
         val minimumValue = multipleFees.minimum.amount.value ?: return
-        val customValue = customFee.firstOrNull()?.value?.toBigDecimalOrNull() ?: return
+        val customAmount = customFee.firstOrNull() ?: return
+        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
         if (selectedFee == FeeType.CUSTOM && minimumValue > customValue) {
             add(SendFeeNotification.Informational.TooLow)
         }
@@ -78,10 +81,11 @@ internal class FeeNotificationFactory(
     ) {
         val multipleFees = transactionFee as? TransactionFee.Choosable ?: return
         val highValue = multipleFees.priority.amount.value ?: return
-        val customValue = customFee.firstOrNull()?.value?.toBigDecimalOrNull() ?: return
+        val customAmount = customFee.firstOrNull() ?: return
+        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
         val diff = customValue / highValue
         if (selectedFee == FeeType.CUSTOM && diff > FEE_MAX_DIFF) {
-            add(SendFeeNotification.Warning.TooHigh(diff.toInt().toString()))
+            add(SendFeeNotification.Warning.TooHigh(diff.toFormattedString(HIGH_FEE_DIFF_DECIMALS)))
         }
     }
 
@@ -158,5 +162,6 @@ internal class FeeNotificationFactory(
 
     companion object {
         private val FEE_MAX_DIFF = BigDecimal(5)
+        private const val HIGH_FEE_DIFF_DECIMALS = 0
     }
 }
