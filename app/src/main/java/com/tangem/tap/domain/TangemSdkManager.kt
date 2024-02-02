@@ -85,11 +85,15 @@ class TangemSdkManager(
         ).also { sendScanResultsToAnalytics(it) }
     }
 
-    suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<CreateProductWalletTaskResponse> {
+    suspend fun createProductWallet(
+        scanResponse: ScanResponse,
+        shouldReset: Boolean = false,
+    ): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
             runnable = CreateProductWalletTask(
                 cardTypesResolver = scanResponse.cardTypesResolver,
                 derivationStyleProvider = scanResponse.derivationStyleProvider,
+                shouldReset = shouldReset,
             ),
             cardId = scanResponse.card.cardId,
             initialMessage = Message(resources.getString(R.string.initial_message_create_wallet_body)),
@@ -100,6 +104,7 @@ class TangemSdkManager(
     suspend fun importWallet(
         scanResponse: ScanResponse,
         mnemonic: String,
+        shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
         val defaultMnemonic = try {
             DefaultMnemonic(mnemonic, tangemSdk.wordlist)
@@ -108,9 +113,10 @@ class TangemSdkManager(
         }
         return runTaskAsync(
             CreateProductWalletTask(
-                scanResponse.cardTypesResolver,
+                cardTypesResolver = scanResponse.cardTypesResolver,
                 derivationStyleProvider = scanResponse.derivationStyleProvider,
-                defaultMnemonic,
+                mnemonic = defaultMnemonic,
+                shouldReset = shouldReset,
             ),
             scanResponse.card.cardId,
             Message(resources.getString(R.string.initial_message_create_wallet_body)),

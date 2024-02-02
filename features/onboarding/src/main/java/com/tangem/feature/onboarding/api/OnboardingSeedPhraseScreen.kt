@@ -14,7 +14,7 @@ import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseSc
 /**
  * @author Anton Zhilenkov on 25.04.2023.
  */
-class OnboardingSeedPhrase : OnboardingSeedPhraseApi {
+class OnboardingSeedPhraseScreen : OnboardingSeedPhraseApi {
 
     @Composable
     override fun ScreenContent(uiState: OnboardingSeedPhraseState, subScreen: SeedPhraseScreen, progress: Float) {
