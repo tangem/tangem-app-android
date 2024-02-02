@@ -8,7 +8,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCard
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.SingleWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.SingleWalletMarketPriceConverter
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.VisaWalletCardStateConverter
 import timber.log.Timber
 
 internal class SetPrimaryCurrencyTransformer(
@@ -25,15 +24,11 @@ internal class SetPrimaryCurrencyTransformer(
                     marketPriceBlockState = prevState.marketPriceBlockState.toLoadedState(),
                 )
             }
-            is WalletState.Visa.Content -> {
-                prevState.copy(
-                    walletCardState = prevState.walletCardState.toLoadedVisaState(),
-                    depositButtonState = prevState.depositButtonState.copy(isEnabled = true),
-                )
+            is WalletState.Visa -> {
+                Timber.w("Impossible to load primary currency status for VISA wallet")
+                prevState
             }
-            is WalletState.Visa.Locked,
-            is WalletState.SingleCurrency.Locked,
-            -> {
+            is WalletState.SingleCurrency.Locked -> {
                 Timber.w("Impossible to load primary currency status for locked wallet")
                 prevState
             }
@@ -46,10 +41,6 @@ internal class SetPrimaryCurrencyTransformer(
 
     private fun WalletCardState.toLoadedSingleCurrencyState(): WalletCardState {
         return SingleWalletCardStateConverter(status.value, userWallet, appCurrency).convert(value = this)
-    }
-
-    private fun WalletCardState.toLoadedVisaState(): WalletCardState {
-        return VisaWalletCardStateConverter(status, userWallet, appCurrency).convert(value = this)
     }
 
     private fun MarketPriceBlockState.toLoadedState(): MarketPriceBlockState {
