@@ -1,14 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
-import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
+import com.tangem.domain.visa.GetVisaCurrencyUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.subscribers.PrimaryCurrencySubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.TxHistorySubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.VisaWalletBalancesAndLimitsSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
@@ -21,24 +18,20 @@ internal class VisaWalletContentLoader(
     private val isRefresh: Boolean,
     private val stateHolder: WalletStateController,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
-    private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val getVisaCurrencyUseCase: GetVisaCurrencyUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
         return listOf(
-            PrimaryCurrencySubscriber(
+            VisaWalletBalancesAndLimitsSubscriber(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
-                getPrimaryCurrencyStatusUpdatesUseCase = getPrimaryCurrencyStatusUpdatesUseCase,
-                setWalletWithFundsFoundUseCase = setWalletWithFundsFoundUseCase,
-                analyticsEventHandler = analyticsEventHandler,
-                getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+                isRefresh = isRefresh,
+                getVisaCurrencyUseCase = getVisaCurrencyUseCase,
+                clickIntents = clickIntents,
             ),
-            VisaWalletBalancesAndLimitsSubscriber(userWallet, stateHolder, clickIntents),
             TxHistorySubscriber(
                 userWallet = userWallet,
                 isRefresh = isRefresh,
