@@ -72,7 +72,10 @@ internal class TangemCardTypesResolver(
     override fun isSingleWalletWithToken(): Boolean = walletData?.token != null && !isMultiwalletAllowed()
 
     override fun isMultiwalletAllowed(): Boolean {
-        return !isTangemTwins() && !card.isStart2Coin && !isTangemNote() &&
+        return !isTangemTwins() &&
+            !card.isStart2Coin &&
+            !isTangemNote() &&
+            !isVisaWallet() &&
             (multiWalletAvailable() || card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
     }
 
@@ -81,6 +84,7 @@ internal class TangemCardTypesResolver(
     override fun getBlockchain(): Blockchain {
         return when (productType) {
             ProductType.Start2Coin -> if (card.isTestCard) Blockchain.BitcoinTestnet else Blockchain.Bitcoin
+            ProductType.Visa -> Blockchain.PolygonTestnet
             else -> {
                 val blockchainName: String = walletData?.blockchain
                     ?: if (productType == ProductType.Note) {
