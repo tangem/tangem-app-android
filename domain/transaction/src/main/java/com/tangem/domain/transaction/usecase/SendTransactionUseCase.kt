@@ -8,19 +8,23 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.transaction.R
+import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.SendTransactionError.Companion.USER_CANCELLED_ERROR_CODE
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.sdk.extensions.localizedDescriptionRes
 
 class SendTransactionUseCase(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
-    private val walletManagersFacade: WalletManagersFacade,
+    private val transactionRepository: TransactionRepository,
 ) {
     suspend operator fun invoke(
         txData: TransactionData,
@@ -37,7 +41,7 @@ class SendTransactionUseCase(
             if (isDemoCardUseCase(cardId = userWallet.cardId)) {
                 SendTransactionError.DemoCardError.left()
             } else {
-                walletManagersFacade.sendTransaction(
+                transactionRepository.sendTransaction(
                     txData = txData,
                     signer = signer,
                     userWalletId = userWallet.walletId,
@@ -64,29 +68,28 @@ class SendTransactionUseCase(
     private fun handleError(result: SimpleResult.Failure): SendTransactionError {
         if (ResultChecker.isNetworkError(result)) return SendTransactionError.NetworkError(result.error.message)
         val error = result.error as? BlockchainSdkError ?: return SendTransactionError.UnknownError()
-        when (error) {
+        return when (error) {
             is BlockchainSdkError.WrappedTangemError -> {
-                val errorByCode = mapErrorByCode(error)
-                if (errorByCode != null) {
-                    return errorByCode
+                if (error.code == USER_CANCELLED_ERROR_CODE) {
+                    SendTransactionError.UserCancelledError
+                } else {
+                    val tangemError = error.tangemError
+                    if (tangemError is TangemSdkError) {
+                        val resource = tangemError.localizedDescriptionRes()
+                        val resId = resource.resId ?: R.string.common_unknown_error
+                        val resArgs = resource.args.map { it.value }
+                        val textReference = resourceReference(resId, wrappedList(resArgs))
+                        SendTransactionError.TangemSdkError(tangemError.code, textReference)
+                    } else {
+                        SendTransactionError.BlockchainSdkError(error.code, tangemError.customMessage)
+                    }
                 }
-                val tangemSdkError = error.tangemError as? TangemSdkError ?: return SendTransactionError.UnknownError()
-                if (tangemSdkError is TangemSdkError.UserCancelled) return SendTransactionError.UserCancelledError
-                return SendTransactionError.TangemSdkError(tangemSdkError.code, tangemSdkError.cause)
             }
             else -> {
-                return SendTransactionError.TangemSdkError(error.code, error.cause)
-            }
-        }
-    }
-
-    private fun mapErrorByCode(error: BlockchainSdkError.WrappedTangemError): SendTransactionError? {
-        return when (error.code) {
-            USER_CANCELLED_ERROR_CODE -> {
-                return SendTransactionError.UserCancelledError
-            }
-            else -> {
-                null
+                SendTransactionError.BlockchainSdkError(
+                    code = error.code,
+                    message = error.customMessage,
+                )
             }
         }
     }

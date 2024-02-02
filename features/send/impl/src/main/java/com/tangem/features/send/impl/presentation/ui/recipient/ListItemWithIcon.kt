@@ -24,6 +24,7 @@ import androidx.constraintlayout.compose.Visibility
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
+import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
 
@@ -49,10 +50,11 @@ fun ListItemWithIcon(
     subtitleEndOffset: Int = 0,
     @DrawableRes subtitleIconRes: Int? = null,
 ) {
+    val hapticFeedback = rememberHapticFeedback(state = title, onAction = onClick)
     ConstraintLayout(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable { hapticFeedback() }
             .padding(horizontal = TangemTheme.dimens.spacing12),
     ) {
         val (iconRef, titleRef, subtitleRef, subtitleIconRef) = createRefs()

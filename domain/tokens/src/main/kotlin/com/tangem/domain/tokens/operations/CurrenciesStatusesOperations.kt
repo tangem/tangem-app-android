@@ -10,7 +10,8 @@ import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-
+// [REDACTED_TODO_COMMENT]
+@Suppress("LargeClass")
 internal class CurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
@@ -105,6 +106,27 @@ internal class CurrenciesStatusesOperations(
                 catch = { raise(Error.DataError(it)) },
             )
         }
+    }
+
+    suspend fun getPrimaryCurrencyStatusSync(): Either<Error, CryptoCurrencyStatus> = either {
+        val currency = catch(
+            block = { currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId) },
+            catch = { raise(Error.DataError(it)) },
+        )
+        val quotes = catch(
+            block = { quotesRepository.getQuoteSync(currency.id).right() },
+            catch = { Error.DataError(it).left() },
+        )
+        val networkStatus = catch(
+            block = {
+                networksRepository.getNetworkStatusesSync(userWalletId, setOf(currency.network))
+                    .firstOrNull { it.network == currency.network }
+                    .right()
+            },
+            catch = { Error.DataError(it).left() },
+        )
+
+        return createCurrencyStatus(currency, quotes, networkStatus)
     }
 
     fun getCardCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
