@@ -113,7 +113,6 @@ private fun Content(state: BalancesAndLimitsBlockState, modifier: Modifier = Mod
             is BalancesAndLimitsBlockState.Content -> with(blockState) {
                 AvailableLimit(
                     availableBalance = availableBalance,
-                    currencySymbol = currencySymbol,
                     limitDays = limitDays,
                 )
             }
@@ -136,19 +135,14 @@ private fun Content(state: BalancesAndLimitsBlockState, modifier: Modifier = Mod
 }
 
 @Composable
-private fun AvailableLimit(
-    availableBalance: String,
-    currencySymbol: String,
-    limitDays: Int,
-    modifier: Modifier = Modifier,
-) {
+private fun AvailableLimit(availableBalance: String, limitDays: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         Text(
-            text = "$availableBalance $currencySymbol",
+            text = availableBalance,
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
         )
@@ -186,8 +180,7 @@ private class BalancesAndLimitsBlockParameterProvider : CollectionPreviewParamet
         BalancesAndLimitsBlockState.Loading,
         BalancesAndLimitsBlockState.Error,
         BalancesAndLimitsBlockState.Content(
-            availableBalance = "400.00",
-            currencySymbol = "USDT",
+            availableBalance = "400.00 USDT",
             limitDays = 7,
             isEnabled = true,
             onClick = {},
