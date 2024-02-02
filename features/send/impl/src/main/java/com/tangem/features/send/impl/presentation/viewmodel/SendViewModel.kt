@@ -5,19 +5,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.PagingData
+import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.extensions.isZero
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
-import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
-import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
+import com.tangem.domain.redux.LegacyAction
+import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.utils.convertToAmount
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -31,23 +38,17 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
-import com.tangem.features.send.impl.presentation.state.SendNotificationFactory
-import com.tangem.features.send.impl.presentation.state.SendStateFactory
-import com.tangem.features.send.impl.presentation.state.SendUiState
-import com.tangem.features.send.impl.presentation.state.StateRouter
+import com.tangem.features.send.impl.presentation.state.fee.FeeNotificationFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.state.fee.getFee
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -58,6 +59,7 @@ internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -70,8 +72,12 @@ internal class SendViewModel @Inject constructor(
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val parseSharedAddressUseCase: ParseSharedAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
+    private val reduxStateHolder: ReduxStateHolder,
+    private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
+    getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
 
@@ -93,9 +99,32 @@ internal class SendViewModel @Inject constructor(
         userWalletProvider = Provider { userWallet },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
+    )
+
+    private val feeStateFactory = FeeStateFactory(
+        clickIntents = this,
+        currentStateProvider = Provider { uiState },
+        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        isFeeApproximateUseCase = isFeeApproximateUseCase,
+    )
+
+    private val eventStateFactory = SendEventStateFactory(
+        clickIntents = this,
+        currentStateProvider = Provider { uiState },
+        feeStateFactory = feeStateFactory,
+    )
+
+    private val feeNotificationFactory = FeeNotificationFactory(
+        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+        currentStateProvider = Provider { uiState },
+        userWalletProvider = Provider { userWallet },
+        clickIntents = this,
+        getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
     )
 
     private val sendNotificationFactory = SendNotificationFactory(
@@ -104,12 +133,15 @@ internal class SendViewModel @Inject constructor(
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
         walletManagersFacade = walletManagersFacade,
+        clickIntents = this,
     )
 
+    // todo convert to StateFlow
     var uiState: SendUiState by mutableStateOf(stateFactory.getInitialState())
         private set
 
     private var userWallet: UserWallet by Delegates.notNull()
+    private var isAmountSubtractAvailable: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
 
@@ -118,11 +150,14 @@ internal class SendViewModel @Inject constructor(
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
+    private var feeNotificationsJobHolder = JobHolder()
     private var qrScannerJobHolder = JobHolder()
+
+    private var sendIdleTimer = 0L
 
     override fun onCreate(owner: LifecycleOwner) {
         subscribeOnCurrencyStatusUpdates(owner)
-        getFee()
+        onStateActive()
     }
 
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
@@ -136,10 +171,13 @@ internal class SendViewModel @Inject constructor(
             getUserWalletUseCase(userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
+                    checkIfSubtractAvailable()
                     getCurrenciesStatusUpdates(owner, wallet)
                 },
                 ifLeft = {
-                    // todo add error handling [[REDACTED_JIRA]]
+                    uiState = eventStateFactory.getGenericErrorState(
+                        onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                    )
                     return@launch
                 },
             )
@@ -280,37 +318,16 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private fun getFee() {
-        viewModelScope.launch(dispatchers.main) {
-            uiState.currentState
-                .filter { it == SendUiStateType.Fee }
-                .onEach {
-                    val amountState = uiState.amountState ?: return@onEach
-                    val recipientState = uiState.recipientState ?: return@onEach
-                    val amount = amountState.amountTextField.value.toBigDecimal()
-
-                    uiState = stateFactory.onFeeOnLoadingState()
-                    getFeeUseCase.invoke(
-                        amount = amount,
-                        destination = recipientState.addressTextField.value,
-                        userWalletId = userWalletId,
-                        cryptoCurrency = cryptoCurrency,
-                    )
-                        .conflate()
-                        .distinctUntilChanged()
-                        .onEach { maybeFee ->
-                            maybeFee.fold(
-                                ifRight = {
-                                    uiState = stateFactory.onFeeOnLoadedState(it)
-                                },
-                                ifLeft = {
-                                    // todo add error handling [[REDACTED_JIRA]]
-                                },
-                            )
-                        }
-                        .launchIn(viewModelScope)
-                }.launchIn(viewModelScope)
-        }.saveIn(feeJobHolder)
+    private fun onStateActive() {
+        uiState.currentState
+            .onEach {
+                when (it) {
+                    SendUiStateType.Fee -> loadFee()
+                    SendUiStateType.Send -> sendIdleTimer = System.currentTimeMillis()
+                    else -> Unit
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun updateNotifications() {
@@ -323,6 +340,16 @@ internal class SendViewModel @Inject constructor(
             .saveIn(sendNotificationsJobHolder)
     }
 
+    private fun updateFeeNotifications() {
+        feeNotificationFactory.create()
+            .conflate()
+            .distinctUntilChanged()
+            .onEach { uiState = feeStateFactory.getFeeNotificationState(notifications = it) }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(feeNotificationsJobHolder)
+    }
+
     // region screen state navigation
     override fun popBackStack() = stateRouter.popBackStack()
     override fun onBackClick() = stateRouter.onBackClick()
@@ -330,6 +357,10 @@ internal class SendViewModel @Inject constructor(
     override fun onPrevClick() = stateRouter.onPrevClick()
 
     override fun onQrCodeScanClick() = innerRouter.openQrCodeScanner(cryptoCurrency.network.name)
+
+    override fun onFailedTxEmailClick(errorMessage: String) {
+        reduxStateHolder.dispatch(LegacyAction.SendEmailTransactionFailed(errorMessage))
+    }
 
     override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) =
         innerRouter.openTokenDetails(userWalletId, currency)
@@ -346,12 +377,15 @@ internal class SendViewModel @Inject constructor(
 
     override fun onMaxValueClick() {
         val amountState = uiState.amountState ?: return
-        val amount = if (amountState.isFiatValue) {
-            amountState.cryptoCurrencyStatus.value.fiatAmount
+        val amountTextField = amountState.amountTextField
+        val (amount, decimals) = if (amountTextField.isFiatValue) {
+            cryptoCurrencyStatus.value.fiatAmount to amountTextField.fiatAmount.decimals
         } else {
-            amountState.cryptoCurrencyStatus.value.amount
+            cryptoCurrencyStatus.value.amount to amountTextField.cryptoAmount.decimals
         }
-        onAmountValueChange(amount?.toPlainString() ?: DEFAULT_VALUE)
+        if (amount != null && !amount.isZero()) {
+            onAmountValueChange(amount.parseBigDecimal(decimals))
+        }
     }
     // endregion
 
@@ -415,16 +449,56 @@ internal class SendViewModel @Inject constructor(
     // endregion
 
     // region fee
+    override fun feeReload() = loadFee()
+
     override fun onFeeSelectorClick(feeType: FeeType) {
-        uiState = stateFactory.onFeeSelectedState(feeType)
+        uiState = feeStateFactory.onFeeSelectedState(feeType)
+        updateFeeNotifications()
     }
 
     override fun onCustomFeeValueChange(index: Int, value: String) {
-        uiState = stateFactory.onCustomFeeValueChange(index, value)
+        uiState = feeStateFactory.onCustomFeeValueChange(index, value)
+        updateFeeNotifications()
     }
 
     override fun onSubtractSelect(value: Boolean) {
-        uiState = stateFactory.onSubtractSelect(value)
+        uiState = feeStateFactory.onSubtractSelect(value)
+        updateFeeNotifications()
+    }
+
+    private fun loadFee() {
+        viewModelScope.launch(dispatchers.main) {
+            uiState = feeStateFactory.onFeeOnLoadingState()
+            uiState = callFeeUseCase()?.fold(
+                ifRight = { fees ->
+                    feeStateFactory.onFeeOnLoadedState(fees, isAmountSubtractAvailable)
+                },
+                ifLeft = {
+                    feeStateFactory.onFeeOnErrorState()
+                },
+            ) ?: feeStateFactory.onFeeOnErrorState()
+            updateFeeNotifications()
+        }.saveIn(feeJobHolder)
+    }
+
+    private suspend fun checkIfSubtractAvailable() {
+        isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, cryptoCurrency).fold(
+            ifRight = { it },
+            ifLeft = { false },
+        )
+    }
+
+    private suspend fun callFeeUseCase(): Either<GetFeeError, TransactionFee>? {
+        val amountState = uiState.amountState ?: return null
+        val recipientState = uiState.recipientState ?: return null
+        val amount = amountState.amountTextField.cryptoAmount.value ?: return null
+
+        return getFeeUseCase.invoke(
+            amount = amount,
+            destination = recipientState.addressTextField.value,
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+        )
     }
     // endregion
 
@@ -433,68 +507,146 @@ internal class SendViewModel @Inject constructor(
         val sendState = uiState.sendState
         if (sendState.isSuccess) popBackStack()
 
-        uiState = stateFactory.getSendingStateUpdate(true)
-        viewModelScope.launch(dispatchers.io) { verifyAndSendTransaction() }
+        uiState = stateFactory.getSendingStateUpdate(isSending = true)
+        if (System.currentTimeMillis() - sendIdleTimer < CHECK_FEE_UPDATE_DELAY) {
+            verifyAndSendTransaction()
+        } else {
+            onCheckFeeUpdate()
+        }
+        sendIdleTimer = System.currentTimeMillis()
     }
 
-    override fun showAmount() = stateRouter.showAmount(isFromSend = true)
+    override fun showAmount() = stateRouter.showAmount()
 
-    override fun showRecipient() = stateRouter.showRecipient(isFromSend = true)
+    override fun showRecipient() = stateRouter.showRecipient()
 
-    override fun showFee() = stateRouter.showFee(isFromSend = true)
+    override fun showFee() = stateRouter.showFee()
 
     override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
 
-    private suspend fun verifyAndSendTransaction() {
+    override fun onAmountReduceClick(reducedAmount: String) {
+        uiState = stateFactory.getOnAmountValueChange(reducedAmount)
+        uiState = sendNotificationFactory.dismissHighFeeWarningState()
+        loadFee()
+    }
+
+    override fun onAmountReduceIgnoreClick() {
+        uiState = sendNotificationFactory.dismissHighFeeWarningState()
+    }
+
+    private fun verifyAndSendTransaction() {
         val recipient = uiState.recipientState?.addressTextField?.value ?: return
         val feeState = uiState.feeState ?: return
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
         val memo = uiState.recipientState?.memoTextField?.value
-        val fee = feeSelectorState.getFee()
+        val fee = feeStateFactory.feeConverter.convert(feeSelectorState)
+        val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
+        val amountToSend = if (feeState.isSubtract && isAmountSubtractAvailable) {
+            feeState.receivedAmountValue
+        } else {
+            amountValue
+        }
 
-        val amountToSend = feeState.receivedAmountValue.convertToAmount(cryptoCurrency)
+        viewModelScope.launch(dispatchers.main) {
+            createTransactionUseCase(
+                amount = amountToSend.convertToAmount(cryptoCurrency),
+                fee = fee,
+                memo = memo,
+                destination = recipient,
+                userWalletId = userWalletId,
+                network = cryptoCurrency.network,
+            ).fold(
+                ifLeft = {
+                    Timber.e(it)
+                    uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                    uiState = eventStateFactory.getGenericErrorState(
+                        error = it,
+                        onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                    )
+                },
+                ifRight = { txData ->
+                    sendTransaction(txData)
+                },
+            )
+        }
+    }
 
-        // todo add error handling [[REDACTED_JIRA]]
-        // val transactionErrors = walletManagersFacade.validateTransaction(
-        //     amount = amountToSend,
-        //     fee = fee.amount,
-        //     userWalletId = userWalletId,
-        //     network = cryptoCurrency.network,
-        // )
-
-        createTransactionUseCase(
-            amount = amountToSend,
-            fee = fee,
-            memo = memo,
-            destination = recipient,
-            userWalletId = userWalletId,
+    private suspend fun sendTransaction(txData: TransactionData) {
+        sendTransactionUseCase(
+            txData = txData,
+            userWallet = userWallet,
             network = cryptoCurrency.network,
         ).fold(
-            ifLeft = {
-                Timber.e(it)
-                // todo add error handling [[REDACTED_JIRA]]
-            },
-            ifRight = { txData ->
-                sendTransactionUseCase(
-                    txData = txData,
-                    userWallet = userWallet,
-                    network = cryptoCurrency.network,
-                ).fold(
-                    ifLeft = {
-                        uiState = stateFactory.getSendingStateUpdate(false)
-                        // todo add error handling [[REDACTED_JIRA]]
-                    },
-                    ifRight = {
-                        uiState = stateFactory.getTransactionSendState(txData)
-                    },
+            ifLeft = { error ->
+                uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                uiState = eventStateFactory.getSendTransactionErrorState(
+                    error = error,
+                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
                 )
             },
+            ifRight = {
+                uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                uiState = stateFactory.getTransactionSendState(txData)
+                scheduleBalanceUpdate()
+            },
         )
+    }
+
+    private fun scheduleBalanceUpdate() {
+        viewModelScope.launch(dispatchers.io) {
+            delay(BALANCE_UPDATE_DELAY)
+            fetchCurrencyStatusUseCase.invoke(
+                userWalletId = userWalletId,
+                id = cryptoCurrency.id,
+                refresh = true,
+            )
+        }
+    }
+
+    private fun onCheckFeeUpdate() {
+        val isSending = uiState.sendState.isSending
+        val isSuccess = uiState.sendState.isSuccess
+        val noErrorNotifications = uiState.sendState.notifications.none { it is SendNotification.Error }
+
+        if (!isSending && !isSuccess && noErrorNotifications) {
+            viewModelScope.launch(dispatchers.main) {
+                val feeUpdatedState = callFeeUseCase()?.fold(
+                    ifRight = {
+                        uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                        eventStateFactory.getFeeUpdatedAlert(
+                            fee = it,
+                            onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                            onFeeNotIncreased = {
+                                uiState = stateFactory.getSendingStateUpdate(isSending = true)
+                                verifyAndSendTransaction()
+                            },
+                        )
+                    },
+                    ifLeft = {
+                        uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                        eventStateFactory.getGenericErrorState(
+                            error = (it as? GetFeeError.DataError)?.cause,
+                            onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                        )
+                    },
+                )
+
+                uiState = if (feeUpdatedState != null) {
+                    feeUpdatedState
+                } else {
+                    uiState = stateFactory.getSendingStateUpdate(isSending = false)
+                    eventStateFactory.getGenericErrorState(
+                        onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                    )
+                }
+            }
+        }
     }
     // endregion
 
     companion object {
         private const val XRP_X_ADDRESS = 'X'
-        private const val DEFAULT_VALUE = "0.00"
+        private const val CHECK_FEE_UPDATE_DELAY = 60_000L
+        private const val BALANCE_UPDATE_DELAY = 10_000L
     }
 }
