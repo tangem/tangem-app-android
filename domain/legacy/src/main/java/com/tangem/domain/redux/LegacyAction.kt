@@ -13,4 +13,9 @@ sealed interface LegacyAction : Action {
      * BackupAction.CheckForUnfinishedBackup, GlobalAction.Onboarding.StartForUnfinishedBackup
      */
     data class StartOnboardingProcess(val scanResponse: ScanResponse, val canSkipBackup: Boolean = true) : LegacyAction
+
+    /**
+     * Sending an email to support when sending transaction failed
+     */
+    data class SendEmailTransactionFailed(val errorMessage: String) : LegacyAction
 }
