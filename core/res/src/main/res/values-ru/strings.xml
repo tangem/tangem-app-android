@@ -70,7 +70,7 @@
     <string name="common_biometric_authentication">биометрическую аутентификацию</string>
     <string name="common_biometrics">биометрией</string>
     <string name="common_buy">Купить</string>
-    <string name="common_buy_currency">Купить %1$s</string>
+    <string name="common_buy_currency">Перейти на %1$s</string>
     <string name="common_camera_denied_alert_message">Вы не предоставили доступ к камере, пожалуйста, измените настройки конфиденциальности.</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_close">Закрыть</string>
@@ -136,6 +136,7 @@
     <string name="common_transfer">Перевод</string>
     <string name="common_understand">Я понял</string>
     <string name="common_unreachable">Недоступно</string>
+    <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
     <string name="common_yes">Да</string>
     <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
     <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -231,6 +232,7 @@
     <string name="express_provider">Провайдер</string>
     <string name="express_provider_best_rate">Лучший курс</string>
     <string name="express_provider_min_amount">Доступно с %s</string>
+    <string name="express_provider_max_amount">Доступно до %s</string>
     <string name="express_provider_not_available">Недоступно для этой пары</string>
     <string name="express_provider_permission_needed">Требуется разрешение</string>
     <string name="express_terms_of_use">Условиями использования</string>
@@ -306,6 +308,8 @@
     <string name="onboarding_access_code_repeat_code_title">Повторно введите код доступа</string>
     <string name="onboarding_access_code_too_short">Код доступа должен состоять не менее чем из 4 символов.</string>
     <string name="onboarding_access_codes_doesnt_match">Введенные коды доступа не совпадают</string>
+    <string name="onboarding_activation_error_message">Необходимо повторить операцию, при этом карта будет сброшена к заводским настройкам</string>
+    <string name="onboarding_activation_error_title">Ошибка активации</string>
     <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту. После того, как процесс будет завершен, Вы больше не сможете добавить карт. Если у Вас есть еще одна карта, добавьте ее в резервную копию. Хотите продолжить?</string>
     <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
     <string name="onboarding_button_add_backup_card">Добавить резервную карту</string>
@@ -448,8 +452,9 @@
     <string name="send_amount_label">Сумма</string>
     <string name="send_amount_substract">Вычесть из суммы отправки</string>
     <string name="send_amount_substract_footer">Сумма к получению %s</string>
+    <string name="send_alert_button_request_support">Поддержка</string>
     <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
-    <string name="send_alert_transaction_failed_text">Причина: %1$s\Код:%2$s</string>
+    <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
     <string name="send_date_format">%1$s в %2$s</string>
     <string name="send_destination_hint_address">Адрес</string>
     <string name="send_destination_tag_field">Код назначения</string>
@@ -475,10 +480,10 @@
     <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
     <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
     <string name="send_notification_exceed_balance_title">Недостаточно средств</string>
-    <string name="send_notification_exceed_fee_text">Размер комиссии превышает баланс сети. Для продолжения необходимо пополнить баланс сети.</string>
-    <string name="send_notification_exceed_fee_title">Комиссия превышает баланс</string>
-    <string name="send_notification_high_fee_text">Комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить 0.01.</string>
     <string name="send_notification_high_fee_title">Увеличение комиссии</string>
+    <string name="send_notification_high_fee_text">Комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить 0.01.</string>
+    <string name="send_notification_fee_too_high_accept">Оставить %s XTZ</string>
+    <string name="send_notification_fee_too_high_ignore">Отправить все</string>
     <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
     <string name="send_notification_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
     <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
@@ -489,7 +494,6 @@
     <string name="send_notification_transaction_delay_text">Обратите внимание, что при определенных параметрах комиссии возможны задержки по вашей транзакции</string>
     <string name="send_notification_transaction_delay_title">Возможны задержки по транзакции</string>
     <string name="send_optional_field">Необязательное</string>
-    <string name="send_qrcode_scan_amount_alert_title">QR код содержит информацию о сумме отправки равной %s</string>
     <string name="send_recent_transactions">Последние</string>
     <string name="send_recipient">Получатель</string>
     <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов</string>
@@ -528,7 +532,6 @@
     <string name="swapping_approve_information_title">Подтвердить</string>
     <string name="swapping_error_wrapper">Ошибка: %s</string>
     <string name="swapping_from_title">Вы отправляете</string>
-    <string name="swapping_generic_error">Произошла ошибка. Пожалуйста, попробуйте еще раз.</string>
     <string name="swapping_give_permission">Дать разрешение</string>
     <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
     <string name="swapping_insufficient_funds">Недостаточно средств</string>
@@ -651,7 +654,7 @@
     <string name="wallet_connect_service_no_chain_id">Dapp не предоставил необходимые данные для открытия сессии WalletConnect</string>
     <string name="wallet_connect_session_not_found">Не удалось найти сессию для обработки запроса</string>
     <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
-    <string name="wallet_connect_subtitle">Подключение к Dapps</string>
+    <string name="wallet_connect_subtitle">Подключение к dApps</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_transaction_signed">Транзакция успешно подписана и отправлена ​​в Dapp</string>
     <string name="wallet_connect_transaction_signed_and_send">Транзакция успешно подписана и отправлена ​​в блокчейн</string>
@@ -690,8 +693,9 @@
     <string name="warning_express_not_enough_fee_for_token_tx_description">Чтобы совершить транзакцию, вам необходимо внести немного %1$s %2$s</string>
     <string name="warning_express_not_enough_fee_for_token_tx_title">Невозможно покрыть комиссию %s</string>
     <string name="warning_express_refresh_required_title">Cервис временно недоступен</string>
-    <string name="warning_express_too_minimal_amount_description">Пожалуйста, измените сумму для обмена</string>
+    <string name="warning_express_wrong_amount_description">Пожалуйста, измените сумму для обмена</string>
     <string name="warning_express_too_minimal_amount_title">Сумма для обмена должна быть не менее %s</string>
+    <string name="warning_express_too_maximum_amount_title">Сумма для обмена должна быть не более %s</string>
     <string name="warning_failed_to_verify_card_message">Возможно, данная карта - образец или подделка</string>
     <string name="warning_failed_to_verify_card_title">Ошибка проверки подлинности</string>
     <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
