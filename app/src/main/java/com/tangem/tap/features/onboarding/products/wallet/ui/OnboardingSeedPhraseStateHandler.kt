@@ -1,7 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import androidx.compose.runtime.collectAsState
-import com.tangem.feature.onboarding.api.OnboardingSeedPhrase
+import com.tangem.feature.onboarding.api.OnboardingSeedPhraseScreen
 import com.tangem.feature.onboarding.api.OnboardingSeedPhraseApi
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseScreen
 import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
@@ -15,7 +15,7 @@ import com.tangem.wallet.R
 [REDACTED_AUTHOR]
  */
 internal class OnboardingSeedPhraseStateHandler(
-    private val onboardingSeedPhraseApi: OnboardingSeedPhraseApi = OnboardingSeedPhrase(),
+    private val onboardingSeedPhraseApi: OnboardingSeedPhraseApi = OnboardingSeedPhraseScreen(),
 ) {
 
     fun newState(
