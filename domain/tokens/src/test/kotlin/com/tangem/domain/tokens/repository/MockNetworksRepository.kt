@@ -32,4 +32,6 @@ internal class MockNetworksRepository(
     ): Set<NetworkStatus> {
         return getNetworkStatusesUpdates(userWalletId, networks).first()
     }
+
+    override fun isNeedToCreateAccountWithoutReserve(network: Network) = false
 }
