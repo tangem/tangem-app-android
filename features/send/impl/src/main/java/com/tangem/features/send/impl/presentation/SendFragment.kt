@@ -50,10 +50,13 @@ internal class SendFragment : ComposeFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(viewModel)
+
+        val isEditingDisabled = arguments?.getString(SendRouter.TRANSACTION_ID_KEY) != null
         viewModel.setRouter(
             innerSendRouter,
             StateRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
+                isEditingDisabled = isEditingDisabled,
             ),
         )
         listenToQrCode()
