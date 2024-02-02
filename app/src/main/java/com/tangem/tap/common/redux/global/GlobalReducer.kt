@@ -30,6 +30,11 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
         is GlobalAction.Onboarding.Stop -> {
             globalState.copy(onboardingState = OnboardingState(false))
         }
+        is GlobalAction.Onboarding.ShouldResetCardOnCreate -> {
+            globalState.copy(
+                onboardingState = globalState.onboardingState.copy(shouldResetOnCreate = action.shouldReset),
+            )
+        }
         is GlobalAction.ScanFailsCounter.Increment -> {
             globalState.copy(scanCardFailsCounter = globalState.scanCardFailsCounter + 1)
         }

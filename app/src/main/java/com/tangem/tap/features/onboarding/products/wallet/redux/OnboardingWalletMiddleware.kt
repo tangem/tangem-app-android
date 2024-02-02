@@ -120,7 +120,10 @@ private fun handleWalletAction(action: Action) {
         is OnboardingWalletAction.CreateWallet -> {
             scanResponse ?: return
             scope.launch {
-                val result = tangemSdkManager.createProductWallet(scanResponse)
+                val result = tangemSdkManager.createProductWallet(
+                    scanResponse,
+                    globalState.onboardingState.shouldResetOnCreate,
+                )
                 store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(true, result))
             }
         }
@@ -139,10 +142,15 @@ private fun handleWalletAction(action: Action) {
                     )
                     onboardingManager.scanResponse = updatedResponse
 
+                    store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(false))
                     startCardActivation(updatedResponse)
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
-                is CompletionResult.Failure -> Unit
+                is CompletionResult.Failure -> {
+                    if (result.error is TangemSdkError.WalletAlreadyCreated) {
+                        handleActivationError()
+                    }
+                }
             }
         }
         is OnboardingWalletAction.FinishOnboarding -> {
@@ -218,9 +226,15 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
         is OnboardingWallet2Action.CreateWallet -> {
             scanResponse ?: return
             scope.launch {
-                val mediateResult = when (val result = tangemSdkManager.createProductWallet(scanResponse)) {
+                val mediateResult = when (
+                    val result = tangemSdkManager.createProductWallet(
+                        scanResponse,
+                        globalState.onboardingState.shouldResetOnCreate,
+                    )
+                ) {
                     is CompletionResult.Success -> {
                         Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
+                        store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(false))
                         val response = CreateWalletResponse(
                             card = result.data.card,
                             derivedKeys = result.data.derivedKeys,
@@ -230,6 +244,9 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                     }
 
                     is CompletionResult.Failure -> {
+                        if (result.error is TangemSdkError.WalletAlreadyCreated) {
+                            handleActivationError()
+                        }
                         CompletionResult.Failure(result.error)
                     }
                 }
@@ -246,6 +263,7 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                     val result = tangemSdkManager.importWallet(
                         scanResponse = scanResponse,
                         mnemonic = action.mnemonicComponents.joinToString(" "),
+                        shouldReset = globalState.onboardingState.shouldResetOnCreate,
                     )
                 ) {
                     is CompletionResult.Success -> {
@@ -259,6 +277,7 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                                 seedPhraseLength = action.mnemonicComponents.size,
                             ),
                         )
+                        store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(false))
                         val response = CreateWalletResponse(
                             card = result.data.card,
                             derivedKeys = result.data.derivedKeys,
@@ -268,6 +287,9 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                     }
 
                     is CompletionResult.Failure -> {
+                        if (result.error is TangemSdkError.WalletAlreadyCreated) {
+                            handleActivationError()
+                        }
                         CompletionResult.Failure(result.error)
                     }
                 }
@@ -298,6 +320,16 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
 
         else -> Unit
     }
+}
+
+private fun handleActivationError() {
+    store.dispatchDialogShow(
+        OnboardingDialog.WalletActivationError(
+            onConfirm = {
+                store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(true))
+            },
+        ),
+    )
 }
 
 private fun updateScanResponseAfterBackup(scanResponse: ScanResponse, backupState: BackupState): ScanResponse {
