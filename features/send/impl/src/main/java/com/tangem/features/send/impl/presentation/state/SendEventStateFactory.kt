@@ -7,7 +7,6 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.state.fee.getFee
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import java.math.BigDecimal
@@ -58,7 +57,7 @@ internal class SendEventStateFactory(
         }
 
         val newFeeValue = newFee.amount.value ?: BigDecimal.ZERO
-        val oldFeeValue = feeSelector.getFee().amount.value ?: BigDecimal.ZERO
+        val oldFeeValue = feeStateFactory.feeConverter.convert(feeSelector).amount.value ?: BigDecimal.ZERO
         val updateFeeState = feeStateFactory.onFeeOnLoadedState(fee)
         return if (newFeeValue > oldFeeValue) {
             updateFeeState.copy(

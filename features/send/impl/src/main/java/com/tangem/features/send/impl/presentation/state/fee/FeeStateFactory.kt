@@ -2,7 +2,9 @@ package com.tangem.features.send.impl.presentation.state.fee
 
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
@@ -10,10 +12,8 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
-import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 /**
@@ -31,6 +31,15 @@ internal class FeeStateFactory(
         SendFeeCustomFieldConverter(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
+
+    val feeConverter by lazy {
+        FeeConverter(
+            clickIntents = clickIntents,
+            appCurrencyProvider = appCurrencyProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
 
@@ -58,7 +67,7 @@ internal class FeeStateFactory(
             customValues = customFeeFieldConverter.convert(fees.normal),
         )
 
-        val fee = feeSelectorState.getFee()
+        val fee = feeConverter.convert(feeSelectorState)
         val receivedAmount = calculateReceiveAmount(state, fee)
         return state.copy(
             feeState = feeState.copy(
@@ -83,7 +92,7 @@ internal class FeeStateFactory(
             fees = fees,
             customValues = customFeeFieldConverter.convert(fees.normal),
         )
-        val fee = updatedFeeSelector.getFee()
+        val fee = feeConverter.convert(updatedFeeSelector)
         val receivedAmount = calculateReceiveAmount(state, fee)
         return state.copy(
             feeState = feeState.copy(
@@ -112,7 +121,7 @@ internal class FeeStateFactory(
         val balance = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
 
         val updatedFeeSelectorState = feeSelectorState.copy(selectedFee = feeType)
-        val fee = updatedFeeSelectorState.getFee()
+        val fee = feeConverter.convert(updatedFeeSelectorState)
         val receivedAmount = calculateReceiveAmount(state, fee)
         return state.copy(
             feeState = feeState.copy(
@@ -129,14 +138,10 @@ internal class FeeStateFactory(
         val state = currentStateProvider()
         val feeState = state.feeState ?: return state
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
-        val updatedFeeSelectorState = feeSelectorState.copy(
-            customValues = feeSelectorState.customValues.toMutableList().apply {
-                set(index, feeSelectorState.customValues[index].copy(value = value))
-            }.toImmutableList(),
-        )
+        val updatedFeeSelectorState = customFeeFieldConverter.onValueChange(feeSelectorState, index, value)
         val balance = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
 
-        val fee = updatedFeeSelectorState.getFee()
+        val fee = feeConverter.convert(updatedFeeSelectorState)
         val receivedAmount = calculateReceiveAmount(state, fee)
         return state.copy(
             feeState = feeState.copy(
@@ -153,7 +158,7 @@ internal class FeeStateFactory(
         val state = currentStateProvider()
         val feeState = state.feeState ?: return state
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
-        val fee = feeSelectorState.getFee()
+        val fee = feeConverter.convert(feeSelectorState)
         val receivedAmount = calculateReceiveAmount(state, fee)
         return state.copy(
             feeState = feeState.copy(
@@ -181,13 +186,17 @@ internal class FeeStateFactory(
         notifications: ImmutableList<SendFeeNotification>,
     ): Boolean {
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return false
-        val customValue = feeSelectorState.customValues.firstOrNull()?.value?.toBigDecimalOrNull()
+        val customValue = feeSelectorState.customValues.firstOrNull()
         val balance = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
-        val fee = feeSelectorState.getFee()
+        val fee = feeConverter.convert(feeSelectorState)
         val feeValue = fee.amount.value ?: BigDecimal.ZERO
 
         val isNotCustom = feeSelectorState.selectedFee != FeeType.CUSTOM
-        val isNotEmptyCustom = !customValue.isNullOrZero() && !isNotCustom
+        val isNotEmptyCustom = if (customValue != null) {
+            !customValue.value.parseToBigDecimal(customValue.decimals).isZero() && !isNotCustom
+        } else {
+            false
+        }
         val noErrors = notifications.none { it is SendFeeNotification.Error }
         val isSubtractRequired = when {
             !feeState.isSubtractAvailable -> true // current currency is not fee currency
