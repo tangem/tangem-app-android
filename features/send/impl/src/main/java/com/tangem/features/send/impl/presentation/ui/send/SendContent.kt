@@ -70,11 +70,13 @@ internal fun SendContent(uiState: SendUiState) {
                 RecipientBlock(
                     recipientState = recipientState,
                     isSuccess = isSuccess,
+                    isEditingDisabled = uiState.isEditingDisabled,
                     onClick = uiState.clickIntents::showRecipient,
                 )
                 AmountBlock(
                     amountState = amountState,
                     isSuccess = isSuccess,
+                    isEditingDisabled = uiState.isEditingDisabled,
                     onClick = uiState.clickIntents::showAmount,
                 )
                 FeeBlock(
@@ -121,7 +123,12 @@ private fun FromWallet(walletName: String, walletBalance: String) {
 }
 
 @Composable
-private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: Boolean, onClick: () -> Unit) {
+private fun AmountBlock(
+    amountState: SendStates.AmountState,
+    isSuccess: Boolean,
+    isEditingDisabled: Boolean,
+    onClick: () -> Unit,
+) {
     val amount = amountState.amountTextField
 
     val cryptoAmount = formatCryptoAmount(
@@ -134,6 +141,11 @@ private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: Boolean,
         fiatCurrencyCode = (amount.fiatAmount.type as AmountType.FiatType).code,
         fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
     )
+    val backgroundColor = if (isEditingDisabled) {
+        TangemTheme.colors.button.disabled
+    } else {
+        TangemTheme.colors.background.action
+    }
     InputRowImage(
         title = TextReference.Res(R.string.send_amount_label),
         subtitle = TextReference.Str(cryptoAmount),
@@ -142,21 +154,31 @@ private fun AmountBlock(amountState: SendStates.AmountState, isSuccess: Boolean,
         showNetworkIcon = true,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
-            .clickable(enabled = !isSuccess) { onClick() },
+            .background(backgroundColor)
+            .clickable(enabled = !isSuccess && !isEditingDisabled) { onClick() },
     )
 }
 
 @Composable
-private fun RecipientBlock(recipientState: SendStates.RecipientState, isSuccess: Boolean, onClick: () -> Unit) {
+private fun RecipientBlock(
+    recipientState: SendStates.RecipientState,
+    isSuccess: Boolean,
+    isEditingDisabled: Boolean,
+    onClick: () -> Unit,
+) {
     val address = recipientState.addressTextField
     val memo = recipientState.memoTextField
+    val backgroundColor = if (isEditingDisabled) {
+        TangemTheme.colors.button.disabled
+    } else {
+        TangemTheme.colors.background.action
+    }
 
     Column(
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
-            .clickable(enabled = !isSuccess) { onClick() },
+            .background(backgroundColor)
+            .clickable(enabled = !isSuccess && !isEditingDisabled) { onClick() },
     ) {
         val showMemo = memo != null && memo.value.isNotBlank()
         InputRowRecipientDefault(
