@@ -2,6 +2,7 @@ package com.tangem.core.ui.utils
 
 import java.text.DecimalFormat
 
+@Deprecated("Deprecated due to unnecessary abstraction. Use methods from DecimalFormatterExt")
 class InputNumberFormatter(
     numberFormat: DecimalFormat,
 ) {
