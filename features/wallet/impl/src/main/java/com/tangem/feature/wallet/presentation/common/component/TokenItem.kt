@@ -127,7 +127,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
         val layoutWidth = constraints.maxWidth
         val horizontalPadding = with(density) { dimens.size14.roundToPx() }
-        val verticalPadding = with(density) { dimens.size15.roundToPx() }
+        val verticalPadding = with(density) { dimens.size16.roundToPx() }
         val layoutWidthWithoutPaddings = layoutWidth - 2 * horizontalPadding
 
         val titleMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
