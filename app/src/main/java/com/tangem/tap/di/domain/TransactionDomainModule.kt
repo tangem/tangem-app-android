@@ -2,12 +2,13 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,24 +21,21 @@ internal object TransactionDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetFeeUseCase(
-        walletManagersFacade: WalletManagersFacade,
-        dispatchers: CoroutineDispatcherProvider,
-    ): GetFeeUseCase {
-        return GetFeeUseCase(walletManagersFacade, dispatchers)
+    fun provideGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetFeeUseCase {
+        return GetFeeUseCase(walletManagersFacade)
     }
 
     @Provides
     @ViewModelScoped
     fun provideSendTransactionUseCase(
         isDemoCardUseCase: IsDemoCardUseCase,
-        walletManagersFacade: WalletManagersFacade,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        transactionRepository: TransactionRepository,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
-            walletManagersFacade = walletManagersFacade,
+            transactionRepository = transactionRepository,
         )
     }
 
@@ -45,5 +43,11 @@ internal object TransactionDomainModule {
     @ViewModelScoped
     fun provideCreateTransactionUseCase(transactionRepository: TransactionRepository): CreateTransactionUseCase {
         return CreateTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIsFeeApproximateUseCase(feeRepository: FeeRepository): IsFeeApproximateUseCase {
+        return IsFeeApproximateUseCase(feeRepository)
     }
 }
