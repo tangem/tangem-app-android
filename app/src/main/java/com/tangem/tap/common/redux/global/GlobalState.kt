@@ -36,4 +36,5 @@ typealias CryptoCurrencyName = String
 data class OnboardingState(
     val onboardingStarted: Boolean = false,
     val onboardingManager: OnboardingManager? = null,
+    val shouldResetOnCreate: Boolean = false,
 )
