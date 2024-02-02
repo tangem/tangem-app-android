@@ -11,7 +11,6 @@ internal sealed class BalancesAndLimitsBlockState {
 
     data class Content(
         val availableBalance: String,
-        val currencySymbol: String,
         val limitDays: Int,
         val isEnabled: Boolean,
         val onClick: () -> Unit,
