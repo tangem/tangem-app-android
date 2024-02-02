@@ -9,4 +9,5 @@ import com.tangem.core.navigation.StateDialog
 sealed class OnboardingDialog : StateDialog {
     object TwinningProcessNotCompleted : OnboardingDialog()
     data class InterruptOnboarding(val onOk: VoidCallback) : OnboardingDialog()
+    data class WalletActivationError(val onConfirm: () -> Unit) : OnboardingDialog()
 }
