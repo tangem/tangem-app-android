@@ -55,6 +55,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             )
             is OnboardingDialog.TwinningProcessNotCompleted -> TwinningProcessNotCompletedDialog.create(context)
             is OnboardingDialog.InterruptOnboarding -> InterruptOnboardingDialog.create(context, state.dialog)
+            is OnboardingDialog.WalletActivationError -> WalletActivationErrorDialog.create(context, state.dialog)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect_title,
