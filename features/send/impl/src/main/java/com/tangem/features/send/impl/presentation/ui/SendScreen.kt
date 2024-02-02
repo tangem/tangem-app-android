@@ -45,6 +45,7 @@ internal fun SendScreen(uiState: SendUiState) {
             SendUiStateType.Recipient -> R.string.send_recipient_label
             SendUiStateType.Fee -> R.string.common_fee_selector_title
             SendUiStateType.Send -> if (!isSuccess) R.string.send_confirm_label else null
+            else -> null
         }
         val iconRes = if (currentState.value == SendUiStateType.Recipient) {
             R.drawable.ic_qrcode_scan_24
@@ -102,6 +103,7 @@ private fun SendScreenContent(
                 uiState.clickIntents,
             )
             SendUiStateType.Send -> SendContent(uiState)
+            else -> Unit
         }
     }
 }
