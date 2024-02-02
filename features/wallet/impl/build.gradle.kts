@@ -69,6 +69,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.analytics)
+    implementation(projects.domain.visa)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.features.onboarding)
     implementation(projects.features.tester.api)
