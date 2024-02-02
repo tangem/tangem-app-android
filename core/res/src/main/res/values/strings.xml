@@ -68,7 +68,7 @@
     <string name="common_biometric_authentication">biometric authentication</string>
     <string name="common_biometrics">biometrics</string>
     <string name="common_buy">Buy</string>
-    <string name="common_buy_currency">Buy %1$s</string>
+    <string name="common_buy_currency">Go to %1$s</string>
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_close">Close</string>
@@ -135,6 +135,7 @@
     <string name="common_transfer">Transfer</string>
     <string name="common_understand">I understand</string>
     <string name="common_unreachable">Unreachable</string>
+    <string name="common_unknown_error">There was an error. Please try again.</string>
     <string name="common_yes">Yes</string>
     <string name="contract_address_copied_message">Contract address copied!</string>
     <string name="currency_subtitle_expanded">Available networks</string>
@@ -234,6 +235,7 @@
     <string name="express_provider">Provider</string>
     <string name="express_provider_best_rate">Best rate</string>
     <string name="express_provider_min_amount">Available from %s</string>
+    <string name="express_provider_max_amount">Available up to %s</string>
     <string name="express_provider_not_available">Unavailable for this pair</string>
     <string name="express_provider_permission_needed">Permission Required</string>
     <string name="express_terms_of_use">Terms of Use</string>
@@ -309,6 +311,8 @@
     <string name="onboarding_access_code_repeat_code_title">Re-enter your Access Code</string>
     <string name="onboarding_access_code_too_short">Access code must be at least 4 characters long</string>
     <string name="onboarding_access_codes_doesnt_match">Entered access code didn\'t match the initial access code</string>
+    <string name="onboarding_activation_error_message">Please repeat the operation. The card will be reset to factory settings.</string>
+    <string name="onboarding_activation_error_title">Activation error</string>
     <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card. When backup process is finished you can\'t add more backup cards. If you have one more card, add it to backup. Do you like to continue the backup process?</string>
     <string name="onboarding_backup_exit_warning">The backup process is partly complete. You can\'t exit it now.</string>
     <string name="onboarding_button_add_backup_card">Add a backup card</string>
@@ -447,8 +451,9 @@
     <string name="send_amount_label">Amount</string>
     <string name="send_amount_substract">Subtract from send amount</string>
     <string name="send_amount_substract_footer">The recipient will receive %s</string>
+    <string name="send_alert_button_request_support">Support</string>
     <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
-    <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode:%2$s</string>
+    <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
     <string name="send_confirm_label">Confirm</string>
     <string name="send_date_format">%1$s at %2$s</string>
     <string name="send_destination_hint_address">Address</string>
@@ -480,10 +485,10 @@
     <string name="send_network_fee_warning_title">Network fee coverage</string>
     <string name="send_notification_exceed_balance_text">Insufficient funds for the transfer, as the total of the fee and transfer amount exceeds the existing balance</string>
     <string name="send_notification_exceed_balance_title">Total exceeds balance</string>
-    <string name="send_notification_exceed_fee_text">The commission fee exceeds the network balance. To continue, it is necessary to replenish the network balance.</string>
-    <string name="send_notification_exceed_fee_title">Fee exceeds balance</string>
-    <string name="send_notification_high_fee_text">The fee for transferring the entire balance is higher. To reduce the commission, you can leave 0.01.</string>
     <string name="send_notification_high_fee_title">Fee is increased</string>
+    <string name="send_notification_high_fee_text">The fee for transferring the entire balance is higher. To reduce the commission, you can leave 0.01.</string>
+    <string name="send_notification_fee_too_high_accept">Reduce by %s XTZ</string>
+    <string name="send_notification_fee_too_high_ignore">No, send all</string>
     <string name="send_notification_fee_too_high_title">Custom fee is high</string>
     <string name="send_notification_fee_too_high_text">The commission amount is %s times the recommended amount. Make sure that the custom settings are correct.</string>
     <string name="send_notification_invalid_amount_text">The included commission exceeds the transfer amount, leading to a negative value</string>
@@ -498,11 +503,6 @@
     <string name="send_notification_existential_deposit_title">Existential deposit</string>
     <string name="send_notification_existential_deposit_text">The account will be wiped from the blockchain if a balance goes below the existential deposit. Please ensure that the remaining balance after sending will not be less than %s.</string>
     <string name="send_optional_field">Optional</string>
-    <string name="send_qrcode_alert_change">Change</string>
-    <string name="send_qrcode_alert_decline">Decline</string>
-    <string name="send_qrcode_scan_address_success">Recipient’s address scanned</string>
-    <string name="send_qrcode_scan_amount_alert_text">Change the entered amount?</string>
-    <string name="send_qrcode_scan_amount_alert_title">QR code contains information about the sending amount equal to %s</string>
     <string name="send_qrcode_scan_info">Please align your QR code with the square to scan it. Ensure you scan %s network address.</string>
     <string name="send_recent_transactions">Recent</string>
     <string name="send_recipient">Recipient</string>
@@ -519,6 +519,7 @@
     <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
     <string name="send_validation_invalid_address">Invalid address</string>
     <string name="sent_transaction_sent_title">Transaction sent</string>
+    <string name="send_wallet_balance_format">%s (%s)</string>
     <string name="shop_buy_now">Buy now</string>
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
     <string name="shop_one_wallet">Tangem Wallet</string>
@@ -545,7 +546,6 @@
     <string name="swapping_approve_information_title">Approve</string>
     <string name="swapping_error_wrapper">Error: %s</string>
     <string name="swapping_from_title">You swap</string>
-    <string name="swapping_generic_error">There was an error. Please try again.</string>
     <string name="swapping_give_permission">Give Permission</string>
     <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
     <string name="swapping_insufficient_funds">Insufficient funds</string>
@@ -666,7 +666,7 @@
     <string name="wallet_connect_service_no_chain_id">Dapp didn\'t provide essential data to establish WalletConnect session</string>
     <string name="wallet_connect_session_not_found">Failed to find session for request</string>
     <string name="wallet_connect_sessions_title">WalletConnect Sessions</string>
-    <string name="wallet_connect_subtitle">Connect to Dapps</string>
+    <string name="wallet_connect_subtitle">Connect to dApps</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_transaction_signed">The transaction has been successfully signed and sent to the Dapp</string>
     <string name="wallet_connect_transaction_signed_and_send">The transaction has been succesfully signed and sent to the blockchain</string>
@@ -705,8 +705,9 @@
     <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
     <string name="warning_express_not_enough_fee_for_token_tx_title">Unable to cover %s fee</string>
     <string name="warning_express_refresh_required_title">Service temporarily unavailable</string>
-    <string name="warning_express_too_minimal_amount_description">Please change the amount to swap</string>
+    <string name="warning_express_wrong_amount_description">Please change the amount to swap</string>
     <string name="warning_express_too_minimal_amount_title">The amount to swap must be at least %s</string>
+    <string name="warning_express_too_maximum_amount_title">The amount of tokens to be swapped must not exceed %s</string>
     <string name="warning_failed_to_verify_card_message">This card might be a production sample or counterfeit</string>
     <string name="warning_failed_to_verify_card_title">Authenticity check failed</string>
     <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
