@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -28,6 +30,7 @@ import com.tangem.features.send.impl.presentation.ui.send.SendContent
 internal fun SendScreen(uiState: SendUiState) {
     val currentState = uiState.currentState.collectAsStateWithLifecycle()
     val isSuccess = uiState.sendState.isSuccess
+    val snackbarHostState = remember { SnackbarHostState() }
     BackHandler { uiState.clickIntents.onBackClick() }
     Column(
         modifier = Modifier
@@ -65,6 +68,11 @@ internal fun SendScreen(uiState: SendUiState) {
         )
         SendNavigationButtons(uiState)
     }
+
+    SendEventEffect(
+        event = uiState.event,
+        snackbarHostState = snackbarHostState,
+    )
 }
 
 @Composable
