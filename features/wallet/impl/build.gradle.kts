@@ -49,6 +49,8 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.common)
+    implementation(projects.core.deepLinks)
+    implementation(projects.core.deepLinks.global)
 
     /** Domain modules */
     implementation(projects.domain.card)
@@ -67,6 +69,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.analytics)
+    implementation(projects.domain.visa)
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)

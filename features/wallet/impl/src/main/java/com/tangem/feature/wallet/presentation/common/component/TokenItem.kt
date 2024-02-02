@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.layout.*
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -123,8 +126,9 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
     Layout(content = content, modifier = modifier) { measurables, constraints ->
 
         val layoutWidth = constraints.maxWidth
-        val layoutPadding = with(density) { dimens.size14.roundToPx() }
-        val layoutWidthWithoutPaddings = layoutWidth - 2 * layoutPadding
+        val horizontalPadding = with(density) { dimens.size14.roundToPx() }
+        val verticalPadding = with(density) { dimens.size16.roundToPx() }
+        val layoutWidthWithoutPaddings = layoutWidth - 2 * horizontalPadding
 
         val titleMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
         val priceChangeMinWidth = (layoutWidth * PRICE_MIN_WIDTH_COEFFICIENT).toInt()
@@ -209,7 +213,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
         val layoutHeight = calculateLayoutHeight(
             state = state,
             minLayoutHeight = with(density) { dimens.size68.roundToPx() },
-            layoutPadding = layoutPadding,
+            layoutPadding = horizontalPadding,
             betweenRowsPadding = with(density) { dimens.size2.roundToPx() },
             title = title,
             fiatAmount = fiatAmount,
@@ -218,35 +222,35 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
         )
 
         layout(width = constraints.maxWidth, height = layoutHeight) {
-            icon.placeRelative(x = layoutPadding, y = (layoutHeight - icon.height).div(other = 2))
+            icon.placeRelative(x = horizontalPadding, y = (layoutHeight - icon.height).div(other = 2))
 
             title.placeRelative(
-                x = layoutPadding + icon.width,
+                x = horizontalPadding + icon.width,
                 y = when (state) {
                     is TokenItemState.NoAddress,
                     is TokenItemState.Unreachable,
                     -> (layoutHeight - title.height).div(other = 2)
-                    else -> layoutPadding
+                    else -> verticalPadding
                 },
             )
 
-            fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width - layoutPadding, y = layoutPadding)
+            fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width - horizontalPadding, y = verticalPadding)
 
             priceChange?.placeRelative(
-                x = layoutPadding + icon.width,
-                y = layoutHeight - priceChange.height - layoutPadding,
+                x = horizontalPadding + icon.width,
+                y = layoutHeight - priceChange.height - verticalPadding,
             )
 
             cryptoAmount?.placeRelative(
                 x = when (state) {
-                    is TokenItemState.Draggable -> layoutPadding + icon.width
-                    else -> layoutWidth - cryptoAmount.width - layoutPadding
+                    is TokenItemState.Draggable -> horizontalPadding + icon.width
+                    else -> layoutWidth - cryptoAmount.width - horizontalPadding
                 },
-                y = layoutHeight - cryptoAmount.height - layoutPadding,
+                y = layoutHeight - cryptoAmount.height - verticalPadding,
             )
 
             nonFiatContent.placeRelative(
-                x = layoutWidth - nonFiatContent.width - layoutPadding,
+                x = layoutWidth - nonFiatContent.width - horizontalPadding,
                 y = (layoutHeight - nonFiatContent.height).div(other = 2),
             )
         }
