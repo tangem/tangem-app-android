@@ -21,6 +21,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.utils.convertToAmount
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -74,6 +75,7 @@ internal class SendViewModel @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
@@ -136,7 +138,7 @@ internal class SendViewModel @Inject constructor(
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
-        walletManagersFacade = walletManagersFacade,
+        currencyChecksRepository = currencyChecksRepository,
         clickIntents = this,
     )
 
