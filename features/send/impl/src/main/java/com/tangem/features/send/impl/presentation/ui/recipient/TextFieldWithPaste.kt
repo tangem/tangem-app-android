@@ -27,11 +27,12 @@ internal fun TextFieldWithPaste(
     footer: String? = null,
     error: TextReference? = null,
     isError: Boolean = false,
+    isReadOnly: Boolean = false,
 ) {
-    val (title, color) = if (isError && error != null) {
-        error to TangemTheme.colors.text.warning
-    } else {
-        label to TangemTheme.colors.text.secondary
+    val (title, color) = when {
+        isError && error != null -> error to TangemTheme.colors.text.warning
+        isReadOnly -> label to TangemTheme.colors.text.disabled
+        else -> label to TangemTheme.colors.text.secondary
     }
     FooterContainer(modifier, footer) {
         Row(
@@ -55,18 +56,21 @@ internal fun TextFieldWithPaste(
                     value = value,
                     placeholder = placeholder,
                     onValueChange = onValueChange,
+                    readOnly = isReadOnly,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = TangemTheme.dimens.spacing6),
                 )
             }
-            PasteButton(
-                isPasteButtonVisible = value.isBlank(),
-                onClick = onPasteClick,
-                modifier = Modifier
-                    .align(CenterVertically)
-                    .padding(end = TangemTheme.dimens.spacing16),
-            )
+            if (!isReadOnly) {
+                PasteButton(
+                    isPasteButtonVisible = value.isBlank(),
+                    onClick = onPasteClick,
+                    modifier = Modifier
+                        .align(CenterVertically)
+                        .padding(end = TangemTheme.dimens.spacing16),
+                )
+            }
         }
     }
 }
