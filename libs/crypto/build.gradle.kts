@@ -13,4 +13,7 @@ dependencies {
 
     /** SDK */
     implementation(deps.tangem.blockchain)
+
+    /** Core */
+    implementation(projects.core.utils)
 }
