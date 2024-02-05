@@ -18,6 +18,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
 
 /**
@@ -26,12 +27,13 @@ import java.math.BigDecimal
 @Immutable
 internal data class SendUiState(
     val clickIntents: SendClickIntents,
+    val isEditingDisabled: Boolean,
     val amountState: SendStates.AmountState? = null,
     val recipientState: SendStates.RecipientState? = null,
     val feeState: SendStates.FeeState? = null,
     val sendState: SendStates.SendState = SendStates.SendState(),
     val recipientList: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
-    val currentState: MutableStateFlow<SendUiStateType>,
+    val currentState: StateFlow<SendUiStateType>,
     val event: StateEvent<SendEvent>,
 )
 
@@ -99,6 +101,7 @@ internal sealed class SendStates {
 }
 
 enum class SendUiStateType {
+    None,
     Amount,
     Recipient,
     Fee,
