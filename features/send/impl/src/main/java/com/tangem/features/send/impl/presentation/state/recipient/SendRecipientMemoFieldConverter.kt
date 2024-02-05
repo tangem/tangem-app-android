@@ -44,6 +44,8 @@ internal class SendRecipientMemoFieldConverter(
             placeholder = resourceReference(R.string.send_optional_field),
             label = resourceReference(value),
             error = resourceReference(R.string.send_memo_destination_tag_error),
+            disabledText = resourceReference(R.string.send_additional_field_already_included),
+            isEnabled = true,
         )
     }
 }
