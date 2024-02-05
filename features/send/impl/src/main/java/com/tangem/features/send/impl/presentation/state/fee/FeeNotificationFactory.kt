@@ -70,7 +70,7 @@ internal class FeeNotificationFactory(
         val customAmount = customFee.firstOrNull() ?: return
         val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
         if (selectedFee == FeeType.CUSTOM && minimumValue > customValue) {
-            add(SendFeeNotification.Informational.TooLow)
+            add(SendFeeNotification.Warning.TooLow)
         }
     }
 
