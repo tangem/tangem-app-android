@@ -99,6 +99,7 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
         swapRepository: SwapRepository,
+        currencyChecksRepository: CurrencyChecksRepository,
         showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCurrencyWarningsUseCase {
@@ -108,6 +109,7 @@ internal object TokensDomainModule {
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             marketCryptoCurrencyRepository = marketCryptoCurrencyRepository,
+            currencyChecksRepository = currencyChecksRepository,
             swapRepository = swapRepository,
             showSwapPromoTokenUseCase = showSwapPromoTokenUseCase,
             dispatchers = dispatchers,
