@@ -67,15 +67,15 @@ internal fun SendContent(uiState: SendUiState) {
                         walletBalance = amountState.walletBalance.resolveReference(),
                     )
                 }
-                AmountBlock(
-                    amountState = amountState,
-                    isSuccess = isSuccess,
-                    onClick = uiState.clickIntents::showAmount,
-                )
                 RecipientBlock(
                     recipientState = recipientState,
                     isSuccess = isSuccess,
                     onClick = uiState.clickIntents::showRecipient,
+                )
+                AmountBlock(
+                    amountState = amountState,
+                    isSuccess = isSuccess,
+                    onClick = uiState.clickIntents::showAmount,
                 )
                 FeeBlock(
                     feeState = feeState,
