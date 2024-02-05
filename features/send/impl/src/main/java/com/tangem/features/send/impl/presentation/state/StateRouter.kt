@@ -15,12 +15,16 @@ internal class StateRouter(
         fragmentManager.get()?.popBackStack()
     }
 
-    fun onBackClick() {
-        when (currentState.value) {
-            SendUiStateType.Recipient -> popBackStack()
-            SendUiStateType.Amount -> showRecipient()
-            SendUiStateType.Fee -> showAmount()
-            SendUiStateType.Send -> showFee()
+    fun onBackClick(isSuccess: Boolean = false) {
+        if (isSuccess) {
+            popBackStack()
+        } else {
+            when (currentState.value) {
+                SendUiStateType.Recipient -> popBackStack()
+                SendUiStateType.Amount -> showRecipient()
+                SendUiStateType.Fee -> showAmount()
+                SendUiStateType.Send -> showFee()
+            }
         }
     }
 
@@ -54,7 +58,7 @@ internal class StateRouter(
         currentState.update { SendUiStateType.Fee }
     }
 
-    private fun showSend() {
+    fun showSend() {
         currentState.update { SendUiStateType.Send }
     }
 }
