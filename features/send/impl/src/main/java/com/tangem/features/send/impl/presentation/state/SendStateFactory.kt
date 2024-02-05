@@ -92,16 +92,27 @@ internal class SendStateFactory(
     // region UI states
     fun getInitialState(): SendUiState = SendUiState(
         clickIntents = clickIntents,
-        currentState = MutableStateFlow(SendUiStateType.Amount),
+        currentState = MutableStateFlow(SendUiStateType.None),
         event = consumedEvent(),
+        isEditingDisabled = false,
     )
 
     fun getReadyState(): SendUiState {
         val state = currentStateProvider()
         return state.copy(
-            amountState = state.amountState ?: amountStateConverter.convert(Unit),
-            recipientState = state.recipientState ?: recipientStateConverter.convert(Unit),
+            amountState = state.amountState ?: amountStateConverter.convert(""),
+            recipientState = state.recipientState ?: recipientStateConverter.convert(""),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
+        )
+    }
+
+    fun getReadyState(amount: String, destinationAddress: String): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            amountState = state.amountState ?: amountStateConverter.convert(amount),
+            recipientState = state.recipientState ?: recipientStateConverter.convert(destinationAddress),
+            feeState = state.feeState ?: feeStateConverter.convert(Unit),
+            isEditingDisabled = true,
         )
     }
     //endregion

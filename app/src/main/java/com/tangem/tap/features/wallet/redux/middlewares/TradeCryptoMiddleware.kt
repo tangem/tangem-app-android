@@ -46,6 +46,11 @@ object TradeCryptoMiddleware {
         }
     }
 
+    private val isSendRedesignedEnabled: Boolean
+        get() = store.state.daggerGraphState.get(
+            getDependency = DaggerGraphState::sendFeatureToggles,
+        ).isRedesignedSendEnabled
+
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun handle(state: () -> AppState?, action: TradeCryptoAction) {
         if (DemoHelper.tryHandle(state, action)) return
@@ -57,8 +62,20 @@ object TradeCryptoMiddleware {
             is TradeCryptoAction.Swap -> openSwap(
                 currency = action.cryptoCurrency,
             )
-            is TradeCryptoAction.SendToken -> handleSendToken(action = action)
-            is TradeCryptoAction.SendCoin -> handleSendCoin(action = action)
+            is TradeCryptoAction.SendToken -> {
+                if (isSendRedesignedEnabled) {
+                    handleNewSendToken(action = action)
+                } else {
+                    handleSendToken(action = action)
+                }
+            }
+            is TradeCryptoAction.SendCoin -> {
+                if (isSendRedesignedEnabled) {
+                    handleNewSendCoin(action = action)
+                } else {
+                    handleSendCoin(action = action)
+                }
+            }
         }
     }
 
@@ -279,5 +296,36 @@ object TradeCryptoMiddleware {
             )
             store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
         }
+    }
+
+    private fun handleNewSendToken(action: TradeCryptoAction.SendToken) {
+        handleNewSend(
+            userWalletId = action.userWallet.walletId.stringValue,
+            txInfo = action.transactionInfo,
+            currency = action.tokenCurrency,
+        )
+    }
+
+    private fun handleNewSendCoin(action: TradeCryptoAction.SendCoin) {
+        handleNewSend(
+            userWalletId = action.userWallet.walletId.stringValue,
+            txInfo = action.transactionInfo,
+            currency = action.coinStatus.currency,
+        )
+    }
+
+    private fun handleNewSend(
+        userWalletId: String,
+        txInfo: TradeCryptoAction.TransactionInfo?,
+        currency: CryptoCurrency,
+    ) {
+        val bundle = bundleOf(
+            SendRouter.CRYPTO_CURRENCY_KEY to currency,
+            SendRouter.USER_WALLET_ID_KEY to userWalletId,
+            SendRouter.TRANSACTION_ID_KEY to txInfo?.transactionId,
+            SendRouter.DESTINATION_ADDRESS_KEY to txInfo?.destinationAddress,
+            SendRouter.AMOUNT_KEY to txInfo?.amount,
+        )
+        store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
     }
 }

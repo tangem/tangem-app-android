@@ -88,6 +88,10 @@ internal class SendViewModel @Inject constructor(
     private val cryptoCurrency: CryptoCurrency = savedStateHandle[SendRouter.CRYPTO_CURRENCY_KEY]
         ?: error("This screen can't open without `CryptoCurrency`")
 
+    private val transactionId: String? = savedStateHandle[SendRouter.TRANSACTION_ID_KEY]
+    private val amount: String? = savedStateHandle[SendRouter.AMOUNT_KEY]
+    private val destinationAddress: String? = savedStateHandle[SendRouter.DESTINATION_ADDRESS_KEY]
+
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private var innerRouter: InnerSendRouter by Delegates.notNull()
@@ -192,11 +196,10 @@ internal class SendViewModel @Inject constructor(
                 .flowWithLifecycle(owner.lifecycle)
                 .onEach { currencyStatus ->
                     currencyStatus.onRight {
-                        cryptoCurrencyStatus = it
-                        coinCryptoCurrencyStatus = it
-                        getWalletsAndRecent()
-                        uiState = stateFactory.getReadyState()
-                        updateNotifications()
+                        onDataLoaded(
+                            currencyStatus = it,
+                            coinCurrencyStatus = it,
+                        )
                     }
                 }
                 .flowOn(dispatchers.main)
@@ -208,10 +211,10 @@ internal class SendViewModel @Inject constructor(
                 flow2 = getCurrencyStatusUpdates(isSingleWallet = isSingleWallet),
             ) { coinStatus, currencyStatus ->
                 if (coinStatus.isRight() && currencyStatus.isRight()) {
-                    coinStatus.onRight { coinCryptoCurrencyStatus = it }
-                    currencyStatus.onRight { cryptoCurrencyStatus = it }
-                    getWalletsAndRecent()
-                    uiState = stateFactory.getReadyState()
+                    onDataLoaded(
+                        currencyStatus = currencyStatus.getOrElse { error("Currency status is unreachable") },
+                        coinCurrencyStatus = coinStatus.getOrElse { error("Coin status is unreachable") },
+                    )
                 }
             }.flowWithLifecycle(owner.lifecycle)
                 .flowOn(dispatchers.main)
@@ -243,6 +246,21 @@ internal class SendViewModel @Inject constructor(
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
+    }
+
+    private fun onDataLoaded(currencyStatus: CryptoCurrencyStatus, coinCurrencyStatus: CryptoCurrencyStatus) {
+        cryptoCurrencyStatus = currencyStatus
+        coinCryptoCurrencyStatus = coinCurrencyStatus
+
+        if (transactionId != null && amount != null && destinationAddress != null) {
+            uiState = stateFactory.getReadyState(amount, destinationAddress)
+            showFee()
+        } else {
+            getWalletsAndRecent()
+            uiState = stateFactory.getReadyState()
+            showRecipient()
+        }
+        updateNotifications()
     }
 
     private fun getWalletsAndRecent() {
