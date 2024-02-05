@@ -352,7 +352,7 @@ internal class SendViewModel @Inject constructor(
 
     // region screen state navigation
     override fun popBackStack() = stateRouter.popBackStack()
-    override fun onBackClick() = stateRouter.onBackClick()
+    override fun onBackClick() = stateRouter.onBackClick(uiState.sendState.isSuccess)
     override fun onNextClick() = stateRouter.onNextClick()
     override fun onPrevClick() = stateRouter.onPrevClick()
 
