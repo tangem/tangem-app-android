@@ -4,10 +4,11 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
+import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -21,7 +22,7 @@ internal class SendNotificationFactory(
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
-    private val walletManagersFacade: WalletManagersFacade,
+    private val currencyChecksRepository: CurrencyChecksRepository,
     private val clickIntents: SendClickIntents,
 ) {
 
@@ -39,6 +40,7 @@ internal class SendNotificationFactory(
                 addExceedBalanceNotification(feeAmount, sendAmount)
                 addInvalidAmountNotification(feeState.isSubtract, sendAmount)
                 addMinimumAmountErrorNotification(feeAmount, sendAmount)
+                addDustWarningNotification(feeAmount, sendAmount)
                 addReserveAmountErrorNotification(recipientState.addressTextField.value)
                 addTransactionLimitErrorNotification(feeAmount, sendAmount)
                 // warnings
@@ -117,12 +119,12 @@ internal class SendNotificationFactory(
     private suspend fun MutableList<SendNotification>.addReserveAmountErrorNotification(recipientAddress: String) {
         val userWalletId = userWalletProvider().walletId
         val cryptoCurrency = cryptoCurrencyStatusProvider().currency
-        val isAccountFunded = walletManagersFacade.checkIfAccountFunded(
+        val isAccountFunded = currencyChecksRepository.checkIfAccountFunded(
             userWalletId,
             cryptoCurrency.network,
             recipientAddress,
         )
-        val minimumAmount = walletManagersFacade.getReserveAmount(userWalletId, cryptoCurrency.network)
+        val minimumAmount = currencyChecksRepository.getReserveAmount(userWalletId, cryptoCurrency.network)
         if (!isAccountFunded && minimumAmount != null && minimumAmount > BigDecimal.ZERO) {
             add(
                 SendNotification.Error.ReserveAmountError(
@@ -141,7 +143,7 @@ internal class SendNotificationFactory(
     ) {
         val userWalletId = userWalletProvider().walletId
         val cryptoCurrency = cryptoCurrencyStatusProvider().currency
-        val utxoLimit = walletManagersFacade.checkUtxoAmountLimit(
+        val utxoLimit = currencyChecksRepository.checkUtxoAmountLimit(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
             amount = receivedAmount,
@@ -173,7 +175,7 @@ internal class SendNotificationFactory(
         } else {
             feeAmount + receivedAmount
         }
-        val currencyDeposit = walletManagersFacade.getExistentialDeposit(
+        val currencyDeposit = currencyChecksRepository.getExistentialDeposit(
             userWalletId,
             cryptoCurrency.network,
         )
@@ -207,6 +209,29 @@ internal class SendNotificationFactory(
                     onDismissClick = clickIntents::onAmountReduceIgnoreClick,
                 ),
             )
+        }
+    }
+
+    private suspend fun MutableList<SendNotification>.addDustWarningNotification(
+        feeAmount: BigDecimal,
+        receivedAmount: BigDecimal,
+    ) {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val dustValue = currencyChecksRepository.getDustValue(
+            userWalletProvider().walletId,
+            cryptoCurrencyStatus.currency.network,
+        )
+        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        if (dustValue != null && !balance.isNullOrZero() && receivedAmount < balance) {
+            val totalAmount = feeAmount + receivedAmount
+            val change = balance - totalAmount
+            val isChangeLowerThanDust = change < dustValue && change != BigDecimal.ZERO
+            val isShowWarning = totalAmount < dustValue || isChangeLowerThanDust
+            if (isShowWarning) {
+                add(
+                    SendNotification.Error.MinimumAmountError(dustValue.toPlainString()),
+                )
+            }
         }
     }
 
