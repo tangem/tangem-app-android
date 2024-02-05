@@ -47,6 +47,8 @@ internal sealed class SendTextField {
         val label: TextReference,
         val isError: Boolean = false,
         val error: TextReference? = null,
+        val disabledText: TextReference,
+        val isEnabled: Boolean,
     ) : SendTextField()
 
     data class CustomFee(
