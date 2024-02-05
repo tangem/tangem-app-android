@@ -113,4 +113,10 @@ internal object TokensDataModule {
     ): NetworksCompatibilityRepository {
         return DefaultNetworksCompatibilityRepository(userWalletsStore = userWalletsStore, dispatchers = dispatchers)
     }
+
+    @Provides
+    @Singleton
+    fun provideCurrencyChecksRepository(walletManagersFacade: WalletManagersFacade): CurrencyChecksRepository {
+        return DefaultCurrencyChecksRepository(walletManagersFacade = walletManagersFacade)
+    }
 }
