@@ -49,9 +49,10 @@ internal fun SendNavigationButtons(uiState: SendUiState) {
 @Composable
 private fun SendSecondaryNavigationButton(uiState: SendUiState) {
     val currentState = uiState.currentState.collectAsState()
+    val isEditingDisabled = uiState.isEditingDisabled
+    val isCorrectScreen = currentState.value == SendUiStateType.Amount || currentState.value == SendUiStateType.Fee
     AnimatedVisibility(
-        visible = currentState.value == SendUiStateType.Amount ||
-            currentState.value == SendUiStateType.Fee,
+        visible = !isEditingDisabled && isCorrectScreen,
     ) {
         Icon(
             modifier = Modifier
@@ -170,6 +171,7 @@ private fun getButtonData(
     isSuccess: Boolean,
 ): Pair<Int, () -> Unit> {
     return when (currentState.value) {
+        SendUiStateType.None,
         SendUiStateType.Amount,
         SendUiStateType.Recipient,
         SendUiStateType.Fee,
