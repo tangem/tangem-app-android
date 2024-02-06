@@ -1,5 +1,8 @@
 package com.tangem.core.featuretoggle.storage
 
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+
 /**
  * Data model with information about feature toggle
  *
@@ -10,4 +13,8 @@ package com.tangem.core.featuretoggle.storage
  *
 [REDACTED_AUTHOR]
  */
-internal data class FeatureToggle(val name: String, val version: String)
+@JsonClass(generateAdapter = true)
+internal data class FeatureToggle(
+    @Json(name = "name") val name: String,
+    @Json(name = "version") val version: String,
+)
