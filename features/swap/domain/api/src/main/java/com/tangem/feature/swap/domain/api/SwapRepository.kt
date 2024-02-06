@@ -2,7 +2,6 @@ package com.tangem.feature.swap.domain.api
 
 import arrow.core.Either
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.*
@@ -69,8 +68,4 @@ interface SwapRepository {
     ): Either<DataError, SwapDataModel>
 
     fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
-
-    suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
-
-    suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal?
 }
