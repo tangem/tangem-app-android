@@ -11,7 +11,6 @@ import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -21,8 +20,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
 
     private val api: MercuryoApi = environment.mercuryoApi
 
-    private val blockchainsAvailableToBuy = CopyOnWriteArrayList<Blockchain>()
-    private val tokensAvailableToBuy = ConcurrentHashMap<String, List<Blockchain>>()
+    private val availableMercuryoCurrencies = CopyOnWriteArrayList<MercuryoCurrenciesResponse.MercuryoCryptoCurrency>()
 
     override fun featureIsSwitchedOn(): Boolean = true
 
@@ -33,29 +31,14 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
     override fun availableForBuy(currency: Currency): Boolean {
         if (!isBuyAllowed()) return false
 
-        // blockchains which cant be defined by mercuryo service
-        val unsupportedBlockchains = listOf(
-            Blockchain.Unknown,
-            Blockchain.Binance,
-            Blockchain.Arbitrum,
-            Blockchain.Optimism,
-        )
-        val blockchain = currency.blockchain
-
-        return when (currency) {
-            is Currency.Blockchain -> {
-                when {
-                    blockchain.isTestnet() -> blockchain.getTestnetTopUpUrl() != null
-                    unsupportedBlockchains.contains(blockchain) -> false
-                    else -> blockchainsAvailableToBuy.contains(blockchain)
-                }
-            }
-
-            is Currency.Token -> {
-                val supportedInBlockchains = tokensAvailableToBuy[currency.currencySymbol] ?: return false
-                supportedInBlockchains.contains(blockchain)
-            }
+        val mercuryoNetwork = currency.blockchain.mercuryoNetwork()
+        val contractAddress = (currency as? Currency.Token)?.token?.contractAddress ?: ""
+        val availableCurrency = availableMercuryoCurrencies.firstOrNull {
+            it.currencySymbol == currency.currencySymbol &&
+                it.network == mercuryoNetwork &&
+                it.contractAddress == contractAddress
         }
+        return availableCurrency != null
     }
 
     override fun availableForSell(currency: Currency): Boolean = false
@@ -67,8 +50,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
                 handleSuccessfullyUpdatedData(data = result.data.data)
             }
             result is Result.Failure -> {
-                blockchainsAvailableToBuy.clear()
-                tokensAvailableToBuy.clear()
+                availableMercuryoCurrencies.clear()
             }
         }
     }
@@ -95,34 +77,48 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
             .appendQueryParameter("return_url", ExchangeUrlBuilder.SUCCESS_URL)
         if (isDarkTheme) builder.appendQueryParameter("theme", "1inch")
 
+        blockchain.mercuryoNetwork()?.let {
+            builder.appendQueryParameter("network", it)
+        }
+
         return builder.build().toString()
     }
 
     override fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String? = null
 
     private fun handleSuccessfullyUpdatedData(data: MercuryoCurrenciesResponse.Data) {
-        data.crypto.forEach { currencyName ->
-            val blockchain = blockchainFromCurrencyName(currencyName)
-            if (blockchain == null) {
-                val specificBlockchain = data.config.base[currencyName]?.let(::blockchainFromCurrencyName)
-                if (specificBlockchain != null) {
-                    tokensAvailableToBuy.set(
-                        key = currencyName,
-                        value = tokensAvailableToBuy[currencyName].orEmpty() + specificBlockchain,
-                    )
-                }
-            } else {
-                blockchainsAvailableToBuy.add(blockchain)
-            }
-        }
+        availableMercuryoCurrencies.clear()
+        availableMercuryoCurrencies.addAll(data.config.cryptoCurrencies)
     }
 
-    private fun blockchainFromCurrencyName(currencyName: String): Blockchain? {
-        return when (currencyName) {
-            "BNB" -> Blockchain.BSC
-            "ETH" -> Blockchain.Ethereum
-            "ADA" -> Blockchain.Cardano
-            else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
+    @Suppress("CyclomaticComplexMethod")
+    private fun Blockchain.mercuryoNetwork(): String? {
+        return when (this) {
+            // Blockchain.Algorand -> "ALGORAND"  //TODO: Uncomment with algo support
+            Blockchain.Arbitrum -> "ARBITRUM"
+            Blockchain.Avalanche -> "AVALANCHE"
+            Blockchain.BSC -> "BINANCESMARTCHAIN"
+            Blockchain.Bitcoin -> "BITCOIN"
+            Blockchain.BitcoinCash -> "BITCOINCASH"
+            Blockchain.Cardano -> "CARDANO"
+            Blockchain.Cosmos -> "COSMOS"
+            Blockchain.Dash -> "DASH"
+            Blockchain.Dogecoin -> "DOGECOIN"
+            Blockchain.Ethereum -> "ETHEREUM"
+            Blockchain.Fantom -> "FANTOM"
+            Blockchain.Kusama -> "KUSAMA"
+            Blockchain.Litecoin -> "LITECOIN"
+            Blockchain.Near -> "NEAR_PROTOCOL"
+            Blockchain.TON -> "NEWTON"
+            Blockchain.Optimism -> "OPTIMISM"
+            Blockchain.Polkadot -> "POLKADOT"
+            Blockchain.Polygon -> "POLYGON"
+            Blockchain.XRP -> "RIPPLE"
+            Blockchain.Solana -> "SOLANA"
+            Blockchain.Stellar -> "STELLAR"
+            Blockchain.Tezos -> "TEZOS"
+            Blockchain.Tron -> "TRON"
+            else -> null
         }
     }
 
