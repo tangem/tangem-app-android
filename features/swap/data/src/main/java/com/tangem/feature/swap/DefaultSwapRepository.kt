@@ -23,7 +23,6 @@ import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWalletId
@@ -296,14 +295,6 @@ internal class DefaultSwapRepository @Inject constructor(
                 getDataError(ex).left()
             }
         }
-    }
-
-    override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
-        return walletManagersFacade.getExistentialDeposit(userWalletId, network)
-    }
-
-    override suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal? {
-        return walletManagersFacade.getDustValue(userWalletId, network)
     }
 
     private fun parseTxDetails(txDetailsJson: String): TxDetails? {
