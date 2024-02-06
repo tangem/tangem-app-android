@@ -237,14 +237,15 @@ internal class ManageTokensViewModel @Inject constructor(
     override fun onGenerateDerivationClick() {
         if (neededDerivations.isNotEmpty()) {
             viewModelScope.launch(dispatchers.io) {
-                val walletId = neededDerivations.keys.firstOrNull()
-                val currenciesToDerive = neededDerivations[walletId]
-                if (walletId == null || currenciesToDerive.isNullOrEmpty()) return@launch
-                derivePublicKeysUseCase(walletId, currenciesToDerive)
-                    .onRight {
-                        updateDerivationNotificationState()
-                        fetchTokenListUseCase(userWalletId = walletId)
+                neededDerivations.forEach { (walletId, currenciesToDerive) ->
+                    if (currenciesToDerive.isNotEmpty()) {
+                        derivePublicKeysUseCase(walletId, currenciesToDerive)
+                            .onRight {
+                                updateDerivationNotificationState()
+                                fetchTokenListUseCase(userWalletId = walletId)
+                            }
                     }
+                }
             }
         }
     }
