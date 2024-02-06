@@ -27,17 +27,18 @@ dependencies {
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
 
-    /** Core modules */
-    implementation(project(":core:featuretoggles"))
-    implementation(project(":core:ui"))
-
-    /** Feature Apis */
-    implementation(project(":features:tester:api"))
-
-    /** Other modules */
-    implementation(project(":libs:crypto"))
-
     /** Other libraries */
     implementation(deps.arrow.core)
     implementation(deps.timber)
+
+    /** Core modules */
+    implementation(projects.core.featuretoggles)
+    implementation(projects.core.ui)
+    implementation(projects.core.utils)
+
+    /** Feature Apis */
+    implementation(projects.features.tester.api)
+
+    /** Other modules */
+    implementation(projects.libs.crypto)
 }
