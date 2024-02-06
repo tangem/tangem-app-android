@@ -11,7 +11,7 @@ import com.tangem.core.featuretoggle.storage.LocalFeatureTogglesStorage
 import com.tangem.core.featuretoggle.version.DefaultVersionProvider
 import com.tangem.core.featuretoggles.BuildConfig
 import com.tangem.datasource.asset.AssetReader
-import com.tangem.datasource.local.AppPreferenceStorage
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,7 +29,7 @@ internal object FeatureTogglesManagerModule {
     fun provideFeatureTogglesManager(
         @ApplicationContext context: Context,
         assetReader: AssetReader,
-        appPreferenceStorage: AppPreferenceStorage,
+        appPreferencesStore: AppPreferencesStore,
     ): FeatureTogglesManager {
         val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
         val localFeatureTogglesStorage = LocalFeatureTogglesStorage(
@@ -41,8 +41,7 @@ internal object FeatureTogglesManagerModule {
         return if (BuildConfig.TESTER_MENU_ENABLED) {
             DevFeatureTogglesManager(
                 localFeatureTogglesStorage = localFeatureTogglesStorage,
-                appPreferenceStorage = appPreferenceStorage,
-                jsonAdapter = moshi.adapter(),
+                appPreferencesStore = appPreferencesStore,
                 versionProvider = versionProvider,
             )
         } else {
