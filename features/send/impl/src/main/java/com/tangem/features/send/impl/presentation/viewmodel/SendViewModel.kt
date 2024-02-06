@@ -7,8 +7,6 @@ import androidx.lifecycle.*
 import androidx.paging.PagingData
 import arrow.core.Either
 import arrow.core.getOrElse
-import com.tangem.blockchain.blockchains.xrp.XrpAddressService
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.extensions.isZero
@@ -20,8 +18,8 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -43,6 +41,7 @@ import com.tangem.features.send.impl.presentation.state.fee.FeeNotificationFacto
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -301,10 +300,12 @@ internal class SendViewModel @Inject constructor(
                                                 userWalletId = wallet.walletId,
                                                 network = walletCurrency.network,
                                             )
-                                            return@fold AvailableWallet(
-                                                name = wallet.name,
-                                                address = addresses.first().value,
-                                            )
+                                            return@fold addresses.firstOrNull()?.let {
+                                                AvailableWallet(
+                                                    name = wallet.name,
+                                                    address = it.value,
+                                                )
+                                            }
                                         },
                                         ifLeft = { null },
                                     )
@@ -426,10 +427,10 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onRecipientAddressValueChange(value: String) {
-        uiState = stateFactory.onRecipientAddressValueChange(value)
         viewModelScope.launch(dispatchers.main) {
-            uiState = stateFactory.getOnRecipientAddressValidationStarted()
             if (!checkIfXrpAddressValue(value)) {
+                uiState = stateFactory.onRecipientAddressValueChange(value)
+                uiState = stateFactory.getOnRecipientAddressValidationStarted()
                 val isValidAddress = validateAddress(value)
                 uiState = stateFactory.getOnRecipientAddressValidState(value, isValidAddress)
             }
@@ -437,10 +438,10 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onRecipientMemoValueChange(value: String) {
-        uiState = stateFactory.getOnRecipientMemoValueChange(value)
         viewModelScope.launch(dispatchers.main) {
-            uiState = stateFactory.getOnRecipientAddressValidationStarted()
             if (!checkIfXrpAddressValue(value)) {
+                uiState = stateFactory.getOnRecipientMemoValueChange(value)
+                uiState = stateFactory.getOnRecipientAddressValidationStarted()
                 val isValidAddress = validateAddress(uiState.recipientState?.addressTextField?.value.orEmpty())
                 uiState = stateFactory.getOnRecipientMemoValidState(value, isValidAddress)
             }
@@ -455,16 +456,14 @@ internal class SendViewModel @Inject constructor(
         ).getOrElse { false }
     }
 
-    private fun checkIfXrpAddressValue(value: String): Boolean {
-        if (cryptoCurrency.network.id.value == Blockchain.XRP.id && value.firstOrNull() == XRP_X_ADDRESS) {
-            viewModelScope.launch(dispatchers.io) {
-                val result = XrpAddressService.decodeXAddress(value)
-                onRecipientAddressValueChange(result?.address.orEmpty())
-                onRecipientMemoValueChange(result?.destinationTag.toString())
-            }
-            return true
-        }
-        return false
+    private suspend fun checkIfXrpAddressValue(value: String): Boolean {
+        return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
+            uiState = stateFactory.onRecipientAddressValueChange(value, isXAddress = true)
+            uiState = stateFactory.getOnXAddressMemoState()
+            val isValidAddress = validateAddress(decodedAddress.address)
+            uiState = stateFactory.getOnRecipientAddressValidState(decodedAddress.address, isValidAddress)
+            true
+        } ?: false
     }
     // endregion
 
@@ -665,7 +664,6 @@ internal class SendViewModel @Inject constructor(
     // endregion
 
     companion object {
-        private const val XRP_X_ADDRESS = 'X'
         private const val CHECK_FEE_UPDATE_DELAY = 60_000L
         private const val BALANCE_UPDATE_DELAY = 10_000L
     }
