@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.fields
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -89,11 +90,16 @@ fun SimpleTextField(
             decorationBox = decorationBox ?: { textValue ->
                 Box {
                     if (value.isBlank() && placeholder != null) {
-                        Text(
-                            text = placeholder.resolveReference(),
-                            style = textStyle,
-                            color = TangemTheme.colors.text.disabled,
-                        )
+                        AnimatedContent(
+                            targetState = placeholder,
+                            label = "Placeholder Change Animation",
+                        ) {
+                            Text(
+                                text = it.resolveReference(),
+                                style = textStyle,
+                                color = TangemTheme.colors.text.disabled,
+                            )
+                        }
                     }
                     textValue()
                 }
