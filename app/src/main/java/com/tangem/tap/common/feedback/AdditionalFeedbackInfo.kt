@@ -72,9 +72,11 @@ class AdditionalFeedbackInfo {
         cardIssuer = data.card.issuer.name
         signedHashesCount = formatSignedHashes(data.card.wallets)
         userWalletId = UserWalletIdBuilder.scanResponse(data).build()?.stringValue ?: ""
-        extendedPublicKey = data.card.wallets.firstOrNull { it.extendedPublicKey != null }
-            ?.extendedPublicKey
-            ?.serialize(networkType = NetworkType.Mainnet).orEmpty()
+        extendedPublicKey = runCatching {
+            data.card.wallets.firstOrNull { it.extendedPublicKey != null }
+                ?.extendedPublicKey
+                ?.serialize(networkType = NetworkType.Mainnet).orEmpty()
+        }.getOrDefault("couldn't retrieve extended public key")
     }
 
     @Deprecated("Don't use it directly")
