@@ -53,7 +53,6 @@ googlePlayServicesWallet = "19.1.0"
 hilt = "2.44"
 hilt-navigation = "1.0.0"
 jodatime = "2.12.1"
-krateSharedPref = "2.0.0"
 kotlin-immutable-collections = "0.3.5"
 kotsonGsonExt = "2.5.0"
 lottie = "3.4.0"
@@ -206,7 +205,6 @@ hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
 hilt-kapt = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 hilt-navigation = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 jodatime = { module = "joda-time:joda-time", version.ref = "jodatime" }
-krateSharedPref = { module = "hu.autsoft:krate", version.ref = "krateSharedPref" }
 kotsonGson = { module = "com.github.salomonbrys.kotson:kotson", version.ref = "kotsonGsonExt" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 material = { module = "com.google.android.material:material", version.ref = "googleMaterialComponent" }
