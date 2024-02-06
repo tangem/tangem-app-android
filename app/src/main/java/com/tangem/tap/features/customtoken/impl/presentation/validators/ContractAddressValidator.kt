@@ -10,7 +10,7 @@ import com.tangem.domain.AddCustomTokenError
  *
  * @author Andrew Khokhlov on 22/04/2023
  */
-object ContactAddressValidator {
+object ContractAddressValidator {
 
     /** Validate a [address] using [blockchain] */
     fun validate(address: String, blockchain: Blockchain): ContractAddressValidatorResult {
