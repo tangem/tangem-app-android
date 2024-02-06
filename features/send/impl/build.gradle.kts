@@ -46,6 +46,9 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
 
+    /** Libs */
+    implementation(projects.libs.crypto)
+
     /** Domain modules */
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
