@@ -5,7 +5,6 @@ import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.squareup.moshi.Moshi
-import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
@@ -322,6 +321,16 @@ class DefaultWalletManagersFacade(
     }
 
     @Deprecated("Will be removed in future")
+    override suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        return getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+    }
+
+    @Deprecated("Will be removed in future")
     override suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager> {
         return walletManagersStore.getAllSync(userWalletId)
     }
@@ -374,63 +383,6 @@ class DefaultWalletManagersFacade(
             }
             is Result.Failure -> null
         }
-    }
-
-    @Deprecated("Will be removed in future")
-    override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
-        val manager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = network,
-        )
-
-        return if (manager is ExistentialDepositProvider) manager.getExistentialDeposit() else null
-    }
-
-    @Deprecated("Will be removed in future")
-    override suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal? {
-        val blockchain = Blockchain.fromId(network.id.value)
-        val manager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
-        )
-
-        return manager?.dustValue
-    }
-
-    @Deprecated("Will be removed in future")
-    override suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal? {
-        val manager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = network,
-        )
-
-        return if (manager is ReserveAmountProvider) manager.getReserveAmount() else null
-    }
-
-    @Deprecated("Will be removed in future")
-    override suspend fun checkIfAccountFunded(userWalletId: UserWalletId, network: Network, address: String): Boolean {
-        val manager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = network,
-        )
-
-        return if (manager is ReserveAmountProvider) manager.isAccountFunded(address) else true
-    }
-
-    @Deprecated("Will be removed in future")
-    override suspend fun checkUtxoAmountLimit(
-        userWalletId: UserWalletId,
-        network: Network,
-        amount: BigDecimal,
-        fee: BigDecimal,
-    ): UtxoAmountLimit? {
-        val manager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = network,
-        )
-
-        return if (manager is UtxoAmountLimitProvider) manager.checkUtxoAmountLimit(amount, fee) else null
     }
 
     @Deprecated("Will be removed in future")
@@ -604,14 +556,5 @@ class DefaultWalletManagersFacade(
             .filter { it !in walletManager.cardTokens }
 
         walletManager.addTokens(tokensToAdd)
-    }
-
-    private suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager? {
-        val blockchain = Blockchain.fromId(network.id.value)
-        return getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
-        )
     }
 }
