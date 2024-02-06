@@ -73,16 +73,18 @@ internal fun SendRecipientContent(
         }
         uiState.memoTextField?.let { memoField ->
             item(key = MEMO_FIELD_KEY) {
+                val placeholder = if (memoField.isEnabled) memoField.placeholder else memoField.disabledText
                 TextFieldWithPaste(
                     value = memoField.value,
                     label = memoField.label,
-                    placeholder = memoField.placeholder,
+                    placeholder = placeholder,
                     footer = stringResource(R.string.send_recipient_memo_footer),
                     onValueChange = memoField.onValueChange,
                     onPasteClick = clickIntents::onRecipientMemoValueChange,
                     modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
                     isError = memoField.isError,
                     error = memoField.error,
+                    isReadOnly = !memoField.isEnabled,
                 )
             }
         }
