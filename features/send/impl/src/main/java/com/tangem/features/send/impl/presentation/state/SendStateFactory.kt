@@ -136,12 +136,13 @@ internal class SendStateFactory(
         )
     }
 
-    fun onRecipientAddressValueChange(value: String): SendUiState {
+    fun onRecipientAddressValueChange(value: String, isXAddress: Boolean = false): SendUiState {
         val state = currentStateProvider()
         val recipientState = state.recipientState ?: return state
         return state.copy(
             recipientState = recipientState.copy(
                 addressTextField = recipientState.addressTextField.copy(value = value),
+                memoTextField = recipientState.memoTextField?.copy(isEnabled = !isXAddress),
             ),
         )
     }
@@ -216,6 +217,20 @@ internal class SendStateFactory(
                 isValidating = false,
                 memoTextField = recipientState.memoTextField?.copy(
                     isError = value.isNotEmpty() && !isValidMemo,
+                    isEnabled = true,
+                ),
+            ),
+        )
+    }
+
+    fun getOnXAddressMemoState(): SendUiState {
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+        return state.copy(
+            recipientState = recipientState.copy(
+                memoTextField = recipientState.memoTextField?.copy(
+                    value = "",
+                    isEnabled = false,
                 ),
             ),
         )
