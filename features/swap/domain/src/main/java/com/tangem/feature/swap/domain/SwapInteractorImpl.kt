@@ -16,6 +16,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.convertToAmount
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -58,6 +59,7 @@ internal class SwapInteractorImpl @Inject constructor(
     private val quotesRepository: QuotesRepository,
     private val dispatcher: CoroutineDispatcherProvider,
     private val swapTransactionRepository: SwapTransactionRepository,
+    private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
 ) : SwapInteractor {
@@ -380,7 +382,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         fromToken: CryptoCurrency,
     ) {
-        val existentialDeposit = repository.getExistentialDeposit(userWalletId, fromToken.network)
+        val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, fromToken.network)
         if (existentialDeposit != null) {
             val nativeBalance = userWalletManager.getNativeTokenBalance(
                 fromToken.network.backendId,
@@ -404,7 +406,7 @@ internal class SwapInteractorImpl @Inject constructor(
             is TxFeeState.MultipleFeeState -> feeState.priorityFee.feeValue
             is TxFeeState.SingleFeeState -> feeState.fee.feeValue
         }
-        val dust = repository.getDustValue(userWalletId, fromTokenStatus.currency.network)
+        val dust = currencyChecksRepository.getDustValue(userWalletId, fromTokenStatus.currency.network)
         val balance = fromTokenStatus.value.amount ?: BigDecimal.ZERO
         if (dust != null &&
             !balance.isNullOrZero() &&
