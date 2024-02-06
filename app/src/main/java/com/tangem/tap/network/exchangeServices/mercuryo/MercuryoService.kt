@@ -36,7 +36,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
         val availableCurrency = availableMercuryoCurrencies.firstOrNull {
             it.currencySymbol == currency.currencySymbol &&
                 it.network == mercuryoNetwork &&
-                it.contractAddress == contractAddress
+                it.contractAddress.equals(contractAddress, ignoreCase = true)
         }
         return availableCurrency != null
     }
