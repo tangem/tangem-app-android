@@ -4,24 +4,29 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.core.featuretoggle.manager.MutableFeatureTogglesManager
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * ViewModel for screen with list of feature toggles
  *
  * @property featureTogglesManager manager for getting information about the availability of feature toggles
+ * @property dispatchers           coroutine dispatchers provider
  *
 [REDACTED_AUTHOR]
  */
 @HiltViewModel
 internal class FeatureTogglesViewModel @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel() {
 
     /** Current ui state */
@@ -47,9 +52,11 @@ internal class FeatureTogglesViewModel @Inject constructor(
     }
 
     private fun onToggleValueChange(name: String, isEnabled: Boolean) {
-        mutableFeatureTogglesManager.changeToggle(name = name, isEnabled = isEnabled)
+        viewModelScope.launch(dispatchers.main) {
+            mutableFeatureTogglesManager.changeToggle(name = name, isEnabled = isEnabled)
 
-        uiState = uiState.copy(featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles())
+            uiState = uiState.copy(featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles())
+        }
     }
 
     private fun MutableFeatureTogglesManager.getTesterFeatureToggles(): List<TesterFeatureToggle> {
