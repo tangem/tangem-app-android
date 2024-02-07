@@ -99,5 +99,4 @@ sealed class ManageTokens(
         DEFAULT("Default"),
         CUSTOM("Custom"),
     }
-
 }
