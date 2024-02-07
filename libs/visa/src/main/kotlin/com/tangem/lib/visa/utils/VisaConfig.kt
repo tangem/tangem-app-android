@@ -9,6 +9,9 @@ internal object VisaConfig {
     const val GAS_LIMIT = 500_000_000L
     const val PRIVATE_KEY_LENGTH = 32
 
+    const val VISA_API_PROD_URL = "https://payapi.tangem-tech.com/api/v1/"
+    const val VISA_API_DEV_URL = "[REDACTED_ENV_URL]"
+
     const val NETWORK_TIMEOUT_SECONDS = 65L
     const val NETWORK_LOGS_TAG = "VisaNetworkLogs"
 }
