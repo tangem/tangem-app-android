@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fee.custom
 
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -43,6 +44,7 @@ internal class EthereumCustomFeeConverter(
                 title = resourceReference(R.string.send_max_fee),
                 footer = resourceReference(R.string.send_max_fee_footer),
                 label = getFeeFormatted(value.amount.value),
+                keyboardActions = KeyboardActions(),
             ),
             SendTextField.CustomFee(
                 value = value.gasPrice.toString(),
@@ -55,6 +57,7 @@ internal class EthereumCustomFeeConverter(
                     imeAction = ImeAction.Next,
                     keyboardType = KeyboardType.Number,
                 ),
+                keyboardActions = KeyboardActions(),
             ),
             SendTextField.CustomFee(
                 value = value.gasLimit.toString(),
@@ -67,6 +70,7 @@ internal class EthereumCustomFeeConverter(
                     imeAction = ImeAction.Done,
                     keyboardType = KeyboardType.Number,
                 ),
+                keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
             ),
         )
     }
