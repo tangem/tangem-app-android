@@ -28,10 +28,10 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) 
         sendField.value to sendField.fiatValue
     }
 
-    val (primaryAmount, secondaryAmount) = if (!isFiat) {
-        sendField.cryptoAmount to sendField.fiatAmount
-    } else {
+    val (primaryAmount, secondaryAmount) = if (isFiat) {
         sendField.fiatAmount to sendField.cryptoAmount
+    } else {
+        sendField.cryptoAmount to sendField.fiatAmount
     }
 
     AmountTextField(
