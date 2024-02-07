@@ -152,4 +152,5 @@ include(":data:wallets")
 include(":data:analytics")
 include(":data:transaction")
 include(":data:visa")
+include(":data:promo")
 // endregion Data modules
