@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendUiState
@@ -95,11 +96,12 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
     ) { textId ->
         when {
             currentState.value == SendUiStateType.Send && !isSuccess -> {
+                val hapticFeedback = rememberHapticFeedback(state = currentState, onAction = buttonClick)
                 PrimaryButtonIconEnd(
                     text = stringResource(textId),
                     iconResId = R.drawable.ic_tangem_24,
                     enabled = isButtonEnabled,
-                    onClick = buttonClick,
+                    onClick = hapticFeedback,
                     showProgress = isSending,
                 )
             }
