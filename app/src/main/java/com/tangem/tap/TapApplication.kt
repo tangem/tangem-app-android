@@ -29,7 +29,6 @@ import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -38,10 +37,8 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
-import com.tangem.features.tester.api.TesterFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
-import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
@@ -120,9 +117,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var scanCardProcessor: ScanCardProcessor
 
     @Inject
-    lateinit var blockchainExceptionHandler: BlockchainExceptionHandler
-
-    @Inject
     lateinit var appCurrencyRepository: AppCurrencyRepository
 
     @Inject
@@ -154,12 +148,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var oneTimeEventFilter: OneTimeEventFilter
-
-    @Inject
-    lateinit var derivationsRepository: DerivationsRepository
-
-    @Inject
-    lateinit var testerFeatureToggles: TesterFeatureToggles
 
     @Inject
     lateinit var blockchainDataStorage: BlockchainDataStorage
@@ -238,8 +226,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
-                    derivationsRepository = derivationsRepository,
-                    testerFeatureToggles = testerFeatureToggles,
                     blockchainDataStorage = blockchainDataStorage,
                 ),
             ),
