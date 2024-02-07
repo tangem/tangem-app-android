@@ -1,9 +1,9 @@
 package com.tangem.lib.visa
 
 import arrow.fx.coroutines.parZip
-import com.tangem.lib.visa.model.BalancesAndLimits
-import com.tangem.lib.visa.model.BalancesAndLimits.Balances
-import com.tangem.lib.visa.model.BalancesAndLimits.Limits
+import com.tangem.lib.visa.model.VisaBalancesAndLimits
+import com.tangem.lib.visa.model.VisaBalancesAndLimits.Balances
+import com.tangem.lib.visa.model.VisaBalancesAndLimits.Limits
 import com.tangem.lib.visa.utils.toBigDecimal
 import com.tangem.lib.visa.utils.toInstant
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -21,22 +21,24 @@ internal class DefaultVisaContractInfoProvider(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaContractInfoProvider {
 
-    override suspend fun getBalancesAndLimits(walletAddress: String): BalancesAndLimits = withContext(dispatchers.io) {
-        val tangemBridgeProcessor = TangemBridgeProcessor.load(
-            /* contractAddress = */ bridgeProcessorAddress,
-            /* web3j = */ web3j,
-            /* transactionManager = */ transactionManager,
-            /* contractGasProvider = */ gasProvider,
-        )
+    override suspend fun getBalancesAndLimits(walletAddress: String): VisaBalancesAndLimits {
+        return withContext(dispatchers.io) {
+            val tangemBridgeProcessor = TangemBridgeProcessor.load(
+                /* contractAddress = */ bridgeProcessorAddress,
+                /* web3j = */ web3j,
+                /* transactionManager = */ transactionManager,
+                /* contractGasProvider = */ gasProvider,
+            )
 
-        parZip(
-            dispatchers.io,
-            { loadPaymentAccount(walletAddress, tangemBridgeProcessor) },
-            { loadPaymentTokenInfo(tangemBridgeProcessor) },
-            { paymentAccount, paymentToken ->
-                fetchBalancesAndLimits(paymentAccount, paymentToken)
-            },
-        )
+            parZip(
+                dispatchers.io,
+                { loadPaymentAccount(walletAddress, tangemBridgeProcessor) },
+                { loadPaymentTokenInfo(tangemBridgeProcessor) },
+                { paymentAccount, paymentToken ->
+                    fetchBalancesAndLimits(paymentAccount, paymentToken)
+                },
+            )
+        }
     }
 
     private fun loadPaymentAccount(
@@ -62,12 +64,12 @@ internal class DefaultVisaContractInfoProvider(
     private suspend fun fetchBalancesAndLimits(
         paymentAccount: TangemPaymentAccount,
         paymentToken: PaymentTokenInfo,
-    ): BalancesAndLimits = parZip(
+    ): VisaBalancesAndLimits = parZip(
         dispatchers.io,
         { fetchBalances(paymentAccount, paymentToken) },
         { fetchLimits(paymentAccount, paymentToken) },
         { balances, (oldLimit, newLimit, changeDate) ->
-            BalancesAndLimits(balances, oldLimit, newLimit, changeDate)
+            VisaBalancesAndLimits(balances, oldLimit, newLimit, changeDate)
         },
     )
 
