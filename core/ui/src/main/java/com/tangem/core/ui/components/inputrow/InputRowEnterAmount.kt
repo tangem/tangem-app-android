@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
@@ -51,6 +52,7 @@ fun InputRowEnterAmount(
     titleColor: Color = TangemTheme.colors.text.secondary,
     textColor: Color = TangemTheme.colors.text.primary1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     iconRes: Int? = null,
     iconTint: Color = TangemTheme.colors.icon.informative,
     onIconClick: (() -> Unit)? = null,
@@ -79,6 +81,7 @@ fun InputRowEnterAmount(
                     color = textColor,
                     textStyle = TangemTheme.typography.body2,
                     keyboardOptions = keyboardOptions,
+                    keyboardActions = keyboardActions,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing8),
                 )
