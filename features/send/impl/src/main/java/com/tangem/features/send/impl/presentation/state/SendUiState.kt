@@ -34,6 +34,7 @@ internal data class SendUiState(
     val sendState: SendStates.SendState = SendStates.SendState(),
     val recipientList: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
     val currentState: StateFlow<SendUiStateType>,
+    val isBalanceHidden: Boolean,
     val event: StateEvent<SendEvent>,
 )
 
