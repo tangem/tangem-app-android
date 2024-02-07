@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.fields
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
@@ -34,6 +35,7 @@ fun SimpleTextField(
     singleLine: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     color: Color = TangemTheme.colors.text.primary1,
     textStyle: TextStyle = TangemTheme.typography.body2.copy(color = color),
     readOnly: Boolean = false,
@@ -87,6 +89,7 @@ fun SimpleTextField(
             readOnly = readOnly,
             visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
             decorationBox = decorationBox ?: { textValue ->
                 Box {
                     if (value.isBlank() && placeholder != null) {

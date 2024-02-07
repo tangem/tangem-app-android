@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -40,9 +41,10 @@ internal class SendAmountFieldConverter(
             fiatValue = fiatValue,
             onValueChange = clickIntents::onAmountValueChange,
             keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Next,
+                imeAction = ImeAction.Done,
                 keyboardType = KeyboardType.Number,
             ),
+            keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
             isFiatValue = false,
             cryptoAmount = cryptoAmount,
             fiatAmount = getAppCurrencyAmount(appCurrencyProvider()),
