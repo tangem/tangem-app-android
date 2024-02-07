@@ -1,8 +1,9 @@
 package com.tangem.tap.di.domain
 
 import com.squareup.moshi.Moshi
-import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
@@ -24,7 +25,8 @@ internal object WalletManagersFacadeModule {
     fun provideWalletManagersFacade(
         walletManagersStore: WalletManagersStore,
         userWalletsStore: UserWalletsStore,
-        blockchainWalletManagerFactory: WalletManagerFactory,
+        configManager: ConfigManager,
+        blockchainDataStorage: BlockchainDataStorage,
         mnemonicRepository: MnemonicRepository,
         assetReader: AssetReader,
         @SdkMoshi moshi: Moshi,
@@ -32,7 +34,8 @@ internal object WalletManagersFacadeModule {
         return DefaultWalletManagersFacade(
             walletManagersStore = walletManagersStore,
             userWalletsStore = userWalletsStore,
-            blockchainWalletManagerFactory = blockchainWalletManagerFactory,
+            configManager = configManager,
+            blockchainDataStorage = blockchainDataStorage,
             assetReader = assetReader,
             moshi = moshi,
             mnemonic = mnemonicRepository.generateDefaultMnemonic(),

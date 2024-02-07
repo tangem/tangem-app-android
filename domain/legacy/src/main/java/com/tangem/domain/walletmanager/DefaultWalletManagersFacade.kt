@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
+import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
@@ -18,6 +19,7 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
@@ -37,23 +39,23 @@ import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
-import com.tangem.blockchain.common.WalletManagerFactory as BlockchainWalletManagerFactory
 
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 // FIXME: Move to its own module and make internal
 @Deprecated("Inject the WalletManagerFacade interface using DI instead")
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
-    blockchainWalletManagerFactory: BlockchainWalletManagerFactory,
     mnemonic: Mnemonic,
     assetReader: AssetReader,
     moshi: Moshi,
+    configManager: ConfigManager,
+    blockchainDataStorage: BlockchainDataStorage,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
-    private val walletManagerFactory by lazy { WalletManagerFactory(blockchainWalletManagerFactory) }
+    private val walletManagerFactory by lazy { WalletManagerFactory(configManager, blockchainDataStorage) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
     private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
