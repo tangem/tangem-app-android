@@ -95,6 +95,7 @@ internal class SendStateFactory(
         currentState = MutableStateFlow(SendUiStateType.None),
         event = consumedEvent(),
         isEditingDisabled = false,
+        isBalanceHidden = false,
     )
 
     fun getReadyState(): SendUiState {
@@ -114,6 +115,10 @@ internal class SendStateFactory(
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
             isEditingDisabled = true,
         )
+    }
+
+    fun getOnHideBalanceState(isBalanceHidden: Boolean): SendUiState {
+        return currentStateProvider().copy(isBalanceHidden = isBalanceHidden)
     }
     //endregion
 
