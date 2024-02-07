@@ -8,8 +8,6 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
-import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.card.DefaultDerivePublicKeysUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -62,14 +60,8 @@ internal object CardDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideDerivePublicKeysUseCase(
-        tangemSdkManager: TangemSdkManager,
-        derivationsRepository: DerivationsRepository,
-    ): DerivePublicKeysUseCase {
-        return DefaultDerivePublicKeysUseCase(
-            tangemSdkManager = tangemSdkManager,
-            derivationsRepository = derivationsRepository,
-        )
+    fun provideDerivePublicKeysUseCase(derivationsRepository: DerivationsRepository): DerivePublicKeysUseCase {
+        return DerivePublicKeysUseCase(derivationsRepository = derivationsRepository)
     }
 
     @Provides
