@@ -1,22 +1,30 @@
 package com.tangem.data.visa
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import arrow.fx.coroutines.parZip
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.extensions.toHexString
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.VisaConfig
 import com.tangem.data.visa.utils.VisaCurrencyFactory
+import com.tangem.data.visa.utils.VisaTxHistoryPagingSource
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.visa.model.VisaCurrency
+import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.visa.repository.VisaRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.lib.visa.VisaContractInfoProvider
+import com.tangem.lib.visa.api.VisaApi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
@@ -24,6 +32,7 @@ import java.math.BigDecimal
 internal class DefaultVisaRepository(
     private val visaContractInfoProvider: VisaContractInfoProvider,
     private val tangemTechApi: TangemTechApi,
+    private val visaApi: VisaApi,
     private val cacheRegistry: CacheRegistry,
     private val userWalletsStore: UserWalletsStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -71,14 +80,34 @@ internal class DefaultVisaRepository(
         )
     }
 
-    private suspend fun getFiatRate(): BigDecimal? {
-        val fiatCurrencyId = VisaConfig.fiatCurrency.code.lowercase()
-        val quotes = tangemTechApi.getQuotes(
-            currencyId = fiatCurrencyId,
-            coinIds = VisaConfig.TOKEN_ID,
-        ).getOrThrow()
+    override suspend fun getTxHistory(
+        userWalletId: UserWalletId,
+        pageSize: Int,
+        isRefresh: Boolean,
+    ): Flow<PagingData<VisaTxHistoryItem>> {
+        val userWallet = findVisaUserWallet(userWalletId)
+        val cardPubKey = getCardPubKey(userWallet).toHexString()
+        // val cardPubKey = "03DEF02B1FECC8BD3CFD52CE93235194479E1DE931EF0F55DC194967E7CCC3D12C" // for testing
+        val pager = Pager(
+            config = PagingConfig(
+                pageSize = pageSize,
+                initialLoadSize = pageSize,
+            ),
+            pagingSourceFactory = {
+                VisaTxHistoryPagingSource(
+                    params = VisaTxHistoryPagingSource.Params(
+                        cardPublicKey = cardPubKey,
+                        pageSize = pageSize,
+                        isRefresh = isRefresh,
+                    ),
+                    cacheRegistry = cacheRegistry,
+                    visaApi = visaApi,
+                    dispatchers = dispatchers,
+                )
+            },
+        )
 
-        return quotes.quotes[VisaConfig.TOKEN_ID]?.price
+        return pager.flow
     }
 
     private suspend fun makeAddress(userWalletId: UserWalletId): String {
@@ -89,6 +118,16 @@ internal class DefaultVisaRepository(
         return requireNotNull(walletAddress?.value) {
             "Unable to find wallet address"
         }
+    }
+
+    private suspend fun getFiatRate(): BigDecimal? {
+        val fiatCurrencyId = VisaConfig.fiatCurrency.code.lowercase()
+        val quotes = tangemTechApi.getQuotes(
+            currencyId = fiatCurrencyId,
+            coinIds = VisaConfig.TOKEN_ID,
+        ).getOrThrow()
+
+        return quotes.quotes[VisaConfig.TOKEN_ID]?.price
     }
 
     private fun makeWalletAddresses(userWallet: UserWallet): Set<Address> {
