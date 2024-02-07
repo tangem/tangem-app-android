@@ -15,7 +15,7 @@ class ValidateContractAddressUseCase(private val tokensListRepository: TokensLis
 
                     if (!tokensListRepository.validateAddress(
                             contractAddress = address,
-                            networkId = networkId
+                            networkId = networkId,
                         )
                     ) {
                         raise(AddCustomTokenError.InvalidContractAddress)
