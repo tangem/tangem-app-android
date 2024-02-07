@@ -40,6 +40,7 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) 
         symbol = primaryAmount.currencySymbol,
         onValueChange = sendField.onValueChange,
         keyboardOptions = sendField.keyboardOptions,
+        keyboardActions = sendField.keyboardActions,
         textStyle = TangemTheme.typography.h2.copy(
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
