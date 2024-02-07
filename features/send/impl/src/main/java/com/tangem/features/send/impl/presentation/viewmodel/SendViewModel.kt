@@ -9,8 +9,6 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.extensions.isZero
-import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -38,6 +36,7 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
+import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeNotificationFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
@@ -108,6 +107,11 @@ internal class SendViewModel @Inject constructor(
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
+    )
+
+    private val amountStateFactory = AmountStateFactory(
+        currentStateProvider = Provider { uiState },
+        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
     )
 
     private val feeStateFactory = FeeStateFactory(
@@ -403,24 +407,15 @@ internal class SendViewModel @Inject constructor(
 
     // region amount state clicks
     override fun onCurrencyChangeClick(isFiat: Boolean) {
-        uiState = stateFactory.getOnCurrencyChangedState(isFiat)
+        uiState = amountStateFactory.getOnCurrencyChangedState(isFiat)
     }
 
     override fun onAmountValueChange(value: String) {
-        uiState = stateFactory.getOnAmountValueChange(value)
+        uiState = amountStateFactory.getOnAmountValueChange(value)
     }
 
     override fun onMaxValueClick() {
-        val amountState = uiState.amountState ?: return
-        val amountTextField = amountState.amountTextField
-        val (amount, decimals) = if (amountTextField.isFiatValue) {
-            cryptoCurrencyStatus.value.fiatAmount to amountTextField.fiatAmount.decimals
-        } else {
-            cryptoCurrencyStatus.value.amount to amountTextField.cryptoAmount.decimals
-        }
-        if (amount != null && !amount.isZero()) {
-            onAmountValueChange(amount.parseBigDecimal(decimals))
-        }
+        uiState = amountStateFactory.getOnMaxAmountClick()
     }
     // endregion
 
@@ -558,7 +553,7 @@ internal class SendViewModel @Inject constructor(
     override fun onExploreClick(txUrl: String) = innerRouter.openUrl(txUrl)
 
     override fun onAmountReduceClick(reducedAmount: String) {
-        uiState = stateFactory.getOnAmountValueChange(reducedAmount)
+        uiState = amountStateFactory.getOnAmountValueChange(reducedAmount)
         uiState = sendNotificationFactory.dismissHighFeeWarningState()
         loadFee()
     }
