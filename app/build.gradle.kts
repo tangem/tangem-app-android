@@ -20,6 +20,9 @@ configurations.all {
 
             substitute(module("com.facebook.react:hermes-engine"))
                 .using(module("com.facebook.react:hermes-android:0.72.4"))
+
+            substitute(module("org.bouncycastle:bcprov-jdk15on"))
+                .using(module("org.bouncycastle:bcprov-jdk18on:1.73"))
         }
 
         force(
