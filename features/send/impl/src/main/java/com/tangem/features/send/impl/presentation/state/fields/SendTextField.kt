@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
@@ -21,6 +22,7 @@ internal sealed class SendTextField {
         override val value: String,
         override val onValueChange: (String) -> Unit,
         override val keyboardOptions: KeyboardOptions,
+        val keyboardActions: KeyboardActions,
         val cryptoAmount: Amount,
         val fiatAmount: Amount,
         val isFiatValue: Boolean,
@@ -55,6 +57,7 @@ internal sealed class SendTextField {
         override val value: String,
         override val onValueChange: (String) -> Unit,
         override val keyboardOptions: KeyboardOptions,
+        val keyboardActions: KeyboardActions,
         val symbol: String?,
         val decimals: Int,
         val title: TextReference,
