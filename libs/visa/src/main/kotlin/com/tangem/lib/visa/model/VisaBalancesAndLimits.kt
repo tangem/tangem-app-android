@@ -4,7 +4,7 @@ import org.joda.time.Instant
 import java.math.BigDecimal
 import java.math.BigInteger
 
-data class BalancesAndLimits(
+data class VisaBalancesAndLimits(
     val balances: Balances,
     val oldLimits: Limits,
     val newLimits: Limits,
