@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,6 +50,7 @@ fun InputRowEnterInfoAmount(
     textColor: Color = TangemTheme.colors.text.primary1,
     infoColor: Color = TangemTheme.colors.text.tertiary,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     showDivider: Boolean = false,
 ) {
     DividerContainer(
@@ -74,6 +76,7 @@ fun InputRowEnterInfoAmount(
                     color = textColor,
                     textStyle = TangemTheme.typography.body2,
                     keyboardOptions = keyboardOptions,
+                    keyboardActions = keyboardActions,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing8)
                         .weight(1f),
