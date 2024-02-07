@@ -13,6 +13,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
@@ -74,6 +75,7 @@ internal class SendViewModel @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -163,6 +165,7 @@ internal class SendViewModel @Inject constructor(
     override fun onCreate(owner: LifecycleOwner) {
         subscribeOnCurrencyStatusUpdates(owner)
         onStateActive()
+        subscribeOnBalanceHidden(owner)
     }
 
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
@@ -187,6 +190,17 @@ internal class SendViewModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun subscribeOnBalanceHidden(owner: LifecycleOwner) {
+        getBalanceHidingSettingsUseCase()
+            .flowWithLifecycle(owner.lifecycle)
+            .conflate()
+            .distinctUntilChanged()
+            .onEach {
+                uiState = stateFactory.getOnHideBalanceState(isBalanceHidden = it.isBalanceHidden)
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun getCurrenciesStatusUpdates(owner: LifecycleOwner, wallet: UserWallet) {
