@@ -45,26 +45,31 @@ fun SimpleTextField(
         mutableStateOf(
             TextFieldValue(
                 text = value,
-                selection = when {
-                    value.isEmpty() -> TextRange.Zero
-                    else -> TextRange(value.length, value.length)
-                },
+                selection = getValueRange(value),
             ),
         )
     }
     val focusRequester = remember { FocusRequester.Default }
     val customTextSelectionColors = TextSelectionColors(
-        handleColor = TangemTheme.colors.text.secondary,
-        backgroundColor = TangemTheme.colors.text.secondary.copy(alpha = 0.4f),
+        handleColor = TangemTheme.colors.text.accent,
+        backgroundColor = TangemTheme.colors.text.accent.copy(alpha = 0.3f),
     )
 
     val textFieldValue = textFieldValueState.copy(text = value)
 
-    SideEffect {
-        if (textFieldValue.selection != textFieldValueState.selection ||
-            textFieldValue.composition != textFieldValueState.composition
-        ) {
-            textFieldValueState = textFieldValue
+    val isSelectionChanged by remember {
+        derivedStateOf {
+            textFieldValue.selection != textFieldValueState.selection ||
+                textFieldValue.composition != textFieldValueState.composition ||
+                textFieldValue.text != textFieldValueState.text
+        }
+    }
+
+    LaunchedEffect(key1 = isSelectionChanged) {
+        if (isSelectionChanged) {
+            textFieldValueState = textFieldValue.copy(
+                selection = getValueRange(value),
+            )
         }
     }
 
@@ -91,24 +96,44 @@ fun SimpleTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             decorationBox = decorationBox ?: { textValue ->
-                Box {
-                    if (value.isBlank() && placeholder != null) {
-                        AnimatedContent(
-                            targetState = placeholder,
-                            label = "Placeholder Change Animation",
-                        ) {
-                            Text(
-                                text = it.resolveReference(),
-                                style = textStyle,
-                                color = TangemTheme.colors.text.disabled,
-                            )
-                        }
-                    }
-                    textValue()
-                }
+                SimpleTextPlaceholder(
+                    placeholder = placeholder,
+                    value = value,
+                    textStyle = textStyle,
+                    textValue = textValue,
+                )
             },
             modifier = modifier
                 .focusRequester(focusRequester),
         )
+    }
+}
+
+private fun getValueRange(value: String) = when {
+    value.isEmpty() -> TextRange.Zero
+    else -> TextRange(value.length, value.length)
+}
+
+@Composable
+private fun SimpleTextPlaceholder(
+    placeholder: TextReference?,
+    value: String,
+    textStyle: TextStyle,
+    textValue: @Composable () -> Unit,
+) {
+    Box {
+        if (value.isBlank() && placeholder != null) {
+            AnimatedContent(
+                targetState = placeholder,
+                label = "Placeholder Change Animation",
+            ) {
+                Text(
+                    text = it.resolveReference(),
+                    style = textStyle,
+                    color = TangemTheme.colors.text.disabled,
+                )
+            }
+        }
+        textValue()
     }
 }
