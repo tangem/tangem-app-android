@@ -1,5 +1,6 @@
 package com.tangem.tap.domain
 
+import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManagerFactory
@@ -30,6 +31,10 @@ class TapWalletManager(
     private val dispatchers: CoroutineDispatcherProvider = AppCoroutineDispatcherProvider(),
 ) {
 
+    private val blockchainSdkConfig by lazy {
+        store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
+    }
+
     private var loadUserWalletDataJob: Job? = null
         set(value) {
             field?.cancel()
@@ -37,7 +42,10 @@ class TapWalletManager(
         }
 
     val walletManagerFactory: WalletManagerFactory by lazy {
-        store.state.daggerGraphState.get(DaggerGraphState::blockchainWalletManagerFactory)
+        WalletManagerFactory(
+            config = blockchainSdkConfig,
+            blockchainDataStorage = store.state.daggerGraphState.get(DaggerGraphState::blockchainDataStorage),
+        )
     }
 
     suspend fun onWalletSelected(userWallet: UserWallet, sendAnalyticsEvent: Boolean) {
