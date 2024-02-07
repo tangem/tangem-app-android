@@ -176,7 +176,7 @@ internal class ManageTokensStateFactory(
                 totalNeeded = totalNeeded,
                 totalWallets = totalWallets,
                 walletsToDerive = walletsToDerive,
-                onGenerateClick = clickIntents::onGenerateDerivationClick,
+                onGenerateClick = clickIntents::onGetAddressesClick,
             )
         }
         return currentStateProvider().copy(derivationNotification = derivationNotificationState)

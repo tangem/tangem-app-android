@@ -13,7 +13,7 @@ internal interface ManageTokensClickIntents {
 
     fun onTokenItemButtonClick(token: TokenItemState.Loaded)
 
-    fun onGenerateDerivationClick()
+    fun onGetAddressesClick()
 
     fun onBackClick()
 

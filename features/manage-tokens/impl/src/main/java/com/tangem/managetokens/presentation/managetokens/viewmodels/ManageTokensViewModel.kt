@@ -234,9 +234,12 @@ internal class ManageTokensViewModel @Inject constructor(
         }
     }
 
-    override fun onGenerateDerivationClick() {
+    override fun onGetAddressesClick() {
         if (neededDerivations.isNotEmpty()) {
             viewModelScope.launch(dispatchers.io) {
+                val cardCount = neededDerivations.count { it.value.isNotEmpty() }
+                analyticsEventHandler.send(ManageTokens.ButtonGenerateAddresses(cardCount))
+
                 neededDerivations.forEach { (walletId, currenciesToDerive) ->
                     if (currenciesToDerive.isNotEmpty()) {
                         derivePublicKeysUseCase(walletId, currenciesToDerive)

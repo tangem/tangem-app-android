@@ -54,7 +54,7 @@ sealed class ManageTokens(
     class ButtonGenerateAddresses(cardCount: Int) : ManageTokens(
         event = "Button - Get Addresses",
         params = mapOf("CardCount" to cardCount.toString()),
-    ) // TODO AND-5979
+    )
 
     object ButtonCustomToken : ManageTokens("Button - Custom Token")
 
