@@ -90,17 +90,18 @@ private fun SendScreenContent(
     ) { state ->
         when (state) {
             SendUiStateType.Amount -> SendAmountContent(
-                uiState.amountState,
-                uiState.clickIntents,
+                amountState = uiState.amountState,
+                isBalanceHiding = uiState.isBalanceHidden,
+                clickIntents = uiState.clickIntents,
             )
             SendUiStateType.Recipient -> SendRecipientContent(
-                uiState.recipientState,
-                uiState.clickIntents,
-                recipientList,
+                uiState = uiState.recipientState,
+                clickIntents = uiState.clickIntents,
+                recipientList = recipientList,
             )
             SendUiStateType.Fee -> SendSpeedAndFeeContent(
-                uiState.feeState,
-                uiState.clickIntents,
+                state = uiState.feeState,
+                clickIntents = uiState.clickIntents,
             )
             SendUiStateType.Send -> SendContent(uiState)
             else -> Unit
