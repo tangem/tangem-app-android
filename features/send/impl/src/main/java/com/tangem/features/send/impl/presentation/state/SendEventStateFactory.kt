@@ -23,7 +23,9 @@ internal class SendEventStateFactory(
     private val clickIntents: SendClickIntents,
     private val feeStateFactory: FeeStateFactory,
 ) {
-    private val sendTransactionErrorConverter by lazy { SendTransactionAlertConverter(clickIntents) }
+    private val sendTransactionErrorConverter by lazy(LazyThreadSafetyMode.NONE) {
+        SendTransactionAlertConverter(clickIntents)
+    }
 
     fun onConsumeEventState(): SendUiState {
         return currentStateProvider().copy(event = consumedEvent())
