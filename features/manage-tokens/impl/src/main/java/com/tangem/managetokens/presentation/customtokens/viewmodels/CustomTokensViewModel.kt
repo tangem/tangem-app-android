@@ -334,7 +334,7 @@ internal class CustomTokensViewModel @Inject constructor(
     }
 
     override fun onCustomDerivationChange(input: String) {
-        analyticsEventHandler.send(ManageTokens.CustomTokenDerivationSelected("Custom"))
+        analyticsEventHandler.send(ManageTokens.CustomTokenDerivationSelected(ManageTokens.Derivation.CUSTOM.value))
         uiState = uiState.copy(
             chooseDerivationState = uiState.chooseDerivationState?.copy(
                 enterCustomDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
@@ -432,9 +432,9 @@ internal class CustomTokensViewModel @Inject constructor(
         val selectedDerivation = uiState.chooseDerivationState?.selectedDerivation
 
         val derivation = when {
-            selectedDerivation == null -> "Default"
+            selectedDerivation == null -> ManageTokens.Derivation.DEFAULT.value
             selectedDerivation.networkName.isNotEmpty() -> selectedDerivation.networkName
-            else -> "Custom"
+            else -> ManageTokens.Derivation.CUSTOM.value
         }
         when (cryptoCurrency) {
             is CryptoCurrency.Token -> {

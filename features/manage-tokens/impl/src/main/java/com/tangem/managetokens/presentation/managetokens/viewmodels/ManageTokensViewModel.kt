@@ -85,7 +85,7 @@ internal class ManageTokensViewModel @Inject constructor(
 
     private var selectedWallet: UserWallet? = null
 
-    private var neededDerivations: Map<UserWalletId, List<CryptoCurrency>> = emptyMap()
+    private var currenciesToGenerateAddresses: Map<UserWalletId, List<CryptoCurrency>> = emptyMap()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -158,7 +158,7 @@ internal class ManageTokensViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .collectLatest {
                     it.onRight { mapOfMissingDerivations ->
-                        neededDerivations = mapOfMissingDerivations
+                        currenciesToGenerateAddresses = mapOfMissingDerivations
                         withContext(dispatchers.main) { updateDerivation() }
                     }
                 }
@@ -166,8 +166,8 @@ internal class ManageTokensViewModel @Inject constructor(
     }
 
     private fun updateDerivation() {
-        val totalNeeded = neededDerivations.values.sumOf { derivations -> derivations.size }
-        val walletsToDerive = neededDerivations.values
+        val totalNeeded = currenciesToGenerateAddresses.values.sumOf { derivations -> derivations.size }
+        val walletsToDerive = currenciesToGenerateAddresses.values
             .filter { derivations -> derivations.isNotEmpty() }.size
         uiState = stateFactory.updateDerivationNotification(
             totalNeeded = totalNeeded,
@@ -235,12 +235,12 @@ internal class ManageTokensViewModel @Inject constructor(
     }
 
     override fun onGetAddressesClick() {
-        if (neededDerivations.isNotEmpty()) {
+        if (currenciesToGenerateAddresses.isNotEmpty()) {
             viewModelScope.launch(dispatchers.io) {
-                val cardCount = neededDerivations.count { it.value.isNotEmpty() }
+                val cardCount = currenciesToGenerateAddresses.count { it.value.isNotEmpty() }
                 analyticsEventHandler.send(ManageTokens.ButtonGenerateAddresses(cardCount))
 
-                neededDerivations.forEach { (walletId, currenciesToDerive) ->
+                currenciesToGenerateAddresses.forEach { (walletId, currenciesToDerive) ->
                     if (currenciesToDerive.isNotEmpty()) {
                         derivePublicKeysUseCase(walletId, currenciesToDerive)
                             .onRight {

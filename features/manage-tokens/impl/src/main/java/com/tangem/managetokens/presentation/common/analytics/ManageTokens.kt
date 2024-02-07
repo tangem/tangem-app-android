@@ -94,4 +94,10 @@ sealed class ManageTokens(
     object CustomTokenSymbol : ManageTokens("Custom Token Symbol")
 
     object CustomTokenDecimals : ManageTokens("Custom Token Decimals")
+
+    enum class Derivation(val value: String) {
+        DEFAULT("Default"),
+        CUSTOM("Custom"),
+    }
+
 }
