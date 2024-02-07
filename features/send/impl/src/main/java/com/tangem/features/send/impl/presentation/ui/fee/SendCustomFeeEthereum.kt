@@ -38,6 +38,7 @@ internal fun SendCustomFeeEthereum(
                             title = value.title,
                             info = value.label,
                             keyboardOptions = value.keyboardOptions,
+                            keyboardActions = value.keyboardActions,
                             onValueChange = value.onValueChange,
                             showDivider = false,
                             modifier = Modifier
@@ -54,6 +55,7 @@ internal fun SendCustomFeeEthereum(
                             symbol = value.symbol,
                             onValueChange = value.onValueChange,
                             keyboardOptions = value.keyboardOptions,
+                            keyboardActions = value.keyboardActions,
                             showDivider = false,
                             modifier = Modifier
                                 .background(
