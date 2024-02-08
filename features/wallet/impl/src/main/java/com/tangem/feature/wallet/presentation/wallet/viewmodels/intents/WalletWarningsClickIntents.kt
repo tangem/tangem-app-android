@@ -227,6 +227,8 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
     override fun onOpenUnlockWalletsBottomSheetClick() {
+        analyticsEventHandler.send(MainScreen.WalletUnlockTapped)
+
         val config = requireNotNull(stateHolder.getSelectedWallet().bottomSheetConfig) {
             "Impossible to open unlock wallet bottom sheet if it's null"
         }
