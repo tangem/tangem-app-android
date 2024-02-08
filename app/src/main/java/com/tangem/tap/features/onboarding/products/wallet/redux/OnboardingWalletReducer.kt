@@ -81,6 +81,7 @@ private object BackupReducer {
             BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
             BackupAction.StartAddingBackupCards -> state.copy(backupStep = BackupStep.AddBackupCards)
             BackupAction.AddBackupCard.Success -> state.copy(backupCardsNumber = state.backupCardsNumber + 1)
+            is BackupAction.AddBackupCard.ChangeButtonLoading -> state.copy(showBtnLoading = action.isLoading)
             BackupAction.ShowAccessCodeInfoScreen -> state.copy(backupStep = BackupStep.SetAccessCode)
             BackupAction.ShowEnterAccessCodeScreen -> state.copy(
                 backupStep = BackupStep.EnterAccessCode,
