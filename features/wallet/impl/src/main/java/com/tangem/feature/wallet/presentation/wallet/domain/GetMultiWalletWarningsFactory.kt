@@ -22,10 +22,7 @@ import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -54,14 +51,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
+        val promoFlow = flow { emit(promoRepository.getChangellyPromoBanner()) }
         return combine(
             flow = getTokenListUseCase(userWallet.walletId).conflate(),
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId).conflate(),
             flow4 = shouldShowSwapPromoWalletUseCase().conflate(),
-        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, shouldShowPromo ->
-
-            val promoBanner = promoRepository.getChangellyPromoBanner()
+            flow5 = promoFlow,
+        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, shouldShowPromo, promoBanner ->
 
             readyForRateAppNotification = true
             buildList {
