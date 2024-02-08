@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.util.TypedValue
@@ -296,10 +297,26 @@ class OnboardingWalletFragment :
 
         layoutButtonsAddCards.root.show()
         layoutButtonsCommon.root.hide()
-        layoutButtonsAddCards.btnAddCard.text = getText(R.string.onboarding_button_add_backup_card)
         layoutButtonsAddCards.btnAddCard.setIconResource(R.drawable.ic_tangem_24)
+        if (state.showBtnLoading) {
+            layoutButtonsAddCards.btnAddCard.iconTint = ColorStateList.valueOf(
+                resources.getColor(R.color.button_secondary),
+            )
+            layoutButtonsAddCards.btnAddCard.text = ""
+            layoutButtonsAddCards.btnAddCard.isEnabled = false
+            layoutButtonsAddCards.btnProgress.show()
+        } else {
+            layoutButtonsAddCards.btnAddCard.iconTint = ColorStateList.valueOf(
+                resources.getColor(R.color.icon_primary_1),
+            )
+            layoutButtonsAddCards.btnProgress.hide()
+            layoutButtonsAddCards.btnAddCard.text = getText(R.string.onboarding_button_add_backup_card)
+            layoutButtonsAddCards.btnAddCard.isEnabled = true
+        }
         if (state.backupCardsNumber < state.maxBackupCards) {
-            layoutButtonsAddCards.btnAddCard.setOnClickListener { store.dispatch(BackupAction.AddBackupCard) }
+            layoutButtonsAddCards.btnAddCard.setOnClickListener {
+                store.dispatch(BackupAction.AddBackupCard)
+            }
         } else {
             layoutButtonsAddCards.btnAddCard.isEnabled = false
         }
