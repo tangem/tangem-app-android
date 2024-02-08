@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.data.analytics)
     implementation(projects.data.transaction)
     implementation(projects.data.visa)
+    implementation(projects.data.promo)
 
     /** Features */
     implementation(projects.features.onboarding)
