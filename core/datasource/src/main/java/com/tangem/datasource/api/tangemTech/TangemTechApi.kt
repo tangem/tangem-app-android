@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import retrofit2.http.*
 
@@ -71,4 +72,7 @@ interface TangemTechApi {
         @Query("coinIds") coinIds: String,
         @Query("fields") fields: String = "price,priceChange24h,lastUpdatedAt",
     ): ApiResponse<QuotesResponse>
+
+    @GET("promotion")
+    suspend fun getPromotionInfo(@Query("programName") name: String): ApiResponse<PromotionInfoResponse>
 }
