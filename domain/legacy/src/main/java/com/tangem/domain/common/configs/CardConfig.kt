@@ -22,7 +22,7 @@ sealed interface CardConfig {
             ) {
                 return MultiWalletCardConfig
             }
-            return GenericCardConfig
+            return GenericCardConfig(cardDTO.settings.maxWalletsCount)
         }
     }
 }
