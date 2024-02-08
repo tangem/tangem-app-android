@@ -395,11 +395,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.AddBackupCard -> {
+            store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(true))
             backupService.addBackupCard { result ->
                 backupService.skipCompatibilityChecks = false
                 store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk
                     .config.filter.cardIdFilter = null
-
+                store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(false))
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success)
