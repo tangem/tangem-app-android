@@ -41,7 +41,9 @@ internal interface WalletClickIntents {
 
     fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onRenameClick(userWalletId: UserWalletId, name: String)
+    fun onRenameBeforeConfirmationClick(userWalletId: UserWalletId)
+
+    fun onRenameAfterConfirmationClick(userWalletId: UserWalletId, name: String)
 
     fun onDeleteBeforeConfirmationClick(userWalletId: UserWalletId)
 
