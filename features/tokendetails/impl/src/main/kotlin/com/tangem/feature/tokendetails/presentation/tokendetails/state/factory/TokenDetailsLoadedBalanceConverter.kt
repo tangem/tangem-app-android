@@ -12,7 +12,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsPendingTxToTransactionStateConverter
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -29,7 +29,7 @@ internal class TokenDetailsLoadedBalanceConverter(
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
 
     private val txHistoryItemConverter by lazy {
-        TokenDetailsPendingTxToTransactionStateConverter(symbol, decimals, clickIntents)
+        TokenDetailsTxHistoryTransactionStateConverter(symbol, decimals, clickIntents)
     }
 
     override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
