@@ -4,12 +4,14 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import timber.log.Timber
 
-object GenericCardConfig : CardConfig {
-    override val mandatoryCurves: List<EllipticCurve>
-        get() = listOf(
-            EllipticCurve.Secp256k1,
-            EllipticCurve.Ed25519,
-        )
+internal class GenericCardConfig(maxWalletCount: Int) : CardConfig {
+
+    override val mandatoryCurves: List<EllipticCurve> = buildList {
+        add(EllipticCurve.Secp256k1)
+        if (maxWalletCount > 1) {
+            add(EllipticCurve.Ed25519)
+        }
+    }
 
     /**
      * Old logic to determine primary curve for blockchain
