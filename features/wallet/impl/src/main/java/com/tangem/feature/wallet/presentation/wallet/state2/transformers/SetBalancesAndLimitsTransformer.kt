@@ -26,12 +26,14 @@ internal class SetBalancesAndLimitsTransformer(
             val visaCurrency = maybeVisaCurrency.getOrElse {
                 return state.copy(
                     walletCardState = getErrorWalletCardState(state.walletCardState),
+                    depositButtonState = state.depositButtonState.copy(isEnabled = false),
                     balancesAndLimitBlockState = BalancesAndLimitsBlockState.Error,
                 )
             }
 
             state.copy(
                 walletCardState = getContentWalletCardState(state.walletCardState, visaCurrency),
+                depositButtonState = state.depositButtonState.copy(isEnabled = true),
                 balancesAndLimitBlockState = getContentBlockState(visaCurrency),
             )
         }
