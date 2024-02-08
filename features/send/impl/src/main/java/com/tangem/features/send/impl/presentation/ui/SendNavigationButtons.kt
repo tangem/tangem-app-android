@@ -110,6 +110,7 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
                     textRes = textId,
                     txUrl = txUrl,
                     onExploreClick = { uiState.clickIntents.onExploreClick(txUrl) },
+                    onShareClick = uiState.clickIntents::onShareClick,
                     onDoneClick = buttonClick,
                     modifier = Modifier,
                 )
@@ -130,6 +131,7 @@ private fun PrimaryButtonsDone(
     @StringRes textRes: Int,
     txUrl: String,
     onExploreClick: () -> Unit,
+    onShareClick: () -> Unit,
     onDoneClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -152,6 +154,7 @@ private fun PrimaryButtonsDone(
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         context.shareText(txUrl)
+                        onShareClick()
                     },
                     modifier = Modifier.weight(1f),
                 )
