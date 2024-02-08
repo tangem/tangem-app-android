@@ -64,8 +64,7 @@ internal class WalletTxHistoryItemFlowConverter(
                             terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
                             item = TxHistoryItemState.Title(clickIntents::onExploreClick),
                         )
-                        .insertGroupTitle() // method uses the raw timestamp
-                        .formatTransactionsTimestamp() // method formats the timestamp
+                        .insertGroupTitle()
                 }
             }
             .launchIn(CoroutineScope(Dispatchers.IO))
@@ -103,28 +102,10 @@ internal class WalletTxHistoryItemFlowConverter(
         }
     }
 
-    /**
-     * Map the [PagingData] to format the [TxHistoryItemState] timestamp
-     */
-    private fun PagingData<TxHistoryItemState>.formatTransactionsTimestamp(): PagingData<TxHistoryItemState> {
-        return map { txHistoryItemState ->
-            if (txHistoryItemState is TxHistoryItemState.Transaction &&
-                txHistoryItemState.state is TransactionState.Content
-            ) {
-                val txContent = txHistoryItemState.state as TransactionState.Content
-                txHistoryItemState.copy(
-                    state = txContent.copy(timestamp = txContent.timestamp.toTimeFormat()),
-                )
-            } else {
-                txHistoryItemState
-            }
-        }
-    }
-
     private fun TxHistoryItemState?.getTimestamp(): Long? {
         return if (this is TxHistoryItemState.Transaction && this.state is TransactionState.Content) {
             val txContent = this.state as TransactionState.Content
-            requireNotNull(txContent.timestamp.toLongOrNull()) { "Timestamp must be Long type" }
+            txContent.timestamp
         } else {
             null
         }
@@ -146,9 +127,5 @@ internal class WalletTxHistoryItemFlowConverter(
         } else {
             DateTimeFormatters.formatDate(date = localDate)
         }
-    }
-
-    private fun String.toTimeFormat(): String {
-        return DateTimeFormatters.formatTime(time = DateTime(this.toLong(), DateTimeZone.getDefault()))
     }
 }

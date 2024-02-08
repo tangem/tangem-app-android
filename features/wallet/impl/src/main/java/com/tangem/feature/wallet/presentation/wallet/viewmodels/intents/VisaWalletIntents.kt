@@ -23,6 +23,8 @@ internal interface VisaWalletIntents {
     fun onDepositClick()
 
     fun onBalancesAndLimitsClick()
+
+    fun onVisaTransactionClick(id: String)
 }
 
 @ViewModelScoped
@@ -92,5 +94,9 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
                 Timber.e("Failed to get primary currency $it")
                 null
             }
+    }
+
+    override fun onVisaTransactionClick(id: String) {
+        // TODO: Implement [REDACTED_JIRA]
     }
 }
