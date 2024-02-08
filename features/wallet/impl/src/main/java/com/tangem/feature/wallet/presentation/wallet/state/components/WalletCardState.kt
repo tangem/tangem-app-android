@@ -24,7 +24,7 @@ internal sealed interface WalletCardState {
     val imageResId: Int?
 
     /** Lambda be invoked when Rename button is clicked */
-    val onRenameClick: (UserWalletId, String) -> Unit
+    val onRenameClick: (UserWalletId) -> Unit
 
     /** Lambda be invoked when Delete button is clicked */
     val onDeleteClick: (UserWalletId) -> Unit
@@ -46,7 +46,7 @@ internal sealed interface WalletCardState {
         override val title: String,
         override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId, String) -> Unit,
+        override val onRenameClick: (UserWalletId) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
         val cardCount: Int?,
         val balance: String,
@@ -67,7 +67,7 @@ internal sealed interface WalletCardState {
         override val title: String,
         override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId, String) -> Unit,
+        override val onRenameClick: (UserWalletId) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
     ) : WalletCardState
 
@@ -85,7 +85,7 @@ internal sealed interface WalletCardState {
         override val title: String,
         override val additionalInfo: WalletAdditionalInfo? = defaultAdditionalInfo,
         override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId, String) -> Unit,
+        override val onRenameClick: (UserWalletId) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
     ) : WalletCardState {
 
@@ -109,7 +109,7 @@ internal sealed interface WalletCardState {
         override val title: String,
         override val additionalInfo: WalletAdditionalInfo? = null,
         override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId, String) -> Unit,
+        override val onRenameClick: (UserWalletId) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
     ) : WalletCardState
 
