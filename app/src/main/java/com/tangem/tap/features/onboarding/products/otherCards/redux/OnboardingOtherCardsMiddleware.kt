@@ -1,12 +1,15 @@
 package com.tangem.tap.features.onboarding.products.otherCards.redux
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -72,7 +75,10 @@ private fun handleOtherCardsAction(action: Action) {
         }
         is OnboardingOtherCardsAction.CreateWallet -> {
             scope.launch {
-                val result = tangemSdkManager.createProductWallet(onboardingManager.scanResponse)
+                val result = tangemSdkManager.createProductWallet(
+                    scanResponse = onboardingManager.scanResponse,
+                    shouldReset = globalState.onboardingState.shouldResetOnCreate,
+                )
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
@@ -87,7 +93,11 @@ private fun handleOtherCardsAction(action: Action) {
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
                         }
-                        is CompletionResult.Failure -> Unit
+                        is CompletionResult.Failure -> {
+                            if (result.error is TangemSdkError.WalletAlreadyCreated) {
+                                handleActivationError()
+                            }
+                        }
                     }
                 }
             }
@@ -101,4 +111,14 @@ private fun handleOtherCardsAction(action: Action) {
         }
         else -> Unit
     }
+}
+
+private fun handleActivationError() {
+    store.dispatchDialogShow(
+        OnboardingDialog.WalletActivationError(
+            onConfirm = {
+                store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(true))
+            },
+        ),
+    )
 }
