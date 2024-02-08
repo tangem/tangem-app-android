@@ -4,8 +4,11 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
@@ -31,13 +34,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.compose.ui.unit.*
-import androidx.constraintlayout.compose.*
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintLayoutScope
+import androidx.constraintlayout.compose.Dimension
 import com.tangem.common.Strings
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
-import com.tangem.core.ui.components.wallets.RenameWalletDialogContent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemDimens
@@ -61,9 +68,8 @@ private const val HALF_OF_ITEM_WIDTH = 0.5
 internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     @Suppress("DestructuringDeclarationWithTooManyEntries")
     CardContainer(
-        name = state.title,
         onDeleteClick = { state.onDeleteClick(state.id) },
-        onRenameClick = { state.onRenameClick(state.id, it) },
+        onRenameClick = { state.onRenameClick(state.id) },
         isLockedState = state is WalletCardState.LockedContent,
         modifier = modifier,
     ) { itemSize ->
@@ -141,9 +147,8 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
 
 @Composable
 private fun CardContainer(
-    name: String,
     onDeleteClick: () -> Unit,
-    onRenameClick: (String) -> Unit,
+    onRenameClick: () -> Unit,
     isLockedState: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable (ConstraintLayoutScope.(IntSize) -> Unit),
@@ -196,8 +201,6 @@ private fun CardContainer(
         }
     }
 
-    var isRenameWalletDialogVisible by rememberSaveable { mutableStateOf(value = false) }
-
     val itemHeight by remember(itemSize.height) {
         mutableStateOf(value = with(density) { itemSize.height.toDp() })
     }
@@ -206,20 +209,9 @@ private fun CardContainer(
         pressOffset = pressOffset,
         itemHeight = itemHeight,
         onDismissRequest = { isMenuVisible = false },
-        onShowRenameWalletDialogClick = { isRenameWalletDialogVisible = true },
+        onShowRenameWalletDialogClick = onRenameClick,
         onDeleteClick = onDeleteClick,
     )
-
-    if (isRenameWalletDialogVisible) {
-        RenameWalletDialogContent(
-            name = name,
-            onConfirm = {
-                onRenameClick(it)
-                isRenameWalletDialogVisible = false
-            },
-            onDismiss = { isRenameWalletDialogVisible = false },
-        )
-    }
 }
 
 @Suppress("LongParameterList")
@@ -365,7 +357,7 @@ private fun AdditionalInfoText(text: TextReference) {
 }
 
 private fun Modifier.nonContentAdditionalInfoSize(dimens: TangemDimens): Modifier {
-    return size(width = dimens.size84, height = dimens.size16)
+    return this.size(width = dimens.size84, height = dimens.size16)
 }
 
 @Composable
