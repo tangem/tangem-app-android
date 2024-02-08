@@ -30,7 +30,7 @@ internal class SingleWalletNotificationsSubscriber(
             .conflate()
             .distinctUntilChanged()
             .onEach { warnings ->
-                val displayedState = stateHolder.getWalletIfSelected(userWalletId)
+                val displayedState = stateHolder.getWalletState(userWalletId)
 
                 stateHolder.update(SetWarningsTransformer(userWalletId, warnings))
                 walletWarningsAnalyticsSender.send(displayedState, warnings)
