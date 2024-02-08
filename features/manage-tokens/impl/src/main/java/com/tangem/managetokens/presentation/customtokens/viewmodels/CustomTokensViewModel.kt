@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
@@ -71,7 +72,7 @@ internal class CustomTokensViewModel @Inject constructor(
     var uiState: AddCustomTokenState by mutableStateOf(stateFactory.getInitialState())
         private set
 
-    init {
+    override fun onCreate(owner: LifecycleOwner) {
         viewModelScope.launch(dispatchers.io) {
             getWalletsUseCase()
                 .distinctUntilChanged()
@@ -89,6 +90,10 @@ internal class CustomTokensViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        uiState = stateFactory.getInitialState()
     }
 
     private suspend fun selectSuitableWallet(suitableUserWallets: List<UserWallet>): UserWalletId? {
@@ -461,4 +466,5 @@ internal class CustomTokensViewModel @Inject constructor(
     override fun onBack() {
         router.popBackStack()
     }
+
 }

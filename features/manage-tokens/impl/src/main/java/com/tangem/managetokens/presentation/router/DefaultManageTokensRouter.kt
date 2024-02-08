@@ -55,6 +55,7 @@ internal class DefaultManageTokensRouter(
                     val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
+                    LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
                     CustomTokensScreen(state = viewModel.uiState)
                 }
                 composable(
