@@ -8,6 +8,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
@@ -41,6 +42,9 @@ internal class SendFragment : ComposeFragment() {
     @Inject
     lateinit var listenToQrScanningUseCase: ListenToQrScanningUseCase
 
+    @Inject
+    lateinit var analyticsEventsHandler: AnalyticsEventHandler
+
     private val viewModel by viewModels<SendViewModel>()
     private val innerSendRouter: InnerSendRouter
         get() = requireNotNull(router as? InnerSendRouter) {
@@ -57,6 +61,7 @@ internal class SendFragment : ComposeFragment() {
             StateRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
                 isEditingDisabled = isEditingDisabled,
+                analyticsEventsHandler = analyticsEventsHandler,
             ),
         )
         listenToQrCode()
