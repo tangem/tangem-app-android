@@ -4,13 +4,16 @@ import arrow.core.Either
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.promo.PromoBanner
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
+import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.repository.PromoRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
@@ -26,12 +29,15 @@ import kotlinx.coroutines.flow.flowOf
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ViewModelScoped
 internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
+    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
+    private val promoRepository: PromoRepository,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
 ) {
 
@@ -52,9 +58,15 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             flow = getTokenListUseCase(userWallet.walletId).conflate(),
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId).conflate(),
-        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup ->
+            flow4 = shouldShowSwapPromoWalletUseCase().conflate(),
+        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, shouldShowPromo ->
+
+            val promoBanner = promoRepository.getChangellyPromoBanner()
+
             readyForRateAppNotification = true
             buildList {
+                addSwapPromoNotification(shouldShowPromo, promoBanner, clickIntents)
+
                 addCriticalNotifications(cardTypesResolver)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
@@ -64,6 +76,23 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 addRateTheAppNotification(isReadyToShowRating, clickIntents)
             }.toImmutableList()
         }
+    }
+
+    private fun MutableList<WalletNotification>.addSwapPromoNotification(
+        shouldShowPromo: Boolean,
+        promoBanner: PromoBanner?,
+        clickIntents: WalletClickIntentsV2,
+    ) {
+        promoBanner ?: return
+        val promoNotification = WalletNotification.SwapPromo(
+            startDateTime = promoBanner.bannerState.timeline.start,
+            endDateTime = promoBanner.bannerState.timeline.end,
+            onCloseClick = clickIntents::onCloseSwapPromoClick,
+        )
+        addIf(
+            element = promoNotification,
+            condition = shouldShowPromo && promoBanner.isActive,
+        )
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(cardTypesResolver: CardTypesResolver) {
