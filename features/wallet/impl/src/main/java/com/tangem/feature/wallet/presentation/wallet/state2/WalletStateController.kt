@@ -42,7 +42,11 @@ internal class WalletStateController @Inject constructor() {
         mutableUiState.update { getInitialState() }
     }
 
-    fun getWalletIfSelected(walletId: UserWalletId): WalletState? {
+    fun getWalletState(userWalletId: UserWalletId): WalletState? {
+        return value.wallets.firstOrNull { it.walletCardState.id == userWalletId }
+    }
+
+    fun getWalletStateIfSelected(walletId: UserWalletId): WalletState? {
         val selectedWalletId = getSelectedWalletId()
 
         return value.wallets.firstOrNull {
