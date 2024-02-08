@@ -958,9 +958,23 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    override fun onRenameClick(userWalletId: UserWalletId, name: String) {
+    override fun onRenameBeforeConfirmationClick(userWalletId: UserWalletId) {
+        val state = uiState as? WalletState.ContentState ?: return
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.RenameWalletAlert(
+                    text = state.walletsListConfig.wallets[state.walletsListConfig.selectedWalletIndex].title,
+                    onConfirmClick = { onRenameAfterConfirmationClick(userWalletId, it) },
+                ),
+            ),
+            setUiState = { uiState = it },
+        )
+    }
+
+    override fun onRenameAfterConfirmationClick(userWalletId: UserWalletId, name: String) {
         viewModelScope.launch(dispatchers.io) {
-            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name) })
+            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name = name) })
         }
     }
 
