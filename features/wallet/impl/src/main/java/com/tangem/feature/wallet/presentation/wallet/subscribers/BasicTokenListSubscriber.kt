@@ -37,7 +37,7 @@ internal abstract class BasicTokenListSubscriber(
         return combine(
             flow = tokenListFlow()
                 .onEach {
-                    val displayedState = stateHolder.getWalletIfSelected(userWallet.walletId)
+                    val displayedState = stateHolder.getWalletStateIfSelected(userWallet.walletId)
 
                     tokenListAnalyticsSender.send(displayedState, userWallet, it.getOrElse { return@onEach })
                 }
