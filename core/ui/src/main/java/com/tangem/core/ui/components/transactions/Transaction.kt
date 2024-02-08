@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -30,6 +31,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionState.Content
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import java.util.UUID
 
@@ -46,6 +48,7 @@ import java.util.UUID
 [REDACTED_AUTHOR]
  */
 @Composable
+@Suppress("LongMethod")
 fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
@@ -76,10 +79,15 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
             Title(
                 state = state,
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
+                    .padding(
+                        start = TangemTheme.dimens.spacing12,
+                        end = TangemTheme.dimens.spacing6,
+                    )
                     .constrainAs(titleItem) {
                         start.linkTo(iconItem.end)
+                        end.linkTo(amountItem.start)
                         top.linkTo(iconItem.top)
+                        width = Dimension.fillToConstraints
                     },
             )
 
@@ -173,11 +181,16 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
 private fun Title(state: TransactionState, modifier: Modifier = Modifier) {
     when (state) {
         is TransactionState.Content -> {
-            Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6)) {
+            Row(
+                modifier = modifier,
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
+            ) {
                 Text(
                     text = state.title.resolveReference(),
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.subtitle2,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                 )
 
                 if (state.status is Status.Unconfirmed) {
@@ -266,7 +279,7 @@ private fun Timestamp(state: TransactionState, modifier: Modifier = Modifier) {
     when (state) {
         is TransactionState.Content -> {
             Text(
-                text = state.timestamp,
+                text = state.time,
                 modifier = modifier,
                 textAlign = TextAlign.End,
                 color = TangemTheme.colors.text.tertiary,
@@ -321,89 +334,109 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "-0.500913 BTC",
-            timestamp = "8:41",
+            time = "8:41",
             status = Status.Confirmed,
             direction = Direction.OUTGOING,
             iconRes = R.drawable.ic_arrow_up_24,
             title = resourceReference(R.string.common_transfer),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            timestamp = 0L,
             onClick = {},
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "+0.500913 BTC",
-            timestamp = "8:41",
+            time = "8:41",
             status = Status.Unconfirmed,
             direction = Direction.INCOMING,
             iconRes = R.drawable.ic_arrow_down_24,
             title = resourceReference(R.string.common_transfer),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            timestamp = 0L,
             onClick = {},
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "+0.500913 BTC",
-            timestamp = "8:41",
+            time = "8:41",
             status = Status.Unconfirmed,
             direction = Direction.OUTGOING,
             iconRes = R.drawable.ic_doc_24,
             title = resourceReference(R.string.common_approval),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            timestamp = 0L,
             onClick = {},
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "+0.500913 BTC",
-            timestamp = "8:41",
+            time = "8:41",
             status = Status.Failed,
             direction = Direction.OUTGOING,
             iconRes = R.drawable.ic_doc_24,
             title = resourceReference(R.string.common_approval),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            timestamp = 0L,
             onClick = {},
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "+0.500913 BTC",
-            timestamp = "8:41",
+            time = "8:41",
             status = Status.Confirmed,
             direction = Direction.OUTGOING,
             iconRes = R.drawable.ic_doc_24,
             title = resourceReference(R.string.common_approval),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            timestamp = 0L,
             onClick = {},
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "+0.500913 BTC",
-            timestamp = "8:41",
+            time = "8:41",
             status = Status.Unconfirmed,
             direction = Direction.INCOMING,
             iconRes = R.drawable.ic_arrow_down_24,
             title = resourceReference(R.string.common_swap),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            timestamp = 0L,
             onClick = {},
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "+0.500913 BTC",
-            timestamp = "8:41",
+            time = "8:41",
             status = Status.Confirmed,
             direction = Direction.INCOMING,
             iconRes = R.drawable.ic_doc_24,
             title = TextReference.Str("Submit"),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            timestamp = 0L,
             onClick = {},
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
             amount = "+0.500913 BTC",
-            timestamp = "8:41",
+            time = "8:41",
             status = Status.Confirmed,
             direction = Direction.OUTGOING,
             iconRes = R.drawable.ic_arrow_up_24,
             title = TextReference.Str("Submit"),
             subtitle = TextReference.Str("33BddS...ga2B"),
+            timestamp = 0L,
+            onClick = {},
+        ),
+        TransactionState.Content(
+            txHash = UUID.randomUUID().toString(),
+            amount = "0.625 USDT",
+            time = "€0.50",
+            status = Status.Confirmed,
+            direction = Direction.OUTGOING,
+            iconRes = R.drawable.ic_arrow_up_24,
+            title = TextReference.Str("Unlimint Banking Cards Sandbox London"),
+            subtitle = stringReference(value = "8:41 • authorized"),
+            timestamp = 0L,
             onClick = {},
         ),
         TransactionState.Loading(txHash = UUID.randomUUID().toString()),

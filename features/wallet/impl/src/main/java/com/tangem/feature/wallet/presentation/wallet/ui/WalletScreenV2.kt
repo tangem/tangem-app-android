@@ -30,6 +30,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetCon
 import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state2.model.*
+import com.tangem.feature.wallet.presentation.wallet.state2.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
@@ -92,7 +93,7 @@ private fun WalletContent(
     BaseScaffold(state = state, selectedWallet = selectedWallet, snackbarHostState = snackbarHostState) {
         val movableItemModifier = Modifier.changeWalletAnimator(walletsListState)
 
-        val lazyTxHistoryItems = (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
+        val lazyTxHistoryItems = (selectedWallet as? TxHistoryStateHolder)?.let { walletState ->
             (walletState.txHistoryState as? TxHistoryState.Content)?.contentItems?.collectAsLazyPagingItems()
         }
 
