@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state2.transformers
 
 import androidx.paging.PagingData
+import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.TxHistoryItemFlowConverter
@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 
 internal class SetTxHistoryItemsTransformer(
-    private val userWallet: UserWallet,
-    private val flow: Flow<PagingData<TxHistoryItem>>,
+    userWallet: UserWallet,
+    private val flow: Flow<PagingData<TransactionState>>,
     private val clickIntents: WalletClickIntentsV2,
 ) : WalletStateTransformer(userWallet.walletId) {
 
@@ -39,7 +39,6 @@ internal class SetTxHistoryItemsTransformer(
 
     private fun TxHistoryState.toContentState(): TxHistoryState {
         val converter = TxHistoryItemFlowConverter(
-            userWallet = userWallet,
             currentState = this,
             clickIntents = clickIntents,
         )
