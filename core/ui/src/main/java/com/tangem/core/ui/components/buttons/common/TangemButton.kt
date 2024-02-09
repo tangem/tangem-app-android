@@ -33,6 +33,7 @@ fun TangemButton(
     elevation: ButtonElevation = TangemButtonsDefaults.elevation,
     textStyle: TextStyle = TangemTheme.typography.button,
     shape: Shape = size.toShape(),
+    iconPadding: Dp = size.toIconPadding(),
 ) {
     Button(
         modifier = modifier.heightIn(min = size.toHeightDp()),
@@ -47,7 +48,7 @@ fun TangemButton(
 
         ButtonContentContainer(
             buttonIcon = icon,
-            iconPadding = size.toIconPadding(),
+            iconPadding = iconPadding,
             showProgress = showProgress,
             progressIndicator = {
                 CircularProgressIndicator(
