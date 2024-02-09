@@ -84,7 +84,7 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
             title = name,
             additionalInfo = if (isMultiCurrency) WalletAdditionalInfoFactory.resolve(wallet = this) else null,
             imageResId = WalletImageResolver.resolve(userWallet = this),
-            onRenameClick = clickIntents::onRenameClick,
+            onRenameClick = clickIntents::onRenameBeforeConfirmationClick,
             onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
         )
     }
