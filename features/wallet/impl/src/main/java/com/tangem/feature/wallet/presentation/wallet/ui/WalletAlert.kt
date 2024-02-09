@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
 
 @Composable
 internal fun WalletAlert(state: WalletAlertState, onDismiss: () -> Unit) {
