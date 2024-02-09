@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.ui
+package com.tangem.managetokens.presentation.addcustomtoken.ui
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.managetokens.presentation.customtokens.state.TextFieldState
+import com.tangem.managetokens.presentation.addcustomtoken.state.TextFieldState
 
 @Composable
 internal fun TokenTextField(
