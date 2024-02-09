@@ -201,21 +201,25 @@ internal class CustomTokensStateFactory(
                         value = "",
                         isEnabled = true,
                         onValueChange = clickIntents::onContractAddressChange,
+                        onFocusExit = clickIntents::onContractAddressFocusExit,
                     ),
                     nameTextField = TextFieldState.Editable(
                         value = "",
                         isEnabled = false,
                         onValueChange = clickIntents::onTokenNameChange,
+                        onFocusExit = clickIntents::onTokenNameFocusExit,
                     ),
                     symbolTextField = TextFieldState.Editable(
                         value = "",
                         isEnabled = false,
                         onValueChange = clickIntents::onSymbolChange,
+                        onFocusExit = clickIntents::onSymbolFocusExit,
                     ),
                     decimalsTextField = TextFieldState.Editable(
                         value = "",
                         isEnabled = false,
                         onValueChange = clickIntents::onDecimalsChange,
+                        onFocusExit = clickIntents::onDecimalsFocusExit,
                     ),
                 )
         } else {
@@ -268,6 +272,8 @@ internal class CustomTokensStateFactory(
                     value = contractAddress,
                     isEnabled = true,
                     onValueChange = clickIntents::onContractAddressChange,
+                    onFocusExit = clickIntents::onContractAddressFocusExit,
+
                 ),
                 nameTextField = TextFieldState.Loading,
                 symbolTextField = TextFieldState.Loading,
