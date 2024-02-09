@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state2.model.BalancesAndLimitsBlockState
+import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBlockState
 
 private const val BALANCES_AND_LIMITS_BLOCK_KEY = "BalancesAndLimitsBlock"
 
