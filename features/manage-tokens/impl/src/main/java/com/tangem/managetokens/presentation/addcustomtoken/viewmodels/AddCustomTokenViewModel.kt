@@ -1,9 +1,10 @@
-package com.tangem.managetokens.presentation.customtokens.viewmodels
+package com.tangem.managetokens.presentation.addcustomtoken.viewmodels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
@@ -23,11 +24,11 @@ import com.tangem.managetokens.presentation.common.analytics.ManageTokens
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.Event
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
-import com.tangem.managetokens.presentation.customtokens.state.*
-import com.tangem.managetokens.presentation.customtokens.state.factory.AddCustomTokenStateToCryptoCurrencyConverter
-import com.tangem.managetokens.presentation.customtokens.state.factory.ContractAddressToCustomTokenDataConverter
-import com.tangem.managetokens.presentation.customtokens.state.factory.CustomTokensStateFactory
-import com.tangem.managetokens.presentation.customtokens.state.factory.FoundTokenToCustomTokenDataConverter
+import com.tangem.managetokens.presentation.addcustomtoken.state.*
+import com.tangem.managetokens.presentation.addcustomtoken.state.factory.AddCustomTokenStateToCryptoCurrencyConverter
+import com.tangem.managetokens.presentation.addcustomtoken.state.factory.ContractAddressToCustomTokenDataConverter
+import com.tangem.managetokens.presentation.addcustomtoken.state.factory.AddCustomTokenStateFactory
+import com.tangem.managetokens.presentation.addcustomtoken.state.factory.FoundTokenToCustomTokenDataConverter
 import com.tangem.managetokens.presentation.router.InnerManageTokensRouter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -45,7 +46,7 @@ import kotlin.properties.Delegates
 
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 @HiltViewModel
-internal class CustomTokensViewModel @Inject constructor(
+internal class AddCustomTokenViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
@@ -57,11 +58,11 @@ internal class CustomTokensViewModel @Inject constructor(
     private val getNetworksSupportedByWallet: GetNetworksSupportedByWallet,
     private val areTokensSupportedByNetworkUseCase: AreTokensSupportedByNetworkUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-) : ViewModel(), CustomTokensClickIntents, DefaultLifecycleObserver {
+) : ViewModel(), AddCustomTokenClickIntents, DefaultLifecycleObserver {
 
     private val debouncer = Debouncer()
 
-    private val stateFactory = CustomTokensStateFactory(
+    private val stateFactory = AddCustomTokenStateFactory(
         currentStateProvider = Provider { uiState },
         clickIntents = this,
     )
@@ -71,7 +72,7 @@ internal class CustomTokensViewModel @Inject constructor(
     var uiState: AddCustomTokenState by mutableStateOf(stateFactory.getInitialState())
         private set
 
-    init {
+    override fun onCreate(owner: LifecycleOwner) {
         viewModelScope.launch(dispatchers.io) {
             getWalletsUseCase()
                 .distinctUntilChanged()
@@ -89,6 +90,10 @@ internal class CustomTokensViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        uiState = stateFactory.getInitialState()
     }
 
     private suspend fun selectSuitableWallet(suitableUserWallets: List<UserWallet>): UserWalletId? {
@@ -134,7 +139,7 @@ internal class CustomTokensViewModel @Inject constructor(
     }
 
     override fun onChooseNetworkClick() {
-        router.openCustomTokensChooseNetwork()
+        router.openCustomTokenChooseNetwork()
     }
 
     override fun onCloseChoosingNetworkClick() {
@@ -159,7 +164,7 @@ internal class CustomTokensViewModel @Inject constructor(
     }
 
     override fun onChooseWalletClick() {
-        router.openCustomTokensChooseWallet()
+        router.openCustomTokenChooseWallet()
     }
 
     override fun onCloseChoosingWalletClick() {
@@ -208,7 +213,7 @@ internal class CustomTokensViewModel @Inject constructor(
                     networkId = networkId,
                 ).fold(
                     ifLeft = {
-                        val tokenData = ContractAddressToCustomTokenDataConverter(this@CustomTokensViewModel)
+                        val tokenData = ContractAddressToCustomTokenDataConverter(this@AddCustomTokenViewModel)
                             .convert(contractAddress)
 
                         val isButtonEnabled = tokenData.isRequiredInformationProvided()
@@ -222,9 +227,9 @@ internal class CustomTokensViewModel @Inject constructor(
                     },
                     ifRight = { token ->
                         val tokenData = if (token != null) {
-                            FoundTokenToCustomTokenDataConverter(this@CustomTokensViewModel).convert(token)
+                            FoundTokenToCustomTokenDataConverter(this@AddCustomTokenViewModel).convert(token)
                         } else {
-                            ContractAddressToCustomTokenDataConverter(this@CustomTokensViewModel).convert(
+                            ContractAddressToCustomTokenDataConverter(this@AddCustomTokenViewModel).convert(
                                 contractAddress,
                             )
                         }
@@ -326,7 +331,7 @@ internal class CustomTokensViewModel @Inject constructor(
     }
 
     override fun onChooseDerivationClick() {
-        router.openCustomTokensChooseDerivation()
+        router.openCustomTokenChooseDerivation()
     }
 
     override fun onCloseChoosingDerivationClick() {
