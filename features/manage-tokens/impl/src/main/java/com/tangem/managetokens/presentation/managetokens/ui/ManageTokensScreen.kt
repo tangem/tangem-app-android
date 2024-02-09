@@ -82,7 +82,11 @@ private fun Content(state: ManageTokensState) {
             val tokens = state.tokens.collectAsLazyPagingItems()
             val query = state.searchBarState.query
 
-            TrackPossibleEmptySearchResult(tokens = tokens, query = query)
+            TrackPossibleEmptySearchResult(
+                tokens = tokens,
+                query = query,
+                onEmptySearchResult = state.onEmptySearchResult,
+            )
 
             TokensList(tokens = tokens, addCustomTokenButton = state.addCustomTokenButton)
         }
@@ -100,17 +104,23 @@ private fun Content(state: ManageTokensState) {
 }
 
 @Composable
-private fun TrackPossibleEmptySearchResult(tokens: LazyPagingItems<TokenItemState>, query: String) {
+private fun TrackPossibleEmptySearchResult(
+    tokens: LazyPagingItems<TokenItemState>,
+    query: String,
+    onEmptySearchResult: (String) -> Unit,
+) {
     val wasLoading = remember { mutableStateOf(false) }
 
     LaunchedEffect(tokens.loadState) {
-        val finishedLoading = tokens.loadState.refresh != LoadState.Loading && wasLoading.value
+        val isLoading = tokens.loadState.refresh == LoadState.Loading
+        val stoppedLoading = wasLoading.value && !isLoading
+        val queryAndTokensCondition = query.isNotEmpty() && tokens.itemSnapshotList.isEmpty()
 
-        if (finishedLoading && query.isNotEmpty() && tokens.itemSnapshotList.isEmpty()) {
-            Analytics.send(ManageTokens.TokenIsNotFound(query))
+        if (stoppedLoading && queryAndTokensCondition) {
+            onEmptySearchResult(query)
         }
 
-        wasLoading.value = finishedLoading
+        wasLoading.value = isLoading
     }
 }
 

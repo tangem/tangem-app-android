@@ -7,7 +7,7 @@ import java.math.BigDecimal
 /**
  * Created by Anton Zhilenkov on 15.11.2022.
  */
-class BigDecimalAdapter {
+internal class BigDecimalAdapter {
     @FromJson
     fun fromJson(value: String) = BigDecimal(value)
 
