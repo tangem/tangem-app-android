@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.state.factory
+package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
@@ -7,17 +7,17 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.managetokens.presentation.common.state.*
-import com.tangem.managetokens.presentation.customtokens.state.*
-import com.tangem.managetokens.presentation.customtokens.viewmodels.CustomTokensClickIntents
+import com.tangem.managetokens.presentation.addcustomtoken.state.*
+import com.tangem.managetokens.presentation.addcustomtoken.viewmodels.AddCustomTokenClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 
-internal class CustomTokensStateFactory(
+internal class AddCustomTokenStateFactory(
     private val currentStateProvider: Provider<AddCustomTokenState>,
-    private val clickIntents: CustomTokensClickIntents,
+    private val clickIntents: AddCustomTokenClickIntents,
 ) {
 
     fun getInitialState(): AddCustomTokenState {
