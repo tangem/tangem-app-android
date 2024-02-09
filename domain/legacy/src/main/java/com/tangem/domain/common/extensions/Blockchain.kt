@@ -82,6 +82,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "aptos/test" -> Blockchain.AptosTestnet
         "shibarium" -> Blockchain.Shibarium
         "shibarium/test" -> Blockchain.ShibariumTestnet
+        "" -> Blockchain.Playa3ull // FIXME
         else -> null
     }
 }
