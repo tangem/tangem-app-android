@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import timber.log.Timber
 
-internal class GenericCardConfig(maxWalletCount: Int) : CardConfig {
+class GenericCardConfig(maxWalletCount: Int) : CardConfig {
 
     override val mandatoryCurves: List<EllipticCurve> = buildList {
         add(EllipticCurve.Secp256k1)
