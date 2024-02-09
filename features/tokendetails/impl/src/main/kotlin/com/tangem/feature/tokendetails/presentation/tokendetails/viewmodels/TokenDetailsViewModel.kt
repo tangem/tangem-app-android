@@ -185,6 +185,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         analyticsEventsHandler.send(
             event = TokenScreenAnalyticsEvent.DetailsScreenOpened(token = cryptoCurrency.symbol),
         )
+        updateTopBarMenu()
         updateContent()
         handleBalanceHiding(owner)
     }
@@ -336,6 +337,14 @@ internal class TokenDetailsViewModel @Inject constructor(
 
                 uiState = stateFactory.getLoadedTxHistoryState(maybeTxHistory)
             }
+        }
+    }
+
+    private fun updateTopBarMenu() {
+        viewModelScope.launch(dispatchers.main) {
+            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
+
+            uiState = stateFactory.getStateWithUpdatedMenu(wallet.scanResponse.cardTypesResolver)
         }
     }
 
