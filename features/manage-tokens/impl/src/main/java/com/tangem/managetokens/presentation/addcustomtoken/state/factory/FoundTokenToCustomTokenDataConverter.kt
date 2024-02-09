@@ -1,13 +1,13 @@
-package com.tangem.managetokens.presentation.customtokens.state.factory
+package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 
 import com.tangem.domain.tokens.model.FoundToken
-import com.tangem.managetokens.presentation.customtokens.state.CustomTokenData
-import com.tangem.managetokens.presentation.customtokens.state.TextFieldState
-import com.tangem.managetokens.presentation.customtokens.viewmodels.CustomTokensClickIntents
+import com.tangem.managetokens.presentation.addcustomtoken.state.CustomTokenData
+import com.tangem.managetokens.presentation.addcustomtoken.state.TextFieldState
+import com.tangem.managetokens.presentation.addcustomtoken.viewmodels.AddCustomTokenClickIntents
 import com.tangem.utils.converter.Converter
 
 internal class FoundTokenToCustomTokenDataConverter(
-    private val clickIntents: CustomTokensClickIntents,
+    private val clickIntents: AddCustomTokenClickIntents,
 ) : Converter<FoundToken, CustomTokenData> {
     override fun convert(value: FoundToken): CustomTokenData {
         return CustomTokenData(
