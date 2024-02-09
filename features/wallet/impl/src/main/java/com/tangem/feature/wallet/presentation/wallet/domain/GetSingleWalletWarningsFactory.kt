@@ -11,7 +11,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.ImmutableList

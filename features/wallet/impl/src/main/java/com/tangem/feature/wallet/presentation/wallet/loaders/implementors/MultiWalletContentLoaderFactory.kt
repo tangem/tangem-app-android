@@ -8,7 +8,7 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAn
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject

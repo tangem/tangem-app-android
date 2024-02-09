@@ -17,8 +17,8 @@ import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState.TokensListItemState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.ImmutableList
 
 private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"

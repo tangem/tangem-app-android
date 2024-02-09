@@ -9,9 +9,9 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListErrorTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow

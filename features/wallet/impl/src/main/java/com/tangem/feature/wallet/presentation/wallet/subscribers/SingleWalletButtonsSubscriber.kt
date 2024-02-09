@@ -5,8 +5,8 @@ import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.collectLatest
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetCryptoCurrencyActionsTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetCryptoCurrencyActionsTransformer
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*

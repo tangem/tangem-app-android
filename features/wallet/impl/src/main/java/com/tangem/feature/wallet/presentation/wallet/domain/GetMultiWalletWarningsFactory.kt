@@ -13,7 +13,7 @@ import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.ImmutableList

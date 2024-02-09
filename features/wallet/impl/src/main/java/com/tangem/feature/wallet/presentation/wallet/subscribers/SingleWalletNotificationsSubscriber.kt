@@ -3,9 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetWarningsTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWarningsTransformer
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.CoroutineScope

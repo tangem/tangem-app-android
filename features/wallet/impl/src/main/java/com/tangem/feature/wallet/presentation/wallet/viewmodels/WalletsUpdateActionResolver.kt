@@ -4,10 +4,10 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state2.model.NOT_INITIALIZED_WALLET_INDEX
-import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import dagger.hilt.android.scopes.ViewModelScoped
 import timber.log.Timber
 import javax.inject.Inject

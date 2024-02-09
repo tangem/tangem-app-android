@@ -12,10 +12,10 @@ import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetRefreshStateTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListErrorTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope

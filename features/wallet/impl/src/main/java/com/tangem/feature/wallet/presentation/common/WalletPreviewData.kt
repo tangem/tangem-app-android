@@ -12,12 +12,7 @@ import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
-import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.TokenActionButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletAdditionalInfo
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTopBarConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import java.util.UUID

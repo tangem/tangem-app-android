@@ -26,11 +26,8 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.model.*
-import com.tangem.feature.wallet.presentation.wallet.state2.model.holder.TxHistoryStateHolder
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*

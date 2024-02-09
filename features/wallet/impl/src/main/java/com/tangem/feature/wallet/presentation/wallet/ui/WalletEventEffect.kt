@@ -11,8 +11,8 @@ import androidx.compose.ui.text.AnnotatedString
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.ReviewManagerRequester
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.animateScrollByIndex
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.demonstrateScrolling
