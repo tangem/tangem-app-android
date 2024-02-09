@@ -1,11 +1,11 @@
-package com.tangem.managetokens.presentation.customtokens.state.factory
+package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.managetokens.presentation.customtokens.state.AddCustomTokenState
-import com.tangem.managetokens.presentation.customtokens.state.CustomTokenData
-import com.tangem.managetokens.presentation.customtokens.state.TextFieldState
+import com.tangem.managetokens.presentation.addcustomtoken.state.AddCustomTokenState
+import com.tangem.managetokens.presentation.addcustomtoken.state.CustomTokenData
+import com.tangem.managetokens.presentation.addcustomtoken.state.TextFieldState
 import com.tangem.utils.converter.Converter
 
 internal class AddCustomTokenStateToCryptoCurrencyConverter(
