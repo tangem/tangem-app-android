@@ -14,9 +14,5 @@
     {
         "name": "REDESIGNED_SEND_SCREEN_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "WALLETS_SCROLLING_PREVIEW_ENABLED",
-        "version": "5.5.0"
     }
 ]
