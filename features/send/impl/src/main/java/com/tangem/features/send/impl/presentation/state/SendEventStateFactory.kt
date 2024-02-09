@@ -50,10 +50,10 @@ internal class SendEventStateFactory(
             is TransactionFee.Single -> fee.normal
             is TransactionFee.Choosable -> {
                 when (feeSelector.selectedFee) {
-                    FeeType.SLOW -> fee.minimum
-                    FeeType.MARKET -> fee.normal
-                    FeeType.FAST -> fee.priority
-                    FeeType.CUSTOM -> return state
+                    FeeType.Slow -> fee.minimum
+                    FeeType.Market -> fee.normal
+                    FeeType.Fast -> fee.priority
+                    FeeType.Custom -> return state
                 }
             }
         }

@@ -20,7 +20,7 @@ internal fun SendCustomFeeEthereum(
     selectedFee: FeeType,
     modifier: Modifier = Modifier,
 ) {
-    if (selectedFee == FeeType.CUSTOM && customValues.isNotEmpty()) {
+    if (selectedFee == FeeType.Custom && customValues.isNotEmpty()) {
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             modifier = modifier,

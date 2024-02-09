@@ -191,7 +191,7 @@ internal class FeeStateFactory(
         val fee = feeConverter.convert(feeSelectorState)
         val feeValue = fee.amount.value ?: BigDecimal.ZERO
 
-        val isNotCustom = feeSelectorState.selectedFee != FeeType.CUSTOM
+        val isNotCustom = feeSelectorState.selectedFee != FeeType.Custom
         val isNotEmptyCustom = if (customValue != null) {
             !customValue.value.parseToBigDecimal(customValue.decimals).isZero() && !isNotCustom
         } else {
