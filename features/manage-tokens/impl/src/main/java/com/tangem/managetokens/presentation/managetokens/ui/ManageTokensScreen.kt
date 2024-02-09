@@ -101,7 +101,7 @@ private fun Content(state: ManageTokensState) {
                 )
             }
         }
-        
+
         state.selectedToken?.let { selectedToken ->
             ManageTokensBottomSheet(selectedToken = selectedToken, state = state)
         }

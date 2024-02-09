@@ -176,6 +176,32 @@ internal class AddCustomTokenStateFactory(
         return currentStateProvider().copy(tokenData = tokenData.copy(contractAddressTextField = contractAddressField))
     }
 
+    private fun unlockAndClearNameSymbolAndDecimals(state: AddCustomTokenState): AddCustomTokenState {
+        val currentTokenData = state.tokenData
+        return state.copy(
+            tokenData = currentTokenData?.copy(
+                nameTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = true,
+                    onValueChange = clickIntents::onTokenNameChange,
+                    onFocusExit = clickIntents::onTokenNameFocusExit,
+                ),
+                symbolTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = true,
+                    onValueChange = clickIntents::onSymbolChange,
+                    onFocusExit = clickIntents::onSymbolFocusExit,
+                ),
+                decimalsTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = true,
+                    onValueChange = clickIntents::onDecimalsChange,
+                    onFocusExit = clickIntents::onDecimalsFocusExit,
+                ),
+            ),
+        )
+    }
+
     fun getStateAndTriggerEvent(
         state: AddCustomTokenState,
         event: Event,
@@ -286,7 +312,9 @@ internal class AddCustomTokenStateFactory(
         val uiState = currentStateProvider()
         return when (error) {
             AddCustomTokenError.InvalidContractAddress -> {
-                addTokenAddressFieldError(AddCustomTokenWarning.InvalidContractAddress)
+                unlockAndClearNameSymbolAndDecimals(
+                    addTokenAddressFieldError(AddCustomTokenWarning.InvalidContractAddress),
+                )
                     .copy(
                         addTokenButton = uiState.addTokenButton.copy(isEnabled = false),
                         warnings = uiState.warnings
@@ -295,7 +323,7 @@ internal class AddCustomTokenStateFactory(
                     )
             }
             AddCustomTokenError.FieldIsEmpty ->
-                removeTokenAddressError()
+                unlockAndClearNameSymbolAndDecimals(removeTokenAddressError())
                     .copy(
                         addTokenButton = uiState.addTokenButton.copy(
                             isEnabled = uiState.tokenData?.isRequiredInformationProvided() == true,
