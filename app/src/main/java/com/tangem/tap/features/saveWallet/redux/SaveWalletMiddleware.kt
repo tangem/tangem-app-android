@@ -129,7 +129,14 @@ internal class SaveWalletMiddleware {
                     }
 
                     store.dispatchOnMain(SaveWalletAction.Save.Success)
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+
+                    store.dispatchOnMain(
+                        if (store.state.navigationState.backStack.contains(AppScreen.Wallet)) {
+                            NavigationAction.PopBackTo(AppScreen.Wallet)
+                        } else {
+                            NavigationAction.NavigateTo(AppScreen.Wallet)
+                        },
+                    )
                 }
         }
     }
