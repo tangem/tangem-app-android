@@ -5,24 +5,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.snapshotFlow
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletsListConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.ScrollOffsetCollector
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.WalletsListInteractionsCollector
 
+@Suppress("LongParameterList")
 @Composable
 internal fun WalletsListEffects(
     lazyListState: LazyListState,
-    walletsListConfig: WalletsListConfig,
+    selectedWalletIndex: Int,
+    onWalletChange: (Int) -> Unit,
+    onSelectedWalletIndexSet: (Int) -> Unit,
     isAutoScroll: State<Boolean>,
     onAutoScrollReset: () -> Unit,
 ) {
-    LaunchedEffect(key1 = lazyListState, key2 = walletsListConfig.onWalletChange) {
+    LaunchedEffect(key1 = lazyListState, key2 = onWalletChange) {
         snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo }
             .collect(
                 collector = ScrollOffsetCollector(
+                    selectedWalletIndex = selectedWalletIndex,
                     lazyListState = lazyListState,
-                    walletsListConfig = walletsListConfig,
-                    isAutoScroll = isAutoScroll,
+                    onWalletChange = { newIndex ->
+                        // Auto scroll must not change wallet
+                        if (isAutoScroll.value) {
+                            onSelectedWalletIndexSet(newIndex)
+                        } else {
+                            onSelectedWalletIndexSet(newIndex)
+                            onWalletChange(newIndex)
+                        }
+                    },
                 ),
             )
     }
