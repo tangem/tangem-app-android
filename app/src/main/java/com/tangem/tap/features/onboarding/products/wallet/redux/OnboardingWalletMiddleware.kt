@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
@@ -70,8 +71,8 @@ private fun handleWalletAction(action: Action) {
 
     when (action) {
         OnboardingWalletAction.Init -> {
-            ifNotNull(onboardingManager, card) { manager, card ->
-                if (!manager.isActivationStarted(card.cardId)) {
+            ifNotNull(onboardingManager, card) { manager, notNullCard ->
+                if (!manager.isActivationStarted(notNullCard.cardId)) {
                     Analytics.send(Onboarding.Started())
                 }
             }
@@ -394,17 +395,19 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.AddBackupCard -> {
+            store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(true))
             backupService.addBackupCard { result ->
                 backupService.skipCompatibilityChecks = false
                 store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk
                     .config.filter.cardIdFilter = null
-
+                store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(false))
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success)
                     }
-
                     is CompletionResult.Failure -> {
+                        val crashlytics = FirebaseCrashlytics.getInstance()
+
                         when (val error = result.error) {
                             is TangemSdkError.BackupFailedNotEmptyWallets -> {
                                 if (card?.canSkipBackup == false) {
@@ -413,6 +416,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                                             BackupDialog.ResetBackupCard(error.cardId),
                                         ),
                                     )
+                                } else {
+                                    crashlytics.recordException(error)
                                 }
                             }
                             is TangemSdkError.IssuerSignatureLoadingFailed -> {
@@ -420,7 +425,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                                     GlobalAction.ShowDialog(BackupDialog.AttestationFailed),
                                 )
                             }
-                            else -> Unit
+                            else -> crashlytics.recordException(error)
                         }
                     }
                 }

@@ -18,6 +18,7 @@ import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
+import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UnlockWalletsError
@@ -62,6 +63,8 @@ internal interface WalletWarningsClickIntents {
     fun onDislikeAppClick()
 
     fun onCloseRateAppWarningClick()
+
+    fun onCloseSwapPromoClick()
 }
 
 @Suppress("LongParameterList")
@@ -82,6 +85,7 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val testerFeatureToggles: TesterFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -223,6 +227,8 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     class DerivationData(val derivations: Pair<ByteArrayKey, List<DerivationPath>>)
 
     override fun onOpenUnlockWalletsBottomSheetClick() {
+        analyticsEventHandler.send(MainScreen.WalletUnlockTapped)
+
         val config = requireNotNull(stateHolder.getSelectedWallet().bottomSheetConfig) {
             "Impossible to open unlock wallet bottom sheet if it's null"
         }
@@ -300,6 +306,12 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) {
             remindToRateAppLaterUseCase()
+        }
+    }
+
+    override fun onCloseSwapPromoClick() {
+        viewModelScope.launch(dispatchers.main) {
+            shouldShowSwapPromoWalletUseCase.neverToShow()
         }
     }
 }
