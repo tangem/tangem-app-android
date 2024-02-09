@@ -6,6 +6,7 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.lib.visa.api.VisaApi
+import com.tangem.lib.visa.model.VisaTxHistoryResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -16,6 +17,7 @@ internal class VisaTxHistoryPagingSource(
     params: Params,
     private val cacheRegistry: CacheRegistry,
     private val visaApi: VisaApi,
+    private val fetchedItems: MutableStateFlow<Map<String, List<VisaTxHistoryResponse.Transaction>>>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PagingSource<Int, VisaTxHistoryItem>() {
 
@@ -76,6 +78,12 @@ internal class VisaTxHistoryPagingSource(
             limit = pageSize,
             offset = offset,
         ).getOrThrow()
+
+        fetchedItems.update {
+            it.toMutableMap().apply {
+                this[cardPublicKey] = this[cardPublicKey].orEmpty() + response.transactions
+            }
+        }
 
         pagedItems.update {
             it.toMutableMap().apply {
