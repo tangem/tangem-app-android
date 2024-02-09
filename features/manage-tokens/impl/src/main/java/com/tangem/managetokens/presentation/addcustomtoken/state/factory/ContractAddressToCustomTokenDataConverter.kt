@@ -1,12 +1,12 @@
-package com.tangem.managetokens.presentation.customtokens.state.factory
+package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 
-import com.tangem.managetokens.presentation.customtokens.state.CustomTokenData
-import com.tangem.managetokens.presentation.customtokens.state.TextFieldState
-import com.tangem.managetokens.presentation.customtokens.viewmodels.CustomTokensClickIntents
+import com.tangem.managetokens.presentation.addcustomtoken.state.CustomTokenData
+import com.tangem.managetokens.presentation.addcustomtoken.state.TextFieldState
+import com.tangem.managetokens.presentation.addcustomtoken.viewmodels.AddCustomTokenClickIntents
 import com.tangem.utils.converter.Converter
 
 internal class ContractAddressToCustomTokenDataConverter(
-    private val clickIntents: CustomTokensClickIntents,
+    private val clickIntents: AddCustomTokenClickIntents,
 ) : Converter<String, CustomTokenData> {
     override fun convert(value: String): CustomTokenData {
         return CustomTokenData(
