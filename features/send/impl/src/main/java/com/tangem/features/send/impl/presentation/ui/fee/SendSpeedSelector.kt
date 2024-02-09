@@ -88,8 +88,8 @@ internal fun SendSpeedSelector(
                                 amount = getCryptoReference(minimumAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(minimumAmount, state.rate, state.appCurrency),
                                 symbolLength = minimumAmount.currencySymbol.length,
-                                isSelected = isSelected == FeeType.SLOW,
-                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.SLOW) },
+                                isSelected = isSelected == FeeType.Slow,
+                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.Slow) },
                             )
                             val normalAmount = fees.normal.amount
                             SendSpeedSelectorItem(
@@ -98,8 +98,8 @@ internal fun SendSpeedSelector(
                                 amount = getCryptoReference(normalAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(normalAmount, state.rate, state.appCurrency),
                                 symbolLength = normalAmount.currencySymbol.length,
-                                isSelected = isSelected == FeeType.MARKET,
-                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.MARKET) },
+                                isSelected = isSelected == FeeType.Market,
+                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.Market) },
                             )
                             val priorityAmount = fees.priority.amount
                             SendSpeedSelectorItem(
@@ -108,8 +108,8 @@ internal fun SendSpeedSelector(
                                 amount = getCryptoReference(priorityAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(priorityAmount, state.rate, state.appCurrency),
                                 symbolLength = priorityAmount.currencySymbol.length,
-                                isSelected = isSelected == FeeType.FAST,
-                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.FAST) },
+                                isSelected = isSelected == FeeType.Fast,
+                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.Fast) },
                                 showDivider = fees.normal is Fee.Ethereum,
                             )
                             AnimatedVisibility(
@@ -123,8 +123,8 @@ internal fun SendSpeedSelector(
                                 SendSpeedSelectorItem(
                                     titleRes = R.string.common_fee_selector_option_custom,
                                     iconRes = R.drawable.ic_edit_24,
-                                    isSelected = isSelected == FeeType.CUSTOM,
-                                    onSelect = { clickIntents.onFeeSelectorClick(FeeType.CUSTOM) },
+                                    isSelected = isSelected == FeeType.Custom,
+                                    onSelect = { clickIntents.onFeeSelectorClick(FeeType.Custom) },
                                     showDivider = fees.normal !is Fee.Ethereum,
                                     showWarning = showWarning,
                                 )
@@ -139,7 +139,7 @@ internal fun SendSpeedSelector(
                                 amount = getCryptoReference(normalAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(normalAmount, state.rate, state.appCurrency),
                                 symbolLength = normalAmount.currencySymbol.length,
-                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.MARKET) },
+                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.Market) },
                                 showDivider = false,
                             )
                         }
