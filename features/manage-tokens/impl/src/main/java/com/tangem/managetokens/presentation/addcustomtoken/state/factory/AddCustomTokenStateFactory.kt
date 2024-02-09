@@ -312,9 +312,7 @@ internal class AddCustomTokenStateFactory(
         val uiState = currentStateProvider()
         return when (error) {
             AddCustomTokenError.InvalidContractAddress -> {
-                unlockAndClearNameSymbolAndDecimals(
-                    addTokenAddressFieldError(AddCustomTokenWarning.InvalidContractAddress),
-                )
+                removeTokenAddressError().also { unlockAndClearNameSymbolAndDecimals(it) }
                     .copy(
                         addTokenButton = uiState.addTokenButton.copy(isEnabled = false),
                         warnings = uiState.warnings
@@ -323,7 +321,7 @@ internal class AddCustomTokenStateFactory(
                     )
             }
             AddCustomTokenError.FieldIsEmpty ->
-                unlockAndClearNameSymbolAndDecimals(removeTokenAddressError())
+                removeTokenAddressError().also { unlockAndClearNameSymbolAndDecimals(it) }
                     .copy(
                         addTokenButton = uiState.addTokenButton.copy(
                             isEnabled = uiState.tokenData?.isRequiredInformationProvided() == true,
