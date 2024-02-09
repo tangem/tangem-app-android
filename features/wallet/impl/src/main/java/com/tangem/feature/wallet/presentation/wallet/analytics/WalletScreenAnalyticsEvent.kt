@@ -61,7 +61,7 @@ sealed class WalletScreenAnalyticsEvent {
         object NoticeBackupYourWalletTapped : MainScreen(event = "Notice - Backup Your Wallet Tapped")
         object NoticeScanYourCardTapped : MainScreen(event = "Notice - Scan Your Card Tapped")
         object NoticeWalletLocked : MainScreen(event = "Notice - Wallet Locked")
-        object WalletUnlockTapped : MainScreen(event = "Button - Wallet Unlock Tapped")
+        object WalletUnlockTapped : MainScreen(event = "Notice - Wallet Unlock Tapped")
 
         object NetworksUnreachable : MainScreen(event = "Notice - Networks Unreachable")
 
