@@ -80,6 +80,9 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "vechain/test" -> Blockchain.VeChainTestnet
         "aptos" -> Blockchain.Aptos
         "aptos/test" -> Blockchain.AptosTestnet
+        "shibarium" -> Blockchain.Shibarium
+        "shibarium/test" -> Blockchain.ShibariumTestnet
+        "" -> Blockchain.Playa3ull // FIXME
         else -> null
     }
 }
@@ -161,6 +164,9 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.VeChainTestnet -> "vechain/test"
         Blockchain.Aptos -> "aptos"
         Blockchain.AptosTestnet -> "aptos/test"
+        Blockchain.Shibarium -> "shibarium"
+        Blockchain.ShibariumTestnet -> "shibarium/test"
+        Blockchain.Playa3ull -> "" // FIXME
     }
 }
 
@@ -213,6 +219,9 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Aptos -> "aptos"
         Blockchain.AptosTestnet -> "aptos/test"
         Blockchain.Unknown -> "unknown"
+        Blockchain.Shibarium -> "bone-shibaswap"
+        Blockchain.ShibariumTestnet -> "bone-shibaswap/test"
+        Blockchain.Playa3ull -> "" // FIXME
     }
 }
 
@@ -241,4 +250,5 @@ private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
     Blockchain.Aptos,
+    Blockchain.Playa3ull,
 )
