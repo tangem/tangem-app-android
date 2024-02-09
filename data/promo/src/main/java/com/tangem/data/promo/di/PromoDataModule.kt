@@ -2,7 +2,6 @@ package com.tangem.data.promo.di
 
 import com.tangem.data.promo.DefaultPromoRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.DevTangemApi
 import com.tangem.domain.tokens.repository.PromoRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -18,7 +17,7 @@ internal object PromoDataModule {
     @Provides
     @Singleton
     fun providePromoRepository(
-        @DevTangemApi tangemTechApi: TangemTechApi,
+        tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
     ): PromoRepository {
         return DefaultPromoRepository(tangemTechApi, dispatchers)
