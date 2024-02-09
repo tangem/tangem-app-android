@@ -33,7 +33,7 @@ import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTok
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenSelectorField.SelectorItem
 import com.tangem.tap.features.customtoken.impl.presentation.routers.CustomTokenRouter
 import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTokenStateHolder
-import com.tangem.tap.features.customtoken.impl.presentation.validators.ContactAddressValidator
+import com.tangem.tap.features.customtoken.impl.presentation.validators.ContractAddressValidator
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContractAddressValidatorResult
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -461,7 +461,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun getTokenWarningSet(): Set<AddCustomTokenWarning> {
         val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
 
-        val isContractAddressFieldEmpty = ContactAddressValidator.validate(
+        val isContractAddressFieldEmpty = ContractAddressValidator.validate(
             address = uiState.form.contractAddressInputField.value,
             blockchain = networkSelectorValue,
         ).let {
@@ -513,7 +513,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         val state = when {
             isAllTokenFieldsFilled() && isNetworkSelected() -> {
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                val error = ContactAddressValidator.validate(
+                val error = ContractAddressValidator.validate(
                     address = uiState.form.contractAddressInputField.value,
                     blockchain = networkSelectorValue,
                 )
@@ -727,7 +727,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
             )
 
             val selectedNetwork = uiState.form.networkSelectorField.selectedItem.blockchain
-            val validatorResult = ContactAddressValidator.validate(
+            val validatorResult = ContractAddressValidator.validate(
                 address = enteredValue,
                 blockchain = selectedNetwork,
             )
