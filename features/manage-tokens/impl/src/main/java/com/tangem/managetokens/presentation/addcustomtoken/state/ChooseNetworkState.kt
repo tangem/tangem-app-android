@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.state
+package com.tangem.managetokens.presentation.addcustomtoken.state
 
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
 import kotlinx.collections.immutable.ImmutableList
