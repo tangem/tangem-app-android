@@ -112,8 +112,10 @@ private fun TrackPossibleEmptySearchResult(
 
     LaunchedEffect(tokens.loadState) {
         val isLoading = tokens.loadState.refresh == LoadState.Loading
+        val stoppedLoading = wasLoading.value && !isLoading
+        val queryAndTokensCondition = query.isNotEmpty() && tokens.itemSnapshotList.isEmpty()
 
-        if (wasLoading.value && !isLoading && query.isNotEmpty() && tokens.itemSnapshotList.isEmpty()) {
+        if (stoppedLoading && queryAndTokensCondition) {
             onEmptySearchResult(query)
         }
 
