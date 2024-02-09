@@ -1,8 +1,8 @@
-package com.tangem.managetokens.presentation.customtokens.state.previewdata
+package com.tangem.managetokens.presentation.addcustomtoken.state.previewdata
 
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
 import com.tangem.managetokens.presentation.common.state.WalletState
-import com.tangem.managetokens.presentation.customtokens.state.*
+import com.tangem.managetokens.presentation.addcustomtoken.state.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 
