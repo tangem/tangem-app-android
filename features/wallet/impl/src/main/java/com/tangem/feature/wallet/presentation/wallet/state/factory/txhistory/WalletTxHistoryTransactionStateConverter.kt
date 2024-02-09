@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletClickIntents
@@ -12,8 +13,6 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
 import com.tangem.utils.toFormattedCurrencyString
 
-// FIXME: Refactoring needed
-/** Same as [WalletPendingTxToTransactionStateConverter] but with other timestamp format */
 internal class WalletTxHistoryTransactionStateConverter(
     private val symbol: String,
     private val decimals: Int,
@@ -29,12 +28,13 @@ internal class WalletTxHistoryTransactionStateConverter(
         return TransactionState.Content(
             txHash = item.txHash,
             amount = item.getAmount(),
-            timestamp = item.getRawTimestamp(),
+            time = item.timestampInMillis.toTimeFormat(),
             status = item.status.tiUiStatus(),
             direction = item.extractDirection(),
             iconRes = item.extractIcon(),
             title = item.extractTitle(),
             subtitle = item.extractSubtitle(),
+            timestamp = item.timestampInMillis,
             onClick = { clickIntents.onTransactionClick(item.txHash) },
         )
     }
@@ -86,14 +86,6 @@ internal class WalletTxHistoryTransactionStateConverter(
 
     private fun TxHistoryItem.extractDirection() =
         if (isOutgoing) TransactionState.Content.Direction.OUTGOING else TransactionState.Content.Direction.INCOMING
-
-    /**
-     * Get timestamp without formatting.
-     * It's life hack that help us to add transaction's group title to flow.
-     *
-     * @see [convert]
-     */
-    private fun TxHistoryItem.getRawTimestamp() = this.timestampInMillis.toString()
 
     private fun TxHistoryItem.TransactionStatus.tiUiStatus() = when (this) {
         TxHistoryItem.TransactionStatus.Confirmed -> TransactionState.Content.Status.Confirmed
