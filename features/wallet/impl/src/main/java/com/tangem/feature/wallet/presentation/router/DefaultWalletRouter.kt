@@ -26,17 +26,13 @@ import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
-import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreenV2
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModelV2
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
 internal class DefaultWalletRouter(
     private val reduxNavController: ReduxNavController,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
@@ -53,21 +49,12 @@ internal class DefaultWalletRouter(
             startDestination = WalletRoute.Wallet.route,
         ) {
             composable(WalletRoute.Wallet.route) {
-                if (walletFeatureToggles.isWalletsScrollingPreviewEnabled) {
-                    val viewModel = hiltViewModel<WalletViewModelV2>().apply {
-                        setWalletRouter(router = this@DefaultWalletRouter)
-                        subscribeToLifecycle(LocalLifecycleOwner.current)
-                    }
-
-                    WalletScreenV2(state = viewModel.uiState.collectAsStateWithLifecycle().value)
-                } else {
-                    val viewModel = hiltViewModel<WalletViewModel>().apply {
-                        router = this@DefaultWalletRouter
-                    }
-                    LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
-
-                    WalletScreen(state = viewModel.uiState)
+                val viewModel = hiltViewModel<WalletViewModel>().apply {
+                    setWalletRouter(router = this@DefaultWalletRouter)
+                    subscribeToLifecycle(LocalLifecycleOwner.current)
                 }
+
+                WalletScreen(state = viewModel.uiState.collectAsStateWithLifecycle().value)
             }
 
             composable(
