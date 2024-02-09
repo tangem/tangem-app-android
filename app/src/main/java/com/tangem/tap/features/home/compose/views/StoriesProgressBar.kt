@@ -13,10 +13,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.coroutines.delay
 
@@ -30,7 +30,7 @@ fun StoriesProgressBar(
     stepDuration: Int = 8_000,
     onStepFinish: () -> Unit = {},
 ) {
-    val progress = remember(currentStep) { Animatable(0f) }
+    val progress = remember(currentStep) { Animatable(initialValue = 0f) }
 
     val context = LocalContext.current
     val animatorSpeed = Settings.Global.getFloat(
@@ -75,20 +75,21 @@ fun StoriesProgressBar(
                     .height(TangemTheme.dimens.size2)
                     .weight(1f)
                     .clip(RoundedCornerShape(TangemTheme.dimens.radius2))
-                    .background(Color.White.copy(alpha = 0.4f)),
+                    .background(TangemColorPalette.White.copy(alpha = .2f)),
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(TangemTheme.dimens.radius2))
-                        .background(Color.White)
-                        .fillMaxHeight().let {
+                        .background(TangemColorPalette.White)
+                        .fillMaxHeight()
+                        .let {
                             when (index) {
                                 currentStep -> it.fillMaxWidth(progress.value)
-                                in 0..currentStep -> it.fillMaxWidth(1f)
+                                in 0..currentStep -> it.fillMaxWidth(fraction = 1f)
                                 else -> it
                             }
                         },
-                ) {}
+                )
             }
             if (index != steps) {
                 SpacerW4()
@@ -100,5 +101,12 @@ fun StoriesProgressBar(
 @Preview
 @Composable
 private fun StoriesProgressBarPreview() {
-    StoriesProgressBar(steps = 3, currentStep = 2, paused = false) { }
+    Box(
+        modifier = Modifier
+            .wrapContentSize()
+            .background(TangemColorPalette.Black)
+            .padding(vertical = TangemTheme.dimens.spacing16),
+    ) {
+        StoriesProgressBar(steps = 5, currentStep = 3, paused = false)
+    }
 }
