@@ -1,6 +1,6 @@
 package com.tangem.tap.features.customtoken.impl.presentation.validators
 
-import com.tangem.domain.AddCustomTokenError
+import com.tangem.domain.tokens.error.AddCustomTokenError
 
 /**
  * Result of validation contract address
