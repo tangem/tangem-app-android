@@ -5,10 +5,6 @@ import androidx.compose.ui.Modifier
 import androidx.paging.compose.LazyPagingItems
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
-import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletState
-import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItemsV2
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState as WalletStateV2
 
@@ -21,18 +17,6 @@ import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState as
  *
  * @author Andrew Khokhlov on 07/08/2023
  */
-internal fun LazyListScope.contentItems(
-    state: WalletState.ContentState,
-    txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    when (state) {
-        is WalletMultiCurrencyState -> tokensListItems(state.tokensListState, modifier, isBalanceHidden)
-        is WalletSingleCurrencyState -> txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
-    }
-}
-
 internal fun LazyListScope.contentItemsV2(
     state: WalletStateV2,
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,

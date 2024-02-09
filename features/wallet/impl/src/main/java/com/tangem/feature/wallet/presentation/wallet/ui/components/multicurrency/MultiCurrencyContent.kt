@@ -32,21 +32,6 @@ private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
  *
  * @author Andrew Khokhlov on 02/08/2023
  */
-internal fun LazyListScope.tokensListItems(
-    state: WalletTokensListState,
-    modifier: Modifier = Modifier,
-    isBalanceHidden: Boolean,
-) {
-    when (state) {
-        is WalletTokensListState.ContentState -> contentItems(
-            items = state.items,
-            isBalanceHidden = isBalanceHidden,
-            modifier = modifier,
-        )
-        WalletTokensListState.Empty -> nonContentItem(modifier = modifier)
-    }
-}
-
 internal fun LazyListScope.tokensListItemsV2(
     state: WalletTokensListStateV2,
     modifier: Modifier = Modifier,
@@ -62,28 +47,6 @@ internal fun LazyListScope.tokensListItemsV2(
         }
         WalletTokensListStateV2.Empty -> nonContentItem(modifier = modifier)
     }
-}
-
-private fun LazyListScope.contentItems(
-    items: ImmutableList<WalletTokensListState.TokensListItemState>,
-    modifier: Modifier = Modifier,
-    isBalanceHidden: Boolean,
-) {
-    itemsIndexed(
-        items = items,
-        key = { _, item -> item.id },
-        contentType = { _, item -> item::class.java },
-        itemContent = { index, item ->
-            MultiCurrencyContentItem(
-                state = item,
-                isBalanceHidden = isBalanceHidden,
-                modifier = modifier.roundedShapeItemDecoration(
-                    currentIndex = index,
-                    lastIndex = items.lastIndex,
-                ),
-            )
-        },
-    )
 }
 
 private fun LazyListScope.contentItemsV2(
