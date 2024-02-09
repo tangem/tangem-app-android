@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.ui
+package com.tangem.managetokens.presentation.addcustomtoken.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.AdditionalTextInputDialogParams
 import com.tangem.core.ui.components.DialogButton
 import com.tangem.core.ui.components.TextInputDialog
 import com.tangem.features.managetokens.impl.R
-import com.tangem.managetokens.presentation.customtokens.state.EnterCustomDerivationState
+import com.tangem.managetokens.presentation.addcustomtoken.state.EnterCustomDerivationState
 
 @Composable
 internal fun CustomDerivationDialog(state: EnterCustomDerivationState) {

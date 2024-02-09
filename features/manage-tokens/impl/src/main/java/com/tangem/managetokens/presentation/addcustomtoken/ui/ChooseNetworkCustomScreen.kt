@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.ui
+package com.tangem.managetokens.presentation.addcustomtoken.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,8 +16,8 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.common.ui.components.NetworkItem
-import com.tangem.managetokens.presentation.customtokens.state.ChooseNetworkState
-import com.tangem.managetokens.presentation.customtokens.state.previewdata.ChooseNetworkCustomPreviewData
+import com.tangem.managetokens.presentation.addcustomtoken.state.ChooseNetworkState
+import com.tangem.managetokens.presentation.addcustomtoken.state.previewdata.ChooseNetworkCustomPreviewData
 
 @Composable
 internal fun ChooseNetworkCustomScreen(state: ChooseNetworkState, modifier: Modifier = Modifier) {

@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.ui
+package com.tangem.managetokens.presentation.addcustomtoken.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding

@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.state
+package com.tangem.managetokens.presentation.addcustomtoken.state
 
 internal sealed class TextFieldState {
     object Loading : TextFieldState()
