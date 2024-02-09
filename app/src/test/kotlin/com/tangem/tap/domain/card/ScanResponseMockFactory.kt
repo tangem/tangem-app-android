@@ -47,7 +47,7 @@ object ScanResponseMockFactory {
                 batchId = "NEVER-MIND",
                 cardPublicKey = ByteArray(0),
                 firmwareVersion = when (cardConfig) {
-                    GenericCardConfig -> genericFirmwareVersion
+                    is GenericCardConfig -> genericFirmwareVersion
                     MultiWalletCardConfig -> walletFirmwareVersion
                     Wallet2CardConfig -> wallet2FirmwareVersion
                 },
