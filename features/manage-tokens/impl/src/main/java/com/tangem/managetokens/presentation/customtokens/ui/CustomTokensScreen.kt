@@ -12,9 +12,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
@@ -46,11 +48,14 @@ internal fun CustomTokensScreen(state: AddCustomTokenState, modifier: Modifier =
 
 @Composable
 private fun Content(state: AddCustomTokenState, modifier: Modifier = Modifier) {
+    val keyboard by keyboardAsState()
+
     Column(
         modifier = modifier
             .background(color = TangemTheme.colors.background.tertiary)
             .statusBarsPadding()
             .navigationBarsPadding()
+            .imePadding()
             .padding(
                 top = TangemTheme.dimens.spacing10,
                 start = TangemTheme.dimens.spacing16,
@@ -78,12 +83,14 @@ private fun Content(state: AddCustomTokenState, modifier: Modifier = Modifier) {
                 .padding(bottom = TangemTheme.dimens.spacing16),
         )
         CustomTokenItemsList(state = state)
-        PrimaryButton(
-            text = stringResource(id = R.string.custom_token_add_token),
-            onClick = state.addTokenButton.onClick,
-            enabled = state.addTokenButton.isEnabled,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (keyboard is Keyboard.Closed) {
+            PrimaryButton(
+                text = stringResource(id = R.string.custom_token_add_token),
+                onClick = state.addTokenButton.onClick,
+                enabled = state.addTokenButton.isEnabled,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 
     if (state.chooseWalletState is ChooseWalletState.Choose && state.chooseWalletState.show) {
