@@ -92,7 +92,7 @@ tangemCardSdk = "develop-324"
 # endregion Tangem
 
 # region Tools
-detektComposeRules = "1.2.2"
+detektComposeRules = "1.3.0"
 detekt = "1.22.0"
 # endregion Tools
 
