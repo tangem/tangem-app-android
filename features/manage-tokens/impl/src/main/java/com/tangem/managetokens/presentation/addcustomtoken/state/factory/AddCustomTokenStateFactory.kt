@@ -2,7 +2,7 @@ package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
-import com.tangem.domain.AddCustomTokenError
+import com.tangem.domain.tokens.error.AddCustomTokenError
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -285,7 +285,7 @@ internal class AddCustomTokenStateFactory(
     fun handleAddressError(error: AddCustomTokenError): AddCustomTokenState {
         val uiState = currentStateProvider()
         return when (error) {
-            AddCustomTokenError.InvalidContractAddress -> {
+            AddCustomTokenError.INVALID_CONTRACT_ADDRESS -> {
                 addTokenAddressFieldError(AddCustomTokenWarning.InvalidContractAddress)
                     .copy(
                         addTokenButton = uiState.addTokenButton.copy(isEnabled = false),
@@ -294,7 +294,7 @@ internal class AddCustomTokenStateFactory(
                             .toPersistentSet(),
                     )
             }
-            AddCustomTokenError.FieldIsEmpty ->
+            AddCustomTokenError.FIELD_IS_EMPTY ->
                 removeTokenAddressError()
                     .copy(
                         addTokenButton = uiState.addTokenButton.copy(
