@@ -15,8 +15,13 @@ internal class BalancesAndLimitsBottomSheetConverter(
 ) : Converter<VisaCurrency, BalancesAndLimitsBottomSheetConfig> {
 
     override fun convert(value: VisaCurrency): BalancesAndLimitsBottomSheetConfig {
+        fun formatAmount(amount: BigDecimal): String = BigDecimalFormatter.formatCryptoAmount(
+            amount,
+            cryptoCurrency = value.symbol,
+            decimals = value.decimals,
+        )
+
         return BalancesAndLimitsBottomSheetConfig(
-            currency = value.symbol,
             balance = BalancesAndLimitsBottomSheetConfig.Balance(
                 totalBalance = value.balances.total.let(::formatAmount),
                 availableBalance = value.balances.available.let(::formatAmount),
@@ -24,23 +29,17 @@ internal class BalancesAndLimitsBottomSheetConverter(
                 debit = value.balances.debt.let(::formatAmount),
                 pending = value.balances.pendingRefund.let(::formatAmount),
                 amlVerified = value.balances.verified.let(::formatAmount),
+                onInfoClick = this::showBalanceInfo,
             ),
             limit = BalancesAndLimitsBottomSheetConfig.Limit(
                 availableBy = DateTimeFormatters.formatDate(date = value.limits.expirationDate),
                 inStore = value.limits.remainingOtp.let(::formatAmount),
                 other = value.limits.remainingNoOtp.let(::formatAmount),
                 singleTransaction = value.limits.singleTransaction.let(::formatAmount),
+                onInfoClick = this::showLimitInfo,
             ),
-            onBalanceInfoClick = this::showBalanceInfo,
-            onLimitInfoClick = this::showLimitInfo,
         )
     }
-
-    private fun formatAmount(amount: BigDecimal): String = BigDecimalFormatter.formatCryptoAmount(
-        amount,
-        cryptoCurrency = "",
-        decimals = 2,
-    )
 
     private fun showBalanceInfo() {
         eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaBalancesInfo))
