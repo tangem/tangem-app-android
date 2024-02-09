@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.MultipleClickPreventer
 
 @Suppress("LongParameterList")
 @Composable
@@ -34,9 +36,13 @@ fun TangemButton(
     textStyle: TextStyle = TangemTheme.typography.button,
     shape: Shape = size.toShape(),
 ) {
+    val multipleClickPreventer = remember { MultipleClickPreventer.get() }
+
     Button(
         modifier = modifier.heightIn(min = size.toHeightDp()),
-        onClick = { if (!showProgress) onClick() },
+        onClick = {
+            multipleClickPreventer.processEvent { if (!showProgress) onClick() }
+        },
         enabled = enabled,
         elevation = elevation,
         shape = shape,
