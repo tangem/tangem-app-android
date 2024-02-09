@@ -8,6 +8,7 @@ internal sealed class TextFieldState {
         val isEnabled: Boolean,
         val error: AddCustomTokenWarning? = null,
         val onValueChange: (String) -> Unit,
+        val onFocusExit: () -> Unit,
     ) : TextFieldState()
 
     fun isInputValid(): Boolean = this is Editable && value.isNotBlank() && error == null
