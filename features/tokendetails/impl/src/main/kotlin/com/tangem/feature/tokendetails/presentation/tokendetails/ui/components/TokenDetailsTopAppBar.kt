@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
@@ -38,12 +39,17 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
         },
         title = {},
         actions = {
-            IconButton(onClick = { showDropdownMenu = true }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_more_vertical_24),
-                    tint = TangemTheme.colors.icon.primary1,
-                    contentDescription = "More",
-                )
+            AnimatedVisibility(
+                visible = config.tokenDetailsAppBarMenuConfig != null &&
+                    config.tokenDetailsAppBarMenuConfig.items.isNotEmpty(),
+            ) {
+                IconButton(onClick = { showDropdownMenu = true }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_more_vertical_24),
+                        tint = TangemTheme.colors.icon.primary1,
+                        contentDescription = "More",
+                    )
+                }
             }
 
             TangemDropdownMenu(
@@ -52,7 +58,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                 onDismissRequest = { showDropdownMenu = false },
                 offset = DpOffset(x = TangemTheme.dimens.spacing20, y = TangemTheme.dimens.spacing10.times(-1)),
                 content = {
-                    config.tokenDetailsAppBarMenuConfig.items.fastForEach {
+                    config.tokenDetailsAppBarMenuConfig?.items?.fastForEach {
                         AppBarDropdownItem(
                             item = it,
                             dismissParent = { showDropdownMenu = false },
