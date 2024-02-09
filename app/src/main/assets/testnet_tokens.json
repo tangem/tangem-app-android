@@ -570,6 +570,16 @@
             ]
         },
         {
+            "id": "shibarium",
+            "name": "Shibarium",
+            "symbol": "BONE",
+            "networks": [
+                {
+                    "networkId": "shibarium/test"
+                }
+            ]
+        },
+        {
             "id": "aptos",
             "name": "Aptos",
             "symbol": "APT",
