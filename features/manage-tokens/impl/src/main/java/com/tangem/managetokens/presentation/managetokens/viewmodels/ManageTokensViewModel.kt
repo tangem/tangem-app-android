@@ -190,7 +190,7 @@ internal class ManageTokensViewModel @Inject constructor(
 
     override fun onAddCustomTokensButtonClick() {
         analyticsEventHandler.send(ManageTokens.ButtonCustomToken)
-        router.openCustomTokensScreen()
+        router.openAddCustomTokenScreen()
     }
 
     override fun onSearchQueryChange(query: String) {

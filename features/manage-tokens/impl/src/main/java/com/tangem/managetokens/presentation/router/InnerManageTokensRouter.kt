@@ -6,6 +6,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
 
 internal interface InnerManageTokensRouter : ManageTokensRouter {
+
     /**
      * Initialize router
      **/
@@ -19,12 +20,15 @@ internal interface InnerManageTokensRouter : ManageTokensRouter {
     /** Open manage tokens screen */
     fun openManageTokensScreen()
 
-    /** Open custom tokens screen */
-    fun openCustomTokensScreen()
+    /** Open add custom token screen */
+    fun openAddCustomTokenScreen()
 
-    fun openCustomTokensChooseNetwork()
+    /** Open custom token choose network screen */
+    fun openCustomTokenChooseNetwork()
 
-    fun openCustomTokensChooseDerivation()
+    /** Open custom token choose derivation screen */
+    fun openCustomTokenChooseDerivation()
 
-    fun openCustomTokensChooseWallet()
+    /** Open custom token choose wallet screen */
+    fun openCustomTokenChooseWallet()
 }

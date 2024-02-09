@@ -104,19 +104,19 @@ internal class DefaultManageTokensRouter(
         navController.navigate(ManageTokensRoute.ManageTokens.route)
     }
 
-    override fun openCustomTokensScreen() {
+    override fun openAddCustomTokenScreen() {
         navController.navigate(ManageTokensRoute.AddCustomToken.route)
     }
 
-    override fun openCustomTokensChooseNetwork() {
+    override fun openCustomTokenChooseNetwork() {
         navController.navigate(ManageTokensRoute.AddCustomToken.ChooseNetwork.route)
     }
 
-    override fun openCustomTokensChooseDerivation() {
+    override fun openCustomTokenChooseDerivation() {
         navController.navigate(ManageTokensRoute.AddCustomToken.ChooseDerivation.route)
     }
 
-    override fun openCustomTokensChooseWallet() {
+    override fun openCustomTokenChooseWallet() {
         navController.navigate(ManageTokensRoute.AddCustomToken.ChooseWallet.route)
     }
 }

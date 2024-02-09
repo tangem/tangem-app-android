@@ -139,7 +139,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     override fun onChooseNetworkClick() {
-        router.openCustomTokensChooseNetwork()
+        router.openCustomTokenChooseNetwork()
     }
 
     override fun onCloseChoosingNetworkClick() {
@@ -164,7 +164,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     override fun onChooseWalletClick() {
-        router.openCustomTokensChooseWallet()
+        router.openCustomTokenChooseWallet()
     }
 
     override fun onCloseChoosingWalletClick() {
@@ -331,7 +331,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     override fun onChooseDerivationClick() {
-        router.openCustomTokensChooseDerivation()
+        router.openCustomTokenChooseDerivation()
     }
 
     override fun onCloseChoosingDerivationClick() {
