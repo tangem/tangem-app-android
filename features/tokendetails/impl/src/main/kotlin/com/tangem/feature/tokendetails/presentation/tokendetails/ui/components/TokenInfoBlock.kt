@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -29,9 +28,15 @@ private const val NORMAL_ALPHA = 1f
 
 @Composable
 internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Modifier) {
-    Row(modifier = modifier.fillMaxWidth()) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = TangemTheme.dimens.size60),
+    ) {
         Column(
-            modifier = Modifier.weight(1F),
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .weight(1F),
         ) {
             Text(
                 text = state.name,
@@ -88,7 +93,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                 )
                 Text(
                     text = state.boldText,
-                    style = TangemTheme.typography.caption2.copy(fontWeight = FontWeight.Medium),
+                    style = TangemTheme.typography.caption1,
                     color = TangemTheme.colors.text.primary1,
                 )
             }
