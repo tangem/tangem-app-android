@@ -15,11 +15,11 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
 import com.tangem.managetokens.ManageTokensFragment
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
-import com.tangem.managetokens.presentation.customtokens.ui.ChooseDerivationScreen
-import com.tangem.managetokens.presentation.customtokens.ui.ChooseNetworkCustomScreen
-import com.tangem.managetokens.presentation.customtokens.ui.CustomTokensChooseWalletScreen
-import com.tangem.managetokens.presentation.customtokens.ui.CustomTokensScreen
-import com.tangem.managetokens.presentation.customtokens.viewmodels.CustomTokensViewModel
+import com.tangem.managetokens.presentation.addcustomtoken.ui.ChooseDerivationScreen
+import com.tangem.managetokens.presentation.addcustomtoken.ui.ChooseNetworkCustomScreen
+import com.tangem.managetokens.presentation.addcustomtoken.ui.CustomTokensChooseWalletScreen
+import com.tangem.managetokens.presentation.addcustomtoken.ui.AddCustomTokenScreen
+import com.tangem.managetokens.presentation.addcustomtoken.viewmodels.AddCustomTokenViewModel
 import com.tangem.managetokens.presentation.managetokens.ui.ManageTokensScreen
 import com.tangem.managetokens.presentation.managetokens.viewmodels.ManageTokensViewModel
 import kotlin.properties.Delegates
@@ -46,21 +46,22 @@ internal class DefaultManageTokensRouter(
             }
 
             navigation(
-                startDestination = ManageTokensRoute.CustomTokens.Main.route,
-                route = ManageTokensRoute.CustomTokens.route,
+                startDestination = ManageTokensRoute.AddCustomToken.Main.route,
+                route = ManageTokensRoute.AddCustomToken.route,
             ) {
                 composable(
-                    ManageTokensRoute.CustomTokens.Main.route,
+                    ManageTokensRoute.AddCustomToken.Main.route,
                 ) {
-                    val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
+                    val viewModel = hiltViewModel<AddCustomTokenViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
-                    CustomTokensScreen(state = viewModel.uiState)
+                    LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
+                    AddCustomTokenScreen(state = viewModel.uiState)
                 }
                 composable(
-                    ManageTokensRoute.CustomTokens.ChooseNetwork.route,
+                    ManageTokensRoute.AddCustomToken.ChooseNetwork.route,
                 ) {
-                    val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
+                    val viewModel = hiltViewModel<AddCustomTokenViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
                     ChooseNetworkCustomScreen(
@@ -68,9 +69,9 @@ internal class DefaultManageTokensRouter(
                     )
                 }
                 composable(
-                    ManageTokensRoute.CustomTokens.ChooseDerivation.route,
+                    ManageTokensRoute.AddCustomToken.ChooseDerivation.route,
                 ) {
-                    val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
+                    val viewModel = hiltViewModel<AddCustomTokenViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
                     ChooseDerivationScreen(
@@ -78,9 +79,9 @@ internal class DefaultManageTokensRouter(
                     )
                 }
                 composable(
-                    ManageTokensRoute.CustomTokens.ChooseWallet.route,
+                    ManageTokensRoute.AddCustomToken.ChooseWallet.route,
                 ) {
-                    val viewModel = hiltViewModel<CustomTokensViewModel>(viewModelStoreOwner).apply {
+                    val viewModel = hiltViewModel<AddCustomTokenViewModel>(viewModelStoreOwner).apply {
                         router = this@DefaultManageTokensRouter
                     }
                     CustomTokensChooseWalletScreen(
@@ -103,19 +104,19 @@ internal class DefaultManageTokensRouter(
         navController.navigate(ManageTokensRoute.ManageTokens.route)
     }
 
-    override fun openCustomTokensScreen() {
-        navController.navigate(ManageTokensRoute.CustomTokens.route)
+    override fun openAddCustomTokenScreen() {
+        navController.navigate(ManageTokensRoute.AddCustomToken.route)
     }
 
-    override fun openCustomTokensChooseNetwork() {
-        navController.navigate(ManageTokensRoute.CustomTokens.ChooseNetwork.route)
+    override fun openCustomTokenChooseNetwork() {
+        navController.navigate(ManageTokensRoute.AddCustomToken.ChooseNetwork.route)
     }
 
-    override fun openCustomTokensChooseDerivation() {
-        navController.navigate(ManageTokensRoute.CustomTokens.ChooseDerivation.route)
+    override fun openCustomTokenChooseDerivation() {
+        navController.navigate(ManageTokensRoute.AddCustomToken.ChooseDerivation.route)
     }
 
-    override fun openCustomTokensChooseWallet() {
-        navController.navigate(ManageTokensRoute.CustomTokens.ChooseWallet.route)
+    override fun openCustomTokenChooseWallet() {
+        navController.navigate(ManageTokensRoute.AddCustomToken.ChooseWallet.route)
     }
 }
