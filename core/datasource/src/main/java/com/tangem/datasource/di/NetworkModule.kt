@@ -5,12 +5,10 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.promotion.PromotionApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
-import com.tangem.lib.auth.AuthProvider
 import com.tangem.lib.auth.ExpressAuthProvider
 import dagger.Module
 import dagger.Provides
@@ -20,7 +18,6 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -75,31 +72,25 @@ class NetworkModule {
     }
 
     @Provides
+    @DevTangemApi
     @Singleton
-    @PromotionOneInch
-    fun providePromotionOneInchApi(
-        authProvider: AuthProvider,
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-    ): PromotionApi {
-        val okClient = OkHttpClient.Builder()
-            .addHeaders(AuthenticationHeader(authProvider))
-            .addLoggers(context)
-            .callTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .connectTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .readTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .writeTimeout(API_ONE_INCH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .build()
-        return createBasePromotionRetrofit(okClient, moshi)
-    }
-
-    private fun createBasePromotionRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): PromotionApi {
+    fun provideTangemTechDevApi(@NetworkMoshi moshi: Moshi, @ApplicationContext context: Context): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
-            .client(okHttpClient)
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
+            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
+            .client(
+                OkHttpClient.Builder()
+                    .addHeaders(
+                        CacheControlHeader,
+                        // TODO("refactor header init") get auth data after biometric auth to avoid race condition
+                        // AuthenticationHeader(authProvider),
+                    )
+                    .addLoggers(context)
+                    .build(),
+            )
             .build()
-            .create(PromotionApi::class.java)
+            .create(TangemTechApi::class.java)
     }
 
     private companion object {
