@@ -36,7 +36,7 @@ internal class DefaultDerivationsRepositoryTest {
         artworkUrl = "",
         cardsInWallet = setOf(),
         isMultiCurrency = false,
-        scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig, derivedKeys = emptyMap()),
+        scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap()),
     )
 
     @Test
