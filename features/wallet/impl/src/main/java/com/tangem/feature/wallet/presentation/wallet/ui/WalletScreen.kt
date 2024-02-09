@@ -35,6 +35,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.controlButtons
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
@@ -169,6 +170,7 @@ private fun WalletContent(
                 is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
                 is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
                 is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
+                is VisaTxDetailsBottomSheetConfig -> VisaTxDetailsBottomSheet(config = bottomSheetConfig)
             }
         }
 
