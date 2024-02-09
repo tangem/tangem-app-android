@@ -90,7 +90,7 @@ internal class InitializeWalletsTransformer(
             title = name,
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = this),
             imageResId = WalletImageResolver.resolve(userWallet = this),
-            onRenameClick = clickIntents::onRenameClick,
+            onRenameClick = clickIntents::onRenameBeforeConfirmationClick,
             onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
         )
     }
