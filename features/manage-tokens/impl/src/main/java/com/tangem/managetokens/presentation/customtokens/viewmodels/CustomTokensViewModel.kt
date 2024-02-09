@@ -6,16 +6,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.*
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.managetokens.presentation.common.analytics.ManageTokens
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.Event
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
@@ -39,7 +43,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 @HiltViewModel
 internal class CustomTokensViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
@@ -52,6 +56,7 @@ internal class CustomTokensViewModel @Inject constructor(
     private val validateContractAddressUseCase: ValidateContractAddressUseCase,
     private val getNetworksSupportedByWallet: GetNetworksSupportedByWallet,
     private val areTokensSupportedByNetworkUseCase: AreTokensSupportedByNetworkUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel(), CustomTokensClickIntents, DefaultLifecycleObserver {
 
     private val debouncer = Debouncer()
@@ -110,6 +115,7 @@ internal class CustomTokensViewModel @Inject constructor(
     }
 
     override fun onNetworkSelected(networkItemState: NetworkItemState) {
+        analyticsEventHandler.send(ManageTokens.CustomTokenNetworkSelected(networkItemState.name))
         selectNetwork(networkItemState)
         router.popBackStack()
     }
@@ -136,6 +142,7 @@ internal class CustomTokensViewModel @Inject constructor(
     }
 
     override fun onWalletSelected(walletId: String) {
+        analyticsEventHandler.send(ManageTokens.WalletSelected(ManageTokens.WalletSelected.Source.CustomToken))
         viewModelScope.launch(dispatchers.io) {
             val userWalletId = UserWalletId(walletId)
             selectWalletUseCase(userWalletId)
@@ -166,6 +173,7 @@ internal class CustomTokensViewModel @Inject constructor(
                     value = input,
                     isEnabled = true,
                     onValueChange = this::onContractAddressChange,
+                    onFocusExit = this::onContractAddressFocusExit,
                 ),
             ),
         )
@@ -202,9 +210,14 @@ internal class CustomTokensViewModel @Inject constructor(
                     ifLeft = {
                         val tokenData = ContractAddressToCustomTokenDataConverter(this@CustomTokensViewModel)
                             .convert(contractAddress)
+
+                        val isButtonEnabled = tokenData.isRequiredInformationProvided()
                         uiState = uiState.copy(
                             tokenData = tokenData,
                             warnings = (uiState.warnings + AddCustomTokenWarning.PotentialScamToken).toPersistentSet(),
+                            addTokenButton = uiState.addTokenButton.copy(
+                                isEnabled = isButtonEnabled,
+                            ),
                         )
                     },
                     ifRight = { token ->
@@ -215,7 +228,14 @@ internal class CustomTokensViewModel @Inject constructor(
                                 contractAddress,
                             )
                         }
-                        uiState = uiState.copy(tokenData = tokenData)
+
+                        val isButtonEnabled = tokenData.isRequiredInformationProvided()
+                        uiState = uiState.copy(
+                            tokenData = tokenData,
+                            addTokenButton = uiState.addTokenButton.copy(
+                                isEnabled = isButtonEnabled,
+                            ),
+                        )
                     },
                 )
             }
@@ -229,7 +249,11 @@ internal class CustomTokensViewModel @Inject constructor(
                     value = input,
                     isEnabled = true,
                     onValueChange = this::onTokenNameChange,
+                    onFocusExit = this::onTokenNameFocusExit,
                 ),
+            ),
+            addTokenButton = uiState.addTokenButton.copy(
+                isEnabled = uiState.tokenData?.isRequiredInformationProvided() == true,
             ),
         )
     }
@@ -241,7 +265,11 @@ internal class CustomTokensViewModel @Inject constructor(
                     value = input,
                     isEnabled = true,
                     onValueChange = this::onSymbolChange,
+                    onFocusExit = this::onSymbolFocusExit,
                 ),
+            ),
+            addTokenButton = uiState.addTokenButton.copy(
+                isEnabled = uiState.tokenData?.isRequiredInformationProvided() == true,
             ),
         )
     }
@@ -260,14 +288,40 @@ internal class CustomTokensViewModel @Inject constructor(
                     isEnabled = true,
                     onValueChange = this::onDecimalsChange,
                     error = error,
+                    onFocusExit = this::onDecimalsFocusExit,
                 ),
+            ),
+            addTokenButton = uiState.addTokenButton.copy(
+                isEnabled = uiState.tokenData?.isRequiredInformationProvided() == true,
             ),
         )
     }
 
+    override fun onContractAddressFocusExit() {
+        val error = (uiState.tokenData?.contractAddressTextField as? TextFieldState.Editable)?.error
+        val validated = error !is AddCustomTokenWarning.InvalidContractAddress
+        analyticsEventHandler.send(ManageTokens.CustomTokenAddress(validated = validated))
+    }
+
+    override fun onTokenNameFocusExit() {
+        analyticsEventHandler.send(ManageTokens.CustomTokenName)
+    }
+
+    override fun onSymbolFocusExit() {
+        analyticsEventHandler.send(ManageTokens.CustomTokenSymbol)
+    }
+
+    override fun onDecimalsFocusExit() {
+        analyticsEventHandler.send(ManageTokens.CustomTokenDecimals)
+    }
+
     override fun onDerivationSelected(derivation: Derivation) {
-        uiState =
-            uiState.copy(chooseDerivationState = uiState.chooseDerivationState?.copy(selectedDerivation = derivation))
+        derivation.standardType?.let {
+            analyticsEventHandler.send(ManageTokens.CustomTokenDerivationSelected(derivation.networkName))
+        }
+        uiState = uiState.copy(
+            chooseDerivationState = uiState.chooseDerivationState?.copy(selectedDerivation = derivation),
+        )
         router.popBackStack()
     }
 
@@ -280,6 +334,7 @@ internal class CustomTokensViewModel @Inject constructor(
     }
 
     override fun onCustomDerivationChange(input: String) {
+        analyticsEventHandler.send(ManageTokens.CustomTokenDerivationSelected(ManageTokens.Derivation.CUSTOM.value))
         uiState = uiState.copy(
             chooseDerivationState = uiState.chooseDerivationState?.copy(
                 enterCustomDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
@@ -332,17 +387,73 @@ internal class CustomTokensViewModel @Inject constructor(
             val cryptoCurrency = AddCustomTokenStateToCryptoCurrencyConverter(
                 selectedWallet.scanResponse.derivationStyleProvider,
             ).convert(uiState)
-            val alreadyAdded =
-                getCurrenciesUseCase(selectedWallet.walletId).getOrNull()?.any { it == cryptoCurrency }
-            if (alreadyAdded == true) {
+            val alreadyAdded = isCryptoCurrencyAlreadyAdded(selectedWallet, cryptoCurrency)
+            if (alreadyAdded) {
                 uiState = stateFactory.getStateAndTriggerEvent(
                     state = uiState,
                     event = Event.ShowAlert(AlertState.TokenAlreadyAdded),
                     setUiState = { uiState = it },
                 )
             } else {
+                sendTokenAddedEvent(cryptoCurrency)
                 addCryptoCurrenciesUseCase(selectedWallet.walletId, currency = cryptoCurrency)
                 withContext(dispatchers.main) { router.popBackStack() }
+            }
+        }
+    }
+
+    private suspend fun isCryptoCurrencyAlreadyAdded(
+        selectedWallet: UserWallet,
+        cryptoCurrency: CryptoCurrency,
+    ): Boolean {
+        val currenciesList = getCurrenciesUseCase(selectedWallet.walletId).getOrElse { emptyList() }
+        return when (cryptoCurrency) {
+            is CryptoCurrency.Coin -> {
+                currenciesList.any {
+                    it is CryptoCurrency.Coin &&
+                        it.id == cryptoCurrency.id &&
+                        it.network.derivationPath == cryptoCurrency.network.derivationPath
+                }
+            }
+            is CryptoCurrency.Token -> {
+                currenciesList.any {
+                    (it as? CryptoCurrency.Token)?.let {
+                        it.id == cryptoCurrency.id &&
+                            it.contractAddress == cryptoCurrency.contractAddress &&
+                            it.network.id == cryptoCurrency.network.id &&
+                            it.network.derivationPath == cryptoCurrency.network.derivationPath
+                    } ?: false
+                }
+            }
+        }
+    }
+
+    private fun sendTokenAddedEvent(cryptoCurrency: CryptoCurrency) {
+        val selectedDerivation = uiState.chooseDerivationState?.selectedDerivation
+
+        val derivation = when {
+            selectedDerivation == null -> ManageTokens.Derivation.DEFAULT.value
+            selectedDerivation.networkName.isNotEmpty() -> selectedDerivation.networkName
+            else -> ManageTokens.Derivation.CUSTOM.value
+        }
+        when (cryptoCurrency) {
+            is CryptoCurrency.Token -> {
+                analyticsEventHandler.send(
+                    ManageTokens.CustomTokenWasAdded(
+                        derivation = derivation,
+                        networkId = cryptoCurrency.network.name,
+                        contractAddress = cryptoCurrency.contractAddress,
+                        token = cryptoCurrency.symbol,
+                    ),
+                )
+            }
+            is CryptoCurrency.Coin -> {
+                analyticsEventHandler.send(
+                    ManageTokens.CustomTokenWasAdded(
+                        derivation = derivation,
+                        networkId = cryptoCurrency.network.name,
+                    ),
+                )
             }
         }
     }
