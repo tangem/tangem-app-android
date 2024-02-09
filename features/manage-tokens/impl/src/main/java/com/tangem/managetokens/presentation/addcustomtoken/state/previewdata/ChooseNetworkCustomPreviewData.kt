@@ -1,8 +1,8 @@
-package com.tangem.managetokens.presentation.customtokens.state.previewdata
+package com.tangem.managetokens.presentation.addcustomtoken.state.previewdata
 
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
-import com.tangem.managetokens.presentation.customtokens.state.ChooseNetworkState
+import com.tangem.managetokens.presentation.addcustomtoken.state.ChooseNetworkState
 import kotlinx.collections.immutable.persistentListOf
 
 internal object ChooseNetworkCustomPreviewData {
