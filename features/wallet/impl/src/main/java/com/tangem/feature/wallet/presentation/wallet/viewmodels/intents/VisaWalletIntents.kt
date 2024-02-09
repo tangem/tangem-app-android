@@ -7,9 +7,11 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModel
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
+import com.tangem.domain.visa.GetVisaTxDetailsUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.BalancesAndLimitsBottomSheetConverter
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.VisaTxDetailsBottomSheetConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -25,6 +27,8 @@ internal interface VisaWalletIntents {
     fun onBalancesAndLimitsClick()
 
     fun onVisaTransactionClick(id: String)
+
+    fun onExploreClick(exploreUrl: String)
 }
 
 @ViewModelScoped
@@ -33,6 +37,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     private val eventSender: WalletEventSender,
     private val getCurrencyStatusUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val getVisaCurrencyUseCase: GetVisaCurrencyUseCase,
+    private val getVisaTxDetailsUseCase: GetVisaTxDetailsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), VisaWalletIntents {
 
@@ -97,6 +102,29 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     }
 
     override fun onVisaTransactionClick(id: String) {
-// [REDACTED_TODO_COMMENT]
+        viewModelScope.launch(dispatchers.main) {
+            val userWalletId = stateController.getSelectedWalletId()
+            val visaCurrency = getVisaCurrencyUseCase(userWalletId)
+                .getOrElse {
+                    Timber.e(it, "Failed to get visa currency")
+                    return@launch
+                }
+            val transactionDetails = getVisaTxDetailsUseCase(userWalletId, id)
+                .getOrElse {
+                    Timber.e(it, "Failed to get transaction details")
+                    return@launch
+                }
+
+            val converter = VisaTxDetailsBottomSheetConverter(
+                visaCurrency,
+                clickIntents = this@VisaWalletIntentsImplementor,
+            )
+
+            stateController.showBottomSheet(content = converter.convert(transactionDetails))
+        }
+    }
+
+    override fun onExploreClick(exploreUrl: String) {
+        router.openUrl(exploreUrl)
     }
 }
