@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.state.factory
+package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 
 import com.tangem.core.ui.extensions.getActiveIconResByNetworkId
 import com.tangem.domain.tokens.model.Network
