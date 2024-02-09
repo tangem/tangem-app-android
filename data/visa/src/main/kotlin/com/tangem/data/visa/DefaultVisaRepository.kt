@@ -11,22 +11,26 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.VisaConfig
 import com.tangem.data.visa.utils.VisaCurrencyFactory
+import com.tangem.data.visa.utils.VisaTxDetailsFactory
 import com.tangem.data.visa.utils.VisaTxHistoryPagingSource
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.visa.model.VisaCurrency
+import com.tangem.domain.visa.model.VisaTxDetails
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.visa.repository.VisaRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.lib.visa.VisaContractInfoProvider
 import com.tangem.lib.visa.api.VisaApi
+import com.tangem.lib.visa.model.VisaTxHistoryResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 internal class DefaultVisaRepository(
@@ -41,9 +45,15 @@ internal class DefaultVisaRepository(
     private val currencyFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         VisaCurrencyFactory()
     }
+    private val txDetailsFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
+        VisaTxDetailsFactory()
+    }
 
     private val fetchedCurrencies = MutableStateFlow(
         value = hashMapOf<String, VisaCurrency>(),
+    )
+    private val fetchedHistoryItems = MutableStateFlow(
+        value = emptyMap<String, List<VisaTxHistoryResponse.Transaction>>(),
     )
 
     override suspend fun getVisaCurrency(userWalletId: UserWalletId, isRefresh: Boolean): VisaCurrency {
@@ -102,12 +112,30 @@ internal class DefaultVisaRepository(
                     ),
                     cacheRegistry = cacheRegistry,
                     visaApi = visaApi,
+                    fetchedItems = fetchedHistoryItems,
                     dispatchers = dispatchers,
                 )
             },
         )
 
         return pager.flow
+    }
+
+    override suspend fun getTxDetails(userWalletId: UserWalletId, txId: String): VisaTxDetails {
+        return withContext(dispatchers.io) {
+            val userWallet = findVisaUserWallet(userWalletId)
+            val cardPubKey = getCardPubKey(userWallet).toHexString()
+            // val cardPubKey = "03DEF02B1FECC8BD3CFD52CE93235194479E1DE931EF0F55DC194967E7CCC3D12C" // for testing
+            val transaction = fetchedHistoryItems.value[cardPubKey]?.firstOrNull {
+                it.transactionId.toString() == txId
+            }
+            requireNotNull(transaction) { "Transaction not found: $txId" }
+
+            txDetailsFactory.create(
+                transaction = transaction,
+                walletBlockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain(),
+            )
+        }
     }
 
     private suspend fun makeAddress(userWalletId: UserWalletId): String {
