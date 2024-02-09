@@ -323,7 +323,6 @@ internal class ManageTokensViewModel @Inject constructor(
             "It is only null if Blockchain is Unknown, which mustn't happen here"
         }
         if (!network.isAdded.value) {
-            updateUi(token, network)
             addedCurrenciesByWallet[selectedWallet]?.add(cryptoCurrency)
             allAddedCurrencies.add(cryptoCurrency)
             viewModelScope.launch(dispatchers.io) {
@@ -332,13 +331,14 @@ internal class ManageTokensViewModel @Inject constructor(
                     currency = cryptoCurrency,
                 )
             }
+            updateUi(token, network)
         } else {
             viewModelScope.launch(dispatchers.io) {
                 if (canBeRemovedAndShowAlertIfNot(selectedWallet.walletId, cryptoCurrency)) {
-                    withContext(dispatchers.main) { updateUi(token, network) }
                     addedCurrenciesByWallet[selectedWallet]?.remove(cryptoCurrency)
                     allAddedCurrencies.remove(cryptoCurrency)
                     removeCurrencyUseCase(selectedWallet.walletId, cryptoCurrency)
+                    withContext(dispatchers.main) { updateUi(token, network) }
                 }
             }
         }
