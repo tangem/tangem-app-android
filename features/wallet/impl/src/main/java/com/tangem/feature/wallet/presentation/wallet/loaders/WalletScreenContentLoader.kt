@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders
 
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +35,7 @@ internal class WalletScreenContentLoader @Inject constructor(
      */
     fun load(
         userWallet: UserWallet,
-        clickIntents: WalletClickIntentsV2,
+        clickIntents: WalletClickIntents,
         isRefresh: Boolean = false,
         coroutineScope: CoroutineScope,
     ) {
@@ -67,7 +67,7 @@ internal class WalletScreenContentLoader @Inject constructor(
 
     private fun loadInternal(
         userWallet: UserWallet,
-        clickIntents: WalletClickIntentsV2,
+        clickIntents: WalletClickIntents,
         coroutineScope: CoroutineScope,
         isRefresh: Boolean,
     ) {
