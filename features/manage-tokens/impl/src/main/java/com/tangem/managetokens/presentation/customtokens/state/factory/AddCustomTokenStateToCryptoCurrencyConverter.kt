@@ -39,7 +39,7 @@ internal class AddCustomTokenStateToCryptoCurrencyConverter(
     private fun parseTokenOrNull(tokenData: CustomTokenData?): CryptoCurrencyFactory.Token? {
         val contractAddress = (tokenData?.contractAddressTextField as? TextFieldState.Editable)?.value
         val symbol = (tokenData?.symbolTextField as? TextFieldState.Editable)?.value
-        val name = (tokenData?.contractAddressTextField as? TextFieldState.Editable)?.value
+        val name = (tokenData?.nameTextField as? TextFieldState.Editable)?.value
         val decimals = (tokenData?.decimalsTextField as? TextFieldState.Editable)?.value?.toIntOrNull()
         return if (
             !contractAddress.isNullOrBlank() && !symbol.isNullOrBlank() && !name.isNullOrBlank() && decimals != null

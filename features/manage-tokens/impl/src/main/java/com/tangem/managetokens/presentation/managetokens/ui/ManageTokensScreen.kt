@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.res.TangemTheme
@@ -77,6 +79,14 @@ private fun Content(state: ManageTokensState) {
                 )
             }
             val tokens = state.tokens.collectAsLazyPagingItems()
+            val query = state.searchBarState.query
+
+            TrackPossibleEmptySearchResult(
+                tokens = tokens,
+                query = query,
+                onEmptySearchResult = state.onEmptySearchResult,
+            )
+
             TokensList(tokens = tokens, addCustomTokenButton = state.addCustomTokenButton)
         }
         state.derivationNotification?.let {
@@ -89,6 +99,27 @@ private fun Content(state: ManageTokensState) {
         state.selectedToken?.let { selectedToken ->
             ManageTokensBottomSheet(selectedToken = selectedToken, state = state)
         }
+    }
+}
+
+@Composable
+private fun TrackPossibleEmptySearchResult(
+    tokens: LazyPagingItems<TokenItemState>,
+    query: String,
+    onEmptySearchResult: (String) -> Unit,
+) {
+    val wasLoading = remember { mutableStateOf(false) }
+
+    LaunchedEffect(tokens.loadState) {
+        val isLoading = tokens.loadState.refresh == LoadState.Loading
+        val stoppedLoading = wasLoading.value && !isLoading
+        val queryAndTokensCondition = query.isNotEmpty() && tokens.itemSnapshotList.isEmpty()
+
+        if (stoppedLoading && queryAndTokensCondition) {
+            onEmptySearchResult(query)
+        }
+
+        wasLoading.value = isLoading
     }
 }
 
