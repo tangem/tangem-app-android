@@ -45,6 +45,8 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Common */
     implementation(projects.common)
