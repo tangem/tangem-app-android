@@ -14,13 +14,13 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.collectLatest
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryCountErrorTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryCountTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryItemsErrorTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryItemsTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.TxHistoryItemStateConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountErrorTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsErrorTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -34,7 +34,7 @@ internal class TxHistorySubscriber(
     private val userWallet: UserWallet,
     private val isRefresh: Boolean,
     private val stateHolder: WalletStateController,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
