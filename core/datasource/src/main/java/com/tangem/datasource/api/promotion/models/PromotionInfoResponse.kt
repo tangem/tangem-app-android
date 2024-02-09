@@ -1,40 +1,23 @@
 package com.tangem.datasource.api.promotion.models
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
-/**
-[REDACTED_AUTHOR]
- */
+@JsonClass(generateAdapter = true)
 data class PromotionInfoResponse(
-    @Json(name = "newCard") val newCard: Data?,
-    @Json(name = "oldCard") val oldCard: Data?,
-    @Json(name = "awardPaymentToken") val awardPaymentToken: TokenData?,
-    @Json(name = "error") override val error: Error? = null,
-) : AbstractPromotionResponse() {
+    @Json(name = "name") val name: String,
+    @Json(name = "all") val bannerState: BannerState?,
+) {
 
-    data class Data(
-        @Json(name = "status") val status: Status,
-        @Json(name = "award") val award: Double,
+    @JsonClass(generateAdapter = true)
+    data class BannerState(
+        @Json(name = "timeline") val timeline: Timeline,
+        @Json(name = "status") val status: String,
     )
 
-    enum class Status(val value: String) {
-        @Json(name = "pending")
-        PENDING("pending"),
-
-        @Json(name = "active")
-        ACTIVE("active"),
-
-        @Json(name = "finished")
-        FINISHED("finished"),
-    }
-
-    data class TokenData(
-        @Json(name = "id") val id: String,
-        @Json(name = "name") val name: String,
-        @Json(name = "symbol") val symbol: String,
-        @Json(name = "active") val active: Boolean,
-        @Json(name = "networkId") val networkId: String,
-        @Json(name = "contractAddress") val contractAddress: String,
-        @Json(name = "decimalCount") val decimalCount: Int,
+    @JsonClass(generateAdapter = true)
+    data class Timeline(
+        @Json(name = "start") val start: String,
+        @Json(name = "end") val end: String,
     )
 }
