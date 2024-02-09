@@ -466,5 +466,4 @@ internal class AddCustomTokenViewModel @Inject constructor(
     override fun onBack() {
         router.popBackStack()
     }
-
 }

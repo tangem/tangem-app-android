@@ -16,5 +16,4 @@ internal sealed class ManageTokensRoute(val route: String) {
         object ChooseWallet : ManageTokensRoute(AddCustomToken.route + "/choose_wallet")
         object ChooseDerivation : ManageTokensRoute(AddCustomToken.route + "/choose_derivation")
     }
-
 }
