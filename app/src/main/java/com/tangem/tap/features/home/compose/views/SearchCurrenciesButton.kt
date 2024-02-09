@@ -1,31 +1,42 @@
 package com.tangem.tap.features.home.compose.views
 
-import androidx.compose.material.ButtonColors
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonColors
+import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
 @Composable
 internal fun SearchCurrenciesButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    TangemButton(
+    StoriesButton(
         modifier = modifier,
         text = stringResource(id = R.string.common_search_tokens),
         icon = TangemButtonIconPosition.Start(R.drawable.ic_search_24),
-        onClick = onClick,
-        colors = SearchCurrenciesButtonColors,
         showProgress = false,
-        enabled = true,
+        useDarkerColors = true,
+        onClick = onClick,
     )
 }
 
-private val SearchCurrenciesButtonColors: ButtonColors = TangemButtonColors(
-    backgroundColor = TangemColorPalette.Dark5,
-    contentColor = TangemColorPalette.White,
-    disabledBackgroundColor = TangemColorPalette.Dark5,
-    disabledContentColor = TangemColorPalette.White,
-)
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun SearchCurrenciesButtonPreview() {
+    TangemTheme {
+        Box(
+            modifier = Modifier
+                .background(color = Color.Black)
+                .padding(all = TangemTheme.dimens.spacing16),
+        ) {
+            SearchCurrenciesButton(modifier = Modifier.fillMaxWidth(), onClick = {})
+        }
+    }
+}
+// endregion Preview
