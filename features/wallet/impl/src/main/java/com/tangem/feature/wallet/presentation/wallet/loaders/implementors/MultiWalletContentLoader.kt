@@ -8,18 +8,18 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAn
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletTokenListSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletConnectNetworksSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 
 @Suppress("LongParameterList")
 internal class MultiWalletContentLoader(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
