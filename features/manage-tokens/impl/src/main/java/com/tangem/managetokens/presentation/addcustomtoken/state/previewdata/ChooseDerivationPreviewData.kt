@@ -1,7 +1,7 @@
-package com.tangem.managetokens.presentation.customtokens.state.previewdata
+package com.tangem.managetokens.presentation.addcustomtoken.state.previewdata
 
-import com.tangem.managetokens.presentation.customtokens.state.ChooseDerivationState
-import com.tangem.managetokens.presentation.customtokens.state.Derivation
+import com.tangem.managetokens.presentation.addcustomtoken.state.ChooseDerivationState
+import com.tangem.managetokens.presentation.addcustomtoken.state.Derivation
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
