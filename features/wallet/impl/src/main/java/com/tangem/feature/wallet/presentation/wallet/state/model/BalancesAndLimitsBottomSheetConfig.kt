@@ -3,11 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 
 internal data class BalancesAndLimitsBottomSheetConfig(
-    val currency: String,
     val balance: Balance,
     val limit: Limit,
-    val onBalanceInfoClick: () -> Unit,
-    val onLimitInfoClick: () -> Unit,
 ) : TangemBottomSheetConfigContent {
 
     data class Balance(
@@ -17,6 +14,7 @@ internal data class BalancesAndLimitsBottomSheetConfig(
         val debit: String,
         val pending: String,
         val amlVerified: String,
+        val onInfoClick: () -> Unit,
     )
 
     data class Limit(
@@ -24,5 +22,6 @@ internal data class BalancesAndLimitsBottomSheetConfig(
         val inStore: String,
         val other: String,
         val singleTransaction: String,
+        val onInfoClick: () -> Unit,
     )
 }
