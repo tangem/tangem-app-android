@@ -3,6 +3,7 @@ package com.tangem.managetokens.presentation.customtokens.viewmodels
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
 import com.tangem.managetokens.presentation.customtokens.state.Derivation
 
+@Suppress("TooManyFunctions")
 internal interface CustomTokensClickIntents {
 
     fun onNetworkSelected(networkItemState: NetworkItemState)
@@ -24,6 +25,14 @@ internal interface CustomTokensClickIntents {
     fun onSymbolChange(input: String)
 
     fun onDecimalsChange(input: String)
+
+    fun onContractAddressFocusExit()
+
+    fun onTokenNameFocusExit()
+
+    fun onSymbolFocusExit()
+
+    fun onDecimalsFocusExit()
 
     fun onDerivationSelected(derivation: Derivation)
 

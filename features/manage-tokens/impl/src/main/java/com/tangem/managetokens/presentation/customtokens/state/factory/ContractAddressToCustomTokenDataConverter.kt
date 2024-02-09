@@ -14,21 +14,25 @@ internal class ContractAddressToCustomTokenDataConverter(
                 value = value,
                 isEnabled = true,
                 onValueChange = clickIntents::onContractAddressChange,
+                onFocusExit = clickIntents::onContractAddressFocusExit,
             ),
             nameTextField = TextFieldState.Editable(
                 value = "",
                 isEnabled = true,
                 onValueChange = clickIntents::onTokenNameChange,
+                onFocusExit = clickIntents::onTokenNameFocusExit,
             ),
             symbolTextField = TextFieldState.Editable(
                 value = "",
                 isEnabled = true,
                 onValueChange = clickIntents::onSymbolChange,
+                onFocusExit = clickIntents::onSymbolFocusExit,
             ),
             decimalsTextField = TextFieldState.Editable(
                 value = "",
                 isEnabled = true,
                 onValueChange = clickIntents::onDecimalsChange,
+                onFocusExit = clickIntents::onDecimalsFocusExit,
             ),
         )
     }
