@@ -5,15 +5,15 @@ import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenListSubscriber(
     private val userWallet: UserWallet,
     private val getCardTokensListUseCase: GetCardTokensListUseCase,
     stateHolder: WalletStateController,
-    clickIntents: WalletClickIntentsV2,
+    clickIntents: WalletClickIntents,
     tokenListAnalyticsSender: TokenListAnalyticsSender,
     walletWithFundsChecker: WalletWithFundsChecker,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,

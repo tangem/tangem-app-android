@@ -25,13 +25,14 @@ sealed interface TransactionState {
     data class Content(
         override val txHash: String,
         val amount: String,
-        val timestamp: String,
+        val time: String,
         val status: Status,
         val direction: Direction,
         val onClick: () -> Unit,
         @DrawableRes val iconRes: Int,
         val title: TextReference,
         val subtitle: TextReference,
+        val timestamp: Long,
     ) : TransactionState {
 
         sealed class Status {
