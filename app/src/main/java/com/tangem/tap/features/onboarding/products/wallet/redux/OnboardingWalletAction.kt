@@ -65,6 +65,7 @@ sealed class BackupAction : Action {
     object StartAddingBackupCards : BackupAction()
     object AddBackupCard : BackupAction() {
         object Success : BackupAction()
+        data class ChangeButtonLoading(val isLoading: Boolean) : BackupAction()
     }
 
     object FinishAddingBackupCards : BackupAction()
