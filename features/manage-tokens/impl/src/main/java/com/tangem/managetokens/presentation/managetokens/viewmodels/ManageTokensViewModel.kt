@@ -1,6 +1,5 @@
 package com.tangem.managetokens.presentation.managetokens.viewmodels
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -63,13 +62,14 @@ internal class ManageTokensViewModel @Inject constructor(
     private val checkCurrencyCompatibilityUseCase: CheckCurrencyCompatibilityUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-) : ViewModel(), ManageTokensClickIntents, DefaultLifecycleObserver {
+) : ViewModel(), ManageTokensClickIntents, ManageTokensUiEvents, DefaultLifecycleObserver {
 
     private val debouncer = Debouncer()
 
     private val stateFactory = ManageTokensStateFactory(
         currentStateProvider = Provider { uiState },
         clickIntents = this,
+        uiIntents = this,
     )
 
     var router: InnerManageTokensRouter by Delegates.notNull()
@@ -402,5 +402,9 @@ internal class ManageTokensViewModel @Inject constructor(
         selectedWallet = wallets.find { it.walletId.stringValue == walletId }
         uiState.selectedToken?.let { onTokenItemButtonClick(it) }
         uiState = stateFactory.updateSelectedWallet(selectedWalletId = selectedWallet?.walletId?.stringValue)
+    }
+
+    override fun onEmptySearchResult(query: String) {
+        analyticsEventHandler.send(ManageTokens.TokenIsNotFound(query))
     }
 }
