@@ -38,6 +38,7 @@ internal object AddCustomTokenPreviewData {
                 value = "0x4ace7262705b68bcba5b91de96889349394",
                 isEnabled = false,
                 onValueChange = {},
+                onFocusExit = {},
             ),
             nameTextField = TextFieldState.Loading,
             symbolTextField = TextFieldState.Loading,
