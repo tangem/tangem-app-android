@@ -7,7 +7,7 @@ import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.TxHistoryItemStateConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 
@@ -15,7 +15,7 @@ internal class SetTxHistoryCountErrorTransformer(
     private val userWallet: UserWallet,
     private val error: TxHistoryStateError,
     private val pendingTransactions: Set<TxHistoryItem>,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val txHistoryItemConverter by lazy {

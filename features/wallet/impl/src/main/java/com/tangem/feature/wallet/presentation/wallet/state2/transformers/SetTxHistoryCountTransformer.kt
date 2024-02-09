@@ -5,7 +5,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
@@ -13,7 +13,7 @@ import timber.log.Timber
 internal class SetTxHistoryCountTransformer(
     userWalletId: UserWalletId,
     private val transactionsCount: Int,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWalletId) {
 
     override fun transform(prevState: WalletState): WalletState {

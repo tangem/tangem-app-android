@@ -5,7 +5,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.utils.toDateFormat
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +16,7 @@ private val scope = CoroutineScope(Dispatchers.IO)
 
 internal class TxHistoryItemFlowConverter(
     private val currentState: TxHistoryState,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : Converter<Flow<PagingData<TransactionState>>, TxHistoryState?> {
 
     override fun convert(value: Flow<PagingData<TransactionState>>): TxHistoryState {

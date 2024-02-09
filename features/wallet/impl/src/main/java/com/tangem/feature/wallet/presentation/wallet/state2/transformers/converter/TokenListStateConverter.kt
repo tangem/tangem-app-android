@@ -9,7 +9,7 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState.TokensListItemState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
@@ -21,7 +21,7 @@ internal class TokenListStateConverter(
     private val tokenList: TokenList,
     private val selectedWallet: UserWallet,
     private val appCurrency: AppCurrency,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
     private val tokenStatusConverter = TokenItemStateConverter(

@@ -11,14 +11,14 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletAddi
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state2.model.BalancesAndLimitsBlockState
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import org.joda.time.DateTime
 import org.joda.time.Days
 
 internal class SetBalancesAndLimitsTransformer(
     private val userWallet: UserWallet,
     private val maybeVisaCurrency: Either<Throwable, VisaCurrency>,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {

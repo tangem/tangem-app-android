@@ -16,7 +16,7 @@ import kotlin.math.abs
  *
  * @author Andrew Khokhlov on 01/07/2023
  */
-internal class ScrollOffsetCollectorV2(
+internal class ScrollOffsetCollector(
     selectedWalletIndex: Int,
     private val lazyListState: LazyListState,
     private val onWalletChange: (Int) -> Unit,

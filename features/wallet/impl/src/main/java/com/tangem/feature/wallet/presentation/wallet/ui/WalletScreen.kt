@@ -44,7 +44,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimat
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-internal fun WalletScreenV2(state: WalletScreenState) {
+internal fun WalletScreen(state: WalletScreenState) {
     BackHandler(onBack = state.onBackClick)
 
     // It means that screen is still initializing
@@ -68,7 +68,7 @@ internal fun WalletScreenV2(state: WalletScreenState) {
         WalletAlert(state = it, onDismiss = { alertConfig = null })
     }
 
-    WalletEventEffectV2(
+    WalletEventEffect(
         event = state.event,
         selectedWalletIndex = state.selectedWalletIndex,
         walletsListState = walletsListState,
@@ -154,7 +154,7 @@ private fun WalletContent(
                 )
             }
 
-            contentItemsV2(
+            contentItems(
                 state = selectedWallet,
                 txHistoryItems = txHistoryItems,
                 isBalanceHidden = state.isHidingMode,
@@ -175,7 +175,7 @@ private fun WalletContent(
             }
         }
 
-        WalletsListEffectsV2(
+        WalletsListEffects(
             lazyListState = walletsListState,
             selectedWalletIndex = selectedWalletIndex,
             onWalletChange = state.onWalletChange,

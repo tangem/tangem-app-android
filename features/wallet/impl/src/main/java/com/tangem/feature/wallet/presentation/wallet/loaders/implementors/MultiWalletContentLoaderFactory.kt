@@ -9,7 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarni
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
@@ -26,7 +26,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
 ) {
 
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntentsV2): WalletContentLoader {
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
         return MultiWalletContentLoader(
             userWallet = userWallet,
             clickIntents = clickIntents,

@@ -10,14 +10,14 @@ import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.TokenListStateConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import timber.log.Timber
 
 internal class SetTokenListTransformer(
     private val tokenList: TokenList,
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {

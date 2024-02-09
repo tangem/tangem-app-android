@@ -10,7 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenSt
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.createStateByWalletType
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -19,7 +19,7 @@ internal class InitializeWalletsTransformer(
     private val selectedWalletIndex: Int,
     private val selectedWallet: UserWallet,
     private val wallets: List<UserWallet>,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy { WalletLoadingStateFactory(clickIntents = clickIntents) }

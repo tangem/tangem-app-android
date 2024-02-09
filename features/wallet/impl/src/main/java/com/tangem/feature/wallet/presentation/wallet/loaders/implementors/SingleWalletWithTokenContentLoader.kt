@@ -11,12 +11,12 @@ import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateControlle
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.SingleWalletWithTokenListSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenContentLoader(
     private val userWallet: UserWallet,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
     private val stateHolder: WalletStateController,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,

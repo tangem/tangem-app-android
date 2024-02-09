@@ -17,7 +17,7 @@ import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHi
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryItemsErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTxHistoryItemsTransformer
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.VisaTxHistoryItemStateConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -31,7 +31,7 @@ internal class VisaWalletSubscriber(
     private val isRefresh: Boolean,
     private val getVisaCurrencyUseCase: GetVisaCurrencyUseCase,
     private val getVisaTxHistoryUseCase: GetVisaTxHistoryUseCase,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {

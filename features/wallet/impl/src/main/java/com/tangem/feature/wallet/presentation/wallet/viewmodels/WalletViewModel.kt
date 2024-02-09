@@ -25,7 +25,7 @@ import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletScreenSt
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -40,11 +40,11 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @HiltViewModel
-internal class WalletViewModelV2 @Inject constructor(
+internal class WalletViewModel @Inject constructor(
     private val stateHolder: WalletStateController,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
     private val walletEventSender: WalletEventSender,
-    private val walletsUpdateActionResolver: WalletsUpdateActionResolverV2,
+    private val walletsUpdateActionResolver: WalletsUpdateActionResolver,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -170,10 +170,10 @@ internal class WalletViewModelV2 @Inject constructor(
         }
     }
 
-    private fun updateWallets(action: WalletsUpdateActionResolverV2.Action) {
+    private fun updateWallets(action: WalletsUpdateActionResolver.Action) {
         when (action) {
-            is WalletsUpdateActionResolverV2.Action.InitializeWallets -> initializeWallets(action)
-            is WalletsUpdateActionResolverV2.Action.ReinitializeWallets -> {
+            is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
+            is WalletsUpdateActionResolver.Action.ReinitializeWallets -> {
                 walletScreenContentLoader.load(
                     userWallet = action.selectedWallet,
                     clickIntents = clickIntents,
@@ -181,21 +181,21 @@ internal class WalletViewModelV2 @Inject constructor(
                     coroutineScope = viewModelScope,
                 )
             }
-            is WalletsUpdateActionResolverV2.Action.ReinitializeWallet -> reinitializeWallet(action)
-            is WalletsUpdateActionResolverV2.Action.AddWallet -> addWallet(action)
-            is WalletsUpdateActionResolverV2.Action.DeleteWallet -> deleteWallet(action)
-            is WalletsUpdateActionResolverV2.Action.UnlockWallet -> unlockWallet(action)
-            is WalletsUpdateActionResolverV2.Action.UpdateWalletCardCount -> {
+            is WalletsUpdateActionResolver.Action.ReinitializeWallet -> reinitializeWallet(action)
+            is WalletsUpdateActionResolver.Action.AddWallet -> addWallet(action)
+            is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
+            is WalletsUpdateActionResolver.Action.UnlockWallet -> unlockWallet(action)
+            is WalletsUpdateActionResolver.Action.UpdateWalletCardCount -> {
                 stateHolder.update(transformer = UpdateWalletCardsCountTransformer(action.selectedWallet))
             }
-            is WalletsUpdateActionResolverV2.Action.UpdateWalletName -> {
+            is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
-            is WalletsUpdateActionResolverV2.Action.Unknown -> Unit
+            is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
     }
 
-    private fun initializeWallets(action: WalletsUpdateActionResolverV2.Action.InitializeWallets) {
+    private fun initializeWallets(action: WalletsUpdateActionResolver.Action.InitializeWallets) {
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
@@ -230,7 +230,7 @@ internal class WalletViewModelV2 @Inject constructor(
         }
     }
 
-    private fun reinitializeWallet(action: WalletsUpdateActionResolverV2.Action.ReinitializeWallet) {
+    private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
         viewModelScope.launch(dispatchers.main) {
             walletScreenContentLoader.cancel(action.prevWalletId)
 
@@ -246,7 +246,7 @@ internal class WalletViewModelV2 @Inject constructor(
         }
     }
 
-    private fun addWallet(action: WalletsUpdateActionResolverV2.Action.AddWallet) {
+    private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
         viewModelScope.launch(dispatchers.main) {
             stateHolder.update(
                 AddWalletTransformer(
@@ -267,7 +267,7 @@ internal class WalletViewModelV2 @Inject constructor(
         }
     }
 
-    private fun deleteWallet(action: WalletsUpdateActionResolverV2.Action.DeleteWallet) {
+    private fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
         viewModelScope.launch(dispatchers.main) {
             walletScreenContentLoader.load(
                 userWallet = action.selectedWallet,
@@ -288,7 +288,7 @@ internal class WalletViewModelV2 @Inject constructor(
         }
     }
 
-    private fun unlockWallet(action: WalletsUpdateActionResolverV2.Action.UnlockWallet) {
+    private fun unlockWallet(action: WalletsUpdateActionResolver.Action.UnlockWallet) {
         viewModelScope.launch(dispatchers.main) {
             withContext(dispatchers.io) { delay(timeMillis = 700) }
 

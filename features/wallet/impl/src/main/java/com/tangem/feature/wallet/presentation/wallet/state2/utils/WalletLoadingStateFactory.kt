@@ -10,7 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.components.WalletCard
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.components.WalletPullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state2.model.*
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
  *
  * @property clickIntents click intents
  */
-internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIntentsV2) {
+internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIntents) {
 
     fun create(userWallet: UserWallet): WalletState {
         return userWallet.createStateByWalletType(

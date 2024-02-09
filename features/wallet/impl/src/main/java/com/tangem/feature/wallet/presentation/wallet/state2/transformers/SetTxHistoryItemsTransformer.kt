@@ -6,14 +6,14 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.TxHistoryItemFlowConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 
 internal class SetTxHistoryItemsTransformer(
     userWallet: UserWallet,
     private val flow: Flow<PagingData<TransactionState>>,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {

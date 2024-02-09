@@ -18,7 +18,7 @@ import javax.inject.Inject
  * @property getSelectedWalletSyncUseCase use case that returns selected wallet
  */
 @ViewModelScoped
-internal class WalletsUpdateActionResolverV2 @Inject constructor(
+internal class WalletsUpdateActionResolver @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) {
 

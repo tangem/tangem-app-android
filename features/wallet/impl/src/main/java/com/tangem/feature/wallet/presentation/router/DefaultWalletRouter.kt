@@ -25,8 +25,8 @@ import com.tangem.feature.onboarding.navigation.OnboardingRouter
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
-import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreenV2
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModelV2
+import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import kotlin.properties.Delegates
 
@@ -49,12 +49,12 @@ internal class DefaultWalletRouter(
             startDestination = WalletRoute.Wallet.route,
         ) {
             composable(WalletRoute.Wallet.route) {
-                val viewModel = hiltViewModel<WalletViewModelV2>().apply {
+                val viewModel = hiltViewModel<WalletViewModel>().apply {
                     setWalletRouter(router = this@DefaultWalletRouter)
                     subscribeToLifecycle(LocalLifecycleOwner.current)
                 }
 
-                WalletScreenV2(state = viewModel.uiState.collectAsStateWithLifecycle().value)
+                WalletScreen(state = viewModel.uiState.collectAsStateWithLifecycle().value)
             }
 
             composable(

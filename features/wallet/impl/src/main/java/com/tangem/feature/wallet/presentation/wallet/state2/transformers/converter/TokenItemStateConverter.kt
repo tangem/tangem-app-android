@@ -6,14 +6,14 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 internal class TokenItemStateConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)

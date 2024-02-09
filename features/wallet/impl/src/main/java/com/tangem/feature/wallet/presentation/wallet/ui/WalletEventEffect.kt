@@ -19,7 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.utils.demonstrateScrolli
 
 @Suppress("LongParameterList")
 @Composable
-internal fun WalletEventEffectV2(
+internal fun WalletEventEffect(
     walletsListState: LazyListState,
     snackbarHostState: SnackbarHostState,
     event: StateEvent<WalletEvent>,

@@ -17,10 +17,9 @@ import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState.TokensListItemState
 import kotlinx.collections.immutable.ImmutableList
-import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState as WalletTokensListStateV2
-import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletTokensListState.TokensListItemState as TokensListItemStateV2
 
 private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
 
@@ -32,25 +31,25 @@ private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
  *
  * @author Andrew Khokhlov on 02/08/2023
  */
-internal fun LazyListScope.tokensListItemsV2(
-    state: WalletTokensListStateV2,
+internal fun LazyListScope.tokensListItems(
+    state: WalletTokensListState,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
 ) {
     when (state) {
-        is WalletTokensListStateV2.ContentState -> {
-            contentItemsV2(
+        is WalletTokensListState.ContentState -> {
+            contentItems(
                 items = state.items,
                 isBalanceHidden = isBalanceHidden,
                 modifier = modifier,
             )
         }
-        WalletTokensListStateV2.Empty -> nonContentItem(modifier = modifier)
+        WalletTokensListState.Empty -> nonContentItem(modifier = modifier)
     }
 }
 
-private fun LazyListScope.contentItemsV2(
-    items: ImmutableList<TokensListItemStateV2>,
+private fun LazyListScope.contentItems(
+    items: ImmutableList<TokensListItemState>,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
 ) {

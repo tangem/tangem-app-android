@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @ViewModelScoped
-internal class WalletClickIntentsV2 @Inject constructor(
+internal class WalletClickIntents @Inject constructor(
     private val walletCardClickIntentsImplementor: WalletCardClickIntentsImplementor,
     private val warningsClickIntentsImplementer: WalletWarningsClickIntentsImplementer,
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
@@ -70,7 +70,7 @@ internal class WalletClickIntentsV2 @Inject constructor(
             maybeUserWallet.onRight {
                 walletScreenContentLoader.load(
                     userWallet = it,
-                    clickIntents = this@WalletClickIntentsV2,
+                    clickIntents = this@WalletClickIntents,
                     coroutineScope = viewModelScope,
                 )
             }
@@ -138,7 +138,7 @@ internal class WalletClickIntentsV2 @Inject constructor(
 
             walletScreenContentLoader.load(
                 userWallet = userWallet,
-                clickIntents = this@WalletClickIntentsV2,
+                clickIntents = this@WalletClickIntents,
                 isRefresh = true,
                 coroutineScope = viewModelScope,
             )
