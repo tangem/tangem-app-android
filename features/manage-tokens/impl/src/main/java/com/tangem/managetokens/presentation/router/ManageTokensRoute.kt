@@ -10,10 +10,10 @@ internal sealed class ManageTokensRoute(val route: String) {
 
     object ManageTokens : ManageTokensRoute(route = "manage_tokens")
 
-    object CustomTokens : ManageTokensRoute(route = "manage_tokens/custom_tokens") {
-        object Main : ManageTokensRoute(CustomTokens.route + "/main")
-        object ChooseNetwork : ManageTokensRoute(CustomTokens.route + "/choose_network")
-        object ChooseWallet : ManageTokensRoute(CustomTokens.route + "/choose_wallet")
-        object ChooseDerivation : ManageTokensRoute(CustomTokens.route + "/choose_derivation")
+    object AddCustomToken : ManageTokensRoute(route = "manage_tokens/add_custom_token") {
+        object Main : ManageTokensRoute(AddCustomToken.route + "/main")
+        object ChooseNetwork : ManageTokensRoute(AddCustomToken.route + "/choose_network")
+        object ChooseWallet : ManageTokensRoute(AddCustomToken.route + "/choose_wallet")
+        object ChooseDerivation : ManageTokensRoute(AddCustomToken.route + "/choose_derivation")
     }
 }
