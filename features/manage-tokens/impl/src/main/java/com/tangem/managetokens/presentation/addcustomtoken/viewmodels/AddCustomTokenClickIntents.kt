@@ -1,10 +1,10 @@
-package com.tangem.managetokens.presentation.customtokens.viewmodels
+package com.tangem.managetokens.presentation.addcustomtoken.viewmodels
 
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
-import com.tangem.managetokens.presentation.customtokens.state.Derivation
+import com.tangem.managetokens.presentation.addcustomtoken.state.Derivation
 
 @Suppress("TooManyFunctions")
-internal interface CustomTokensClickIntents {
+internal interface AddCustomTokenClickIntents {
 
     fun onNetworkSelected(networkItemState: NetworkItemState)
 
