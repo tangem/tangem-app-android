@@ -129,7 +129,6 @@ internal class WalletViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val scanCardToUnlockWalletUseCase: ScanCardToUnlockWalletClickHandler,
-    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     isNeedToBackupUseCase: IsNeedToBackupUseCase,
     getMissedAddressesCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
@@ -148,7 +147,6 @@ internal class WalletViewModel @Inject constructor(
         isNeedToBackupUseCase = isNeedToBackupUseCase,
         getMissedAddressCryptoCurrenciesUseCase = getMissedAddressesCryptoCurrenciesUseCase,
         hasSingleWalletSignedHashesUseCase = hasSingleWalletSignedHashesUseCase,
-        shouldShowSwapPromoWalletUseCase = shouldShowSwapPromoWalletUseCase,
         clickIntents = this,
     )
 
@@ -795,12 +793,6 @@ internal class WalletViewModel @Inject constructor(
         refreshSingleCurrencyContent(selectedWalletIndex)
     }
 
-    override fun onCloseSwapPromoNotificationClick() {
-        viewModelScope.launch(dispatchers.main) {
-            shouldShowSwapPromoWalletUseCase.neverToShow()
-        }
-    }
-
     // FIXME: refreshSingleCurrencyContent mustn't update the TxHistory and Buttons. It only must fetch primary
     //  currency. Now it not works because GetPrimaryCurrency's subscriber uses .distinctUntilChanged()
     private fun refreshSingleCurrencyContent(walletIndex: Int) {
@@ -966,9 +958,23 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    override fun onRenameClick(userWalletId: UserWalletId, name: String) {
+    override fun onRenameBeforeConfirmationClick(userWalletId: UserWalletId) {
+        val state = uiState as? WalletState.ContentState ?: return
+        uiState = stateFactory.getStateAndTriggerEvent(
+            state = uiState,
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.RenameWalletAlert(
+                    text = state.walletsListConfig.wallets[state.walletsListConfig.selectedWalletIndex].title,
+                    onConfirmClick = { onRenameAfterConfirmationClick(userWalletId, it) },
+                ),
+            ),
+            setUiState = { uiState = it },
+        )
+    }
+
+    override fun onRenameAfterConfirmationClick(userWalletId: UserWalletId, name: String) {
         viewModelScope.launch(dispatchers.io) {
-            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name) })
+            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name = name) })
         }
     }
 
