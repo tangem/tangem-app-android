@@ -7,10 +7,7 @@ import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -29,6 +26,7 @@ class GetCurrencyWarningsUseCase(
     private val networksRepository: NetworksRepository,
     private val swapRepository: SwapRepository,
     private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
+    private val promoRepository: PromoRepository,
     private val showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
@@ -86,11 +84,14 @@ class GetCurrencyWarningsUseCase(
     ): Flow<CryptoCurrencyWarning?> {
         val currency = currencyStatus.currency
         val cryptoStatuses = operations.getCurrenciesStatusesSync()
+        val promoBanner = promoRepository.getChangellyPromoBanner()
         return combine(
             showSwapPromoTokenUseCase().conflate(),
             flowOf(marketCryptoCurrencyRepository.isExchangeable(userWalletId, currency)).conflate(),
         ) { shouldShowSwapPromo, isExchangeable ->
-            if (shouldShowSwapPromo && isExchangeable && currencyStatus.value !is CryptoCurrencyStatus.Unreachable) {
+            promoBanner ?: return@combine null
+            val showPromo = promoBanner.isActive && shouldShowSwapPromo
+            if (showPromo && isExchangeable && currencyStatus.value !is CryptoCurrencyStatus.Unreachable) {
                 cryptoStatuses.fold(
                     ifLeft = { null },
                     ifRight = { cryptoCurrencyStatuses ->
@@ -124,7 +125,10 @@ class GetCurrencyWarningsUseCase(
                                 }
                         }
                         if (showPromo) {
-                            CryptoCurrencyWarning.SwapPromo
+                            CryptoCurrencyWarning.SwapPromo(
+                                startDateTime = promoBanner.bannerState.timeline.start,
+                                endDateTime = promoBanner.bannerState.timeline.end,
+                            )
                         } else {
                             null
                         }

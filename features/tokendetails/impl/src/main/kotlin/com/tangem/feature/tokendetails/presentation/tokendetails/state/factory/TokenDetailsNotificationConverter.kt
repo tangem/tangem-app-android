@@ -68,6 +68,8 @@ internal class TokenDetailsNotificationConverter(
                 coinSymbol = warning.blockchainSymbol,
             )
             is CryptoCurrencyWarning.SwapPromo -> SwapPromo(
+                startDateTime = warning.startDateTime,
+                endDateTime = warning.endDateTime,
                 onSwapClick = clickIntents::onSwapPromoClick,
                 onCloseClick = clickIntents::onSwapPromoDismiss,
             )
