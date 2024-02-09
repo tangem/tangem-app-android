@@ -5,7 +5,6 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.tokens.GetMissedAddressesCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.error.GetCurrenciesError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -41,7 +40,6 @@ internal class WalletNotificationsListFactory(
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val getMissedAddressCryptoCurrenciesUseCase: GetMissedAddressesCryptoCurrenciesUseCase,
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
-    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     private val clickIntents: WalletClickIntents,
 ) {
 
@@ -57,12 +55,9 @@ internal class WalletNotificationsListFactory(
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(selectedWallet.walletId).conflate(),
             flow4 = getMissedAddressCryptoCurrenciesUseCase(selectedWallet.walletId).conflate(),
-            flow5 = shouldShowSwapPromoWalletUseCase().conflate(),
-        ) { hasSignedHashes, isReadyToShowRating, isNeedToBackup, maybeMissedAddressCurrencies, isShowSwapPromo ->
+        ) { hasSignedHashes, isReadyToShowRating, isNeedToBackup, maybeMissedAddressCurrencies ->
             readyForRateAppNotification = true
             buildList {
-                addSwapPromoNotification(isShowSwapPromo, cardTypesResolver)
-
                 addCriticalNotifications(cardTypesResolver)
 
                 addInformationalNotifications(cardTypesResolver, maybeMissedAddressCurrencies)
@@ -84,18 +79,6 @@ internal class WalletNotificationsListFactory(
             val network = requireNotNull(cryptoCurrencyList.firstOrNull()?.currency?.network)
             hasSingleWalletSignedHashesUseCase(userWallet = selectedWallet, network = network).conflate()
         }
-    }
-
-    private fun MutableList<WalletNotification>.addSwapPromoNotification(
-        showSwapPromo: Boolean,
-        cardTypesResolver: CardTypesResolver,
-    ) {
-        addIf(
-            element = WalletNotification.SwapPromo(
-                clickIntents::onCloseSwapPromoNotificationClick,
-            ),
-            condition = showSwapPromo && cardTypesResolver.isMultiwalletAllowed(),
-        )
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(cardTypesResolver: CardTypesResolver) {
