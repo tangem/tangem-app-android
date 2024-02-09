@@ -1,4 +1,4 @@
-package com.tangem.managetokens.presentation.customtokens.ui
+package com.tangem.managetokens.presentation.addcustomtoken.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -27,13 +27,13 @@ import com.tangem.managetokens.presentation.common.ui.ChooseWalletBottomSheetCon
 import com.tangem.managetokens.presentation.common.ui.EventEffect
 import com.tangem.managetokens.presentation.common.ui.components.Alert
 import com.tangem.managetokens.presentation.common.ui.components.SimpleSelectionBlock
-import com.tangem.managetokens.presentation.customtokens.state.AddCustomTokenState
-import com.tangem.managetokens.presentation.customtokens.state.CustomTokenData
-import com.tangem.managetokens.presentation.customtokens.state.TextFieldState
-import com.tangem.managetokens.presentation.customtokens.state.previewdata.AddCustomTokenPreviewData
+import com.tangem.managetokens.presentation.addcustomtoken.state.AddCustomTokenState
+import com.tangem.managetokens.presentation.addcustomtoken.state.CustomTokenData
+import com.tangem.managetokens.presentation.addcustomtoken.state.TextFieldState
+import com.tangem.managetokens.presentation.addcustomtoken.state.previewdata.AddCustomTokenPreviewData
 
 @Composable
-internal fun CustomTokensScreen(state: AddCustomTokenState, modifier: Modifier = Modifier) {
+internal fun AddCustomTokenScreen(state: AddCustomTokenState, modifier: Modifier = Modifier) {
     var alertState by remember { mutableStateOf<AlertState?>(value = null) }
 
     EventEffect(
@@ -250,7 +250,7 @@ private fun TokenTextFieldTitle(state: TextFieldState?, title: String) {
 @Composable
 private fun Preview_ChooseDerivationScreen_Light() {
     TangemTheme(isDark = false) {
-        CustomTokensScreen(state = AddCustomTokenPreviewData.state)
+        AddCustomTokenScreen(state = AddCustomTokenPreviewData.state)
     }
 }
 
@@ -258,6 +258,6 @@ private fun Preview_ChooseDerivationScreen_Light() {
 @Composable
 private fun Preview_ChooseDerivationScreen_Dark() {
     TangemTheme(isDark = true) {
-        CustomTokensScreen(state = AddCustomTokenPreviewData.state)
+        AddCustomTokenScreen(state = AddCustomTokenPreviewData.state)
     }
 }
