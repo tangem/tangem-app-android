@@ -13,7 +13,11 @@ class ValidateContractAddressUseCase(private val tokensListRepository: TokensLis
                 block = {
                     if (address.isEmpty()) raise(AddCustomTokenError.FieldIsEmpty)
 
-                    if (!tokensListRepository.validateAddress(networkId, address)) {
+                    if (!tokensListRepository.validateAddress(
+                            contractAddress = address,
+                            networkId = networkId,
+                        )
+                    ) {
                         raise(AddCustomTokenError.InvalidContractAddress)
                     }
                 },
