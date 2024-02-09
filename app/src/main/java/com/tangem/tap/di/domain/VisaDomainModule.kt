@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
+import com.tangem.domain.visa.GetVisaTxDetailsUseCase
 import com.tangem.domain.visa.GetVisaTxHistoryUseCase
 import com.tangem.domain.visa.repository.VisaRepository
 import dagger.Module
@@ -23,5 +24,11 @@ internal object VisaDomainModule {
     @ViewModelScoped
     fun provideGetVisaTxHistoryUseCase(visaRepository: VisaRepository): GetVisaTxHistoryUseCase {
         return GetVisaTxHistoryUseCase(visaRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetVisaTxDetailsUseCase(visaRepository: VisaRepository): GetVisaTxDetailsUseCase {
+        return GetVisaTxDetailsUseCase(visaRepository)
     }
 }
