@@ -175,7 +175,7 @@ internal fun LazyListScope.subtractButton(
         item {
             val feeStateContent = feeSendState as? FeeSelectorState.Content
             val isCustomAvailable = feeStateContent?.customValues.isNullOrEmpty().not()
-            val isCustomSelected = feeStateContent?.selectedFee == FeeType.CUSTOM
+            val isCustomSelected = feeStateContent?.selectedFee == FeeType.Custom
             val topPadding = if (isCustomSelected && isCustomAvailable) {
                 TangemTheme.dimens.spacing12
             } else {
