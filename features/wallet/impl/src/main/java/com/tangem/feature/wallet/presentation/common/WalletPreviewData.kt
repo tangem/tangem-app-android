@@ -1,17 +1,10 @@
 package com.tangem.feature.wallet.presentation.common
 
-import androidx.paging.PagingData
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
-import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.components.transactions.state.TransactionState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.impl.R
@@ -19,16 +12,9 @@ import com.tangem.feature.wallet.presentation.common.state.TokenItemState
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
-import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.TokenActionButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.state.WalletMultiCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletSingleCurrencyState
-import com.tangem.feature.wallet.presentation.wallet.state.components.*
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletTokensListState.TokensListItemState
-import kotlinx.collections.immutable.persistentListOf
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
 
 @Suppress("LargeClass")
@@ -77,14 +63,6 @@ internal object WalletPreviewData {
             UserWalletId(stringValue = "123") to walletCardContentState,
             UserWalletId(stringValue = "321") to walletCardLoadingState,
             UserWalletId(stringValue = "24") to walletCardErrorState,
-        )
-    }
-
-    val walletListConfig by lazy {
-        WalletsListConfig(
-            selectedWalletIndex = 0,
-            wallets = wallets.values.toPersistentList(),
-            onWalletChange = {},
         )
     }
 
@@ -320,146 +298,4 @@ internal object WalletPreviewData {
             ),
         ).toImmutableList(),
     )
-
-    private val manageButtons by lazy {
-        persistentListOf(
-            WalletManageButton.Buy(enabled = true, onClick = {}),
-            WalletManageButton.Send(enabled = true, onClick = {}),
-            WalletManageButton.Receive(enabled = true, onClick = {}),
-            WalletManageButton.Sell(enabled = true, onClick = {}),
-            WalletManageButton.Swap(enabled = true, onClick = {}),
-        )
-    }
-
-    val multicurrencyWalletScreenState by lazy {
-        WalletMultiCurrencyState.Content(
-            onBackClick = {},
-            topBarConfig = topBarConfig,
-            walletsListConfig = walletListConfig,
-            tokensListState = WalletTokensListState.Content(
-                persistentListOf(
-                    TokensListItemState.NetworkGroupTitle(id = 0, stringReference("Bitcoin")),
-                    TokensListItemState.Token(
-                        tokenItemVisibleState.copy(
-                            id = "token_1",
-                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
-                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
-                        ),
-                    ),
-                    TokensListItemState.Token(
-                        tokenItemVisibleState.copy(
-                            id = "token_2",
-                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
-                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
-                        ),
-                    ),
-                    TokensListItemState.Token(
-                        tokenItemVisibleState.copy(
-                            id = "token_3",
-                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
-                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
-                        ),
-                    ),
-                    TokensListItemState.Token(
-                        tokenItemVisibleState.copy(
-                            id = "token_4",
-                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
-                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
-                        ),
-                    ),
-                    TokensListItemState.NetworkGroupTitle(id = 1, stringReference("Ethereum")),
-                    TokensListItemState.Token(
-                        tokenItemVisibleState.copy(
-                            id = "token_5",
-                            titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
-                            cryptoAmountState = TokenItemState.CryptoAmountState.Content("1,89340821 ETH"),
-                        ),
-                    ),
-                ),
-                organizeTokensButton = WalletTokensListState.OrganizeTokensButtonState.Visible(isEnabled = true, {}),
-            ),
-            pullToRefreshConfig = WalletPullToRefreshConfig(
-                isRefreshing = false,
-                onRefresh = {},
-            ),
-            notifications = persistentListOf(
-                WalletNotification.Critical.DevCard,
-                WalletNotification.Informational.MissingAddresses(missingAddressesCount = 0, onGenerateClick = {}),
-                WalletNotification.Warning.NetworksUnreachable,
-            ),
-            bottomSheetConfig = bottomSheet,
-            onManageTokensClick = {},
-            event = consumedEvent(),
-            isBalanceHidden = false,
-        )
-    }
-
-    val singleWalletScreenState by lazy {
-        WalletSingleCurrencyState.Content(
-            onBackClick = {},
-            topBarConfig = topBarConfig,
-            walletsListConfig = walletListConfig,
-            pullToRefreshConfig = WalletPullToRefreshConfig(
-                isRefreshing = false,
-                onRefresh = {},
-            ),
-            notifications = persistentListOf(WalletNotification.Warning.NetworksUnreachable),
-            buttons = manageButtons,
-            bottomSheetConfig = bottomSheet,
-            marketPriceBlockState = MarketPriceBlockState.Content(
-                currencySymbol = "BTC",
-                price = "98900.12$",
-                priceChangeConfig = PriceChangeState.Content(
-                    valueInPercent = "5.16%",
-                    type = PriceChangeType.UP,
-                ),
-            ),
-            txHistoryState = TxHistoryState.Content(
-                contentItems = MutableStateFlow(
-                    PagingData.from(
-                        listOf(
-                            TxHistoryState.TxHistoryItemState.GroupTitle(
-                                title = "Today",
-                                itemKey = UUID.randomUUID().toString(),
-                            ),
-                            TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Content(
-                                    txHash = UUID.randomUUID().toString(),
-                                    amount = "-0.500913 BTC",
-                                    time = "8:41",
-                                    status = TransactionState.Content.Status.Unconfirmed,
-                                    direction = TransactionState.Content.Direction.OUTGOING,
-                                    iconRes = com.tangem.core.ui.R.drawable.ic_arrow_up_24,
-                                    title = resourceReference(com.tangem.core.ui.R.string.common_transfer),
-                                    subtitle = TextReference.Str("33BddS...ga2B"),
-                                    timestamp = 0L,
-                                    onClick = {},
-                                ),
-                            ),
-                            TxHistoryState.TxHistoryItemState.GroupTitle(
-                                title = "Yesterday",
-                                itemKey = UUID.randomUUID().toString(),
-                            ),
-                            TxHistoryState.TxHistoryItemState.Transaction(
-                                TransactionState.Content(
-                                    txHash = UUID.randomUUID().toString(),
-                                    amount = "-0.500913 BTC",
-                                    time = "8:41",
-                                    status = TransactionState.Content.Status.Confirmed,
-                                    direction = TransactionState.Content.Direction.OUTGOING,
-                                    iconRes = com.tangem.core.ui.R.drawable.ic_arrow_up_24,
-                                    title = resourceReference(com.tangem.core.ui.R.string.common_transfer),
-                                    subtitle = TextReference.Str("33BddS...ga2B"),
-                                    timestamp = 0L,
-                                    onClick = {},
-                                ),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-            event = consumedEvent(),
-            isBalanceHidden = false,
-        )
-    }
 }
