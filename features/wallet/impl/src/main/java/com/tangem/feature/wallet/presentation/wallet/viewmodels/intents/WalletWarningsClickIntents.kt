@@ -20,11 +20,11 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletError
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
-import com.tangem.feature.wallet.presentation.wallet.state.WalletAlertState
-import com.tangem.feature.wallet.presentation.wallet.state.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.CloseBottomSheetTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.utils.WalletEventSender
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
