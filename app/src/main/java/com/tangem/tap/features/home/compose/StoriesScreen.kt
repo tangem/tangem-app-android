@@ -170,7 +170,7 @@ private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: M
                 .padding(horizontal = TangemTheme.dimens.spacing16)
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
             AnimatedVisibility(
                 visible = config.currentStory == Stories.Currencies,
