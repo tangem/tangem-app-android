@@ -16,6 +16,7 @@ internal data class ManageTokensState(
     val selectedToken: TokenItemState.Loaded? = null,
     val showChooseWalletScreen: Boolean = false,
     val event: StateEvent<Event>,
+    val onEmptySearchResult: (String) -> Unit,
 )
 
 data class AddCustomTokenButton(

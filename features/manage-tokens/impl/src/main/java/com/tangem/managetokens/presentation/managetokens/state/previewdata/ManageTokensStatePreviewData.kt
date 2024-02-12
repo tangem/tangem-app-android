@@ -19,6 +19,7 @@ internal object ManageTokensStatePreviewData {
             derivationNotification = DerivationNotificationStatePreviewData.state,
             event = consumedEvent(),
             chooseWalletState = ChooseWalletStatePreviewData.state,
+            onEmptySearchResult = {},
         )
 
     val loadingState: ManageTokensState
