@@ -40,13 +40,17 @@ internal class UpdateWalletManagerResultFactory {
         )
     }
 
-    fun getNoAccountResult(walletManager: WalletManager, customMessage: String): UpdateWalletManagerResult {
+    fun getNoAccountResult(
+        walletManager: WalletManager,
+        customMessage: String,
+        amountToCreateAccount: BigDecimal?,
+    ): UpdateWalletManagerResult {
         val wallet = walletManager.wallet
         val blockchain = wallet.blockchain
         val firstWalletToken = wallet.getTokens().firstOrNull()
-        val amountToCreateAccount = blockchain.amountToCreateAccount(firstWalletToken)
+        val amount = amountToCreateAccount ?: blockchain.amountToCreateAccount(firstWalletToken)
 
-        return if (amountToCreateAccount == null) {
+        return if (amount == null) {
             Timber.w("Unable to get required amount to create account for: $blockchain")
             UpdateWalletManagerResult.Unreachable(
                 selectedAddress = wallet.address,
@@ -56,7 +60,7 @@ internal class UpdateWalletManagerResultFactory {
             UpdateWalletManagerResult.NoAccount(
                 selectedAddress = wallet.address,
                 addresses = getAvailableAddresses(wallet.addresses),
-                amountToCreateAccount = amountToCreateAccount,
+                amountToCreateAccount = amount,
                 errorMessage = customMessage,
             )
         }
