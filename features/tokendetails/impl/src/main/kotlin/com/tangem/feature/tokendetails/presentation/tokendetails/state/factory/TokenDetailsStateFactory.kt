@@ -11,7 +11,9 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -22,6 +24,7 @@ import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
@@ -29,7 +32,9 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.t
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -273,6 +278,33 @@ internal class TokenDetailsStateFactory(
                     val currentState = currentStateProvider()
                     setUiState(currentState.copy(event = consumedEvent()))
                 },
+            ),
+        )
+    }
+
+    fun getStateWithUpdatedMenu(cardTypesResolver: CardTypesResolver): TokenDetailsState {
+        return with(currentStateProvider()) {
+            copy(
+                topAppBarConfig = topAppBarConfig.copy(
+                    tokenDetailsAppBarMenuConfig = topAppBarConfig.tokenDetailsAppBarMenuConfig
+                        ?.updateMenu(cardTypesResolver),
+                ),
+            )
+        }
+    }
+
+    private fun TokenDetailsAppBarMenuConfig.updateMenu(
+        cardTypesResolver: CardTypesResolver,
+    ): TokenDetailsAppBarMenuConfig? {
+        if (cardTypesResolver.isSingleWalletWithToken()) return null
+
+        return copy(
+            items = persistentListOf(
+                TokenDetailsAppBarMenuConfig.MenuItem(
+                    title = TextReference.Res(id = R.string.token_details_hide_token),
+                    textColorProvider = { TangemTheme.colors.text.warning },
+                    onClick = clickIntents::onHideClick,
+                ),
             ),
         )
     }

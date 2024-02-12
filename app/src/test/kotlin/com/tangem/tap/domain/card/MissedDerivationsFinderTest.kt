@@ -20,7 +20,7 @@ internal class MissedDerivationsFinderTest {
 
     @Test
     fun `empty derivations for empty currencies`() {
-        val scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig, derivedKeys = emptyMap())
+        val scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
         val finder = MissedDerivationsFinder(scanResponse)
 
         val actual = finder.find(emptyList())
@@ -31,7 +31,7 @@ internal class MissedDerivationsFinderTest {
     @Test
     fun `empty derivations for non supported blockchains`() {
         // Bls is not supported
-        val scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig, derivedKeys = emptyMap())
+        val scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
         val finder = MissedDerivationsFinder(scanResponse)
 
         val currencies = CryptoCurrenciesMocks(scanResponse).chia
@@ -44,7 +44,7 @@ internal class MissedDerivationsFinderTest {
     fun `derivations ONLY for supported blockchains`() {
         // Bls is not supported
         val scanResponse = ScanResponseMockFactory.create(
-            cardConfig = GenericCardConfig,
+            cardConfig = GenericCardConfig(2),
             derivedKeys = emptyMap(),
         ).let {
             it.copy(

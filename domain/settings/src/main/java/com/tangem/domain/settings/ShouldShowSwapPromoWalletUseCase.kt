@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 class ShouldShowSwapPromoWalletUseCase(private val swapPromoRepository: SwapPromoRepository) {
 
-    operator fun invoke(): Flow<Boolean> = swapPromoRepository.isReadyToShowWallet()
+    operator fun invoke(): Flow<Boolean> = swapPromoRepository.isReadyToShowWalletPromo()
 
-    suspend fun neverToShow() = swapPromoRepository.setNeverToShowWallet()
+    suspend fun neverToShow() = swapPromoRepository.setNeverToShowWalletPromo()
 }
