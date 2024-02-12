@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.datasource.api.common.BigDecimalAdapter
+import com.tangem.datasource.api.common.DateTimeAdapter
 import com.tangem.datasource.api.common.LocalDateAdapter
 import dagger.Module
 import dagger.Provides
@@ -22,6 +23,7 @@ class MoshiModule {
         return Moshi.Builder()
             .add(BigDecimalAdapter())
             .add(LocalDateAdapter())
+            .add(DateTimeAdapter())
             .add(KotlinJsonAdapterFactory())
             .build()
     }
