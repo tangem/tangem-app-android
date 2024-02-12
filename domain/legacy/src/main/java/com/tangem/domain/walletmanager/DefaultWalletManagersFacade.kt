@@ -276,7 +276,11 @@ class DefaultWalletManagersFacade(
 
             resultFactory.getResult(walletManager)
         } catch (e: BlockchainSdkError.AccountNotFound) {
-            resultFactory.getNoAccountResult(walletManager = walletManager, customMessage = e.customMessage)
+            resultFactory.getNoAccountResult(
+                walletManager = walletManager,
+                customMessage = e.customMessage,
+                amountToCreateAccount = e.amountToCreateAccount,
+            )
         } catch (e: Throwable) {
             Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
@@ -288,7 +292,11 @@ class DefaultWalletManagersFacade(
         return try {
             resultFactory.getResult(walletManager)
         } catch (e: BlockchainSdkError.AccountNotFound) {
-            resultFactory.getNoAccountResult(walletManager = walletManager, customMessage = e.customMessage)
+            resultFactory.getNoAccountResult(
+                walletManager = walletManager,
+                customMessage = e.customMessage,
+                amountToCreateAccount = e.amountToCreateAccount,
+            )
         } catch (e: Throwable) {
             Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
 
