@@ -49,6 +49,8 @@ fun getActiveIconRes(blockchainId: String): Int {
         "xdc", "xdc/test" -> R.drawable.img_xdc_22
         "vechain", "vechain/test" -> R.drawable.img_vechain_22
         "aptos", "aptos/test" -> R.drawable.img_aptos_22
+        "shibarium", "shibarium/test" -> R.drawable.img_shibarium_22
+        "algorand", "algorand/test" -> R.drawable.img_algorand_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -99,6 +101,8 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "xdc-network", "xdc-network/test" -> R.drawable.img_xdc_22
         "vechain", "vechain/test" -> R.drawable.img_vechain_22
         "aptos", "aptos/test" -> R.drawable.img_aptos_22
+        "shibarium", "shibarium/test" -> R.drawable.img_shibarium_22
+        "algorand", "algorand/test" -> R.drawable.img_algorand_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -146,6 +150,8 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "xdce-crowd-sale" -> R.drawable.img_xdc_22
         "vechain" -> R.drawable.img_vechain_22
         "aptos" -> R.drawable.img_aptos_22
+        "shibarium" -> R.drawable.img_shibarium_22
+        "algorand" -> R.drawable.img_algorand_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -196,6 +202,8 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "xdc", "xdc/test" -> R.drawable.ic_xdc_22
         "vechain", "vechain/test" -> R.drawable.ic_vechain_22
         "aptos", "aptos/test" -> R.drawable.ic_aptos_22
+        "shibarium", "shibarium/test" -> R.drawable.ic_shibarium_22
+        "algorand", "algorand/test" -> R.drawable.ic_algorand_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -246,6 +254,8 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "xdc-network", "xdc-network/test" -> R.drawable.ic_xdc_22
         "vechain", "vechain/test" -> R.drawable.ic_vechain_22
         "aptos", "aptos/test" -> R.drawable.ic_aptos_22
+        "shibarium", "shibarium/test" -> R.drawable.ic_shibarium_22
+        "algorand", "algorand/test" -> R.drawable.ic_algorand_22
         else -> R.drawable.ic_alert_24
     }
 }

@@ -3,14 +3,20 @@ package com.tangem.tap.features.tokens.impl.presentation.viewmodels
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
+import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
-import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import timber.log.Timber
 import kotlin.properties.Delegates
@@ -24,6 +30,8 @@ import kotlin.properties.Delegates
 internal class TokensListMigration(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
+    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
 ) {
 
     private var currentNewCoins: List<CryptoCurrency.Coin> by Delegates.notNull()
@@ -76,31 +84,72 @@ internal class TokensListMigration(
         }
     }
 
-    fun onSaveButtonClick(
+    suspend fun onSaveButtonClick(
         changedTokensList: MutableList<TokenWithBlockchain>,
         changedBlockchainList: List<Blockchain>,
     ) {
-        store.dispatch(
-            action = TokensAction.SaveChanges(
-                currentTokens = currentNewTokens,
-                currentCoins = currentNewCoins,
-                changedTokens = changedTokensList.mapNotNull {
-                    cryptoCurrencyFactory.createToken(
-                        sdkToken = it.token,
-                        blockchain = it.blockchain,
-                        extraDerivationPath = null,
-                        derivationStyleProvider = currentUserWallet.scanResponse.derivationStyleProvider,
-                    )
-                },
-                changedCoins = changedBlockchainList.mapNotNull {
-                    cryptoCurrencyFactory.createCoin(
-                        blockchain = it,
-                        extraDerivationPath = null,
-                        derivationStyleProvider = currentUserWallet.scanResponse.derivationStyleProvider,
-                    )
-                },
-                userWallet = currentUserWallet,
-            ),
+        val changedTokens = changedTokensList.mapNotNull {
+            cryptoCurrencyFactory.createToken(
+                sdkToken = it.token,
+                blockchain = it.blockchain,
+                extraDerivationPath = null,
+                derivationStyleProvider = currentUserWallet.scanResponse.derivationStyleProvider,
+            )
+        }
+
+        val changedCoins = changedBlockchainList.mapNotNull {
+            cryptoCurrencyFactory.createCoin(
+                blockchain = it,
+                extraDerivationPath = null,
+                derivationStyleProvider = currentUserWallet.scanResponse.derivationStyleProvider,
+            )
+        }
+
+        val blockchainsToAdd = changedCoins.filterNot(currentNewCoins::contains)
+        val blockchainsToRemove = currentNewCoins.filterNot(changedCoins::contains)
+
+        val tokensToAdd = changedTokens.filterNot(currentNewTokens::contains)
+        val tokensToRemove = currentNewTokens.filterNot { token -> changedTokens.any { it == token } }
+
+        removeCurrenciesIfNeeded(
+            userWalletId = currentUserWallet.walletId,
+            currencies = blockchainsToRemove + tokensToRemove,
+        )
+
+        val isNothingToDoWithTokens = tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
+        val isNothingToDoWithBlockchain = blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
+        if (isNothingToDoWithTokens && isNothingToDoWithBlockchain) {
+            store.dispatchDebugErrorNotification(message = "Nothing to save")
+            store.dispatchOnMain(NavigationAction.PopBackTo())
+            return
+        }
+
+        val currencyList = blockchainsToAdd + tokensToAdd
+
+        derivePublicKeysUseCase(userWalletId = currentUserWallet.walletId, currencies = currencyList)
+            .onRight {
+                addCryptoCurrenciesUseCase(userWalletId = currentUserWallet.walletId, currencies = currencyList)
+                store.dispatchOnMain(NavigationAction.PopBackTo())
+            }
+            .onLeft { Timber.e("Failed to derive public keys: $it") }
+    }
+
+    private suspend fun removeCurrenciesIfNeeded(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) return
+        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
+
+        currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = currencies)
+
+        walletManagersFacade.remove(
+            userWalletId = userWalletId,
+            networks = currencies
+                .filterIsInstance<CryptoCurrency.Coin>()
+                .mapTo(hashSetOf(), CryptoCurrency::network),
+        )
+        walletManagersFacade.removeTokens(
+            userWalletId = userWalletId,
+            tokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
         )
     }
 }
