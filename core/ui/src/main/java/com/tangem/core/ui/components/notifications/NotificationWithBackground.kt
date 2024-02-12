@@ -28,6 +28,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemColorPalette.Dark6
 import com.tangem.core.ui.res.TangemColorPalette.Light4
@@ -55,7 +56,7 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
         val spacing14 = TangemTheme.dimens.spacing14
 
         Image(
-            painter = painterResource(config.backgroundResId ?: R.drawable.img_swap_promo_banner_background),
+            painter = painterResource(config.backgroundResId ?: R.drawable.img_swap_promo_blue_banner_background),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.constrainAs(backgroundRef) {
@@ -171,13 +172,19 @@ private class NotificationWithBackgroundPreviewProvider : PreviewParameterProvid
     override val values: Sequence<NotificationConfig>
         get() = sequenceOf(
             NotificationConfig(
-                title = resourceReference(id = R.string.main_swap_promotion_title),
-                subtitle = resourceReference(id = R.string.main_swap_promotion_message),
+                title = resourceReference(id = R.string.main_swap_changelly_promotion_title),
+                subtitle = resourceReference(
+                    id = R.string.main_swap_changelly_promotion_message,
+                    formatArgs = wrappedList("1", "2"),
+                ),
                 iconResId = R.drawable.img_swap_promo,
-                backgroundResId = R.drawable.img_swap_promo_banner_background,
+                backgroundResId = R.drawable.img_swap_promo_blue_banner_background,
             ),
             NotificationConfig(
-                title = resourceReference(id = R.string.token_swap_promotion_title),
+                title = resourceReference(
+                    id = R.string.token_swap_changelly_promotion_title,
+                    formatArgs = wrappedList("1", "2"),
+                ),
                 subtitle = stringReference(
                     "Swap multiple currencies between any chains you wish. Swap multiple " +
                         "currencies between any chains you wish. Swap multiple " +
@@ -185,7 +192,7 @@ private class NotificationWithBackgroundPreviewProvider : PreviewParameterProvid
                         "till Dec 31.",
                 ),
                 iconResId = R.drawable.img_swap_promo,
-                backgroundResId = R.drawable.img_swap_promo_banner_background,
+                backgroundResId = R.drawable.img_swap_promo_blue_banner_background,
                 buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                     text = resourceReference(id = R.string.token_swap_promotion_button),
                     onClick = {},

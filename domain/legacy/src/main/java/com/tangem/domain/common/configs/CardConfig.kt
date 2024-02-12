@@ -22,7 +22,12 @@ sealed interface CardConfig {
             ) {
                 return MultiWalletCardConfig
             }
-            return GenericCardConfig
+            if (cardDTO.supportedCurves.size == 1 &&
+                cardDTO.supportedCurves.contains(EllipticCurve.Ed25519)
+            ) {
+                return EdSingleCurrencyCardConfig
+            }
+            return GenericCardConfig(cardDTO.settings.maxWalletsCount)
         }
     }
 }

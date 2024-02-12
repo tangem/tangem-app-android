@@ -20,7 +20,9 @@ import javax.inject.Inject
 
 internal interface WalletCardClickIntents {
 
-    fun onRenameClick(userWalletId: UserWalletId, name: String)
+    fun onRenameBeforeConfirmationClick(userWalletId: UserWalletId)
+
+    fun onRenameAfterConfirmationClick(userWalletId: UserWalletId, name: String)
 
     fun onDeleteBeforeConfirmationClick(userWalletId: UserWalletId)
 
@@ -38,15 +40,28 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), WalletCardClickIntents {
 
-    override fun onRenameClick(userWalletId: UserWalletId, name: String) {
+    override fun onRenameBeforeConfirmationClick(userWalletId: UserWalletId) {
         analyticsEventHandler.send(MainScreen.EditWalletTapped)
 
+        walletEventSender.send(
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.RenameWalletAlert(
+                    text = stateHolder.getSelectedWallet().walletCardState.title,
+                    onConfirmClick = { onRenameAfterConfirmationClick(userWalletId, it) },
+                ),
+            ),
+        )
+    }
+
+    override fun onRenameAfterConfirmationClick(userWalletId: UserWalletId, name: String) {
         viewModelScope.launch(dispatchers.main) {
-            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name) })
+            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name = name) })
         }
     }
 
     override fun onDeleteBeforeConfirmationClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(MainScreen.DeleteWalletTapped)
+
         walletEventSender.send(
             event = WalletEvent.ShowAlert(
                 state = WalletAlertState.RemoveWalletAlert(
@@ -57,8 +72,6 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     }
 
     override fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreen.DeleteWalletTapped)
-
         viewModelScope.launch(dispatchers.main) {
             walletScreenContentLoader.cancel(userWalletId)
             deleteWalletUseCase(userWalletId)

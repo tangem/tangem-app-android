@@ -2,10 +2,7 @@ package com.tangem.tap.domain.card
 
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.domain.common.configs.CardConfig
-import com.tangem.domain.common.configs.GenericCardConfig
-import com.tangem.domain.common.configs.MultiWalletCardConfig
-import com.tangem.domain.common.configs.Wallet2CardConfig
+import com.tangem.domain.common.configs.*
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.KeyWalletPublicKey
 import com.tangem.domain.models.scan.ProductType
@@ -47,9 +44,10 @@ object ScanResponseMockFactory {
                 batchId = "NEVER-MIND",
                 cardPublicKey = ByteArray(0),
                 firmwareVersion = when (cardConfig) {
-                    GenericCardConfig -> genericFirmwareVersion
+                    is GenericCardConfig -> genericFirmwareVersion
                     MultiWalletCardConfig -> walletFirmwareVersion
                     Wallet2CardConfig -> wallet2FirmwareVersion
+                    EdSingleCurrencyCardConfig -> genericFirmwareVersion
                 },
                 manufacturer = CardDTO.Manufacturer(name = "NEVER-MIND", manufactureDate = Date(), signature = null),
                 issuer = CardDTO.Issuer(name = "NEVER-MIND", publicKey = ByteArray(0)),

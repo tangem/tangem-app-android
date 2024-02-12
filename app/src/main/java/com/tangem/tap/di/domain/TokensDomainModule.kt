@@ -101,6 +101,7 @@ internal object TokensDomainModule {
         swapRepository: SwapRepository,
         currencyChecksRepository: CurrencyChecksRepository,
         showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
+        promoRepository: PromoRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCurrencyWarningsUseCase {
         return GetCurrencyWarningsUseCase(
@@ -112,6 +113,7 @@ internal object TokensDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             swapRepository = swapRepository,
             showSwapPromoTokenUseCase = showSwapPromoTokenUseCase,
+            promoRepository = promoRepository,
             dispatchers = dispatchers,
         )
     }

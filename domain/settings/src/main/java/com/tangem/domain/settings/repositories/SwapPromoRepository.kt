@@ -3,11 +3,11 @@ package com.tangem.domain.settings.repositories
 import kotlinx.coroutines.flow.Flow
 
 interface SwapPromoRepository {
-    fun isReadyToShowWallet(): Flow<Boolean>
+    fun isReadyToShowWalletPromo(): Flow<Boolean>
 
-    fun isReadyToShowToken(): Flow<Boolean>
+    fun isReadyToShowTokenPromo(): Flow<Boolean>
 
-    suspend fun setNeverToShowWallet()
+    suspend fun setNeverToShowWalletPromo()
 
-    suspend fun setNeverToShowToken()
+    suspend fun setNeverToShowTokenPromo()
 }
