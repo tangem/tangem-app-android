@@ -4,9 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.*
@@ -54,20 +52,6 @@ internal object ProxyModule {
             analytics = analytics,
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideDerivationManager(
-        appStateHolder: AppStateHolder,
-        currenciesRepository: CurrenciesRepository,
-        networksRepository: NetworksRepository,
-    ): DerivationManager {
-        return DerivationManagerImpl(
-            appStateHolder = appStateHolder,
-            currenciesRepository = currenciesRepository,
-            networksRepository = networksRepository,
         )
     }
 }

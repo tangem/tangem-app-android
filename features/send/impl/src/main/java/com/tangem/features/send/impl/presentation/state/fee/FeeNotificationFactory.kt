@@ -69,8 +69,8 @@ internal class FeeNotificationFactory(
         val minimumValue = multipleFees.minimum.amount.value ?: return
         val customAmount = customFee.firstOrNull() ?: return
         val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
-        if (selectedFee == FeeType.CUSTOM && minimumValue > customValue) {
-            add(SendFeeNotification.Informational.TooLow)
+        if (selectedFee == FeeType.Custom && minimumValue > customValue) {
+            add(SendFeeNotification.Warning.TooLow)
         }
     }
 
@@ -84,7 +84,7 @@ internal class FeeNotificationFactory(
         val customAmount = customFee.firstOrNull() ?: return
         val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
         val diff = customValue / highValue
-        if (selectedFee == FeeType.CUSTOM && diff > FEE_MAX_DIFF) {
+        if (selectedFee == FeeType.Custom && diff > FEE_MAX_DIFF) {
             add(SendFeeNotification.Warning.TooHigh(diff.toFormattedString(HIGH_FEE_DIFF_DECIMALS)))
         }
     }
