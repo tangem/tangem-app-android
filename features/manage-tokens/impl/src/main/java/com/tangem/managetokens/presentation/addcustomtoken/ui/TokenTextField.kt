@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -22,7 +23,11 @@ import com.tangem.managetokens.presentation.addcustomtoken.state.TextFieldState
 internal fun TokenTextField(
     state: TextFieldState.Editable,
     placeholder: String,
-    keyboardType: KeyboardType = KeyboardType.Text,
+    onImeAction: () -> Unit,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(
+        keyboardType = KeyboardType.Text,
+        imeAction = ImeAction.Default,
+    ),
 ) {
     val isInitiallyComposed = remember { mutableStateOf(false) }
     LaunchedEffect(key1 = true) {
@@ -32,7 +37,7 @@ internal fun TokenTextField(
     BasicTextField(
         value = state.value,
         onValueChange = state.onValueChange,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Default),
+        keyboardOptions = keyboardOptions,
         singleLine = true,
         maxLines = 1,
         textStyle = TangemTheme.typography.subtitle1.copy(
@@ -42,6 +47,14 @@ internal fun TokenTextField(
         cursorBrush = SolidColor(TangemTheme.colors.icon.primary1),
         modifier = Modifier
             .fillMaxWidth()
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyUp && keyEvent.key == Key.Enter) {
+                    onImeAction()
+                    true
+                } else {
+                    false
+                }
+            }
             .onFocusChanged {
                 if (!it.isFocused && isInitiallyComposed.value) {
                     state.onFocusExit()
