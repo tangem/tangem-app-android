@@ -14,7 +14,9 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
@@ -46,6 +48,7 @@ internal fun ManageTokensScreen(state: ManageTokensState) {
 
 @Composable
 private fun Content(state: ManageTokensState) {
+    val keyboard by keyboardAsState()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -88,13 +91,17 @@ private fun Content(state: ManageTokensState) {
 
             TokensList(tokens = tokens, addCustomTokenButton = state.addCustomTokenButton)
         }
+
         state.derivationNotification?.let {
-            DerivationNotification(
-                config = it.config,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter),
-            )
+            if (keyboard is Keyboard.Closed) {
+                DerivationNotification(
+                    config = it.config,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter),
+                )
+            }
         }
+
         state.selectedToken?.let { selectedToken ->
             ManageTokensBottomSheet(selectedToken = selectedToken, state = state)
         }
