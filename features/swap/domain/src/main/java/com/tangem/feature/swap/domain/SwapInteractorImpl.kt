@@ -14,9 +14,9 @@ import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.convertToAmount
-import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -666,6 +666,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 Fee.Aptos(
                     amount = feeAmount,
                     gasUnitPrice = fee.feeValue.toLong() / fee.gasLimit,
+                    gasLimit = fee.gasLimit.toLong(),
                 )
             }
             else -> Fee.Common(feeAmount)
