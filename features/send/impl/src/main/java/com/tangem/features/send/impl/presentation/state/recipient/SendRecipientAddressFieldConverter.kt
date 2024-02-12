@@ -11,11 +11,11 @@ import com.tangem.utils.converter.Converter
 
 internal class SendRecipientAddressFieldConverter(
     private val clickIntents: SendClickIntents,
-) : Converter<Unit, SendTextField.RecipientAddress> {
+) : Converter<String, SendTextField.RecipientAddress> {
 
-    override fun convert(value: Unit): SendTextField.RecipientAddress {
+    override fun convert(value: String): SendTextField.RecipientAddress {
         return SendTextField.RecipientAddress(
-            value = "",
+            value = value,
             onValueChange = clickIntents::onRecipientAddressValueChange,
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Next,
