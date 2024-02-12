@@ -66,6 +66,7 @@ data class GetBlockAccessTokens(
     @Json(name = "litecoin") val litecoin: GetBlockToken?,
     @Json(name = "dash") val dash: GetBlockToken?,
     @Json(name = "bitcoin") val bitcoin: GetBlockToken?,
+    @Json(name = "algorand") val algorand: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)
