@@ -435,6 +435,16 @@
           ]
         },
         {
+          "id" : "algorand",
+          "symbol" : "ALGO",
+          "name" : "Algorand",
+          "networks" : [
+              {
+                  "networkId" : "algorand/test"
+              }
+          ]
+        },
+        {
           "id" : "arbitrum-one",
           "symbol" : "ETH",
           "name" : "Arbitrum",
@@ -566,6 +576,16 @@
             "networks": [
                 {
                     "networkId": "xdc-network/test"
+                }
+            ]
+        },
+        {
+            "id": "shibarium",
+            "name": "Shibarium",
+            "symbol": "BONE",
+            "networks": [
+                {
+                    "networkId": "shibarium/test"
                 }
             ]
         },

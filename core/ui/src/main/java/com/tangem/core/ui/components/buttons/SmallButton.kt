@@ -1,11 +1,13 @@
 package com.tangem.core.ui.components.buttons
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,12 +53,22 @@ fun SecondarySmallButton(config: SmallButtonConfig, modifier: Modifier = Modifie
 @Composable
 private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(size = TangemTheme.dimens.radius16)
+
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isPrimary) TangemTheme.colors.button.primary else TangemTheme.colors.button.secondary,
+        label = "Update background color",
+    )
+
+    val textColor by animateColorAsState(
+        targetValue = if (isPrimary) TangemTheme.colors.text.primary2 else TangemTheme.colors.text.primary1,
+        label = "Update text color",
+    )
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = TangemTheme.dimens.size46, minHeight = TangemTheme.dimens.size24)
             .clip(shape)
             .background(
-                color = if (isPrimary) TangemTheme.colors.button.primary else TangemTheme.colors.button.secondary,
+                color = backgroundColor,
                 shape = shape,
             )
             .clickable(enabled = true, onClick = config.onClick)
@@ -66,8 +78,11 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
         contentAlignment = Alignment.Center,
     ) {
         Text(
+            modifier = Modifier.padding(
+                horizontal = TangemTheme.dimens.spacing10,
+            ),
             text = config.text.resolveReference(),
-            color = if (isPrimary) TangemTheme.colors.text.primary2 else TangemTheme.colors.text.primary1,
+            color = textColor,
             maxLines = 1,
             style = TangemTheme.typography.button,
         )
@@ -97,7 +112,7 @@ private fun ButtonsSample() {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         val config = SmallButtonConfig(
-            text = TextReference.Str(value = "Add"),
+            text = TextReference.Str(value = "Adddddddd"),
             onClick = {},
         )
         PrimarySmallButton(config = config)
