@@ -7,8 +7,8 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAn
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import javax.inject.Inject
 
 // TODO: Refactor
@@ -23,7 +23,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
 ) {
 
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntentsV2): SingleWalletWithTokenContentLoader {
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): SingleWalletWithTokenContentLoader {
         return SingleWalletWithTokenContentLoader(
             userWallet = userWallet,
             clickIntents = clickIntents,
