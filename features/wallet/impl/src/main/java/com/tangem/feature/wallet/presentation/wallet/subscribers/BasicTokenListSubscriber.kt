@@ -9,10 +9,10 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListErrorTransformer
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.SetTokenListTransformer
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -25,7 +25,7 @@ internal typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
 internal abstract class BasicTokenListSubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -37,7 +37,7 @@ internal abstract class BasicTokenListSubscriber(
         return combine(
             flow = tokenListFlow()
                 .onEach {
-                    val displayedState = stateHolder.getWalletIfSelected(userWallet.walletId)
+                    val displayedState = stateHolder.getWalletStateIfSelected(userWallet.walletId)
 
                     tokenListAnalyticsSender.send(displayedState, userWallet, it.getOrElse { return@onEach })
                 }
