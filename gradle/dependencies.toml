@@ -53,7 +53,6 @@ googlePlayServicesWallet = "19.1.0"
 hilt = "2.44"
 hilt-navigation = "1.0.0"
 jodatime = "2.12.1"
-krateSharedPref = "2.0.0"
 kotlin-immutable-collections = "0.3.5"
 kotsonGsonExt = "2.5.0"
 lottie = "3.4.0"
@@ -82,17 +81,18 @@ androidXCamera = "1.3.0"
 listenableFuture = "1.0"
 swipeRefreshLayout = "1.1.0"
 spr-client = "3.6.2"
+web3j = "4.10.1"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.6-480"
+tangemBlockchainSdk = "develop-485"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.6-325"
+tangemCardSdk = "develop-324"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
 # region Tools
-detektComposeRules = "1.2.2"
+detektComposeRules = "1.3.0"
 detekt = "1.22.0"
 # endregion Tools
 
@@ -206,7 +206,6 @@ hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
 hilt-kapt = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 hilt-navigation = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 jodatime = { module = "joda-time:joda-time", version.ref = "jodatime" }
-krateSharedPref = { module = "hu.autsoft:krate", version.ref = "krateSharedPref" }
 kotsonGson = { module = "com.github.salomonbrys.kotson:kotson", version.ref = "kotsonGsonExt" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 material = { module = "com.google.android.material:material", version.ref = "googleMaterialComponent" }
@@ -239,5 +238,5 @@ listenableFuture = { module = "com.google.guava:listenablefuture", version.ref =
 camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "androidXCamera" }
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "androidXCamera" }
 camera-view = { module = "androidx.camera:camera-view", version.ref = "androidXCamera" }
-
+web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
 # endregion Other
