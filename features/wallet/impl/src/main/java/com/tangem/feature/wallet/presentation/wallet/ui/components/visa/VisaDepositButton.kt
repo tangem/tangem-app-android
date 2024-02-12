@@ -4,7 +4,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state2.model.DepositButtonState
+import com.tangem.feature.wallet.presentation.wallet.state.model.DepositButtonState
 
 private const val DEPOSIT_BUTTON_CONTENT_TYPE = "DepositButton"
 
