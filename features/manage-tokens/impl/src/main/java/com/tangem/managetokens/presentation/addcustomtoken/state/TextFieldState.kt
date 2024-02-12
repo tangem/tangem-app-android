@@ -13,6 +13,8 @@ internal sealed class TextFieldState {
 
     fun isInputValid(): Boolean = this is Editable && value.isNotBlank() && error == null
 
+    fun isDisabled() = this is Editable && !this.isEnabled
+
     fun copySealed(
         value: String = (this as? Editable)?.value ?: "",
         isEnabled: Boolean = (this as? Editable)?.isEnabled ?: true,

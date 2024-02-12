@@ -4,11 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -154,8 +159,11 @@ private fun ColumnScope.CustomTokenItemsList(state: AddCustomTokenState, modifie
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun TokenFields(state: CustomTokenData, modifier: Modifier = Modifier) {
+    val focusManager = LocalFocusManager.current
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -166,21 +174,51 @@ private fun TokenFields(state: CustomTokenData, modifier: Modifier = Modifier) {
             textFieldState = state.contractAddressTextField,
             placeholder = "0x0000000000000000000000000000000",
             title = R.string.custom_token_contract_address_input_title,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = if (state.isNameSymbolDecimalsDisabled()) {
+                    ImeAction.Done
+                } else {
+                    ImeAction.Next
+                },
+            ),
+            onImeAction = {
+                if (state.isNameSymbolDecimalsDisabled()) {
+                    focusManager.moveFocus(FocusDirection.Exit)
+                } else {
+                    focusManager.moveFocus(FocusDirection.Down)
+                }
+            },
         )
         TokenField(
             textFieldState = state.nameTextField,
             placeholder = stringResource(id = R.string.custom_token_name_input_placeholder),
             title = R.string.custom_token_name_input_title,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+            ),
+            onImeAction = { focusManager.moveFocus(FocusDirection.Down) },
         )
         TokenField(
             textFieldState = state.symbolTextField,
             placeholder = stringResource(id = R.string.custom_token_token_symbol_input_placeholder),
             title = R.string.custom_token_token_symbol_input_title,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+            ),
+            onImeAction = { focusManager.moveFocus(FocusDirection.Down) },
         )
         TokenField(
             textFieldState = state.decimalsTextField,
             placeholder = "0",
             title = R.string.custom_token_decimals_input_title,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done,
+            ),
+            onImeAction = { focusManager.moveFocus(FocusDirection.Exit) },
         )
     }
 }
@@ -190,7 +228,8 @@ private fun TokenField(
     textFieldState: TextFieldState,
     placeholder: String,
     title: Int,
-    keyboardType: KeyboardType = KeyboardType.Text,
+    onImeAction: () -> Unit,
+    keyboardOptions: KeyboardOptions,
 ) {
     Column(
         modifier = Modifier
@@ -205,7 +244,8 @@ private fun TokenField(
             is TextFieldState.Editable -> TokenTextField(
                 state = textFieldState,
                 placeholder = placeholder,
-                keyboardType = keyboardType,
+                onImeAction = onImeAction,
+                keyboardOptions = keyboardOptions,
             )
             is TextFieldState.Loading -> TokenShimmer()
         }
