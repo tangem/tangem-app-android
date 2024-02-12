@@ -55,6 +55,10 @@ object DateTimeFormatters {
             .withLocale(Locale.getDefault())
     }
 
+    val dateTimeFormatter: DateTimeFormatter by lazy {
+        DateTimeFormat.forPattern("dd.MM.yyyy HH:mm")
+    }
+
     fun formatTime(formatter: DateTimeFormatter = timeFormatter, time: DateTime): String {
         return formatter.print(time)
     }
