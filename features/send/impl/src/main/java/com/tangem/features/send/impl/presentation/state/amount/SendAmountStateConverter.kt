@@ -22,9 +22,9 @@ internal class SendAmountStateConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
     private val sendAmountFieldConverter: SendAmountFieldConverter,
-) : Converter<Unit, SendStates.AmountState> {
+) : Converter<String, SendStates.AmountState> {
 
-    override fun convert(value: Unit): SendStates.AmountState {
+    override fun convert(value: String): SendStates.AmountState {
         val userWallet = userWalletProvider()
         val appCurrency = appCurrencyProvider()
         val status = cryptoCurrencyStatusProvider()
@@ -35,7 +35,7 @@ internal class SendAmountStateConverter(
             walletName = userWallet.name,
             walletBalance = resourceReference(R.string.send_wallet_balance_format, wrappedList(crypto, fiat)),
             tokenIconState = iconStateConverter.convert(status),
-            amountTextField = sendAmountFieldConverter.convert(Unit),
+            amountTextField = sendAmountFieldConverter.convert(value),
             isPrimaryButtonEnabled = false,
             segmentedButtonConfig = persistentListOf(
                 SendAmountSegmentedButtonsConfig(
