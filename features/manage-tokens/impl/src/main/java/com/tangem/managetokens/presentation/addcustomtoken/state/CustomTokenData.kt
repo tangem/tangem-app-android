@@ -11,4 +11,8 @@ internal data class CustomTokenData(
         return contractAddressTextField.isInputValid() && nameTextField.isInputValid() &&
             symbolTextField.isInputValid() && decimalsTextField.isInputValid()
     }
+
+    fun isNameSymbolDecimalsDisabled(): Boolean {
+        return nameTextField.isDisabled() && symbolTextField.isDisabled() && decimalsTextField.isDisabled()
+    }
 }
