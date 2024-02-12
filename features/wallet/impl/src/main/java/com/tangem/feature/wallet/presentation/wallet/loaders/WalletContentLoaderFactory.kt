@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.*
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
@@ -17,7 +17,7 @@ internal class WalletContentLoaderFactory @Inject constructor(
 
     fun create(
         userWallet: UserWallet,
-        clickIntents: WalletClickIntentsV2,
+        clickIntents: WalletClickIntents,
         isRefresh: Boolean = false,
     ): WalletContentLoader? {
         return when {
