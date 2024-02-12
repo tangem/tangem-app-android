@@ -449,6 +449,7 @@
     <string name="scan_card_settings_button">Сканировать</string>
     <string name="scan_card_settings_message">Отсканируйте карту, чтобы изменить ее настройки. Изменения затронут только ту карту, которую вы отсканировали, и не повлияют на другие карты, привязанные к вашему кошельку.</string>
     <string name="scan_card_settings_title">Приготовьте свою карту</string>
+    <string name="send_additional_field_already_included">Уже содержится в введенном адресе</string>
     <string name="send_amount_label">Сумма</string>
     <string name="send_amount_substract">Вычесть из суммы отправки</string>
     <string name="send_amount_substract_footer">Сумма к получению %s</string>
