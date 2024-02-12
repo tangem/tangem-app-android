@@ -46,6 +46,7 @@ internal fun SendAmountContent(
                     .weight(1f)
                     .height(TangemTheme.dimens.size40),
                 config = amountState.segmentedButtonConfig,
+                showIndication = false,
                 onClick = { clickIntents.onCurrencyChangeClick(it.isFiat) },
             ) {
                 SendAmountCurrencyButton(it)
