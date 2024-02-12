@@ -13,7 +13,7 @@ internal sealed class FeeSelectorState {
 
     data class Content(
         val fees: TransactionFee,
-        val selectedFee: FeeType = FeeType.MARKET,
+        val selectedFee: FeeType = FeeType.Market,
         val customValues: ImmutableList<SendTextField.CustomFee> = persistentListOf(),
     ) : FeeSelectorState()
 
@@ -21,8 +21,8 @@ internal sealed class FeeSelectorState {
 }
 
 enum class FeeType {
-    SLOW,
-    MARKET,
-    FAST,
-    CUSTOM,
+    Slow,
+    Market,
+    Fast,
+    Custom,
 }
