@@ -2,48 +2,42 @@ package com.tangem.core.featuretoggle.manager
 
 import android.annotation.SuppressLint
 import com.google.common.truth.Truth
-import com.squareup.moshi.JsonAdapter
 import com.tangem.core.featuretoggle.storage.FeatureToggle
 import com.tangem.core.featuretoggle.storage.FeatureTogglesStorage
 import com.tangem.core.featuretoggle.utils.associateToggles
 import com.tangem.core.featuretoggle.version.VersionProvider
-import com.tangem.datasource.local.AppPreferenceStorage
-import io.mockk.Runs
-import io.mockk.coEvery
-import io.mockk.coVerifyOrder
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.verifyAll
-import io.mockk.verifyOrder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import kotlin.collections.set
 
 /**
 [REDACTED_AUTHOR]
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 @SuppressLint("CheckResult")
 internal class DevFeatureTogglesManagerTest {
 
     private val localFeatureTogglesStorage = mockk<FeatureTogglesStorage>()
-    private val appPreferenceStorage = mockk<AppPreferenceStorage>(relaxed = true)
-    private val jsonAdapter = mockk<JsonAdapter<Map<String, Boolean>>>()
+    private val appPreferenceStore = mockk<AppPreferencesStore>(relaxed = true)
     private val versionProvider = mockk<VersionProvider>()
     private val manager = DevFeatureTogglesManager(
         localFeatureTogglesStorage = localFeatureTogglesStorage,
-        appPreferenceStorage = appPreferenceStorage,
-        jsonAdapter = jsonAdapter,
+        appPreferencesStore = appPreferenceStore,
         versionProvider = versionProvider,
     )
 
     @Test
     fun `successfully initialize storage if shared prefs kept feature toggles`() = runTest {
-        val currentVersion = "1.0.0"
+        val currentVersion = "0.1.0"
 
         coEvery { localFeatureTogglesStorage.init() } just Runs
-        coEvery { appPreferenceStorage.featureToggles } returns savedFeatureToggles
-        coEvery { jsonAdapter.fromJson(savedFeatureToggles) } returns savedFeatureTogglesMap
+        coEvery {
+            appPreferenceStore.getObjectSyncOrNull<Map<String, Boolean>>(PreferencesKeys.FEATURE_TOGGLES_KEY)
+        } returns savedFeatureTogglesMap
         coEvery { localFeatureTogglesStorage.featureToggles } returns localFeatureToggles
         coEvery { versionProvider.get() } returns currentVersion
 
@@ -51,7 +45,6 @@ internal class DevFeatureTogglesManagerTest {
 
         coVerifyOrder {
             localFeatureTogglesStorage.init()
-            jsonAdapter.fromJson(savedFeatureToggles)
             versionProvider.get()
         }
 
@@ -66,12 +59,12 @@ internal class DevFeatureTogglesManagerTest {
 
     @Test
     fun `successfully initialize storage if shared prefs kept empty list`() = runTest {
-        val currentVersion = "1.0.0"
-        val sharedPrefFeatureToggles = "[]"
+        val currentVersion = "0.1.0"
 
         coEvery { localFeatureTogglesStorage.init() } just Runs
-        coEvery { appPreferenceStorage.featureToggles } returns sharedPrefFeatureToggles
-        coEvery { jsonAdapter.fromJson(sharedPrefFeatureToggles) } returns savedFeatureTogglesMap
+        coEvery {
+            appPreferenceStore.getObjectSyncOrNull<Map<String, Boolean>>(PreferencesKeys.FEATURE_TOGGLES_KEY)
+        } returns emptyMap()
         coEvery { localFeatureTogglesStorage.featureToggles } returns localFeatureToggles
         coEvery { versionProvider.get() } returns currentVersion
 
@@ -79,7 +72,6 @@ internal class DevFeatureTogglesManagerTest {
 
         coVerifyOrder {
             localFeatureTogglesStorage.init()
-            jsonAdapter.fromJson(sharedPrefFeatureToggles)
             versionProvider.get()
         }
 
@@ -94,10 +86,12 @@ internal class DevFeatureTogglesManagerTest {
 
     @Test
     fun `successfully initialize storage if shared prefs didn't keep feature toggles`() = runTest {
-        val currentVersion = "1.0.0"
+        val currentVersion = "0.1.0"
 
         coEvery { localFeatureTogglesStorage.init() } just Runs
-        coEvery { appPreferenceStorage.featureToggles } returns ""
+        coEvery {
+            appPreferenceStore.getObjectSyncOrNull<Map<String, Boolean>>(PreferencesKeys.FEATURE_TOGGLES_KEY)
+        } returns null
         coEvery { localFeatureTogglesStorage.featureToggles } returns localFeatureToggles
         coEvery { versionProvider.get() } returns currentVersion
 
@@ -107,7 +101,6 @@ internal class DevFeatureTogglesManagerTest {
             localFeatureTogglesStorage.init()
             versionProvider.get()
         }
-        verifyAll(inverse = true) { jsonAdapter.fromJson(any<String>()) }
 
         val expected = localFeatureToggles
             .associateToggles(currentVersion)
@@ -119,8 +112,7 @@ internal class DevFeatureTogglesManagerTest {
     @Test
     fun `successfully initialize storage if versionProvider returns null`() = runTest {
         coEvery { localFeatureTogglesStorage.init() } just Runs
-        coEvery { appPreferenceStorage.featureToggles } returns savedFeatureToggles
-        coEvery { jsonAdapter.fromJson(savedFeatureToggles) } returns savedFeatureTogglesMap
+        coEvery { appPreferenceStore.getSyncOrNull(PreferencesKeys.FEATURE_TOGGLES_KEY) } returns savedFeatureToggles
         coEvery { localFeatureTogglesStorage.featureToggles } returns localFeatureToggles
         coEvery { versionProvider.get() } returns null
 
@@ -128,7 +120,6 @@ internal class DevFeatureTogglesManagerTest {
 
         coVerifyOrder {
             localFeatureTogglesStorage.init()
-            jsonAdapter.fromJson(savedFeatureToggles)
             versionProvider.get()
         }
 
@@ -180,7 +171,7 @@ internal class DevFeatureTogglesManagerTest {
     }
 
     @Test
-    fun `change toggle that contains in map`() {
+    fun `change toggle that contains in map`() = runTest {
         val changeableToggleName = "INACTIVE_TEST_FEATURE_ENABLED"
         val resultMap = mutableMapOf(
             changeableToggleName to false,
@@ -188,18 +179,16 @@ internal class DevFeatureTogglesManagerTest {
         )
 
         manager.setFeatureToggles(resultMap)
-        coEvery { jsonAdapter.toJson(resultMap) } returns ""
 
         manager.changeToggle(changeableToggleName, true)
 
         resultMap[changeableToggleName] = true
-        verifyOrder { jsonAdapter.toJson(resultMap) }
 
         Truth.assertThat(manager.getFeatureToggles()).containsExactlyEntriesIn(resultMap)
     }
 
     @Test
-    fun `change toggle that doesn't contains in map`() {
+    fun `change toggle that doesn't contains in map`() = runTest {
         val resultMap = mutableMapOf(
             "INACTIVE_TEST_FEATURE_ENABLED" to false,
             "ACTIVE2_TEST_FEATURE_ENABLED" to false,
@@ -208,8 +197,6 @@ internal class DevFeatureTogglesManagerTest {
         manager.setFeatureToggles(resultMap)
 
         manager.changeToggle("FEATURE_TOGGLE", true)
-
-        verifyAll(inverse = true) { jsonAdapter.toJson(any()) }
 
         Truth.assertThat(manager.getFeatureToggles()).containsExactlyEntriesIn(resultMap)
     }
