@@ -80,9 +80,11 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "vechain/test" -> Blockchain.VeChainTestnet
         "aptos" -> Blockchain.Aptos
         "aptos/test" -> Blockchain.AptosTestnet
+        "" -> Blockchain.Playa3ull // FIXME
         "shibarium" -> Blockchain.Shibarium
         "shibarium/test" -> Blockchain.ShibariumTestnet
-        "" -> Blockchain.Playa3ull // FIXME
+        "algorand" -> Blockchain.Algorand
+        "algorand/test" -> Blockchain.AlgorandTestnet
         else -> null
     }
 }
@@ -164,9 +166,11 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.VeChainTestnet -> "vechain/test"
         Blockchain.Aptos -> "aptos"
         Blockchain.AptosTestnet -> "aptos/test"
+        Blockchain.Playa3ull -> "" // FIXME
         Blockchain.Shibarium -> "shibarium"
         Blockchain.ShibariumTestnet -> "shibarium/test"
-        Blockchain.Playa3ull -> "" // FIXME
+        Blockchain.Algorand -> "algorand"
+        Blockchain.AlgorandTestnet -> "algorand/test"
     }
 }
 
@@ -218,10 +222,12 @@ fun Blockchain.toCoinId(): String {
         Blockchain.VeChain, Blockchain.VeChainTestnet -> "vechain"
         Blockchain.Aptos -> "aptos"
         Blockchain.AptosTestnet -> "aptos/test"
-        Blockchain.Unknown -> "unknown"
+        Blockchain.Playa3ull -> "" // FIXME
         Blockchain.Shibarium -> "bone-shibaswap"
         Blockchain.ShibariumTestnet -> "bone-shibaswap/test"
-        Blockchain.Playa3ull -> "" // FIXME
+        Blockchain.Algorand -> "algorand"
+        Blockchain.AlgorandTestnet -> "algorand/test"
+        Blockchain.Unknown -> "unknown"
     }
 }
 
