@@ -109,6 +109,9 @@ interface WalletManagersFacade {
     ): WalletManager?
 
     @Deprecated("Will be removed in future")
+    suspend fun getOrCreateWalletManager(userWalletId: UserWalletId, network: Network): WalletManager?
+
+    @Deprecated("Will be removed in future")
     suspend fun getStoredWalletManagers(userWalletId: UserWalletId): List<WalletManager>
 
     /**
@@ -135,47 +138,6 @@ interface WalletManagersFacade {
      * @param network network of currency
      */
     suspend fun getRentInfo(userWalletId: UserWalletId, network: Network): CryptoCurrencyWarning.Rent?
-
-    /**
-     * Returns value which indicates if the account balance drops below the existential deposit value, it will be
-     * deactivated and any remaining funds will be destroyed.
-     *
-     * [REDACTED_TODO_COMMENT]
-     */
-    @Deprecated("Will be removed in future")
-    suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
-
-    @Deprecated("Will be removed in future")
-    suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal?
-
-    /**
-     * Returns reserve amount which is required to create an account
-     *
-     * [REDACTED_TODO_COMMENT]
-     */
-    @Deprecated("Will be removed in future")
-    suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal?
-
-    /**
-     * Returns true if account with [address] was reserved with minimum amount
-     *
-     * [REDACTED_TODO_COMMENT]
-     */
-    @Deprecated("Will be removed in future")
-    suspend fun checkIfAccountFunded(userWalletId: UserWalletId, network: Network, address: String): Boolean
-
-    /**
-     * Checks if transaction amount is within the UTXO limit
-     *
-     * [REDACTED_TODO_COMMENT]
-     */
-    @Deprecated("Will be removed in future")
-    suspend fun checkUtxoAmountLimit(
-        userWalletId: UserWalletId,
-        network: Network,
-        amount: BigDecimal,
-        fee: BigDecimal,
-    ): UtxoAmountLimit?
 
     @Deprecated("Will be removed in future")
     fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>>
