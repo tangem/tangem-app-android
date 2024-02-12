@@ -23,7 +23,9 @@ internal class SendEventStateFactory(
     private val clickIntents: SendClickIntents,
     private val feeStateFactory: FeeStateFactory,
 ) {
-    private val sendTransactionErrorConverter by lazy { SendTransactionAlertConverter(clickIntents) }
+    private val sendTransactionErrorConverter by lazy(LazyThreadSafetyMode.NONE) {
+        SendTransactionAlertConverter(clickIntents)
+    }
 
     fun onConsumeEventState(): SendUiState {
         return currentStateProvider().copy(event = consumedEvent())
@@ -48,10 +50,10 @@ internal class SendEventStateFactory(
             is TransactionFee.Single -> fee.normal
             is TransactionFee.Choosable -> {
                 when (feeSelector.selectedFee) {
-                    FeeType.SLOW -> fee.minimum
-                    FeeType.MARKET -> fee.normal
-                    FeeType.FAST -> fee.priority
-                    FeeType.CUSTOM -> return state
+                    FeeType.Slow -> fee.minimum
+                    FeeType.Market -> fee.normal
+                    FeeType.Fast -> fee.priority
+                    FeeType.Custom -> return state
                 }
             }
         }
