@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.impl.R
+import org.joda.time.DateTime
 
 /**
  * Wallet notification component state
@@ -168,13 +169,21 @@ sealed class WalletNotification(val config: NotificationConfig) {
     )
 
     data class SwapPromo(
+        val startDateTime: DateTime,
+        val endDateTime: DateTime,
         val onCloseClick: () -> Unit,
     ) : WalletNotification(
         config = NotificationConfig(
-            title = resourceReference(id = R.string.main_swap_promotion_title),
-            subtitle = resourceReference(id = R.string.main_swap_promotion_message),
+            title = resourceReference(
+                id = R.string.main_swap_changelly_promotion_title,
+                formatArgs = wrappedList("0%"),
+            ),
+            subtitle = resourceReference(
+                id = R.string.main_swap_changelly_promotion_message,
+                formatArgs = wrappedList("0%", startDateTime.dayOfMonth, endDateTime.dayOfMonth),
+            ),
             iconResId = R.drawable.img_swap_promo,
-            backgroundResId = R.drawable.img_swap_promo_banner_background,
+            backgroundResId = R.drawable.img_swap_promo_green_banner_background,
             onCloseClick = onCloseClick,
         ),
     )
