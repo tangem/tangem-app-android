@@ -28,10 +28,10 @@ internal class FeeConverter(
         return when (val fees = value.fees) {
             is TransactionFee.Choosable -> {
                 when (value.selectedFee) {
-                    FeeType.SLOW -> fees.minimum
-                    FeeType.MARKET -> fees.normal
-                    FeeType.FAST -> fees.priority
-                    FeeType.CUSTOM -> convertCustom(value, fees)
+                    FeeType.Slow -> fees.minimum
+                    FeeType.Market -> fees.normal
+                    FeeType.Fast -> fees.priority
+                    FeeType.Custom -> convertCustom(value, fees)
                 }
             }
             is TransactionFee.Single -> fees.normal

@@ -125,6 +125,7 @@ sealed class AnalyticsParam {
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
         const val BATCH = "Batch"
+        const val TYPE = "Type"
         const val FEE_TYPE = "Fee Type"
         const val PERMISSION_TYPE = "Permission Type"
         const val PRODUCT_TYPE = "Product Type"

@@ -3,7 +3,7 @@ package com.tangem.tap.features.customtoken.impl.presentation.validators
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressService
 import com.tangem.common.card.EllipticCurve
-import com.tangem.domain.AddCustomTokenError
+import com.tangem.domain.tokens.error.AddCustomTokenError
 
 /**
  * Validator of contract address
@@ -15,9 +15,9 @@ object ContractAddressValidator {
     /** Validate a [address] using [blockchain] */
     fun validate(address: String, blockchain: Blockchain): ContractAddressValidatorResult {
         return when {
-            address.isEmpty() -> ContractAddressValidatorResult.Error(type = AddCustomTokenError.FieldIsEmpty)
+            address.isEmpty() -> ContractAddressValidatorResult.Error(type = AddCustomTokenError.FIELD_IS_EMPTY)
             validateAddress(blockchain, address) -> ContractAddressValidatorResult.Success
-            else -> ContractAddressValidatorResult.Error(type = AddCustomTokenError.InvalidContractAddress)
+            else -> ContractAddressValidatorResult.Error(type = AddCustomTokenError.INVALID_CONTRACT_ADDRESS)
         }
     }
 

@@ -16,13 +16,13 @@ import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
-import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.error.AddCustomTokenError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
@@ -465,7 +465,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
             address = uiState.form.contractAddressInputField.value,
             blockchain = networkSelectorValue,
         ).let {
-            it is ContractAddressValidatorResult.Error && it.type == AddCustomTokenError.FieldIsEmpty
+            it is ContractAddressValidatorResult.Error && it.type == AddCustomTokenError.FIELD_IS_EMPTY
         }
 
         val isSupportedToken = if (!isNetworkSelected()) {
@@ -621,7 +621,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
     private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
         when {
-            isNetworkSelected() && type == AddCustomTokenError.InvalidContractAddress -> {
+            isNetworkSelected() && type == AddCustomTokenError.INVALID_CONTRACT_ADDRESS -> {
                 val isAnotherTokenFieldsFilled = isAnyTokenFieldsFilled()
                 uiState = uiState.copySealed(
                     form = uiState.form.copy(
@@ -644,7 +644,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 )
             }
 
-            !isNetworkSelected() || type == AddCustomTokenError.FieldIsEmpty -> {
+            !isNetworkSelected() || type == AddCustomTokenError.FIELD_IS_EMPTY -> {
                 uiState = uiState.copySealed(
                     form = uiState.form.copy(
                         contractAddressInputField = uiState.form.contractAddressInputField.copy(isError = false),
