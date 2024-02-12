@@ -45,6 +45,14 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+
+    /** Common */
+    implementation(projects.common)
+
+    /** Libs */
+    implementation(projects.libs.crypto)
 
     /** Domain modules */
     implementation(projects.domain.models)
@@ -59,6 +67,8 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.card)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
 
     /** Feature modules */
     implementation(projects.features.send.api)

@@ -16,8 +16,8 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.repository.PromoRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -40,7 +40,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private var readyForRateAppNotification = false
 
-    fun create(clickIntents: WalletClickIntentsV2): Flow<ImmutableList<WalletNotification>> {
+    fun create(clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val userWallet = getSelectedWalletSyncUseCase().fold(
             ifLeft = {
                 Timber.e("Failed to get selected wallet $it")
@@ -78,7 +78,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private fun MutableList<WalletNotification>.addSwapPromoNotification(
         shouldShowPromo: Boolean,
         promoBanner: PromoBanner?,
-        clickIntents: WalletClickIntentsV2,
+        clickIntents: WalletClickIntents,
     ) {
         promoBanner ?: return
         val promoNotification = WalletNotification.SwapPromo(
@@ -114,7 +114,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private fun MutableList<WalletNotification>.addInformationalNotifications(
         cardTypesResolver: CardTypesResolver,
         maybeTokenList: Either<TokenListError, TokenList>,
-        clickIntents: WalletClickIntentsV2,
+        clickIntents: WalletClickIntents,
     ) {
         addIf(
             element = WalletNotification.Informational.DemoCard,
@@ -126,7 +126,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addMissingAddressesNotification(
         maybeTokenList: Either<TokenListError, TokenList>,
-        clickIntents: WalletClickIntentsV2,
+        clickIntents: WalletClickIntents,
     ) {
         val currencies = maybeTokenList.getMissingAddressCurrencies()
 
@@ -162,7 +162,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         cardTypesResolver: CardTypesResolver,
         tokenList: Either<TokenListError, TokenList>,
         isNeedToBackup: Boolean,
-        clickIntents: WalletClickIntentsV2,
+        clickIntents: WalletClickIntents,
     ) {
         addIf(
             element = WalletNotification.Warning.MissingBackup(
@@ -199,7 +199,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addRateTheAppNotification(
         isReadyToShowRating: Boolean,
-        clickIntents: WalletClickIntentsV2,
+        clickIntents: WalletClickIntents,
     ) {
         addIf(
             element = WalletNotification.RateApp(

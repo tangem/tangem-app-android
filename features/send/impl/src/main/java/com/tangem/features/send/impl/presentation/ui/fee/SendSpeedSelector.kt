@@ -4,6 +4,9 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -39,6 +42,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import java.math.BigDecimal
@@ -84,8 +88,8 @@ internal fun SendSpeedSelector(
                                 amount = getCryptoReference(minimumAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(minimumAmount, state.rate, state.appCurrency),
                                 symbolLength = minimumAmount.currencySymbol.length,
-                                isSelected = isSelected == FeeType.SLOW,
-                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.SLOW) },
+                                isSelected = isSelected == FeeType.Slow,
+                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.Slow) },
                             )
                             val normalAmount = fees.normal.amount
                             SendSpeedSelectorItem(
@@ -94,8 +98,8 @@ internal fun SendSpeedSelector(
                                 amount = getCryptoReference(normalAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(normalAmount, state.rate, state.appCurrency),
                                 symbolLength = normalAmount.currencySymbol.length,
-                                isSelected = isSelected == FeeType.MARKET,
-                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.MARKET) },
+                                isSelected = isSelected == FeeType.Market,
+                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.Market) },
                             )
                             val priorityAmount = fees.priority.amount
                             SendSpeedSelectorItem(
@@ -104,20 +108,25 @@ internal fun SendSpeedSelector(
                                 amount = getCryptoReference(priorityAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(priorityAmount, state.rate, state.appCurrency),
                                 symbolLength = priorityAmount.currencySymbol.length,
-                                isSelected = isSelected == FeeType.FAST,
-                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.FAST) },
+                                isSelected = isSelected == FeeType.Fast,
+                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.Fast) },
                                 showDivider = fees.normal is Fee.Ethereum,
                             )
                             AnimatedVisibility(
                                 visible = fees.normal is Fee.Ethereum,
                                 label = "Custom fee appearance animation",
                             ) {
+                                val showWarning = state.notifications.any {
+                                    it is SendFeeNotification.Warning.TooHigh ||
+                                        it is SendFeeNotification.Warning.TooLow
+                                }
                                 SendSpeedSelectorItem(
                                     titleRes = R.string.common_fee_selector_option_custom,
                                     iconRes = R.drawable.ic_edit_24,
-                                    isSelected = isSelected == FeeType.CUSTOM,
-                                    onSelect = { clickIntents.onFeeSelectorClick(FeeType.CUSTOM) },
+                                    isSelected = isSelected == FeeType.Custom,
+                                    onSelect = { clickIntents.onFeeSelectorClick(FeeType.Custom) },
                                     showDivider = fees.normal !is Fee.Ethereum,
+                                    showWarning = showWarning,
                                 )
                             }
                         }
@@ -130,7 +139,7 @@ internal fun SendSpeedSelector(
                                 amount = getCryptoReference(normalAmount, state.isFeeApproximate),
                                 fiatAmount = getFiatReference(normalAmount, state.rate, state.appCurrency),
                                 symbolLength = normalAmount.currencySymbol.length,
-                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.MARKET) },
+                                onSelect = { clickIntents.onFeeSelectorClick(FeeType.Market) },
                                 showDivider = false,
                             )
                         }
@@ -222,6 +231,7 @@ private fun SendSpeedSelectorItem(
     symbolLength: Int? = null,
     isSelected: Boolean = false,
     showDivider: Boolean = true,
+    showWarning: Boolean = false,
 ) {
     val iconTint by animateColorAsState(
         targetValue = if (isSelected) {
@@ -257,7 +267,10 @@ private fun SendSpeedSelectorItem(
                     symbolLength = symbolLength,
                     textStyle = textStyle,
                 )
+            } else {
+                SpacerWMax()
             }
+            WarningIcon(showWarning = showWarning)
         }
         if (showDivider) {
             Box(
@@ -336,6 +349,26 @@ private fun RowScope.SelectorValueContent(
                 bottom = TangemTheme.dimens.spacing14,
             ),
     )
+}
+
+@Composable
+private fun WarningIcon(showWarning: Boolean = false) {
+    AnimatedVisibility(
+        visible = showWarning,
+        label = "Custom fee warning indicator",
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_alert_triangle_20),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(
+                    vertical = TangemTheme.dimens.spacing12,
+                    horizontal = TangemTheme.dimens.spacing14,
+                ),
+        )
+    }
 }
 
 //region preview

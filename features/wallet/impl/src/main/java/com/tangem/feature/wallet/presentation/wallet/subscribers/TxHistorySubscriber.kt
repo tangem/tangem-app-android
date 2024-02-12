@@ -2,8 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.map
 import arrow.core.Either
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -14,13 +14,17 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.collectLatest
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.*
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountErrorTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsErrorTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 typealias MaybeTxHistoryCount = Either<TxHistoryStateError, Int>
 typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxHistoryItem>>>
@@ -30,31 +34,13 @@ internal class TxHistorySubscriber(
     private val userWallet: UserWallet,
     private val isRefresh: Boolean,
     private val stateHolder: WalletStateController,
-    private val clickIntents: WalletClickIntentsV2,
+    private val clickIntents: WalletClickIntents,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<PagingData<TxHistoryItem>> {
-// [REDACTED_TODO_COMMENT]
-        if (userWallet.scanResponse.cardTypesResolver.isVisaWallet()) {
-            return flow {
-                stateHolder.update(
-                    object : WalletStateTransformer(userWallet.walletId) {
-                        override fun transform(prevState: WalletState): WalletState {
-                            return when (prevState) {
-                                is WalletState.Visa.Content -> prevState.copy(
-                                    txHistoryState = TxHistoryState.Empty(onExploreClick = {}),
-                                )
-                                else -> prevState
-                            }
-                        }
-                    },
-                )
-            }
-        }
-
         return flow {
             getPrimaryCurrencyStatusUpdatesUseCase.collectLatest(userWalletId = userWallet.walletId) { status ->
                 val maybeTxHistoryItemCount = txHistoryItemsCountUseCase(
@@ -109,10 +95,19 @@ internal class TxHistorySubscriber(
                         clickIntents = clickIntents,
                     )
                 },
-                ifRight = {
+                ifRight = { itemsFlow ->
+                    val blockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
+                    val itemConverter = TxHistoryItemStateConverter(
+                        symbol = blockchain.currency,
+                        decimals = blockchain.decimals(),
+                        clickIntents = clickIntents,
+                    )
+
                     SetTxHistoryItemsTransformer(
                         userWallet = userWallet,
-                        flow = it,
+                        flow = itemsFlow.map { items ->
+                            items.map(itemConverter::convert)
+                        },
                         clickIntents = clickIntents,
                     )
                 },

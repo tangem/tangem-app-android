@@ -80,6 +80,11 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "vechain/test" -> Blockchain.VeChainTestnet
         "aptos" -> Blockchain.Aptos
         "aptos/test" -> Blockchain.AptosTestnet
+        "" -> Blockchain.Playa3ull // FIXME
+        "shibarium" -> Blockchain.Shibarium
+        "shibarium/test" -> Blockchain.ShibariumTestnet
+        "algorand" -> Blockchain.Algorand
+        "algorand/test" -> Blockchain.AlgorandTestnet
         else -> null
     }
 }
@@ -161,6 +166,11 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.VeChainTestnet -> "vechain/test"
         Blockchain.Aptos -> "aptos"
         Blockchain.AptosTestnet -> "aptos/test"
+        Blockchain.Playa3ull -> "" // FIXME
+        Blockchain.Shibarium -> "shibarium"
+        Blockchain.ShibariumTestnet -> "shibarium/test"
+        Blockchain.Algorand -> "algorand"
+        Blockchain.AlgorandTestnet -> "algorand/test"
     }
 }
 
@@ -212,6 +222,11 @@ fun Blockchain.toCoinId(): String {
         Blockchain.VeChain, Blockchain.VeChainTestnet -> "vechain"
         Blockchain.Aptos -> "aptos"
         Blockchain.AptosTestnet -> "aptos/test"
+        Blockchain.Playa3ull -> "" // FIXME
+        Blockchain.Shibarium -> "bone-shibaswap"
+        Blockchain.ShibariumTestnet -> "bone-shibaswap/test"
+        Blockchain.Algorand -> "algorand"
+        Blockchain.AlgorandTestnet -> "algorand/test"
         Blockchain.Unknown -> "unknown"
     }
 }
@@ -240,5 +255,5 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Ducatus,
-    Blockchain.Aptos,
+    Blockchain.Playa3ull,
 )

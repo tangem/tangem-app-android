@@ -1,5 +1,6 @@
 package com.tangem.tap.proxy.redux
 
+import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -7,7 +8,6 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -17,7 +17,6 @@ import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggle
 import com.tangem.features.managetokens.navigation.ManageTokensRouter
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.features.send.api.navigation.SendRouter
-import com.tangem.features.tester.api.TesterFeatureToggles
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -52,10 +51,8 @@ data class DaggerGraphState(
     val sendFeatureToggles: SendFeatureToggles? = null,
     val sendRouter: SendRouter? = null,
     val qrScanningRouter: QrScanningRouter? = null,
-// [REDACTED_TODO_COMMENT]
     val currenciesRepository: CurrenciesRepository? = null,
-    val derivationsRepository: DerivationsRepository? = null,
-    val testerFeatureToggles: TesterFeatureToggles? = null,
+    val blockchainDataStorage: BlockchainDataStorage? = null,
 ) : StateType {
 
     inline fun <reified T> get(getDependency: DaggerGraphState.() -> T?): T {

@@ -77,6 +77,7 @@ include(":core:deep-links:global")
 // region Libs modules
 include(":libs:crypto")
 include(":libs:auth")
+include(":libs:visa")
 // endregion Libs modules
 
 // region Feature modules

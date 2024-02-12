@@ -80,6 +80,13 @@ object TokenListPreviewData {
                 iconResId = mutableStateOf(R.drawable.ic_bsc_16),
                 isMainNetwork = false,
             ),
+            // check icon clipping
+            NetworkItemState.ReadContent(
+                name = "SHIBARIUM",
+                protocolName = "BEP20",
+                iconResId = mutableStateOf(R.drawable.ic_shibarium_22),
+                isMainNetwork = false,
+            ),
         )
     }
 }

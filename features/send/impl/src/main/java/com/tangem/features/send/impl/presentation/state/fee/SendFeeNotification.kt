@@ -8,22 +8,6 @@ import com.tangem.features.send.impl.R
 
 sealed class SendFeeNotification(val config: NotificationConfig) {
 
-    sealed class Informational(
-        val title: TextReference,
-        val subtitle: TextReference,
-    ) : SendFeeNotification(
-        config = NotificationConfig(
-            title = title,
-            subtitle = subtitle,
-            iconResId = R.drawable.ic_alert_circle_24,
-        ),
-    ) {
-        object TooLow : Informational(
-            title = resourceReference(id = R.string.send_notification_transaction_delay_title),
-            subtitle = resourceReference(id = R.string.send_notification_transaction_delay_text),
-        )
-    }
-
     sealed class Warning(
         val title: TextReference,
         val subtitle: TextReference,
@@ -36,6 +20,11 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
             buttonsState = buttonsState,
         ),
     ) {
+        object TooLow : Warning(
+            title = resourceReference(id = R.string.send_notification_transaction_delay_title),
+            subtitle = resourceReference(id = R.string.send_notification_transaction_delay_text),
+        )
+
         data class TooHigh(
             val value: String,
         ) : Warning(
