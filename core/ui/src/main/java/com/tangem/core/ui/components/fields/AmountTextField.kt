@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.fields
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -54,6 +55,7 @@ fun AmountTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions(
         keyboardType = KeyboardType.Number,
     ),
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     val decimalFormat = rememberDecimalFormat()
 
@@ -75,6 +77,7 @@ fun AmountTextField(
         textStyle = textStyle,
         color = color,
         keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         singleLine = true,
         visualTransformation = AmountVisualTransformation(decimals, symbol, decimalFormat),
         decorationBox = { innerTextField ->
