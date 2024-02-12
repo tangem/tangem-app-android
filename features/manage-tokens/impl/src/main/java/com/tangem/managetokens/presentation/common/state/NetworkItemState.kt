@@ -38,7 +38,7 @@ internal sealed interface NetworkItemState {
      * @property onToggleClick  lambda be invoked when switch is been toggled
      */
     @Suppress("LongParameterList")
-    class Toggleable(
+    data class Toggleable(
         override val name: String,
         override val protocolName: String,
         override val id: String,
@@ -72,7 +72,7 @@ internal sealed interface NetworkItemState {
      * @property onNetworkClick lambda be invoked when network item is been clicked
      *
      */
-    class Selectable(
+    data class Selectable(
         override val name: String,
         override val protocolName: String,
         val iconResId: Int,
