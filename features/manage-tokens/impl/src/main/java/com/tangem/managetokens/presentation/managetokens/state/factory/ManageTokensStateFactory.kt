@@ -10,6 +10,7 @@ import com.tangem.managetokens.presentation.common.state.*
 import com.tangem.managetokens.presentation.common.utils.CurrencyUtils
 import com.tangem.managetokens.presentation.managetokens.state.*
 import com.tangem.managetokens.presentation.managetokens.viewmodels.ManageTokensClickIntents
+import com.tangem.managetokens.presentation.managetokens.viewmodels.ManageTokensUiEvents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 internal class ManageTokensStateFactory(
     private val currentStateProvider: Provider<ManageTokensState>,
     private val clickIntents: ManageTokensClickIntents,
+    private val uiIntents: ManageTokensUiEvents,
 ) {
 
     fun getInitialState(tokens: Flow<PagingData<TokenItemState>>): ManageTokensState {
@@ -36,6 +38,7 @@ internal class ManageTokensStateFactory(
             isLoading = false,
             event = consumedEvent(),
             chooseWalletState = ChooseWalletState.NoSelection,
+            onEmptySearchResult = uiIntents::onEmptySearchResult,
         )
     }
 
@@ -176,7 +179,7 @@ internal class ManageTokensStateFactory(
                 totalNeeded = totalNeeded,
                 totalWallets = totalWallets,
                 walletsToDerive = walletsToDerive,
-                onGenerateClick = clickIntents::onGenerateDerivationClick,
+                onGenerateClick = clickIntents::onGetAddressesClick,
             )
         }
         return currentStateProvider().copy(derivationNotification = derivationNotificationState)

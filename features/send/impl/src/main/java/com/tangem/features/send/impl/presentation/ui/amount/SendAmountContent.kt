@@ -22,13 +22,17 @@ import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegment
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 
 @Composable
-internal fun SendAmountContent(amountState: SendStates.AmountState?, clickIntents: SendClickIntents) {
+internal fun SendAmountContent(
+    amountState: SendStates.AmountState?,
+    isBalanceHiding: Boolean,
+    clickIntents: SendClickIntents,
+) {
     if (amountState == null) return
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.tertiary),
     ) {
-        AmountFieldContainer(amountState = amountState)
+        AmountFieldContainer(amountState = amountState, isBalanceHiding = isBalanceHiding)
         Row(
             modifier = Modifier
                 .padding(
