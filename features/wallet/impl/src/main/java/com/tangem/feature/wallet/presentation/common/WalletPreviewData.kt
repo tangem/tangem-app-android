@@ -32,7 +32,7 @@ internal object WalletPreviewData {
                 content = TextReference.Str("3 cards • Seed phrase3 cards • Seed phrasephrasephrasephrase"),
             ),
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
-            onRenameClick = { _, _ -> },
+            onRenameClick = { _ -> },
             onDeleteClick = {},
             cardCount = 1,
         )
@@ -43,7 +43,7 @@ internal object WalletPreviewData {
             id = UserWalletId("321"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
-            onRenameClick = { _, _ -> },
+            onRenameClick = { _ -> },
             onDeleteClick = {},
         )
     }
@@ -53,7 +53,7 @@ internal object WalletPreviewData {
             id = UserWalletId("24"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
-            onRenameClick = { _, _ -> },
+            onRenameClick = { _ -> },
             onDeleteClick = {},
         )
     }
