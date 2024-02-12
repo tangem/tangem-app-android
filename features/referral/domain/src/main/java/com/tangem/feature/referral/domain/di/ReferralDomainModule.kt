@@ -6,9 +6,6 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.ReferralInteractorImpl
 import com.tangem.feature.referral.domain.ReferralRepository
-import com.tangem.feature.referral.domain.converter.TokensConverter
-import com.tangem.features.tester.api.TesterFeatureToggles
-import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
 import dagger.Module
 import dagger.Provides
@@ -24,23 +21,17 @@ class ReferralDomainModule {
     @ViewModelScoped
     fun provideReferralInteractor(
         referralRepository: ReferralRepository,
-        derivationManager: DerivationManager,
         userWalletManager: UserWalletManager,
-        tokensConverter: TokensConverter,
         derivePublicKeysUseCase: DerivePublicKeysUseCase,
         getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
-        testerFeatureToggles: TesterFeatureToggles,
     ): ReferralInteractor {
         return ReferralInteractorImpl(
             repository = referralRepository,
-            derivationManager = derivationManager,
             userWalletManager = userWalletManager,
-            tokensConverter = tokensConverter,
             derivePublicKeysUseCase = derivePublicKeysUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             addCryptoCurrenciesUseCase = addCryptoCurrenciesUseCase,
-            testerFeatureToggles = testerFeatureToggles,
         )
     }
 }
