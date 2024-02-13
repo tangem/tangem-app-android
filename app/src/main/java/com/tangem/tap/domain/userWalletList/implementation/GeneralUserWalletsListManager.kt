@@ -141,7 +141,7 @@ internal class GeneralUserWalletsListManager(
 
                 implementation.value = it
             }
-            .flowOn(dispatchers.io)
+            .flowOn(dispatchers.main)
             .launchIn(applicationScope)
     }
 
