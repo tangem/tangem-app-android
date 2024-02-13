@@ -53,12 +53,16 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
     Surface(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
-            .defaultMinSize(minHeight = TangemTheme.dimens.size56)
             .clickable(
                 enabled = state is TransactionState.Content,
                 onClick = (state as? TransactionState.Content)?.onClick ?: {},
             )
-            .padding(horizontal = TangemTheme.dimens.spacing12, vertical = TangemTheme.dimens.spacing10),
+            .fillMaxWidth()
+            .heightIn(min = TangemTheme.dimens.size56)
+            .padding(
+                vertical = TangemTheme.dimens.spacing8,
+                horizontal = TangemTheme.dimens.spacing12,
+            ),
         color = TangemTheme.colors.background.primary,
     ) {
         @Suppress("DestructuringDeclarationWithTooManyEntries")
@@ -81,12 +85,13 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                 modifier = Modifier
                     .padding(
                         start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing6,
+                        end = TangemTheme.dimens.spacing4,
                     )
                     .constrainAs(titleItem) {
+                        top.linkTo(parent.top)
+                        bottom.linkTo(subtitleItem.top)
                         start.linkTo(iconItem.end)
                         end.linkTo(amountItem.start)
-                        top.linkTo(iconItem.top)
                         width = Dimension.fillToConstraints
                     },
             )
@@ -94,11 +99,14 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
             Subtitle(
                 state = state,
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing6)
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
+                    .padding(
+                        start = TangemTheme.dimens.spacing12,
+                        end = TangemTheme.dimens.spacing4,
+                    )
                     .constrainAs(subtitleItem) {
+                        top.linkTo(titleItem.bottom)
+                        bottom.linkTo(parent.bottom)
                         start.linkTo(iconItem.end)
-                        top.linkTo(amountItem.bottom)
                         end.linkTo(timestampItem.start)
                         width = Dimension.fillToConstraints
                     },
@@ -108,8 +116,9 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                 state = state,
                 isBalanceHidden = isBalanceHidden,
                 modifier = Modifier.constrainAs(amountItem) {
+                    top.linkTo(parent.top)
+                    bottom.linkTo(timestampItem.top)
                     start.linkTo(titleItem.end)
-                    top.linkTo(titleItem.top)
                     end.linkTo(parent.end)
                     width = Dimension.fillToConstraints
                 },
@@ -117,12 +126,11 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
 
             Timestamp(
                 state = state,
-                modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing6)
-                    .constrainAs(timestampItem) {
-                        top.linkTo(amountItem.bottom)
-                        end.linkTo(parent.end)
-                    },
+                modifier = Modifier.constrainAs(timestampItem) {
+                    top.linkTo(amountItem.bottom)
+                    bottom.linkTo(parent.bottom)
+                    end.linkTo(parent.end)
+                },
             )
         }
     }
