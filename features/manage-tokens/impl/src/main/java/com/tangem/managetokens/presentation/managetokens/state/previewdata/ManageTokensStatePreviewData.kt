@@ -32,6 +32,7 @@ internal object ManageTokensStatePreviewData {
         get() = listOf(
             TokenItemStatePreviewData.loadedPriceDown,
             TokenItemStatePreviewData.loadedPriceUp,
+            TokenItemStatePreviewData.loadedPriceNeutral,
         )
 
     private val searchState: SearchBarState
