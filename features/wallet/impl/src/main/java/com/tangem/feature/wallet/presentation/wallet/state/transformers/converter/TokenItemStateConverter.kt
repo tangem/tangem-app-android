@@ -54,7 +54,7 @@ internal class TokenItemStateConverter(
             ),
             cryptoAmountState = TokenItemState.CryptoAmountState.Content(text = getFormattedAmount()),
             cryptoPriceState = getCryptoPriceState(),
-            onItemClick = { clickIntents.onTokenItemClick(currency) },
+            onItemClick = { clickIntents.onTokenItemClick(this) },
             onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
         )
     }
@@ -76,7 +76,7 @@ internal class TokenItemStateConverter(
         id = currency.id.value,
         iconState = iconStateConverter.convert(value = this),
         titleState = TokenItemState.TitleState.Content(text = currency.name),
-        onItemClick = { clickIntents.onTokenItemClick(currency) },
+        onItemClick = { clickIntents.onTokenItemClick(this) },
         onItemLongClick = { clickIntents.onTokenItemLongClick(cryptoCurrencyStatus = this) },
     )
 
