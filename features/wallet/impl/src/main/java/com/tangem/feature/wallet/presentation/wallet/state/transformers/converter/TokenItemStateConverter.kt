@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -97,8 +98,6 @@ internal class TokenItemStateConverter(
                 priceChangePercent = BigDecimalFormatter.formatPercent(
                     percent = priceChange,
                     useAbsoluteValue = true,
-                    maxFractionDigits = 1,
-                    minFractionDigits = 1,
                 ),
                 type = priceChange.getPriceChangeType(),
             )
@@ -117,6 +116,6 @@ internal class TokenItemStateConverter(
     }
 
     private fun BigDecimal.getPriceChangeType(): PriceChangeType {
-        return if (this > BigDecimal.ZERO) PriceChangeType.UP else PriceChangeType.DOWN
+        return PriceChangeConverter.fromBigDecimal(value = this)
     }
 }
