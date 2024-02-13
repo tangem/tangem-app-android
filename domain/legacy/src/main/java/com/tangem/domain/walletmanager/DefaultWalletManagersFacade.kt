@@ -52,11 +52,18 @@ class DefaultWalletManagersFacade(
     moshi: Moshi,
     configManager: ConfigManager,
     blockchainDataStorage: BlockchainDataStorage,
+    accountCreator: AccountCreator,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
-    private val walletManagerFactory by lazy { WalletManagerFactory(configManager, blockchainDataStorage) }
+    private val walletManagerFactory by lazy {
+        WalletManagerFactory(
+            configManager,
+            accountCreator,
+            blockchainDataStorage,
+        )
+    }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
     private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
