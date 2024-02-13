@@ -10,6 +10,7 @@ import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
+import com.tangem.blockchain.common.AccountCreator
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
@@ -151,6 +152,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var blockchainDataStorage: BlockchainDataStorage
+
+    @Inject
+    lateinit var accountCreator: AccountCreator
     // endregion Injected
 
     override fun onCreate() {
@@ -227,6 +231,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
                     blockchainDataStorage = blockchainDataStorage,
+                    accountCreator = accountCreator,
                 ),
             ),
         )
