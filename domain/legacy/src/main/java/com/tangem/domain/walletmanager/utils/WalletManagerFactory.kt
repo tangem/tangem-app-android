@@ -1,5 +1,6 @@
 package com.tangem.domain.walletmanager.utils
 
+import com.tangem.blockchain.common.AccountCreator
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.WalletManager
@@ -13,10 +14,14 @@ import com.tangem.domain.models.scan.ScanResponse
 import timber.log.Timber
 import com.tangem.blockchain.common.WalletManagerFactory as BlockchainWalletManagerFactory
 
-internal class WalletManagerFactory(configManager: ConfigManager, blockchainDataStorage: BlockchainDataStorage) {
+internal class WalletManagerFactory(
+    configManager: ConfigManager,
+    accountCreator: AccountCreator,
+    blockchainDataStorage: BlockchainDataStorage,
+) {
 
     private val sdkWalletManagerFactory by lazy {
-        BlockchainWalletManagerFactory(configManager.config.blockchainSdkConfig, blockchainDataStorage)
+        BlockchainWalletManagerFactory(configManager.config.blockchainSdkConfig, accountCreator, blockchainDataStorage)
     }
 
     fun createWalletManager(
