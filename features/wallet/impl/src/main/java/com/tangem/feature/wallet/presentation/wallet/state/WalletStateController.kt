@@ -10,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarCon
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.WalletScreenStateTransformer
+import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,9 +24,12 @@ import javax.inject.Singleton
 [REDACTED_AUTHOR]
  */
 @Singleton
-internal class WalletStateController @Inject constructor() {
+internal class WalletStateController @Inject constructor(
+    private val manageTokensFeatureToggles: ManageTokensFeatureToggles,
+) {
 
     val uiState: StateFlow<WalletScreenState> get() = mutableUiState
+
     val value: WalletScreenState get() = uiState.value
 
     private val mutableUiState: MutableStateFlow<WalletScreenState> = MutableStateFlow(value = getInitialState())
@@ -81,6 +85,7 @@ internal class WalletStateController @Inject constructor() {
             onWalletChange = {},
             event = consumedEvent(),
             isHidingMode = false,
+            manageTokenRedesignToggle = manageTokensFeatureToggles.isRedesignedScreenEnabled,
         )
     }
 }
