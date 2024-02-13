@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -25,6 +26,7 @@ internal class MultiWalletContentLoader(
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val getTokenListUseCase: GetTokenListUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val reduxStateHolder: ReduxStateHolder,
 ) : WalletContentLoader(id = userWallet.walletId) {
@@ -39,6 +41,7 @@ internal class MultiWalletContentLoader(
                 walletWithFundsChecker = walletWithFundsChecker,
                 getTokenListUseCase = getTokenListUseCase,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+                applyTokenListSortingUseCase = applyTokenListSortingUseCase,
             ),
             MultiWalletWarningsSubscriber(
                 userWalletId = userWallet.walletId,
