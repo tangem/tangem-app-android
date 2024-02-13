@@ -19,7 +19,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
 import com.tangem.core.navigation.StateDialog
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.navigation.OnboardingRouter
 import com.tangem.feature.wallet.presentation.WalletFragment
@@ -136,16 +136,19 @@ internal class DefaultWalletRouter(
         reduxNavController.navigate(action = NavigationAction.OpenUrl(url))
     }
 
-    override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        reduxNavController.navigate(
-            action = NavigationAction.NavigateTo(
-                screen = AppScreen.WalletDetails,
-                bundle = bundleOf(
-                    TokenDetailsRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
-                    TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currency,
+    override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        val networkAddress = currencyStatus.value.networkAddress
+        if (networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()) {
+            reduxNavController.navigate(
+                action = NavigationAction.NavigateTo(
+                    screen = AppScreen.WalletDetails,
+                    bundle = bundleOf(
+                        TokenDetailsRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
+                        TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currencyStatus.currency,
+                    ),
                 ),
-            ),
-        )
+            )
+        }
     }
 
     override fun openStoriesScreen() {
