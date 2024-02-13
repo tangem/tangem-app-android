@@ -39,47 +39,57 @@ fun HorizontalActionChips(
     }
 }
 
-@Preview
+// region Preview
+@Preview(widthDp = 360)
 @Composable
 private fun Preview_HorizontalActionChips_Light(
-    @PreviewParameter(ActionButtonConfigProvider::class) buttons: ImmutableList<ActionButtonConfig>,
+    @PreviewParameter(ActionButtonConfigProvider::class) buttons: HorizontalActionChips,
 ) {
     TangemTheme(isDark = false) {
-        HorizontalActionChips(buttons = buttons)
+        HorizontalActionChips(buttons = buttons.buttons)
     }
 }
 
-@Preview
+@Preview(widthDp = 360)
 @Composable
 private fun Preview_HorizontalActionChips_Dark(
-    @PreviewParameter(ActionButtonConfigProvider::class) buttons: ImmutableList<ActionButtonConfig>,
+    @PreviewParameter(ActionButtonConfigProvider::class) buttons: HorizontalActionChips,
 ) {
     TangemTheme(isDark = true) {
-        HorizontalActionChips(buttons = buttons)
+        HorizontalActionChips(buttons = buttons.buttons)
     }
 }
 
-private class ActionButtonConfigProvider : CollectionPreviewParameterProvider<ActionButtonConfig>(
-    collection = persistentListOf(
-        ActionButtonConfig(
-            text = TextReference.Str(value = "Buy"),
-            iconResId = R.drawable.ic_plus_24,
-            onClick = {},
-        ),
-        ActionButtonConfig(
-            text = TextReference.Str(value = "Send"),
-            iconResId = R.drawable.ic_arrow_up_24,
-            onClick = {},
-        ),
-        ActionButtonConfig(
-            text = TextReference.Str(value = "Receive"),
-            iconResId = R.drawable.ic_arrow_down_24,
-            onClick = {},
-        ),
-        ActionButtonConfig(
-            text = TextReference.Str(value = "Exchange"),
-            iconResId = R.drawable.ic_exchange_vertical_24,
-            onClick = {},
+private class ActionButtonConfigProvider : CollectionPreviewParameterProvider<HorizontalActionChips>(
+    collection = listOf(
+        HorizontalActionChips(
+            buttons = persistentListOf(
+                ActionButtonConfig(
+                    text = TextReference.Str(value = "Buy"),
+                    iconResId = R.drawable.ic_plus_24,
+                    onClick = {},
+                ),
+                ActionButtonConfig(
+                    text = TextReference.Str(value = "Send"),
+                    iconResId = R.drawable.ic_arrow_up_24,
+                    onClick = {},
+                ),
+                ActionButtonConfig(
+                    text = TextReference.Str(value = "Receive"),
+                    iconResId = R.drawable.ic_arrow_down_24,
+                    onClick = {},
+                ),
+                ActionButtonConfig(
+                    text = TextReference.Str(value = "Exchange"),
+                    iconResId = R.drawable.ic_exchange_vertical_24,
+                    onClick = {},
+                ),
+            ),
         ),
     ),
 )
+
+private data class HorizontalActionChips(
+    val buttons: ImmutableList<ActionButtonConfig>,
+)
+// endregion Preview
