@@ -6,8 +6,3 @@ sealed class PriceChangeState {
 
     object Unknown : PriceChangeState()
 }
-
-/** Price changing type */
-enum class PriceChangeType {
-    UP, DOWN
-}
