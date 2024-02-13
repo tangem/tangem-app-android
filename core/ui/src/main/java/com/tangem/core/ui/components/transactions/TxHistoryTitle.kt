@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -24,9 +25,11 @@ internal fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Mod
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
-            .fillMaxWidth()
             .padding(top = TangemTheme.dimens.spacing12)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = TangemTheme.dimens.spacing12)
+            .fillMaxWidth()
+            .heightIn(min = TangemTheme.dimens.size24),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
@@ -37,13 +40,14 @@ internal fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Mod
 
         Row(
             modifier = Modifier.clickable(onClick = onExploreClick),
-            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing2),
         ) {
             Icon(
+                modifier = Modifier.size(size = TangemTheme.dimens.size20),
                 painter = painterResource(id = R.drawable.ic_compass_24),
-                contentDescription = null,
-                modifier = Modifier.size(size = TangemTheme.dimens.size18),
                 tint = TangemTheme.colors.icon.informative,
+                contentDescription = null,
             )
             Text(
                 text = stringResource(id = R.string.common_explorer),
