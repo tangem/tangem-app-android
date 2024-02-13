@@ -879,8 +879,12 @@ internal class SwapViewModel @Inject constructor(
             },
             onReceiveCardWarningClick = {
                 val selectedProvider = dataState.selectedProvider ?: return@UiActions
-                uiState = stateBuilder.createImpactAlert(
+                val currencySymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return@UiActions
+                val isPriceImpact = uiState.priceImpact is PriceImpact.Value
+                uiState = stateBuilder.createAlert(
                     uiState = uiState,
+                    isPriceImpact = isPriceImpact,
+                    token = currencySymbol,
                     providerType = selectedProvider.type,
                 ) {
                     uiState = stateBuilder.clearAlert(uiState)
