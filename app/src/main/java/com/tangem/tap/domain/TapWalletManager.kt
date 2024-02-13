@@ -44,6 +44,7 @@ class TapWalletManager(
     val walletManagerFactory: WalletManagerFactory by lazy {
         WalletManagerFactory(
             config = blockchainSdkConfig,
+            accountCreator = store.state.daggerGraphState.get(DaggerGraphState::accountCreator),
             blockchainDataStorage = store.state.daggerGraphState.get(DaggerGraphState::blockchainDataStorage),
         )
     }

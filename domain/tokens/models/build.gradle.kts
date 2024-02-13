@@ -16,4 +16,5 @@ dependencies {
         exclude(module = "joda-time")
     }
     implementation(deps.jodatime)
+    implementation(deps.timber)
 }

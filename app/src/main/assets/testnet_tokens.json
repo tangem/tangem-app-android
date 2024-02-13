@@ -598,6 +598,16 @@
                     "networkId": "aptos/test"
                 }
             ]
+        },
+        {
+            "id": "hedera-hashgraph",
+            "name": "Hedera",
+            "symbol": "HBAR",
+            "networks": [
+                {
+                    "networkId": "hedera-hashgraph/test"
+                }
+            ]
         }
     ]
 }

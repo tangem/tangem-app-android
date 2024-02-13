@@ -1,5 +1,6 @@
 package com.tangem.tap.proxy.redux
 
+import com.tangem.blockchain.common.AccountCreator
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -53,6 +54,7 @@ data class DaggerGraphState(
     val qrScanningRouter: QrScanningRouter? = null,
     val currenciesRepository: CurrenciesRepository? = null,
     val blockchainDataStorage: BlockchainDataStorage? = null,
+    val accountCreator: AccountCreator? = null,
 ) : StateType {
 
     inline fun <reified T> get(getDependency: DaggerGraphState.() -> T?): T {
