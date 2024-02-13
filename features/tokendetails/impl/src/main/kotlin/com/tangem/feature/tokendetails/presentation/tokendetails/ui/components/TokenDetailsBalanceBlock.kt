@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,18 +33,21 @@ internal fun TokenDetailsBalanceBlock(
         color = TangemTheme.colors.background.primary,
     ) {
         Column {
-            Text(
+            Box(
                 modifier = Modifier
-                    .padding(
-                        top = TangemTheme.dimens.spacing12,
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing12,
-                    ),
-                text = stringResource(id = R.string.common_balance_title),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-                maxLines = 1,
-            )
+                    .padding(top = TangemTheme.dimens.spacing12)
+                    .padding(horizontal = TangemTheme.dimens.spacing12)
+                    .fillMaxWidth()
+                    .heightIn(min = TangemTheme.dimens.spacing24),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Text(
+                    text = stringResource(id = R.string.common_balance_title),
+                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography.subtitle2,
+                    maxLines = 1,
+                )
+            }
             FiatBalance(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
@@ -124,7 +128,7 @@ private fun CryptoBalance(
     }
 }
 
-@Preview
+@Preview(widthDp = 328, heightDp = 152)
 @Composable
 private fun Preview_TokenDetailsBalanceBlock_LightTheme(
     @PreviewParameter(TokenDetailsBalanceBlockStateProvider::class) state: TokenDetailsBalanceBlockState,
@@ -134,7 +138,7 @@ private fun Preview_TokenDetailsBalanceBlock_LightTheme(
     }
 }
 
-@Preview
+@Preview(widthDp = 328, heightDp = 152)
 @Composable
 private fun Preview_TokenDetailsBalanceBlock_DarkTheme(
     @PreviewParameter(TokenDetailsBalanceBlockStateProvider::class) state: TokenDetailsBalanceBlockState,
