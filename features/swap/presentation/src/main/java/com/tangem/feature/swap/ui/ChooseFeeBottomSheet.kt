@@ -40,7 +40,7 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.primary)
-            .padding(bottom = TangemTheme.dimens.spacing8)
+            .padding(bottom = TangemTheme.dimens.spacing8),
     ) {
         Text(
             text = stringResource(R.string.common_fee_selector_title),
@@ -63,17 +63,13 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
         FooterBlock(
             readMore = content.readMore,
             readMoreUrl = content.readMoreUrl,
-            onReadMoreClick = content.onReadMoreClick
+            onReadMoreClick = content.onReadMoreClick,
         )
     }
 }
 
 @Composable
-private fun FooterBlock(
-    readMore: TextReference,
-    readMoreUrl: String,
-    onReadMoreClick: (String) -> Unit,
-) {
+private fun FooterBlock(readMore: TextReference, readMoreUrl: String, onReadMoreClick: (String) -> Unit) {
     val linkText = readMore.resolveReference()
     val fullString = stringResource(id = R.string.common_fee_selector_footer, linkText)
     val linkTextPosition = fullString.indexOf(linkText)

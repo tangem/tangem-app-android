@@ -1351,8 +1351,8 @@ internal class StateBuilder(
     }
 
     private companion object {
-        private val RU_LOCALE = "ru"
-        private val EN_LOCALE = "en"
+        private const val RU_LOCALE = "ru"
+        private const val EN_LOCALE = "en"
         const val ADDRESS_MIN_LENGTH = 11
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4

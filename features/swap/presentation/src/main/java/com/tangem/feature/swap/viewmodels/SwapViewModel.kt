@@ -888,19 +888,8 @@ internal class SwapViewModel @Inject constructor(
             },
             onFeeReadMoreClick = {
                 swapRouter.openUrl(it)
-            }
+            },
         )
-    }
-
-    private val RU_LOCALE = "ru"
-    private val EN_LOCALE = "en"
-
-    private fun getLocaleName(): String {
-        return if (Locale.getDefault().language == "ru") {
-            RU_LOCALE
-        } else {
-            EN_LOCALE
-        }
     }
 
     private fun sendSuccessSwapEvent(fromToken: CryptoCurrency, feeType: FeeType) {
