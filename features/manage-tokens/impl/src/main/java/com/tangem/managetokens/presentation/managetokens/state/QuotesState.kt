@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.state
 
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import kotlinx.collections.immutable.ImmutableList
 
 internal sealed class QuotesState {
@@ -10,8 +11,4 @@ internal sealed class QuotesState {
         val changeType: PriceChangeType,
         val chartData: ImmutableList<Float>,
     ) : QuotesState()
-}
-
-enum class PriceChangeType {
-    UP, DOWN
 }
