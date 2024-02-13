@@ -103,7 +103,7 @@ private fun TokenList(
         )
 
         val listContentPadding = PaddingValues(
-            top = TangemTheme.dimens.spacing12,
+            top = TangemTheme.dimens.spacing4,
             bottom = TangemTheme.dimens.spacing92,
             start = TangemTheme.dimens.spacing16,
             end = TangemTheme.dimens.spacing16,
@@ -245,7 +245,7 @@ private fun TopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size56),
+                .padding(bottom = TangemTheme.dimens.spacing8),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
