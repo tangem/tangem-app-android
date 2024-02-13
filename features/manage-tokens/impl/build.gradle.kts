@@ -35,6 +35,7 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.tangem.card.core)
+    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)
