@@ -3,11 +3,11 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.converter.Converter
-import java.math.BigDecimal
 
 internal class SingleWalletMarketPriceConverter(
     private val status: CryptoCurrencyStatus.Status,
@@ -61,8 +61,6 @@ internal class SingleWalletMarketPriceConverter(
     }
 
     private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeType {
-        val priceChange = status.priceChange ?: return PriceChangeType.DOWN
-
-        return if (priceChange > BigDecimal.ZERO) PriceChangeType.UP else PriceChangeType.DOWN
+        return PriceChangeConverter.fromBigDecimal(status.priceChange)
     }
 }

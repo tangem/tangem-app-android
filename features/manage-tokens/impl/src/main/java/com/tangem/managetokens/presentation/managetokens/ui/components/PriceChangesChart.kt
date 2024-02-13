@@ -121,3 +121,13 @@ private fun Chart_Negative_Preview() {
         )
     }
 }
+
+@Preview(widthDp = 150, heightDp = 150, showBackground = true)
+@Composable
+private fun Chart_Neutral_Preview() {
+    TangemTheme(isDark = true) {
+        PriceChangesChart(
+            persistentListOf(5f, 2f, 4f, 1f, 5f),
+        )
+    }
+}
