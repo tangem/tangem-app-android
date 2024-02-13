@@ -5,6 +5,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.isNullOrZero
 
 internal class SendAmountFieldMaxAmountConverter(
     private val currentStateProvider: Provider<SendUiState>,
@@ -22,6 +23,8 @@ internal class SendAmountFieldMaxAmountConverter(
         val fiatDecimals = amountTextField.fiatAmount.decimals
         val decimalCryptoValue = cryptoCurrencyStatus.value.amount
         val decimalFiatValue = cryptoCurrencyStatus.value.fiatAmount
+
+        if (decimalCryptoValue.isNullOrZero()) return state
 
         val cryptoValue = decimalCryptoValue?.parseBigDecimal(cryptoDecimals).orEmpty()
         val fiatValue = decimalFiatValue?.parseBigDecimal(fiatDecimals).orEmpty()
