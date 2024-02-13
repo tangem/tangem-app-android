@@ -85,6 +85,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "shibarium/test" -> Blockchain.ShibariumTestnet
         "algorand" -> Blockchain.Algorand
         "algorand/test" -> Blockchain.AlgorandTestnet
+        "hedera-hashgraph" -> Blockchain.Hedera
+        "hedera-hashgraph/test" -> Blockchain.HederaTestnet
         else -> null
     }
 }
@@ -171,6 +173,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.ShibariumTestnet -> "shibarium/test"
         Blockchain.Algorand -> "algorand"
         Blockchain.AlgorandTestnet -> "algorand/test"
+        Blockchain.Hedera -> "hedera-hashgraph"
+        Blockchain.HederaTestnet -> "hedera-hashgraph/test"
     }
 }
 
@@ -228,6 +232,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Algorand -> "algorand"
         Blockchain.AlgorandTestnet -> "algorand/test"
         Blockchain.Unknown -> "unknown"
+        Blockchain.Hedera -> "hedera-hashgraph"
+        Blockchain.HederaTestnet -> "hedera-hashgraph/test"
     }
 }
 
