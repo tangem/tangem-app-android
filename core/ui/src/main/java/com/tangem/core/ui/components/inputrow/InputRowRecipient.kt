@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,6 +17,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
+import com.tangem.core.ui.components.inputrow.inner.CrossIcon
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.inputrow.inner.PasteButton
 import com.tangem.core.ui.extensions.TextReference
@@ -73,47 +75,63 @@ fun InputRowRecipient(
                     color = color,
                 )
             }
-            Row(
+            Box(
                 modifier = Modifier
                     .padding(top = TangemTheme.dimens.spacing8),
             ) {
-                AnimatedContent(
-                    targetState = isLoading,
-                    label = "Indicator Show Change",
-                    modifier = Modifier
-                        .align(CenterVertically)
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
-                        .size(TangemTheme.dimens.size36)
-                        .background(TangemTheme.colors.background.tertiary),
-                ) { showIndicator ->
-                    if (showIndicator) {
-                        CircularProgressIndicator(
-                            color = TangemTheme.colors.icon.informative,
-                            modifier = Modifier
-                                .padding(TangemTheme.dimens.spacing8),
-                        )
-                    } else {
-                        IdentIcon(address = value)
-                    }
+                Row {
+                    InputIcon(
+                        isLoading = isLoading,
+                        value = value,
+                    )
+                    SimpleTextField(
+                        value = value,
+                        placeholder = placeholder,
+                        onValueChange = onValueChange,
+                        singleLine = singleLine,
+                        modifier = Modifier
+                            .padding(start = TangemTheme.dimens.spacing12)
+                            .weight(1f)
+                            .align(CenterVertically),
+                    )
+                    CrossIcon(
+                        onClick = onPasteClick,
+                        modifier = Modifier
+                            .align(CenterVertically)
+                            .padding(start = TangemTheme.dimens.spacing8),
+                    )
                 }
-                SimpleTextField(
-                    value = value,
-                    placeholder = placeholder,
-                    onValueChange = onValueChange,
-                    singleLine = singleLine,
-                    modifier = Modifier
-                        .padding(start = TangemTheme.dimens.spacing12)
-                        .weight(1f)
-                        .align(CenterVertically),
-                )
                 PasteButton(
                     isPasteButtonVisible = value.isBlank(),
                     onClick = onPasteClick,
                     modifier = Modifier
-                        .align(CenterVertically)
+                        .align(CenterEnd)
                         .padding(start = TangemTheme.dimens.spacing8),
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.InputIcon(isLoading: Boolean, value: String) {
+    AnimatedContent(
+        targetState = isLoading,
+        label = "Indicator Show Change",
+        modifier = Modifier
+            .align(CenterVertically)
+            .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
+            .size(TangemTheme.dimens.size36)
+            .background(TangemTheme.colors.background.tertiary),
+    ) { showIndicator ->
+        if (showIndicator) {
+            CircularProgressIndicator(
+                color = TangemTheme.colors.icon.informative,
+                modifier = Modifier
+                    .padding(TangemTheme.dimens.spacing8),
+            )
+        } else {
+            IdentIcon(address = value)
         }
     }
 }
