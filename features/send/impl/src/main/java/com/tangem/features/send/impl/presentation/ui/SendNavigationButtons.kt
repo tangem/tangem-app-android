@@ -3,6 +3,8 @@ package com.tangem.features.send.impl.presentation.ui
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -54,6 +57,8 @@ private fun SendSecondaryNavigationButton(uiState: SendUiState) {
     val isCorrectScreen = currentState.value == SendUiStateType.Amount || currentState.value == SendUiStateType.Fee
     AnimatedVisibility(
         visible = !isEditingDisabled && isCorrectScreen,
+        enter = expandHorizontally(expandFrom = Alignment.End),
+        exit = shrinkHorizontally(shrinkTowards = Alignment.End),
     ) {
         Icon(
             modifier = Modifier
