@@ -1,8 +1,12 @@
 package com.tangem.features.managetokens.navigation
 
-import androidx.fragment.app.Fragment
+import androidx.compose.ui.unit.Dp
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 
 interface ManageTokensRouter {
 
-    fun getEntryFragment(): Fragment
+    val startDestination: String
+
+    fun NavGraphBuilder.initialize(navController: NavHostController, onHeaderSizeChange: (Dp) -> Unit)
 }
