@@ -40,6 +40,11 @@ fun SpacerH16(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun SpacerH18(modifier: Modifier = Modifier) {
+    SpacerH(18.dp, modifier)
+}
+
+@Composable
 fun SpacerH24(modifier: Modifier = Modifier) {
     SpacerH(24.dp, modifier)
 }

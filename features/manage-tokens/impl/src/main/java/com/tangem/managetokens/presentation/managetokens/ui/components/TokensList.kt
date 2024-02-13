@@ -17,8 +17,12 @@ import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
 private const val PLACEHOLDER_ITEMS_COUNT = 50
 
 @Composable
-internal fun TokensList(tokens: LazyPagingItems<TokenItemState>, addCustomTokenButton: AddCustomTokenButton) {
-    LazyColumn {
+internal fun TokensList(
+    tokens: LazyPagingItems<TokenItemState>,
+    addCustomTokenButton: AddCustomTokenButton,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(modifier = modifier) {
         item {
             Text(
                 text = stringResource(id = R.string.manage_tokens_title),
