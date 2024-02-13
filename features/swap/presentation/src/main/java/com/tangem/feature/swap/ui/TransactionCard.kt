@@ -280,7 +280,7 @@ private fun Content(
                             Text(
                                 text = makePriceImpactBalanceWarning(
                                     amountEquivalent,
-                                    priceImpact.getIntPercentValue()
+                                    priceImpact.getIntPercentValue(),
                                 ),
                                 color = TangemTheme.colors.text.tertiary,
                                 style = TangemTheme.typography.body2,
@@ -510,7 +510,6 @@ private fun Preview_TransactionCardWithoutPriceImpact_InLightTheme() {
         TransactionCardPreviewWithoutPriceImpact()
     }
 }
-
 
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
