@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
+import timber.log.Timber
 
 internal typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
 
@@ -33,35 +34,48 @@ internal abstract class BasicTokenListSubscriber(
 
     protected abstract fun tokenListFlow(): MaybeTokenListFlow
 
+    protected open suspend fun onTokenListReceived(tokenList: TokenList) { /* no-op */
+    }
+
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
         return combine(
             flow = tokenListFlow()
-                .onEach {
+                .onEach { maybeTokenList ->
                     val displayedState = stateHolder.getWalletStateIfSelected(userWallet.walletId)
 
-                    tokenListAnalyticsSender.send(displayedState, userWallet, it.getOrElse { return@onEach })
+                    tokenListAnalyticsSender.send(
+                        displayedUiState = displayedState,
+                        userWallet = userWallet,
+                        tokenList = maybeTokenList.getOrElse { return@onEach },
+                    )
                 }
                 .distinctUntilChanged(),
             flow2 = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
             transform = { maybeTokenList, maybeAppCurrency ->
-                updateContent(maybeTokenList, maybeAppCurrency.getOrElse { AppCurrency.Default })
-                walletWithFundsChecker.check(maybeTokenList)
+                val tokenList = maybeTokenList.getOrElse { e ->
+                    Timber.e("Failed to load token list: $e")
+                    SetTokenListErrorTransformer(userWallet.walletId, e)
+                    return@combine
+                }
+                val appCurrency = maybeAppCurrency.getOrElse { e ->
+                    Timber.e("Failed to load app currency: $e")
+                    AppCurrency.Default
+                }
+
+                updateContent(tokenList, appCurrency)
+                walletWithFundsChecker.check(tokenList)
+                onTokenListReceived(tokenList)
             },
         )
     }
 
-    private fun updateContent(maybeTokenList: Either<TokenListError, TokenList>, appCurrency: AppCurrency) {
+    private fun updateContent(tokenList: TokenList, appCurrency: AppCurrency) {
         stateHolder.update(
-            maybeTokenList.fold(
-                ifLeft = { SetTokenListErrorTransformer(userWalletId = userWallet.walletId, error = it) },
-                ifRight = {
-                    SetTokenListTransformer(
-                        tokenList = it,
-                        userWallet = userWallet,
-                        appCurrency = appCurrency,
-                        clickIntents = clickIntents,
-                    )
-                },
+            SetTokenListTransformer(
+                tokenList = tokenList,
+                userWallet = userWallet,
+                appCurrency = appCurrency,
+                clickIntents = clickIntents,
             ),
         )
     }

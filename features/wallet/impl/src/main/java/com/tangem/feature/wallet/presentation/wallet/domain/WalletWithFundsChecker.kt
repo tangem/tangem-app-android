@@ -1,9 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
-import arrow.core.Either
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
-import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
@@ -13,9 +11,7 @@ internal class WalletWithFundsChecker @Inject constructor(
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
 ) {
 
-    suspend fun check(maybeTokenList: Either<TokenListError, TokenList>) {
-        val tokenList = (maybeTokenList as? Either.Right)?.value ?: return
-
+    suspend fun check(tokenList: TokenList) {
         val hasNonZeroWallets = when (tokenList) {
             is TokenList.GroupedByNetwork -> {
                 tokenList.groups
