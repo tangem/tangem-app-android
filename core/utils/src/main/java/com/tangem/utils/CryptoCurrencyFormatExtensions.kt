@@ -4,7 +4,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 
 // todo determine where to place this extensions
 fun BigDecimal.toFormattedString(
@@ -38,7 +38,7 @@ fun BigDecimal.toFormattedCurrencyString(
         decimals = decimalsForRounding,
         roundingMode = roundingMode,
     )
-    val formattedCurrency = currency?.let { " $it " } ?: ""
+    val formattedCurrency = currency?.let { " $it" } ?: ""
     return "$formattedAmount$formattedCurrency"
 }
 
