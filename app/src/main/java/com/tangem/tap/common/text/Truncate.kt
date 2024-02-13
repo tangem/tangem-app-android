@@ -77,7 +77,7 @@ class TruncateStart : BaseTruncate() {
 class TruncateMiddle : BaseTruncate() {
 
     override fun roughTruncate(text: String, residualLength: Int): String {
-        if (text.length <= residualLength) return text
+        if (text.length <= residualLength || residualLength < 0) return text
 
         hasBeenTruncated = true
         val halfOfResidualLength = residualLength / 2
