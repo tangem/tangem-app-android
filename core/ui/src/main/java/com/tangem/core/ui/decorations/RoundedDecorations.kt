@@ -19,7 +19,7 @@ fun Modifier.roundedShapeItemDecoration(
             modifier
                 .then(
                     if (addDefaultPadding) {
-                        Modifier.padding(top = TangemTheme.dimens.spacing14)
+                        Modifier.padding(top = TangemTheme.dimens.spacing12)
                     } else {
                         Modifier
                     },
@@ -30,7 +30,7 @@ fun Modifier.roundedShapeItemDecoration(
             modifier
                 .then(
                     if (addDefaultPadding) {
-                        Modifier.padding(top = TangemTheme.dimens.spacing14)
+                        Modifier.padding(top = TangemTheme.dimens.spacing12)
                     } else {
                         Modifier
                     },
