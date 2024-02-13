@@ -1,10 +1,10 @@
 package com.tangem.feature.wallet.presentation.router
 
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +27,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScree
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
+import com.tangem.features.managetokens.navigation.ManageTokensRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import kotlin.properties.Delegates
 
@@ -41,7 +42,7 @@ internal class DefaultWalletRouter(
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(onFinish: () -> Unit) {
+    override fun Initialize(onFinish: () -> Unit, manageTokensRouter: ManageTokensRouter) {
         this.onFinish = onFinish
 
         NavHost(
@@ -54,7 +55,27 @@ internal class DefaultWalletRouter(
                     subscribeToLifecycle(LocalLifecycleOwner.current)
                 }
 
-                WalletScreen(state = viewModel.uiState.collectAsStateWithLifecycle().value)
+                var bottomSheetHeaderHeight by remember { mutableStateOf(0.dp) }
+                val innerController = rememberNavController()
+
+                WalletScreen(
+                    state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                    bottomSheetHeaderHeightProvider = { bottomSheetHeaderHeight },
+                    bottomSheetContent = {
+                        NavHost(
+                            navController = innerController,
+                            startDestination = manageTokensRouter.startDestination,
+                        ) {
+                            // Manage Tokens
+                            with(manageTokensRouter) {
+                                initialize(
+                                    navController = innerController,
+                                    onHeaderSizeChange = { bottomSheetHeaderHeight = it },
+                                )
+                            }
+                        }
+                    },
+                )
             }
 
             composable(
