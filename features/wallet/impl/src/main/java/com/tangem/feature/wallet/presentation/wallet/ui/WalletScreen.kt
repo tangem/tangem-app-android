@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -9,20 +10,26 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.atoms.Hand
+import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
@@ -40,9 +47,14 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balances
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.launch
 
 @Composable
-internal fun WalletScreen(state: WalletScreenState) {
+internal fun WalletScreen(
+    state: WalletScreenState,
+    bottomSheetHeaderHeightProvider: () -> Dp,
+    bottomSheetContent: @Composable () -> Unit,
+) {
     BackHandler(onBack = state.onBackClick)
 
     // It means that screen is still initializing
@@ -58,6 +70,8 @@ internal fun WalletScreen(state: WalletScreenState) {
         snackbarHostState = snackbarHostState,
         isAutoScroll = isAutoScroll,
         onAutoScrollReset = { isAutoScroll.value = false },
+        bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
+        bottomSheetContent = bottomSheetContent,
     )
 
     var alertConfig by remember { mutableStateOf<WalletAlertState?>(value = null) }
@@ -76,19 +90,21 @@ internal fun WalletScreen(state: WalletScreenState) {
     )
 }
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 private fun WalletContent(
     state: WalletScreenState,
     walletsListState: LazyListState,
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
+    bottomSheetHeaderHeightProvider: () -> Dp,
     onAutoScrollReset: () -> Unit,
+    bottomSheetContent: @Composable () -> Unit,
 ) {
     var selectedWalletIndex by remember { mutableIntStateOf(state.selectedWalletIndex) }
     val selectedWallet = state.wallets[selectedWalletIndex]
 
-    BaseScaffold(state = state, selectedWallet = selectedWallet, snackbarHostState = snackbarHostState) {
+    val scaffoldContent: @Composable () -> Unit = {
         val movableItemModifier = Modifier.changeWalletAnimator(walletsListState)
 
         val lazyTxHistoryItems = (selectedWallet as? TxHistoryStateHolder)?.let { walletState ->
@@ -183,6 +199,130 @@ private fun WalletContent(
             onAutoScrollReset = onAutoScrollReset,
         )
     }
+
+    if (state.manageTokenRedesignToggle) {
+        BaseScaffoldManageTokenRedesign(
+            state = state,
+            selectedWallet = selectedWallet,
+            snackbarHostState = snackbarHostState,
+            bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
+            bottomSheetContent = bottomSheetContent,
+        ) {
+            scaffoldContent()
+        }
+    } else {
+        BaseScaffold(
+            state = state,
+            selectedWallet = selectedWallet,
+            snackbarHostState = snackbarHostState,
+        ) {
+            scaffoldContent()
+        }
+    }
+}
+
+@Suppress("LongParameterList", "LongMethod")
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@Composable
+private fun BaseScaffoldManageTokenRedesign(
+    state: WalletScreenState,
+    selectedWallet: WalletState,
+    snackbarHostState: SnackbarHostState,
+    bottomSheetHeaderHeightProvider: () -> Dp,
+    bottomSheetContent: @Composable () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val scaffoldState = rememberBottomSheetScaffoldState()
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+    val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
+    val systemUiController = rememberSystemUiController()
+    val navigationBarColor = TangemTheme.colors.background.primary
+    val navigationBarColorWithout = TangemTheme.colors.background.secondary
+
+    DisposableEffect(
+        navigationBarColor,
+        navigationBarColorWithout,
+    ) {
+        systemUiController.setNavigationBarColor(navigationBarColor)
+        onDispose {
+            systemUiController.setNavigationBarColor(navigationBarColorWithout)
+        }
+    }
+
+    val keyboardShown by keyboardAsState()
+    // expand bottom sheet when keyboard appears
+    LaunchedEffect(keyboardShown is Keyboard.Opened) {
+        if (keyboardShown is Keyboard.Opened) {
+            scaffoldState.bottomSheetState.expand()
+        }
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val sheetHasBeenHidden = scaffoldState.bottomSheetState.targetValue == SheetValue.PartiallyExpanded
+    // hide keyboard when bottom sheet is about to be hidden
+    LaunchedEffect(sheetHasBeenHidden) {
+        if (sheetHasBeenHidden) {
+            keyboardController?.hide()
+        }
+    }
+
+    val peekHeight = bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
+    val coroutineScope = rememberCoroutineScope()
+
+    BottomSheetScaffold(
+        topBar = {
+            WalletTopBar(config = state.topBarConfig)
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
+        containerColor = TangemTheme.colors.background.secondary,
+        sheetContainerColor = TangemTheme.colors.background.primary,
+        scaffoldState = scaffoldState,
+        sheetPeekHeight = peekHeight,
+        sheetDragHandle = {
+            Hand(modifier = Modifier.background(color = TangemTheme.colors.background.primary))
+        },
+        sheetContent = {
+            BoxWithConstraints {
+                Box(
+                    modifier = Modifier
+                        .sizeIn(maxHeight = maxHeight - statusBarHeight)
+                        .align(Alignment.BottomCenter),
+                ) {
+                    bottomSheetContent()
+                }
+            }
+
+            // hide bottom sheet when back pressed
+            BackHandler(
+                keyboardShown is Keyboard.Closed &&
+                    scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded,
+            ) {
+                coroutineScope.launch { scaffoldState.bottomSheetState.partialExpand() }
+            }
+        },
+        content = { paddingValues ->
+            val pullRefreshState = rememberPullRefreshState(
+                refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
+                onRefresh = selectedWallet.pullToRefreshConfig.onRefresh,
+            )
+
+            Box(
+                modifier = Modifier
+                    .pullRefresh(pullRefreshState)
+                    .padding(paddingValues),
+            ) {
+                content()
+
+                WalletPullToRefreshIndicator(
+                    isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
+                    state = pullRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)
