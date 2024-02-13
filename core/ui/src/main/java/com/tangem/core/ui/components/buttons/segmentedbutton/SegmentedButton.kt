@@ -1,10 +1,16 @@
 package com.tangem.core.ui.components.buttons.segmentedbutton
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -58,11 +64,16 @@ inline fun <reified T> SegmentedButtons(
             val leftRadius = if (index == 0) TangemTheme.dimens.radius26 else TangemTheme.dimens.radius0
             val rightRadius = if (index == config.lastIndex) TangemTheme.dimens.radius26 else TangemTheme.dimens.radius0
 
+            val animateColor by animateColorAsState(
+                targetValue = if (index == selected) selectedColor else color,
+                label = "Segmented Button Selected Color Animation",
+                animationSpec = spring(stiffness = Spring.StiffnessMedium),
+            )
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .background(
-                        color = if (index == selected) selectedColor else color,
+                        color = animateColor,
                         shape = RoundedCornerShape(
                             topStart = leftRadius,
                             topEnd = rightRadius,
