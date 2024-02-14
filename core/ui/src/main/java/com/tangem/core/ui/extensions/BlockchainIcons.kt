@@ -104,7 +104,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "aptos", "aptos/test" -> R.drawable.img_aptos_22
         "shibarium", "shibarium/test" -> R.drawable.img_shibarium_22
         "algorand", "algorand/test" -> R.drawable.img_algorand_22
-        "hedera", "hedera/test" -> R.drawable.img_hedera_22
+        "hedera-hashgraph", "hedera/test" -> R.drawable.img_hedera_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -154,7 +154,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "aptos" -> R.drawable.img_aptos_22
         "shibarium" -> R.drawable.img_shibarium_22
         "algorand" -> R.drawable.img_algorand_22
-        "hedera" -> R.drawable.img_hedera_22
+        "hedera-hashgraph" -> R.drawable.img_hedera_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -260,7 +260,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "aptos", "aptos/test" -> R.drawable.ic_aptos_22
         "shibarium", "shibarium/test" -> R.drawable.ic_shibarium_22
         "algorand", "algorand/test" -> R.drawable.ic_algorand_22
-        "hedera", "hedera/test" -> R.drawable.ic_hedera_22
+        "hedera-hashgraph", "hedera/test" -> R.drawable.ic_hedera_22
         else -> R.drawable.ic_alert_24
     }
 }
