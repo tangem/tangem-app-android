@@ -14,6 +14,8 @@ sealed class SendTransactionError {
 
     object UserCancelledError : SendTransactionError()
 
+    data class CreateAccountUnderfunded(val amount: String) : SendTransactionError()
+
     data class TangemSdkError(val code: Int, val messageReference: TextReference) : SendTransactionError()
 
     data class UnknownError(val ex: Exception? = null) : SendTransactionError()
