@@ -116,6 +116,7 @@ private fun ChooseProviderBottomSheet_Preview() {
             additionalBadge = ProviderState.AdditionalBadge.BestTrade,
             percentLowerThenBest = PercentLowerThanBest.Value(-1.0f),
             selectionType = ProviderState.SelectionType.SELECT,
+            namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = {},
         ),
         ProviderState.Unavailable(
