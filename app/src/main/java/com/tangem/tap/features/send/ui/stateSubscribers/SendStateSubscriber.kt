@@ -62,7 +62,8 @@ internal class SendStateSubscriber(
         }
     }
 
-    @Suppress("ComplexMethod")
+    @Deprecated("Legacy")
+    @Suppress("ComplexMethod", "LongMethod")
     private fun handleTransactionExtrasState(fg: SendFragment, infoState: TransactionExtrasState) =
         with(fg.binding.lSendAddress) {
             fun showView(view: View, info: Any?) {
@@ -73,6 +74,7 @@ internal class SendStateSubscriber(
             showView(binanceMemoContainer, infoState.binanceMemo)
             showView(tonMemoContainer, infoState.tonMemoState)
             showView(cosmosMemoContainer, infoState.cosmosMemoState)
+            showView(hederaMemoContainer, infoState.hederaMemoState)
 
             infoState.xlmMemo?.let {
                 if (!it.viewFieldValue.isFromUserInput) etXlmMemo.setText(it.viewFieldValue.value)
@@ -127,6 +129,16 @@ internal class SendStateSubscriber(
                 }
                 if (!it.viewFieldValue.isFromUserInput) {
                     etCosmosMemo.setText(it.viewFieldValue.value)
+                }
+            }
+            infoState.hederaMemoState?.let {
+                if (infoState.hederaMemoState.error != null) {
+                    tilHederaMemo.error = fg.getText(R.string.send_extras_error_invalid_memo)
+                } else {
+                    tilHederaMemo.error = null
+                }
+                if (!it.viewFieldValue.isFromUserInput) {
+                    etHederaMemo.setText(it.viewFieldValue.value)
                 }
             }
         }
