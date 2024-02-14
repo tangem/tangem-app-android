@@ -31,7 +31,6 @@ internal class SendNotificationFactory(
         .map {
             val state = currentStateProvider()
             val feeState = state.feeState ?: return@map persistentListOf()
-            val recipientState = state.recipientState ?: return@map persistentListOf()
             val feeAmount = feeState.fee?.amount?.value ?: BigDecimal.ZERO
             val amountValue = state.amountState?.amountTextField?.value?.toBigDecimalOrNull() ?: BigDecimal.ZERO
             val sendAmount = if (feeState.isSubtract) feeState.receivedAmountValue else amountValue
@@ -41,7 +40,6 @@ internal class SendNotificationFactory(
                 addInvalidAmountNotification(feeState.isSubtract, sendAmount)
                 addMinimumAmountErrorNotification(feeAmount, sendAmount)
                 addDustWarningNotification(feeAmount, sendAmount)
-                addReserveAmountErrorNotification(recipientState.addressTextField.value)
                 addTransactionLimitErrorNotification(feeAmount, sendAmount)
                 // warnings
                 addExistentialWarningNotification(feeAmount, sendAmount)
@@ -116,26 +114,27 @@ internal class SendNotificationFactory(
         }
     }
 
-    private suspend fun MutableList<SendNotification>.addReserveAmountErrorNotification(recipientAddress: String) {
-        val userWalletId = userWalletProvider().walletId
-        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
-        val isAccountFunded = currencyChecksRepository.checkIfAccountFunded(
-            userWalletId,
-            cryptoCurrency.network,
-            recipientAddress,
-        )
-        val minimumAmount = currencyChecksRepository.getReserveAmount(userWalletId, cryptoCurrency.network)
-        if (!isAccountFunded && minimumAmount != null && minimumAmount > BigDecimal.ZERO) {
-            add(
-                SendNotification.Error.ReserveAmountError(
-                    BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = minimumAmount,
-                        cryptoCurrency = cryptoCurrency,
-                    ),
-                ),
-            )
-        }
-    }
+    // todo temporarily disabling notification
+    // private suspend fun MutableList<SendNotification>.addReserveAmountErrorNotification(recipientAddress: String) {
+    //     val userWalletId = userWalletProvider().walletId
+    //     val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+    //     val isAccountFunded = currencyChecksRepository.checkIfAccountFunded(
+    //         userWalletId,
+    //         cryptoCurrency.network,
+    //         recipientAddress,
+    //     )
+    //     val minimumAmount = currencyChecksRepository.getReserveAmount(userWalletId, cryptoCurrency.network)
+    //     if (!isAccountFunded && minimumAmount != null && minimumAmount > BigDecimal.ZERO) {
+    //         add(
+    //             SendNotification.Error.ReserveAmountError(
+    //                 BigDecimalFormatter.formatCryptoAmount(
+    //                     cryptoAmount = minimumAmount,
+    //                     cryptoCurrency = cryptoCurrency,
+    //                 ),
+    //             ),
+    //         )
+    //     }
+    // }
 
     private suspend fun MutableList<SendNotification>.addTransactionLimitErrorNotification(
         feeAmount: BigDecimal,
