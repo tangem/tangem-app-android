@@ -1326,7 +1326,7 @@ internal class StateBuilder(
     }
 
     private fun SwapAmount.getFormattedCryptoAmount(token: CryptoCurrency): String {
-        return "${this.formatToUIRepresentation()} ${token.symbol}"
+        return BigDecimalFormatter.formatCryptoAmount(value, token.symbol, token.decimals)
     }
 
     private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
