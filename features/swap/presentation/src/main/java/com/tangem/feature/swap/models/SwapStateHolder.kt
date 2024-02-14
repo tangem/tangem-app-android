@@ -84,6 +84,7 @@ sealed interface TransactionCardType {
     ) : TransactionCardType
 
     data class ReadOnly(
+        val showWarning: Boolean = false,
         val onWarningClick: (() -> Unit)? = null,
         @StringRes override val headerResId: Int = R.string.swapping_to_title,
     ) : TransactionCardType

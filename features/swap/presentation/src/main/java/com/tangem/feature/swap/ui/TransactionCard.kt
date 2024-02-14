@@ -298,23 +298,25 @@ private fun Content(
                                 )
                             }
                         }
-                        SpacerW4()
-                        IconButton(
-                            onClick = {
-                                type.onWarningClick?.invoke()
-                            },
-                            modifier = Modifier.size(size = TangemTheme.dimens.size20),
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_alert_24),
-                                contentDescription = null,
-                                tint = if (priceImpact is PriceImpact.Value) {
-                                    TangemTheme.colors.text.attention
-                                } else {
-                                    TangemTheme.colors.text.tertiary
+                        if (type.showWarning) {
+                            SpacerW4()
+                            IconButton(
+                                onClick = {
+                                    type.onWarningClick?.invoke()
                                 },
-                                modifier = Modifier.align(Alignment.CenterVertically),
-                            )
+                                modifier = Modifier.size(size = TangemTheme.dimens.size20),
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_alert_24),
+                                    contentDescription = null,
+                                    tint = if (priceImpact is PriceImpact.Value) {
+                                        TangemTheme.colors.text.attention
+                                    } else {
+                                        TangemTheme.colors.text.tertiary
+                                    },
+                                    modifier = Modifier.align(Alignment.CenterVertically),
+                                )
+                            }
                         }
                     }
                 } else {
