@@ -26,5 +26,4 @@ class GetCryptoCurrenciesUseCase(private val currenciesRepository: CurrenciesRep
     fun getAsync(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
         return currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWalletId)
     }
-
 }
