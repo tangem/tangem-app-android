@@ -1,9 +1,10 @@
 package com.tangem.feature.qrscanning.presentation
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,14 +19,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
-import com.google.mlkit.vision.common.InputImage
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIconContent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -44,15 +43,9 @@ internal fun QrScanningContent(
     analyzer: () -> MLKitBarcodeAnalyzer,
     uiState: QrScanningState,
 ) {
-    val context = LocalContext.current
     var isFlash by remember { mutableStateOf(false) }
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-        val selectedImage = it ?: Uri.EMPTY
-        if (selectedImage != Uri.EMPTY) {
-            val image = InputImage.fromFilePath(context, selectedImage)
-            analyzer().analyze(image)
-        }
-    }
+
+    BackHandler(onBack = uiState.onBackClick)
 
     Box(
         modifier = Modifier
@@ -101,13 +94,16 @@ internal fun QrScanningContent(
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = rememberRipple(bounded = false),
-                                onClick = { galleryLauncher.launch("image/*") },
+                                onClick = uiState.onGalleryClick,
                             ),
                         tint = TangemColorPalette.White,
                     )
                 }
             },
         )
+        if (uiState.bottomSheetConfig != null) {
+            CameraDeniedBottomSheet(uiState.bottomSheetConfig)
+        }
     }
 }
 
