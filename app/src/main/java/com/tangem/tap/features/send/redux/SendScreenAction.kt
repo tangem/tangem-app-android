@@ -59,25 +59,35 @@ sealed class TransactionExtrasAction : SendScreenActionUi {
 
     object Release : TransactionExtrasAction()
 
+    @Deprecated("Only in legacy send screen")
     sealed class XlmMemo : TransactionExtrasAction() {
         //        data class ChangeSelectedMemo(val memoType: XlmMemoType) : XlmMemo()
         data class HandleUserInput(val data: String) : XlmMemo()
     }
 
+    @Deprecated("Only in legacy send screen")
     sealed class BinanceMemo : TransactionExtrasAction() {
         data class HandleUserInput(val data: String) : BinanceMemo()
     }
 
+    @Deprecated("Only in legacy send screen")
     sealed class XrpDestinationTag : TransactionExtrasAction() {
         data class HandleUserInput(val data: String) : XrpDestinationTag()
     }
 
+    @Deprecated("Only in legacy send screen")
     sealed class TonMemo : TransactionExtrasAction() {
         data class HandleUserInput(val data: String) : TonMemo()
     }
 
+    @Deprecated("Only in legacy send screen")
     sealed class CosmosMemo : TransactionExtrasAction() {
         data class HandleUserInput(val data: String) : CosmosMemo()
+    }
+
+    @Deprecated("Only in legacy send screen")
+    sealed class HederaMemo : TransactionExtrasAction() {
+        data class HandleUserInput(val data: String) : HederaMemo()
     }
 }
 
