@@ -17,11 +17,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -113,12 +114,14 @@ private fun ProviderContentState(
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             ) {
                 Row {
-                    Text(
-                        text = stringResource(id = R.string.express_by_provider),
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
-                    )
+                    if (state.namePrefix == ProviderState.PrefixType.PROVIDED_BY) {
+                        Text(
+                            text = stringResource(id = R.string.express_by_provider),
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors.text.tertiary,
+                            modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
+                        )
+                    }
                     AnimatedContent(targetState = state.name, label = "") {
                         Text(
                             text = it,
@@ -427,13 +430,16 @@ private class ProviderItemParameterProvider : CollectionPreviewParameterProvider
             name = "1inch",
             type = "DEX",
             iconUrl = "",
-            subtitle = stringReference(value = "1 132,46 MATIC"),
-            additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
+            subtitle = stringReference(value = "0,64554846 DAI ≈ 1 MATIC"),
+            additionalBadge = ProviderState.AdditionalBadge.Empty,
             percentLowerThenBest = PercentLowerThanBest.Empty,
             selectionType = ProviderState.SelectionType.SELECT,
+            namePrefix = ProviderState.PrefixType.PROVIDED_BY,
             onProviderClick = {},
         )
         val contentState2 = contentState.copy(
+            subtitle = stringReference(value = "1 132,46 MATIC"),
+            additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
             percentLowerThenBest = PercentLowerThanBest.Value(value = 5f),
         )
         val unavailableState = ProviderState.Unavailable(
