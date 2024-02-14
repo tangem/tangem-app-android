@@ -28,6 +28,7 @@ internal class SendRecipientMemoFieldConverter(
             Blockchain.TerraV1.id,
             Blockchain.TerraV2.id,
             Blockchain.Stellar.id,
+            Blockchain.Hedera.id,
             -> convert(R.string.send_extras_hint_memo)
             else -> null
         }
