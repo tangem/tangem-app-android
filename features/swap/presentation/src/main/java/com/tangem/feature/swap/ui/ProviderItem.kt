@@ -391,75 +391,73 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ProviderItem_Loading_Preview() {
-    Column {
-        TangemTheme(isDark = false) {
-            ProviderItemBlock(state = ProviderState.Loading())
-        }
-
-        SpacerH24()
-
-        TangemTheme(isDark = true) {
-            ProviderItemBlock(state = ProviderState.Loading())
-        }
+private fun ProviderItemPreview_Light(
+    @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
+) {
+    TangemTheme {
+        ProviderItem(
+            modifier = Modifier.background(TangemTheme.colors.background.action),
+            state = state.first,
+            isSelected = state.second,
+        )
     }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ProviderItem_Content_Preview() {
-    val state = ProviderState.Content(
-        id = "1",
-        name = "1inch",
-        type = "DEX",
-        iconUrl = "",
-        subtitle = stringReference("1 000 000"),
-        additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
-        percentLowerThenBest = PercentLowerThanBest.Value(-1.0f),
-        selectionType = ProviderState.SelectionType.SELECT,
-        onProviderClick = {},
-    )
-    Column {
-        TangemTheme(isDark = false) {
-            ProviderItemBlock(state = state)
-        }
-
-        SpacerH24()
-
-        TangemTheme(isDark = true) {
-            ProviderItemBlock(state = state)
-        }
+private fun ProviderItemPreview_Dark(
+    @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
+) {
+    TangemTheme(isDark = true) {
+        ProviderItem(
+            modifier = Modifier.background(TangemTheme.colors.background.action),
+            state = state.first,
+            isSelected = state.second,
+        )
     }
 }
 
-@Preview
-@Composable
-private fun ProviderItem_Unavailable_Preview() {
-    val state = ProviderState.Unavailable(
-        id = "1",
-        name = "1inch",
-        type = "DEX",
-        iconUrl = "",
-        selectionType = ProviderState.SelectionType.SELECT,
-        alertText = stringReference("Unavailable"),
-    )
-    Column {
-        TangemTheme(isDark = false) {
-            ProviderItemBlock(state = state)
-        }
+private class ProviderItemParameterProvider : CollectionPreviewParameterProvider<Pair<ProviderState, Boolean>>(
+    collection = buildList {
+        val contentState = ProviderState.Content(
+            id = "1",
+            name = "1inch",
+            type = "DEX",
+            iconUrl = "",
+            subtitle = stringReference(value = "1 132,46 MATIC"),
+            additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
+            percentLowerThenBest = PercentLowerThanBest.Empty,
+            selectionType = ProviderState.SelectionType.SELECT,
+            onProviderClick = {},
+        )
+        val contentState2 = contentState.copy(
+            percentLowerThenBest = PercentLowerThanBest.Value(value = 5f),
+        )
+        val unavailableState = ProviderState.Unavailable(
+            id = "1",
+            name = "1inch",
+            type = "DEX",
+            iconUrl = "",
+            alertText = stringReference(value = "Not available"),
+            selectionType = ProviderState.SelectionType.SELECT,
+            onProviderClick = {},
+        )
+        val loadingState = ProviderState.Loading()
 
-        SpacerH24()
+        add(contentState to true)
+        add(contentState to false)
 
-        TangemTheme(isDark = true) {
-            ProviderItemBlock(state = state)
-        }
+        add(contentState2 to true)
+        add(contentState2 to false)
 
-        SpacerH24()
+        add(unavailableState to true)
+        add(unavailableState to false)
 
-        TangemTheme(isDark = true) {
-            ProviderItem(state = state, isSelected = true)
-        }
-    }
-}
+        add(loadingState to true)
+        add(loadingState to false)
+    },
+)
+// endregion Preview
