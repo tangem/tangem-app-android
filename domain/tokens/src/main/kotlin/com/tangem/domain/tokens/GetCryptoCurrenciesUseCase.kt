@@ -7,6 +7,7 @@ import com.tangem.domain.tokens.error.GetCurrenciesError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
+import kotlinx.coroutines.flow.Flow
 
 class GetCryptoCurrenciesUseCase(private val currenciesRepository: CurrenciesRepository) {
 
@@ -21,4 +22,9 @@ class GetCryptoCurrenciesUseCase(private val currenciesRepository: CurrenciesRep
             )
         }
     }
+
+    fun getAsync(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
+        return currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWalletId)
+    }
+
 }
