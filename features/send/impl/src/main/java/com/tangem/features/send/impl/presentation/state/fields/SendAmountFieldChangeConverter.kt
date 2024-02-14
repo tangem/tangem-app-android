@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -21,7 +22,6 @@ internal class SendAmountFieldChangeConverter(
         val feeState = state.feeState ?: return state
 
         if (value.isEmpty()) return state.emptyState()
-
         val cryptoDecimals = amountTextField.cryptoAmount.decimals
         val fiatDecimals = amountTextField.fiatAmount.decimals
 
@@ -89,10 +89,12 @@ internal class SendAmountFieldChangeConverter(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val currencyCryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val currencyFiatAmount = cryptoCurrencyStatus.value.fiatAmount ?: BigDecimal.ZERO
+        val fiatDecimal = parseToBigDecimal(amountTextField.fiatAmount.decimals)
+        val cryptoDecimal = parseToBigDecimal(amountTextField.cryptoAmount.decimals)
         return if (amountTextField.isFiatValue) {
-            parseToBigDecimal(amountTextField.fiatAmount.decimals) > currencyFiatAmount
+            fiatDecimal > currencyFiatAmount || fiatDecimal.isZero()
         } else {
-            parseToBigDecimal(amountTextField.cryptoAmount.decimals) > currencyCryptoAmount
+            cryptoDecimal > currencyCryptoAmount || cryptoDecimal.isZero()
         }
     }
 
