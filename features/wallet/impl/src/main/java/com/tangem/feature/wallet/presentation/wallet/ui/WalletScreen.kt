@@ -81,8 +81,6 @@ internal fun WalletScreen(
         alertConfig = alertConfig,
     )
 
-
-
     WalletEventEffect(
         event = state.event,
         selectedWalletIndex = state.selectedWalletIndex,
