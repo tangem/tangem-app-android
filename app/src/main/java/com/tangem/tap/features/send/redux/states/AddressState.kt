@@ -23,18 +23,20 @@ data class AddressState(
     fun isReady(): Boolean = error == null && destinationWalletAddress?.isNotEmpty() ?: false
 }
 
+@Deprecated("Legacy")
 data class TransactionExtrasState(
     val xlmMemo: XlmMemoState? = null,
     val binanceMemo: BinanceMemoState? = null,
     val xrpDestinationTag: XrpDestinationTagState? = null,
     val tonMemoState: TonMemoState? = null,
     val cosmosMemoState: CosmosMemoState? = null,
+    val hederaMemoState: HederaMemoState? = null,
 ) : IdStateHolder {
     override val stateId: StateId = StateId.TRANSACTION_EXTRAS
 
     fun isNull(): Boolean {
         return xlmMemo == null && binanceMemo == null && xrpDestinationTag == null && tonMemoState == null &&
-            cosmosMemoState == null
+            cosmosMemoState == null && hederaMemoState == null
     }
 
     fun isEmpty(): Boolean {
@@ -43,8 +45,9 @@ data class TransactionExtrasState(
         val isXrpEmpty = xrpDestinationTag?.viewFieldValue?.value?.isEmpty() ?: false
         val isTonEmpty = tonMemoState?.viewFieldValue?.value?.isEmpty() ?: false
         val isCosmosEmpty = cosmosMemoState?.viewFieldValue?.value?.isEmpty() ?: false
+        val isHederaEmpty = hederaMemoState?.viewFieldValue?.value?.isEmpty() ?: false
 
-        return isXlmEmpty || isBinanceEmpty || isXrpEmpty || isTonEmpty || isCosmosEmpty
+        return isXlmEmpty || isBinanceEmpty || isXrpEmpty || isTonEmpty || isCosmosEmpty || isHederaEmpty
     }
 }
 
@@ -115,6 +118,12 @@ data class TonMemoState(
 )
 
 data class CosmosMemoState(
+    val viewFieldValue: InputViewValue = InputViewValue(""),
+    val memo: String? = null,
+    val error: TransactionExtraError? = null,
+)
+
+data class HederaMemoState(
     val viewFieldValue: InputViewValue = InputViewValue(""),
     val memo: String? = null,
     val error: TransactionExtraError? = null,
