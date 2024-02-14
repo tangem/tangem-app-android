@@ -71,8 +71,8 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
 @Composable
 private fun FooterBlock(readMore: TextReference, readMoreUrl: String, onReadMoreClick: (String) -> Unit) {
     val linkText = readMore.resolveReference()
-    val fullString = stringResource(id = R.string.common_fee_selector_footer, linkText)
-    val linkTextPosition = fullString.indexOf(linkText)
+    val fullString = stringResource(R.string.common_fee_selector_footer, linkText)
+    val linkTextPosition = fullString.length - linkText.length
     val annotatedString = buildAnnotatedString {
         withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
             append(fullString.substring(0, linkTextPosition))

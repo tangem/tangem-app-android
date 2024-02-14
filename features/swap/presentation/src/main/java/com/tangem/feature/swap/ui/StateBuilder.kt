@@ -1075,7 +1075,7 @@ internal class StateBuilder(
                 }
                 actions.onSelectFeeType.invoke(selectedItem)
             },
-            readMoreUrl = composeReadMoreUrl(),
+            readMoreUrl = buildReadMoreUrl(),
             feeItems = txFeeState.toFeeItemState(),
             readMore = resourceReference(R.string.common_fee_selector_link_description),
             onReadMoreClick = actions.onFeeReadMoreClick,
@@ -1089,7 +1089,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun composeReadMoreUrl(): String {
+    private fun buildReadMoreUrl(): String {
         return buildString {
             append(FEE_READ_MORE_URL_FIRST_PART)
             append(getLocaleName())
