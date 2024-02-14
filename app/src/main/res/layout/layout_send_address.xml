@@ -260,6 +260,38 @@
 
         </FrameLayout>
 
+        <FrameLayout
+            android:id="@+id/hederaMemoContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilHederaMemo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/send_extras_hint_memo"
+                style="@style/SecondaryTextInputLayout"
+                app:errorIconDrawable="@null">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etHederaMemo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/background_secondary"
+                    android:textColor="@color/text_primary_1"
+                    android:ellipsize="end"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:singleLine="true"
+                    android:textSize="16sp"
+                    tools:text="Hedera memo" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </FrameLayout>
+
     </LinearLayout>
 
 </LinearLayout>
