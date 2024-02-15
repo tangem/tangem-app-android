@@ -40,6 +40,7 @@ class ConfigValueModel(
     val tangemComAuthorization: String?,
     val chiaFireAcademyApiKey: String?,
     val chiaTangemApiKey: String?,
+    val devExpress: ExpressModel?,
     val express: ExpressModel?,
 )
 
