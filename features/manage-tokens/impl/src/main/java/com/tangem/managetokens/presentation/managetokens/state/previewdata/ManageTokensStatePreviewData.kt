@@ -1,6 +1,8 @@
 package com.tangem.managetokens.presentation.managetokens.state.previewdata
 
 import androidx.paging.PagingData
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.managetokens.presentation.common.state.previewdata.ChooseWalletStatePreviewData
 import com.tangem.managetokens.presentation.managetokens.state.AddCustomTokenButton
@@ -20,6 +22,7 @@ internal object ManageTokensStatePreviewData {
             event = consumedEvent(),
             chooseWalletState = ChooseWalletStatePreviewData.state,
             onEmptySearchResult = {},
+            customTokenBottomSheetConfig = TangemBottomSheetConfig(false, {}, TangemBottomSheetConfigContent.Empty),
         )
 
     val loadingState: ManageTokensState
