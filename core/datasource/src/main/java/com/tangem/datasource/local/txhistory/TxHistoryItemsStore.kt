@@ -1,15 +1,14 @@
 package com.tangem.datasource.local.txhistory
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.wallets.models.UserWalletId
 
 interface TxHistoryItemsStore {
 
-    suspend fun getNextPageSyncOrNull(key: Key): Int?
-
-    suspend fun getSyncOrNull(key: Key, page: Int): PaginationWrapper<TxHistoryItem>?
+    suspend fun getSyncOrNull(key: Key, page: Page): PaginationWrapper<TxHistoryItem>?
 
     suspend fun remove(key: Key)
 
