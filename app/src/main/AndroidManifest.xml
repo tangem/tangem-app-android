@@ -120,7 +120,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="success.tangem.com"
+                    android:host="redirect"
                     android:scheme="tangem" />
             </intent-filter>
 
