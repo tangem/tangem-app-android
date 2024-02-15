@@ -1,6 +1,8 @@
 package com.tangem.managetokens.presentation.managetokens.state.factory
 
 import androidx.paging.PagingData
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.tokens.CurrencyCompatibilityError
@@ -39,6 +41,11 @@ internal class ManageTokensStateFactory(
             event = consumedEvent(),
             chooseWalletState = ChooseWalletState.NoSelection,
             onEmptySearchResult = uiIntents::onEmptySearchResult,
+            customTokenBottomSheetConfig = TangemBottomSheetConfig(
+                isShow = false,
+                onDismissRequest = uiIntents::onAddCustomTokenSheetDismissed,
+                content = TangemBottomSheetConfigContent.Empty,
+            ),
         )
     }
 
