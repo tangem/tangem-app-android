@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.router
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -27,7 +28,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScree
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
-import com.tangem.features.managetokens.navigation.ManageTokensRouter
+import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import kotlin.properties.Delegates
 
@@ -42,7 +43,7 @@ internal class DefaultWalletRouter(
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(onFinish: () -> Unit, manageTokensRouter: ManageTokensRouter) {
+    override fun Initialize(onFinish: () -> Unit, manageTokensUi: ManageTokensUi) {
         this.onFinish = onFinish
 
         NavHost(
@@ -56,24 +57,15 @@ internal class DefaultWalletRouter(
                 }
 
                 var bottomSheetHeaderHeight by remember { mutableStateOf(0.dp) }
-                val innerController = rememberNavController()
 
                 WalletScreen(
                     state = viewModel.uiState.collectAsStateWithLifecycle().value,
                     bottomSheetHeaderHeightProvider = { bottomSheetHeaderHeight },
                     bottomSheetContent = {
-                        NavHost(
-                            navController = innerController,
-                            startDestination = manageTokensRouter.startDestination,
-                        ) {
-                            // Manage Tokens
-                            with(manageTokensRouter) {
-                                initialize(
-                                    navController = innerController,
-                                    onHeaderSizeChange = { bottomSheetHeaderHeight = it },
-                                )
-                            }
-                        }
+                        // Manage Tokens
+                        manageTokensUi.Content(
+                            onHeaderSizeChange = { bottomSheetHeaderHeight = it },
+                        )
                     },
                 )
             }
@@ -97,6 +89,7 @@ internal class DefaultWalletRouter(
         }
     }
 
+    @SuppressLint("RestrictedApi")
     override fun popBackStack(screen: AppScreen?) {
         /*
          * It's hack that avoid issue with closing the wallet screen.
