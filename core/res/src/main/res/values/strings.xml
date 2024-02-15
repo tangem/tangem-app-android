@@ -89,7 +89,8 @@
     <string name="common_explore_transaction_history">Explore transaction history</string>
     <string name="common_explorer">Explorer</string>
     <string name="common_fee_label">Fee</string>
-    <string name="common_fee_selector_footer">Network transaction fees are used to support network security, incentivize validators, allocate resources, and determine transaction priority.</string>
+    <string name="common_fee_selector_footer">Network fees are charges users pay to process and confirm transactions. The fee amount can be affected by network congestion, transaction size, and execution priority. %s</string>
+    <string name="common_fee_selector_link_description">Read more</string>
     <string name="common_fee_selector_option_custom">Custom</string>
     <string name="common_fee_selector_option_fast">Fast</string>
     <string name="common_fee_selector_option_market">Market</string>
