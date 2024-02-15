@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.addcustomtoken.viewmodels
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,6 +21,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.managetokens.presentation.addcustomtoken.router.AddCustomTokenRouter
 import com.tangem.managetokens.presentation.common.analytics.ManageTokens
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.Event
@@ -29,22 +31,20 @@ import com.tangem.managetokens.presentation.addcustomtoken.state.factory.AddCust
 import com.tangem.managetokens.presentation.addcustomtoken.state.factory.ContractAddressToCustomTokenDataConverter
 import com.tangem.managetokens.presentation.addcustomtoken.state.factory.AddCustomTokenStateFactory
 import com.tangem.managetokens.presentation.addcustomtoken.state.factory.FoundTokenToCustomTokenDataConverter
-import com.tangem.managetokens.presentation.router.InnerManageTokensRouter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.Debouncer.Companion.DEFAULT_WAIT_TIME_MS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toPersistentSet
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
+@Stable
 @HiltViewModel
 internal class AddCustomTokenViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
@@ -67,12 +67,15 @@ internal class AddCustomTokenViewModel @Inject constructor(
         clickIntents = this,
     )
 
-    var router: InnerManageTokensRouter by Delegates.notNull()
+    var router: AddCustomTokenRouter by Delegates.notNull()
 
     var uiState: AddCustomTokenState by mutableStateOf(stateFactory.getInitialState())
         private set
 
-    override fun onCreate(owner: LifecycleOwner) {
+    /**
+     *  Called when the bottom sheet was opened
+     */
+    fun onInitialize() {
         viewModelScope.launch(dispatchers.io) {
             getWalletsUseCase()
                 .distinctUntilChanged()
@@ -90,6 +93,16 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    /**
+     *  Called after the bottom sheet is closed
+     */
+    fun onDispose() {
+        // We have to manually cancel viewModelScope's child jobs when bottom sheet is closed
+        viewModelScope.coroutineContext.cancelChildren()
+        // and reset state
+        uiState = stateFactory.getInitialState()
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
