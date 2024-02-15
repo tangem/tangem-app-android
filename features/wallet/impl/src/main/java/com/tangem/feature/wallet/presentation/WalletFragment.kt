@@ -7,7 +7,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.features.managetokens.navigation.ManageTokensRouter
+import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.wallet.navigation.WalletRouter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -24,7 +24,7 @@ internal class WalletFragment : ComposeFragment() {
     override lateinit var appThemeModeHolder: AppThemeModeHolder
 
     @Inject
-    internal lateinit var manageTokensRouter: ManageTokensRouter
+    internal lateinit var manageTokensUi: ManageTokensUi
 
     /** Feature router */
     @Inject
@@ -44,7 +44,7 @@ internal class WalletFragment : ComposeFragment() {
 
         _walletRouter.Initialize(
             onFinish = requireActivity()::finish,
-            manageTokensRouter = manageTokensRouter,
+            manageTokensUi = manageTokensUi,
         )
     }
 
