@@ -1,21 +1,18 @@
 package com.tangem.managetokens.di
 
-import com.tangem.core.navigation.ReduxNavController
-import com.tangem.features.managetokens.navigation.ManageTokensRouter
-import com.tangem.managetokens.presentation.router.DefaultManageTokensRouter
+import com.tangem.features.managetokens.navigation.ManageTokensUi
+import com.tangem.managetokens.presentation.router.ManageTokensUiImpl
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.scopes.ActivityScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ActivityComponent::class)
-internal object ManageTokensRouterModule {
+@InstallIn(SingletonComponent::class)
+internal interface ManageTokensRouterModule {
 
-    @Provides
-    @ActivityScoped
-    fun provideManageTokensRouter(reduxNavController: ReduxNavController): ManageTokensRouter {
-        return DefaultManageTokensRouter(reduxNavController)
-    }
+    @Binds
+    @Singleton
+    fun provideManageTokensRouter(manageTokensUiImpl: ManageTokensUiImpl): ManageTokensUi
 }
