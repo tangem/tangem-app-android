@@ -59,9 +59,7 @@ object TradeCryptoMiddleware {
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
             is TradeCryptoAction.Buy -> proceedBuyAction(state, action)
             is TradeCryptoAction.Sell -> proceedSellAction(action)
-            is TradeCryptoAction.Swap -> openSwap(
-                currency = action.cryptoCurrency,
-            )
+            is TradeCryptoAction.Swap -> openSwap(currency = action.cryptoCurrency)
             is TradeCryptoAction.SendToken -> {
                 if (isSendRedesignedEnabled) {
                     handleNewSendToken(action = action)
