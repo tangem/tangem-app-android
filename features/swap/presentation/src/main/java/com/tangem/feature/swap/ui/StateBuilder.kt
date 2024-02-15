@@ -233,7 +233,10 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(actions.onReceiveCardWarningClick),
+                type = TransactionCardType.ReadOnly(
+                    showWarning = true,
+                    actions.onReceiveCardWarningClick,
+                ),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 token = toCurrencyStatus,
@@ -852,17 +855,30 @@ internal class StateBuilder(
         )
     }
 
-    fun createImpactAlert(
+    fun createAlert(
         uiState: SwapStateHolder,
+        isPriceImpact: Boolean,
+        token: String,
         providerType: ExchangeProviderType,
         onAlertClick: () -> Unit,
     ): SwapStateHolder {
         val message = when (providerType) {
-            ExchangeProviderType.CEX -> resourceReference(R.string.express_cex_fee_explanation)
-            ExchangeProviderType.DEX -> resourceReference(R.string.swapping_high_price_impact_description)
+            ExchangeProviderType.CEX -> resourceReference(R.string.swapping_alert_cex_description, wrappedList(token))
+            ExchangeProviderType.DEX -> {
+                val refs = buildList {
+                    if (isPriceImpact) {
+                        add(resourceReference(R.string.swapping_high_price_impact_description))
+                        add(stringReference("\n\n"))
+                    }
+                    add(resourceReference(R.string.swapping_alert_dex_description))
+                }
+
+                combinedReference(refs.toWrappedList())
+            }
         }
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
+                title = resourceReference(R.string.swapping_alert_title),
                 message = message,
                 onClick = onAlertClick,
                 type = GenericWarningType.OTHER,
