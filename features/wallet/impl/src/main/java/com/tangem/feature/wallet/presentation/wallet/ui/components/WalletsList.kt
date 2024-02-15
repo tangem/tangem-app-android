@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -30,8 +29,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletCard
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
-
-private const val SHORT_SNAP_ELEMENT_COUNT = 50
 
 /**
  * Wallets list component
@@ -56,7 +53,7 @@ internal fun WalletsList(
         state = lazyListState,
         contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
-        flingBehavior = rememberWalletsFlingBehaviour(lazyListState = lazyListState, itemWidth = itemWidth),
+        flingBehavior = rememberWalletsFlingBehaviour(lazyListState = lazyListState),
     ) {
         items(
             items = wallets,
@@ -76,17 +73,14 @@ internal fun WalletsList(
 
 /**
  * Custom implementation of fling behaviour that overrides 'shortSnapVelocityThreshold'.
- * Every user's drag action will similar to a short snap
- * if drag offset is less than [SHORT_SNAP_ELEMENT_COUNT] * item width.
  *
  * @param lazyListState lazy list state
- * @param itemWidth     list item width
  *
  * @see rememberSnapFlingBehavior
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun rememberWalletsFlingBehaviour(lazyListState: LazyListState, itemWidth: Dp): SnapFlingBehavior {
+private fun rememberWalletsFlingBehaviour(lazyListState: LazyListState): SnapFlingBehavior {
     val snappingLayout = remember(lazyListState) { SnapLayoutInfoProvider(lazyListState) }
     val density = LocalDensity.current
     val highVelocityApproachSpec: DecayAnimationSpec<Float> = rememberSplineBasedDecay()
@@ -97,8 +91,6 @@ private fun rememberWalletsFlingBehaviour(lazyListState: LazyListState, itemWidt
             lowVelocityAnimationSpec = tween(durationMillis = 1000, easing = LinearEasing),
             highVelocityAnimationSpec = highVelocityApproachSpec,
             snapAnimationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-            density = density,
-            shortSnapVelocityThreshold = itemWidth * SHORT_SNAP_ELEMENT_COUNT,
         )
     }
 }
