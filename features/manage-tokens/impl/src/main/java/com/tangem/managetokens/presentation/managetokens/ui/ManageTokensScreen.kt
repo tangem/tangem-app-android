@@ -23,6 +23,7 @@ import com.tangem.core.ui.components.SpacerH18
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.managetokens.presentation.addcustomtoken.ui.AddCustomTokenBottomSheet
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
 import com.tangem.managetokens.presentation.common.ui.ChooseWalletBottomSheet
@@ -49,6 +50,8 @@ internal fun ManageTokensScreen(state: ManageTokensState, onHeaderSizeChange: (D
     }
 
     Content(state = state, onHeaderSizeChange = onHeaderSizeChange)
+
+    AddCustomTokenBottomSheet(state.customTokenBottomSheetConfig)
 }
 
 @Composable
@@ -122,6 +125,9 @@ private fun Content(state: ManageTokensState, onHeaderSizeChange: (Dp) -> Unit) 
                             with(density) { tokenListAlertBottomPadding = it.size.height.toDp() }
                         },
                 )
+                DisposableEffect(Unit) {
+                    onDispose { tokenListAlertBottomPadding = 0.dp }
+                }
             }
         }
     }
