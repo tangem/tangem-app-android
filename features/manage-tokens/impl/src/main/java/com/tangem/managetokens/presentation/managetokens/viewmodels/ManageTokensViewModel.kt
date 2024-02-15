@@ -38,6 +38,7 @@ import com.tangem.utils.coroutines.Debouncer.Companion.DEFAULT_WAIT_TIME_MS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.set
 import kotlin.properties.Delegates
@@ -133,7 +134,12 @@ internal class ManageTokensViewModel @Inject constructor(
             allAddedCurrencies.clear()
             addedCurrenciesByWallet.clear()
 
-            val walletsWithCurrencies = wallets.zip(it)
+            val walletsWithCurrencies = wallets.zip(it.map {
+                currencyList -> currencyList.getOrElse {
+                    Timber.e("Couldn't retrieve currency list")
+                    emptyList()
+                }
+            })
 
             walletsWithCurrencies.map { (wallet, currencies) ->
                 allAddedCurrencies += currencies
