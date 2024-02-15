@@ -134,12 +134,15 @@ internal class ManageTokensViewModel @Inject constructor(
             allAddedCurrencies.clear()
             addedCurrenciesByWallet.clear()
 
-            val walletsWithCurrencies = wallets.zip(it.map {
-                currencyList -> currencyList.getOrElse {
-                    Timber.e("Couldn't retrieve currency list")
-                    emptyList()
-                }
-            })
+            val walletsWithCurrencies = wallets.zip(
+                it.map {
+                        currencyList ->
+                    currencyList.getOrElse {
+                        Timber.e("Couldn't retrieve currency list")
+                        emptyList()
+                    }
+                },
+            )
 
             walletsWithCurrencies.map { (wallet, currencies) ->
                 allAddedCurrencies += currencies

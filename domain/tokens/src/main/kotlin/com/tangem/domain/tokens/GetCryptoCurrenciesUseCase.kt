@@ -7,13 +7,11 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.domain.tokens.error.GetCurrenciesError
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEmpty
 
 class GetCryptoCurrenciesUseCase(private val currenciesRepository: CurrenciesRepository) {
 
