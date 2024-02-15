@@ -3,7 +3,6 @@ package com.tangem.managetokens.presentation.managetokens.viewmodels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -30,7 +29,6 @@ import com.tangem.managetokens.presentation.managetokens.state.ManageTokensState
 import com.tangem.managetokens.presentation.managetokens.state.TokenButtonType
 import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
 import com.tangem.managetokens.presentation.managetokens.state.factory.*
-import com.tangem.managetokens.presentation.router.InnerManageTokensRouter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -62,7 +60,7 @@ internal class ManageTokensViewModel @Inject constructor(
     private val checkCurrencyCompatibilityUseCase: CheckCurrencyCompatibilityUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-) : ViewModel(), ManageTokensClickIntents, ManageTokensUiEvents, DefaultLifecycleObserver {
+) : ViewModel(), ManageTokensClickIntents, ManageTokensUiEvents {
 
     private val debouncer = Debouncer()
 
@@ -71,8 +69,6 @@ internal class ManageTokensViewModel @Inject constructor(
         clickIntents = this,
         uiIntents = this,
     )
-
-    var router: InnerManageTokensRouter by Delegates.notNull()
 
     var uiState: ManageTokensState by mutableStateOf(stateFactory.getInitialState(flowOf(PagingData.from(emptyList()))))
         private set
@@ -190,7 +186,7 @@ internal class ManageTokensViewModel @Inject constructor(
 
     override fun onAddCustomTokensButtonClick() {
         analyticsEventHandler.send(ManageTokens.ButtonCustomToken)
-        router.openAddCustomTokenScreen()
+        uiState = uiState.copy(customTokenBottomSheetConfig = uiState.customTokenBottomSheetConfig.copy(isShow = true))
     }
 
     override fun onSearchQueryChange(query: String) {
@@ -406,5 +402,9 @@ internal class ManageTokensViewModel @Inject constructor(
 
     override fun onEmptySearchResult(query: String) {
         analyticsEventHandler.send(ManageTokens.TokenIsNotFound(query))
+    }
+
+    override fun onAddCustomTokenSheetDismissed() {
+        uiState = uiState.copy(customTokenBottomSheetConfig = uiState.customTokenBottomSheetConfig.copy(isShow = false))
     }
 }
