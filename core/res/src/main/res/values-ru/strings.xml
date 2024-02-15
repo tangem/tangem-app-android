@@ -91,7 +91,8 @@
     <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
     <string name="common_explorer">Обозреватель</string>
     <string name="common_fee_label">Комиссия</string>
-    <string name="common_fee_selector_footer">Сетевые комиссии за транзакции используются для поддержки безопасности сети, поощрения валидаторов, выделения ресурсов и определения приоритета транзакции.</string>
+    <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузка на сеть, объема транзакции и приоритета исполнения. %s</string>
+    <string name="common_fee_selector_link_description">Подробнее</string>
     <string name="common_fee_selector_option_custom">Свое</string>
     <string name="common_fee_selector_option_fast">Быстро</string>
     <string name="common_fee_selector_option_market">По рынку</string>
