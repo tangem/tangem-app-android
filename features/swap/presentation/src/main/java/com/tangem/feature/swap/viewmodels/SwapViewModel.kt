@@ -890,6 +890,9 @@ internal class SwapViewModel @Inject constructor(
                     uiState = stateBuilder.clearAlert(uiState)
                 }
             },
+            onFeeReadMoreClick = {
+                swapRouter.openUrl(it)
+            },
         )
     }
 
