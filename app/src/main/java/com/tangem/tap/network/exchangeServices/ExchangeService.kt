@@ -67,6 +67,6 @@ interface ExchangeUrlBuilder {
 
     companion object {
         const val SCHEME = "https"
-        const val SUCCESS_URL = "tangem://success.tangem.com"
+        const val SUCCESS_URL = "https://tangem.com/success"
     }
 }
