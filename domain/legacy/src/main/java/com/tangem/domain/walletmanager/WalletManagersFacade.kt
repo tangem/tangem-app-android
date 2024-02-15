@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
@@ -97,7 +98,7 @@ interface WalletManagersFacade {
     suspend fun getTxHistoryItems(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
-        page: Int,
+        page: Page,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem>
 
