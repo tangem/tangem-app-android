@@ -549,6 +549,9 @@
     <string name="swapping_give_permission">Give Permission</string>
     <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
     <string name="swapping_insufficient_funds">Insufficient funds</string>
+    <string name="swapping_alert_title">Fees</string>
+    <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
+    <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
     <string name="swapping_not_enough_funds_for_fee">Insufficient funds in your %1$s  wallet to cover fees. Top up your %2$s wallet first.</string>
     <string name="swapping_pending_transaction_subtitle">Transaction in progress...</string>
     <string name="swapping_pending_transaction_title">Waiting</string>
