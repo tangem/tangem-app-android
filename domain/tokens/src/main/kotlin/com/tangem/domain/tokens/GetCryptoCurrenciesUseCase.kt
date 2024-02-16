@@ -15,7 +15,13 @@ import kotlinx.coroutines.flow.map
 
 class GetCryptoCurrenciesUseCase(private val currenciesRepository: CurrenciesRepository) {
 
-    suspend operator fun invoke(
+    operator fun invoke(userWalletId: UserWalletId): Flow<Either<GetCurrenciesError, List<CryptoCurrency>>> {
+        return currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWalletId)
+            .map<List<CryptoCurrency>, Either<GetCurrenciesError, List<CryptoCurrency>>> { it.right() }
+            .catch { emit(GetCurrenciesError.DataError(it).left()) }
+    }
+
+    suspend fun getSync(
         userWalletId: UserWalletId,
         refresh: Boolean = false,
     ): Either<GetCurrenciesError, List<CryptoCurrency>> {
@@ -25,11 +31,5 @@ class GetCryptoCurrenciesUseCase(private val currenciesRepository: CurrenciesRep
                 catch = { raise(GetCurrenciesError.DataError(it)) },
             )
         }
-    }
-
-    fun getAsync(userWalletId: UserWalletId): Flow<Either<GetCurrenciesError, List<CryptoCurrency>>> {
-        return currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWalletId)
-            .map<List<CryptoCurrency>, Either<GetCurrenciesError, List<CryptoCurrency>>> { it.right() }
-            .catch { emit(GetCurrenciesError.DataError(it).left()) }
     }
 }

@@ -35,10 +35,15 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.Debouncer.Companion.DEFAULT_WAIT_TIME_MS
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import kotlin.collections.set
 import kotlin.properties.Delegates
@@ -74,15 +79,17 @@ internal class ManageTokensViewModel @Inject constructor(
     var uiState: ManageTokensState by mutableStateOf(stateFactory.getInitialState(flowOf(PagingData.from(emptyList()))))
         private set
 
-    private var currenciesListJob: Job? = null
+    private val currenciesListJobHolder: JobHolder = JobHolder()
 
     private val debouncer = Debouncer()
 
-    private var allAddedCurrencies: MutableList<CryptoCurrency> = mutableListOf()
+    private var allAddedCurrencies: MutableList<CryptoCurrency> = Collections.synchronizedList(
+        mutableListOf<CryptoCurrency>(),
+    )
 
-    private var wallets: List<UserWallet> by Delegates.notNull()
+    private var wallets: CopyOnWriteArrayList<UserWallet> by Delegates.notNull()
 
-    private var addedCurrenciesByWallet: MutableMap<UserWallet, MutableList<CryptoCurrency>> = mutableMapOf()
+    private var addedCurrenciesByWallet: MutableMap<UserWallet, MutableList<CryptoCurrency>> = ConcurrentHashMap()
 
     private var selectedWallet: UserWallet? = null
 
@@ -119,24 +126,22 @@ internal class ManageTokensViewModel @Inject constructor(
             getWalletsUseCase()
                 .distinctUntilChanged()
                 .collectLatest { userWallets ->
-                    currenciesListJob?.cancel()
-                    currenciesListJob = launch {
+                    launch {
                         subscribeToCurrencies(userWallets)
-                    }
+                    }.saveIn(currenciesListJobHolder)
                 }
         }
     }
 
     private suspend fun subscribeToCurrencies(userWallets: List<UserWallet>) {
-        wallets = userWallets.filter { it.isMultiCurrency && !it.isLocked }
+        wallets = CopyOnWriteArrayList(userWallets.filter { it.isMultiCurrency && !it.isLocked })
 
-        combine(wallets.map { getCurrenciesUseCase.getAsync(it.walletId).distinctUntilChanged() }) {
+        combine(wallets.map { getCurrenciesUseCase.invoke(it.walletId).distinctUntilChanged() }) {
             allAddedCurrencies.clear()
             addedCurrenciesByWallet.clear()
 
             val walletsWithCurrencies = wallets.zip(
-                it.map {
-                        currencyList ->
+                it.map { currencyList ->
                     currencyList.getOrElse {
                         Timber.e("Couldn't retrieve currency list")
                         emptyList()
@@ -144,8 +149,9 @@ internal class ManageTokensViewModel @Inject constructor(
                 },
             )
 
-            walletsWithCurrencies.map { (wallet, currencies) ->
-                allAddedCurrencies += currencies
+            allAddedCurrencies = walletsWithCurrencies.flatMap { it.second }.toMutableList()
+
+            walletsWithCurrencies.forEach { (wallet, currencies) ->
                 addedCurrenciesByWallet[wallet] = currencies.toMutableList()
             }
 
