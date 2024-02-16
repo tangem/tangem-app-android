@@ -66,8 +66,9 @@ internal fun WalletScreen(
 
     var alertConfig by remember { mutableStateOf<WalletAlertState?>(value = null) }
 
-    alertConfig?.let {
-        WalletAlert(state = it, onDismiss = { alertConfig = null })
+    val config = alertConfig
+    if (config != null) {
+        WalletAlert(state = config, onDismiss = { alertConfig = null })
     }
 
     WalletContent(
