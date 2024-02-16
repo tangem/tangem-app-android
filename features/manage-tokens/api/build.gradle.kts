@@ -9,9 +9,5 @@ android {
 }
 
 dependencies {
-    /** AndroidX */
-    implementation(deps.androidx.fragment.ktx)
-
     implementation(deps.compose.foundation)
-    implementation(deps.compose.navigation)
 }

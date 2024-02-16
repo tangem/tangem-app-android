@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
+import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
@@ -51,14 +52,22 @@ class DefaultWalletManagersFacade(
     moshi: Moshi,
     configManager: ConfigManager,
     blockchainDataStorage: BlockchainDataStorage,
+    accountCreator: AccountCreator,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
-    private val walletManagerFactory by lazy { WalletManagerFactory(configManager, blockchainDataStorage) }
+    private val walletManagerFactory by lazy {
+        WalletManagerFactory(
+            configManager,
+            accountCreator,
+            blockchainDataStorage,
+        )
+    }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
     private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
+    private val sdkPageConverter by lazy { SdkPageConverter() }
     private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory(mnemonic) }
 
     override suspend fun update(
@@ -187,7 +196,7 @@ class DefaultWalletManagersFacade(
     override suspend fun getTxHistoryItems(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
-        page: Int,
+        page: Page,
         pageSize: Int,
     ): PaginationWrapper<TxHistoryItem> {
         val walletManager = getOrCreateWalletManager(
@@ -203,7 +212,8 @@ class DefaultWalletManagersFacade(
             request = TransactionHistoryRequest(
                 address = walletManager.wallet.address,
                 decimals = currency.decimals,
-                page = TransactionHistoryRequest.Page(number = page, size = pageSize),
+                page = page,
+                pageSize = pageSize,
                 filterType = when (currency) {
                     is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
                     is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
@@ -213,9 +223,8 @@ class DefaultWalletManagersFacade(
 
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
-                page = itemsResult.data.page,
-                totalPages = itemsResult.data.totalPages,
-                itemsOnPage = itemsResult.data.itemsOnPage,
+                currentPage = sdkPageConverter.convert(page),
+                nextPage = sdkPageConverter.convert(itemsResult.data.nextPage),
                 items = txHistoryItemConverter.convertList(itemsResult.data.items),
             )
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)

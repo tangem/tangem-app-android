@@ -24,4 +24,5 @@ data class UiActions(
     val onPolicyClick: (String) -> Unit,
     val onTosClick: (String) -> Unit,
     val onReceiveCardWarningClick: () -> Unit,
+    val onFeeReadMoreClick: (String) -> Unit,
 )

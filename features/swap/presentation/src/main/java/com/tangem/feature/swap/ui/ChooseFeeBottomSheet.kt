@@ -3,18 +3,23 @@ package com.tangem.feature.swap.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.ui.FeeType
@@ -33,7 +38,9 @@ fun ChooseFeeBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        modifier = Modifier
+            .background(TangemTheme.colors.background.primary)
+            .padding(bottom = TangemTheme.dimens.spacing8),
     ) {
         Text(
             text = stringResource(R.string.common_fee_selector_title),
@@ -53,19 +60,45 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
         ) {
             FeeItemsBlock(content)
         }
-        Text(
-            text = stringResource(R.string.common_fee_selector_footer),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
-            modifier = Modifier
-                .padding(
-                    vertical = TangemTheme.dimens.spacing8,
-                    horizontal = TangemTheme.dimens.spacing16,
-                )
-                .align(Alignment.CenterHorizontally),
-            textAlign = TextAlign.Start,
+        FooterBlock(
+            readMore = content.readMore,
+            readMoreUrl = content.readMoreUrl,
+            onReadMoreClick = content.onReadMoreClick,
         )
     }
+}
+
+@Composable
+private fun FooterBlock(readMore: TextReference, readMoreUrl: String, onReadMoreClick: (String) -> Unit) {
+    val linkText = readMore.resolveReference()
+    val fullString = stringResource(R.string.common_fee_selector_footer, linkText)
+    val linkTextPosition = fullString.length - linkText.length
+    val annotatedString = buildAnnotatedString {
+        withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+            append(fullString.substring(0, linkTextPosition))
+        }
+        withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+            append(fullString.substring(linkTextPosition, fullString.length))
+        }
+    }
+
+    val click = { i: Int ->
+        val readMoreStyle = requireNotNull(annotatedString.spanStyles.getOrNull(1))
+        if (i in readMoreStyle.start..readMoreStyle.end) {
+            onReadMoreClick(readMoreUrl)
+        }
+    }
+
+    ClickableText(
+        text = annotatedString,
+        modifier = Modifier
+            .padding(
+                vertical = TangemTheme.dimens.spacing8,
+                horizontal = TangemTheme.dimens.spacing16,
+            ),
+        style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Start),
+        onClick = click,
+    )
 }
 
 @Composable
@@ -129,6 +162,9 @@ private fun ChooseFeeBottomSheetContent_Preview() {
                     selectedFee = FeeType.NORMAL,
                     onSelectFeeType = {},
                     feeItems = feeItems,
+                    readMore = stringReference("Read more"),
+                    readMoreUrl = "",
+                    onReadMoreClick = {},
                 ),
             )
         }
@@ -141,6 +177,9 @@ private fun ChooseFeeBottomSheetContent_Preview() {
                     selectedFee = FeeType.NORMAL,
                     onSelectFeeType = {},
                     feeItems = feeItems,
+                    readMore = stringReference("Read more"),
+                    readMoreUrl = "",
+                    onReadMoreClick = {},
                 ),
             )
         }

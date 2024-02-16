@@ -7,9 +7,11 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.models.UserWalletId
 import timber.log.Timber
 
@@ -18,21 +20,19 @@ internal class TxHistoryPagingSource(
     private val txHistoryItemsStore: TxHistoryItemsStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val cacheRegistry: CacheRegistry,
-) : PagingSource<Int, TxHistoryItem>() {
+) : PagingSource<Page, TxHistoryItem>() {
 
     private val storeKey = TxHistoryItemsStore.Key(sourceParams.userWalletId, sourceParams.currency)
+    private val sdkPageConverter by lazy { SdkPageConverter() }
 
     override val keyReuseSupported: Boolean get() = true
 
-    override fun getRefreshKey(state: PagingState<Int, TxHistoryItem>): Int? {
-        return state.anchorPosition?.let { anchorPosition ->
-            val anchorPage = state.closestPageToPosition(anchorPosition)
-            anchorPage?.prevKey?.inc() ?: anchorPage?.nextKey?.dec()
-        }
+    override fun getRefreshKey(state: PagingState<Page, TxHistoryItem>): Page? {
+        return null
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, TxHistoryItem> {
-        val pageToLoad = params.key ?: INITIAL_PAGE
+    override suspend fun load(params: LoadParams<Page>): LoadResult<Page, TxHistoryItem> {
+        val pageToLoad = params.key ?: Page.Initial
 
         return try {
             val wrappedItems = loadItems(
@@ -40,20 +40,11 @@ internal class TxHistoryPagingSource(
                 pageSize = sourceParams.pageSize,
                 refresh = sourceParams.refresh && params is LoadParams.Refresh,
             )
-
-            val items = wrappedItems.items
-            val prevPage = when {
-                items.isEmpty() -> null
-                pageToLoad > INITIAL_PAGE -> pageToLoad.dec()
-                else -> null
+            val nextKey = when (wrappedItems.nextPage) {
+                Page.LastPage -> null
+                Page.Initial, is Page.Next -> wrappedItems.nextPage
             }
-            val nextPage = when {
-                items.isEmpty() -> INITIAL_PAGE
-                pageToLoad < wrappedItems.totalPages -> pageToLoad.inc()
-                else -> null
-            }
-
-            LoadResult.Page(items, prevKey = prevPage, nextKey = nextPage)
+            LoadResult.Page(wrappedItems.items, prevKey = null, nextKey = nextKey)
         } catch (e: Throwable) {
             Timber.e(e, "Unable to load the transaction history for the requested page: $pageToLoad")
 
@@ -61,7 +52,7 @@ internal class TxHistoryPagingSource(
         }
     }
 
-    private suspend fun loadItems(pageToLoad: Int, pageSize: Int, refresh: Boolean): PaginationWrapper<TxHistoryItem> {
+    private suspend fun loadItems(pageToLoad: Page, pageSize: Int, refresh: Boolean): PaginationWrapper<TxHistoryItem> {
         cacheRegistry.invokeOnExpire(
             key = getTxHistoryPageKey(pageToLoad),
             skipCache = refresh,
@@ -71,23 +62,23 @@ internal class TxHistoryPagingSource(
         return txHistoryItemsStore.getSync(pageToLoad)
     }
 
-    private suspend fun fetch(pageToLoad: Int, pageSize: Int) {
+    private suspend fun fetch(pageToLoad: Page, pageSize: Int) {
         val wrappedItems = walletManagersFacade.getTxHistoryItems(
             userWalletId = sourceParams.userWalletId,
             currency = sourceParams.currency,
-            page = pageToLoad,
+            page = sdkPageConverter.convertBack(pageToLoad),
             pageSize = pageSize,
         )
 
         txHistoryItemsStore.store(key = storeKey, value = wrappedItems)
     }
 
-    private suspend fun TxHistoryItemsStore.getSync(pageToLoad: Int): PaginationWrapper<TxHistoryItem> {
+    private suspend fun TxHistoryItemsStore.getSync(pageToLoad: Page): PaginationWrapper<TxHistoryItem> {
         val storedItems = requireNotNull(getSyncOrNull(storeKey, pageToLoad)) {
             "The transaction history page #$pageToLoad could not be retrieved"
         }
 
-        return if (pageToLoad == 1) storedItems.addRecentTransactions() else storedItems
+        return if (pageToLoad is Page.Initial) storedItems.addRecentTransactions() else storedItems
     }
 
     private suspend fun PaginationWrapper<TxHistoryItem>.addRecentTransactions(): PaginationWrapper<TxHistoryItem> {
@@ -131,7 +122,7 @@ internal class TxHistoryPagingSource(
         return filter { item -> apiItems.none { it.txHash == item.txHash } }
     }
 
-    private fun getTxHistoryPageKey(page: Int): String {
+    private fun getTxHistoryPageKey(page: Page): String {
         return "tx_history_page_${sourceParams.currency}_${sourceParams.userWalletId}_$page"
     }
 
@@ -141,8 +132,4 @@ internal class TxHistoryPagingSource(
         val pageSize: Int,
         val refresh: Boolean,
     )
-
-    private companion object {
-        private const val INITIAL_PAGE = 1
-    }
 }

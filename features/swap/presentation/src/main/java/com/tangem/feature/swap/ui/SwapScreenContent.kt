@@ -111,8 +111,13 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
             } else {
                 state.alert.message?.resolveReference() ?: stringResource(id = R.string.common_unknown_error)
             }
-            SimpleOkDialog(
+            BasicDialog(
+                title = state.alert.title?.resolveReference(),
                 message = message,
+                confirmButton = DialogButton(
+                    title = stringResource(id = R.string.common_ok),
+                    onClick = state.alert.onClick,
+                ),
                 onDismissDialog = state.alert.onClick,
             )
         }
