@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
@@ -348,15 +349,17 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun getTxHistory(): Flow<PagingData<TxHistoryItem>> {
-        return flow {
-            txHistoryItemsUseCase(
-                userWalletId = userWalletId,
-                currency = cryptoCurrency,
-            ).fold(
-                ifRight = { emitAll(it.distinctUntilChanged()) },
-                ifLeft = {},
-            )
-        }
+        return txHistoryItemsUseCase(
+            userWalletId = userWalletId,
+            currency = cryptoCurrency,
+        ).fold(
+            ifRight = {
+                it.distinctUntilChanged().cachedIn(viewModelScope)
+            },
+            ifLeft = {
+                emptyFlow()
+            },
+        )
     }
 
     private fun getTxHistoryCount(): Flow<Int> {
