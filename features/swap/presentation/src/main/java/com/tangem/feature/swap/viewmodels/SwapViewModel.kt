@@ -183,18 +183,18 @@ internal class SwapViewModel @Inject constructor(
 
                 val userWalletId = swapInteractor.getSelectedWallet()?.walletId ?: return@launch
                 (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let {
-                    subscribeOnCryptoCurrencyStatusUpdates(
+                    subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
                         coin = it,
-                        isSendCurrency = true,
+                        isFromCurrency = true,
                     )
                 }
 
                 (dataState.toCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let {
-                    subscribeOnCryptoCurrencyStatusUpdates(
+                    subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
                         coin = it,
-                        isSendCurrency = false,
+                        isFromCurrency = false,
                     )
                 }
             }.onFailure {
@@ -681,10 +681,10 @@ internal class SwapViewModel @Inject constructor(
 
                 val newToken = fromToken.currency as? CryptoCurrency.Coin
                 if (userWalletId != null && newToken != null) {
-                    subscribeOnCryptoCurrencyStatusUpdates(
+                    subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
                         coin = newToken,
-                        isSendCurrency = true,
+                        isFromCurrency = true,
                     )
                 }
             } else {
@@ -693,10 +693,10 @@ internal class SwapViewModel @Inject constructor(
 
                 val newToken = toToken.currency as? CryptoCurrency.Coin
                 if (userWalletId != null && newToken != null) {
-                    subscribeOnCryptoCurrencyStatusUpdates(
+                    subscribeToCoinBalanceUpdates(
                         userWalletId = userWalletId,
                         coin = newToken,
-                        isSendCurrency = false,
+                        isFromCurrency = false,
                     )
                 }
             }
@@ -716,12 +716,12 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun subscribeOnCryptoCurrencyStatusUpdates(
+    private fun subscribeToCoinBalanceUpdates(
         userWalletId: UserWalletId,
         coin: CryptoCurrency.Coin,
-        isSendCurrency: Boolean,
+        isFromCurrency: Boolean,
     ) {
-        Timber.d("Subscribe on ${coin.id} balance updates")
+        Timber.d("Subscribe to ${coin.id} balance updates")
 
         getCurrencyStatusUpdatesUseCase(
             userWalletId = userWalletId,
@@ -729,11 +729,11 @@ internal class SwapViewModel @Inject constructor(
             isSingleWalletWithTokens = false,
         )
             .mapNotNull { (it as? Either.Right)?.value }
-            .distinctUntilChanged()
+            .distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
             .onEach {
                 Timber.d("${coin.id} balance is ${it.value.amount}")
 
-                uiState = if (isSendCurrency) {
+                uiState = if (isFromCurrency) {
                     dataState = dataState.copy(fromCryptoCurrency = it)
                     stateBuilder.updateSendCurrencyBalance(uiState, it)
                 } else {
@@ -743,7 +743,7 @@ internal class SwapViewModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
-            .saveIn(if (isSendCurrency) fromTokenBalanceJobHolder else toTokenBalanceJobHolder)
+            .saveIn(if (isFromCurrency) fromTokenBalanceJobHolder else toTokenBalanceJobHolder)
     }
 
     private fun onChangeCardsClicked() {
