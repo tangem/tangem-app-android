@@ -3,10 +3,7 @@ package com.tangem.data.source.preferences
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.data.source.preferences.adapters.BigDecimalAdapter
 import com.tangem.data.source.preferences.storage.DisclaimerPrefStorage
-import com.tangem.data.source.preferences.storage.UsedCardsPrefStorage
 import javax.inject.Inject
 
 // 🔥FIXME: Only logic to work with preferences must be here, must be separated to repositories
@@ -14,21 +11,13 @@ import javax.inject.Inject
 @Deprecated("Create repository instead")
 class PreferencesDataSource @Inject internal constructor(applicationContext: Context) {
 
-    val usedCardsPrefStorage: UsedCardsPrefStorage
     val disclaimerPrefStorage: DisclaimerPrefStorage
 
     private val preferences: SharedPreferences =
         applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-    private val moshiConverter = MoshiJsonConverter(
-        adapters = listOf(BigDecimalAdapter()) + MoshiJsonConverter.getTangemSdkAdapters(),
-        typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
-    )
-
     init {
         incrementLaunchCounter()
-        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, moshiConverter)
-        usedCardsPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
     }
 
