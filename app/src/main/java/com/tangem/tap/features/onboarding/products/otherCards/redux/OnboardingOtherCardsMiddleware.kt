@@ -11,6 +11,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
+import com.tangem.tap.mainScope
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -43,8 +44,10 @@ private fun handleOtherCardsAction(action: Action) {
 
     when (action) {
         is OnboardingOtherCardsAction.Init -> {
-            if (!onboardingManager.isActivationStarted(card.cardId)) {
-                Analytics.send(Onboarding.Started())
+            scope.launch {
+                if (!onboardingManager.isActivationStarted(card.cardId)) {
+                    Analytics.send(Onboarding.Started())
+                }
             }
         }
         is OnboardingOtherCardsAction.LoadCardArtwork -> {
@@ -67,8 +70,10 @@ private fun handleOtherCardsAction(action: Action) {
                 }
                 OnboardingOtherCardsStep.Done -> {
                     Analytics.send(Onboarding.Finished())
-                    onboardingManager.activationFinished(card.cardId)
-                    postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+                    mainScope.launch {
+                        onboardingManager.finishActivation(card.cardId)
+                        postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+                    }
                 }
                 else -> Unit
             }
@@ -88,7 +93,7 @@ private fun handleOtherCardsAction(action: Action) {
                             )
                             val updatedCard = updatedResponse.card
                             onboardingManager.scanResponse = updatedResponse
-                            onboardingManager.activationStarted(updatedCard.cardId)
+                            onboardingManager.startActivation(updatedCard.cardId)
 
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
