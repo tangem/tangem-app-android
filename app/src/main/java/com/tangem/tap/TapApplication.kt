@@ -30,6 +30,7 @@ import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
@@ -170,6 +171,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase
+
+    @Inject
+    lateinit var cardRepository: CardRepository
     // endregion Injected
 
     override fun onCreate() {
@@ -256,6 +260,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
+                    cardRepository = cardRepository,
                 ),
             ),
         )
