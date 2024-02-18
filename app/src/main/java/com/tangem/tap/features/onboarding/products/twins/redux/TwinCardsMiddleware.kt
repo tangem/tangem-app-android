@@ -26,7 +26,7 @@ import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.preferencesStorage
+import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -100,15 +100,23 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 
             when (twinCardsState.mode) {
                 CreateTwinWalletMode.CreateWallet -> {
-                    if (preferencesStorage.wasTwinsOnboardingShown()) {
-                        val step = when {
-                            !scanResponse.twinsIsTwinned() -> TwinCardsStep.CreateFirstWallet
-                            twinCardsState.walletBalance.balanceIsToppedUp() -> TwinCardsStep.Done
-                            else -> TwinCardsStep.TopUpWallet
+                    mainScope.launch {
+                        val wasTwinsOnboardingShown = store.state.daggerGraphState
+                            .get(DaggerGraphState::wasTwinsOnboardingShownUseCase)
+                            .invokeSync()
+
+                        val dispatchAction = if (wasTwinsOnboardingShown) {
+                            val step = when {
+                                !scanResponse.twinsIsTwinned() -> TwinCardsStep.CreateFirstWallet
+                                twinCardsState.walletBalance.balanceIsToppedUp() -> TwinCardsStep.Done
+                                else -> TwinCardsStep.TopUpWallet
+                            }
+                            TwinCardsAction.SetStepOfScreen(step)
+                        } else {
+                            TwinCardsAction.SetStepOfScreen(TwinCardsStep.Welcome)
                         }
-                        store.dispatch(TwinCardsAction.SetStepOfScreen(step))
-                    } else {
-                        store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Welcome))
+
+                        store.dispatch(dispatchAction)
                     }
                 }
                 CreateTwinWalletMode.RecreateWallet -> {
@@ -120,7 +128,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             when (action.step) {
                 is TwinCardsStep.WelcomeOnly, TwinCardsStep.Welcome -> {
                     Analytics.send(Onboarding.Twins.ScreenOpened())
-                    preferencesStorage.saveTwinsOnboardingShown()
+
+                    scope.launch {
+                        store.state.daggerGraphState.get(DaggerGraphState::saveTwinsOnboardingShownUseCase).invoke()
+                    }
                 }
                 is TwinCardsStep.CreateFirstWallet -> {
                     Analytics.send(Onboarding.CreateWallet.ScreenOpened())
