@@ -75,51 +75,61 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 
     fun startCardActivation(cardId: String) {
         if (twinCardsState.mode == CreateTwinWalletMode.CreateWallet) {
-            onboardingManager?.activationStarted(cardId)
+            scope.launch {
+                onboardingManager?.startActivation(cardId)
+            }
         }
     }
 
     fun finishCardActivation() {
         if (twinCardsState.mode == CreateTwinWalletMode.CreateWallet) {
             Analytics.send(Onboarding.Finished())
-            onboardingManager?.activationFinished(getScanResponse().card.cardId)
-            twinCardsState.pairCardId?.let { onboardingManager?.activationFinished(it) }
+
+            val cardIds = listOfNotNull(getScanResponse().card.cardId, twinCardsState.pairCardId)
+
+            if (cardIds.isNotEmpty()) {
+                mainScope.launch {
+                    onboardingManager?.finishActivation(cardIds)
+                }
+            }
         }
     }
 
     when (action) {
         is TwinCardsAction.Init -> {
-            if (twinCardsState.currentStep is TwinCardsStep.WelcomeOnly) return
+            mainScope.launch {
+                if (twinCardsState.currentStep is TwinCardsStep.WelcomeOnly) return@launch
 
-            val scanResponse = getScanResponse()
-            onboardingManager?.apply {
-                if (!isActivationStarted(scanResponse.card.cardId)) {
-                    Analytics.send(Onboarding.Started())
-                }
-            }
-
-            when (twinCardsState.mode) {
-                CreateTwinWalletMode.CreateWallet -> {
-                    mainScope.launch {
-                        val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase)
-                            .invokeSync()
-
-                        val dispatchAction = if (wasTwinsOnboardingShown) {
-                            val step = when {
-                                !scanResponse.twinsIsTwinned() -> TwinCardsStep.CreateFirstWallet
-                                twinCardsState.walletBalance.balanceIsToppedUp() -> TwinCardsStep.Done
-                                else -> TwinCardsStep.TopUpWallet
-                            }
-                            TwinCardsAction.SetStepOfScreen(step)
-                        } else {
-                            TwinCardsAction.SetStepOfScreen(TwinCardsStep.Welcome)
-                        }
-
-                        store.dispatch(dispatchAction)
+                val scanResponse = getScanResponse()
+                onboardingManager?.apply {
+                    if (!isActivationStarted(scanResponse.card.cardId)) {
+                        Analytics.send(Onboarding.Started())
                     }
                 }
-                CreateTwinWalletMode.RecreateWallet -> {
-                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Warning))
+
+                when (twinCardsState.mode) {
+                    CreateTwinWalletMode.CreateWallet -> {
+                        mainScope.launch {
+                            val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase)
+                                .invokeSync()
+
+                            val dispatchAction = if (wasTwinsOnboardingShown) {
+                                val step = when {
+                                    !scanResponse.twinsIsTwinned() -> TwinCardsStep.CreateFirstWallet
+                                    twinCardsState.walletBalance.balanceIsToppedUp() -> TwinCardsStep.Done
+                                    else -> TwinCardsStep.TopUpWallet
+                                }
+                                TwinCardsAction.SetStepOfScreen(step)
+                            } else {
+                                TwinCardsAction.SetStepOfScreen(TwinCardsStep.Welcome)
+                            }
+
+                            store.dispatch(dispatchAction)
+                        }
+                    }
+                    CreateTwinWalletMode.RecreateWallet -> {
+                        store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Warning))
+                    }
                 }
             }
         }
