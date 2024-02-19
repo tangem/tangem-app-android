@@ -321,6 +321,6 @@ data class CardDTO(
     }
 
     companion object {
-        const val RING_BATCH_ID = "AC17"
+        val RING_BATCH_IDS = listOf("AC17", "BA01")
     }
 }
