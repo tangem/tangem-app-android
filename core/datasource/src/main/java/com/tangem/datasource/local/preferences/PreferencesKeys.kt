@@ -3,6 +3,7 @@ package com.tangem.datasource.local.preferences
 import androidx.datastore.preferences.core.*
 import com.tangem.datasource.local.preferences.PreferencesKeys.APP_LAUNCH_COUNT_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.FUNDS_FOUND_DATE_KEY
+import com.tangem.datasource.local.preferences.PreferencesKeys.IS_TANGEM_TOS_ACCEPTED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SAVE_USER_WALLETS_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_KEY
@@ -57,6 +58,10 @@ object PreferencesKeys {
     val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
 
     val WAS_TWINS_ONBOARDING_SHOWN by lazy { booleanPreferencesKey(name = "twinsOnboardingShown") }
+
+    val IS_TANGEM_TOS_ACCEPTED_KEY by lazy { booleanPreferencesKey(name = "tangem_tos_accepted") }
+
+    fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
@@ -69,6 +74,7 @@ internal fun getTapPrefKeysToMigrate(): Set<String> {
         USER_WAS_INTERACT_WITH_RATING_KEY,
         USED_CARDS_INFO_KEY,
         WAS_TWINS_ONBOARDING_SHOWN,
+        IS_TANGEM_TOS_ACCEPTED_KEY,
     )
         .map(Preferences.Key<*>::name)
         .toSet()
