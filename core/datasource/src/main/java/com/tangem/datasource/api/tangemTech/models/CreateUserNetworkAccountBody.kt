@@ -6,5 +6,5 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class CreateUserNetworkAccountBody(
     @Json(name = "networkId") val networkId: String,
-    @Json(name = "publicWalletKey") val publicWalletKey: String,
+    @Json(name = "walletPublicKey") val publicWalletKey: String,
 )
