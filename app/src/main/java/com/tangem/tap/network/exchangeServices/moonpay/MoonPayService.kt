@@ -81,6 +81,7 @@ class MoonPayService(
 
     override fun availableForSell(currency: Currency): Boolean {
         val availableForSell = status?.availableForSell ?: return false
+        val metadata = status?.responseCurrencies?.map { it.metadata }
         if (!isSellAllowed()) return false
 
         return when (currency) {
@@ -92,7 +93,9 @@ class MoonPayService(
                     else -> availableForSell.contains(currency.currencySymbol)
                 }
             }
-            is Currency.Token -> false
+            is Currency.Token -> {
+                metadata?.any { it?.contractAddress.equals(currency.token.contractAddress, ignoreCase = true) } ?: false
+            }
         }
     }
 
