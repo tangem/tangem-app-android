@@ -75,6 +75,7 @@ internal class SendStateSubscriber(
             showView(tonMemoContainer, infoState.tonMemoState)
             showView(cosmosMemoContainer, infoState.cosmosMemoState)
             showView(hederaMemoContainer, infoState.hederaMemoState)
+            showView(algorandMemoContainer, infoState.algorandMemoState)
 
             infoState.xlmMemo?.let {
                 if (!it.viewFieldValue.isFromUserInput) etXlmMemo.setText(it.viewFieldValue.value)
@@ -139,6 +140,16 @@ internal class SendStateSubscriber(
                 }
                 if (!it.viewFieldValue.isFromUserInput) {
                     etHederaMemo.setText(it.viewFieldValue.value)
+                }
+            }
+            infoState.algorandMemoState?.let {
+                if (infoState.algorandMemoState.error != null) {
+                    tilAlgorandMemo.error = fg.getText(R.string.send_extras_error_invalid_memo)
+                } else {
+                    tilAlgorandMemo.error = null
+                }
+                if (!it.viewFieldValue.isFromUserInput) {
+                    etAlgorandMemo.setText(it.viewFieldValue.value)
                 }
             }
         }
