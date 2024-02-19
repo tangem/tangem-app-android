@@ -1,7 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.tap.common.extensions.filterNotNull
 
 /**
 [REDACTED_AUTHOR]
@@ -42,22 +41,31 @@ sealed class WalletConnect(
         val methodName: String,
         val blockchain: String,
         val errorCode: String? = null,
+        val errorDescription: String? = null,
     ) {
         fun toParamsMap(): Map<String, String> {
             val validation = if (errorCode == null) Validation.SUCCESS.param else Validation.FAIL.param
-            return mapOf(
-                AnalyticsParam.DAPP_NAME to dAppName,
-                AnalyticsParam.DAPP_URL to dAppUrl,
-                AnalyticsParam.METHOD_NAME to methodName,
-                AnalyticsParam.BLOCKCHAIN to blockchain,
-                AnalyticsParam.VALIDATION to validation,
-                if (errorCode != null) AnalyticsParam.ERROR_CODE to errorCode else null to null,
-            ).filterNotNull()
+            val code = errorCode ?: SUCCESS_CODE
+            return buildMap {
+                put(AnalyticsParam.DAPP_NAME, dAppName)
+                put(AnalyticsParam.DAPP_URL, dAppUrl)
+                put(AnalyticsParam.METHOD_NAME, methodName)
+                put(AnalyticsParam.BLOCKCHAIN, blockchain)
+                put(AnalyticsParam.VALIDATION, validation)
+                put(AnalyticsParam.ERROR_CODE, code)
+                if (errorDescription != null) {
+                    put(AnalyticsParam.ERROR_DESCRIPTION, errorDescription)
+                }
+            }
         }
     }
 
     enum class Validation(val param: String) {
         SUCCESS("Success"),
         FAIL("Fail"),
+    }
+
+    companion object {
+        private const val SUCCESS_CODE = "0"
     }
 }
