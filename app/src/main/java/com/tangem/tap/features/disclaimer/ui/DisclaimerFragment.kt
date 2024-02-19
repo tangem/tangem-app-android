@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.View.OVER_SCROLL_NEVER
 import android.webkit.WebView
+import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.core.navigation.AppScreen
@@ -21,6 +22,7 @@ import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentDisclaimerBinding
+import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
 
 class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubscriber<DisclaimerState> {
@@ -92,10 +94,12 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
         store.dispatch(DisclaimerAction.OnBackPressed)
     }
 
-    override fun newState(state: DisclaimerState) = with(binding) {
-        if (activity == null || view == null) return
+    override fun newState(state: DisclaimerState) {
+        return with(binding) {
+            if (activity == null || view == null) return
 
-        updateUiVisibility(state.disclaimer, state.progressState)
+            updateUiVisibility(state.disclaimer, state.progressState)
+        }
     }
 
     private fun updateUiVisibility(disclaimer: Disclaimer, progressState: ProgressState?) = with(binding) {
@@ -112,7 +116,9 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 groupError.hide()
                 groupLoading.hide()
                 webView.show()
-                groupAccept.show(!disclaimer.isAccepted())
+                lifecycleScope.launch {
+                    groupAccept.show(!disclaimer.isAccepted())
+                }
             }
             ProgressState.Error -> {
                 root.beginDelayedTransition()
