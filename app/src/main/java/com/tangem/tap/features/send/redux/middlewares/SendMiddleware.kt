@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.tangem.blockchain.blockchains.algorand.AlgorandTransactionExtras
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.hedera.HederaTransactionBuilder
@@ -177,6 +178,7 @@ private fun sendTransaction(
             extras = HederaTransactionBuilder.HederaTransactionExtras(it),
         )
     }
+    transactionExtras.algorandMemoState?.memo?.let { txData = txData.copy(extras = AlgorandTransactionExtras(it)) }
 
     scope.launch {
 // [REDACTED_TODO_COMMENT]
