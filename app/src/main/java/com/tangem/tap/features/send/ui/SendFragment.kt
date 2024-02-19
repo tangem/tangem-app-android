@@ -243,6 +243,15 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             }
             .onEach { store.dispatch(TransactionExtrasAction.HederaMemo.HandleUserInput(it)) }
             .launchIn(mainScope)
+
+        etAlgorandMemo.inputtedTextAsFlow()
+            .debounce(EDIT_TEXT_INPUT_DEBOUNCE)
+            .filter {
+                val info = store.state.sendState.transactionExtrasState
+                info.algorandMemoState?.viewFieldValue?.value != it
+            }
+            .onEach { store.dispatch(TransactionExtrasAction.AlgorandMemo.HandleUserInput(it)) }
+            .launchIn(mainScope)
     }
 
     private fun onCodeScanned(scannedCode: String) {
