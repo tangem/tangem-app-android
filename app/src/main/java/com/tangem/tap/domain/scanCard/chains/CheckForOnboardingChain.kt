@@ -12,6 +12,7 @@ import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -62,8 +63,7 @@ class CheckForOnboardingChain(
             else -> {
                 Analytics.setContext(previousChainResult)
 
-                val wasTwinsOnboardingShown = com.tangem.tap.store.state.daggerGraphState
-                    .get(DaggerGraphState::wasTwinsOnboardingShownUseCase)
+                val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase)
                     .invokeSync()
 
                 // If twins was twinned previously but twins welcome not shown

@@ -14,10 +14,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.common.extensions.addContext
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -169,9 +166,7 @@ internal object LegacyScanProcessor {
         } else {
             Analytics.setContext(scanResponse)
 
-            val wasTwinsOnboardingShown = store.state.daggerGraphState
-                .get(DaggerGraphState::wasTwinsOnboardingShownUseCase)
-                .invokeSync()
+            val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase).invokeSync()
 
             if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
                 onWalletNotCreated()

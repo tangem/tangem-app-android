@@ -101,8 +101,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             when (twinCardsState.mode) {
                 CreateTwinWalletMode.CreateWallet -> {
                     mainScope.launch {
-                        val wasTwinsOnboardingShown = store.state.daggerGraphState
-                            .get(DaggerGraphState::wasTwinsOnboardingShownUseCase)
+                        val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase)
                             .invokeSync()
 
                         val dispatchAction = if (wasTwinsOnboardingShown) {
@@ -130,7 +129,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     Analytics.send(Onboarding.Twins.ScreenOpened())
 
                     scope.launch {
-                        store.state.daggerGraphState.get(DaggerGraphState::saveTwinsOnboardingShownUseCase).invoke()
+                        store.inject(DaggerGraphState::saveTwinsOnboardingShownUseCase).invoke()
                     }
                 }
                 is TwinCardsStep.CreateFirstWallet -> {
@@ -306,7 +305,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 }
                 CreateTwinWalletMode.RecreateWallet -> {
                     scope.launch {
-                        val walletsRepository = store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+                        val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
                         if (walletsRepository.shouldSaveUserWalletsSync()) {
                             OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
