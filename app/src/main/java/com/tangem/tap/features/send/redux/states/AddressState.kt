@@ -31,12 +31,13 @@ data class TransactionExtrasState(
     val tonMemoState: TonMemoState? = null,
     val cosmosMemoState: CosmosMemoState? = null,
     val hederaMemoState: HederaMemoState? = null,
+    val algorandMemoState: AlgorandMemoState? = null,
 ) : IdStateHolder {
     override val stateId: StateId = StateId.TRANSACTION_EXTRAS
 
     fun isNull(): Boolean {
         return xlmMemo == null && binanceMemo == null && xrpDestinationTag == null && tonMemoState == null &&
-            cosmosMemoState == null && hederaMemoState == null
+            cosmosMemoState == null && hederaMemoState == null && algorandMemoState == null
     }
 
     fun isEmpty(): Boolean {
@@ -46,8 +47,15 @@ data class TransactionExtrasState(
         val isTonEmpty = tonMemoState?.viewFieldValue?.value?.isEmpty() ?: false
         val isCosmosEmpty = cosmosMemoState?.viewFieldValue?.value?.isEmpty() ?: false
         val isHederaEmpty = hederaMemoState?.viewFieldValue?.value?.isEmpty() ?: false
+        val isAlgorandEmpty = algorandMemoState?.viewFieldValue?.value?.isEmpty() ?: false
 
-        return isXlmEmpty || isBinanceEmpty || isXrpEmpty || isTonEmpty || isCosmosEmpty || isHederaEmpty
+        return isXlmEmpty ||
+            isBinanceEmpty ||
+            isXrpEmpty ||
+            isTonEmpty ||
+            isCosmosEmpty ||
+            isHederaEmpty ||
+            isAlgorandEmpty
     }
 }
 
@@ -124,6 +132,12 @@ data class CosmosMemoState(
 )
 
 data class HederaMemoState(
+    val viewFieldValue: InputViewValue = InputViewValue(""),
+    val memo: String? = null,
+    val error: TransactionExtraError? = null,
+)
+
+data class AlgorandMemoState(
     val viewFieldValue: InputViewValue = InputViewValue(""),
     val memo: String? = null,
     val error: TransactionExtraError? = null,
