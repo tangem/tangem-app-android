@@ -1,6 +1,5 @@
 package com.tangem.tap.common.feedback
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.extensions.breakLine
 
 class FeedbackDataBuilder(
@@ -33,9 +32,10 @@ class FeedbackDataBuilder(
             builder.appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
             builder.appendKeyValue("Derivation path", walletInfo.derivationPath)
 
-            if (walletInfo.blockchain == Blockchain.Bitcoin) {
-                builder.appendKeyValue("XPUB", infoHolder.extendedPublicKey)
-            }
+            // enable later
+            // if (walletInfo.blockchain == Blockchain.Bitcoin) {
+            //     builder.appendKeyValue("XPUB", infoHolder.extendedPublicKey)
+            // }
 
             builder.appendKeyValue("Outputs count", walletInfo.outputsCount)
 
