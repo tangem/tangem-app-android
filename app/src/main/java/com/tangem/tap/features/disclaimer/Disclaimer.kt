@@ -8,8 +8,8 @@ import android.net.Uri
 interface Disclaimer {
     fun type(): DisclaimerType
     fun getUri(): Uri
-    fun accept()
-    fun isAccepted(): Boolean
+    suspend fun accept()
+    suspend fun isAccepted(): Boolean
 }
 
 abstract class BaseDisclaimer(
@@ -18,32 +18,28 @@ abstract class BaseDisclaimer(
 
     val baseUrl = "https://tangem.com"
 
-    override fun accept() {
-        dataProvider.storage().accept(getPreferenceKey())
+    override suspend fun accept() {
+        dataProvider.accept()
     }
 
-    override fun isAccepted(): Boolean = dataProvider.storage().isAccepted(getPreferenceKey())
-
-    protected open fun getPreferenceKey(): String = type().name
+    override suspend fun isAccepted(): Boolean = dataProvider.isAccepted()
 }
 
 class DummyDisclaimer : Disclaimer {
     override fun type(): DisclaimerType = DisclaimerType.Tangem
     override fun getUri(): Uri = Uri.parse("https://tangem.com/tangem_tos.html")
-    override fun accept() {}
-    override fun isAccepted(): Boolean = false
+    override suspend fun accept() {}
+    override suspend fun isAccepted(): Boolean = false
 }
 
 class TangemDisclaimer(dataProvider: DisclaimerDataProvider) : BaseDisclaimer(dataProvider) {
     override fun type(): DisclaimerType = DisclaimerType.Tangem
     override fun getUri(): Uri = Uri.parse("$baseUrl/tangem_tos.html")
-    override fun getPreferenceKey(): String = "tangem_tos_accepted"
 }
 
 class Start2CoinDisclaimer(dataProvider: DisclaimerDataProvider) : BaseDisclaimer(dataProvider) {
     override fun type(): DisclaimerType = DisclaimerType.Start2Coin
     override fun getUri(): Uri = Uri.parse("$baseUrl/" + filename(dataProvider.getLanguage(), getRegion()))
-    override fun getPreferenceKey(): String = "start2Coin_tos_accepted_${getRegion()}"
 
     @Suppress("ComplexMethod")
     private fun filename(languageCode: String, regionCode: String?): String {
