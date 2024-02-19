@@ -89,6 +89,11 @@ sealed class TransactionExtrasAction : SendScreenActionUi {
     sealed class HederaMemo : TransactionExtrasAction() {
         data class HandleUserInput(val data: String) : HederaMemo()
     }
+
+    @Deprecated("Only in legacy send screen")
+    sealed class AlgorandMemo : TransactionExtrasAction() {
+        data class HandleUserInput(val data: String) : AlgorandMemo()
+    }
 }
 
 sealed class AddressVerifyAction : SendScreenAction {
