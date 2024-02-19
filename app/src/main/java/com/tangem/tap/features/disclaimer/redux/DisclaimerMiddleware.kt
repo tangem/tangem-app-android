@@ -3,7 +3,9 @@ package com.tangem.tap.features.disclaimer.redux
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.mainScope
 import com.tangem.tap.store
+import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 
@@ -26,9 +28,11 @@ private fun handleDisclaimerMiddleware(action: Action, appState: AppState) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
         }
         is DisclaimerAction.AcceptDisclaimer -> {
-            state.disclaimer.accept()
-            store.dispatch(NavigationAction.PopBackTo())
-            state.callback?.onAccept?.invoke()
+            mainScope.launch {
+                state.disclaimer.accept()
+                store.dispatch(NavigationAction.PopBackTo())
+                state.callback?.onAccept?.invoke()
+            }
         }
         is DisclaimerAction.OnBackPressed -> {
             store.dispatch(NavigationAction.PopBackTo())
