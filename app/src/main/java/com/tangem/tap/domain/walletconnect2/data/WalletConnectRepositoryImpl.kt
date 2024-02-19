@@ -352,7 +352,8 @@ class WalletConnectRepositoryImpl @Inject constructor(
                     dAppUrl = session?.url ?: "",
                     methodName = requestData.method,
                     blockchain = requestData.blockchain,
-                    errorCode = WalletConnectError.ValidationError.toString(),
+                    errorCode = WalletConnectError.ValidationError.error,
+                    errorDescription = it.throwable.message,
                 )
             },
         )
