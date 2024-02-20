@@ -74,11 +74,17 @@ class ResponseCryptoCurrenciesFactory {
     ): CryptoCurrency.Coin? {
         val network = getNetwork(blockchain, responseToken.derivationPath, derivationStyleProvider) ?: return null
 
+        // workaround: Dischain was renamed but backend still returns the old name,
+        // get name and symbol from enum Blockchain until backend renamed
+        // [REDACTED_JIRA]
+        val name = if (blockchain == Blockchain.Dischain) blockchain.fullName else responseToken.name
+        val symbol = if (blockchain == Blockchain.Dischain) blockchain.currency else responseToken.symbol
+
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
             network = network,
-            name = responseToken.name,
-            symbol = responseToken.symbol,
+            name = name,
+            symbol = symbol,
             decimals = responseToken.decimals,
             iconUrl = getCoinIconUrl(blockchain),
             isCustom = isCustomCoin(network),
