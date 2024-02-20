@@ -35,6 +35,7 @@ fun TangemButton(
     elevation: ButtonElevation = TangemButtonsDefaults.elevation,
     textStyle: TextStyle = TangemTheme.typography.button,
     shape: Shape = size.toShape(),
+    iconPadding: Dp = size.toIconPadding(),
 ) {
     val multipleClickPreventer = remember { MultipleClickPreventer.get() }
 
@@ -53,7 +54,7 @@ fun TangemButton(
 
         ButtonContentContainer(
             buttonIcon = icon,
-            iconPadding = size.toIconPadding(),
+            iconPadding = iconPadding,
             showProgress = showProgress,
             progressIndicator = {
                 CircularProgressIndicator(

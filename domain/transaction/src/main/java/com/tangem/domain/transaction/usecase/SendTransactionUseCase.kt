@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.SendTransactionError.Companion.USER_CANCELLED_ERROR_CODE
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.sdk.extensions.localizedDescriptionRes
+import com.tangem.utils.toFormattedString
 
 class SendTransactionUseCase(
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -84,6 +85,11 @@ class SendTransactionUseCase(
                         SendTransactionError.BlockchainSdkError(error.code, tangemError.customMessage)
                     }
                 }
+            }
+            is BlockchainSdkError.CreateAccountUnderfunded -> {
+                val minAmount = error.minReserve
+                val minValue = minAmount.value?.toFormattedString(minAmount.decimals).orEmpty()
+                SendTransactionError.CreateAccountUnderfunded(minValue)
             }
             else -> {
                 SendTransactionError.BlockchainSdkError(
