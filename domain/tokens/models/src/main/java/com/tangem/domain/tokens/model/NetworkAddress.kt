@@ -1,5 +1,7 @@
 package com.tangem.domain.tokens.model
 
+import timber.log.Timber
+
 /**
  * Represents a network address configuration.
  */
@@ -47,7 +49,9 @@ sealed class NetworkAddress {
         }
 
         init {
-            require(value.isNotBlank()) { "Address value must not be blank" }
+            if (value.isEmpty()) {
+                Timber.w("Address value is blank")
+            }
         }
     }
 }

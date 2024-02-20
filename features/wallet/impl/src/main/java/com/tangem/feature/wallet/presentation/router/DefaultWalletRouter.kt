@@ -1,10 +1,11 @@
 package com.tangem.feature.wallet.presentation.router
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,24 +20,21 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
 import com.tangem.core.navigation.StateDialog
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.navigation.OnboardingRouter
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
-import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreenV2
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModelV2
+import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
 internal class DefaultWalletRouter(
     private val reduxNavController: ReduxNavController,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
@@ -45,7 +43,7 @@ internal class DefaultWalletRouter(
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(onFinish: () -> Unit) {
+    override fun Initialize(onFinish: () -> Unit, manageTokensUi: ManageTokensUi) {
         this.onFinish = onFinish
 
         NavHost(
@@ -53,21 +51,23 @@ internal class DefaultWalletRouter(
             startDestination = WalletRoute.Wallet.route,
         ) {
             composable(WalletRoute.Wallet.route) {
-                if (walletFeatureToggles.isWalletsScrollingPreviewEnabled) {
-                    val viewModel = hiltViewModel<WalletViewModelV2>().apply {
-                        setWalletRouter(router = this@DefaultWalletRouter)
-                        subscribeToLifecycle(LocalLifecycleOwner.current)
-                    }
-
-                    WalletScreenV2(state = viewModel.uiState.collectAsStateWithLifecycle().value)
-                } else {
-                    val viewModel = hiltViewModel<WalletViewModel>().apply {
-                        router = this@DefaultWalletRouter
-                    }
-                    LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
-
-                    WalletScreen(state = viewModel.uiState)
+                val viewModel = hiltViewModel<WalletViewModel>().apply {
+                    setWalletRouter(router = this@DefaultWalletRouter)
+                    subscribeToLifecycle(LocalLifecycleOwner.current)
                 }
+
+                var bottomSheetHeaderHeight by remember { mutableStateOf(0.dp) }
+
+                WalletScreen(
+                    state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                    bottomSheetHeaderHeightProvider = { bottomSheetHeaderHeight },
+                    bottomSheetContent = {
+                        // Manage Tokens
+                        manageTokensUi.Content(
+                            onHeaderSizeChange = { bottomSheetHeaderHeight = it },
+                        )
+                    },
+                )
             }
 
             composable(
@@ -89,6 +89,7 @@ internal class DefaultWalletRouter(
         }
     }
 
+    @SuppressLint("RestrictedApi")
     override fun popBackStack(screen: AppScreen?) {
         /*
          * It's hack that avoid issue with closing the wallet screen.
@@ -128,16 +129,19 @@ internal class DefaultWalletRouter(
         reduxNavController.navigate(action = NavigationAction.OpenUrl(url))
     }
 
-    override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        reduxNavController.navigate(
-            action = NavigationAction.NavigateTo(
-                screen = AppScreen.WalletDetails,
-                bundle = bundleOf(
-                    TokenDetailsRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
-                    TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currency,
+    override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        val networkAddress = currencyStatus.value.networkAddress
+        if (networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()) {
+            reduxNavController.navigate(
+                action = NavigationAction.NavigateTo(
+                    screen = AppScreen.WalletDetails,
+                    bundle = bundleOf(
+                        TokenDetailsRouter.USER_WALLET_ID_KEY to userWalletId.stringValue,
+                        TokenDetailsRouter.CRYPTO_CURRENCY_KEY to currencyStatus.currency,
+                    ),
                 ),
-            ),
-        )
+            )
+        }
     }
 
     override fun openStoriesScreen() {
