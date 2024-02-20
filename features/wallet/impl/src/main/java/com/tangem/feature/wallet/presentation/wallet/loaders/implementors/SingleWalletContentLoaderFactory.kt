@@ -10,8 +10,8 @@ import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntentsV2
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
@@ -30,7 +30,7 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
 ) {
 
-    fun create(userWallet: UserWallet, clickIntents: WalletClickIntentsV2, isRefresh: Boolean): WalletContentLoader {
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents, isRefresh: Boolean): WalletContentLoader {
         return SingleWalletContentLoader(
             userWallet = userWallet,
             clickIntents = clickIntents,
