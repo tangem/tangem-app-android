@@ -20,7 +20,7 @@ internal fun SendCustomFeeEthereum(
     selectedFee: FeeType,
     modifier: Modifier = Modifier,
 ) {
-    if (selectedFee == FeeType.CUSTOM && customValues.isNotEmpty()) {
+    if (selectedFee == FeeType.Custom && customValues.isNotEmpty()) {
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             modifier = modifier,
@@ -38,6 +38,7 @@ internal fun SendCustomFeeEthereum(
                             title = value.title,
                             info = value.label,
                             keyboardOptions = value.keyboardOptions,
+                            keyboardActions = value.keyboardActions,
                             onValueChange = value.onValueChange,
                             showDivider = false,
                             modifier = Modifier
@@ -54,6 +55,7 @@ internal fun SendCustomFeeEthereum(
                             symbol = value.symbol,
                             onValueChange = value.onValueChange,
                             keyboardOptions = value.keyboardOptions,
+                            keyboardActions = value.keyboardActions,
                             showDivider = false,
                             modifier = Modifier
                                 .background(
