@@ -9,6 +9,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.wallet"
+}
+
 configurations.all {
     exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
     exclude(group = "com.github.komputing.kethereum")

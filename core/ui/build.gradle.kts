@@ -4,6 +4,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.core.ui"
+}
+
 dependencies {
     /** Project - Common */
     implementation(projects.common)
