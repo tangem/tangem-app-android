@@ -1,16 +1,19 @@
-package com.tangem.feature.qrscanning.presentation
+package com.tangem.feature.qrscanning.presentation.transformers
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.feature.qrscanning.viewmodel.QrScanningClickIntents
 import com.tangem.feature.qrscanning.SourceType
 import com.tangem.feature.qrscanning.impl.R
+import com.tangem.feature.qrscanning.presentation.QrScanningState
+import com.tangem.feature.qrscanning.viewmodel.QrScanningClickIntents
 
-internal class QrScanningStateFactory(
-    val clickIntents: QrScanningClickIntents,
-) {
+internal class InitializeQrScanningStateTransformer(
+    private val clickIntents: QrScanningClickIntents,
+    private val source: SourceType,
+    private val network: String?,
+) : QrScanningTransformer {
 
-    fun getInitialState(source: SourceType, network: String?): QrScanningState {
+    override fun transform(prevState: QrScanningState): QrScanningState {
         val message = when (source) {
             SourceType.SEND -> network?.let { resourceReference(R.string.send_qrcode_scan_info, wrappedList(it)) }
             else -> null
@@ -20,7 +23,7 @@ internal class QrScanningStateFactory(
             message = message,
             onBackClick = clickIntents::onBackClick,
             onQrScanned = clickIntents::onQrScanned,
-            onGalleryClicked = clickIntents::onGalleryClicked,
+            onGalleryClick = clickIntents::onGalleryClicked,
         )
     }
 }
