@@ -693,6 +693,32 @@ internal class StateBuilder(
         )
     }
 
+    fun updateSendCurrencyBalance(
+        uiState: SwapStateHolder,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): SwapStateHolder {
+        if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
+
+        return uiState.copy(
+            sendCardData = uiState.sendCardData.copy(
+                balance = cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+            ),
+        )
+    }
+
+    fun updateReceiveCurrencyBalance(
+        uiState: SwapStateHolder,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): SwapStateHolder {
+        if (uiState.receiveCardData !is SwapCardState.SwapCardData) return uiState
+
+        return uiState.copy(
+            receiveCardData = uiState.receiveCardData.copy(
+                balance = cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+            ),
+        )
+    }
+
     fun updateBalanceHiddenState(uiState: SwapStateHolder, isBalanceHidden: Boolean): SwapStateHolder {
         if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
         if (uiState.receiveCardData !is SwapCardState.SwapCardData) return uiState
