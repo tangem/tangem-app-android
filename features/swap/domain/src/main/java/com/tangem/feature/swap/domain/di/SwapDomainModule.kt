@@ -7,6 +7,7 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.TransactionRepository
@@ -42,6 +43,7 @@ class SwapDomainModule {
         quotesRepository: QuotesRepository,
         swapTransactionRepository: SwapTransactionRepository,
         appCurrencyRepository: AppCurrencyRepository,
+        currencyChecksRepository: CurrencyChecksRepository,
         walletManagersFacade: WalletManagersFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
         initialToCurrencyResolver: InitialToCurrencyResolver,
@@ -59,6 +61,7 @@ class SwapDomainModule {
             dispatcher = coroutineDispatcherProvider,
             swapTransactionRepository = swapTransactionRepository,
             appCurrencyRepository = appCurrencyRepository,
+            currencyChecksRepository = currencyChecksRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
         )
     }
