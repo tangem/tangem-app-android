@@ -2,10 +2,7 @@ package com.tangem.domain.tokens
 
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.FeePaidCurrency
-import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
@@ -94,17 +91,21 @@ class GetCryptoCurrencyActionsUseCase(
             return listOf(TokenActionsState.ActionState.HideToken(true))
         }
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Unreachable) {
-            return getActionsForUnreachableCurrency(cryptoCurrency)
+            return getActionsForUnreachableCurrency(cryptoCurrencyStatus)
         }
 
         val activeList = mutableListOf<TokenActionsState.ActionState>()
         val disabledList = mutableListOf<TokenActionsState.ActionState>()
 
         // copy address
-        activeList.add(TokenActionsState.ActionState.CopyAddress(true))
+        if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
+            activeList.add(TokenActionsState.ActionState.CopyAddress(true))
+        }
 
         // receive
-        activeList.add(TokenActionsState.ActionState.Receive(true))
+        if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
+            activeList.add(TokenActionsState.ActionState.Receive(true))
+        }
 
         // send
         if (
@@ -148,12 +149,16 @@ class GetCryptoCurrencyActionsUseCase(
         return activeList + disabledList
     }
 
-    private fun getActionsForUnreachableCurrency(cryptoCurrency: CryptoCurrency): List<TokenActionsState.ActionState> {
+    private fun getActionsForUnreachableCurrency(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): List<TokenActionsState.ActionState> {
         val activeList = mutableListOf<TokenActionsState.ActionState>()
         val disabledList = mutableListOf<TokenActionsState.ActionState>()
 
-        activeList.add(TokenActionsState.ActionState.CopyAddress(true))
-        if (rampManager.availableForBuy(cryptoCurrency)) {
+        if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
+            activeList.add(TokenActionsState.ActionState.CopyAddress(true))
+        }
+        if (rampManager.availableForBuy(cryptoCurrencyStatus.currency)) {
             activeList.add(TokenActionsState.ActionState.Buy(true))
         } else {
             disabledList.add(TokenActionsState.ActionState.Buy(false))
@@ -161,7 +166,10 @@ class GetCryptoCurrencyActionsUseCase(
         disabledList.add(TokenActionsState.ActionState.Send(false))
         disabledList.add(TokenActionsState.ActionState.Swap(false))
         disabledList.add(TokenActionsState.ActionState.Sell(false))
-        activeList.add(TokenActionsState.ActionState.Receive(true))
+
+        if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
+            activeList.add(TokenActionsState.ActionState.Receive(true))
+        }
         activeList.add(TokenActionsState.ActionState.HideToken(true))
         return activeList + disabledList
     }
@@ -198,6 +206,10 @@ class GetCryptoCurrencyActionsUseCase(
                 !tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()
             }
         }
+    }
+
+    private fun isAddressAvailable(networkAddress: NetworkAddress?): Boolean {
+        return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
     }
 
     private fun BigDecimal?.isZero(): Boolean {
