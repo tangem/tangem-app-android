@@ -25,6 +25,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.Locale
 import kotlin.math.min
 
 /**
@@ -233,7 +234,10 @@ internal class StateBuilder(
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
             receiveCardData = SwapCardState.SwapCardData(
-                type = TransactionCardType.ReadOnly(actions.onReceiveCardWarningClick),
+                type = TransactionCardType.ReadOnly(
+                    showWarning = true,
+                    actions.onReceiveCardWarningClick,
+                ),
                 amountTextFieldValue = TextFieldValue(quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation()),
                 amountEquivalent = getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
                 token = toCurrencyStatus,
@@ -852,17 +856,30 @@ internal class StateBuilder(
         )
     }
 
-    fun createImpactAlert(
+    fun createAlert(
         uiState: SwapStateHolder,
+        isPriceImpact: Boolean,
+        token: String,
         providerType: ExchangeProviderType,
         onAlertClick: () -> Unit,
     ): SwapStateHolder {
         val message = when (providerType) {
-            ExchangeProviderType.CEX -> resourceReference(R.string.express_cex_fee_explanation)
-            ExchangeProviderType.DEX -> resourceReference(R.string.swapping_high_price_impact_description)
+            ExchangeProviderType.CEX -> resourceReference(R.string.swapping_alert_cex_description, wrappedList(token))
+            ExchangeProviderType.DEX -> {
+                val refs = buildList {
+                    if (isPriceImpact) {
+                        add(resourceReference(R.string.swapping_high_price_impact_description))
+                        add(stringReference("\n\n"))
+                    }
+                    add(resourceReference(R.string.swapping_alert_dex_description))
+                }
+
+                combinedReference(refs.toWrappedList())
+            }
         }
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
+                title = resourceReference(R.string.swapping_alert_title),
                 message = message,
                 onClick = onAlertClick,
                 type = GenericWarningType.OTHER,
@@ -1074,7 +1091,10 @@ internal class StateBuilder(
                 }
                 actions.onSelectFeeType.invoke(selectedItem)
             },
+            readMoreUrl = buildReadMoreUrl(),
             feeItems = txFeeState.toFeeItemState(),
+            readMore = resourceReference(R.string.common_fee_selector_link_description),
+            onReadMoreClick = actions.onFeeReadMoreClick,
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
@@ -1083,6 +1103,14 @@ internal class StateBuilder(
                 content = config,
             ),
         )
+    }
+
+    private fun buildReadMoreUrl(): String {
+        return buildString {
+            append(FEE_READ_MORE_URL_FIRST_PART)
+            append(getLocaleName())
+            append(FEE_READ_MORE_URL_SECOND_PART)
+        }
     }
 
     fun updateSelectedFeeBottomSheet(uiState: SwapStateHolder, selectedFee: FeeType): SwapStateHolder {
@@ -1337,12 +1365,24 @@ internal class StateBuilder(
         return text.replace(",", ".").toBigDecimalOrNull()
     }
 
+    private fun getLocaleName(): String {
+        return if (Locale.getDefault().language == "ru") {
+            RU_LOCALE
+        } else {
+            EN_LOCALE
+        }
+    }
+
     private companion object {
+        private const val RU_LOCALE = "ru"
+        private const val EN_LOCALE = "en"
         const val ADDRESS_MIN_LENGTH = 11
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val PRICE_IMPACT_THRESHOLD = 0.1
         private const val UNKNOWN_AMOUNT_SIGN = "—"
         private const val MAX_DECIMALS_TO_SHOW = 8
+        private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
+        private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
 }
