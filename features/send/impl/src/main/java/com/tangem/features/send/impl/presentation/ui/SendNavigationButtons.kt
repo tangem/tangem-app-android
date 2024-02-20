@@ -3,6 +3,8 @@ package com.tangem.features.send.impl.presentation.ui
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -24,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendUiState
@@ -49,9 +53,12 @@ internal fun SendNavigationButtons(uiState: SendUiState) {
 @Composable
 private fun SendSecondaryNavigationButton(uiState: SendUiState) {
     val currentState = uiState.currentState.collectAsState()
+    val isEditingDisabled = uiState.isEditingDisabled
+    val isCorrectScreen = currentState.value == SendUiStateType.Amount || currentState.value == SendUiStateType.Fee
     AnimatedVisibility(
-        visible = currentState.value == SendUiStateType.Amount ||
-            currentState.value == SendUiStateType.Fee,
+        visible = !isEditingDisabled && isCorrectScreen,
+        enter = expandHorizontally(expandFrom = Alignment.End),
+        exit = shrinkHorizontally(shrinkTowards = Alignment.End),
     ) {
         Icon(
             modifier = Modifier
@@ -94,11 +101,12 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
     ) { textId ->
         when {
             currentState.value == SendUiStateType.Send && !isSuccess -> {
+                val hapticFeedback = rememberHapticFeedback(state = currentState, onAction = buttonClick)
                 PrimaryButtonIconEnd(
                     text = stringResource(textId),
                     iconResId = R.drawable.ic_tangem_24,
                     enabled = isButtonEnabled,
-                    onClick = buttonClick,
+                    onClick = hapticFeedback,
                     showProgress = isSending,
                 )
             }
@@ -107,6 +115,7 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
                     textRes = textId,
                     txUrl = txUrl,
                     onExploreClick = { uiState.clickIntents.onExploreClick(txUrl) },
+                    onShareClick = uiState.clickIntents::onShareClick,
                     onDoneClick = buttonClick,
                     modifier = Modifier,
                 )
@@ -127,6 +136,7 @@ private fun PrimaryButtonsDone(
     @StringRes textRes: Int,
     txUrl: String,
     onExploreClick: () -> Unit,
+    onShareClick: () -> Unit,
     onDoneClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -149,6 +159,7 @@ private fun PrimaryButtonsDone(
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         context.shareText(txUrl)
+                        onShareClick()
                     },
                     modifier = Modifier.weight(1f),
                 )
@@ -170,6 +181,7 @@ private fun getButtonData(
     isSuccess: Boolean,
 ): Pair<Int, () -> Unit> {
     return when (currentState.value) {
+        SendUiStateType.None,
         SendUiStateType.Amount,
         SendUiStateType.Recipient,
         SendUiStateType.Fee,
