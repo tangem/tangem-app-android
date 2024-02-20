@@ -116,6 +116,7 @@ dependencies {
     implementation(deps.androidx.core.ktx)
     implementation(deps.androidx.core.splashScreen)
     implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.datastore)
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.constraintLayout)
     implementation(deps.androidx.activity.compose)
