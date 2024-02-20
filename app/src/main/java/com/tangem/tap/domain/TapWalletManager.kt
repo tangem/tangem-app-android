@@ -5,19 +5,20 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.attestation.Attestation
-import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -40,8 +41,13 @@ class TapWalletManager(
             field = value
         }
 
-    val walletManagerFactory: WalletManagerFactory
-        by lazy { WalletManagerFactory(blockchainSdkConfig) }
+    val walletManagerFactory: WalletManagerFactory by lazy {
+        WalletManagerFactory(
+            config = blockchainSdkConfig,
+            accountCreator = store.state.daggerGraphState.get(DaggerGraphState::accountCreator),
+            blockchainDataStorage = store.state.daggerGraphState.get(DaggerGraphState::blockchainDataStorage),
+        )
+    }
 
     suspend fun onWalletSelected(userWallet: UserWallet, sendAnalyticsEvent: Boolean) {
         // If a previous job was running, it gets cancelled before the new one starts,
