@@ -90,7 +90,7 @@ fun Store<*>.dispatchShare(url: String) {
     dispatch(NavigationAction.Share(url))
 }
 
-inline fun <reified T> Store<AppState>.getFromDagger(getDependency: DaggerGraphState.() -> T?): T {
+inline fun <reified T> Store<AppState>.inject(getDependency: DaggerGraphState.() -> T?): T {
     return requireNotNull(state.daggerGraphState.getDependency()) {
         "${T::class.simpleName} isn't initialized "
     }

@@ -3,7 +3,7 @@ package com.tangem.tap.common.redux.global
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.getFromDagger
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingManager
@@ -97,10 +97,10 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             )
         }
         is GlobalAction.UpdateUserWalletsListManager -> {
-            val featureToggles = store.getFromDagger(DaggerGraphState::userWalletsListManagerFeatureToggles)
+            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
 
             if (featureToggles.isGeneralManagerEnabled) {
-                val generalUserWalletsListManager = store.getFromDagger(DaggerGraphState::generalUserWalletsListManager)
+                val generalUserWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
                 appStateHolder.userWalletsListManager = generalUserWalletsListManager
                 globalState.copy(userWalletsListManager = generalUserWalletsListManager)

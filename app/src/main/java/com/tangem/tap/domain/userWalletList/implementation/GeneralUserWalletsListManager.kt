@@ -9,6 +9,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
@@ -23,6 +24,7 @@ import timber.log.Timber
  *
  * @author Andrew Khokhlov on 09/02/2024
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class GeneralUserWalletsListManager(
     private val runtimeUserWalletsListManager: UserWalletsListManager,
     private val biometricUserWalletsListManager: UserWalletsListManager,
@@ -38,18 +40,10 @@ internal class GeneralUserWalletsListManager(
     }
 
     override val userWallets: Flow<List<UserWallet>>
-        get() = channelFlow {
-            implementation.collectLatest {
-                it.userWallets.collectLatest(::send)
-            }
-        }
+        get() = implementation.flatMapLatest { it.userWallets }
 
     override val selectedUserWallet: Flow<UserWallet>
-        get() = channelFlow {
-            implementation.collectLatest {
-                it.selectedUserWallet.collectLatest(::send)
-            }
-        }
+        get() = implementation.flatMapLatest { it.selectedUserWallet }
 
     override val selectedUserWalletSync: UserWallet?
         get() = implementation.value.selectedUserWalletSync
@@ -61,13 +55,11 @@ internal class GeneralUserWalletsListManager(
         get() = implementation.value.walletsCount
 
     override val isLocked: Flow<Boolean>
-        get() = channelFlow {
-            implementation.collectLatest {
-                if (it is UserWalletsListManager.Lockable) {
-                    it.isLocked.collectLatest(::send)
-                } else {
-                    error("RuntimeUserWalletsListManager is not lockable")
-                }
+        get() = implementation.flatMapLatest {
+            if (it is UserWalletsListManager.Lockable) {
+                it.isLocked
+            } else {
+                error("RuntimeUserWalletsListManager is not lockable")
             }
         }
 
@@ -129,19 +121,18 @@ internal class GeneralUserWalletsListManager(
     private fun subscribeOnCurrentManager() {
         appPreferencesStore.get(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
             .distinctUntilChanged()
-            .map { shouldSaveUserWallets ->
-                if (shouldSaveUserWallets) {
+            .onEach { shouldSaveUserWallets ->
+                val manager = if (shouldSaveUserWallets) {
                     biometricUserWalletsListManager.copyFrom(runtimeUserWalletsListManager)
                 } else {
                     runtimeUserWalletsListManager.copyFrom(biometricUserWalletsListManager)
                 }
-            }
-            .onEach {
-                Timber.d("Switch to ${it::class.java.simpleName}")
 
-                implementation.value = it
+                Timber.d("Switch to ${manager::class.java.simpleName}")
+
+                implementation.value = manager
             }
-            .flowOn(dispatchers.main)
+            .flowOn(dispatchers.io)
             .launchIn(applicationScope)
     }
 

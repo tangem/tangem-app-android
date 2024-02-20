@@ -18,7 +18,7 @@ import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.extensions.getFromDagger
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
@@ -98,9 +98,9 @@ internal class SaveWalletMiddleware {
                     .build()
                 ?: return@launch
 
-            val featureToggles = store.getFromDagger(DaggerGraphState::userWalletsListManagerFeatureToggles)
+            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
             if (featureToggles.isGeneralManagerEnabled) {
-                store.getFromDagger(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+                store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
             } else {
                 provideLockableUserWalletsListManagerIfNot()
             }
@@ -123,12 +123,12 @@ internal class SaveWalletMiddleware {
                     store.dispatchWithMain(SaveWalletAction.Save.Error(error))
                 }
                 .doOnSuccess {
-                    store.getFromDagger(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+                    store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
 
                     // Enable saving access codes only if this is the first time user save the wallet
                     if (isFirstSavedWallet) {
                         preferencesStorage.shouldSaveAccessCodes = true
-                        store.getFromDagger(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                        store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
                             isBiometricsRequestPolicy = userWallet.hasAccessCode,
                         )
                     }
@@ -165,7 +165,7 @@ internal class SaveWalletMiddleware {
                     .build()
                 ?: return@launch
 
-            store.getFromDagger(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+            store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
 
             saveAccessCodeIfNeeded(accessCode = state.backupInfo?.accessCode, cardsInWallet = userWallet.cardsInWallet)
                 .flatMap {
@@ -176,7 +176,7 @@ internal class SaveWalletMiddleware {
                 }
                 .doOnSuccess {
                     preferencesStorage.shouldSaveAccessCodes = true
-                    store.getFromDagger(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                    store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
                         isBiometricsRequestPolicy = userWallet.hasAccessCode,
                     )
 

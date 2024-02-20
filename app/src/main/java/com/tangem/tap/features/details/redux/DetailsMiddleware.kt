@@ -289,7 +289,7 @@ class DetailsMiddleware {
 
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
             // Nothing to change
-            val walletsRepository = store.getFromDagger(DaggerGraphState::walletsRepository)
+            val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
             // TODO: как такое возможно?)
             if (walletsRepository.shouldSaveUserWalletsSync() == enable) {
@@ -360,7 +360,7 @@ class DetailsMiddleware {
             scanResponse: ScanResponse?,
             enableAccessCodesSaving: Boolean,
         ): CompletionResult<Unit> {
-            val featureToggles = store.getFromDagger(DaggerGraphState::userWalletsListManagerFeatureToggles)
+            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
 
             return if (featureToggles.isGeneralManagerEnabled) {
                 saveCurrentWalletByNewWay(scanResponse, enableAccessCodesSaving)
@@ -393,7 +393,7 @@ class DetailsMiddleware {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
 
                     preferencesStorage.shouldShowSaveUserWalletScreen = false
-                    store.getFromDagger(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+                    store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
@@ -404,7 +404,7 @@ class DetailsMiddleware {
             scanResponse: ScanResponse?,
             enableAccessCodesSaving: Boolean,
         ): CompletionResult<Unit> {
-            store.getFromDagger(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+            store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
 
             return if (enableAccessCodesSaving) {
                 saveAccessCodes(scanResponse)
@@ -413,8 +413,6 @@ class DetailsMiddleware {
             }
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
-
-                    preferencesStorage.shouldShowSaveUserWalletScreen = false // TODO: зачем?
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
@@ -422,7 +420,7 @@ class DetailsMiddleware {
         }
 
         private suspend fun deleteSavedWalletsAndAccessCodes(): CompletionResult<Unit> {
-            val featureToggles = store.getFromDagger(DaggerGraphState::userWalletsListManagerFeatureToggles)
+            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
 
             return if (featureToggles.isGeneralManagerEnabled) {
                 deleteSavedWalletsAndAccessCodesByNewWay()
@@ -437,7 +435,7 @@ class DetailsMiddleware {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
                     deleteSavedAccessCodes()
                     updateUserWalletsListManager(enableUserWalletsSaving = false)
-                    store.getFromDagger(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
+                    store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
 
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
                 }
@@ -450,7 +448,7 @@ class DetailsMiddleware {
             Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
 
             deleteSavedAccessCodes()
-            store.getFromDagger(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
+            store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
 
             store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
 
@@ -494,7 +492,6 @@ class DetailsMiddleware {
         }
 
         private fun createBiometricsUserWalletsManager(): UserWalletsListManager? {
-            // TODO: для чего это нужно?
             val context = foregroundActivityObserver.foregroundActivity?.applicationContext.guard {
                 Timber.e(IllegalStateException("No activities in foreground"))
                 return null
