@@ -83,7 +83,9 @@ internal fun BriefNetworkItem(model: NetworkItemState, modifier: Modifier = Modi
         Icon(
             painter = painterResource(id = model.iconResId.value),
             contentDescription = null,
-            modifier = Modifier.size(size = TangemTheme.dimens.size20),
+            modifier = Modifier
+                .size(size = TangemTheme.dimens.size20)
+                .clip(CircleShape),
             tint = if (isAdded) Color.Unspecified else TangemTheme.colors.text.tertiary,
         )
 
