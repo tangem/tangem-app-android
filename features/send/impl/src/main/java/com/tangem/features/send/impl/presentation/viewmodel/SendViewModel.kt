@@ -377,8 +377,8 @@ internal class SendViewModel @Inject constructor(
     private fun onStateActive() {
         uiState.currentState
             .onEach {
-                when (it) {
-                    SendUiStateType.Fee -> loadFee()
+                when (it.type) {
+                    SendUiStateType.Fee -> if (!it.isFromConfirmation) loadFee()
                     SendUiStateType.Send -> sendIdleTimer = System.currentTimeMillis()
                     else -> Unit
                 }
@@ -576,17 +576,17 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun showAmount() {
-        stateRouter.showAmount()
+        stateRouter.showAmount(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
     }
 
     override fun showRecipient() {
-        stateRouter.showRecipient()
+        stateRouter.showRecipient(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
     }
 
     override fun showFee() {
-        stateRouter.showFee()
+        stateRouter.showFee(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
     }
 
