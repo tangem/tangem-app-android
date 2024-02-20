@@ -33,7 +33,6 @@ dependencies {
     implementation(deps.timber)
 
     /** Network */
-    implementation(deps.krateSharedPref)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.okHttp)

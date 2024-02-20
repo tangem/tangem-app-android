@@ -7,13 +7,21 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":core:datasource"))
 
+    /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Local storages */
+    implementation(deps.androidx.datastore)
+
+    /** Other libraries */
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
+
+    /** Core modules */
+    implementation(projects.core.datasource)
 
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
