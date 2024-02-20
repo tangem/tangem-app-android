@@ -4,6 +4,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.domain.features"
+}
+
 dependencies {
     implementation(project(":core:datasource"))
     implementation(project(":core:utils"))
