@@ -23,6 +23,7 @@ import com.tangem.domain.common.TwinsHelper
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.ScanTask
@@ -239,7 +240,7 @@ private class ScanWalletProcessor(
     }
 
     private fun getWalletProductType(card: CardDTO): ProductType {
-        if (card.batchId == CardDTO.RING_BATCH_ID) {
+        if (RING_BATCH_IDS.contains(card.batchId)) {
             return ProductType.Ring
         }
         return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
