@@ -43,6 +43,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
+import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
@@ -84,6 +85,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
+    private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -301,12 +303,25 @@ internal class TokenDetailsViewModel @Inject constructor(
         val config = uiState.bottomSheetConfig
         val exchangeBottomSheet = config?.content as? ExchangeStatusBottomSheetConfig
         val currentTx = swapTxs.firstOrNull { it.txId == exchangeBottomSheet?.value?.txId }
+        if (currentTx?.activeStatus == ExchangeStatus.Finished) {
+            updateNetworkToSwapBalance(currentTx.toCryptoCurrency)
+        }
         uiState = uiState.copy(
             swapTxs = swapTxs,
             bottomSheetConfig = currentTx?.let(
                 stateFactory::updateStateWithExchangeStatusBottomSheet,
             ) ?: config,
         )
+    }
+
+    private fun updateNetworkToSwapBalance(toCryptoCurrency: CryptoCurrency) {
+        viewModelScope.launch {
+            updateDelayedCurrencyStatusUseCase(
+                userWalletId = userWalletId,
+                network = toCryptoCurrency.network,
+                refresh = true,
+            )
+        }
     }
 
     /**
