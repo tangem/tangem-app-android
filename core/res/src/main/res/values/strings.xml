@@ -393,6 +393,10 @@
     <string name="organize_tokens_sort_by_balance">By balance</string>
     <string name="organize_tokens_title">Organize tokens</string>
     <string name="organize_tokens_ungroup">Ungroup</string>
+    <string name="qr_scanner_camera_denied_gallery_button">Select from the gallery</string>
+    <string name="qr_scanner_camera_denied_settings_button">Settings</string>
+    <string name="qr_scanner_camera_denied_title">Camera access denied</string>
+    <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
     <string name="receive_bottom_sheet_title">%1$s %2$s address on %3$s network</string>
     <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
     <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
