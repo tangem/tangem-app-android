@@ -1,12 +1,14 @@
 package com.tangem.core.ui.components.transactions
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.res.TangemTheme
@@ -20,19 +22,23 @@ import java.util.UUID
  */
 @Composable
 internal fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifier = Modifier) {
-    Text(
-        text = config.title,
+    Box(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
-            .fillMaxWidth()
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing14,
-            ),
-        color = TangemTheme.colors.text.tertiary,
-        textAlign = TextAlign.Start,
-        style = TangemTheme.typography.body2,
-    )
+                vertical = TangemTheme.dimens.spacing8,
+                horizontal = TangemTheme.dimens.spacing12,
+            )
+            .fillMaxWidth()
+            .heightIn(min = TangemTheme.dimens.size24),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Text(
+            text = config.title,
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.body2,
+        )
+    }
 }
 
 @Preview

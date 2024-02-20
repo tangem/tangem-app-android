@@ -5,7 +5,6 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.utils.toDateFormat
-import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
@@ -52,8 +51,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
                             terminalSeparatorType = TerminalSeparatorType.SOURCE_COMPLETE,
                             item = TxHistoryItemState.Title(clickIntents::onExploreClick),
                         )
-                        .insertGroupTitle() // method uses the raw timestamp
-                        .formatTransactionsTimestamp() // method formats the timestamp
+                        .insertGroupTitle()
                 }
             }
             .launchIn(CoroutineScope(Dispatchers.IO))
@@ -94,28 +92,10 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
         }
     }
 
-    /**
-     * Map the [PagingData] to format the [TxHistoryItemState] timestamp
-     */
-    private fun PagingData<TxHistoryItemState>.formatTransactionsTimestamp(): PagingData<TxHistoryItemState> {
-        return map { txHistoryItemState ->
-            if (txHistoryItemState is TxHistoryItemState.Transaction &&
-                txHistoryItemState.state is TransactionState.Content
-            ) {
-                val txContent = txHistoryItemState.state as TransactionState.Content
-                txHistoryItemState.copy(
-                    state = txContent.copy(timestamp = txContent.timestamp.toLong().toTimeFormat()),
-                )
-            } else {
-                txHistoryItemState
-            }
-        }
-    }
-
     private fun TxHistoryItemState?.getTimestamp(): Long? {
         return if (this is TxHistoryItemState.Transaction && this.state is TransactionState.Content) {
             val txContent = this.state as TransactionState.Content
-            requireNotNull(txContent.timestamp.toLongOrNull()) { "Timestamp must be Long type" }
+            txContent.timestamp
         } else {
             null
         }

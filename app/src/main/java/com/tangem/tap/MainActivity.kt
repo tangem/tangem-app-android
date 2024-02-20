@@ -37,7 +37,7 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.features.managetokens.navigation.ManageTokensRouter
+import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -125,7 +125,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var tokenDetailsRouter: TokenDetailsRouter
 
     @Inject
-    lateinit var manageTokensRouter: ManageTokensRouter
+    lateinit var manageTokensUi: ManageTokensUi
 
     @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
@@ -211,7 +211,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
                 tokenDetailsRouter = tokenDetailsRouter,
-                manageTokensRouter = manageTokensRouter,
+                manageTokensUi = manageTokensUi,
                 cardSdkConfigRepository = cardSdkConfigRepository,
                 sendRouter = sendRouter,
                 qrScanningRouter = qrScanningRouter,

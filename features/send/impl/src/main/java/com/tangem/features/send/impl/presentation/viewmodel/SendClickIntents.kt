@@ -2,10 +2,11 @@ package com.tangem.features.send.impl.presentation.viewmodel
 
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 
 @Suppress("TooManyFunctions")
-interface SendClickIntents {
+internal interface SendClickIntents {
 
     fun popBackStack()
 
@@ -30,9 +31,9 @@ interface SendClickIntents {
     // endregion
 
     // region Recipient
-    fun onRecipientAddressValueChange(value: String)
+    fun onRecipientAddressValueChange(value: String, type: EnterAddressSource? = null)
 
-    fun onRecipientMemoValueChange(value: String)
+    fun onRecipientMemoValueChange(value: String, isPasted: Boolean = false)
     // endregion
 
     // region Fee
@@ -55,6 +56,8 @@ interface SendClickIntents {
     fun showFee()
 
     fun onExploreClick(txUrl: String)
+
+    fun onShareClick()
 
     fun onAmountReduceClick(reducedAmount: String)
 

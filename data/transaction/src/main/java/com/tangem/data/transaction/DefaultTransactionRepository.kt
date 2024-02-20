@@ -1,8 +1,10 @@
 package com.tangem.data.transaction
 
 import androidx.core.text.isDigitsOnly
+import com.tangem.blockchain.blockchains.algorand.AlgorandTransactionExtras
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
+import com.tangem.blockchain.blockchains.hedera.HederaTransactionBuilder
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
@@ -71,6 +73,8 @@ internal class DefaultTransactionRepository(
             Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
             Blockchain.Cosmos -> CosmosTransactionExtras(memo)
             Blockchain.TON -> TonTransactionExtras(memo)
+            Blockchain.Hedera -> HederaTransactionBuilder.HederaTransactionExtras(memo)
+            Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             else -> null
         }
     }

@@ -45,6 +45,7 @@ internal fun SendScreen(uiState: SendUiState) {
             SendUiStateType.Recipient -> R.string.send_recipient_label
             SendUiStateType.Fee -> R.string.common_fee_selector_title
             SendUiStateType.Send -> if (!isSuccess) R.string.send_confirm_label else null
+            else -> null
         }
         val iconRes = if (currentState.value == SendUiStateType.Recipient) {
             R.drawable.ic_qrcode_scan_24
@@ -89,19 +90,21 @@ private fun SendScreenContent(
     ) { state ->
         when (state) {
             SendUiStateType.Amount -> SendAmountContent(
-                uiState.amountState,
-                uiState.clickIntents,
+                amountState = uiState.amountState,
+                isBalanceHiding = uiState.isBalanceHidden,
+                clickIntents = uiState.clickIntents,
             )
             SendUiStateType.Recipient -> SendRecipientContent(
-                uiState.recipientState,
-                uiState.clickIntents,
-                recipientList,
+                uiState = uiState.recipientState,
+                clickIntents = uiState.clickIntents,
+                recipientList = recipientList,
             )
             SendUiStateType.Fee -> SendSpeedAndFeeContent(
-                uiState.feeState,
-                uiState.clickIntents,
+                state = uiState.feeState,
+                clickIntents = uiState.clickIntents,
             )
             SendUiStateType.Send -> SendContent(uiState)
+            else -> Unit
         }
     }
 }
