@@ -1,8 +1,8 @@
 package com.tangem.core.ui.components.transactions.empty
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,9 +33,10 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
+        Icon(
             modifier = Modifier.size(TangemTheme.dimens.size64),
             painter = painterResource(id = state.iconRes),
+            tint = TangemTheme.colors.icon.inactive,
             contentDescription = null,
         )
 
@@ -44,7 +45,7 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
             textAlign = TextAlign.Center,
             text = state.text.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors.text.tertiary,
         )
 
         Buttons(
@@ -84,8 +85,8 @@ private fun PairButtons(state: EmptyTransactionsBlockState.ButtonsState.PairButt
     }
 }
 
-@Preview
 @Composable
+@Preview(widthDp = 360, showBackground = true)
 private fun EmptyTransactionBlock_Light(
     @PreviewParameter(EmptyTransactionBlockStateProvider::class) state: EmptyTransactionsBlockState,
 ) {
@@ -94,8 +95,8 @@ private fun EmptyTransactionBlock_Light(
     }
 }
 
-@Preview
 @Composable
+@Preview(widthDp = 360, showBackground = true)
 private fun EmptyTransactionBlock_Dark(
     @PreviewParameter(EmptyTransactionBlockStateProvider::class) state: EmptyTransactionsBlockState,
 ) {
