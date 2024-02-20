@@ -29,6 +29,7 @@ class GetCurrencyWarningsUseCase(
     private val promoRepository: PromoRepository,
     private val showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
 
     suspend operator fun invoke(
@@ -54,7 +55,7 @@ class GetCurrencyWarningsUseCase(
                 isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
-            flowOf(walletManagersFacade.getExistentialDeposit(userWalletId, currency.network)),
+            flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
             getSwapPromoNotificationWarning(
                 operations = operations,
                 userWalletId = userWalletId,

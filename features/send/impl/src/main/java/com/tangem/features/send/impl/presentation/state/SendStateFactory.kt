@@ -14,10 +14,8 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
-import com.tangem.features.send.impl.presentation.state.amount.SendAmountCurrencyConverter
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
-import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientListConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientStateConverter
@@ -38,29 +36,17 @@ internal class SendStateFactory(
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
 ) {
-
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
-    private val amountFieldConverter by lazy {
+
+    private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendAmountFieldConverter(
             clickIntents = clickIntents,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
             appCurrencyProvider = appCurrencyProvider,
         )
     }
-    private val amountFieldChangeConverter by lazy {
-        SendAmountFieldChangeConverter(
-            currentStateProvider = currentStateProvider,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-        )
-    }
-    private val amountCurrencyConverter by lazy {
-        SendAmountCurrencyConverter(
-            currentStateProvider = currentStateProvider,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-        )
-    }
 
-    private val amountStateConverter by lazy {
+    private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendAmountStateConverter(
             appCurrencyProvider = appCurrencyProvider,
             iconStateConverter = iconStateConverter,
@@ -69,20 +55,20 @@ internal class SendStateFactory(
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
-    private val recipientStateConverter by lazy {
+    private val recipientStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendRecipientStateConverter(
             clickIntents = clickIntents,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
-    private val feeStateConverter by lazy {
+    private val feeStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendFeeStateConverter(
             appCurrencyProvider = appCurrencyProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
 
-    private val recipientListStateConverter by lazy {
+    private val recipientListStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendRecipientListConverter(
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
@@ -92,24 +78,34 @@ internal class SendStateFactory(
     // region UI states
     fun getInitialState(): SendUiState = SendUiState(
         clickIntents = clickIntents,
-        currentState = MutableStateFlow(SendUiStateType.Amount),
+        currentState = MutableStateFlow(SendUiStateType.None),
         event = consumedEvent(),
+        isEditingDisabled = false,
+        isBalanceHidden = false,
     )
 
     fun getReadyState(): SendUiState {
         val state = currentStateProvider()
         return state.copy(
-            amountState = state.amountState ?: amountStateConverter.convert(Unit),
-            recipientState = state.recipientState ?: recipientStateConverter.convert(Unit),
+            amountState = state.amountState ?: amountStateConverter.convert(""),
+            recipientState = state.recipientState ?: recipientStateConverter.convert(""),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
         )
     }
-    //endregion
 
-    //region amount state clicks
-    fun getOnAmountValueChange(value: String) = amountFieldChangeConverter.convert(value)
+    fun getReadyState(amount: String, destinationAddress: String): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            amountState = state.amountState ?: amountStateConverter.convert(amount),
+            recipientState = state.recipientState ?: recipientStateConverter.convert(destinationAddress),
+            feeState = state.feeState ?: feeStateConverter.convert(Unit),
+            isEditingDisabled = true,
+        )
+    }
 
-    fun getOnCurrencyChangedState(isFiat: Boolean) = amountCurrencyConverter.convert(isFiat)
+    fun getOnHideBalanceState(isBalanceHidden: Boolean): SendUiState {
+        return currentStateProvider().copy(isBalanceHidden = isBalanceHidden)
+    }
     //endregion
 
     //region recipient
@@ -125,12 +121,13 @@ internal class SendStateFactory(
         )
     }
 
-    fun onRecipientAddressValueChange(value: String): SendUiState {
+    fun onRecipientAddressValueChange(value: String, isXAddress: Boolean = false): SendUiState {
         val state = currentStateProvider()
         val recipientState = state.recipientState ?: return state
         return state.copy(
             recipientState = recipientState.copy(
                 addressTextField = recipientState.addressTextField.copy(value = value),
+                memoTextField = recipientState.memoTextField?.copy(isEnabled = !isXAddress),
             ),
         )
     }
@@ -205,6 +202,20 @@ internal class SendStateFactory(
                 isValidating = false,
                 memoTextField = recipientState.memoTextField?.copy(
                     isError = value.isNotEmpty() && !isValidMemo,
+                    isEnabled = true,
+                ),
+            ),
+        )
+    }
+
+    fun getOnXAddressMemoState(): SendUiState {
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+        return state.copy(
+            recipientState = recipientState.copy(
+                memoTextField = recipientState.memoTextField?.copy(
+                    value = "",
+                    isEnabled = false,
                 ),
             ),
         )
