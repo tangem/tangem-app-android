@@ -5,7 +5,6 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.TokensAction
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -13,9 +12,9 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
-import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state2.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state2.transformers.converter.MultiWalletCurrencyActionsConverter
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.collectLatest
@@ -33,7 +32,7 @@ internal interface WalletContentClickIntents {
 
     fun onOrganizeTokensClick()
 
-    fun onTokenItemClick(currency: CryptoCurrency)
+    fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus)
 
     fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
@@ -69,9 +68,9 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         router.openOrganizeTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
     }
 
-    override fun onTokenItemClick(currency: CryptoCurrency) {
+    override fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus) {
         analyticsEventHandler.send(PortfolioEvent.TokenTapped)
-        router.openTokenDetails(stateHolder.getSelectedWalletId(), currency)
+        router.openTokenDetails(stateHolder.getSelectedWalletId(), currencyStatus)
     }
 
     override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
