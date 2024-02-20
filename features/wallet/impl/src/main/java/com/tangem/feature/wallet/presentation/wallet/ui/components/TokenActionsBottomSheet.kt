@@ -15,8 +15,8 @@ import com.tangem.core.ui.components.getWarningRowColors
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
-import com.tangem.feature.wallet.presentation.wallet.state.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.TokenActionButtonConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
