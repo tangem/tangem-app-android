@@ -35,6 +35,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
@@ -155,6 +156,12 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var accountCreator: AccountCreator
+
+    @Inject
+    lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
+
+    @Inject
+    lateinit var generalUserWalletsListManager: UserWalletsListManager
     // endregion Injected
 
     override fun onCreate() {
@@ -183,8 +190,13 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         // TODO: Try to performance and user experience.
         //  [REDACTED_JIRA]
         runBlocking {
-            initUserWalletsListManager()
             featureTogglesManager.init()
+
+            if (userWalletsListManagerFeatureToggles.isGeneralManagerEnabled) {
+                store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
+            } else {
+                initUserWalletsListManager()
+            }
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
@@ -232,6 +244,8 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     sendFeatureToggles = sendFeatureToggles,
                     blockchainDataStorage = blockchainDataStorage,
                     accountCreator = accountCreator,
+                    userWalletsListManagerFeatureToggles = userWalletsListManagerFeatureToggles,
+                    generalUserWalletsListManager = generalUserWalletsListManager,
                 ),
             ),
         )
