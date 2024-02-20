@@ -19,4 +19,5 @@ dependencies {
 
     /** Libs - Other */
     implementation(deps.jodatime)
+    implementation(deps.androidx.paging.runtime)
 }
