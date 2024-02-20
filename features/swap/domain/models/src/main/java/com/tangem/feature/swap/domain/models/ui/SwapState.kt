@@ -42,9 +42,11 @@ sealed class PriceImpact {
 
     abstract val value: Float
 
-    fun getIntPercentValue() = (value * HUNDRED_PERCENTS).toInt()
     data class Empty(override val value: Float = 0f) : PriceImpact()
+
     data class Value(override val value: Float) : PriceImpact()
+
+    fun getIntPercentValue() = (value * HUNDRED_PERCENTS).toInt()
 
     companion object {
         private const val HUNDRED_PERCENTS = 100

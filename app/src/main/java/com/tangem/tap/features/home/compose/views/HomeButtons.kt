@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,15 +12,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.SpacerW8
-import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonColors
+import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
-@Suppress("MagicNumber")
 @Composable
 internal fun HomeButtons(
     btnScanStateInProgress: Boolean,
@@ -38,7 +33,7 @@ internal fun HomeButtons(
             showProgress = btnScanStateInProgress,
             onClick = onScanButtonClick,
         )
-        SpacerW8()
+        SpacerW12()
         OrderCardButton(
             modifier = Modifier.weight(weight = 1f),
             onClick = onShopButtonClick,
@@ -48,43 +43,25 @@ internal fun HomeButtons(
 
 @Composable
 private fun ScanCardButton(showProgress: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    TangemButton(
+    StoriesButton(
         modifier = modifier,
         text = stringResource(id = R.string.home_button_scan),
+        useDarkerColors = false,
         icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24),
-        colors = LightBgScanCardButtonColors,
-        showProgress = showProgress,
-        enabled = true,
         onClick = onClick,
+        showProgress = showProgress,
     )
 }
 
 @Composable
 private fun OrderCardButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    TangemButton(
+    StoriesButton(
         modifier = modifier,
         text = stringResource(id = R.string.home_button_order),
-        icon = TangemButtonIconPosition.None,
-        colors = LightBgOrderCardButtonColors,
-        showProgress = false,
-        enabled = true,
+        useDarkerColors = true,
         onClick = onClick,
     )
 }
-
-private val LightBgScanCardButtonColors: ButtonColors = TangemButtonColors(
-    backgroundColor = TangemColorPalette.Light4,
-    contentColor = TangemColorPalette.Dark6,
-    disabledBackgroundColor = TangemColorPalette.Dark5,
-    disabledContentColor = TangemColorPalette.Dark6,
-)
-
-private val LightBgOrderCardButtonColors: ButtonColors = TangemButtonColors(
-    backgroundColor = TangemColorPalette.Dark6,
-    contentColor = TangemColorPalette.White,
-    disabledBackgroundColor = TangemColorPalette.Dark6,
-    disabledContentColor = TangemColorPalette.White,
-)
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
@@ -95,10 +72,10 @@ private fun HomeButtonsPreview(@PreviewParameter(HomeButtonsParameterProvider::c
             modifier = Modifier.background(Color.Black),
         ) {
             HomeButtons(
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
                 btnScanStateInProgress = state.btnScanStateInProgress,
                 onScanButtonClick = {},
                 onShopButtonClick = {},
+                modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
             )
         }
     }
