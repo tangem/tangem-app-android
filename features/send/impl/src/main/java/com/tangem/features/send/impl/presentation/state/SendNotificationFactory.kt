@@ -27,7 +27,7 @@ internal class SendNotificationFactory(
 ) {
 
     fun create(): Flow<ImmutableList<SendNotification>> = currentStateProvider().currentState
-        .filter { it == SendUiStateType.Send }
+        .filter { it.type == SendUiStateType.Send }
         .map {
             val state = currentStateProvider()
             val feeState = state.feeState ?: return@map persistentListOf()
