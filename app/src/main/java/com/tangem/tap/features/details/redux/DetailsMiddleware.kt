@@ -24,10 +24,7 @@ import com.tangem.domain.wallets.legacy.isLockedSync
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.extensions.onUserWalletSelected
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -292,7 +289,8 @@ class DetailsMiddleware {
 
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
             // Nothing to change
-            val walletsRepository = store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
+            val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
+// [REDACTED_TODO_COMMENT]
             if (walletsRepository.shouldSaveUserWalletsSync() == enable) {
                 store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 return@launch
@@ -361,6 +359,19 @@ class DetailsMiddleware {
             scanResponse: ScanResponse?,
             enableAccessCodesSaving: Boolean,
         ): CompletionResult<Unit> {
+            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
+
+            return if (featureToggles.isGeneralManagerEnabled) {
+                saveCurrentWalletByNewWay(scanResponse, enableAccessCodesSaving)
+            } else {
+                saveCurrentWalletByOldWay(scanResponse, enableAccessCodesSaving)
+            }
+        }
+
+        private suspend fun saveCurrentWalletByOldWay(
+            scanResponse: ScanResponse?,
+            enableAccessCodesSaving: Boolean,
+        ): CompletionResult<Unit> {
             val userWallet = userWalletsListManager.selectedUserWalletSync
                 ?: scanResponse?.let { UserWalletBuilder(it).build() }
                 ?: return CompletionResult.Failure(
@@ -381,8 +392,26 @@ class DetailsMiddleware {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
 
                     preferencesStorage.shouldShowSaveUserWalletScreen = false
-                    store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
-                        .saveShouldSaveUserWallets(item = true)
+                    store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+                }
+                .doOnFailure { error ->
+                    Timber.e(error, "Unable to save user wallet")
+                }
+        }
+
+        private suspend fun saveCurrentWalletByNewWay(
+            scanResponse: ScanResponse?,
+            enableAccessCodesSaving: Boolean,
+        ): CompletionResult<Unit> {
+            store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+
+            return if (enableAccessCodesSaving) {
+                saveAccessCodes(scanResponse)
+            } else {
+                CompletionResult.Success(Unit)
+            }
+                .doOnSuccess {
+                    Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
@@ -390,19 +419,39 @@ class DetailsMiddleware {
         }
 
         private suspend fun deleteSavedWalletsAndAccessCodes(): CompletionResult<Unit> {
+            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
+
+            return if (featureToggles.isGeneralManagerEnabled) {
+                deleteSavedWalletsAndAccessCodesByNewWay()
+            } else {
+                deleteSavedWalletsAndAccessCodesByOldWay()
+            }
+        }
+
+        private suspend fun deleteSavedWalletsAndAccessCodesByOldWay(): CompletionResult<Unit> {
             return userWalletsListManager.clear()
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
                     deleteSavedAccessCodes()
                     updateUserWalletsListManager(enableUserWalletsSaving = false)
-                    store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
-                        .saveShouldSaveUserWallets(item = false)
+                    store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
 
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to delete saved wallets")
                 }
+        }
+
+        private suspend fun deleteSavedWalletsAndAccessCodesByNewWay(): CompletionResult<Unit> {
+            Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
+
+            deleteSavedAccessCodes()
+            store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = false)
+
+            store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Home))
+
+            return CompletionResult.Success(Unit)
         }
 
         private fun saveAccessCodes(scanResponse: ScanResponse?): CompletionResult<Unit> {
