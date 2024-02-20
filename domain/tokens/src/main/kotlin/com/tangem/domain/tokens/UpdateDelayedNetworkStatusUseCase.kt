@@ -33,7 +33,7 @@ class UpdateDelayedNetworkStatusUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         network: Network,
-        delayMillis: Long,
+        delayMillis: Long = 0L,
         refresh: Boolean = false,
     ): Either<CurrencyStatusError, Unit> {
         delay(delayMillis)
