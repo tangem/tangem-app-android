@@ -2,6 +2,7 @@ package com.tangem.feature.qrscanning
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -10,6 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.mlkit.vision.common.InputImage
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -45,12 +48,19 @@ internal class QrScanningFragment : ComposeFragment() {
     }
 
     private val cameraPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-        if (!it) parentFragmentManager.popBackStack()
+        if (!it) viewModel.onCameraDeniedState()
+    }
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) {
+        val selectedImage = it ?: Uri.EMPTY
+        if (selectedImage != Uri.EMPTY) {
+            val image = InputImage.fromFilePath(requireContext(), selectedImage)
+            analyzer.analyze(image)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.router = innerRouter
+        viewModel.setRouter(innerRouter, galleryLauncher)
         cameraExecutor = Executors.newSingleThreadExecutor()
         requestCameraPermission()
     }
@@ -70,7 +80,7 @@ internal class QrScanningFragment : ComposeFragment() {
         QrScanningContent(
             executor = { cameraExecutor },
             analyzer = { analyzer },
-            uiState = viewModel.uiState,
+            uiState = viewModel.uiState.collectAsStateWithLifecycle().value,
         )
         setFitSystemWindows(fit = false)
     }
