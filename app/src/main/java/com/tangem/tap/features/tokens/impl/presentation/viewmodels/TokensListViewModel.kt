@@ -13,12 +13,14 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getGreyedOutIconRes
+import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.canHandleBlockchain
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -67,6 +69,8 @@ internal class TokensListViewModel @Inject constructor(
     private val router: TokensListRouter,
     private val dispatchers: AppCoroutineDispatcherProvider,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    derivePublicKeysUseCase: DerivePublicKeysUseCase,
+    addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     analyticsEventHandler: AnalyticsEventHandler,
     getCurrenciesUseCase: GetCryptoCurrenciesUseCase,
 ) : ViewModel(), DefaultLifecycleObserver {
@@ -88,6 +92,8 @@ internal class TokensListViewModel @Inject constructor(
     private val tokensListMigration = TokensListMigration(
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         getCurrenciesUseCase = getCurrenciesUseCase,
+        derivePublicKeysUseCase = derivePublicKeysUseCase,
+        addCryptoCurrenciesUseCase = addCryptoCurrenciesUseCase,
     )
 
     init {
@@ -303,10 +309,13 @@ internal class TokensListViewModel @Inject constructor(
 
         fun onSaveButtonClick() {
             analyticsSender.sendWhenSaveButtonClicked()
-            tokensListMigration.onSaveButtonClick(
-                changedTokensList = changedTokensList,
-                changedBlockchainList = changedBlockchainList,
-            )
+
+            viewModelScope.launch(dispatchers.main) {
+                tokensListMigration.onSaveButtonClick(
+                    changedTokensList = changedTokensList,
+                    changedBlockchainList = changedBlockchainList,
+                )
+            }
         }
 
         private fun onSearchValueChange(newValue: String) {

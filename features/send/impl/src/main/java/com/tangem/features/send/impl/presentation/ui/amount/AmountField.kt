@@ -28,10 +28,10 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) 
         sendField.value to sendField.fiatValue
     }
 
-    val (primaryAmount, secondaryAmount) = if (!isFiat) {
-        sendField.cryptoAmount to sendField.fiatAmount
-    } else {
+    val (primaryAmount, secondaryAmount) = if (isFiat) {
         sendField.fiatAmount to sendField.cryptoAmount
+    } else {
+        sendField.cryptoAmount to sendField.fiatAmount
     }
 
     AmountTextField(
@@ -40,6 +40,7 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) 
         symbol = primaryAmount.currencySymbol,
         onValueChange = sendField.onValueChange,
         keyboardOptions = sendField.keyboardOptions,
+        keyboardActions = sendField.keyboardActions,
         textStyle = TangemTheme.typography.h2.copy(
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
