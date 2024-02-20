@@ -1,6 +1,8 @@
 package com.tangem.managetokens.presentation.managetokens.state.factory
 
 import androidx.paging.PagingData
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.tokens.CurrencyCompatibilityError
@@ -10,6 +12,7 @@ import com.tangem.managetokens.presentation.common.state.*
 import com.tangem.managetokens.presentation.common.utils.CurrencyUtils
 import com.tangem.managetokens.presentation.managetokens.state.*
 import com.tangem.managetokens.presentation.managetokens.viewmodels.ManageTokensClickIntents
+import com.tangem.managetokens.presentation.managetokens.viewmodels.ManageTokensUiEvents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 internal class ManageTokensStateFactory(
     private val currentStateProvider: Provider<ManageTokensState>,
     private val clickIntents: ManageTokensClickIntents,
+    private val uiIntents: ManageTokensUiEvents,
 ) {
 
     fun getInitialState(tokens: Flow<PagingData<TokenItemState>>): ManageTokensState {
@@ -36,6 +40,12 @@ internal class ManageTokensStateFactory(
             isLoading = false,
             event = consumedEvent(),
             chooseWalletState = ChooseWalletState.NoSelection,
+            onEmptySearchResult = uiIntents::onEmptySearchResult,
+            customTokenBottomSheetConfig = TangemBottomSheetConfig(
+                isShow = false,
+                onDismissRequest = uiIntents::onAddCustomTokenSheetDismissed,
+                content = TangemBottomSheetConfigContent.Empty,
+            ),
         )
     }
 
@@ -176,7 +186,7 @@ internal class ManageTokensStateFactory(
                 totalNeeded = totalNeeded,
                 totalWallets = totalWallets,
                 walletsToDerive = walletsToDerive,
-                onGenerateClick = clickIntents::onGenerateDerivationClick,
+                onGenerateClick = clickIntents::onGetAddressesClick,
             )
         }
         return currentStateProvider().copy(derivationNotification = derivationNotificationState)

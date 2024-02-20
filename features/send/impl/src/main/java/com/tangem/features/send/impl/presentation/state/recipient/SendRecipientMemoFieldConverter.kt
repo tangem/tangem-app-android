@@ -28,6 +28,8 @@ internal class SendRecipientMemoFieldConverter(
             Blockchain.TerraV1.id,
             Blockchain.TerraV2.id,
             Blockchain.Stellar.id,
+            Blockchain.Hedera.id,
+            Blockchain.Algorand.id,
             -> convert(R.string.send_extras_hint_memo)
             else -> null
         }
@@ -44,6 +46,8 @@ internal class SendRecipientMemoFieldConverter(
             placeholder = resourceReference(R.string.send_optional_field),
             label = resourceReference(value),
             error = resourceReference(R.string.send_memo_destination_tag_error),
+            disabledText = resourceReference(R.string.send_additional_field_already_included),
+            isEnabled = true,
         )
     }
 }

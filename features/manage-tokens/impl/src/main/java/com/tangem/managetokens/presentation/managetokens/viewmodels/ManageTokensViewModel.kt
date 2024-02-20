@@ -3,12 +3,13 @@ package com.tangem.managetokens.presentation.managetokens.viewmodels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.map
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.DerivePublicKeysUseCase
@@ -20,6 +21,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.managetokens.presentation.common.analytics.ManageTokens
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.Event
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
@@ -27,7 +29,6 @@ import com.tangem.managetokens.presentation.managetokens.state.ManageTokensState
 import com.tangem.managetokens.presentation.managetokens.state.TokenButtonType
 import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
 import com.tangem.managetokens.presentation.managetokens.state.factory.*
-import com.tangem.managetokens.presentation.router.InnerManageTokensRouter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
@@ -58,16 +59,16 @@ internal class ManageTokensViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val checkCurrencyCompatibilityUseCase: CheckCurrencyCompatibilityUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
-) : ViewModel(), ManageTokensClickIntents, DefaultLifecycleObserver {
+    private val analyticsEventHandler: AnalyticsEventHandler,
+) : ViewModel(), ManageTokensClickIntents, ManageTokensUiEvents {
 
     private val debouncer = Debouncer()
 
     private val stateFactory = ManageTokensStateFactory(
         currentStateProvider = Provider { uiState },
         clickIntents = this,
+        uiIntents = this,
     )
-
-    var router: InnerManageTokensRouter by Delegates.notNull()
 
     var uiState: ManageTokensState by mutableStateOf(stateFactory.getInitialState(flowOf(PagingData.from(emptyList()))))
         private set
@@ -80,7 +81,7 @@ internal class ManageTokensViewModel @Inject constructor(
 
     private var selectedWallet: UserWallet? = null
 
-    private var neededDerivations: Map<UserWalletId, List<CryptoCurrency>> = emptyMap()
+    private var currenciesToGenerateAddresses: Map<UserWalletId, List<CryptoCurrency>> = emptyMap()
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -107,6 +108,8 @@ internal class ManageTokensViewModel @Inject constructor(
     )
 
     init {
+        analyticsEventHandler.send(ManageTokens.ScreenOpened())
+
         viewModelScope.launch(dispatchers.io) {
             getWalletsUseCase()
                 .distinctUntilChanged()
@@ -151,7 +154,7 @@ internal class ManageTokensViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .collectLatest {
                     it.onRight { mapOfMissingDerivations ->
-                        neededDerivations = mapOfMissingDerivations
+                        currenciesToGenerateAddresses = mapOfMissingDerivations
                         withContext(dispatchers.main) { updateDerivation() }
                     }
                 }
@@ -159,8 +162,8 @@ internal class ManageTokensViewModel @Inject constructor(
     }
 
     private fun updateDerivation() {
-        val totalNeeded = neededDerivations.values.sumOf { derivations -> derivations.size }
-        val walletsToDerive = neededDerivations.values
+        val totalNeeded = currenciesToGenerateAddresses.values.sumOf { derivations -> derivations.size }
+        val walletsToDerive = currenciesToGenerateAddresses.values
             .filter { derivations -> derivations.isNotEmpty() }.size
         uiState = stateFactory.updateDerivationNotification(
             totalNeeded = totalNeeded,
@@ -182,7 +185,8 @@ internal class ManageTokensViewModel @Inject constructor(
     }
 
     override fun onAddCustomTokensButtonClick() {
-        router.openCustomTokensScreen()
+        analyticsEventHandler.send(ManageTokens.ButtonCustomToken)
+        uiState = uiState.copy(customTokenBottomSheetConfig = uiState.customTokenBottomSheetConfig.copy(isShow = true))
     }
 
     override fun onSearchQueryChange(query: String) {
@@ -201,6 +205,13 @@ internal class ManageTokensViewModel @Inject constructor(
     override fun onTokenItemButtonClick(token: TokenItemState.Loaded) {
         when (token.availableAction.value) {
             TokenButtonType.ADD, TokenButtonType.EDIT -> {
+                if (token.availableAction.value == TokenButtonType.ADD) {
+                    analyticsEventHandler.send(ManageTokens.ButtonAdd(token.currencySymbol))
+                }
+                if (token.availableAction.value == TokenButtonType.EDIT) {
+                    analyticsEventHandler.send(ManageTokens.ButtonEdit(token.currencySymbol))
+                }
+
                 uiState = uiState.copy(selectedToken = token)
                 val addedCurrenciesOnWallet = addedCurrenciesByWallet[selectedWallet] ?: listOf()
                 stateFactory.updateTokenNetworksOnTokenSelection(token, addedCurrenciesOnWallet)
@@ -219,17 +230,21 @@ internal class ManageTokensViewModel @Inject constructor(
         }
     }
 
-    override fun onGenerateDerivationClick() {
-        if (neededDerivations.isNotEmpty()) {
+    override fun onGetAddressesClick() {
+        if (currenciesToGenerateAddresses.isNotEmpty()) {
             viewModelScope.launch(dispatchers.io) {
-                val walletId = neededDerivations.keys.firstOrNull()
-                val currenciesToDerive = neededDerivations[walletId]
-                if (walletId == null || currenciesToDerive.isNullOrEmpty()) return@launch
-                derivePublicKeysUseCase(walletId, currenciesToDerive)
-                    .onRight {
-                        updateDerivationNotificationState()
-                        fetchTokenListUseCase(userWalletId = walletId)
+                val cardCount = currenciesToGenerateAddresses.count { it.value.isNotEmpty() }
+                analyticsEventHandler.send(ManageTokens.ButtonGenerateAddresses(cardCount))
+
+                currenciesToGenerateAddresses.forEach { (walletId, currenciesToDerive) ->
+                    if (currenciesToDerive.isNotEmpty()) {
+                        derivePublicKeysUseCase(walletId, currenciesToDerive)
+                            .onRight {
+                                updateDerivationNotificationState()
+                                fetchTokenListUseCase(userWalletId = walletId)
+                            }
                     }
+                }
             }
         }
     }
@@ -247,8 +262,14 @@ internal class ManageTokensViewModel @Inject constructor(
         if (!selectedWallet.isMultiCurrency || selectedWallet.isLocked) return
 
         if (network.isAdded.value) {
+            analyticsEventHandler.send(
+                ManageTokens.TokenSwitcherChanged(token = token.currencySymbol, AnalyticsParam.OnOffState.Off),
+            )
             toggleToken(token, network, selectedWallet)
         } else {
+            analyticsEventHandler.send(
+                ManageTokens.TokenSwitcherChanged(token = token.currencySymbol, AnalyticsParam.OnOffState.On),
+            )
             viewModelScope.launch(dispatchers.io) {
                 checkCompatibilityAndToggleToken(token, network, selectedWallet)
             }
@@ -298,7 +319,6 @@ internal class ManageTokensViewModel @Inject constructor(
             "It is only null if Blockchain is Unknown, which mustn't happen here"
         }
         if (!network.isAdded.value) {
-            updateUi(token, network)
             addedCurrenciesByWallet[selectedWallet]?.add(cryptoCurrency)
             allAddedCurrencies.add(cryptoCurrency)
             viewModelScope.launch(dispatchers.io) {
@@ -307,13 +327,14 @@ internal class ManageTokensViewModel @Inject constructor(
                     currency = cryptoCurrency,
                 )
             }
+            updateUi(token, network)
         } else {
             viewModelScope.launch(dispatchers.io) {
                 if (canBeRemovedAndShowAlertIfNot(selectedWallet.walletId, cryptoCurrency)) {
-                    withContext(dispatchers.main) { updateUi(token, network) }
                     addedCurrenciesByWallet[selectedWallet]?.remove(cryptoCurrency)
                     allAddedCurrencies.remove(cryptoCurrency)
                     removeCurrencyUseCase(selectedWallet.walletId, cryptoCurrency)
+                    withContext(dispatchers.main) { updateUi(token, network) }
                 }
             }
         }
@@ -348,6 +369,7 @@ internal class ManageTokensViewModel @Inject constructor(
     }
 
     override fun onNonNativeNetworkHintClick() {
+        analyticsEventHandler.send(ManageTokens.NoticeNonNativeNetworkClicked)
         uiState = stateFactory.getStateAndTriggerEvent(
             state = uiState,
             event = Event.ShowAlert(AlertState.NonNative),
@@ -355,13 +377,8 @@ internal class ManageTokensViewModel @Inject constructor(
         )
     }
 
-    override fun onSelectWalletsClick() {
-        uiState = uiState.copy(
-            showChooseWalletScreen = true,
-        )
-    }
-
     override fun onChooseWalletClick() {
+        analyticsEventHandler.send(ManageTokens.ButtonChooseWallet)
         uiState = uiState.copy(
             showChooseWalletScreen = true,
         )
@@ -374,11 +391,20 @@ internal class ManageTokensViewModel @Inject constructor(
     }
 
     override fun onWalletSelected(walletId: String) {
+        analyticsEventHandler.send(ManageTokens.WalletSelected(ManageTokens.WalletSelected.Source.MainToken))
         viewModelScope.launch(dispatchers.io) {
             selectWalletUseCase(UserWalletId(walletId))
         }
         selectedWallet = wallets.find { it.walletId.stringValue == walletId }
         uiState.selectedToken?.let { onTokenItemButtonClick(it) }
         uiState = stateFactory.updateSelectedWallet(selectedWalletId = selectedWallet?.walletId?.stringValue)
+    }
+
+    override fun onEmptySearchResult(query: String) {
+        analyticsEventHandler.send(ManageTokens.TokenIsNotFound(query))
+    }
+
+    override fun onAddCustomTokenSheetDismissed() {
+        uiState = uiState.copy(customTokenBottomSheetConfig = uiState.customTokenBottomSheetConfig.copy(isShow = false))
     }
 }
