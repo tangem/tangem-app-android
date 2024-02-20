@@ -7,6 +7,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -87,4 +88,10 @@ fun Store<*>.dispatchOpenUrl(url: String) {
 
 fun Store<*>.dispatchShare(url: String) {
     dispatch(NavigationAction.Share(url))
+}
+
+inline fun <reified T> Store<AppState>.inject(getDependency: DaggerGraphState.() -> T?): T {
+    return requireNotNull(state.daggerGraphState.getDependency()) {
+        "${T::class.simpleName} isn't initialized "
+    }
 }
