@@ -30,6 +30,8 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.ui.utils)
     implementation(deps.compose.coil)
+    implementation(deps.compose.navigation)
+    implementation(deps.compose.navigation.hilt)
 
     /** Other libraries */
     implementation(deps.compose.accompanist.systemUiController)
@@ -38,4 +40,5 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.zxing.qrCore)
     implementation(deps.jodatime)
+    implementation(deps.timber)
 }
