@@ -43,7 +43,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "xdai" -> Blockchain.Gnosis
         "ethereum-pow-iou" -> Blockchain.EthereumPow
         "ethereum-pow-iou/test" -> Blockchain.EthereumPowTestnet
-        "ethereumfair" -> Blockchain.EthereumFair
+        "ethereumfair", "dischain" -> Blockchain.Dischain // for old client compatibility
         "polkadot" -> Blockchain.Polkadot
         "polkadot/test" -> Blockchain.PolkadotTestnet
         "kusama" -> Blockchain.Kusama
@@ -131,7 +131,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Gnosis -> "xdai"
         Blockchain.EthereumPow -> "ethereum-pow-iou"
         Blockchain.EthereumPowTestnet -> "ethereum-pow-iou/test"
-        Blockchain.EthereumFair -> "ethereumfair"
+        Blockchain.Dischain -> "ethereumfair" // for backend compatibility
         Blockchain.Polkadot -> "polkadot"
         Blockchain.PolkadotTestnet -> "polkadot/test"
         Blockchain.Kusama -> "kusama"
@@ -203,7 +203,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Dogecoin -> "dogecoin"
         Blockchain.Gnosis -> "xdai"
         Blockchain.EthereumPow, Blockchain.EthereumPowTestnet -> "ethereum-pow-iou"
-        Blockchain.EthereumFair -> "ethereumfair"
+        Blockchain.Dischain -> "ethereumfair" // for backend compatibility
         Blockchain.Kusama -> "kusama"
         Blockchain.Optimism, Blockchain.OptimismTestnet -> "optimistic-ethereum"
         Blockchain.Dash -> "dash"
