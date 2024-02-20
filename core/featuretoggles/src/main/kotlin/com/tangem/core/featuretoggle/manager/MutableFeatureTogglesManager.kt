@@ -11,5 +11,5 @@ interface MutableFeatureTogglesManager : FeatureTogglesManager {
     fun getFeatureToggles(): Map<String, Boolean>
 
     /** Change availability [isEnabled] of toggle with name [name] */
-    fun changeToggle(name: String, isEnabled: Boolean)
+    suspend fun changeToggle(name: String, isEnabled: Boolean)
 }
