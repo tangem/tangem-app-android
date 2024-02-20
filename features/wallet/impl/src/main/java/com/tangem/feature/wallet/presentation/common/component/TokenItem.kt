@@ -126,7 +126,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
     Layout(content = content, modifier = modifier) { measurables, constraints ->
 
         val layoutWidth = constraints.maxWidth
-        val horizontalPadding = with(density) { dimens.size14.roundToPx() }
+        val horizontalPadding = with(density) { dimens.size12.roundToPx() }
         val verticalPadding = with(density) { dimens.size16.roundToPx() }
         val layoutWidthWithoutPaddings = layoutWidth - 2 * horizontalPadding
 
@@ -137,7 +137,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
         /*
          * Title width take the whole REMAINING space.
-         * If FiatAmount took the whole free space, then Title will has min width.
+         * If FiatAmount took the whole free space, then Title will have min width.
          */
         val title: Placeable
 
@@ -149,7 +149,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
         /*
          * PriceChange width take the whole REMAINING space.
-         * If CryptoAmount took the whole free space, then PriceChange will has min width.
+         * If CryptoAmount took the whole free space, then PriceChange will have min width.
          */
         val priceChange: Placeable?
 

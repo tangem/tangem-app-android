@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationWithBackground
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.wallet.presentation.wallet.state.components.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 
 /**
