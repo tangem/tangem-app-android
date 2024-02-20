@@ -52,6 +52,8 @@ object PreferencesKeys {
     val IS_TOKEN_SWAP_PROMO_CHANGELLY_SHOW_KEY by lazy {
         booleanPreferencesKey(name = "isTokenSwapPromoChangellyShown")
     }
+
+    val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
