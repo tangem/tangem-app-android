@@ -27,7 +27,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "TRON", "TRON/test" -> R.drawable.img_tron_22
         "GNO" -> R.drawable.img_gnosis_22
         "ETH-Pow", "ETH-Pow/test" -> R.drawable.img_eth_pow_22
-        "ETH-Fair" -> R.drawable.img_eth_fair_22
+        "ETH-Fair", "dischain" -> R.drawable.img_dischain_22
         "Polkadot", "Polkadot/test" -> R.drawable.img_polkadot_22
         "Kusama" -> R.drawable.img_kusama_22
         "OPTIMISM", "OPTIMISM/test" -> R.drawable.img_optimism_22
@@ -81,7 +81,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "tron", "tron/test" -> R.drawable.img_tron_22
         "xdai" -> R.drawable.img_gnosis_22
         "ethereum-pow-iou", "ethereum-pow-iou/test" -> R.drawable.img_eth_pow_22
-        "ethereumfair" -> R.drawable.img_eth_fair_22
+        "ethereumfair", "dischain" -> R.drawable.img_dischain_22
         "polkadot", "polkadot/test" -> R.drawable.img_polkadot_22
         "kusama" -> R.drawable.img_kusama_22
         "optimistic-ethereum", "optimistic-ethereum/test" -> R.drawable.img_optimism_22
@@ -137,7 +137,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "dogecoin" -> R.drawable.img_dogecoin_22
         "xdai" -> R.drawable.img_gnosis_22
         "ethereum-pow-iou" -> R.drawable.img_eth_pow_22
-        "ethereumfair" -> R.drawable.img_eth_fair_22
+        "ethereumfair", "dischain" -> R.drawable.img_dischain_22
         "kusama" -> R.drawable.img_kusama_22
         "dash" -> R.drawable.img_dash_22
         "kaspa" -> R.drawable.img_kaspa_22
@@ -186,7 +186,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "TRON", "TRON/test" -> R.drawable.ic_tron_22
         "GNO" -> R.drawable.ic_gnosis_22
         "ETH-Pow", "ETH-Pow/test" -> R.drawable.ic_ethereumpow_22
-        "ETH-Fair" -> R.drawable.ic_ethereumfair_22
+        "ETH-Fair", "dischain" -> R.drawable.ic_dischain_22
         "Polkadot", "Polkadot/test" -> R.drawable.ic_polkadot_16
         "Kusama" -> R.drawable.ic_kusama_16
         "OPTIMISM", "OPTIMISM/test" -> R.drawable.ic_optimism_22
@@ -240,7 +240,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "tron", "tron/test" -> R.drawable.ic_tron_22
         "xdai" -> R.drawable.ic_gnosis_22
         "ethereum-pow-iou", "ethereum-pow-iou/test" -> R.drawable.ic_ethereumpow_22
-        "ethereumfair" -> R.drawable.ic_ethereumfair_22
+        "ethereumfair", "dischain" -> R.drawable.ic_dischain_22
         "polkadot", "polkadot/test" -> R.drawable.ic_polkadot_16
         "kusama" -> R.drawable.ic_kusama_16
         "optimistic-ethereum", "optimistic-ethereum/test" -> R.drawable.ic_optimism_22
