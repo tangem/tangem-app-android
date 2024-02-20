@@ -274,29 +274,49 @@ private fun Content(
             SpacerH8()
 
             if (amountEquivalent != null) {
-                if (type is TransactionCardType.ReadOnly && priceImpact !is PriceImpact.Empty) {
+                if (type is TransactionCardType.ReadOnly) {
                     Row {
-                        Text(
-                            text = makePriceImpactBalanceWarning(amountEquivalent, priceImpact.getIntPercentValue()),
-                            color = TangemTheme.colors.text.tertiary,
-                            style = TangemTheme.typography.body2,
-                            modifier = Modifier
-                                .defaultMinSize(minHeight = TangemTheme.dimens.size20)
-                                .align(Alignment.CenterVertically),
-                        )
-                        SpacerW4()
-                        IconButton(
-                            onClick = {
-                                type.onWarningClick?.invoke()
-                            },
-                            modifier = Modifier.size(size = TangemTheme.dimens.size20),
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_alert_24),
-                                contentDescription = null,
-                                tint = TangemTheme.colors.icon.attention,
-                                modifier = Modifier.align(Alignment.CenterVertically),
+                        if (priceImpact is PriceImpact.Value) {
+                            Text(
+                                text = makePriceImpactBalanceWarning(
+                                    amountEquivalent,
+                                    priceImpact.getIntPercentValue(),
+                                ),
+                                color = TangemTheme.colors.text.tertiary,
+                                style = TangemTheme.typography.body2,
+                                modifier = Modifier
+                                    .defaultMinSize(minHeight = TangemTheme.dimens.size20)
+                                    .align(Alignment.CenterVertically),
                             )
+                        } else {
+                            AnimatedContent(targetState = amountEquivalent, label = "") {
+                                Text(
+                                    text = it,
+                                    color = TangemTheme.colors.text.tertiary,
+                                    style = TangemTheme.typography.body2,
+                                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
+                                )
+                            }
+                        }
+                        if (type.showWarning) {
+                            SpacerW4()
+                            IconButton(
+                                onClick = {
+                                    type.onWarningClick?.invoke()
+                                },
+                                modifier = Modifier.size(size = TangemTheme.dimens.size20),
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_alert_24),
+                                    contentDescription = null,
+                                    tint = if (priceImpact is PriceImpact.Value) {
+                                        TangemTheme.colors.text.attention
+                                    } else {
+                                        TangemTheme.colors.text.tertiary
+                                    },
+                                    modifier = Modifier.align(Alignment.CenterVertically),
+                                )
+                            }
                         }
                     }
                 } else {
@@ -471,19 +491,49 @@ private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: In
 
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
-private fun Preview_SwapMainCard_InLightTheme() {
+private fun Preview_TransactionCard_InLightTheme() {
     TangemTheme(isDark = false) {
         TransactionCardPreview()
+    }
+}
+
+@Preview(widthDp = 328, heightDp = 116, showBackground = true)
+@Composable
+private fun Preview_TransactionCardWithPriceImpact_InLightTheme() {
+    TangemTheme(isDark = false) {
         TransactionCardPreviewWithPriceImpact()
     }
 }
 
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
-private fun Preview_SwapMainCard_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_TransactionCardWithoutPriceImpact_InLightTheme() {
+    TangemTheme(isDark = false) {
+        TransactionCardPreviewWithoutPriceImpact()
+    }
+}
+
+@Preview(widthDp = 328, heightDp = 116, showBackground = true)
+@Composable
+private fun Preview_TransactionCard_InDarkTheme() {
+    TangemTheme(isDark = false) {
         TransactionCardPreview()
+    }
+}
+
+@Preview(widthDp = 328, heightDp = 116, showBackground = true)
+@Composable
+private fun Preview_TransactionCardWithPriceImpact_InDarkTheme() {
+    TangemTheme(isDark = false) {
         TransactionCardPreviewWithPriceImpact()
+    }
+}
+
+@Preview(widthDp = 328, heightDp = 116, showBackground = true)
+@Composable
+private fun Preview_TransactionCardWithoutPriceImpact_InDarkTheme() {
+    TangemTheme(isDark = false) {
+        TransactionCardPreviewWithoutPriceImpact()
     }
 }
 
@@ -515,6 +565,22 @@ private fun TransactionCardPreviewWithPriceImpact() {
         balance = "123",
         textFieldValue = TextFieldValue(),
         priceImpact = PriceImpact.Value(0.15F),
+    )
+}
+
+@Composable
+@Suppress("MagicNumber")
+private fun TransactionCardPreviewWithoutPriceImpact() {
+    TransactionCard(
+        type = TransactionCardType.ReadOnly(),
+        amountEquivalent = "1 000 000",
+        tokenIconUrl = "",
+        tokenCurrency = "DAI",
+        networkIconRes = R.drawable.img_polygon_22,
+        onChangeTokenClick = {},
+        balance = "123",
+        textFieldValue = TextFieldValue(),
+        priceImpact = PriceImpact.Empty(),
     )
 }
 

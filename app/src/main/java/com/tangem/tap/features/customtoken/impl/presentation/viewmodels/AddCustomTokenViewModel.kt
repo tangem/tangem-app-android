@@ -16,13 +16,13 @@ import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.HDWalletError
-import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
+import com.tangem.domain.tokens.error.AddCustomTokenError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.features.customtoken.impl.domain.CustomTokenInteractor
@@ -33,7 +33,7 @@ import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTok
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenSelectorField.SelectorItem
 import com.tangem.tap.features.customtoken.impl.presentation.routers.CustomTokenRouter
 import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTokenStateHolder
-import com.tangem.tap.features.customtoken.impl.presentation.validators.ContactAddressValidator
+import com.tangem.tap.features.customtoken.impl.presentation.validators.ContractAddressValidator
 import com.tangem.tap.features.customtoken.impl.presentation.validators.ContractAddressValidatorResult
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -461,11 +461,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun getTokenWarningSet(): Set<AddCustomTokenWarning> {
         val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
 
-        val isContractAddressFieldEmpty = ContactAddressValidator.validate(
+        val isContractAddressFieldEmpty = ContractAddressValidator.validate(
             address = uiState.form.contractAddressInputField.value,
             blockchain = networkSelectorValue,
         ).let {
-            it is ContractAddressValidatorResult.Error && it.type == AddCustomTokenError.FieldIsEmpty
+            it is ContractAddressValidatorResult.Error && it.type == AddCustomTokenError.FIELD_IS_EMPTY
         }
 
         val isSupportedToken = if (!isNetworkSelected()) {
@@ -513,7 +513,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         val state = when {
             isAllTokenFieldsFilled() && isNetworkSelected() -> {
                 val networkSelectorValue = uiState.form.networkSelectorField.selectedItem.blockchain
-                val error = ContactAddressValidator.validate(
+                val error = ContractAddressValidator.validate(
                     address = uiState.form.contractAddressInputField.value,
                     blockchain = networkSelectorValue,
                 )
@@ -621,7 +621,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
     private fun handleContractAddressErrorValidation(type: AddCustomTokenError) {
         when {
-            isNetworkSelected() && type == AddCustomTokenError.InvalidContractAddress -> {
+            isNetworkSelected() && type == AddCustomTokenError.INVALID_CONTRACT_ADDRESS -> {
                 val isAnotherTokenFieldsFilled = isAnyTokenFieldsFilled()
                 uiState = uiState.copySealed(
                     form = uiState.form.copy(
@@ -644,7 +644,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 )
             }
 
-            !isNetworkSelected() || type == AddCustomTokenError.FieldIsEmpty -> {
+            !isNetworkSelected() || type == AddCustomTokenError.FIELD_IS_EMPTY -> {
                 uiState = uiState.copySealed(
                     form = uiState.form.copy(
                         contractAddressInputField = uiState.form.contractAddressInputField.copy(isError = false),
@@ -727,7 +727,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
             )
 
             val selectedNetwork = uiState.form.networkSelectorField.selectedItem.blockchain
-            val validatorResult = ContactAddressValidator.validate(
+            val validatorResult = ContractAddressValidator.validate(
                 address = enteredValue,
                 blockchain = selectedNetwork,
             )

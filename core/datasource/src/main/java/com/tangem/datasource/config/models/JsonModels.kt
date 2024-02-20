@@ -40,6 +40,7 @@ class ConfigValueModel(
     val tangemComAuthorization: String?,
     val chiaFireAcademyApiKey: String?,
     val chiaTangemApiKey: String?,
+    val devExpress: ExpressModel?,
     val express: ExpressModel?,
 )
 
@@ -66,6 +67,7 @@ data class GetBlockAccessTokens(
     @Json(name = "litecoin") val litecoin: GetBlockToken?,
     @Json(name = "dash") val dash: GetBlockToken?,
     @Json(name = "bitcoin") val bitcoin: GetBlockToken?,
+    @Json(name = "algorand") val algorand: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)
