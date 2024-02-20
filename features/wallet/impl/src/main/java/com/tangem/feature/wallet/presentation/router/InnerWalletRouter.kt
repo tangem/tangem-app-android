@@ -3,8 +3,9 @@ package com.tangem.feature.wallet.presentation.router
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import com.tangem.core.navigation.AppScreen
-import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.wallet.navigation.WalletRouter
 
 /**
@@ -25,7 +26,7 @@ internal interface InnerWalletRouter : WalletRouter {
      */
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    fun Initialize(onFinish: () -> Unit)
+    fun Initialize(onFinish: () -> Unit, manageTokensUi: ManageTokensUi)
 
     /** Pop back stack */
     fun popBackStack(screen: AppScreen? = null)
@@ -43,7 +44,7 @@ internal interface InnerWalletRouter : WalletRouter {
     fun openUrl(url: String)
 
     /** Open token details screen */
-    fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency)
+    fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
 
     /** Open stories screen */
     fun openStoriesScreen()
