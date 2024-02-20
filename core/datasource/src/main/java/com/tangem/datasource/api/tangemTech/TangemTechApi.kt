@@ -75,4 +75,11 @@ interface TangemTechApi {
 
     @GET("promotion")
     suspend fun getPromotionInfo(@Query("programName") name: String): ApiResponse<PromotionInfoResponse>
+
+    @POST("user-network-account")
+    suspend fun createUserNetworkAccount(
+        @Header("card_public_key") cardPublicKey: String,
+        @Header("card_id") cardId: String,
+        @Body body: CreateUserNetworkAccountBody,
+    ): ApiResponse<CreateUserNetworkAccountResponse>
 }

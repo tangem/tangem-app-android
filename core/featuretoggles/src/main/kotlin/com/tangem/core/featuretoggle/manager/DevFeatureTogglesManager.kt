@@ -1,25 +1,25 @@
 package com.tangem.core.featuretoggle.manager
 
 import androidx.annotation.VisibleForTesting
-import com.squareup.moshi.JsonAdapter
 import com.tangem.core.featuretoggle.storage.FeatureTogglesStorage
 import com.tangem.core.featuretoggle.utils.associateToggles
 import com.tangem.core.featuretoggle.version.VersionProvider
-import com.tangem.datasource.local.AppPreferenceStorage
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
+import com.tangem.datasource.local.preferences.utils.storeObject
 import kotlin.properties.Delegates
 
 /**
  * Feature toggles manager implementation in DEV build
  *
  * @property localFeatureTogglesStorage local feature toggles storage
- * @property appPreferenceStorage       application local storage
- * @property jsonAdapter                adapter for parsing json
+ * @property appPreferencesStore        application local store
  * @property versionProvider            application version provider
  */
 internal class DevFeatureTogglesManager(
     private val localFeatureTogglesStorage: FeatureTogglesStorage,
-    private val appPreferenceStorage: AppPreferenceStorage,
-    private val jsonAdapter: JsonAdapter<Map<String, Boolean>>,
+    private val appPreferencesStore: AppPreferencesStore,
     private val versionProvider: VersionProvider,
 ) : MutableFeatureTogglesManager {
 
@@ -28,11 +28,9 @@ internal class DevFeatureTogglesManager(
     override suspend fun init() {
         localFeatureTogglesStorage.init()
 
-        val savedFeatureToggles = if (appPreferenceStorage.featureToggles.isNotEmpty()) {
-            jsonAdapter.fromJson(appPreferenceStorage.featureToggles).orEmpty()
-        } else {
-            emptyMap()
-        }
+        val savedFeatureToggles = appPreferencesStore.getObjectSyncOrNull<Map<String, Boolean>>(
+            key = PreferencesKeys.FEATURE_TOGGLES_KEY,
+        ) ?: emptyMap()
 
         featureTogglesMap = localFeatureTogglesStorage.featureToggles
             .associateToggles(currentVersion = versionProvider.get().orEmpty())
@@ -46,10 +44,10 @@ internal class DevFeatureTogglesManager(
 
     override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap
 
-    override fun changeToggle(name: String, isEnabled: Boolean) {
+    override suspend fun changeToggle(name: String, isEnabled: Boolean) {
         featureTogglesMap[name] ?: return
         featureTogglesMap[name] = isEnabled
-        appPreferenceStorage.featureToggles = jsonAdapter.toJson(featureTogglesMap)
+        appPreferencesStore.storeObject(PreferencesKeys.FEATURE_TOGGLES_KEY, featureTogglesMap)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
