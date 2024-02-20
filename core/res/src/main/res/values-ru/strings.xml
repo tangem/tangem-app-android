@@ -91,7 +91,8 @@
     <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
     <string name="common_explorer">Обозреватель</string>
     <string name="common_fee_label">Комиссия</string>
-    <string name="common_fee_selector_footer">Сетевые комиссии за транзакции используются для поддержки безопасности сети, поощрения валидаторов, выделения ресурсов и определения приоритета транзакции.</string>
+    <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузка на сеть, объема транзакции и приоритета исполнения. %s</string>
+    <string name="common_fee_selector_link_description">Подробнее</string>
     <string name="common_fee_selector_option_custom">Свое</string>
     <string name="common_fee_selector_option_fast">Быстро</string>
     <string name="common_fee_selector_option_market">По рынку</string>
@@ -449,6 +450,7 @@
     <string name="scan_card_settings_button">Сканировать</string>
     <string name="scan_card_settings_message">Отсканируйте карту, чтобы изменить ее настройки. Изменения затронут только ту карту, которую вы отсканировали, и не повлияют на другие карты, привязанные к вашему кошельку.</string>
     <string name="scan_card_settings_title">Приготовьте свою карту</string>
+    <string name="send_additional_field_already_included">Уже содержится в введенном адресе</string>
     <string name="send_amount_label">Сумма</string>
     <string name="send_amount_substract">Вычесть из суммы отправки</string>
     <string name="send_amount_substract_footer">Сумма к получению %s</string>
@@ -535,6 +537,9 @@
     <string name="swapping_give_permission">Дать разрешение</string>
     <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
     <string name="swapping_insufficient_funds">Недостаточно средств</string>
+    <string name="swapping_alert_title">Комиссии</string>
+    <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя</string>
+    <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
     <string name="swapping_not_enough_funds_for_fee">Недостаточно средств для оплаты комиссии на вашем %1$s кошельке для создания транзакции. Сначала пополните свой %2$s кошелек.</string>
     <string name="swapping_pending_transaction_subtitle">Транзакция в процессе…</string>
     <string name="swapping_pending_transaction_title">Подождите</string>
