@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
@@ -82,14 +85,12 @@ internal fun TokenDetailsScreen(state: TokenDetailsState) {
                 .pullRefresh(pullRefreshState),
         ) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = TangemTheme.dimens.spacing16),
             ) {
                 item {
                     TokenInfoBlock(
-                        modifier = Modifier
-                            .padding(top = TangemTheme.dimens.spacing4)
-                            .padding(horizontal = horizontalPadding),
+                        modifier = Modifier.padding(horizontal = horizontalPadding),
                         state = state.tokenInfoBlockState,
                     )
                 }
@@ -181,18 +182,32 @@ internal fun TokenDetailsEventEffect(snackbarHostState: SnackbarHostState, event
     )
 }
 
-@Preview
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun Preview_TokenDetailsScreen_LightTheme() {
-    TangemTheme(isDark = false) {
-        TokenDetailsScreen(state = TokenDetailsPreviewData.tokenDetailsState)
+private fun TokenDetailsScreenPreview_Light(
+    @PreviewParameter(TokenDetailsScreenParameterProvider::class) state: TokenDetailsState,
+) {
+    TangemTheme {
+        TokenDetailsScreen(state)
     }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun Preview_TokenDetailsScreen_DarkTheme() {
+private fun TokenDetailsScreenPreview_Dark(
+    @PreviewParameter(TokenDetailsScreenParameterProvider::class) state: TokenDetailsState,
+) {
     TangemTheme(isDark = true) {
-        TokenDetailsScreen(state = TokenDetailsPreviewData.tokenDetailsState)
+        TokenDetailsScreen(state)
     }
 }
+
+private class TokenDetailsScreenParameterProvider : CollectionPreviewParameterProvider<TokenDetailsState>(
+    collection = listOf(
+        TokenDetailsPreviewData.tokenDetailsState_1,
+        TokenDetailsPreviewData.tokenDetailsState_2,
+        TokenDetailsPreviewData.tokenDetailsState_3,
+    ),
+)
+// endregion Preview
