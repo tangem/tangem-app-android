@@ -38,6 +38,7 @@ internal class SendTransactionAlertConverter(
                 cause = value.ex?.localizedMessage,
                 onConfirmClick = { clickIntents.onFailedTxEmailClick(value.ex?.localizedMessage.orEmpty()) },
             )
+            is SendTransactionError.CreateAccountUnderfunded -> SendAlertState.ReserveAmount(value.amount)
             else -> null
         }
     }

@@ -1,14 +1,10 @@
 package com.tangem.datasource.api.common
 
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.ToJson
+import com.squareup.moshi.*
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
 
-class LocalDateAdapter : JsonAdapter<LocalDate>() {
+internal class LocalDateAdapter : JsonAdapter<LocalDate>() {
 
     private val formatter = DateTimeFormat.forPattern("yyyy-MM-dd")
 
