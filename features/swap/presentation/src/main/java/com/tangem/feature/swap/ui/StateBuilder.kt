@@ -1257,6 +1257,7 @@ internal class StateBuilder(
             additionalBadge = badge,
             selectionType = selectionType,
             percentLowerThenBest = PercentLowerThanBest.Empty,
+            namePrefix = ProviderState.PrefixType.PROVIDED_BY,
             onProviderClick = onProviderClick,
         )
     }
@@ -1288,6 +1289,7 @@ internal class StateBuilder(
             percentLowerThenBest = pricesLowerBest[this.providerId]?.let { percent ->
                 PercentLowerThanBest.Value(percent)
             } ?: PercentLowerThanBest.Value(0f),
+            namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
         )
     }
@@ -1322,6 +1324,11 @@ internal class StateBuilder(
             subtitle = alertText,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
             percentLowerThenBest = PercentLowerThanBest.Empty,
+            namePrefix = if (selectionType != ProviderState.SelectionType.SELECT) {
+                ProviderState.PrefixType.PROVIDED_BY
+            } else {
+                ProviderState.PrefixType.NONE
+            },
             onProviderClick = onProviderClick,
         )
     }
@@ -1347,7 +1354,7 @@ internal class StateBuilder(
     }
 
     private fun SwapAmount.getFormattedCryptoAmount(token: CryptoCurrency): String {
-        return "${this.formatToUIRepresentation()} ${token.symbol}"
+        return BigDecimalFormatter.formatCryptoAmount(value, token.symbol, token.decimals)
     }
 
     private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
