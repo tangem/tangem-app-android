@@ -27,7 +27,7 @@ internal class FeeStateFactory(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
 ) {
-    private val customFeeFieldConverter by lazy {
+    private val customFeeFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendFeeCustomFieldConverter(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
@@ -35,7 +35,7 @@ internal class FeeStateFactory(
         )
     }
 
-    val feeConverter by lazy {
+    val feeConverter by lazy(LazyThreadSafetyMode.NONE) {
         FeeConverter(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
@@ -191,7 +191,7 @@ internal class FeeStateFactory(
         val fee = feeConverter.convert(feeSelectorState)
         val feeValue = fee.amount.value ?: BigDecimal.ZERO
 
-        val isNotCustom = feeSelectorState.selectedFee != FeeType.CUSTOM
+        val isNotCustom = feeSelectorState.selectedFee != FeeType.Custom
         val isNotEmptyCustom = if (customValue != null) {
             !customValue.value.parseToBigDecimal(customValue.decimals).isZero() && !isNotCustom
         } else {

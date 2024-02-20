@@ -1,6 +1,7 @@
 package com.tangem.managetokens.presentation.managetokens.state
 
 import androidx.paging.PagingData
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
 import com.tangem.managetokens.presentation.common.state.Event
@@ -15,7 +16,9 @@ internal data class ManageTokensState(
     val derivationNotification: DerivationNotificationState? = null,
     val selectedToken: TokenItemState.Loaded? = null,
     val showChooseWalletScreen: Boolean = false,
+    val customTokenBottomSheetConfig: TangemBottomSheetConfig,
     val event: StateEvent<Event>,
+    val onEmptySearchResult: (String) -> Unit,
 )
 
 data class AddCustomTokenButton(
