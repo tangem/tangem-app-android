@@ -33,7 +33,6 @@ import com.tangem.tap.features.shop.redux.ShopMiddleware
 import com.tangem.tap.features.shop.redux.ShopState
 import com.tangem.tap.features.signin.redux.SignInMiddleware
 import com.tangem.tap.features.signin.redux.SignInState
-import com.tangem.tap.features.tokens.legacy.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.legacy.redux.TokensState
 import com.tangem.tap.features.wallet.redux.middlewares.TradeCryptoMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
@@ -91,7 +90,6 @@ data class AppState(
                 SendMiddleware().sendMiddleware,
                 DetailsMiddleware().detailsMiddleware,
                 DisclaimerMiddleware().disclaimerMiddleware,
-                TokensMiddleware.tokensMiddleware,
                 WalletConnectMiddleware().walletConnectMiddleware,
                 BackupMiddleware().backupMiddleware,
                 ShopMiddleware().shopMiddleware,

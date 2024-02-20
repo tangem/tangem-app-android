@@ -9,7 +9,7 @@ import com.tangem.utils.converter.Converter
 internal class SendRecipientStateConverter(
     private val clickIntents: SendClickIntents,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Converter<Unit, SendStates.RecipientState> {
+) : Converter<String, SendStates.RecipientState> {
 
     private val addressFieldConverter by lazy { SendRecipientAddressFieldConverter(clickIntents) }
     private val memoFieldConverter by lazy {
@@ -19,9 +19,9 @@ internal class SendRecipientStateConverter(
         )
     }
 
-    override fun convert(value: Unit): SendStates.RecipientState {
+    override fun convert(value: String): SendStates.RecipientState {
         return SendStates.RecipientState(
-            addressTextField = addressFieldConverter.convert(Unit),
+            addressTextField = addressFieldConverter.convert(value),
             memoTextField = memoFieldConverter.convertOrNull(),
             network = cryptoCurrencyStatusProvider().currency.network.name,
             isPrimaryButtonEnabled = false,
