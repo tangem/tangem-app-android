@@ -87,7 +87,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
             currentCryptoCurrencies = getSelectedWalletSyncUseCase().fold(
                 ifLeft = { emptyList() },
                 ifRight = { selectedWallet ->
-                    getCurrenciesUseCase(selectedWallet.walletId).fold(
+                    getCurrenciesUseCase.getSync(selectedWallet.walletId).fold(
                         ifLeft = { emptyList() },
                         ifRight = { it },
                     )
