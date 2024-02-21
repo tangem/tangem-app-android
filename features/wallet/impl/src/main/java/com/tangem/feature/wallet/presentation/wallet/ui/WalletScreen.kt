@@ -64,6 +64,13 @@ internal fun WalletScreen(
     val snackbarHostState = remember(::SnackbarHostState)
     val isAutoScroll = remember { mutableStateOf(value = false) }
 
+    var alertConfig by remember { mutableStateOf<WalletAlertState?>(value = null) }
+
+    val config = alertConfig
+    if (config != null) {
+        WalletAlert(state = config, onDismiss = { alertConfig = null })
+    }
+
     WalletContent(
         state = state,
         walletsListState = walletsListState,
@@ -72,13 +79,8 @@ internal fun WalletScreen(
         onAutoScrollReset = { isAutoScroll.value = false },
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         bottomSheetContent = bottomSheetContent,
+        alertConfig = alertConfig,
     )
-
-    var alertConfig by remember { mutableStateOf<WalletAlertState?>(value = null) }
-
-    alertConfig?.let {
-        WalletAlert(state = it, onDismiss = { alertConfig = null })
-    }
 
     WalletEventEffect(
         event = state.event,
@@ -100,6 +102,7 @@ private fun WalletContent(
     bottomSheetHeaderHeightProvider: () -> Dp,
     onAutoScrollReset: () -> Unit,
     bottomSheetContent: @Composable () -> Unit,
+    alertConfig: WalletAlertState?,
 ) {
     var selectedWalletIndex by remember { mutableIntStateOf(state.selectedWalletIndex) }
     val selectedWallet = state.wallets[selectedWalletIndex]
@@ -207,6 +210,7 @@ private fun WalletContent(
             snackbarHostState = snackbarHostState,
             bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
             bottomSheetContent = bottomSheetContent,
+            alertConfig = alertConfig,
         ) {
             scaffoldContent()
         }
@@ -230,6 +234,7 @@ private fun BaseScaffoldManageTokenRedesign(
     snackbarHostState: SnackbarHostState,
     bottomSheetHeaderHeightProvider: () -> Dp,
     bottomSheetContent: @Composable () -> Unit,
+    alertConfig: WalletAlertState?,
     content: @Composable () -> Unit,
 ) {
     val scaffoldState = rememberBottomSheetScaffoldState()
@@ -252,7 +257,7 @@ private fun BaseScaffoldManageTokenRedesign(
     val keyboardShown by keyboardAsState()
     // expand bottom sheet when keyboard appears
     LaunchedEffect(keyboardShown is Keyboard.Opened) {
-        if (keyboardShown is Keyboard.Opened) {
+        if (keyboardShown is Keyboard.Opened && alertConfig == null) {
             scaffoldState.bottomSheetState.expand()
         }
     }
