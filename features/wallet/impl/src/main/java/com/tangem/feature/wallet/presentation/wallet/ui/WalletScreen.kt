@@ -22,6 +22,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
@@ -224,7 +225,7 @@ private fun WalletContent(
     }
 }
 
-@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongParameterList", "LongMethod")
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun BaseScaffoldManageTokenRedesign(
@@ -240,7 +241,6 @@ private fun BaseScaffoldManageTokenRedesign(
     val showManageTokensBottomSheet = remember(state.wallets) {
         state.wallets.any { it is WalletState.MultiCurrency }
     }
-
     val bottomSheetState = rememberSheetStateEnhanced(
         initialValue = if (showManageTokensBottomSheet) SheetValue.PartiallyExpanded else SheetValue.Hidden,
         confirmValueChange = { sheetValue ->
@@ -253,67 +253,14 @@ private fun BaseScaffoldManageTokenRedesign(
         skipHiddenState = showManageTokensBottomSheet,
     )
 
-    // Bottom sheet during initialization internally expand partially after its content was remeasured,
-    // therefore initialValue = SheetValue.Hidden in rememberStandardBottomSheetState doesn't work as expected
-    // so we have to manually restrict expansion in this case
-    LaunchedEffect(bottomSheetState.targetValue, bottomSheetState.currentValue) {
-        if (!showManageTokensBottomSheet &&
-            (bottomSheetState.targetValue != SheetValue.Hidden || bottomSheetState.currentValue != SheetValue.Hidden)
-        ) {
-            bottomSheetState.hide()
-        }
-    }
-    // react to changes in wallet list
-    LaunchedEffect(showManageTokensBottomSheet) {
-        when {
-            showManageTokensBottomSheet && bottomSheetState.currentValue != SheetValue.PartiallyExpanded -> {
-                bottomSheetState.partialExpand()
-            }
-            !showManageTokensBottomSheet && bottomSheetState.targetValue != SheetValue.Hidden -> {
-                bottomSheetState.hide()
-            }
-        }
-    }
+    val keyboardShown = keyboardAsState()
 
-    val systemUiController = rememberSystemUiController()
-    val navigationBarColor = TangemTheme.colors.background.primary
-    val navigationBarColorWithout = TangemTheme.colors.background.secondary
-
-    SideEffect {
-        if (showManageTokensBottomSheet) {
-            systemUiController.setNavigationBarColor(navigationBarColor)
-        }
-    }
-    DisposableEffect(
-        showManageTokensBottomSheet,
-    ) {
-        onDispose {
-            if (showManageTokensBottomSheet) {
-                systemUiController.setNavigationBarColor(navigationBarColorWithout)
-            }
-        }
-    }
-
-    val keyboardShown by keyboardAsState()
-    // expand bottom sheet when keyboard appears
-    LaunchedEffect(keyboardShown is Keyboard.Opened) {
-        if (keyboardShown is Keyboard.Opened && alertConfig == null) {
-            bottomSheetState.expand()
-        }
-    }
-
-    val keyboardController = LocalSoftwareKeyboardController.current
-    // hide keyboard when bottom sheet is about to be hidden
-    LaunchedEffect(Unit) {
-        snapshotFlow {
-            bottomSheetState.currentValue == SheetValue.Expanded &&
-                bottomSheetState.targetValue == SheetValue.PartiallyExpanded
-        }.collect { sheetHasBeenHidden ->
-            if (sheetHasBeenHidden) {
-                keyboardController?.hide()
-            }
-        }
-    }
+    BottomSheetStateEffects(
+        bottomSheetState = bottomSheetState,
+        showManageTokensBottomSheet = showManageTokensBottomSheet,
+        alertConfig = alertConfig,
+        keyboardShown = keyboardShown,
+    )
 
     val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = bottomSheetState,
@@ -353,7 +300,7 @@ private fun BaseScaffoldManageTokenRedesign(
 
             // hide bottom sheet when back pressed
             BackHandler(
-                keyboardShown is Keyboard.Closed &&
+                keyboardShown.value is Keyboard.Closed &&
                     bottomSheetState.currentValue == SheetValue.Expanded,
             ) {
                 coroutineScope.launch { bottomSheetState.partialExpand() }
@@ -380,6 +327,76 @@ private fun BaseScaffoldManageTokenRedesign(
             }
         },
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BottomSheetStateEffects(
+    bottomSheetState: SheetState,
+    showManageTokensBottomSheet: Boolean,
+    alertConfig: WalletAlertState?,
+    keyboardShown: State<Keyboard>,
+) {
+    // Bottom sheet during initialization internally expand partially after its content was remeasured,
+    // therefore initialValue = SheetValue.Hidden in rememberStandardBottomSheetState doesn't work as expected
+    // so we have to manually restrict expansion in this case
+    LaunchedEffect(bottomSheetState.targetValue, bottomSheetState.currentValue) {
+        if (!showManageTokensBottomSheet &&
+            (bottomSheetState.targetValue != SheetValue.Hidden || bottomSheetState.currentValue != SheetValue.Hidden)
+        ) {
+            bottomSheetState.hide()
+        }
+    }
+    // react to changes in wallet list
+    LaunchedEffect(showManageTokensBottomSheet) {
+        when {
+            showManageTokensBottomSheet && bottomSheetState.currentValue != SheetValue.PartiallyExpanded -> {
+                bottomSheetState.partialExpand()
+            }
+            !showManageTokensBottomSheet && bottomSheetState.targetValue != SheetValue.Hidden -> {
+                bottomSheetState.hide()
+            }
+        }
+    }
+
+    val systemUiController = rememberSystemUiController()
+    val navigationBarColor = TangemTheme.colors.background.primary
+    val navigationBarColorWithout = TangemTheme.colors.background.secondary
+
+    SystemBarsEffect {
+        if (showManageTokensBottomSheet) {
+            setNavigationBarColor(navigationBarColor)
+        }
+    }
+    DisposableEffect(
+        showManageTokensBottomSheet,
+    ) {
+        onDispose {
+            if (showManageTokensBottomSheet) {
+                systemUiController.setNavigationBarColor(navigationBarColorWithout)
+            }
+        }
+    }
+
+    // expand bottom sheet when keyboard appears
+    LaunchedEffect(keyboardShown.value is Keyboard.Opened) {
+        if (keyboardShown.value is Keyboard.Opened && alertConfig == null) {
+            bottomSheetState.expand()
+        }
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    // hide keyboard when bottom sheet is about to be hidden
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            bottomSheetState.currentValue == SheetValue.Expanded &&
+                bottomSheetState.targetValue == SheetValue.PartiallyExpanded
+        }.collect { sheetHasBeenHidden ->
+            if (sheetHasBeenHidden) {
+                keyboardController?.hide()
+            }
+        }
+    }
 }
 
 /**
