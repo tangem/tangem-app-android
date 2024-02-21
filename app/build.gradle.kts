@@ -60,6 +60,7 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
+    implementation(projects.domain.onboarding)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
@@ -88,6 +89,7 @@ dependencies {
     implementation(projects.data.transaction)
     implementation(projects.data.visa)
     implementation(projects.data.promo)
+    implementation(projects.data.onboarding)
 
     /** Features */
     implementation(projects.features.onboarding)
