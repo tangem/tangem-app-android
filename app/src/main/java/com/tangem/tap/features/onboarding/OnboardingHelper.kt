@@ -15,10 +15,7 @@ import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.onUserWalletSelected
-import com.tangem.tap.common.extensions.removeContext
-import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
@@ -80,7 +77,7 @@ object OnboardingHelper {
         scope.launch {
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
-                store.state.daggerGraphState.get(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
+                store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
                     proceedWithScanResponse(scanResponse, backupCardsIds)
 
                     store.dispatchOnMain(
