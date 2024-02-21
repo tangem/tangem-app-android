@@ -32,7 +32,7 @@ internal class FeeNotificationFactory(
 ) {
 
     fun create() = currentStateProvider().currentState
-        .filter { it == SendUiStateType.Fee }
+        .filter { it.type == SendUiStateType.Fee }
         .map {
             val state = currentStateProvider()
             val feeState = state.feeState ?: return@map persistentListOf()
