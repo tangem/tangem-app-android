@@ -82,7 +82,9 @@ internal class WalletViewModel @Inject constructor(
         clickIntents.initialize(router, viewModelScope)
     }
 
-    fun setManageTokenBottomSheetVisibilityChanged(onManageTokenBottomSheetVisibilityChanged: (ExpandableState) -> Unit) {
+    fun setManageTokenBottomSheetVisibilityChanged(
+        onManageTokenBottomSheetVisibilityChanged: (ExpandableState) -> Unit,
+    ) {
         stateHolder.update {
             it.copy(onManageTokenBottomSheetVisibilityChanged = onManageTokenBottomSheetVisibilityChanged)
         }

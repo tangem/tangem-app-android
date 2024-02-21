@@ -7,6 +7,5 @@ interface ManageTokensUi {
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    fun content(onHeaderSizeChange: (Dp) -> Unit) : (ExpandableState) -> Unit
-
+    fun content(onHeaderSizeChange: (Dp) -> Unit): (ExpandableState) -> Unit
 }

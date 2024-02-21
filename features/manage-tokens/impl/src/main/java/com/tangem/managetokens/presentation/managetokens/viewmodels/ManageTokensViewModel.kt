@@ -122,7 +122,6 @@ internal class ManageTokensViewModel @Inject constructor(
         analyticsEventHandler.send(ManageTokens.ScreenOpened())
 
         viewModelScope.launch(dispatchers.io) {
-            delay(1000)
             getWalletsUseCase()
                 .distinctUntilChanged()
                 .collectLatest { userWallets ->

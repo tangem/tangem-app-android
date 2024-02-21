@@ -4,7 +4,6 @@ import androidx.paging.PagingData
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
-import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.managetokens.presentation.common.state.previewdata.ChooseWalletStatePreviewData
 import com.tangem.managetokens.presentation.managetokens.state.*
 import com.tangem.managetokens.presentation.managetokens.state.ManageTokensState

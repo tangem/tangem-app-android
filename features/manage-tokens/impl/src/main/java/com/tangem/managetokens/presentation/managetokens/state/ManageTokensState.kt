@@ -3,7 +3,6 @@ package com.tangem.managetokens.presentation.managetokens.state
 import androidx.paging.PagingData
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.event.StateEvent
-import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
 import com.tangem.managetokens.presentation.common.state.Event
 import kotlinx.coroutines.flow.Flow
