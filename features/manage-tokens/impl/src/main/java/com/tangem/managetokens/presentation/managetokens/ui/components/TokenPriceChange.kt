@@ -11,9 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
-import com.tangem.managetokens.presentation.managetokens.state.PriceChangeType
 import com.tangem.managetokens.presentation.managetokens.state.QuotesState
 
 @Composable
@@ -48,11 +48,13 @@ private fun PriceChangeIcon(type: PriceChangeType?) {
                 id = when (animatedType) {
                     PriceChangeType.UP -> R.drawable.ic_arrow_up_8
                     PriceChangeType.DOWN -> R.drawable.ic_arrow_down_8
+                    PriceChangeType.NEUTRAL -> R.drawable.ic_elipse_8
                 },
             ),
             tint = when (animatedType) {
                 PriceChangeType.UP -> TangemTheme.colors.icon.accent
                 PriceChangeType.DOWN -> TangemTheme.colors.icon.warning
+                PriceChangeType.NEUTRAL -> TangemTheme.colors.icon.inactive
             },
             contentDescription = null,
         )
@@ -69,6 +71,7 @@ private fun PriceChangeText(type: PriceChangeType?, text: String?) {
             color = when (type) {
                 PriceChangeType.UP -> TangemTheme.colors.text.accent
                 PriceChangeType.DOWN -> TangemTheme.colors.text.warning
+                PriceChangeType.NEUTRAL -> TangemTheme.colors.text.disabled
                 null -> TangemTheme.colors.text.primary1
             },
             overflow = TextOverflow.Ellipsis,

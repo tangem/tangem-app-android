@@ -4,6 +4,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.features.wallet.api"
+}
+
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.fragment.ktx)

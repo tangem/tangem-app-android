@@ -41,4 +41,11 @@ data class MoonPayCurrencies(
     val isSupportedInUS: Boolean = false,
     val isSellSupported: Boolean = false,
     val notAllowedUSStates: List<String> = emptyList(),
+    val metadata: MoonPayCurrenciesMetadata? = null,
+)
+
+@JsonClass(generateAdapter = true)
+data class MoonPayCurrenciesMetadata(
+    val contractAddress: String?,
+    val networkCode: String?,
 )

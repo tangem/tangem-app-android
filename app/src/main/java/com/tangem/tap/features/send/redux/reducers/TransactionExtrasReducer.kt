@@ -20,6 +20,7 @@ class TransactionExtrasReducer : SendInternalReducer {
             is TonMemo -> handleTonMemo(action, sendState, sendState.transactionExtrasState)
             is CosmosMemo -> handleCosmosMemo(action, sendState, sendState.transactionExtrasState)
             is HederaMemo -> handleHederaMemo(action, sendState, sendState.transactionExtrasState)
+            is AlgorandMemo -> handleAlgorandMemo(action, sendState, sendState.transactionExtrasState)
             else -> sendState
         }
     }
@@ -54,6 +55,9 @@ class TransactionExtrasReducer : SendInternalReducer {
             Blockchain.TerraV2,
             -> TransactionExtrasState(cosmosMemoState = CosmosMemoState())
             Blockchain.Hedera, Blockchain.HederaTestnet -> TransactionExtrasState(hederaMemoState = HederaMemoState())
+            Blockchain.Algorand, Blockchain.AlgorandTestnet -> TransactionExtrasState(
+                algorandMemoState = AlgorandMemoState(),
+            )
             else -> emptyResult
         }
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
@@ -175,6 +179,21 @@ class TransactionExtrasReducer : SendInternalReducer {
                 val memo = action.data
                 val input = InputViewValue(memo, true)
                 infoState.copy(hederaMemoState = HederaMemoState(input, memo))
+            }
+        }
+        return updateLastState(sendState.copy(transactionExtrasState = result), result)
+    }
+
+    private fun handleAlgorandMemo(
+        action: AlgorandMemo,
+        sendState: SendState,
+        infoState: TransactionExtrasState,
+    ): SendState {
+        val result = when (action) {
+            is AlgorandMemo.HandleUserInput -> {
+                val memo = action.data
+                val input = InputViewValue(memo, true)
+                infoState.copy(algorandMemoState = AlgorandMemoState(input, memo))
             }
         }
         return updateLastState(sendState.copy(transactionExtrasState = result), result)

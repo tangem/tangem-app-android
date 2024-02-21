@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
@@ -56,6 +57,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -348,15 +350,17 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun getTxHistory(): Flow<PagingData<TxHistoryItem>> {
-        return flow {
-            txHistoryItemsUseCase(
-                userWalletId = userWalletId,
-                currency = cryptoCurrency,
-            ).fold(
-                ifRight = { emitAll(it.distinctUntilChanged()) },
-                ifLeft = {},
-            )
-        }
+        return txHistoryItemsUseCase(
+            userWalletId = userWalletId,
+            currency = cryptoCurrency,
+        ).fold(
+            ifRight = {
+                it.distinctUntilChanged().cachedIn(viewModelScope)
+            },
+            ifLeft = {
+                emptyFlow()
+            },
+        )
     }
 
     private fun getTxHistoryCount(): Flow<Int> {
@@ -374,8 +378,8 @@ internal class SendViewModel @Inject constructor(
     private fun onStateActive() {
         uiState.currentState
             .onEach {
-                when (it) {
-                    SendUiStateType.Fee -> loadFee()
+                when (it.type) {
+                    SendUiStateType.Fee -> if (!it.isFromConfirmation) loadFee()
                     SendUiStateType.Send -> sendIdleTimer = System.currentTimeMillis()
                     else -> Unit
                 }
@@ -521,6 +525,16 @@ internal class SendViewModel @Inject constructor(
         updateFeeNotifications()
     }
 
+    override fun onReadMoreClick() {
+        val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
+        val url = buildString {
+            append(FEE_READ_MORE_URL_FIRST_PART)
+            append(locale)
+            append(FEE_READ_MORE_URL_SECOND_PART)
+        }
+        innerRouter.openUrl(url)
+    }
+
     private fun loadFee() {
         viewModelScope.launch(dispatchers.main) {
             uiState = feeStateFactory.onFeeOnLoadingState()
@@ -573,17 +587,17 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun showAmount() {
-        stateRouter.showAmount()
+        stateRouter.showAmount(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
     }
 
     override fun showRecipient() {
-        stateRouter.showRecipient()
+        stateRouter.showRecipient(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
     }
 
     override fun showFee() {
-        stateRouter.showFee()
+        stateRouter.showFee(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
     }
 
@@ -720,5 +734,10 @@ internal class SendViewModel @Inject constructor(
     companion object {
         private const val CHECK_FEE_UPDATE_DELAY = 60_000L
         private const val BALANCE_UPDATE_DELAY = 10_000L
+
+        private const val RU_LOCALE = "ru"
+        private const val EN_LOCALE = "en"
+        private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
+        private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
 }
