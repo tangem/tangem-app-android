@@ -4,8 +4,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.snapping.SnapFlingBehavior
-import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
@@ -29,6 +28,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletCard
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
+
+private const val SHORT_SNAP_ELEMENT_COUNT = 25
 
 /**
  * Wallets list component
@@ -53,7 +54,7 @@ internal fun WalletsList(
         state = lazyListState,
         contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
-        flingBehavior = rememberWalletsFlingBehaviour(lazyListState = lazyListState),
+        flingBehavior = rememberWalletsFlingBehaviour(lazyListState = lazyListState, itemWidth = itemWidth),
     ) {
         items(
             items = wallets,
@@ -80,17 +81,19 @@ internal fun WalletsList(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun rememberWalletsFlingBehaviour(lazyListState: LazyListState): SnapFlingBehavior {
-    val snappingLayout = remember(lazyListState) { SnapLayoutInfoProvider(lazyListState) }
+private fun rememberWalletsFlingBehaviour(lazyListState: LazyListState, itemWidth: Dp): TangemSnapFlingBehavior {
+    val snappingLayout = remember(lazyListState) { TangemSnapLayoutInfoProvider(lazyListState) }
     val density = LocalDensity.current
     val highVelocityApproachSpec: DecayAnimationSpec<Float> = rememberSplineBasedDecay()
 
     return remember(key1 = snappingLayout, key2 = highVelocityApproachSpec, key3 = density) {
-        SnapFlingBehavior(
+        TangemSnapFlingBehavior(
             snapLayoutInfoProvider = snappingLayout,
             lowVelocityAnimationSpec = tween(durationMillis = 1000, easing = LinearEasing),
             highVelocityAnimationSpec = highVelocityApproachSpec,
             snapAnimationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            density = density,
+            shortSnapVelocityThreshold = itemWidth * SHORT_SNAP_ELEMENT_COUNT,
         )
     }
 }
