@@ -65,11 +65,4 @@ data class DaggerGraphState(
     val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
     val cardRepository: CardRepository? = null,
-) : StateType {
-
-    inline fun <reified T> get(getDependency: DaggerGraphState.() -> T?): T {
-        return requireNotNull(getDependency()) {
-            "${T::class.simpleName} isn't initialized "
-        }
-    }
-}
+) : StateType
