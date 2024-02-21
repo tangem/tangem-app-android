@@ -49,7 +49,11 @@ internal class TokensListMigration(
             is Either.Right -> {
                 currentUserWallet = selectedWalletEither.value
 
-                when (val currenciesEither = getCurrenciesUseCase(userWalletId = selectedWalletEither.value.walletId)) {
+                when (
+                    val currenciesEither = getCurrenciesUseCase.getSync(
+                        userWalletId = selectedWalletEither.value.walletId,
+                    )
+                ) {
                     is Either.Left -> {
                         Timber.e(currenciesEither.value.toString())
                         TokensListCryptoCurrencies(coins = emptyList(), tokens = emptyList())
