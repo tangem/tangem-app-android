@@ -9,6 +9,8 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
+import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -59,6 +61,8 @@ data class DaggerGraphState(
     val accountCreator: AccountCreator? = null,
     val userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles? = null,
     val generalUserWalletsListManager: UserWalletsListManager? = null,
+    val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
+    val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
 ) : StateType {
 
     inline fun <reified T> get(getDependency: DaggerGraphState.() -> T?): T {
