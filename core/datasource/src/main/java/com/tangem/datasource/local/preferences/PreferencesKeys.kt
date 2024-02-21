@@ -7,6 +7,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.SAVE_USER_WALLETS
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY
+import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN
 
 /**
  * All preferences keys that DataStore<Preferences> is stored.
@@ -54,6 +55,8 @@ object PreferencesKeys {
     }
 
     val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
+
+    val WAS_TWINS_ONBOARDING_SHOWN by lazy { booleanPreferencesKey(name = "twinsOnboardingShown") }
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
@@ -65,6 +68,7 @@ internal fun getTapPrefKeysToMigrate(): Set<String> {
         FUNDS_FOUND_DATE_KEY,
         USER_WAS_INTERACT_WITH_RATING_KEY,
         USED_CARDS_INFO_KEY,
+        WAS_TWINS_ONBOARDING_SHOWN,
     )
         .map(Preferences.Key<*>::name)
         .toSet()
