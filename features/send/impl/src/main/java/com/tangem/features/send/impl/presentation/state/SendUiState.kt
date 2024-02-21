@@ -33,7 +33,7 @@ internal data class SendUiState(
     val feeState: SendStates.FeeState? = null,
     val sendState: SendStates.SendState = SendStates.SendState(),
     val recipientList: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
-    val currentState: StateFlow<SendUiStateType>,
+    val currentState: StateFlow<SendUiCurrentScreen>,
     val isBalanceHidden: Boolean,
     val event: StateEvent<SendEvent>,
 )
@@ -97,9 +97,15 @@ internal sealed class SendStates {
         val transactionDate: Long = 0L,
         val txUrl: String = "",
         val ignoreAmountReduce: Boolean = false,
+        val isFromConfirmation: Boolean = true,
         val notifications: ImmutableList<SendNotification> = persistentListOf(),
     ) : SendStates()
 }
+
+data class SendUiCurrentScreen(
+    val type: SendUiStateType,
+    val isFromConfirmation: Boolean,
+)
 
 enum class SendUiStateType {
     None,
