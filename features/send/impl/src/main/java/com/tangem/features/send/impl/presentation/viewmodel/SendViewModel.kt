@@ -324,7 +324,7 @@ internal class SendViewModel @Inject constructor(
                         .filterNot { it.walletId == userWalletId || it.isLocked }
                         .map { wallet ->
                             async(dispatchers.io) {
-                                getCryptoCurrenciesUseCase(wallet.walletId)
+                                getCryptoCurrenciesUseCase.getSync(wallet.walletId)
                                     .fold(
                                         ifRight = { currencyItem ->
                                             val walletCurrency = currencyItem.firstOrNull {
