@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.utils
 
-import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
 import kotlinx.coroutines.flow.FlowCollector
 import kotlin.math.abs
@@ -20,14 +19,14 @@ internal class ScrollOffsetCollector(
     selectedWalletIndex: Int,
     private val lazyListState: LazyListState,
     private val onWalletChange: (Int) -> Unit,
-) : FlowCollector<List<LazyListItemInfo>> {
+) : FlowCollector<List<LazyListItemData>> {
 
-    private val LazyListItemInfo.halfItemSize
+    private val LazyListItemData.halfItemSize
         get() = size.div(other = 2)
 
     private var currentIndex = selectedWalletIndex
 
-    override suspend fun emit(value: List<LazyListItemInfo>) {
+    override suspend fun emit(value: List<LazyListItemData>) {
         if (!lazyListState.isScrollInProgress || value.size <= 1) return
 
         val firstItem = value.firstOrNull() ?: return
@@ -47,3 +46,9 @@ internal class ScrollOffsetCollector(
         }
     }
 }
+
+internal data class LazyListItemData(
+    val index: Int,
+    val size: Int,
+    val offset: Int,
+)
