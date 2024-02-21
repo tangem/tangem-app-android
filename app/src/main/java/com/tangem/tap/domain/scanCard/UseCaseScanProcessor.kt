@@ -11,7 +11,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.domain.scanCard.chains.*
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
@@ -52,7 +51,7 @@ internal object UseCaseScanProcessor {
                 add(AnalyticsChain(analyticsEvent))
             }
             add(DisclaimerChain(store, disclaimerWillShow))
-            add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager, preferencesStorage))
+            add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
         }
 
         scanCardUseCase(cardId, afterScanChains = chains)
