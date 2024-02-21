@@ -265,7 +265,7 @@ class DetailsMiddleware {
         }
 
         private fun changeAppThemeMode(appThemeMode: AppThemeMode) {
-            val repository = store.state.daggerGraphState.get(DaggerGraphState::appThemeModeRepository)
+            val repository = store.inject(DaggerGraphState::appThemeModeRepository)
 
             scope.launch {
                 repository.changeAppThemeMode(appThemeMode)
@@ -275,7 +275,7 @@ class DetailsMiddleware {
         }
 
         private fun changeBalanceHiding(hideBalance: Boolean) {
-            val repository = store.state.daggerGraphState.get(DaggerGraphState::balanceHidingRepository)
+            val repository = store.inject(DaggerGraphState::balanceHidingRepository)
 
             scope.launch {
                 val newState = repository.getBalanceHidingSettings().copy(
@@ -459,8 +459,7 @@ class DetailsMiddleware {
             Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.On))
 
             preferencesStorage.shouldSaveAccessCodes = true
-            store.state.daggerGraphState
-                .get(DaggerGraphState::cardSdkConfigRepository)
+            store.inject(DaggerGraphState::cardSdkConfigRepository)
                 .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = scanResponse?.card?.isAccessCodeSet == true)
 
             return CompletionResult.Success(Unit)
@@ -472,8 +471,7 @@ class DetailsMiddleware {
                     Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.Off))
 
                     preferencesStorage.shouldSaveAccessCodes = false
-                    store.state.daggerGraphState
-                        .get(DaggerGraphState::cardSdkConfigRepository)
+                    store.inject(DaggerGraphState::cardSdkConfigRepository)
                         .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = false)
                 }
                 .doOnFailure { error ->
@@ -532,7 +530,7 @@ class DetailsMiddleware {
     }
 
     private fun scanCard(state: DetailsState) = scope.launch {
-        store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor)
+        store.inject(DaggerGraphState::scanCardProcessor)
             .scan(allowsRequestAccessCodeFromRepository = true)
             .doOnSuccess { scanResponse ->
                 // if we use biometric, scanResponse in GlobalState is null, and crashes NPE on twin cards
@@ -562,7 +560,7 @@ class DetailsMiddleware {
     }
 
     private fun scanAndSaveUserWallet() = scope.launch(Dispatchers.IO) {
-        val cardSdkConfigRepository = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository)
+        val cardSdkConfigRepository = store.inject(DaggerGraphState::cardSdkConfigRepository)
 
         val prevUseBiometricsForAccessCode = cardSdkConfigRepository.isBiometricsRequestPolicy()
 
@@ -571,7 +569,7 @@ class DetailsMiddleware {
             isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
         )
 
-        store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
+        store.inject(DaggerGraphState::scanCardProcessor).scan(
             analyticsEvent = Basic.CardWasScanned(CoreAnalyticsParam.ScannedFrom.MyWallets),
             onWalletNotCreated = {
                 // No need to rollback policy, continue with the policy set before the card scan
