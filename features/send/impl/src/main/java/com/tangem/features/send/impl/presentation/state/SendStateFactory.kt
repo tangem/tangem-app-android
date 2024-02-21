@@ -78,7 +78,7 @@ internal class SendStateFactory(
     // region UI states
     fun getInitialState(): SendUiState = SendUiState(
         clickIntents = clickIntents,
-        currentState = MutableStateFlow(SendUiStateType.None),
+        currentState = MutableStateFlow(SendUiCurrentScreen(type = SendUiStateType.None, isFromConfirmation = false)),
         event = consumedEvent(),
         isEditingDisabled = false,
         isBalanceHidden = false,
