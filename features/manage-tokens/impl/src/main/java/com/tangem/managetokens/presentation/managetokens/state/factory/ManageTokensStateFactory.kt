@@ -8,6 +8,7 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.tokens.CurrencyCompatibilityError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.managetokens.presentation.common.state.*
 import com.tangem.managetokens.presentation.common.utils.CurrencyUtils
 import com.tangem.managetokens.presentation.managetokens.state.*

@@ -21,6 +21,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.managetokens.presentation.common.analytics.ManageTokens
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.Event
@@ -75,6 +76,8 @@ internal class ManageTokensViewModel @Inject constructor(
     var uiState: ManageTokensState by mutableStateOf(stateFactory.getInitialState(flowOf(PagingData.from(emptyList()))))
         private set
 
+    var expandableState: ExpandableState = ExpandableState.COLLAPSED
+
     private val currenciesListJobHolder: JobHolder = JobHolder()
 
     private val debouncer = Debouncer()
@@ -119,6 +122,7 @@ internal class ManageTokensViewModel @Inject constructor(
         analyticsEventHandler.send(ManageTokens.ScreenOpened())
 
         viewModelScope.launch(dispatchers.io) {
+            delay(1000)
             getWalletsUseCase()
                 .distinctUntilChanged()
                 .collectLatest { userWallets ->
@@ -129,10 +133,16 @@ internal class ManageTokensViewModel @Inject constructor(
         }
     }
 
+    fun onChangeVisibilityState(state: ExpandableState) {
+        expandableState = state
+    }
+
     private suspend fun subscribeToCurrencies(userWallets: List<UserWallet>) {
         wallets = CopyOnWriteArrayList(userWallets.filter { it.isMultiCurrency && !it.isLocked })
 
         combine(wallets.map { getCurrenciesUseCase.invoke(it.walletId).distinctUntilChanged() }) {
+            if (expandableState == ExpandableState.EXPANDED) return@combine
+
             allAddedCurrencies.clear()
             addedCurrenciesByWallet.clear()
 

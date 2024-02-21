@@ -63,9 +63,10 @@ internal class DefaultWalletRouter(
                     bottomSheetHeaderHeightProvider = { bottomSheetHeaderHeight },
                     bottomSheetContent = {
                         // Manage Tokens
-                        manageTokensUi.Content(
+                        val manageTokenBottomSheetVisibilityChanged = manageTokensUi.content(
                             onHeaderSizeChange = { bottomSheetHeaderHeight = it },
                         )
+                        viewModel.setManageTokenBottomSheetVisibilityChanged(manageTokenBottomSheetVisibilityChanged)
                     },
                 )
             }

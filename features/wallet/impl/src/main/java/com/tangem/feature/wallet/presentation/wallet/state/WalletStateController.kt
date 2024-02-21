@@ -86,6 +86,7 @@ internal class WalletStateController @Inject constructor(
             event = consumedEvent(),
             isHidingMode = false,
             manageTokenRedesignToggle = manageTokensFeatureToggles.isRedesignedScreenEnabled,
+            onManageTokenBottomSheetVisibilityChanged = {},
         )
     }
 }
