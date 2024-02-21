@@ -2,6 +2,7 @@ package com.tangem.tap.features.disclaimer
 
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import java.util.Locale
@@ -35,7 +36,7 @@ fun DisclaimerType.createDisclaimer(cardDTO: CardDTO): Disclaimer {
 fun CardDTO.createDisclaimer(): Disclaimer = DisclaimerType.get(this).createDisclaimer(this)
 
 private fun provideDisclaimerDataProvider(cardId: String, disclaimerType: DisclaimerType): DisclaimerDataProvider {
-    val cardRepository = store.state.daggerGraphState.get(DaggerGraphState::cardRepository)
+    val cardRepository = store.inject(DaggerGraphState::cardRepository)
     return object : DisclaimerDataProvider {
         override fun getLanguage(): String = Locale.getDefault().language
         override fun getCardId(): String = cardId
