@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,25 +23,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 
 @Composable
-internal fun SendNavigationButtons(uiState: SendUiState) {
+internal fun SendNavigationButtons(uiState: SendUiState, currentState: State<SendUiCurrentScreen>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = TangemTheme.dimens.spacing12),
     ) {
-        SendSecondaryNavigationButton(uiState)
+        SendSecondaryNavigationButton(
+            uiState = uiState,
+            currentState = currentState,
+        )
         SendPrimaryNavigationButton(
             uiState = uiState,
+            currentState = currentState,
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = TangemTheme.dimens.spacing16),
@@ -51,12 +54,13 @@ internal fun SendNavigationButtons(uiState: SendUiState) {
 }
 
 @Composable
-private fun SendSecondaryNavigationButton(uiState: SendUiState) {
-    val currentState = uiState.currentState.collectAsState()
+private fun SendSecondaryNavigationButton(uiState: SendUiState, currentState: State<SendUiCurrentScreen>) {
     val isEditingDisabled = uiState.isEditingDisabled
-    val isCorrectScreen = currentState.value == SendUiStateType.Amount || currentState.value == SendUiStateType.Fee
+    val isFromConfirmation = currentState.value.isFromConfirmation
+    val isCorrectScreen =
+        currentState.value.type == SendUiStateType.Amount || currentState.value.type == SendUiStateType.Fee
     AnimatedVisibility(
-        visible = !isEditingDisabled && isCorrectScreen,
+        visible = !isEditingDisabled && isCorrectScreen && !isFromConfirmation,
         enter = expandHorizontally(expandFrom = Alignment.End),
         exit = shrinkHorizontally(shrinkTowards = Alignment.End),
     ) {
@@ -77,8 +81,11 @@ private fun SendSecondaryNavigationButton(uiState: SendUiState) {
 }
 
 @Composable
-private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier = Modifier) {
-    val currentState = uiState.currentState.collectAsStateWithLifecycle()
+private fun SendPrimaryNavigationButton(
+    uiState: SendUiState,
+    currentState: State<SendUiCurrentScreen>,
+    modifier: Modifier = Modifier,
+) {
     val isSuccess = uiState.sendState.isSuccess
     val isSending = uiState.sendState.isSending
     val txUrl = uiState.sendState.txUrl
@@ -100,7 +107,7 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
         modifier = modifier,
     ) { textId ->
         when {
-            currentState.value == SendUiStateType.Send && !isSuccess -> {
+            currentState.value.type == SendUiStateType.Send && !isSuccess -> {
                 val hapticFeedback = rememberHapticFeedback(state = currentState, onAction = buttonClick)
                 PrimaryButtonIconEnd(
                     text = stringResource(textId),
@@ -110,7 +117,7 @@ private fun SendPrimaryNavigationButton(uiState: SendUiState, modifier: Modifier
                     showProgress = isSending,
                 )
             }
-            currentState.value == SendUiStateType.Send && isSuccess -> {
+            currentState.value.type == SendUiStateType.Send && isSuccess -> {
                 PrimaryButtonsDone(
                     textRes = textId,
                     txUrl = txUrl,
@@ -177,15 +184,19 @@ private fun PrimaryButtonsDone(
 
 private fun getButtonData(
     uiState: SendUiState,
-    currentState: State<SendUiStateType>,
+    currentState: State<SendUiCurrentScreen>,
     isSuccess: Boolean,
 ): Pair<Int, () -> Unit> {
-    return when (currentState.value) {
+    return when (currentState.value.type) {
         SendUiStateType.None,
         SendUiStateType.Amount,
         SendUiStateType.Recipient,
         SendUiStateType.Fee,
-        -> R.string.common_next to uiState.clickIntents::onNextClick
+        -> if (currentState.value.isFromConfirmation) {
+            R.string.common_continue to uiState.clickIntents::onNextClick
+        } else {
+            R.string.common_next to uiState.clickIntents::onNextClick
+        }
         SendUiStateType.Send -> if (isSuccess) {
             R.string.common_close
         } else {
@@ -194,8 +205,8 @@ private fun getButtonData(
     }
 }
 
-private fun isButtonEnabled(currentState: State<SendUiStateType>, uiState: SendUiState): Boolean {
-    return when (currentState.value) {
+private fun isButtonEnabled(currentState: State<SendUiCurrentScreen>, uiState: SendUiState): Boolean {
+    return when (currentState.value.type) {
         SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
         SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
         SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled ?: false
