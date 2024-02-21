@@ -424,7 +424,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
         selectedWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
     ): Boolean {
-        val currenciesList = getCurrenciesUseCase(selectedWallet.walletId).getOrElse { emptyList() }
+        val currenciesList = getCurrenciesUseCase.getSync(selectedWallet.walletId).getOrElse { emptyList() }
         return when (cryptoCurrency) {
             is CryptoCurrency.Coin -> {
                 currenciesList.any {
