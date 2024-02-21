@@ -57,6 +57,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -524,6 +525,16 @@ internal class SendViewModel @Inject constructor(
         updateFeeNotifications()
     }
 
+    override fun onReadMoreClick() {
+        val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
+        val url = buildString {
+            append(FEE_READ_MORE_URL_FIRST_PART)
+            append(locale)
+            append(FEE_READ_MORE_URL_SECOND_PART)
+        }
+        innerRouter.openUrl(url)
+    }
+
     private fun loadFee() {
         viewModelScope.launch(dispatchers.main) {
             uiState = feeStateFactory.onFeeOnLoadingState()
@@ -723,5 +734,10 @@ internal class SendViewModel @Inject constructor(
     companion object {
         private const val CHECK_FEE_UPDATE_DELAY = 60_000L
         private const val BALANCE_UPDATE_DELAY = 10_000L
+
+        private const val RU_LOCALE = "ru"
+        private const val EN_LOCALE = "en"
+        private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
+        private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
 }
