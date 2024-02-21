@@ -137,6 +137,7 @@ include(":domain:balance-hiding:models")
 include(":domain:transaction")
 include(":domain:analytics")
 include(":domain:visa")
+include(":domain:onboarding")
 // endregion Domain modules
 
 // region Data modules
@@ -154,4 +155,5 @@ include(":data:analytics")
 include(":data:transaction")
 include(":data:visa")
 include(":data:promo")
+include(":data:onboarding")
 // endregion Data modules
