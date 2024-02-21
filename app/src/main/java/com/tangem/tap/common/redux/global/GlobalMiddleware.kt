@@ -123,7 +123,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                     primaryRules = CardExchangeRules(cardProvider),
                 )
                 // TODO: for refactoring (after remove old design refactor CurrencyExchangeManager and use 1 instance)
-                store.state.daggerGraphState.get(DaggerGraphState::appStateHolder).exchangeService = exchangeManager
+                store.inject(DaggerGraphState::appStateHolder).exchangeService = exchangeManager
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
             }
@@ -155,7 +155,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             }
         }
         is GlobalAction.UpdateUserWalletsListManager -> {
-            val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
+            val walletManagersFacade = store.inject(DaggerGraphState::walletManagersFacade)
 
             /*
              * If implementation of the UserWalletsListManager is changed,
@@ -186,7 +186,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
 
 private fun restoreAppCurrency() {
     scope.launch {
-        val currency = store.state.daggerGraphState.get(DaggerGraphState::appCurrencyRepository)
+        val currency = store.inject(DaggerGraphState::appCurrencyRepository)
             .getSelectedAppCurrency()
             .firstOrNull()
             ?: AppCurrency.Default
