@@ -16,6 +16,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import timber.log.Timber
@@ -140,8 +141,8 @@ internal class TokensListMigration(
 
     private suspend fun removeCurrenciesIfNeeded(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) return
-        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
-        val walletManagersFacade = store.state.daggerGraphState.get(DaggerGraphState::walletManagersFacade)
+        val currenciesRepository = store.inject(DaggerGraphState::currenciesRepository)
+        val walletManagersFacade = store.inject(DaggerGraphState::walletManagersFacade)
 
         currenciesRepository.removeCurrencies(userWalletId = userWalletId, currencies = currencies)
 
