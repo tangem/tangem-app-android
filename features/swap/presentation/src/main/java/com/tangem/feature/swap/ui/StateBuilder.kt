@@ -1073,7 +1073,7 @@ internal class StateBuilder(
                                     subtitle = stringReference(rateString),
                                     percentLowerThenBest = pricesLowerBest[it.id]?.let { percent ->
                                         PercentLowerThanBest.Value(percent)
-                                    } ?: PercentLowerThanBest.Empty,
+                                    } ?: PercentLowerThanBest.Value(0f),
                                 )
                             } else {
                                 it

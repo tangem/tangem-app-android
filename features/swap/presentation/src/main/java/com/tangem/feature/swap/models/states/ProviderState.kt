@@ -73,7 +73,7 @@ object ProviderPercentDiffComparator : Comparator<ProviderState> {
                 return 1
             }
             return if (o1Percent is PercentLowerThanBest.Value && o2Percent is PercentLowerThanBest.Value) {
-                o1Percent.value.compareTo(o2Percent.value)
+                o2Percent.value.compareTo(o1Percent.value)
             } else {
                 0
             }
