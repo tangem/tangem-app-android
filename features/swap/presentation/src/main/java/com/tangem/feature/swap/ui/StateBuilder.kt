@@ -1024,6 +1024,7 @@ internal class StateBuilder(
     fun showSelectProviderBottomSheet(
         uiState: SwapStateHolder,
         selectedProviderId: String,
+        bestRatedProviderId: String,
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         unavailableProviders: List<SwapProvider>,
@@ -1031,7 +1032,7 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
             .mapNotNull {
-                it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
+                it.convertToProviderBottomSheetState(pricesLowerBest, bestRatedProviderId, actions.onProviderSelect)
             }
             .sortedWith(ProviderPercentDiffComparator)
         val unavailableProviderStates = unavailableProviders.map {
@@ -1179,18 +1180,21 @@ internal class StateBuilder(
 
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
         pricesLowerBest: Map<String, Float>,
+        bestRatedProviderId: String,
         onProviderSelect: (String) -> Unit,
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
             is SwapState.EmptyAmountState -> null
-            is SwapState.QuotesLoadedState -> provider.convertToContentSelectableProviderState(
-                isBestRate = false, // not show best rate in bottom sheet
-                state = state,
-                onProviderClick = onProviderSelect,
-                pricesLowerBest = pricesLowerBest,
-                selectionType = ProviderState.SelectionType.SELECT,
-            )
+            is SwapState.QuotesLoadedState -> {
+                provider.convertToContentSelectableProviderState(
+                    isBestRate = bestRatedProviderId == provider.providerId,
+                    state = state,
+                    onProviderClick = onProviderSelect,
+                    pricesLowerBest = pricesLowerBest,
+                    selectionType = ProviderState.SelectionType.SELECT,
+                )
+            }
             is SwapState.SwapError -> getProviderStateForError(
                 swapProvider = provider,
                 fromToken = state.fromTokenInfo.cryptoCurrencyStatus.currency,
