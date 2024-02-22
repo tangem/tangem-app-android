@@ -1,7 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.TweenSpec
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -14,9 +18,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -274,9 +281,6 @@ private fun BaseScaffoldManageTokenRedesign(
     val coroutineScope = rememberCoroutineScope()
 
     BottomSheetScaffold(
-        topBar = {
-            WalletTopBar(config = state.topBarConfig)
-        },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
@@ -312,21 +316,57 @@ private fun BaseScaffoldManageTokenRedesign(
                 onRefresh = selectedWallet.pullToRefreshConfig.onRefresh,
             )
 
-            Box(
-                modifier = Modifier
-                    .pullRefresh(pullRefreshState)
-                    .padding(paddingValues),
+            Column(
+                modifier = Modifier.padding(paddingValues),
             ) {
-                content()
+                WalletTopBar(config = state.topBarConfig)
+                Box(
+                    modifier = Modifier.pullRefresh(pullRefreshState),
+                ) {
+                    content()
 
-                WalletPullToRefreshIndicator(
-                    isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                    state = pullRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                )
+                    WalletPullToRefreshIndicator(
+                        isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
+                        state = pullRefreshState,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    )
+                }
             }
+
+            BottomSheetScrim(
+                color = BottomSheetDefaults.ScrimColor,
+                visible = bottomSheetState.targetValue == SheetValue.Expanded,
+                onDismissRequest = { coroutineScope.launch { bottomSheetState.partialExpand() } },
+            )
         },
     )
+}
+
+@Composable
+private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: () -> Unit) {
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = TweenSpec(),
+        label = "scrim",
+    )
+    val dismissSheet = if (visible) {
+        Modifier
+            .pointerInput(onDismissRequest) {
+                detectTapGestures {
+                    onDismissRequest()
+                }
+            }
+            .clearAndSetSemantics {}
+    } else {
+        Modifier
+    }
+    Canvas(
+        Modifier
+            .fillMaxSize()
+            .then(dismissSheet),
+    ) {
+        drawRect(color = color, alpha = alpha)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
