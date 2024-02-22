@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -37,6 +38,7 @@ internal fun AutoSizeTextField(
 ) {
     val focusManager = LocalFocusManager.current
     val textFieldFocusRequester = remember { FocusRequester() }
+
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         var shrunkFontSize = TangemTheme.typography.h2.fontSize
         val calculateIntrinsics = @Composable {
@@ -94,6 +96,10 @@ internal fun AutoSizeTextField(
                 ),
                 cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
             )
+
+            LaunchedEffect(Unit) {
+                textFieldFocusRequester.requestFocus()
+            }
         }
     }
 }
