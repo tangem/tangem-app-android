@@ -53,6 +53,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "algorand", "algorand/test" -> R.drawable.img_algorand_22
         "hedera", "hedera/test" -> R.drawable.img_hedera_22
         "playa3ull" -> R.drawable.img_playa3ull_22
+        "DUC" -> R.drawable.img_ducatus_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -107,6 +108,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "algorand", "algorand/test" -> R.drawable.img_algorand_22
         "hedera-hashgraph", "hedera/test" -> R.drawable.img_hedera_22
         "playa3ull-games" -> R.drawable.img_playa3ull_22
+        "ducatus" -> R.drawable.img_ducatus_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -158,6 +160,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "algorand" -> R.drawable.img_algorand_22
         "hedera-hashgraph" -> R.drawable.img_hedera_22
         "playa3ull-games-2" -> R.drawable.img_playa3ull_22
+        "ducatus" -> R.drawable.img_ducatus_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -212,6 +215,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "algorand", "algorand/test" -> R.drawable.ic_algorand_22
         "hedera", "hedera/test" -> R.drawable.ic_hedera_22
         "playa3ull" -> R.drawable.ic_playa3ull_22
+        "DUC" -> R.drawable.ic_ducatus_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -266,6 +270,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "algorand", "algorand/test" -> R.drawable.ic_algorand_22
         "hedera-hashgraph", "hedera/test" -> R.drawable.ic_hedera_22
         "playa3ull-games" -> R.drawable.ic_playa3ull_22
+        "ducatus" -> R.drawable.ic_ducatus_22
         else -> R.drawable.ic_alert_24
     }
 }
