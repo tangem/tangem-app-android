@@ -81,41 +81,38 @@ internal class BiometricUserWalletsKeysRepository(
     }
 
     private suspend fun getAllInternal(): CompletionResult<List<UserWalletEncryptionKey>> {
-        return getUserWalletsIds()
-            .map { userWalletId ->
-                getEncryptionKey(userWalletId)
-                    .doOnFailure { error ->
-                        when (error) {
-                            is TangemSdkError.UserCanceledAuthentication -> {
-                                // If the user cancels biometric authentication, then cancel operation with error
-                                return CompletionResult.Failure(error)
-                            }
-                            is TangemSdkError.KeystoreInvalidated -> {
-                                // If the biometric cryptography key was invalidated,
-                                // then delete all user wallets encryption keys and cancel operation with error
-                                getUserWalletsIds().forEach { userWalletId ->
-                                    deleteEncryptionKey(userWalletId)
-                                }
+        return catching {
+            val userWalletIds = getUserWalletsIds()
 
-                                return CompletionResult.Failure(error)
-                            }
+            getEncryptionKeys(userWalletIds)
+        }
+            .doOnFailure { error ->
+                when (error) {
+                    is TangemSdkError.KeystoreInvalidated -> {
+                        // If the biometric cryptography key was invalidated, then delete all encryption keys
+                        getUserWalletsIds().forEach { userWalletId ->
+                            deleteEncryptionKey(userWalletId)
                         }
                     }
-            }
-            .fold(listOf()) { acc, data ->
-                if (data != null) acc + data else acc
+                    else -> Unit
+                }
             }
     }
 
-    private suspend fun getEncryptionKey(userWalletId: UserWalletId): CompletionResult<UserWalletEncryptionKey?> {
-        return catching { authenticatedStorage.get(StorageKey.UserWalletEncryptionKey(userWalletId).name) }
-            .map { it.decodeToKey() }
+    private suspend fun getEncryptionKeys(userWalletsIds: List<UserWalletId>): List<UserWalletEncryptionKey> {
+        val keys = userWalletsIds.map { userWalletId ->
+            StorageKey.UserWalletEncryptionKey(userWalletId).name
+        }
+
+        return authenticatedStorage.get(keys).mapNotNull { (_, encodedData) ->
+            encodedData.decodeToKey()
+        }
     }
 
     private suspend fun storeEncryptionKey(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit> {
         return catching {
             authenticatedStorage.store(
-                key = StorageKey.UserWalletEncryptionKey(encryptionKey.walletId).name,
+                keyAlias = StorageKey.UserWalletEncryptionKey(encryptionKey.walletId).name,
                 data = encryptionKey.encode(),
             )
         }
