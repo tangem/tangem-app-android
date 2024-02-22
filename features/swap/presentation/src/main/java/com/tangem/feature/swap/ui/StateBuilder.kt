@@ -1073,8 +1073,8 @@ internal class StateBuilder(
                                 it.copy(
                                     subtitle = stringReference(rateString),
                                     percentLowerThenBest = pricesLowerBest[it.id]?.let { percent ->
-                                        PercentLowerThanBest.Value(percent)
-                                    } ?: PercentLowerThanBest.Value(0f),
+                                        PercentDifference.Value(percent)
+                                    } ?: PercentDifference.Value(0f),
                                 )
                             } else {
                                 it
@@ -1286,7 +1286,7 @@ internal class StateBuilder(
             subtitle = stringReference(rateString),
             additionalBadge = badge,
             selectionType = selectionType,
-            percentLowerThenBest = PercentLowerThanBest.Empty,
+            percentLowerThenBest = PercentDifference.Empty,
             onProviderClick = onProviderClick,
         )
     }
@@ -1316,8 +1316,8 @@ internal class StateBuilder(
             additionalBadge = additionalBadge,
             selectionType = selectionType,
             percentLowerThenBest = pricesLowerBest[this.providerId]?.let { percent ->
-                PercentLowerThanBest.Value(percent)
-            } ?: PercentLowerThanBest.Value(0f),
+                PercentDifference.Value(percent)
+            } ?: PercentDifference.Value(0f),
             onProviderClick = onProviderClick,
         )
     }
@@ -1351,7 +1351,7 @@ internal class StateBuilder(
             selectionType = selectionType,
             subtitle = alertText,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
-            percentLowerThenBest = PercentLowerThanBest.Empty,
+            percentLowerThenBest = PercentDifference.Empty,
             onProviderClick = onProviderClick,
         )
     }

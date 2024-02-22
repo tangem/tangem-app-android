@@ -25,7 +25,7 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.swap.models.states.PercentLowerThanBest
+import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
 /**
@@ -158,7 +158,7 @@ private fun ProviderContentState(
                             maxLines = 1,
                         )
                     }
-                    if (state.percentLowerThenBest is PercentLowerThanBest.Value &&
+                    if (state.percentLowerThenBest is PercentDifference.Value &&
                         state.percentLowerThenBest.value != 0f
                     ) {
                         val textColor = if (state.percentLowerThenBest.value > 0) {
@@ -416,7 +416,7 @@ private fun ProviderItem_Content_Preview() {
         iconUrl = "",
         subtitle = stringReference("1 000 000"),
         additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
-        percentLowerThenBest = PercentLowerThanBest.Value(12.0f),
+        percentLowerThenBest = PercentDifference.Value(12.0f),
         selectionType = ProviderState.SelectionType.SELECT,
         onProviderClick = {},
     )
