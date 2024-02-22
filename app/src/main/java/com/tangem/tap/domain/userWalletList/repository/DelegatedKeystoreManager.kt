@@ -8,11 +8,15 @@ internal class DelegatedKeystoreManager(
     private val keystoreManagerProvider: Provider<KeystoreManager>,
 ) : KeystoreManager {
 
-    override suspend fun authenticateAndGetKey(keyAlias: String): SecretKey? {
-        return keystoreManagerProvider().authenticateAndGetKey(keyAlias)
+    override suspend fun get(keyAlias: String): SecretKey? {
+        return keystoreManagerProvider().get(keyAlias)
     }
 
-    override suspend fun storeKey(keyAlias: String, key: SecretKey) {
-        keystoreManagerProvider().storeKey(keyAlias, key)
+    override suspend fun get(keyAliases: Collection<String>): Map<String, SecretKey> {
+        return keystoreManagerProvider().get(keyAliases)
+    }
+
+    override suspend fun store(keyAlias: String, key: SecretKey) {
+        return keystoreManagerProvider().store(keyAlias, key)
     }
 }
