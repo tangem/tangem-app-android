@@ -23,9 +23,6 @@ internal class SendOnNextScreenAnalyticSender(
                     }
                     analyticsEventHandler.send(SendAnalyticEvents.SelectedFee(selectedFee.name))
                 }
-                if (feeState.isSubtract) {
-                    analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount)
-                }
             }
             SendUiStateType.Amount -> {
                 val isFiatSelected = state.amountState?.amountTextField?.isFiatValue ?: return
