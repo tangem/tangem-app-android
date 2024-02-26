@@ -507,6 +507,8 @@
     <string name="send_notifiaction_transaction_limit_text">Due to %1$s limitations only %2$s UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
     <string name="send_notification_existential_deposit_title">Existential deposit</string>
     <string name="send_notification_existential_deposit_text">The account will be wiped from the blockchain if a balance goes below the existential deposit. Please ensure that the remaining balance after sending will not be less than %s.</string>
+    <string name="send_notification_reduce_by">Reduce by [%s]</string>
+    <string name="send_notification_reduce_to">Reduce to [%s]</string>
     <string name="send_optional_field">Optional</string>
     <string name="send_qrcode_scan_info">Please align your QR code with the square to scan it. Ensure you scan %s network address.</string>
     <string name="send_recent_transactions">Recent</string>
