@@ -45,9 +45,9 @@ import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeNotificationFactory
-import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.fee.checkFeeCoverage
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -126,7 +126,6 @@ internal class SendViewModel @Inject constructor(
     private val feeStateFactory = FeeStateFactory(
         clickIntents = this,
         currentStateProvider = Provider { uiState },
-        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isFeeApproximateUseCase = isFeeApproximateUseCase,
@@ -411,6 +410,20 @@ internal class SendViewModel @Inject constructor(
     override fun popBackStack() = stateRouter.popBackStack()
     override fun onBackClick() = stateRouter.onBackClick(uiState.sendState.isSuccess)
     override fun onNextClick() {
+        val currentState = stateRouter.currentState.value
+        val isCurrentFee = currentState.type == SendUiStateType.Fee
+        if (isCurrentFee) {
+            val isFeeCoverage = checkFeeCoverage(uiState, cryptoCurrencyStatus)
+            if (isAmountSubtractAvailable && isFeeCoverage) {
+                uiState = eventStateFactory.getFeeCoverageAlert(
+                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                )
+                return
+            } else {
+                uiState = stateFactory.onSubtractSelect(false)
+            }
+        }
+
         val prevScreen = stateRouter.onNextClick()
         sendOnNextScreenAnalyticSender.send(prevScreen, uiState)
     }
@@ -520,9 +533,9 @@ internal class SendViewModel @Inject constructor(
         updateFeeNotifications()
     }
 
-    override fun onSubtractSelect(value: Boolean) {
-        uiState = feeStateFactory.onSubtractSelect(value)
-        updateFeeNotifications()
+    override fun onSubtractSelect() {
+        uiState = stateFactory.onSubtractSelect(true)
+        stateRouter.showSend()
     }
 
     override fun onReadMoreClick() {
@@ -539,12 +552,8 @@ internal class SendViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             uiState = feeStateFactory.onFeeOnLoadingState()
             uiState = callFeeUseCase()?.fold(
-                ifRight = { fees ->
-                    feeStateFactory.onFeeOnLoadedState(fees, isAmountSubtractAvailable)
-                },
-                ifLeft = {
-                    feeStateFactory.onFeeOnErrorState()
-                },
+                ifRight = feeStateFactory::onFeeOnLoadedState,
+                ifLeft = { feeStateFactory.onFeeOnErrorState() },
             ) ?: feeStateFactory.onFeeOnErrorState()
             updateFeeNotifications()
         }.saveIn(feeJobHolder)
@@ -587,16 +596,19 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun showAmount() {
+        uiState = stateFactory.onSubtractSelect(false)
         stateRouter.showAmount(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
     }
 
     override fun showRecipient() {
+        uiState = stateFactory.onSubtractSelect(false)
         stateRouter.showRecipient(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
     }
 
     override fun showFee() {
+        uiState = stateFactory.onSubtractSelect(false)
         stateRouter.showFee(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
     }
@@ -623,12 +635,12 @@ internal class SendViewModel @Inject constructor(
     private fun verifyAndSendTransaction() {
         val recipient = uiState.recipientState?.addressTextField?.value ?: return
         val feeState = uiState.feeState ?: return
-        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
+        val fee = feeState.fee ?: return
         val memo = uiState.recipientState?.memoTextField?.value
-        val fee = feeStateFactory.feeConverter.convert(feeSelectorState)
         val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
-        val amountToSend = if (feeState.isSubtract && isAmountSubtractAvailable) {
-            feeState.receivedAmountValue
+        val amountToSend = if (uiState.sendState.isSubtract && isAmountSubtractAvailable) {
+            val feeValue = fee.amount.value ?: return
+            amountValue.minus(feeValue)
         } else {
             amountValue
         }
