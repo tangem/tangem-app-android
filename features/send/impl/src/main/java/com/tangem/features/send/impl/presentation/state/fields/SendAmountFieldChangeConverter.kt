@@ -1,5 +1,8 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
@@ -43,6 +46,10 @@ internal class SendAmountFieldChangeConverter(
                     isError = isExceedBalance,
                     cryptoAmount = amountTextField.cryptoAmount.copy(value = decimalCryptoValue),
                     fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = if (!isExceedBalance) ImeAction.Done else ImeAction.None,
+                        keyboardType = KeyboardType.Number,
+                    ),
                 ),
             ),
             feeState = feeState.copy(
