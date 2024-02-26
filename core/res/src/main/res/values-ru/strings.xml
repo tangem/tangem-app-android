@@ -92,7 +92,6 @@
     <string name="common_explorer">Обозреватель</string>
     <string name="common_fee_label">Комиссия</string>
     <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузки на сеть, объема транзакции и приоритета исполнения. %s</string>
-    <string name="common_fee_selector_link_description">Подробнее</string>
     <string name="common_fee_selector_option_custom">Свое</string>
     <string name="common_fee_selector_option_fast">Быстро</string>
     <string name="common_fee_selector_option_market">По рынку</string>
@@ -111,6 +110,7 @@
     <string name="common_ok">OK</string>
     <string name="common_origin_card">Основная карта</string>
     <string name="common_paste">Вставить</string>
+    <string name="common_read_more">Подробнее</string>
     <string name="common_receive">Получить</string>
     <string name="common_reject">Отклонить</string>
     <string name="common_reload">Перезагрузить</string>
@@ -457,6 +457,8 @@
     <string name="send_alert_button_request_support">Поддержка</string>
     <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
     <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
+    <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию из отправляемой сумму?</string>
+    <string name="send_alert_fee_coverage_subract_text">Вычесть</string>
     <string name="send_date_format">%1$s в %2$s</string>
     <string name="send_destination_hint_address">Адрес</string>
     <string name="send_destination_tag_field">Код назначения</string>
