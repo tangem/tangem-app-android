@@ -45,9 +45,18 @@ internal sealed class SendAlertState {
         override val message: TextReference = resourceReference(id = R.string.warning_demo_mode_message)
     }
 
-    object FeeIncreased : SendAlertState() {
+    data object FeeIncreased : SendAlertState() {
         override val title: TextReference? = null
         override val message: TextReference = resourceReference(id = R.string.send_notification_high_fee_title)
+    }
+
+    data class FeeCoverage(
+        override val onConfirmClick: (() -> Unit),
+    ) : SendAlertState() {
+        override val title: TextReference? = null
+        override val message: TextReference = resourceReference(id = R.string.send_alert_fee_coverage_title)
+        override val confirmButtonText: TextReference =
+            resourceReference(id = R.string.send_alert_fee_coverage_subract_text)
     }
 
     data class ReserveAmount(val amount: String) : SendAlertState() {
