@@ -90,7 +90,6 @@
     <string name="common_explorer">Explorer</string>
     <string name="common_fee_label">Fee</string>
     <string name="common_fee_selector_footer">Network fees are charges users pay to process and confirm transactions. The fee amount can be affected by network congestion, transaction size, and execution priority. %s</string>
-    <string name="common_fee_selector_link_description">Read more</string>
     <string name="common_fee_selector_option_custom">Custom</string>
     <string name="common_fee_selector_option_fast">Fast</string>
     <string name="common_fee_selector_option_market">Market</string>
@@ -110,6 +109,7 @@
     <string name="common_ok">OK</string>
     <string name="common_origin_card">Primary Card</string>
     <string name="common_paste">Paste</string>
+    <string name="common_read_more">Read more</string>
     <string name="common_receive">Receive</string>
     <string name="common_reject">Reject</string>
     <string name="common_reload">Reload</string>
@@ -459,6 +459,8 @@
     <string name="send_alert_button_request_support">Support</string>
     <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
     <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
+    <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию из отправляемой сумму?</string>
+    <string name="send_alert_fee_coverage_subract_text">Вычесть</string>
     <string name="send_confirm_label">Confirm</string>
     <string name="send_date_format">%1$s at %2$s</string>
     <string name="send_destination_hint_address">Address</string>
@@ -486,7 +488,7 @@
     <string name="send_max_fee_footer">Maximum fee amount</string>
     <string name="send_memo_destination_tag_error">Numbers only for Destination Tag</string>
     <string name="common_network_fee_title">Network fee</string>
-    <string name="send_network_fee_warning_content">Sending amount will be reduced to cover the selected fee level</string>
+    <string name="send_network_fee_warning_content">Sending amount will be reduced by %1$s to cover the selected commission level. The recipient will get %2$s.</string>
     <string name="send_network_fee_warning_title">Network fee coverage</string>
     <string name="send_notification_exceed_balance_text">Insufficient funds for the transfer, as the total of the fee and transfer amount exceeds the existing balance</string>
     <string name="send_notification_exceed_balance_title">Total exceeds balance</string>
