@@ -1119,7 +1119,7 @@ internal class StateBuilder(
             },
             readMoreUrl = buildReadMoreUrl(),
             feeItems = txFeeState.toFeeItemState(),
-            readMore = resourceReference(R.string.common_fee_selector_link_description),
+            readMore = resourceReference(R.string.common_read_more),
             onReadMoreClick = actions.onFeeReadMoreClick,
         )
         return uiState.copy(

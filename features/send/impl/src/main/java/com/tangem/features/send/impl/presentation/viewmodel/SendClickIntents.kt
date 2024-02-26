@@ -43,7 +43,7 @@ internal interface SendClickIntents {
 
     fun onCustomFeeValueChange(index: Int, value: String)
 
-    fun onSubtractSelect(value: Boolean)
+    fun onSubtractSelect()
 
     fun onReadMoreClick()
     // endregion
