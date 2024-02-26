@@ -9,7 +9,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.R
-import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
@@ -47,7 +46,6 @@ internal class FeeNotificationFactory(
                         val selectedFee = feeSelectorState.selectedFee
                         addTooLowNotification(feeSelectorState.fees, selectedFee, customFee)
                         addTooHighNotification(feeSelectorState.fees, selectedFee, customFee)
-                        addFeeCoverageNotification(feeState, state.amountState)
                         addExceedsBalanceNotification(feeState.fee)
                     }
                 }
@@ -86,20 +84,6 @@ internal class FeeNotificationFactory(
         val diff = customValue / highValue
         if (selectedFee == FeeType.Custom && diff > FEE_MAX_DIFF) {
             add(SendFeeNotification.Warning.TooHigh(diff.toFormattedString(HIGH_FEE_DIFF_DECIMALS)))
-        }
-    }
-
-    private fun MutableList<SendFeeNotification>.addFeeCoverageNotification(
-        feeState: SendStates.FeeState,
-        amountState: SendStates.AmountState?,
-    ) {
-        if (!feeState.isSubtractAvailable) return
-
-        val cryptoAmount = coinCryptoCurrencyStatusProvider().value.amount ?: return
-        val feeValue = feeState.fee?.amount?.value ?: return
-        val value = amountState?.amountTextField?.cryptoAmount?.value ?: return
-        if (cryptoAmount <= value + feeValue && feeState.isSubtract && !feeState.isUserSubtracted) {
-            add(SendFeeNotification.Warning.NetworkCoverage)
         }
     }
 

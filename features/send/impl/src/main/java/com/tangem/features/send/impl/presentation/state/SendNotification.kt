@@ -85,5 +85,16 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             title = resourceReference(R.string.send_notification_existential_deposit_title),
             subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
         )
+
+        data class NetworkCoverage(
+            val amountReducedBy: String,
+            val amountReduced: String,
+        ) : Warning(
+            title = resourceReference(id = R.string.send_network_fee_warning_title),
+            subtitle = resourceReference(
+                id = R.string.send_network_fee_warning_content,
+                formatArgs = wrappedList(amountReducedBy, amountReduced),
+            ),
+        )
     }
 }
