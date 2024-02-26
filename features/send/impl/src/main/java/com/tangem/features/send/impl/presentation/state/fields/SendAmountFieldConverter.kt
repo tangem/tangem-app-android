@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.extensions.toBigDecimalOrDefault
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -36,12 +37,13 @@ internal class SendAmountFieldConverter(
             val fiatDecimal = cryptoCurrencyStatus.value.fiatRate?.multiply(cryptoDecimal) ?: BigDecimal.ZERO
             fiatDecimal.parseBigDecimal(FIAT_DECIMALS)
         }
+        val isDoneActionEnabled = !cryptoDecimal.isZero()
         return SendTextField.AmountField(
             value = value,
             fiatValue = fiatValue,
             onValueChange = clickIntents::onAmountValueChange,
             keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
+                imeAction = if (isDoneActionEnabled) ImeAction.Done else ImeAction.None,
                 keyboardType = KeyboardType.Number,
             ),
             keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
