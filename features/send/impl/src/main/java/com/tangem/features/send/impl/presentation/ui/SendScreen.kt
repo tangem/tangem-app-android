@@ -82,7 +82,6 @@ private fun SendScreenContent(
     currentState: State<SendUiCurrentScreen>,
     modifier: Modifier = Modifier,
 ) {
-    val recipientList = uiState.recipientList.collectAsLazyPagingItems()
     AnimatedContent(
         targetState = currentState.value,
         label = "Send Scree Navigation",
@@ -97,7 +96,6 @@ private fun SendScreenContent(
             SendUiStateType.Recipient -> SendRecipientContent(
                 uiState = uiState.recipientState,
                 clickIntents = uiState.clickIntents,
-                recipientList = recipientList,
             )
             SendUiStateType.Fee -> SendSpeedAndFeeContent(
                 state = uiState.feeState,
