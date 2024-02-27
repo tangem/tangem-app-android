@@ -57,7 +57,7 @@ internal interface SendClickIntents {
 
     fun showFee()
 
-    fun onExploreClick(txUrl: String)
+    fun onExploreClick()
 
     fun onShareClick()
 
