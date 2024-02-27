@@ -30,20 +30,22 @@ internal class SendNotificationFactory(
         .filter { it.type == SendUiStateType.Send }
         .map {
             val state = currentStateProvider()
+            val sendState = state.sendState
             val feeState = state.feeState ?: return@map persistentListOf()
             val feeAmount = feeState.fee?.amount?.value ?: BigDecimal.ZERO
-            val amountValue = state.amountState?.amountTextField?.value?.toBigDecimalOrNull() ?: BigDecimal.ZERO
-            val sendAmount = if (feeState.isSubtract) feeState.receivedAmountValue else amountValue
+            val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
+            val sendAmount = if (sendState.isSubtract) amountValue.minus(feeAmount) else amountValue
             buildList {
                 // errors
                 addExceedBalanceNotification(feeAmount, sendAmount)
-                addInvalidAmountNotification(feeState.isSubtract, sendAmount)
+                addInvalidAmountNotification(sendState.isSubtract, sendAmount)
                 addMinimumAmountErrorNotification(feeAmount, sendAmount)
                 addDustWarningNotification(feeAmount, sendAmount)
                 addTransactionLimitErrorNotification(feeAmount, sendAmount)
                 // warnings
+                addFeeCoverageNotification(sendState.isSubtract, sendAmount)
                 addExistentialWarningNotification(feeAmount, sendAmount)
-                addHighFeeWarningNotification(amountValue, state.sendState.ignoreAmountReduce)
+                addHighFeeWarningNotification(sendAmount, sendState.ignoreAmountReduce)
             }.toImmutableList()
         }
 
@@ -231,6 +233,29 @@ internal class SendNotificationFactory(
                     SendNotification.Error.MinimumAmountError(dustValue.toPlainString()),
                 )
             }
+        }
+    }
+
+    private fun MutableList<SendNotification>.addFeeCoverageNotification(
+        isSubtract: Boolean,
+        amountValue: BigDecimal,
+    ) {
+        val state = currentStateProvider()
+        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+        val feeAmount = state.feeState?.fee?.amount?.value ?: BigDecimal.ZERO
+
+        val amountReducedValue = amountValue.minus(feeAmount)
+        val amountReducedByValue = amountValue.minus(amountReducedValue)
+        val amountReducedBy = BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = amountReducedByValue,
+            cryptoCurrency = cryptoCurrency,
+        )
+        val amountReduced = BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = amountReducedValue,
+            cryptoCurrency = cryptoCurrency,
+        )
+        if (isSubtract) {
+            add(SendNotification.Warning.NetworkCoverage(amountReducedBy, amountReduced))
         }
     }
 
