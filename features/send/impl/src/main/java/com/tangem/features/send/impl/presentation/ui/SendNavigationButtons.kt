@@ -121,7 +121,7 @@ private fun SendPrimaryNavigationButton(
                 PrimaryButtonsDone(
                     textRes = textId,
                     txUrl = txUrl,
-                    onExploreClick = { uiState.clickIntents.onExploreClick(txUrl) },
+                    onExploreClick = uiState.clickIntents::onExploreClick,
                     onShareClick = uiState.clickIntents::onShareClick,
                     onDoneClick = buttonClick,
                     modifier = Modifier,
