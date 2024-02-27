@@ -21,7 +21,6 @@ import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -39,7 +38,6 @@ import java.math.RoundingMode
 @Suppress("LargeClass")
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
-    private val analytics: AnalyticsEventHandler,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
 ) : TransactionManager {
@@ -144,10 +142,6 @@ class TransactionManagerImpl(
         }
     }
 
-    override fun getNativeTokenDecimals(networkId: String): Int {
-        return Blockchain.fromNetworkId(networkId)?.decimals() ?: error("blockchain not found")
-    }
-
     override suspend fun updateWalletManager(networkId: String, derivationPath: String?) {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         getActualWalletManager(blockchain, derivationPath).update()
@@ -205,7 +199,6 @@ class TransactionManagerImpl(
         return ProxyNetworkInfo(
             name = blockchain.fullName,
             blockchainId = blockchain.id,
-            blockchainCurrency = blockchain.currency,
         )
     }
 
