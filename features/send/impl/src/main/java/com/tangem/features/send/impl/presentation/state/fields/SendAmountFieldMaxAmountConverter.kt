@@ -20,7 +20,6 @@ internal class SendAmountFieldMaxAmountConverter(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val amountState = state.amountState ?: return state
         val amountTextField = amountState.amountTextField
-        val feeState = state.feeState ?: return state
 
         val cryptoDecimals = amountTextField.cryptoAmount.decimals
         val fiatDecimals = amountTextField.fiatAmount.decimals
@@ -46,9 +45,6 @@ internal class SendAmountFieldMaxAmountConverter(
                         keyboardType = KeyboardType.Number,
                     ),
                 ),
-            ),
-            feeState = feeState.copy(
-                isSubtract = true,
             ),
         )
     }
