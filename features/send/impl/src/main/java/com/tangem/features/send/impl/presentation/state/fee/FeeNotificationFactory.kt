@@ -1,9 +1,11 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.parseToBigDecimal
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -90,6 +92,7 @@ internal class FeeNotificationFactory(
             ifRight = { it },
         ) ?: return
 
+        val mergeFeeNetworkName = cryptoCurrencyStatus.shouldMergeFeeNetworkName()
         when (warning) {
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> {
                 add(
@@ -99,6 +102,7 @@ internal class FeeNotificationFactory(
                         currencyName = cryptoCurrencyStatus.currency.name,
                         feeName = warning.coinCurrency.name,
                         feeSymbol = warning.coinCurrency.symbol,
+                        mergeFeeNetworkName = mergeFeeNetworkName,
                         onClick = {
                             clickIntents.onTokenDetailsClick(
                                 userWalletId = userWalletId,
@@ -117,6 +121,7 @@ internal class FeeNotificationFactory(
                         feeName = warning.feeCurrencyName,
                         feeSymbol = warning.feeCurrencySymbol,
                         networkName = warning.networkName,
+                        mergeFeeNetworkName = mergeFeeNetworkName,
                         onClick = currency?.let {
                             {
                                 clickIntents.onTokenDetailsClick(
@@ -130,6 +135,11 @@ internal class FeeNotificationFactory(
             }
             else -> Unit
         }
+    }
+
+    // workaround for networks that users have misunderstanding
+    private fun CryptoCurrencyStatus.shouldMergeFeeNetworkName(): Boolean {
+        return Blockchain.fromNetworkId(this.currency.network.backendId) == Blockchain.Arbitrum
     }
 
     companion object {
