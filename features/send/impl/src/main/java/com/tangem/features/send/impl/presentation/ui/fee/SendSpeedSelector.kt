@@ -154,7 +154,7 @@ internal fun SendSpeedSelector(
 
 @Composable
 private fun FooterText(onReadMoreClick: () -> Unit) {
-    val linkText = stringResource(R.string.common_fee_selector_link_description)
+    val linkText = stringResource(R.string.common_read_more)
     val fullString = stringResource(R.string.common_fee_selector_footer, linkText)
     val linkTextPosition = fullString.length - linkText.length
     val defaultStyle = TangemTheme.colors.text.tertiary
