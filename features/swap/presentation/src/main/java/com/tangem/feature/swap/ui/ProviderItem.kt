@@ -25,7 +25,7 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.swap.models.states.PercentLowerThanBest
+import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
 /**
@@ -93,11 +93,8 @@ private fun ProviderContentState(
                     .padding(start = TangemTheme.dimens.spacing12)
                     .size(size = TangemTheme.dimens.size40)
                     .clip(TangemTheme.shapes.roundedCorners8),
-                model = ImageRequest.Builder(context = LocalContext.current)
-                    .data(state.iconUrl)
-                    .crossfade(enable = true)
-                    .allowHardware(false)
-                    .build(),
+                model = ImageRequest.Builder(context = LocalContext.current).data(state.iconUrl)
+                    .crossfade(enable = true).allowHardware(false).build(),
                 loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
                 error = {
                     ErrorProviderIcon(
@@ -135,10 +132,12 @@ private fun ProviderContentState(
                         )
                     }
                     when (state.additionalBadge) {
-                        ProviderState.AdditionalBadge.BestTrade ->
-                            BestTradeItem(Modifier.padding(start = TangemTheme.dimens.spacing4))
-                        ProviderState.AdditionalBadge.PermissionRequired ->
-                            PermissionBadgeItem(Modifier.padding(start = TangemTheme.dimens.spacing4))
+                        ProviderState.AdditionalBadge.BestTrade -> BestTradeItem(
+                            Modifier.padding(start = TangemTheme.dimens.spacing4),
+                        )
+                        ProviderState.AdditionalBadge.PermissionRequired -> PermissionBadgeItem(
+                            Modifier.padding(start = TangemTheme.dimens.spacing4),
+                        )
                         ProviderState.AdditionalBadge.Empty -> {
                             // no-op
                         }
@@ -159,14 +158,19 @@ private fun ProviderContentState(
                             maxLines = 1,
                         )
                     }
-                    if (state.percentLowerThenBest is PercentLowerThanBest.Value &&
-                        state.percentLowerThenBest.value > 0
+                    if (state.percentLowerThenBest is PercentDifference.Value &&
+                        state.percentLowerThenBest.value != 0f
                     ) {
+                        val textColor = if (state.percentLowerThenBest.value > 0) {
+                            TangemTheme.colors.icon.accent
+                        } else {
+                            TangemTheme.colors.text.warning
+                        }
                         AnimatedContent(targetState = state.percentLowerThenBest.value, label = "") {
                             Text(
-                                text = "-$it%",
+                                text = if (it > 0) "+$it%" else "$it%",
                                 style = TangemTheme.typography.body2,
-                                color = TangemTheme.colors.text.warning,
+                                color = textColor,
                                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,
@@ -195,11 +199,8 @@ private fun ProviderUnavailableState(
                     .padding(start = TangemTheme.dimens.spacing12)
                     .size(size = TangemTheme.dimens.size40)
                     .clip(TangemTheme.shapes.roundedCorners8),
-                model = ImageRequest.Builder(context = LocalContext.current)
-                    .data(state.iconUrl)
-                    .crossfade(enable = true)
-                    .allowHardware(false)
-                    .build(),
+                model = ImageRequest.Builder(context = LocalContext.current).data(state.iconUrl)
+                    .crossfade(enable = true).allowHardware(false).build(),
                 loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
                 error = {
                     ErrorProviderIcon(
@@ -295,8 +296,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
 @Composable
 private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType, isSelected: Boolean) {
     when (selectionType) {
-        ProviderState.SelectionType.NONE -> {
-            /* no-op */
+        ProviderState.SelectionType.NONE -> { /* no-op */
         }
         ProviderState.SelectionType.CLICK -> {
             Icon(
@@ -342,11 +342,10 @@ private fun BaseContainer(modifier: Modifier = Modifier, content: @Composable Bo
 @Composable
 private fun ErrorProviderIcon(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .background(
-                color = TangemTheme.colors.background.secondary,
-                shape = TangemTheme.shapes.roundedCorners8,
-            ),
+        modifier = modifier.background(
+            color = TangemTheme.colors.background.secondary,
+            shape = TangemTheme.shapes.roundedCorners8,
+        ),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -366,7 +365,7 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
         ),
     ) {
         Text(
-            text = "Best rate",
+            text = stringResource(R.string.express_provider_best_rate),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
@@ -417,7 +416,7 @@ private fun ProviderItem_Content_Preview() {
         iconUrl = "",
         subtitle = stringReference("1 000 000"),
         additionalBadge = ProviderState.AdditionalBadge.PermissionRequired,
-        percentLowerThenBest = PercentLowerThanBest.Value(-1.0f),
+        percentLowerThenBest = PercentDifference.Value(12.0f),
         selectionType = ProviderState.SelectionType.SELECT,
         onProviderClick = {},
     )
