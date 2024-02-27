@@ -17,16 +17,18 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class SendNotificationFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val clickIntents: SendClickIntents,
 ) {
 
-    fun create(): Flow<ImmutableList<SendNotification>> = currentStateProvider().currentState
+    fun create(): Flow<ImmutableList<SendNotification>> = stateRouterProvider().currentState
         .filter { it.type == SendUiStateType.Send }
         .map {
             val state = currentStateProvider()
