@@ -325,67 +325,22 @@ internal class StateBuilder(
         tezosFeeThreshold: BigDecimal,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
-        addDomainWarnings(quoteModel, warnings)
 
-        val status = quoteModel.toTokenInfo.cryptoCurrencyStatus.value
-        if (status is CryptoCurrencyStatus.NoAccount) {
-            val amount = quoteModel.toTokenInfo.tokenAmount.value
-            val amountToCreateAccount = status.amountToCreateAccount
+        maybeAddDomainWarnings(quoteModel, warnings)
+        maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
+        maybeAddReduceAmountWarning(quoteModel, warnings, ignoreAmountReduce, tezosFeeThreshold)
+        maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
+        maybeAddNetworkFeeCoverageWarning(quoteModel, warnings)
+        maybeAddUnableCoverFeeWarning(quoteModel, fromToken, warnings)
+        maybeAddInsufficientFundsWarning(quoteModel, warnings)
+        maybeAddTransactionInProgressWarning(quoteModel, warnings)
+        return warnings
+    }
 
-            if (amount < amountToCreateAccount) {
-                warnings.add(
-                    SwapWarning.NeedReserveToCreateAccount(
-                        notificationConfig = createActivateAccountWarning(
-                            status.amountToCreateAccount,
-                            quoteModel.toTokenInfo.cryptoCurrencyStatus.currency.name
-                        ),
-                    )
-                )
-            }
-        }
-
-        val isTezos = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
-        if (!ignoreAmountReduce && isTezos &&
-            quoteModel.fromTokenInfo.tokenAmount.value == quoteModel.fromTokenInfo.cryptoCurrencyStatus.value.amount
-        ) {
-            warnings.add(
-                SwapWarning.ReduceAmount(
-                    notificationConfig = createReduceAmount(
-                        amount = tezosFeeThreshold.toPlainString(),
-                        onConfirmClick = actions.onAmountReduce,
-                        onDismissClick = actions.onAmountReduceIgnoreClick,
-                    )
-                )
-            )
-        }
-
-        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
-            quoteModel.preparedSwapConfigState.isFeeEnough &&
-            quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
-        ) {
-            warnings.add(
-                SwapWarning.PermissionNeeded(
-                    createPermissionNotificationConfig(fromToken.symbol),
-                ),
-            )
-        }
-        when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
-            is IncludeFeeInAmount.Included ->
-                warnings.add(
-                    SwapWarning.GeneralWarning(
-                        createNetworkFeeCoverageNotificationConfig(),
-                    ),
-                )
-            else -> Unit
-        }
-        addUnableCoverFeeWarning(quoteModel, fromToken, warnings)
-        // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
-        if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
-            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
-        ) {
-            warnings.add(SwapWarning.InsufficientFunds)
-        }
-
+    private fun maybeAddTransactionInProgressWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        warnings: MutableList<SwapWarning>,
+    ) {
         if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
             warnings.add(
                 SwapWarning.TransactionInProgressWarning(
@@ -406,10 +361,9 @@ internal class StateBuilder(
                 ),
             )
         }
-        return warnings
     }
 
-    private fun addDomainWarnings(quoteModel: SwapState.QuotesLoadedState, warnings: MutableList<SwapWarning>) {
+    private fun maybeAddDomainWarnings(quoteModel: SwapState.QuotesLoadedState, warnings: MutableList<SwapWarning>) {
         quoteModel.warnings.forEach {
             when (it) {
                 is Warning.ExistentialDepositWarning -> {
@@ -450,7 +404,83 @@ internal class StateBuilder(
         }
     }
 
-    private fun addUnableCoverFeeWarning(
+    private fun maybeAddNeedReserveToCreateAccountWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        warnings: MutableList<SwapWarning>,
+    ) {
+        val status = quoteModel.toTokenInfo.cryptoCurrencyStatus.value
+        if (status is CryptoCurrencyStatus.NoAccount) {
+            val amount = quoteModel.toTokenInfo.tokenAmount.value
+            val amountToCreateAccount = status.amountToCreateAccount
+
+            if (amount < amountToCreateAccount) {
+                warnings.add(
+                    SwapWarning.NeedReserveToCreateAccount(
+                        notificationConfig = createActivateAccountWarning(
+                            status.amountToCreateAccount,
+                            quoteModel.toTokenInfo.cryptoCurrencyStatus.currency.name
+                        ),
+                    )
+                )
+            }
+        }
+    }
+
+    private fun maybeAddReduceAmountWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        warnings: MutableList<SwapWarning>,
+        ignoreAmountReduce: Boolean,
+        tezosFeeThreshold: BigDecimal,
+    ) {
+        val isTezos = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
+        if (!ignoreAmountReduce && isTezos &&
+            quoteModel.fromTokenInfo.tokenAmount.value == quoteModel.fromTokenInfo.cryptoCurrencyStatus.value.amount
+        ) {
+            warnings.add(
+                SwapWarning.ReduceAmount(
+                    notificationConfig = createReduceAmount(
+                        amount = tezosFeeThreshold.toPlainString(),
+                        onConfirmClick = actions.onAmountReduce,
+                        onDismissClick = actions.onAmountReduceIgnoreClick,
+                    )
+                )
+            )
+        }
+    }
+
+    private fun maybeAddPermissionNeededWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        warnings: MutableList<SwapWarning>,
+        fromToken: CryptoCurrency,
+    ) {
+        if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
+            quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
+        ) {
+            warnings.add(
+                SwapWarning.PermissionNeeded(
+                    createPermissionNotificationConfig(fromToken.symbol),
+                ),
+            )
+        }
+    }
+
+    private fun maybeAddNetworkFeeCoverageWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        warnings: MutableList<SwapWarning>,
+    ) {
+        when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
+            is IncludeFeeInAmount.Included ->
+                warnings.add(
+                    SwapWarning.GeneralWarning(
+                        createNetworkFeeCoverageNotificationConfig(),
+                    ),
+                )
+            else -> Unit
+        }
+    }
+
+    private fun maybeAddUnableCoverFeeWarning(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
         warnings: MutableList<SwapWarning>,
@@ -467,6 +497,18 @@ internal class StateBuilder(
                     ),
                 ),
             )
+        }
+    }
+
+    private fun maybeAddInsufficientFundsWarning(
+        quoteModel: SwapState.QuotesLoadedState,
+        warnings: MutableList<SwapWarning>,
+    ) {
+        // check isBalanceEnough, but for dex includeFeeInAmount always Excluded
+        if (!quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.preparedSwapConfigState.includeFeeInAmount !is IncludeFeeInAmount.Included
+        ) {
+            warnings.add(SwapWarning.InsufficientFunds)
         }
     }
 
