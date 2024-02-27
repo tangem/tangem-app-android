@@ -11,6 +11,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
@@ -21,16 +22,18 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class FeeNotificationFactory(
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val clickIntents: SendClickIntents,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
 ) {
 
-    fun create() = currentStateProvider().currentState
+    fun create() = stateRouterProvider().currentState
         .filter { it.type == SendUiStateType.Fee }
         .map {
             val state = currentStateProvider()
