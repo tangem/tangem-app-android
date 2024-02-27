@@ -59,7 +59,8 @@ internal sealed class SendStates {
         override val isPrimaryButtonEnabled: Boolean,
         val addressTextField: SendTextField.RecipientAddress,
         val memoTextField: SendTextField.RecipientMemo?,
-        val recipients: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
+        val recent: ImmutableList<SendRecipientListContent>,
+        val wallets: ImmutableList<SendRecipientListContent>,
         val network: String,
         val isValidating: Boolean = false,
     ) : SendStates()
