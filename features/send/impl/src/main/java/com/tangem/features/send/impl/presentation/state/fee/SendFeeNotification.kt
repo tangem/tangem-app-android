@@ -32,11 +32,6 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.send_notification_fee_too_high_text, wrappedList(value)),
         )
 
-        object NetworkCoverage : Warning(
-            title = resourceReference(id = R.string.send_network_fee_warning_title),
-            subtitle = resourceReference(id = R.string.send_network_fee_warning_content),
-        )
-
         data class NetworkFeeUnreachable(val onRefresh: () -> Unit) : Warning(
             title = resourceReference(R.string.send_fee_unreachable_error_title),
             subtitle = resourceReference(R.string.send_fee_unreachable_error_text),
