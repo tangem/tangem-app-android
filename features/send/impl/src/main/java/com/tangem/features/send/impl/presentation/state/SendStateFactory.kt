@@ -223,6 +223,13 @@ internal class SendStateFactory(
     //endregion
 
     //region send
+    fun onSubtractSelect(isSubtract: Boolean): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            sendState = state.sendState.copy(isSubtract = isSubtract),
+        )
+    }
+
     fun getSendingStateUpdate(isSending: Boolean): SendUiState {
         val state = currentStateProvider()
         return state.copy(sendState = state.sendState.copy(isSending = isSending))
