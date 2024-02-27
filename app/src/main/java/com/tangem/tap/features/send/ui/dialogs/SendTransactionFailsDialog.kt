@@ -30,7 +30,7 @@ object SendTransactionFailsDialog {
         return AlertDialog.Builder(context).apply {
             setTitle(R.string.alert_failed_to_send_transaction_title)
             setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
-            setNeutralButton(R.string.alert_button_send_feedback) { _, _ ->
+            setNeutralButton(R.string.details_row_title_contact_to_support) { _, _ ->
                 store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
             }
             setPositiveButton(R.string.common_cancel) { _, _ -> }

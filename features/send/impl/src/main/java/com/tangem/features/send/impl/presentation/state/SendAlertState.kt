@@ -20,7 +20,7 @@ internal sealed class SendAlertState {
     ) : SendAlertState() {
         override val message: TextReference = resourceReference(R.string.common_unknown_error)
         override val confirmButtonText: TextReference =
-            resourceReference(id = R.string.send_alert_button_request_support)
+            resourceReference(id = R.string.common_support)
     }
 
     data class TransactionError(
@@ -35,7 +35,7 @@ internal sealed class SendAlertState {
             formatArgs = wrappedList(causeTextReference ?: cause.orEmpty(), code),
         )
         override val confirmButtonText: TextReference =
-            resourceReference(id = R.string.send_alert_button_request_support)
+            resourceReference(id = R.string.common_support)
     }
 
     data class DemoMode(
