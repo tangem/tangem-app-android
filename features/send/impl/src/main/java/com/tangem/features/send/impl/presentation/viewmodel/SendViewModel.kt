@@ -4,8 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
@@ -28,8 +26,7 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
+import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -54,6 +51,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -72,8 +70,7 @@ internal class SendViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
-    private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
-    private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
+    private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
@@ -106,7 +103,8 @@ internal class SendViewModel @Inject constructor(
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private var innerRouter: InnerSendRouter by Delegates.notNull()
-    private var stateRouter: StateRouter by Delegates.notNull()
+    var stateRouter: StateRouter by Delegates.notNull()
+        private set
 
     private val stateFactory = SendStateFactory(
         clickIntents = this,
@@ -142,6 +140,7 @@ internal class SendViewModel @Inject constructor(
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
+        stateRouterProvider = Provider { stateRouter },
         clickIntents = this,
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
     )
@@ -151,6 +150,7 @@ internal class SendViewModel @Inject constructor(
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
+        stateRouterProvider = Provider { stateRouter },
         currencyChecksRepository = currencyChecksRepository,
         clickIntents = this,
     )
@@ -190,7 +190,6 @@ internal class SendViewModel @Inject constructor(
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
         innerRouter = router
         this.stateRouter = stateRouter
-        uiState = uiState.copy(currentState = stateRouter.currentState)
     }
 
     private fun subscribeOnCurrencyStatusUpdates(owner: LifecycleOwner) {
@@ -301,12 +300,10 @@ internal class SendViewModel @Inject constructor(
         combine(
             flow = getUserWallets().conflate(),
             flow2 = getTxHistory().conflate(),
-            flow3 = getTxHistoryCount().conflate(),
-        ) { wallets, txHistory, txHistoryCount ->
-            stateFactory.onLoadedRecipientList(
+        ) { wallets, txHistory ->
+            uiState = stateFactory.onLoadedRecipientList(
                 wallets = wallets,
                 txHistory = txHistory,
-                txHistoryCount = txHistoryCount,
             )
         }
             .flowOn(dispatchers.io)
@@ -348,34 +345,18 @@ internal class SendViewModel @Inject constructor(
             }
     }
 
-    private fun getTxHistory(): Flow<PagingData<TxHistoryItem>> {
-        return txHistoryItemsUseCase(
+    private fun getTxHistory(): Flow<List<TxHistoryItem>> {
+        return getFixedTxHistoryItemsUseCase(
             userWalletId = userWalletId,
             currency = cryptoCurrency,
         ).fold(
-            ifRight = {
-                it.distinctUntilChanged().cachedIn(viewModelScope)
-            },
-            ifLeft = {
-                emptyFlow()
-            },
+            ifRight = { it.distinctUntilChanged() },
+            ifLeft = { emptyFlow() },
         )
     }
 
-    private fun getTxHistoryCount(): Flow<Int> {
-        return flow {
-            txHistoryItemsCountUseCase(
-                userWalletId = userWalletId,
-                currency = cryptoCurrency,
-            ).fold(
-                ifRight = { emit(it) },
-                ifLeft = { emit(0) },
-            )
-        }
-    }
-
     private fun onStateActive() {
-        uiState.currentState
+        stateRouter.currentState
             .onEach {
                 when (it.type) {
                     SendUiStateType.Fee -> if (!it.isFromConfirmation) loadFee()
@@ -499,11 +480,13 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun validateAddress(value: String): Boolean {
-        return validateWalletAddressUseCase(
+        val isValidAddress = validateWalletAddressUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
             address = value,
         ).getOrElse { false }
+        onEnteredValidAddress(isValidAddress)
+        return isValidAddress
     }
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
@@ -514,6 +497,16 @@ internal class SendViewModel @Inject constructor(
             uiState = stateFactory.getOnRecipientAddressValidState(decodedAddress.address, isValidAddress)
             true
         } ?: false
+    }
+
+    private fun onEnteredValidAddress(isValidAddress: Boolean) {
+        val recipientState = uiState.recipientState ?: return
+        uiState = uiState.copy(
+            recipientState = recipientState.copy(
+                recent = recipientState.recent.map { it.copy(isVisible = !isValidAddress) }.toPersistentList(),
+                wallets = recipientState.wallets.map { it.copy(isVisible = !isValidAddress) }.toPersistentList(),
+            ),
+        )
     }
     // endregion
 
@@ -613,9 +606,9 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
     }
 
-    override fun onExploreClick(txUrl: String) {
+    override fun onExploreClick() {
         analyticsEventHandler.send(SendAnalyticEvents.ExploreButtonClicked)
-        innerRouter.openUrl(txUrl)
+        innerRouter.openUrl(uiState.sendState.txUrl)
     }
 
     override fun onShareClick() {
