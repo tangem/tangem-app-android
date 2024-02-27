@@ -61,6 +61,7 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
             val feeName: String,
             val feeSymbol: String,
             val networkName: String,
+            val mergeFeeNetworkName: Boolean = false,
             val onClick: (() -> Unit)? = null,
         ) : Error(
             title = resourceReference(
@@ -74,7 +75,16 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
             iconResId = networkIconId,
             buttonsState = onClick?.let {
                 NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                    text = resourceReference(R.string.common_buy_currency, wrappedList(feeName)),
+                    text = resourceReference(
+                        R.string.common_buy_currency,
+                        wrappedList(
+                            if (mergeFeeNetworkName) {
+                                "$currencyName ($feeSymbol)"
+                            } else {
+                                feeName
+                            },
+                        ),
+                    ),
                     onClick = onClick,
                 )
             },
