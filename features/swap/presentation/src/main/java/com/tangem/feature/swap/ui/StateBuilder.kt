@@ -1024,6 +1024,7 @@ internal class StateBuilder(
     fun showSelectProviderBottomSheet(
         uiState: SwapStateHolder,
         selectedProviderId: String,
+        bestRatedProviderId: String,
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         unavailableProviders: List<SwapProvider>,
@@ -1031,7 +1032,7 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
             .mapNotNull {
-                it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
+                it.convertToProviderBottomSheetState(pricesLowerBest, bestRatedProviderId, actions.onProviderSelect)
             }
             .sortedWith(ProviderPercentDiffComparator)
         val unavailableProviderStates = unavailableProviders.map {
@@ -1072,8 +1073,8 @@ internal class StateBuilder(
                                 it.copy(
                                     subtitle = stringReference(rateString),
                                     percentLowerThenBest = pricesLowerBest[it.id]?.let { percent ->
-                                        PercentLowerThanBest.Value(percent)
-                                    } ?: PercentLowerThanBest.Empty,
+                                        PercentDifference.Value(percent)
+                                    } ?: PercentDifference.Value(0f),
                                 )
                             } else {
                                 it
@@ -1179,18 +1180,21 @@ internal class StateBuilder(
 
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
         pricesLowerBest: Map<String, Float>,
+        bestRatedProviderId: String,
         onProviderSelect: (String) -> Unit,
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
             is SwapState.EmptyAmountState -> null
-            is SwapState.QuotesLoadedState -> provider.convertToContentSelectableProviderState(
-                isBestRate = false, // not show best rate in bottom sheet
-                state = state,
-                onProviderClick = onProviderSelect,
-                pricesLowerBest = pricesLowerBest,
-                selectionType = ProviderState.SelectionType.SELECT,
-            )
+            is SwapState.QuotesLoadedState -> {
+                provider.convertToContentSelectableProviderState(
+                    isBestRate = bestRatedProviderId == provider.providerId,
+                    state = state,
+                    onProviderClick = onProviderSelect,
+                    pricesLowerBest = pricesLowerBest,
+                    selectionType = ProviderState.SelectionType.SELECT,
+                )
+            }
             is SwapState.SwapError -> getProviderStateForError(
                 swapProvider = provider,
                 fromToken = state.fromTokenInfo.cryptoCurrencyStatus.currency,
@@ -1282,7 +1286,7 @@ internal class StateBuilder(
             subtitle = stringReference(rateString),
             additionalBadge = badge,
             selectionType = selectionType,
-            percentLowerThenBest = PercentLowerThanBest.Empty,
+            percentLowerThenBest = PercentDifference.Empty,
             onProviderClick = onProviderClick,
         )
     }
@@ -1312,8 +1316,8 @@ internal class StateBuilder(
             additionalBadge = additionalBadge,
             selectionType = selectionType,
             percentLowerThenBest = pricesLowerBest[this.providerId]?.let { percent ->
-                PercentLowerThanBest.Value(percent)
-            } ?: PercentLowerThanBest.Value(0f),
+                PercentDifference.Value(percent)
+            } ?: PercentDifference.Value(0f),
             onProviderClick = onProviderClick,
         )
     }
@@ -1347,7 +1351,7 @@ internal class StateBuilder(
             selectionType = selectionType,
             subtitle = alertText,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
-            percentLowerThenBest = PercentLowerThanBest.Empty,
+            percentLowerThenBest = PercentDifference.Empty,
             onProviderClick = onProviderClick,
         )
     }
