@@ -119,12 +119,12 @@ internal class StateRouter(
         mutableCurrentState.update { SendUiCurrentScreen(SendUiStateType.Fee, isFromConfirmation) }
     }
 
-    private fun continueToSend(show: () -> Unit) {
-        if (currentState.value.isFromConfirmation) showSend() else show()
-    }
-
-    private fun showSend() {
+    fun showSend() {
         analyticsEventsHandler.send(SendAnalyticEvents.ConfirmationScreenOpened)
         mutableCurrentState.update { SendUiCurrentScreen(SendUiStateType.Send, isFromConfirmation = false) }
+    }
+
+    private fun continueToSend(show: () -> Unit) {
+        if (currentState.value.isFromConfirmation) showSend() else show()
     }
 }
