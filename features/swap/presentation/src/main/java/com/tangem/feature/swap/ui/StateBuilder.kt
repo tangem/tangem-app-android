@@ -316,6 +316,24 @@ internal class StateBuilder(
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
         addDomainWarnings(quoteModel, warnings)
+
+        val status = quoteModel.toTokenInfo.cryptoCurrencyStatus.value
+        if (status is CryptoCurrencyStatus.NoAccount) {
+            val amount = quoteModel.toTokenInfo.tokenAmount.value
+            val amountToCreateAccount = status.amountToCreateAccount
+
+            if (amount < amountToCreateAccount) {
+                warnings.add(
+                    SwapWarning.NeedReserveToCreateAccount(
+                        notificationConfig = createActivateAccountWarning(
+                            status.amountToCreateAccount,
+                            quoteModel.toTokenInfo.cryptoCurrencyStatus.currency.name
+                        ),
+                    )
+                )
+            }
+        }
+
         if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
             quoteModel.preparedSwapConfigState.isFeeEnough &&
             quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
@@ -428,6 +446,16 @@ internal class StateBuilder(
     }
 
     private fun getSwapButtonEnabled(quoteModel: SwapState.QuotesLoadedState): Boolean {
+        val status = quoteModel.toTokenInfo.cryptoCurrencyStatus.value
+        if (status is CryptoCurrencyStatus.NoAccount) {
+            val amount = quoteModel.toTokenInfo.tokenAmount.value
+            val amountToCreateAccount = status.amountToCreateAccount
+
+            if (amount < amountToCreateAccount) {
+                return false
+            }
+        }
+
         val preparedSwapConfigState = quoteModel.preparedSwapConfigState
         // check has has outgoing transaction
         if (preparedSwapConfigState.hasOutgoingTransaction) return false
@@ -1210,6 +1238,17 @@ internal class StateBuilder(
                 formatArgs = wrappedList(fromTokenSymbol),
             ),
             iconResId = R.drawable.ic_locked_24,
+        )
+    }
+
+    private fun createActivateAccountWarning(amount: BigDecimal, token: String): NotificationConfig {
+        return NotificationConfig(
+            title = resourceReference(
+                id = R.string.send_notification_invalid_reserve_amount_title,
+                formatArgs = wrappedList("$amount $token")
+            ),
+            subtitle = resourceReference(R.string.send_notification_invalid_reserve_amount_text),
+            iconResId = R.drawable.img_attention_20
         )
     }
 

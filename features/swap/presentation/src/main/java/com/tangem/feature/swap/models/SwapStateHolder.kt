@@ -117,6 +117,7 @@ sealed interface SwapWarning {
     data class GeneralWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class GeneralInformational(val notificationConfig: NotificationConfig) : SwapWarning
     data class TransactionInProgressWarning(val title: TextReference, val description: TextReference) : SwapWarning
+    data class NeedReserveToCreateAccount(val notificationConfig: NotificationConfig) : SwapWarning
 }
 
 enum class GenericWarningType {
