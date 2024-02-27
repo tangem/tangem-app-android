@@ -129,6 +129,7 @@
     <string name="common_start">Start</string>
     <string name="common_submit">Submit</string>
     <string name="common_success">Success</string>
+    <string name="common_support">Support</string>
     <string name="common_swap">Swap</string>
     <string name="common_terms_and_conditions">terms and conditions</string>
     <string name="common_transaction_failed">Transaction failed</string>
@@ -180,11 +181,11 @@
     <string name="details_row_privacy_policy">Privacy policy</string>
     <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
     <string name="details_row_title_cid">Card ID</string>
+    <string name="details_row_title_contact_to_support">Contact to Support</string>
     <string name="details_row_title_create_backup">Link More Cards</string>
     <string name="details_row_title_currency">App Currency</string>
     <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
     <string name="details_row_title_issuer">Issuer</string>
-    <string name="details_row_title_send_feedback">Send Feedback</string>
     <string name="details_row_title_signed_hashes">Signed</string>
     <string name="details_title">Details</string>
     <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
@@ -456,7 +457,6 @@
     <string name="send_amount_label">Amount</string>
     <string name="send_amount_substract">Subtract from send amount</string>
     <string name="send_amount_substract_footer">The recipient will receive %s</string>
-    <string name="send_alert_button_request_support">Support</string>
     <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
     <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
     <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию из отправляемой сумму?</string>

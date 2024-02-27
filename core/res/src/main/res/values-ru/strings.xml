@@ -130,6 +130,7 @@
     <string name="common_start">Начать</string>
     <string name="common_submit">Отправить</string>
     <string name="common_success">Успешно</string>
+    <string name="common_support">Поддержка</string>
     <string name="common_swap">Обмен</string>
     <string name="common_terms_and_conditions">условия участия</string>
     <string name="common_transaction_failed">Ошибка транзакции</string>
@@ -181,11 +182,11 @@
     <string name="details_row_privacy_policy">Privacy policy</string>
     <string name="details_row_subtitle_signed_hashes_format">%s хэшей</string>
     <string name="details_row_title_cid">Номер карты</string>
+    <string name="details_row_title_contact_to_support">Обратиться в поддержку</string>
     <string name="details_row_title_create_backup">Добавить еще карты</string>
     <string name="details_row_title_currency">Валюта приложения</string>
     <string name="details_row_title_flip_to_hide">Скрывать балансы жестом переворота</string>
     <string name="details_row_title_issuer">Эмитент</string>
-    <string name="details_row_title_send_feedback">Отправить отзыв</string>
     <string name="details_row_title_signed_hashes">Подписано</string>
     <string name="details_title">Подробности</string>
     <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
@@ -454,7 +455,6 @@
     <string name="send_amount_label">Сумма</string>
     <string name="send_amount_substract">Вычесть из суммы отправки</string>
     <string name="send_amount_substract_footer">Сумма к получению %s</string>
-    <string name="send_alert_button_request_support">Поддержка</string>
     <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
     <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
     <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию из отправляемой сумму?</string>
