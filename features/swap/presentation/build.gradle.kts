@@ -67,4 +67,7 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Blockchain */
+    implementation(deps.tangem.blockchain)
 }

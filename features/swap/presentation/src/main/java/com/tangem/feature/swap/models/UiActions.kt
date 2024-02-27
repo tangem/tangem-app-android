@@ -12,6 +12,8 @@ data class UiActions(
     val onChangeCardsClicked: () -> Unit,
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
+    val onAmountReduce: () -> Unit,
+    val onAmountReduceIgnoreClick: () -> Unit,
     val openPermissionBottomSheet: () -> Unit,
     val onChangeApproveType: (ApproveType) -> Unit,
     // region new actions

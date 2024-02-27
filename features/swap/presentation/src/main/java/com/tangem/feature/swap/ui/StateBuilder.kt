@@ -2,6 +2,7 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -89,6 +90,7 @@ internal class StateBuilder(
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             providerState = ProviderState.Empty(),
             shouldShowMaxAmount = false,
+            ignoreAmountReduce = false,
             priceImpact = PriceImpact.Empty(),
         )
     }
@@ -211,10 +213,16 @@ internal class StateBuilder(
         isNeedBestRateBadge: Boolean,
         selectedFeeType: FeeType,
         isReverseSwapPossible: Boolean,
+        tezosFeeThresHold: BigDecimal,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
-        val warnings = getWarningsForSuccessState(quoteModel, fromToken)
+        val warnings = getWarningsForSuccessState(
+            quoteModel = quoteModel,
+            fromToken = fromToken,
+            ignoreAmountReduce = uiStateHolder.ignoreAmountReduce,
+            tezosFeeThreshold = tezosFeeThresHold,
+        )
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
@@ -313,6 +321,8 @@ internal class StateBuilder(
     private fun getWarningsForSuccessState(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
+        ignoreAmountReduce: Boolean,
+        tezosFeeThreshold: BigDecimal,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
         addDomainWarnings(quoteModel, warnings)
@@ -332,6 +342,21 @@ internal class StateBuilder(
                     )
                 )
             }
+        }
+
+        val isTezos = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
+        if (!ignoreAmountReduce && isTezos &&
+            quoteModel.fromTokenInfo.tokenAmount.value == quoteModel.fromTokenInfo.cryptoCurrencyStatus.value.amount
+        ) {
+            warnings.add(
+                SwapWarning.ReduceAmount(
+                    notificationConfig = createReduceAmount(
+                        amount = tezosFeeThreshold.toPlainString(),
+                        onConfirmClick = actions.onAmountReduce,
+                        onDismissClick = actions.onAmountReduceIgnoreClick,
+                    )
+                )
+            )
         }
 
         if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
@@ -1249,6 +1274,24 @@ internal class StateBuilder(
             ),
             subtitle = resourceReference(R.string.send_notification_invalid_reserve_amount_text),
             iconResId = R.drawable.img_attention_20
+        )
+    }
+
+    private fun createReduceAmount(
+        amount: String,
+        onConfirmClick: () -> Unit,
+        onDismissClick: () -> Unit,
+    ): NotificationConfig {
+        return NotificationConfig(
+            title = resourceReference(R.string.send_notification_high_fee_title),
+            subtitle = resourceReference(R.string.send_notification_high_fee_text),
+            iconResId = R.drawable.img_attention_20,
+            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
+                primaryText = resourceReference(R.string.send_notification_fee_too_high_accept, wrappedList(amount)),
+                onPrimaryClick = onConfirmClick,
+                secondaryText = resourceReference(R.string.send_notification_fee_too_high_ignore),
+                onSecondaryClick = onDismissClick,
+            ),
         )
     }
 

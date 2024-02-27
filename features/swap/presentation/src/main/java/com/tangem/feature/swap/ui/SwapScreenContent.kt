@@ -382,6 +382,11 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         config = warning.notificationConfig,
                     )
                 }
+                is SwapWarning.ReduceAmount -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                    )
+                }
                 is SwapWarning.TransactionInProgressWarning -> {
                     CardWithIcon(
                         title = warning.title.resolveReference(),
@@ -505,6 +510,7 @@ private val state = SwapStateHolder(
     providerState = ProviderState.Loading(),
     priceImpact = PriceImpact.Empty(),
     shouldShowMaxAmount = true,
+    ignoreAmountReduce = false,
     tosState = TosState(
         tosLink = LegalState(
             title = stringReference("Terms of Use"),

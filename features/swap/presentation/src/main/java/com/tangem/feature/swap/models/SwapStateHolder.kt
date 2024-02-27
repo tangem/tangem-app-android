@@ -21,6 +21,7 @@ data class SwapStateHolder(
     val alert: SwapWarning.GenericWarning? = null,
     val changeCardsButtonState: ChangeCardsButtonState = ChangeCardsButtonState.ENABLED,
     val providerState: ProviderState,
+    val ignoreAmountReduce: Boolean,
 
     val fee: FeeItemState = FeeItemState.Empty,
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
@@ -118,6 +119,7 @@ sealed interface SwapWarning {
     data class GeneralInformational(val notificationConfig: NotificationConfig) : SwapWarning
     data class TransactionInProgressWarning(val title: TextReference, val description: TextReference) : SwapWarning
     data class NeedReserveToCreateAccount(val notificationConfig: NotificationConfig) : SwapWarning
+    data class ReduceAmount(val notificationConfig: NotificationConfig) : SwapWarning
 }
 
 enum class GenericWarningType {
