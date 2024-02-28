@@ -34,9 +34,10 @@ internal class SendAmountFieldChangeConverter(
 
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
         val isExceedBalance = checkValue.checkExceedBalance(amountTextField)
+        val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isZero() else decimalCryptoValue.isZero()
         return state.copy(
             amountState = amountState.copy(
-                isPrimaryButtonEnabled = !isExceedBalance,
+                isPrimaryButtonEnabled = !isExceedBalance && !isZero,
                 amountTextField = amountTextField.copy(
                     value = cryptoValue,
                     fiatValue = fiatValue,
@@ -93,9 +94,9 @@ internal class SendAmountFieldChangeConverter(
         val fiatDecimal = parseToBigDecimal(amountTextField.fiatAmount.decimals)
         val cryptoDecimal = parseToBigDecimal(amountTextField.cryptoAmount.decimals)
         return if (amountTextField.isFiatValue) {
-            fiatDecimal > currencyFiatAmount || fiatDecimal.isZero()
+            fiatDecimal > currencyFiatAmount
         } else {
-            cryptoDecimal > currencyCryptoAmount || cryptoDecimal.isZero()
+            cryptoDecimal > currencyCryptoAmount
         }
     }
 }
