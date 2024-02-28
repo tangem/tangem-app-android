@@ -171,6 +171,7 @@ internal class SendViewModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
 
     private var balanceJobHolder = JobHolder()
+    private var balanceHidingJobHolder = JobHolder()
     private var recipientsJobHolder = JobHolder()
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
@@ -180,11 +181,21 @@ internal class SendViewModel @Inject constructor(
 
     private var sendIdleTimer = 0L
 
+    init {
+        subscribeOnCurrencyStatusUpdates()
+        subscribeOnBalanceHidden()
+    }
+
     override fun onCreate(owner: LifecycleOwner) {
-        subscribeOnCurrencyStatusUpdates(owner)
         onStateActive()
-        subscribeOnBalanceHidden(owner)
         analyticsEventHandler.send(SendAnalyticEvents.SendOpened)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        balanceHidingJobHolder.cancel()
+        balanceJobHolder.cancel()
+        stateRouter.clear()
     }
 
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
@@ -192,13 +203,13 @@ internal class SendViewModel @Inject constructor(
         this.stateRouter = stateRouter
     }
 
-    private fun subscribeOnCurrencyStatusUpdates(owner: LifecycleOwner) {
+    private fun subscribeOnCurrencyStatusUpdates() {
         viewModelScope.launch(dispatchers.main) {
             getUserWalletUseCase(userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
                     checkIfSubtractAvailable()
-                    getCurrenciesStatusUpdates(owner, wallet)
+                    getCurrenciesStatusUpdates(wallet)
                 },
                 ifLeft = {
                     uiState = eventStateFactory.getGenericErrorState(
@@ -210,23 +221,22 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private fun subscribeOnBalanceHidden(owner: LifecycleOwner) {
+    private fun subscribeOnBalanceHidden() {
         getBalanceHidingSettingsUseCase()
-            .flowWithLifecycle(owner.lifecycle)
             .conflate()
             .distinctUntilChanged()
             .onEach {
                 uiState = stateFactory.getOnHideBalanceState(isBalanceHidden = it.isBalanceHidden)
             }
             .launchIn(viewModelScope)
+            .saveIn(balanceHidingJobHolder)
     }
 
-    private fun getCurrenciesStatusUpdates(owner: LifecycleOwner, wallet: UserWallet) {
+    private fun getCurrenciesStatusUpdates(wallet: UserWallet) {
         val isSingleWallet = wallet.scanResponse.walletData?.token != null && !wallet.isMultiCurrency
 
         if (cryptoCurrency is CryptoCurrency.Coin) {
             getCurrencyStatusUpdates(isSingleWallet = isSingleWallet)
-                .flowWithLifecycle(owner.lifecycle)
                 .onEach { currencyStatus ->
                     currencyStatus.onRight {
                         onDataLoaded(
@@ -249,7 +259,7 @@ internal class SendViewModel @Inject constructor(
                         coinCurrencyStatus = coinStatus.getOrElse { error("Coin status is unreachable") },
                     )
                 }
-            }.flowWithLifecycle(owner.lifecycle)
+            }
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
                 .saveIn(balanceJobHolder)
@@ -703,11 +713,10 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun onCheckFeeUpdate() {
-        val isSending = uiState.sendState.isSending
         val isSuccess = uiState.sendState.isSuccess
         val noErrorNotifications = uiState.sendState.notifications.none { it is SendNotification.Error }
 
-        if (!isSending && !isSuccess && noErrorNotifications) {
+        if (!isSuccess && noErrorNotifications) {
             viewModelScope.launch(dispatchers.main) {
                 val feeUpdatedState = callFeeUseCase()?.fold(
                     ifRight = {
