@@ -47,7 +47,6 @@ internal class FeeNotificationFactory(
                     is FeeSelectorState.Content -> {
                         val customFee = feeSelectorState.customValues
                         val selectedFee = feeSelectorState.selectedFee
-                        addTooLowNotification(feeSelectorState.fees, selectedFee, customFee)
                         addTooHighNotification(feeSelectorState.fees, selectedFee, customFee)
                         addExceedsBalanceNotification(feeState.fee)
                     }
@@ -58,20 +57,6 @@ internal class FeeNotificationFactory(
     private fun MutableList<SendFeeNotification>.addFeeUnreachableNotification(feeSelectorState: FeeSelectorState) {
         if (feeSelectorState is FeeSelectorState.Error) {
             add(SendFeeNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload))
-        }
-    }
-
-    private fun MutableList<SendFeeNotification>.addTooLowNotification(
-        transactionFee: TransactionFee,
-        selectedFee: FeeType,
-        customFee: List<SendTextField.CustomFee>,
-    ) {
-        val multipleFees = transactionFee as? TransactionFee.Choosable ?: return
-        val minimumValue = multipleFees.minimum.amount.value ?: return
-        val customAmount = customFee.firstOrNull() ?: return
-        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
-        if (selectedFee == FeeType.Custom && minimumValue > customValue) {
-            add(SendFeeNotification.Warning.TooLow)
         }
     }
 
