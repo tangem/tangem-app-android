@@ -14,22 +14,14 @@ internal class StateRouter(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val isEditingDisabled: Boolean,
 ) {
-    private var mutableCurrentState: MutableStateFlow<SendUiCurrentScreen> = MutableStateFlow(
-        if (isEditingDisabled) {
-            SendUiCurrentScreen(
-                type = SendUiStateType.None,
-                isFromConfirmation = false,
-            )
-        } else {
-            SendUiCurrentScreen(
-                type = SendUiStateType.Recipient,
-                isFromConfirmation = false,
-            )
-        },
-    )
+    private var mutableCurrentState: MutableStateFlow<SendUiCurrentScreen> = MutableStateFlow(getInitState())
 
     val currentState: StateFlow<SendUiCurrentScreen>
         get() = mutableCurrentState
+
+    fun clear() {
+        mutableCurrentState.update { getInitState() }
+    }
 
     fun popBackStack() {
         fragmentManager.get()?.popBackStack()
@@ -127,5 +119,17 @@ internal class StateRouter(
 
     private fun continueToSend(show: () -> Unit) {
         if (currentState.value.isFromConfirmation) showSend() else show()
+    }
+
+    private fun getInitState() = if (isEditingDisabled) {
+        SendUiCurrentScreen(
+            type = SendUiStateType.None,
+            isFromConfirmation = false,
+        )
+    } else {
+        SendUiCurrentScreen(
+            type = SendUiStateType.Recipient,
+            isFromConfirmation = false,
+        )
     }
 }
