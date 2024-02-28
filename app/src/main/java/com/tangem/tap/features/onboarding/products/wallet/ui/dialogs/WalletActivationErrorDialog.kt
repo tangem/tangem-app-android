@@ -3,6 +3,8 @@ package com.tangem.tap.features.onboarding.products.wallet.ui.dialogs
 import android.app.Dialog
 import android.content.Context
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -19,6 +21,7 @@ object WalletActivationErrorDialog {
             setPositiveButton(R.string.common_ok) { _, _ -> dialog.onConfirm() }
             setNegativeButton(R.string.common_support) { _, _ ->
                 // changed on email support [REDACTED_TASK_KEY]
+                Analytics.send(Basic.ButtonSupport())
                 store.dispatch(GlobalAction.SendEmail(SupportInfo()))
             }
             setOnDismissListener { store.dispatchDialogHide() }
