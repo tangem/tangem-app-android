@@ -11,6 +11,8 @@ internal class AppCurrencyConverter : Converter<CurrenciesResponse.Currency, App
             code = value.code,
             name = value.name,
             symbol = value.unit,
+            iconSmallUrl = value.iconSmallUrl,
+            iconMediumUrl = value.iconMediumUrl,
         )
     }
 }
