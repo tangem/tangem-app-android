@@ -935,24 +935,17 @@ internal class SwapInteractorImpl @Inject constructor(
         amount: SwapAmount,
         fromToken: CryptoCurrency,
     ): IncludeFeeInAmount {
-        val tokenForFeeBalance =
-            userWalletManager.getNativeTokenBalance(
-                networkId,
-                fromToken.network.derivationPath.value,
-            ) ?: ProxyAmount.empty()
-
         val feeValue = when (txFee) {
             TxFeeState.Empty -> BigDecimal.ZERO
             is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeValue
             is TxFeeState.SingleFeeState -> txFee.fee.feeValue
         }
         val feePaidCurrency = getFeePaidCurrency(
-            userWalletId = UserWalletId(userWalletManager.getWalletId()),
+            userWalletId = requireNotNull(getSelectedWallet()).walletId,
             currency = fromToken,
         )
-        val amountWithFee = amount.value + feeValue
 
-        val asd: IncludeFeeInAmount = when (feePaidCurrency) {
+        return when (feePaidCurrency) {
             is FeePaidCurrency.Token -> {
                 if (feePaidCurrency.balance > feeValue) {
                     IncludeFeeInAmount.Excluded
@@ -960,43 +953,55 @@ internal class SwapInteractorImpl @Inject constructor(
                     IncludeFeeInAmount.BalanceNotEnough
                 }
             }
+            else -> getIncludeFeeAmountForCoinFee(networkId, amount, feeValue, fromToken)
+        }
+    }
+
+    private suspend fun getIncludeFeeAmountForCoinFee(
+        networkId: String,
+        amount: SwapAmount,
+        feeValue: BigDecimal,
+        fromToken: CryptoCurrency,
+    ): IncludeFeeInAmount {
+        val tokenForFeeBalance =
+            userWalletManager.getNativeTokenBalance(
+                networkId,
+                fromToken.network.derivationPath.value,
+            ) ?: ProxyAmount.empty()
+        val amountWithFee = amount.value + feeValue
+        return when {
+            fromToken is CryptoCurrency.Token -> {
+                if (feeValue > tokenForFeeBalance.value || tokenForFeeBalance.value.signum() == 0) {
+                    IncludeFeeInAmount.BalanceNotEnough
+                } else {
+                    IncludeFeeInAmount.Excluded
+                }
+            }
+            amount.value > tokenForFeeBalance.value -> {
+                IncludeFeeInAmount.BalanceNotEnough
+            }
+            amountWithFee < tokenForFeeBalance.value -> {
+                IncludeFeeInAmount.Excluded
+            }
             else -> {
-                when {
-                    fromToken is CryptoCurrency.Token -> {
-                        if (feeValue > tokenForFeeBalance.value || tokenForFeeBalance.value.signum() == 0) {
-                            IncludeFeeInAmount.BalanceNotEnough
-                        } else {
-                            IncludeFeeInAmount.Excluded
-                        }
-                    }
-                    amount.value > tokenForFeeBalance.value -> {
-                        IncludeFeeInAmount.BalanceNotEnough
-                    }
-                    amountWithFee < tokenForFeeBalance.value -> {
-                        IncludeFeeInAmount.Excluded
-                    }
-                    else -> {
-                        if (feeValue < amount.value) {
-                            IncludeFeeInAmount.Included(
-                                SwapAmount(
-                                    tokenForFeeBalance.value - feeValue,
-                                    getNativeToken(fromToken.network.backendId).decimals,
-                                ),
-                            )
-                        } else {
-                            IncludeFeeInAmount.BalanceNotEnough
-                        }
-                    }
+                if (feeValue < amount.value) {
+                    IncludeFeeInAmount.Included(
+                        SwapAmount(
+                            tokenForFeeBalance.value - feeValue,
+                            getNativeToken(fromToken.network.backendId).decimals,
+                        ),
+                    )
+                } else {
+                    IncludeFeeInAmount.BalanceNotEnough
                 }
             }
         }
-        return asd
     }
 
     private suspend fun getFormattedFiatFees(fromToken: CryptoCurrency, vararg fees: BigDecimal): List<String> {
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         val feePaidCurrency = getFeePaidCurrency(
-            userWalletId = UserWalletId(userWalletManager.getWalletId()),
+            userWalletId = requireNotNull(getSelectedWallet()).walletId,
             currency = fromToken,
         )
         val feeCurrencyId: CryptoCurrency.ID = when (feePaidCurrency) {
@@ -1411,7 +1416,7 @@ internal class SwapInteractorImpl @Inject constructor(
     ): Boolean {
         val tokenBalance = getTokenBalance(fromToken).value
         val feePaidCurrency = getFeePaidCurrency(
-            userWalletId = UserWalletId(userWalletManager.getWalletId()),
+            userWalletId = requireNotNull(getSelectedWallet()).walletId,
             currency = fromToken.currency,
         )
         return when (feePaidCurrency) {
@@ -1458,14 +1463,13 @@ internal class SwapInteractorImpl @Inject constructor(
         networkId: String,
         fromTokenStatus: CryptoCurrencyStatus,
     ): SwapFeeState {
-        val userWalletId = UserWalletId(userWalletManager.getWalletId())
+        val userWalletId = requireNotNull(getSelectedWallet()).walletId
         if (fee == null) {
             return SwapFeeState.NotEnough()
         }
 
         val percentsToFeeIncrease = BigDecimal.ONE
-        val feePaidCurrency = getFeePaidCurrency(userWalletId = userWalletId, currency = fromTokenStatus.currency)
-        return when (feePaidCurrency) {
+        return when (val feePaidCurrency = getFeePaidCurrency(userWalletId, fromTokenStatus.currency)) {
             FeePaidCurrency.Coin -> {
                 val nativeTokenBalance = userWalletManager.getNativeTokenBalance(
                     networkId,

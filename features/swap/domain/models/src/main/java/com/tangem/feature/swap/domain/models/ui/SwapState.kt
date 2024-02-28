@@ -15,7 +15,7 @@ sealed interface SwapState {
         val preparedSwapConfigState: PreparedSwapConfigState = PreparedSwapConfigState(
             isAllowedToSpend = false,
             isBalanceEnough = false,
-            feeState = SwapFeeState.Enough,
+            feeState = SwapFeeState.NotEnough(),
             hasOutgoingTransaction = false,
             includeFeeInAmount = IncludeFeeInAmount.Excluded,
         ),
