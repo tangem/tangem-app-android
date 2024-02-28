@@ -16,6 +16,11 @@ class JobHolder {
         this.job?.cancel()
         this.job = job
     }
+
+    /** Cancel current [job] */
+    fun cancel() {
+        job?.cancel()
+    }
 }
 
 fun Job.saveIn(jobHolder: JobHolder) = jobHolder.update(job = this)
