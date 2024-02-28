@@ -3,6 +3,7 @@ package com.tangem.features.send.impl.presentation.state
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
@@ -86,6 +87,29 @@ internal class SendEventStateFactory(
             onFeeNotIncreased()
             updateFeeState
         }
+    }
+
+    fun getFeeTooLowAlert(onConsume: () -> Unit): SendUiState {
+        val state = currentStateProvider()
+        val feeSelectorState = state.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return state
+        val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return state
+        val minimumValue = multipleFees.minimum.amount.value ?: return state
+        val customAmount = feeSelectorState.customValues.firstOrNull() ?: return state
+        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
+
+        val isFeeTooLow = feeSelectorState.selectedFee == FeeType.Custom && minimumValue > customValue
+        if (!isFeeTooLow) return state
+
+        return state.copy(
+            event = triggeredEvent(
+                data = SendEvent.ShowAlert(
+                    SendAlertState.FeeTooLow(
+                        onConfirmClick = clickIntents::showSend,
+                    ),
+                ),
+                onConsume = onConsume,
+            ),
+        )
     }
 
     fun getGenericErrorState(error: Throwable? = null, onConsume: () -> Unit): SendUiState {
