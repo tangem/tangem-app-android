@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
@@ -26,11 +25,11 @@ import com.tangem.features.send.impl.presentation.ui.amount.SendAmountContent
 import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
 import com.tangem.features.send.impl.presentation.ui.send.SendContent
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-internal fun SendScreen(uiState: SendUiState) {
-    val currentState = uiState.currentState.collectAsStateWithLifecycle()
-    val isSuccess = uiState.sendState.isSuccess
+internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUiCurrentScreen>) {
+    val currentState = currentStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     BackHandler { uiState.clickIntents.onBackClick() }
     Column(
@@ -45,7 +44,7 @@ internal fun SendScreen(uiState: SendUiState) {
             SendUiStateType.Amount -> R.string.send_amount_label
             SendUiStateType.Recipient -> R.string.send_recipient_label
             SendUiStateType.Fee -> R.string.common_fee_selector_title
-            SendUiStateType.Send -> if (!isSuccess) R.string.send_confirm_label else null
+            SendUiStateType.Send -> if (!uiState.sendState.isSuccess) R.string.send_confirm_label else null
             else -> null
         }
         val iconRes = if (currentState.value.type == SendUiStateType.Recipient) {
@@ -83,7 +82,6 @@ private fun SendScreenContent(
     currentState: State<SendUiCurrentScreen>,
     modifier: Modifier = Modifier,
 ) {
-    val recipientList = uiState.recipientList.collectAsLazyPagingItems()
     AnimatedContent(
         targetState = currentState.value,
         label = "Send Scree Navigation",
@@ -98,7 +96,6 @@ private fun SendScreenContent(
             SendUiStateType.Recipient -> SendRecipientContent(
                 uiState = uiState.recipientState,
                 clickIntents = uiState.clickIntents,
-                recipientList = recipientList,
             )
             SendUiStateType.Fee -> SendSpeedAndFeeContent(
                 state = uiState.feeState,
