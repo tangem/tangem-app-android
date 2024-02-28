@@ -10,11 +10,13 @@ import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +27,7 @@ class DefaultTxHistoryRepository(
     private val userWalletsStore: UserWalletsStore,
     private val txHistoryItemsStore: TxHistoryItemsStore,
 ) : TxHistoryRepository {
+    private val sdkPageConverter by lazy { SdkPageConverter() }
 
     override suspend fun getTxHistoryItemsCount(userWalletId: UserWalletId, currency: CryptoCurrency): Int {
         val userWallet = getUserWallet(userWalletId)
@@ -72,6 +75,43 @@ class DefaultTxHistoryRepository(
         } else {
             blockchain.getExploreTxUrl(txHash)
         }
+    }
+
+    override suspend fun getFixedSizeTxHistoryItems(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        pageSize: Int,
+        refresh: Boolean,
+    ): List<TxHistoryItem> {
+        cacheRegistry.invokeOnExpire(
+            key = getTxHistoryPageKey(currency, userWalletId, Page.Initial),
+            skipCache = refresh,
+            block = { fetchFixedSizeTxHistoryItems(userWalletId, currency, pageSize) },
+        )
+        val txs = txHistoryItemsStore.getSyncOrNull(
+            key = TxHistoryItemsStore.Key(userWalletId, currency),
+            page = Page.Initial,
+        )?.items
+        return txs ?: emptyList()
+    }
+
+    private fun getTxHistoryPageKey(currency: CryptoCurrency, userWalletId: UserWalletId, page: Page): String {
+        return "tx_history_page_${currency}_${userWalletId}_$page"
+    }
+
+    private suspend fun fetchFixedSizeTxHistoryItems(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        pageSize: Int,
+    ) {
+        val wrappedItems = walletManagersFacade.getTxHistoryItems(
+            userWalletId = userWalletId,
+            currency = currency,
+            page = sdkPageConverter.convertBack(Page.Initial),
+            pageSize = pageSize,
+        )
+
+        txHistoryItemsStore.store(TxHistoryItemsStore.Key(userWalletId, currency), wrappedItems)
     }
 
     private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
