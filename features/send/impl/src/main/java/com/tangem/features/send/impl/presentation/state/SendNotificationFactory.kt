@@ -1,11 +1,15 @@
 package com.tangem.features.send.impl.presentation.state
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
@@ -48,13 +52,16 @@ internal class SendNotificationFactory(
                 addFeeCoverageNotification(sendState.isSubtract, sendAmount)
                 addExistentialWarningNotification(feeAmount, sendAmount)
                 addHighFeeWarningNotification(sendAmount, sendState.ignoreAmountReduce)
+                addTooLowNotification(feeState)
             }.toImmutableList()
         }
 
-    fun dismissHighFeeWarningState(): SendUiState {
+    fun dismissNotificationState(clazz: Class<out SendNotification>): SendUiState {
         val state = currentStateProvider()
         val sendState = state.sendState
-        val updatedNotifications = sendState.notifications.filterNot { it is SendNotification.Warning.HighFeeError }
+        val notificationsToRemove = sendState.notifications.filterIsInstance(clazz)
+        val updatedNotifications = sendState.notifications.toMutableList()
+        updatedNotifications.removeAll(notificationsToRemove)
         return state.copy(
             sendState = sendState.copy(
                 ignoreAmountReduce = true,
@@ -162,6 +169,13 @@ internal class SendNotificationFactory(
                         cryptoAmount = utxoLimit.maxAmount,
                         cryptoCurrency = cryptoCurrency,
                     ),
+                    onConfirmClick = {
+                        val reduceTo = utxoLimit.maxAmount.toPlainString()
+                        clickIntents.onAmountReduceClick(
+                            reduceTo,
+                            SendNotification.Error.TransactionLimitError::class.java,
+                        )
+                    },
                 ),
             )
         }
@@ -207,9 +221,11 @@ internal class SendNotificationFactory(
                     amount = TEZOS_FEE_THRESHOLD.toPlainString(),
                     onConfirmClick = {
                         val reduceTo = sendAmount.minus(TEZOS_FEE_THRESHOLD).toPlainString()
-                        clickIntents.onAmountReduceClick(reduceTo)
+                        clickIntents.onAmountReduceClick(reduceTo, SendNotification.Warning.HighFeeError::class.java)
                     },
-                    onDismissClick = clickIntents::onAmountReduceIgnoreClick,
+                    onCloseClick = {
+                        clickIntents.onNotificationCancel(SendNotification.Warning.HighFeeError::class.java)
+                    },
                 ),
             )
         }
@@ -258,6 +274,17 @@ internal class SendNotificationFactory(
         )
         if (isSubtract) {
             add(SendNotification.Warning.NetworkCoverage(amountReducedBy, amountReduced))
+        }
+    }
+
+    private fun MutableList<SendNotification>.addTooLowNotification(feeState: SendStates.FeeState) {
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
+        val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return
+        val minimumValue = multipleFees.minimum.amount.value ?: return
+        val customAmount = feeSelectorState.customValues.firstOrNull() ?: return
+        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
+        if (feeSelectorState.selectedFee == FeeType.Custom && minimumValue > customValue) {
+            add(SendNotification.Warning.FeeTooLow)
         }
     }
 
