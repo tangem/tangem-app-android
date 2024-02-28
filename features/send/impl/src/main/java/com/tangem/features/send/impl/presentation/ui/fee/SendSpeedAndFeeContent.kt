@@ -74,10 +74,7 @@ private fun LazyListScope.middleNotifications(
     modifier: Modifier = Modifier,
 ) {
     notifications(
-        configs = configs.filter {
-            it is SendFeeNotification.Warning.TooLow ||
-                it is SendFeeNotification.Warning.TooHigh
-        }.toImmutableList(),
+        configs = configs.filterIsInstance<SendFeeNotification.Warning.TooHigh>().toImmutableList(),
         modifier = modifier,
     )
 }
