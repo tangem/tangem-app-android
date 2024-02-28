@@ -17,6 +17,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
@@ -117,7 +118,10 @@ class TransactionManagerImpl(
 
     override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: error("blockchain not found")
-        return blockchain.getExploreTxUrl(txAddress)
+        return when (val txUrlState = blockchain.getExploreTxUrl(txAddress)) {
+            TxExploreState.Unsupported -> ""
+            is TxExploreState.Url -> txUrlState.url
+        }
     }
 
     override fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
