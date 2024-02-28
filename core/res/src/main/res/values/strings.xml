@@ -455,8 +455,6 @@
     <string name="scan_card_settings_title">Get your card ready!</string>
     <string name="send_additional_field_already_included">Already included in the entered address</string>
     <string name="send_amount_label">Amount</string>
-    <string name="send_amount_substract">Subtract from send amount</string>
-    <string name="send_amount_substract_footer">The recipient will receive %s</string>
     <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
     <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
     <string name="send_alert_fee_coverage_title">Not enough funds to cover the network commission. Subtract the commission from the amount sent?</string>
