@@ -13,11 +13,14 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
@@ -32,24 +35,25 @@ internal abstract class BasicTokenListSubscriber(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : WalletSubscriber() {
 
-    protected abstract fun tokenListFlow(): MaybeTokenListFlow
+    private val sendAnalyticsJobHolder = JobHolder()
+    private val onTokenListReceivedJobHolder = JobHolder()
 
-    protected open suspend fun onTokenListReceived(tokenList: TokenList) { /* no-op */
-    }
+    protected abstract fun tokenListFlow(): MaybeTokenListFlow
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
         return combine(
             flow = tokenListFlow()
                 .onEach { maybeTokenList ->
-                    val displayedState = stateHolder.getWalletStateIfSelected(userWallet.walletId)
-
-                    tokenListAnalyticsSender.send(
-                        displayedUiState = displayedState,
-                        userWallet = userWallet,
-                        tokenList = maybeTokenList.getOrElse { return@onEach },
-                    )
+                    coroutineScope.launch {
+                        sendTokenListAnalytics(maybeTokenList)
+                    }.saveIn(sendAnalyticsJobHolder)
                 }
-                .distinctUntilChanged(),
+                .distinctUntilChanged()
+                .onEach { maybeTokenList ->
+                    coroutineScope.launch {
+                        onTokenListReceived(maybeTokenList)
+                    }.saveIn(onTokenListReceivedJobHolder)
+                },
             flow2 = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
             transform = { maybeTokenList, maybeAppCurrency ->
                 val tokenList = maybeTokenList.getOrElse { e ->
@@ -64,8 +68,21 @@ internal abstract class BasicTokenListSubscriber(
 
                 updateContent(tokenList, appCurrency)
                 walletWithFundsChecker.check(tokenList)
-                onTokenListReceived(tokenList)
             },
+        )
+    }
+
+    protected open suspend fun onTokenListReceived(maybeTokenList: Either<TokenListError, TokenList>) {
+        /* no-op */
+    }
+
+    private suspend fun sendTokenListAnalytics(maybeTokenList: Either<TokenListError, TokenList>) {
+        val displayedState = stateHolder.getWalletStateIfSelected(userWallet.walletId)
+
+        tokenListAnalyticsSender.send(
+            displayedUiState = displayedState,
+            userWallet = userWallet,
+            tokenList = maybeTokenList.getOrElse { return },
         )
     }
 
