@@ -1,8 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -31,28 +35,34 @@ internal class MultiWalletTokenListSubscriber(
 
     override fun tokenListFlow(): MaybeTokenListFlow = getTokenListUseCase(userWallet.walletId)
 
-    override suspend fun onTokenListReceived(tokenList: TokenList) {
-        updateSortingIfNeeded(tokenList)
+    override suspend fun onTokenListReceived(maybeTokenList: Either<TokenListError, TokenList>) {
+        updateSortingIfNeeded(maybeTokenList)
     }
 
-    private suspend fun updateSortingIfNeeded(tokenList: TokenList) {
-        if (tokenList.totalFiatBalance is TokenList.FiatBalance.Loading ||
-            tokenList.sortedBy == TokenList.SortType.NONE
-        ) {
-            return
-        }
+    private suspend fun updateSortingIfNeeded(maybeTokenList: Either<TokenListError, TokenList>) {
+        val tokenList = maybeTokenList.getOrElse { return }
+        if (!checkNeedSorting(tokenList)) return
 
         applyTokenListSortingUseCase(
             userWalletId = userWallet.walletId,
-            sortedTokensIds = when (tokenList) {
-                is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { group ->
-                    group.currencies.map { it.currency.id }
-                }
-                is TokenList.Ungrouped -> tokenList.currencies.map { it.currency.id }
-                is TokenList.Empty -> return
-            },
+            sortedTokensIds = getCurrenciesIds(tokenList),
             isGroupedByNetwork = tokenList is TokenList.GroupedByNetwork,
-            isSortedByBalance = true,
+            isSortedByBalance = tokenList.sortedBy == TokenList.SortType.BALANCE,
         )
+    }
+
+    private fun checkNeedSorting(tokenList: TokenList): Boolean {
+        return tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading &&
+            tokenList.sortedBy == TokenList.SortType.BALANCE
+    }
+
+    private fun getCurrenciesIds(tokenList: TokenList): List<CryptoCurrency.ID> {
+        return when (tokenList) {
+            is TokenList.GroupedByNetwork -> tokenList.groups.flatMap { group ->
+                group.currencies.map { it.currency.id }
+            }
+            is TokenList.Ungrouped -> tokenList.currencies.map { it.currency.id }
+            is TokenList.Empty -> emptyList()
+        }
     }
 }
