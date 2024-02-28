@@ -74,7 +74,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
             .appendQueryParameter("address", walletAddress)
             .appendQueryParameter("signature", signature(walletAddress))
             .appendQueryParameter("fix_currency", "true")
-            .appendQueryParameter("return_url", ExchangeUrlBuilder.SUCCESS_URL)
+            .appendQueryParameter("redirect_url", ExchangeUrlBuilder.SUCCESS_URL)
         if (isDarkTheme) builder.appendQueryParameter("theme", "1inch")
 
         blockchain.mercuryoNetwork()?.let {
