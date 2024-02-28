@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TransactionCard(
     type: TransactionCardType,
+    focusRequester: FocusRequester,
     balance: String,
     tokenIconUrl: String,
     tokenCurrency: String,
@@ -78,6 +80,7 @@ fun TransactionCard(
                 amountEquivalent = amountEquivalent,
                 textFieldValue = textFieldValue,
                 priceImpact = priceImpact,
+                focusRequester = focusRequester,
             )
         }
 
@@ -111,6 +114,7 @@ fun TransactionCard(
 @Composable
 fun TransactionCardEmpty(
     type: TransactionCardType,
+    focusRequester: FocusRequester,
     amountEquivalent: String?,
     textFieldValue: TextFieldValue?,
     modifier: Modifier = Modifier,
@@ -140,6 +144,7 @@ fun TransactionCardEmpty(
                 amountEquivalent = amountEquivalent,
                 textFieldValue = textFieldValue,
                 priceImpact = PriceImpact.Empty(),
+                focusRequester = focusRequester,
             )
         }
 
@@ -220,6 +225,7 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
 @Composable
 private fun Content(
     type: TransactionCardType,
+    focusRequester: FocusRequester,
     amountEquivalent: String?,
     priceImpact: PriceImpact,
     textFieldValue: TextFieldValue?,
@@ -264,6 +270,7 @@ private fun Content(
                 is TransactionCardType.Inputtable -> {
                     AutoSizeTextField(
                         modifier = sumTextModifier,
+                        focusRequester = focusRequester,
                         textFieldValue = textFieldValue ?: TextFieldValue(),
                         onAmountChange = { type.onAmountChanged(it) },
                         onFocusChange = type.onFocusChanged,
@@ -549,6 +556,7 @@ private fun TransactionCardPreview() {
         balance = "123",
         textFieldValue = TextFieldValue(),
         priceImpact = PriceImpact.Empty(),
+        focusRequester = FocusRequester(),
     )
 }
 
@@ -565,6 +573,7 @@ private fun TransactionCardPreviewWithPriceImpact() {
         balance = "123",
         textFieldValue = TextFieldValue(),
         priceImpact = PriceImpact.Value(0.15F),
+        focusRequester = FocusRequester(),
     )
 }
 
@@ -581,6 +590,7 @@ private fun TransactionCardPreviewWithoutPriceImpact() {
         balance = "123",
         textFieldValue = TextFieldValue(),
         priceImpact = PriceImpact.Empty(),
+        focusRequester = FocusRequester(),
     )
 }
 

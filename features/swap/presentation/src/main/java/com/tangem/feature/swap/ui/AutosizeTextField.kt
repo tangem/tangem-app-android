@@ -11,7 +11,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -32,12 +31,12 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 internal fun AutoSizeTextField(
     textFieldValue: TextFieldValue,
+    focusRequester: FocusRequester,
     onAmountChange: (String) -> Unit,
     onFocusChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
-    val textFieldFocusRequester = remember { FocusRequester() }
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         var shrunkFontSize = TangemTheme.typography.h2.fontSize
@@ -73,7 +72,7 @@ internal fun AutoSizeTextField(
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(textFieldFocusRequester)
+                    .focusRequester(focusRequester)
                     .onFocusChanged { onFocusChange(it.hasFocus) },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Done,
@@ -98,7 +97,7 @@ internal fun AutoSizeTextField(
             )
 
             LaunchedEffect(Unit) {
-                textFieldFocusRequester.requestFocus()
+                focusRequester.requestFocus()
             }
         }
     }

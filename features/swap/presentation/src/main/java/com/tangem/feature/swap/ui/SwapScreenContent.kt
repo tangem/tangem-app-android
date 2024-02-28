@@ -10,8 +10,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -167,6 +169,7 @@ private fun TransactionCardData(
     onSelectTokenClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val focusRequester = remember { FocusRequester() }
     when (swapCardState) {
         is SwapCardState.Empty -> {
             TransactionCardEmpty(
@@ -175,6 +178,7 @@ private fun TransactionCardData(
                 textFieldValue = swapCardState.amountTextFieldValue,
                 onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
                 modifier = modifier,
+                focusRequester = focusRequester,
             )
         }
         is SwapCardState.SwapCardData -> {
@@ -196,6 +200,7 @@ private fun TransactionCardData(
                 },
                 onChangeTokenClick = if (swapCardState.canSelectAnotherToken) onSelectTokenClick else null,
                 modifier = modifier,
+                focusRequester = focusRequester,
             )
         }
     }
