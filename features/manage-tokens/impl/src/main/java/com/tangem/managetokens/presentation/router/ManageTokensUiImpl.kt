@@ -15,7 +15,7 @@ internal class ManageTokensUiImpl @Inject constructor() : ManageTokensUi {
     @Composable
     override fun Content(onHeaderSizeChange: (Dp) -> Unit, state: State<ExpandableState>) {
         val viewModel = hiltViewModel<ManageTokensViewModel>()
-        viewModel.setVisibilityState(state)
+        viewModel.setExpandableState(state)
 
         ManageTokensScreen(
             state = viewModel.uiState,

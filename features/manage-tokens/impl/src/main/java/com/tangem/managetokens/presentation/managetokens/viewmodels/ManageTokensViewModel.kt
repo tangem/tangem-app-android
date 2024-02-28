@@ -130,7 +130,7 @@ internal class ManageTokensViewModel @Inject constructor(
         }
     }
 
-    fun setVisibilityState(state: State<ExpandableState>) {
+    fun setExpandableState(state: State<ExpandableState>) {
         expandableState = state.value
     }
 
