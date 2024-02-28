@@ -394,6 +394,9 @@ internal class SendViewModel @Inject constructor(
         val currentState = stateRouter.currentState.value
         val isCurrentFee = currentState.type == SendUiStateType.Fee
         if (isCurrentFee) {
+            uiState = eventStateFactory.getFeeTooLowAlert(
+                onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+            )
             val isFeeCoverage = checkFeeCoverage(uiState, cryptoCurrencyStatus)
             if (isAmountSubtractAvailable && isFeeCoverage) {
                 uiState = eventStateFactory.getFeeCoverageAlert(
@@ -606,6 +609,10 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
     }
 
+    override fun showSend() {
+        stateRouter.showSend()
+    }
+
     override fun onExploreClick() {
         analyticsEventHandler.send(SendAnalyticEvents.ExploreButtonClicked)
         innerRouter.openUrl(uiState.sendState.txUrl)
@@ -615,14 +622,14 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
     }
 
-    override fun onAmountReduceClick(reducedAmount: String) {
+    override fun onAmountReduceClick(reducedAmount: String, clazz: Class<out SendNotification>) {
         uiState = amountStateFactory.getOnAmountValueChange(reducedAmount)
-        uiState = sendNotificationFactory.dismissHighFeeWarningState()
+        uiState = sendNotificationFactory.dismissNotificationState(clazz)
         loadFee()
     }
 
-    override fun onAmountReduceIgnoreClick() {
-        uiState = sendNotificationFactory.dismissHighFeeWarningState()
+    override fun onNotificationCancel(clazz: Class<out SendNotification>) {
+        uiState = sendNotificationFactory.dismissNotificationState(clazz)
     }
 
     private fun verifyAndSendTransaction() {
