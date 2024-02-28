@@ -453,8 +453,6 @@
     <string name="scan_card_settings_title">Приготовьте свою карту</string>
     <string name="send_additional_field_already_included">Уже содержится в введенном адресе</string>
     <string name="send_amount_label">Сумма</string>
-    <string name="send_amount_substract">Вычесть из суммы отправки</string>
-    <string name="send_amount_substract_footer">Сумма к получению %s</string>
     <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
     <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
     <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию из отправляемой сумму?</string>
