@@ -28,7 +28,8 @@ internal class StateRouter(
         },
     )
 
-    val currentState: StateFlow<SendUiCurrentScreen> = mutableCurrentState
+    val currentState: StateFlow<SendUiCurrentScreen>
+        get() = mutableCurrentState
 
     fun popBackStack() {
         fragmentManager.get()?.popBackStack()
