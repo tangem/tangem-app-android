@@ -810,7 +810,7 @@ internal class SwapViewModel @Inject constructor(
         dataState.fromCryptoCurrency?.let {
             val balance = swapInteractor.getTokenBalance(it)
             val patchedBalance = balance.copy(
-                value = balance.value - TEZOS_FEE_THRESHOLD
+                value = balance.value - TEZOS_FEE_THRESHOLD,
             )
             onAmountChanged(patchedBalance.formatToUIRepresentation())
         }
@@ -877,7 +877,8 @@ internal class SwapViewModel @Inject constructor(
             onAmountReduceIgnoreClick = {
                 uiState = uiState.copy(
                     ignoreAmountReduce = true,
-                    warnings = uiState.warnings.filter { it !is SwapWarning.ReduceAmount })
+                    warnings = uiState.warnings.filter { it !is SwapWarning.ReduceAmount },
+                )
             },
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()

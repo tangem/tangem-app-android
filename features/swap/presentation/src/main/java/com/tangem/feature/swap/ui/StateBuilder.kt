@@ -418,9 +418,9 @@ internal class StateBuilder(
                     SwapWarning.NeedReserveToCreateAccount(
                         notificationConfig = createActivateAccountWarning(
                             status.amountToCreateAccount,
-                            quoteModel.toTokenInfo.cryptoCurrencyStatus.currency.name
+                            quoteModel.toTokenInfo.cryptoCurrencyStatus.currency.name,
                         ),
-                    )
+                    ),
                 )
             }
         }
@@ -442,8 +442,8 @@ internal class StateBuilder(
                         amount = tezosFeeThreshold.toPlainString(),
                         onConfirmClick = actions.onAmountReduce,
                         onDismissClick = actions.onAmountReduceIgnoreClick,
-                    )
-                )
+                    ),
+                ),
             )
         }
     }
@@ -1312,10 +1312,10 @@ internal class StateBuilder(
         return NotificationConfig(
             title = resourceReference(
                 id = R.string.send_notification_invalid_reserve_amount_title,
-                formatArgs = wrappedList("$amount $token")
+                formatArgs = wrappedList("$amount $token"),
             ),
             subtitle = resourceReference(R.string.send_notification_invalid_reserve_amount_text),
-            iconResId = R.drawable.img_attention_20
+            iconResId = R.drawable.img_attention_20,
         )
     }
 
