@@ -5,11 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.tap.features.main.model.MainScreenState
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,6 +22,8 @@ internal class MainViewModel @Inject constructor(
     private val updateBalanceHidingSettingsUseCase: UpdateBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val reduxNavController: ReduxNavController,
+    private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
+    private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
 
@@ -33,9 +37,16 @@ internal class MainViewModel @Inject constructor(
     val state: StateFlow<MainScreenState> = stateHolder.stateFlow
 
     init {
+        updateAppCurrencies()
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
+    }
+
+    private fun updateAppCurrencies() {
+        viewModelScope.launch(dispatchers.main) {
+            fetchAppCurrenciesUseCase.invoke()
+        }
     }
 
     private fun observeFlips() {
