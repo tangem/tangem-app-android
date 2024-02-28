@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
@@ -69,11 +70,9 @@ class DefaultTxHistoryRepository(
 
     override fun getTxExploreUrl(txHash: String, networkId: Network.ID): String {
         val blockchain = Blockchain.fromId(networkId.value)
-        // TODO: Fix ton tx urls [REDACTED_TASK_KEY]
-        return if (blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet) {
-            ""
-        } else {
-            blockchain.getExploreTxUrl(txHash)
+        return when (val txExploreState = blockchain.getExploreTxUrl(txHash)) {
+            is TxExploreState.Url -> txExploreState.url
+            is TxExploreState.Unsupported -> ""
         }
     }
 
