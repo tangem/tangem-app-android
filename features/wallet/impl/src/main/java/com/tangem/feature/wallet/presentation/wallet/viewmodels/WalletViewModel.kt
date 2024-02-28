@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -82,11 +83,9 @@ internal class WalletViewModel @Inject constructor(
         clickIntents.initialize(router, viewModelScope)
     }
 
-    fun setManageTokenBottomSheetVisibilityChanged(
-        onManageTokenBottomSheetVisibilityChanged: (ExpandableState) -> Unit,
-    ) {
+    fun setExpandableState(state: MutableState<ExpandableState>) {
         stateHolder.update {
-            it.copy(onManageTokenBottomSheetVisibilityChanged = onManageTokenBottomSheetVisibilityChanged)
+            it.copy(expandableState = state)
         }
     }
 

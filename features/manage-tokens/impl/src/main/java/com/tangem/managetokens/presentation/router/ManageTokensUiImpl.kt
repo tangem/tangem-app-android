@@ -1,6 +1,7 @@
 package com.tangem.managetokens.presentation.router
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tangem.features.managetokens.navigation.ExpandableState
@@ -12,14 +13,13 @@ import javax.inject.Inject
 internal class ManageTokensUiImpl @Inject constructor() : ManageTokensUi {
 
     @Composable
-    override fun content(onHeaderSizeChange: (Dp) -> Unit): (ExpandableState) -> Unit {
+    override fun Content(onHeaderSizeChange: (Dp) -> Unit, state: State<ExpandableState>) {
         val viewModel = hiltViewModel<ManageTokensViewModel>()
+        viewModel.setVisibilityState(state)
 
         ManageTokensScreen(
             state = viewModel.uiState,
             onHeaderSizeChange = onHeaderSizeChange,
         )
-
-        return viewModel::onChangeVisibilityState
     }
 }

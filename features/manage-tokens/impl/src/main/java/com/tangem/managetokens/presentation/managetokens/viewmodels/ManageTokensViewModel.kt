@@ -1,8 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.viewmodels
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -76,7 +74,7 @@ internal class ManageTokensViewModel @Inject constructor(
     var uiState: ManageTokensState by mutableStateOf(stateFactory.getInitialState(flowOf(PagingData.from(emptyList()))))
         private set
 
-    var expandableState: ExpandableState = ExpandableState.COLLAPSED
+    private var expandableState: ExpandableState = ExpandableState.COLLAPSED
 
     private val currenciesListJobHolder: JobHolder = JobHolder()
 
@@ -132,8 +130,8 @@ internal class ManageTokensViewModel @Inject constructor(
         }
     }
 
-    fun onChangeVisibilityState(state: ExpandableState) {
-        expandableState = state
+    fun setVisibilityState(state: State<ExpandableState>) {
+        expandableState = state.value
     }
 
     private suspend fun subscribeToCurrencies(userWallets: List<UserWallet>) {

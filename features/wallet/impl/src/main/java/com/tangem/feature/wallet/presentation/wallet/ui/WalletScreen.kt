@@ -268,10 +268,10 @@ private fun BaseScaffoldManageTokenRedesign(
     // hide keyboard when bottom sheet is about to be hidden
     LaunchedEffect(sheetHasBeenHidden) {
         if (sheetHasBeenHidden) {
-            state.onManageTokenBottomSheetVisibilityChanged(ExpandableState.COLLAPSED)
+            state.expandableState.value = ExpandableState.COLLAPSED
             keyboardController?.hide()
         } else {
-            state.onManageTokenBottomSheetVisibilityChanged(ExpandableState.EXPANDED)
+            state.expandableState.value = ExpandableState.EXPANDED
         }
     }
 
