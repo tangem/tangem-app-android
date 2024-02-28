@@ -1241,7 +1241,7 @@ internal class StateBuilder(
     private fun createNetworkFeeCoverageNotificationConfig(): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.send_network_fee_warning_title),
-            subtitle = resourceReference(R.string.send_network_fee_warning_content),
+            subtitle = resourceReference(R.string.swapping_network_fee_warning_content),
             iconResId = R.drawable.img_attention_20,
         )
     }

@@ -544,6 +544,7 @@
     <string name="swapping_alert_title">Комиссии</string>
     <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя</string>
     <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
+    <string name="swapping_network_fee_warning_content">Сумма отправки будет уменьшена для покрытия выбранного уровня комиссии</string>
     <string name="swapping_not_enough_funds_for_fee">Недостаточно средств для оплаты комиссии на вашем %1$s кошельке для создания транзакции. Сначала пополните свой %2$s кошелек.</string>
     <string name="swapping_pending_transaction_subtitle">Транзакция в процессе…</string>
     <string name="swapping_pending_transaction_title">Подождите</string>
