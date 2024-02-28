@@ -20,11 +20,6 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
             buttonsState = buttonsState,
         ),
     ) {
-        object TooLow : Warning(
-            title = resourceReference(id = R.string.send_notification_transaction_delay_title),
-            subtitle = resourceReference(id = R.string.send_notification_transaction_delay_text),
-        )
-
         data class TooHigh(
             val value: String,
         ) : Warning(
