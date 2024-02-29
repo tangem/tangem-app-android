@@ -2,12 +2,14 @@ package com.tangem.features.send.impl.presentation.state
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
@@ -30,6 +32,7 @@ internal class SendNotificationFactory(
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val stateRouterProvider: Provider<StateRouter>,
     private val clickIntents: SendClickIntents,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     fun create(): Flow<ImmutableList<SendNotification>> = stateRouterProvider().currentState
@@ -285,6 +288,11 @@ internal class SendNotificationFactory(
         val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
         if (feeSelectorState.selectedFee == FeeType.Custom && minimumValue > customValue) {
             add(SendNotification.Warning.FeeTooLow)
+            analyticsEventHandler.send(
+                SendAnalyticEvents.NoticeTransactionDelays(
+                    cryptoCurrencyStatusProvider().currency.symbol,
+                ),
+            )
         }
     }
 
