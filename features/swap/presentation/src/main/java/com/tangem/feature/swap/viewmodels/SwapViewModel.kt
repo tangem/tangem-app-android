@@ -49,7 +49,6 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.math.absoluteValue
 import kotlin.properties.Delegates
 
 typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
@@ -325,7 +324,7 @@ internal class SwapViewModel @Inject constructor(
                     val (provider, state) = updateLoadedQuotes(providersState)
                     setupLoadedState(provider, state, fromToken)
                     val successStates = providersState.getLastLoadedSuccessStates()
-                    val pricesLowerBest = getPricesLowerBest(successStates)
+                    val pricesLowerBest = getPricesLowerBest(provider.providerId, successStates)
                     uiState = stateBuilder.updateProvidersBottomSheetContent(
                         uiState = uiState,
                         pricesLowerBest = pricesLowerBest,
@@ -908,13 +907,14 @@ internal class SwapViewModel @Inject constructor(
             onProviderClick = { providerId ->
                 analyticsEventHandler.send(SwapEvents.ProviderClicked)
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
-                val pricesLowerBest = getPricesLowerBest(states)
+                val pricesLowerBest = getPricesLowerBest(providerId, states)
                 val unavailableProviders = getUnavailableProvidersFor(dataState.lastLoadedSwapStates)
                 uiState = stateBuilder.showSelectProviderBottomSheet(
                     uiState = uiState,
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
                     unavailableProviders = unavailableProviders,
+                    bestRatedProviderId = findBestQuoteProvider(states)?.providerId ?: providerId,
                     providersStates = dataState.lastLoadedSwapStates,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
@@ -1023,17 +1023,18 @@ internal class SwapViewModel @Inject constructor(
         }?.key
     }
 
-    private fun getPricesLowerBest(state: SuccessLoadedSwapData): Map<String, Float> {
-        val bestRateEntry = state.maxByOrNull { it.value.toTokenInfo.tokenAmount.value } ?: return emptyMap()
-        val bestRate = bestRateEntry.value.toTokenInfo.tokenAmount.value
+    private fun getPricesLowerBest(selectedProviderId: String, state: SuccessLoadedSwapData): Map<String, Float> {
+        val selectedProviderEntry = state.filter { it.key.providerId == selectedProviderId }.entries.firstOrNull()
+            ?: return emptyMap()
+        val selectedProviderRate = selectedProviderEntry.value.toTokenInfo.tokenAmount.value
         val hundredPercent = BigDecimal("100")
         return state.entries.mapNotNull {
-            if (it.key != bestRateEntry.key) {
+            if (it.key != selectedProviderEntry.key) {
                 val amount = it.value.toTokenInfo.tokenAmount.value
                 val percentDiff = BigDecimal.ONE.minus(
-                    amount.divide(bestRate, RoundingMode.HALF_UP),
+                    selectedProviderRate.divide(amount, RoundingMode.HALF_UP),
                 ).multiply(hundredPercent)
-                it.key.providerId to percentDiff.setScale(2, RoundingMode.HALF_UP).toFloat().absoluteValue
+                it.key.providerId to percentDiff.setScale(2, RoundingMode.HALF_UP).toFloat()
             } else {
                 null
             }

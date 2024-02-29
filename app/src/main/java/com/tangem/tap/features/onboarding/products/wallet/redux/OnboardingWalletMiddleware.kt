@@ -28,6 +28,7 @@ import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
@@ -403,8 +404,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(true))
             backupService.addBackupCard { result ->
                 backupService.skipCompatibilityChecks = false
-                store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk
-                    .config.filter.cardIdFilter = null
+                store.inject(DaggerGraphState::cardSdkConfigRepository).sdk.config.filter.cardIdFilter = null
                 store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(false))
                 when (result) {
                     is CompletionResult.Success -> {
