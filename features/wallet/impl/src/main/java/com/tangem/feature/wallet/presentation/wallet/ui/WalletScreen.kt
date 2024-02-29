@@ -372,6 +372,7 @@ private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: (
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("CyclomaticComplexMethod")
 @Composable
 private fun BottomSheetStateEffects(
     bottomSheetState: SheetState,
@@ -449,7 +450,6 @@ private fun BottomSheetStateEffects(
             state.manageTokensExpandableState.value = ExpandableState.EXPANDED
         }
     }
-
 }
 
 /**
