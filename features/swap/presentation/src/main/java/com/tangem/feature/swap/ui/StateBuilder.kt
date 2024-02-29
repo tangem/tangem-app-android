@@ -90,7 +90,7 @@ internal class StateBuilder(
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             providerState = ProviderState.Empty(),
             shouldShowMaxAmount = false,
-            ignoreAmountReduce = false,
+            reduceAmountIgnore = false,
             priceImpact = PriceImpact.Empty(),
         )
     }
@@ -220,7 +220,7 @@ internal class StateBuilder(
         val warnings = getWarningsForSuccessState(
             quoteModel = quoteModel,
             fromToken = fromToken,
-            ignoreAmountReduce = uiStateHolder.ignoreAmountReduce,
+            ignoreAmountReduce = uiStateHolder.reduceAmountIgnore,
             tezosFeeThreshold = tezosFeeThresHold,
         )
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)

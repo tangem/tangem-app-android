@@ -876,7 +876,7 @@ internal class SwapViewModel @Inject constructor(
             onReduceAmount = ::onReduceAmountClicked,
             onReduceAmountIgnoreClick = {
                 uiState = uiState.copy(
-                    ignoreAmountReduce = true,
+                    reduceAmountIgnore = true,
                     warnings = uiState.warnings.filter { it !is SwapWarning.ReduceAmount },
                 )
             },
