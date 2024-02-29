@@ -5,6 +5,7 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.persistentListOf
 
 internal class SendRecipientStateConverter(
     private val clickIntents: SendClickIntents,
@@ -25,6 +26,8 @@ internal class SendRecipientStateConverter(
             memoTextField = memoFieldConverter.convertOrNull(),
             network = cryptoCurrencyStatusProvider().currency.network.name,
             isPrimaryButtonEnabled = false,
+            wallets = persistentListOf(),
+            recent = persistentListOf(),
         )
     }
 }
