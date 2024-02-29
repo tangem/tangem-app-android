@@ -87,11 +87,13 @@ private fun PriceChangeIcon(type: PriceChangeType) {
                 id = when (animatedType) {
                     PriceChangeType.UP -> R.drawable.ic_arrow_up_8
                     PriceChangeType.DOWN -> R.drawable.ic_arrow_down_8
+                    PriceChangeType.NEUTRAL -> R.drawable.ic_elipse_8
                 },
             ),
             tint = when (animatedType) {
                 PriceChangeType.UP -> TangemTheme.colors.icon.accent
                 PriceChangeType.DOWN -> TangemTheme.colors.icon.warning
+                PriceChangeType.NEUTRAL -> TangemTheme.colors.icon.inactive
             },
             contentDescription = null,
         )
@@ -106,6 +108,7 @@ private fun PriceChangeText(type: PriceChangeType?, text: String?, modifier: Mod
             color = when (type) {
                 PriceChangeType.UP -> TangemTheme.colors.text.accent
                 PriceChangeType.DOWN -> TangemTheme.colors.text.warning
+                PriceChangeType.NEUTRAL -> TangemTheme.colors.text.disabled
                 null -> TangemTheme.colors.text.tertiary
             },
             overflow = TextOverflow.Ellipsis,
