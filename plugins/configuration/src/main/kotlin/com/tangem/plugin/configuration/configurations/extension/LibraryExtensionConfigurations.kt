@@ -21,6 +21,7 @@ private fun LibraryExtension.configureDefaultConfig() {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildFeatures.buildConfig = true
     }
 }
 
