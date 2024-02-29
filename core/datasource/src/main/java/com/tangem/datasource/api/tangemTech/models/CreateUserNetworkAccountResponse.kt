@@ -12,6 +12,6 @@ data class CreateUserNetworkAccountResponse(
     @JsonClass(generateAdapter = true)
     data class AccountCreated(
         @Json(name = "accountId") val accountId: String,
-        @Json(name = "publicWalletKey") val publicWalletKey: String,
+        @Json(name = "walletPublicKey") val walletPublicKey: String,
     )
 }

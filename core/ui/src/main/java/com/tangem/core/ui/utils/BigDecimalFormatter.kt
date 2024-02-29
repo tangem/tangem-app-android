@@ -14,12 +14,18 @@ object BigDecimalFormatter {
 
     private const val TEMP_CURRENCY_CODE = "USD"
 
-    fun formatCryptoAmount(cryptoAmount: BigDecimal?, cryptoCurrency: String, decimals: Int): String {
+    fun formatCryptoAmount(
+        cryptoAmount: BigDecimal?,
+        cryptoCurrency: String,
+        decimals: Int,
+        locale: Locale = Locale.getDefault(),
+    ): String {
         if (cryptoAmount == null) return EMPTY_BALANCE_SIGN
 
-        val formatter = NumberFormat.getNumberInstance().apply {
+        val formatter = NumberFormat.getNumberInstance(locale).apply {
             maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
             minimumFractionDigits = 2
+            isGroupingUsed = true
             roundingMode = RoundingMode.DOWN
         }
 
@@ -32,8 +38,12 @@ object BigDecimalFormatter {
         }
     }
 
-    fun formatCryptoAmount(cryptoAmount: BigDecimal?, cryptoCurrency: CryptoCurrency): String {
-        return formatCryptoAmount(cryptoAmount, cryptoCurrency.symbol, cryptoCurrency.decimals)
+    fun formatCryptoAmount(
+        cryptoAmount: BigDecimal?,
+        cryptoCurrency: CryptoCurrency,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        return formatCryptoAmount(cryptoAmount, cryptoCurrency.symbol, cryptoCurrency.decimals, locale)
     }
 
     fun formatFiatAmount(
