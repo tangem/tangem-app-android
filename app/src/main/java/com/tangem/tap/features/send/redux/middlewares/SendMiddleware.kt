@@ -24,10 +24,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.analytics.events.Token.Send.SelectedCurrency.CurrencyType
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -211,7 +208,7 @@ private fun sendTransaction(
         //     return@launch
         // }
 
-        val tangemSdk = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk
+        val tangemSdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk
         val linkedTerminalState = tangemSdk.config.linkedTerminal
         if (card.isStart2Coin) {
             tangemSdk.config.linkedTerminal = false
