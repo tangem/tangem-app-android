@@ -203,9 +203,9 @@ internal class SendNotificationFactory(
                     amount = TEZOS_FEE_THRESHOLD.toPlainString(),
                     onConfirmClick = {
                         val reduceTo = sendAmount.minus(TEZOS_FEE_THRESHOLD).toPlainString()
-                        clickIntents.onAmountReduceClick(reduceTo)
+                        clickIntents.onReduceAmountClick(reduceTo)
                     },
-                    onDismissClick = clickIntents::onAmountReduceIgnoreClick,
+                    onDismissClick = clickIntents::onReduceAmountIgnoreClick,
                 ),
             )
         }

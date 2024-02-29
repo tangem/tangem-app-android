@@ -61,8 +61,9 @@ internal interface SendClickIntents {
 
     fun onShareClick()
 
-    fun onAmountReduceClick(reducedAmount: String)
+    fun onReduceAmountClick(reducedAmount: String)
 
-    fun onAmountReduceIgnoreClick()
+    fun onReduceAmountIgnoreClick()
+
     // endregion
 }

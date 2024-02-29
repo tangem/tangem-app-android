@@ -440,8 +440,8 @@ internal class StateBuilder(
                 SwapWarning.ReduceAmount(
                     notificationConfig = createReduceAmount(
                         amount = tezosFeeThreshold.toPlainString(),
-                        onConfirmClick = actions.onAmountReduce,
-                        onDismissClick = actions.onAmountReduceIgnoreClick,
+                        onConfirmClick = actions.onReduceAmount,
+                        onDismissClick = actions.onReduceAmountIgnoreClick,
                     ),
                 ),
             )

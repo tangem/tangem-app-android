@@ -873,8 +873,8 @@ internal class SwapViewModel @Inject constructor(
                 onSearchEntered("")
             },
             onMaxAmountSelected = ::onMaxAmountClicked,
-            onAmountReduce = ::onReduceAmountClicked,
-            onAmountReduceIgnoreClick = {
+            onReduceAmount = ::onReduceAmountClicked,
+            onReduceAmountIgnoreClick = {
                 uiState = uiState.copy(
                     ignoreAmountReduce = true,
                     warnings = uiState.warnings.filter { it !is SwapWarning.ReduceAmount },
@@ -1157,12 +1157,12 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    companion object {
-        private const val loggingTag = "SwapViewModel"
-        private const val INITIAL_AMOUNT = ""
-        private const val UPDATE_DELAY = 10000L
-        private const val DEBOUNCE_AMOUNT_DELAY = 1000L
-        private const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
-        private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
+    private companion object {
+        const val loggingTag = "SwapViewModel"
+        const val INITIAL_AMOUNT = ""
+        const val UPDATE_DELAY = 10000L
+        const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
+        val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
     }
 }
