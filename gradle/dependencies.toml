@@ -3,10 +3,10 @@
 
 [versions]
 # region Classpath
-androidGradlePlugin = "7.4.2"
+androidGradlePlugin = "8.2.2"
 firebaseCrashlytics = "2.9.4"
 googleServices = "4.3.10"
-kotlin = "1.8.21"
+kotlin = "1.9.22"
 # endregion Classpath
 
 # region AndroidX
@@ -24,17 +24,17 @@ androidx-datastore = "1.0.0"
 # endregion AndroidX
 
 # region Compose
-compose-compiler = "1.4.7"
-compose-runtime = "1.5.3"
-compose-foundation = "1.5.3"
-compose-material = "1.5.3"
-compose-material3 = "1.1.2"
+compose-compiler = "1.5.9"
+compose-runtime = "1.6.1"
+compose-foundation = "1.6.1"
+compose-material = "1.6.1"
+compose-material3 = "1.2.0"
 compose-constraint = "1.0.1"
-compose-navigation = "2.7.4"
+compose-navigation = "2.7.7"
 compose-accompanist = "0.30.1"
 compose-paging = "3.2.1"
 compose-reorderable = "0.9.6"
-compose-lifecycle-runtime = "2.6.2"
+compose-lifecycle-runtime = "2.7.0"
 # endregion Compose
 
 # region Other libraries
@@ -50,7 +50,7 @@ googleMaterialComponent = "1.6.1"
 googlePlayCore = "1.10.3"
 googlePlayCoreKtx = "1.8.1"
 googlePlayServicesWallet = "19.1.0"
-hilt = "2.44"
+hilt = "2.46"
 hilt-navigation = "1.0.0"
 jodatime = "2.12.1"
 kotlin-immutable-collections = "0.3.5"
@@ -85,9 +85,9 @@ web3j = "4.10.1"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.7-504"
+tangemBlockchainSdk = "develop-505"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.7-329"
+tangemCardSdk = "develop-324"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
