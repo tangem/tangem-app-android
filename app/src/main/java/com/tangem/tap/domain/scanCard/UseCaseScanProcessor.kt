@@ -6,14 +6,13 @@ import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.StateDialog
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.domain.scanCard.chains.AnalyticsChain
-import com.tangem.tap.domain.scanCard.chains.CheckForOnboardingChain
-import com.tangem.tap.domain.scanCard.chains.DisclaimerChain
-import com.tangem.tap.domain.scanCard.chains.ScanChainException
+import com.tangem.tap.domain.scanCard.chains.*
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -47,6 +46,7 @@ internal object UseCaseScanProcessor {
     ) = progressScope(onProgressStateChange) {
         val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         val chains = buildList {
+            add(UnsuccessfulScansCounterChain(UseCaseScanProcessor::showMaxUnsuccessfulScansReachedDialog))
             if (analyticsEvent != null) {
                 add(AnalyticsChain(analyticsEvent))
             }
@@ -58,6 +58,10 @@ internal object UseCaseScanProcessor {
             ifLeft = { proceedWithException(it, onWalletNotCreated, onFailure) },
             ifRight = { onSuccess(it) },
         )
+    }
+
+    private fun showMaxUnsuccessfulScansReachedDialog() {
+        store.dispatchDialogShow(StateDialog.ScanFailsDialog)
     }
 
     private suspend fun proceedWithException(
