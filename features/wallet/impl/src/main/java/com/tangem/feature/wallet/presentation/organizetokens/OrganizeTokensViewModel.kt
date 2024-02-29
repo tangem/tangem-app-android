@@ -147,9 +147,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
                     stateHolder.updateStateToHideProgress()
-                    withContext(
-                        dispatchers.main,
-                    ) { router.popBackStack() }
+                    withContext(dispatchers.main) { router.popBackStack() }
                 },
             )
         }
