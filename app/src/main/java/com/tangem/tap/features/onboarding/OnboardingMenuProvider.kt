@@ -22,7 +22,8 @@ class OnboardingMenuProvider : MenuProvider {
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean = when (menuItem.itemId) {
         R.id.menu_item_chat_support -> {
             Analytics.send(Onboarding.ButtonChat())
-            store.dispatch(GlobalAction.OpenChat(SupportInfo()))
+            // changed on email support [REDACTED_TASK_KEY]
+            store.dispatch(GlobalAction.SendEmail(SupportInfo()))
             true
         }
         else -> false
