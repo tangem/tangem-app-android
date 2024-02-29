@@ -1,14 +1,14 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
-import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
-import java.math.BigDecimal
 
 /**
- * Calculate receiving amount when fee is subtracted from sending amount
+ * Check if sending amount with fee is greater than balance
  */
-internal fun calculateReceiveAmount(state: SendUiState, feeAmount: Fee): BigDecimal {
-    val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
-    val fee = feeAmount.amount.value ?: return BigDecimal.ZERO
-    return amountValue.minus(fee)
+internal fun checkFeeCoverage(state: SendUiState, cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
+    val balance = cryptoCurrencyStatus.value.amount ?: return false
+    val fee = state.feeState?.fee?.amount?.value ?: return false
+    val amount = state.amountState?.amountTextField?.cryptoAmount?.value ?: return false
+    return balance <= amount + fee
 }
