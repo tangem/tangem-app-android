@@ -6,6 +6,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.feature.tester.impl"
+}
+
 dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
