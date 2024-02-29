@@ -10,7 +10,10 @@ import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.domain.scanCard.chains.*
+import com.tangem.tap.domain.scanCard.chains.AnalyticsChain
+import com.tangem.tap.domain.scanCard.chains.CheckForOnboardingChain
+import com.tangem.tap.domain.scanCard.chains.DisclaimerChain
+import com.tangem.tap.domain.scanCard.chains.ScanChainException
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -37,17 +40,13 @@ internal object UseCaseScanProcessor {
         analyticsEvent: AnalyticsEvent?,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
-        onScanStateChange: suspend (scanInProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
         disclaimerWillShow: () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) = progressScope(onProgressStateChange) {
-        onScanStateChange(true)
-
         val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         val chains = buildList {
-            add(ScanningFinishedChain { onScanStateChange(false) })
             if (analyticsEvent != null) {
                 add(AnalyticsChain(analyticsEvent))
             }
@@ -55,9 +54,10 @@ internal object UseCaseScanProcessor {
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
         }
 
-        scanCardUseCase(cardId, afterScanChains = chains)
-            .map { onSuccess(it) }
-            .mapLeft { proceedWithException(it, onWalletNotCreated, onFailure) }
+        scanCardUseCase(cardId, afterScanChains = chains).fold(
+            ifLeft = { proceedWithException(it, onWalletNotCreated, onFailure) },
+            ifRight = { onSuccess(it) },
+        )
     }
 
     private suspend fun proceedWithException(
@@ -89,8 +89,7 @@ internal object UseCaseScanProcessor {
                 navigateTo(exception.onboardingRoute)
                 onWalletNotCreated()
             }
-            is ScanChainException.DisclaimerWasCanceled,
-            -> onFailure(scanCardExceptionConverter.convertBack(exception))
+            is ScanChainException.DisclaimerWasCanceled -> onFailure(scanCardExceptionConverter.convertBack(exception))
         }
     }
 
