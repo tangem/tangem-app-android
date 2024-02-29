@@ -54,7 +54,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         // When
         val result = useCase(
             userWalletId = userWalletId,
-            sortedTokensIds = MockTokens.tokens.map { it.id },
+            sortedTokensIds = MockTokens.tokens.map { it.id }.sortedByDescending { it.value },
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )

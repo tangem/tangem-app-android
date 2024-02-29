@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -31,9 +32,10 @@ internal class EthereumCustomFeeConverter(
 ) : Converter<Fee.Ethereum, ImmutableList<SendTextField.CustomFee>> {
 
     override fun convert(value: Fee.Ethereum): ImmutableList<SendTextField.CustomFee> {
+        val feeValue = value.amount.value
         return persistentListOf(
             SendTextField.CustomFee(
-                value = value.amount.value?.parseBigDecimal(value.amount.decimals).orEmpty(),
+                value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
                 decimals = value.amount.decimals,
                 symbol = value.amount.currencySymbol,
                 onValueChange = { clickIntents.onCustomFeeValueChange(FEE_AMOUNT, it) },
@@ -43,7 +45,7 @@ internal class EthereumCustomFeeConverter(
                 ),
                 title = resourceReference(R.string.send_max_fee),
                 footer = resourceReference(R.string.send_max_fee_footer),
-                label = getFeeFormatted(value.amount.value),
+                label = getFeeFormatted(feeValue),
                 keyboardActions = KeyboardActions(),
             ),
             SendTextField.CustomFee(
@@ -67,7 +69,7 @@ internal class EthereumCustomFeeConverter(
                 footer = resourceReference(R.string.send_gas_limit_footer),
                 onValueChange = { clickIntents.onCustomFeeValueChange(GAS_LIMIT, it) },
                 keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done,
+                    imeAction = if (checkExceedBalance(feeValue)) ImeAction.None else ImeAction.Done,
                     keyboardType = KeyboardType.Number,
                 ),
                 keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
@@ -133,7 +135,16 @@ internal class EthereumCustomFeeConverter(
                             label = getFeeFormatted(newFeeAmount),
                         ),
                     )
-                    set(index, this[index].copy(value = value))
+                    set(
+                        index,
+                        this[index].copy(
+                            value = value,
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = if (!checkExceedBalance(newFeeAmount)) ImeAction.None else ImeAction.Done,
+                                keyboardType = KeyboardType.Number,
+                            ),
+                        ),
+                    )
                 }
             }
         }.toImmutableList()
@@ -150,6 +161,13 @@ internal class EthereumCustomFeeConverter(
                 fiatCurrencySymbol = appCurrency.symbol,
             ),
         )
+    }
+
+    private fun checkExceedBalance(feeAmount: BigDecimal?): Boolean {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val currencyCryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+
+        return feeAmount == null || feeAmount.isZero() || feeAmount > currencyCryptoAmount
     }
 
     companion object {

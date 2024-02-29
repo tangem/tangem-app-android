@@ -11,7 +11,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 
-private const val DEFAULT_PAGE_SIZE = 50
+const val DEFAULT_PAGE_SIZE = 50
 
 // TODO: Add tests
 class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {

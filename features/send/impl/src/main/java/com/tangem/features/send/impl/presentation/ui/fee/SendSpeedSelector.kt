@@ -117,10 +117,7 @@ internal fun SendSpeedSelector(
                                 visible = fees.normal is Fee.Ethereum,
                                 label = "Custom fee appearance animation",
                             ) {
-                                val showWarning = state.notifications.any {
-                                    it is SendFeeNotification.Warning.TooHigh ||
-                                        it is SendFeeNotification.Warning.TooLow
-                                }
+                                val showWarning = state.notifications.any { it is SendFeeNotification.Warning.TooHigh }
                                 SendSpeedSelectorItem(
                                     titleRes = R.string.common_fee_selector_option_custom,
                                     iconRes = R.drawable.ic_edit_24,
@@ -154,7 +151,7 @@ internal fun SendSpeedSelector(
 
 @Composable
 private fun FooterText(onReadMoreClick: () -> Unit) {
-    val linkText = stringResource(R.string.common_fee_selector_link_description)
+    val linkText = stringResource(R.string.common_read_more)
     val fullString = stringResource(R.string.common_fee_selector_footer, linkText)
     val linkTextPosition = fullString.length - linkText.length
     val defaultStyle = TangemTheme.colors.text.tertiary

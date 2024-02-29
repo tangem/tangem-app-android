@@ -41,7 +41,7 @@ internal object CoinsResponseConverter : Converter<CoinsResponse, List<Token>> {
                     )
                 },
             )
-        }
+        }.filter { it.networks.isNotEmpty() }
     }
 
     fun getIconUrl(id: String, imageHost: String? = null): String {
