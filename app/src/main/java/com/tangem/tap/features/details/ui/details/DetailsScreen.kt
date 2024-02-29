@@ -262,7 +262,8 @@ private class DetailsScreenStateProvider : CollectionPreviewParameterProvider<De
                 SettingsItem.LinkMoreCards({}).let(::add)
                 SettingsItem.CardSettings({}).let(::add)
                 SettingsItem.AppSettings({}).let(::add)
-                SettingsItem.Chat({}).let(::add)
+                // removed chat in task [REDACTED_TASK_KEY]
+                // SettingsItem.Chat({}).let(::add)
                 SettingsItem.SendFeedback({}).let(::add)
                 SettingsItem.ReferralProgram({}).let(::add)
                 SettingsItem.TermsOfService({}).let(::add)
@@ -279,7 +280,8 @@ private class DetailsScreenStateProvider : CollectionPreviewParameterProvider<De
                 SettingsItem.AddWallet(showProgress = true, {}).let(::add)
                 SettingsItem.CardSettings({}).let(::add)
                 SettingsItem.AppSettings({}).let(::add)
-                SettingsItem.Chat({}).let(::add)
+                // removed chat in task [REDACTED_TASK_KEY]
+                // SettingsItem.Chat({}).let(::add)
                 SettingsItem.SendFeedback({}).let(::add)
                 SettingsItem.TermsOfService({}).let(::add)
             }.toImmutableList(),
