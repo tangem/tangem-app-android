@@ -9,6 +9,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.wallet"
+}
+
 configurations.all {
     exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
     exclude(group = "com.github.komputing.kethereum")
@@ -56,6 +60,7 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
+    implementation(projects.domain.onboarding)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
@@ -84,6 +89,7 @@ dependencies {
     implementation(projects.data.transaction)
     implementation(projects.data.visa)
     implementation(projects.data.promo)
+    implementation(projects.data.onboarding)
 
     /** Features */
     implementation(projects.features.onboarding)
@@ -112,6 +118,7 @@ dependencies {
     implementation(deps.androidx.core.ktx)
     implementation(deps.androidx.core.splashScreen)
     implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.datastore)
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.constraintLayout)
     implementation(deps.androidx.activity.compose)
