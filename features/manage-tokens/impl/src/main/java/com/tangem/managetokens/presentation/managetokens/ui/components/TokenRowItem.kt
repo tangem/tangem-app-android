@@ -180,7 +180,8 @@ private fun BaseSurface(modifier: Modifier = Modifier, content: @Composable () -
     }
 }
 
-@Preview()
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun Preview_Tokens_LightTheme(@PreviewParameter(TokenConfigProvider::class) state: TokenItemState) {
     TangemTheme(isDark = false) {
@@ -188,7 +189,7 @@ private fun Preview_Tokens_LightTheme(@PreviewParameter(TokenConfigProvider::cla
     }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun Preview_Tokens_DarkTheme(@PreviewParameter(TokenConfigProvider::class) state: TokenItemState) {
     TangemTheme(isDark = true) {
@@ -201,5 +202,7 @@ private class TokenConfigProvider : CollectionPreviewParameterProvider<TokenItem
         TokenItemStatePreviewData.tokenLoading,
         TokenItemStatePreviewData.loadedPriceDown,
         TokenItemStatePreviewData.loadedPriceUp,
+        TokenItemStatePreviewData.loadedPriceNeutral,
     ),
 )
+// endregion Preview
