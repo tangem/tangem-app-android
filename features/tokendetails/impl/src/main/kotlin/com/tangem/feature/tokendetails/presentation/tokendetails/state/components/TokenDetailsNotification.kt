@@ -99,6 +99,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         private val networkName: String,
         private val feeCurrencyName: String,
         private val feeCurrencySymbol: String,
+        val mergeFeeNetworkName: Boolean = false,
         private val onBuyClick: () -> Unit,
     ) : Warning(
         title = TextReference.Res(
@@ -120,7 +121,13 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(
                 id = R.string.common_buy_currency,
-                formatArgs = wrappedList(feeCurrencySymbol),
+                formatArgs = wrappedList(
+                    if (mergeFeeNetworkName) {
+                        "$feeCurrencyName ($feeCurrencySymbol)"
+                    } else {
+                        feeCurrencySymbol
+                    },
+                ),
             ),
             onClick = onBuyClick,
         ),
