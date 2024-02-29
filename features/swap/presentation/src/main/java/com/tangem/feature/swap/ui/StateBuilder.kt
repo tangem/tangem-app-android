@@ -693,6 +693,32 @@ internal class StateBuilder(
         )
     }
 
+    fun updateSendCurrencyBalance(
+        uiState: SwapStateHolder,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): SwapStateHolder {
+        if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
+
+        return uiState.copy(
+            sendCardData = uiState.sendCardData.copy(
+                balance = cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+            ),
+        )
+    }
+
+    fun updateReceiveCurrencyBalance(
+        uiState: SwapStateHolder,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): SwapStateHolder {
+        if (uiState.receiveCardData !is SwapCardState.SwapCardData) return uiState
+
+        return uiState.copy(
+            receiveCardData = uiState.receiveCardData.copy(
+                balance = cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+            ),
+        )
+    }
+
     fun updateBalanceHiddenState(uiState: SwapStateHolder, isBalanceHidden: Boolean): SwapStateHolder {
         if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
         if (uiState.receiveCardData !is SwapCardState.SwapCardData) return uiState
@@ -998,6 +1024,7 @@ internal class StateBuilder(
     fun showSelectProviderBottomSheet(
         uiState: SwapStateHolder,
         selectedProviderId: String,
+        bestRatedProviderId: String,
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         unavailableProviders: List<SwapProvider>,
@@ -1005,7 +1032,7 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
             .mapNotNull {
-                it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
+                it.convertToProviderBottomSheetState(pricesLowerBest, bestRatedProviderId, actions.onProviderSelect)
             }
             .sortedWith(ProviderPercentDiffComparator)
         val unavailableProviderStates = unavailableProviders.map {
@@ -1046,8 +1073,8 @@ internal class StateBuilder(
                                 it.copy(
                                     subtitle = stringReference(rateString),
                                     percentLowerThenBest = pricesLowerBest[it.id]?.let { percent ->
-                                        PercentLowerThanBest.Value(percent)
-                                    } ?: PercentLowerThanBest.Empty,
+                                        PercentDifference.Value(percent)
+                                    } ?: PercentDifference.Value(0f),
                                 )
                             } else {
                                 it
@@ -1093,7 +1120,7 @@ internal class StateBuilder(
             },
             readMoreUrl = buildReadMoreUrl(),
             feeItems = txFeeState.toFeeItemState(),
-            readMore = resourceReference(R.string.common_fee_selector_link_description),
+            readMore = resourceReference(R.string.common_read_more),
             onReadMoreClick = actions.onFeeReadMoreClick,
         )
         return uiState.copy(
@@ -1153,18 +1180,21 @@ internal class StateBuilder(
 
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
         pricesLowerBest: Map<String, Float>,
+        bestRatedProviderId: String,
         onProviderSelect: (String) -> Unit,
     ): ProviderState? {
         val provider = this.key
         return when (val state = this.value) {
             is SwapState.EmptyAmountState -> null
-            is SwapState.QuotesLoadedState -> provider.convertToContentSelectableProviderState(
-                isBestRate = false, // not show best rate in bottom sheet
-                state = state,
-                onProviderClick = onProviderSelect,
-                pricesLowerBest = pricesLowerBest,
-                selectionType = ProviderState.SelectionType.SELECT,
-            )
+            is SwapState.QuotesLoadedState -> {
+                provider.convertToContentSelectableProviderState(
+                    isBestRate = bestRatedProviderId == provider.providerId,
+                    state = state,
+                    onProviderClick = onProviderSelect,
+                    pricesLowerBest = pricesLowerBest,
+                    selectionType = ProviderState.SelectionType.SELECT,
+                )
+            }
             is SwapState.SwapError -> getProviderStateForError(
                 swapProvider = provider,
                 fromToken = state.fromTokenInfo.cryptoCurrencyStatus.currency,
@@ -1211,7 +1241,7 @@ internal class StateBuilder(
     private fun createNetworkFeeCoverageNotificationConfig(): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.send_network_fee_warning_title),
-            subtitle = resourceReference(R.string.send_network_fee_warning_content),
+            subtitle = resourceReference(R.string.swapping_network_fee_warning_content),
             iconResId = R.drawable.img_attention_20,
         )
     }
@@ -1256,7 +1286,7 @@ internal class StateBuilder(
             subtitle = stringReference(rateString),
             additionalBadge = badge,
             selectionType = selectionType,
-            percentLowerThenBest = PercentLowerThanBest.Empty,
+            percentLowerThenBest = PercentDifference.Empty,
             namePrefix = ProviderState.PrefixType.PROVIDED_BY,
             onProviderClick = onProviderClick,
         )
@@ -1287,8 +1317,8 @@ internal class StateBuilder(
             additionalBadge = additionalBadge,
             selectionType = selectionType,
             percentLowerThenBest = pricesLowerBest[this.providerId]?.let { percent ->
-                PercentLowerThanBest.Value(percent)
-            } ?: PercentLowerThanBest.Value(0f),
+                PercentDifference.Value(percent)
+            } ?: PercentDifference.Value(0f),
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = onProviderClick,
         )
@@ -1323,7 +1353,7 @@ internal class StateBuilder(
             selectionType = selectionType,
             subtitle = alertText,
             additionalBadge = ProviderState.AdditionalBadge.Empty,
-            percentLowerThenBest = PercentLowerThanBest.Empty,
+            percentLowerThenBest = PercentDifference.Empty,
             namePrefix = if (selectionType != ProviderState.SelectionType.SELECT) {
                 ProviderState.PrefixType.PROVIDED_BY
             } else {
