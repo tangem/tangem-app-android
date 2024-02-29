@@ -3,11 +3,12 @@ package com.tangem.tap.common.redux.global
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingManager
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.extensions.replaceBy
 import org.rekotlin.Action
@@ -20,8 +21,7 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
 
     return when (action) {
         is GlobalAction.Onboarding.Start -> {
-            val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
-            val onboardingManager = OnboardingManager(action.scanResponse, usedCardsPrefStorage)
+            val onboardingManager = OnboardingManager(action.scanResponse)
             globalState.copy(onboardingState = OnboardingState(true, onboardingManager))
         }
         is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
@@ -95,10 +95,17 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             )
         }
         is GlobalAction.UpdateUserWalletsListManager -> {
-            appStateHolder.userWalletsListManager = action.manager
-            globalState.copy(
-                userWalletsListManager = action.manager,
-            )
+            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
+
+            if (featureToggles.isGeneralManagerEnabled) {
+                val generalUserWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
+                appStateHolder.userWalletsListManager = generalUserWalletsListManager
+                globalState.copy(userWalletsListManager = generalUserWalletsListManager)
+            } else {
+                appStateHolder.userWalletsListManager = action.manager
+                globalState.copy(userWalletsListManager = action.manager)
+            }
         }
         is GlobalAction.ChangeAppThemeMode -> globalState.copy(
             appThemeMode = action.appThemeMode,

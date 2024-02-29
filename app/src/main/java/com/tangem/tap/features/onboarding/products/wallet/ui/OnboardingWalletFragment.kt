@@ -501,7 +501,8 @@ class OnboardingWalletFragment :
     private fun makeSeedPhraseRouter(): SeedPhraseRouter = SeedPhraseRouter(
         onBack = ::legacyOnBackHandler,
         onOpenChat = {
-            store.dispatch(GlobalAction.OpenChat(SupportInfo()))
+            // changed on email support [REDACTED_TASK_KEY]
+            store.dispatch(GlobalAction.SendEmail(SupportInfo()))
         },
         onOpenUriClick = { uri ->
             store.dispatchOpenUrl(uri.toString())
