@@ -12,7 +12,9 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
+import kotlin.collections.set
 
 class ApplyTokenListSortingUseCase(
     private val currenciesRepository: CurrenciesRepository,
@@ -25,11 +27,17 @@ class ApplyTokenListSortingUseCase(
         isGroupedByNetwork: Boolean,
         isSortedByBalance: Boolean,
     ): Either<TokenListSortingError, Unit> {
-        return withContext(dispatchers.default) {
-            either {
+        return either {
+            val storedCurrencies = getCurrencies(userWalletId)
+            val isSortingTypeChanged = checkIsCurrenciesSortedByBalance(userWalletId) != isSortedByBalance
+            val isGroupingTypeChanged = checkIsCurrenciesGroupedByNetwork(userWalletId) != isGroupedByNetwork
+
+            val sortedCurrencies = sortTokens(sortedTokensIds, storedCurrencies)
+
+            if (storedCurrencies != sortedCurrencies || isSortingTypeChanged || isGroupingTypeChanged) {
                 applySorting(
                     userWalletId = userWalletId,
-                    tokens = sortTokens(sortedTokensIds, getCurrencies(userWalletId)),
+                    currencies = sortedCurrencies,
                     isGrouped = isGroupedByNetwork,
                     isSortedByBalance = isSortedByBalance,
                 )
@@ -37,17 +45,29 @@ class ApplyTokenListSortingUseCase(
         }
     }
 
+    private suspend fun Raise<TokenListSortingError>.checkIsCurrenciesSortedByBalance(userWalletId: UserWalletId) =
+        catch(
+            block = { currenciesRepository.isTokensSortedByBalance(userWalletId).firstOrNull() ?: false },
+            catch = { raise(TokenListSortingError.DataError(it)) },
+        )
+
+    private suspend fun Raise<TokenListSortingError>.checkIsCurrenciesGroupedByNetwork(userWalletId: UserWalletId) =
+        catch(
+            block = { currenciesRepository.isTokensGrouped(userWalletId).firstOrNull() ?: false },
+            catch = { raise(TokenListSortingError.DataError(it)) },
+        )
+
     private suspend fun Raise<TokenListSortingError>.sortTokens(
-        sortedTokensIds: List<CryptoCurrency.ID>,
-        unsortedTokens: List<CryptoCurrency>,
+        sortedCurrenciesIds: List<CryptoCurrency.ID>,
+        unsortedCurrencies: List<CryptoCurrency>,
     ): List<CryptoCurrency> = withContext(dispatchers.default) {
-        val nonEmptySortedTokensIds = ensureNotNull(sortedTokensIds.toNonEmptySetOrNull()) {
+        val nonEmptySortedTokensIds = ensureNotNull(sortedCurrenciesIds.toNonEmptySetOrNull()) {
             TokenListSortingError.TokenListIsEmpty
         }
 
         val sortedTokens = sortedMapOf<Int, CryptoCurrency>()
 
-        unsortedTokens.distinct().forEach { currency ->
+        unsortedCurrencies.distinct().forEach { currency ->
             val index = nonEmptySortedTokensIds.indexOfFirst { currencyId ->
                 currencyId == currency.id
             }
@@ -79,12 +99,12 @@ class ApplyTokenListSortingUseCase(
 
     private suspend fun Raise<TokenListSortingError>.applySorting(
         userWalletId: UserWalletId,
-        tokens: List<CryptoCurrency>,
+        currencies: List<CryptoCurrency>,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
     ) = withContext(dispatchers.io) {
         catch(
-            block = { currenciesRepository.saveTokens(userWalletId, tokens, isGrouped, isSortedByBalance) },
+            block = { currenciesRepository.saveTokens(userWalletId, currencies, isGrouped, isSortedByBalance) },
             catch = { raise(TokenListSortingError.DataError(it)) },
         )
     }
