@@ -8,6 +8,7 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
@@ -16,9 +17,9 @@ import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
-import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
@@ -169,10 +170,10 @@ internal class WelcomeMiddleware {
     }
 
     private suspend inline fun scanCardInternal(crossinline onCardScanned: suspend (ScanResponse) -> Unit) {
-        store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+        store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
             isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
         )
-        store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
+        store.inject(DaggerGraphState::scanCardProcessor).scan(
             analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.SignIn),
             onSuccess = { scanResponse ->
                 scope.launch { onCardScanned(scanResponse) }
