@@ -16,6 +16,8 @@ internal sealed interface SaveWalletAction : Action {
         data class Error(val error: TangemError) : SaveWalletAction
     }
 
+    object AllowToUseBiometrics : SaveWalletAction
+
     object Dismiss : SaveWalletAction
 
     object CloseError : SaveWalletAction
