@@ -88,7 +88,7 @@ internal class WalletStateController @Inject constructor(
             event = consumedEvent(),
             isHidingMode = false,
             manageTokenRedesignToggle = manageTokensFeatureToggles.isRedesignedScreenEnabled,
-            expandableState = mutableStateOf(ExpandableState.EXPANDED),
+            manageTokensExpandableState = mutableStateOf(ExpandableState.EXPANDED),
         )
     }
 }

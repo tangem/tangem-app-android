@@ -7,7 +7,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal data class WalletScreenState(
     val onBackClick: () -> Unit,
-    val expandableState: MutableState<ExpandableState>,
+    val manageTokensExpandableState: MutableState<ExpandableState>,
     val topBarConfig: WalletTopBarConfig,
     val selectedWalletIndex: Int,
     val wallets: ImmutableList<WalletState>,

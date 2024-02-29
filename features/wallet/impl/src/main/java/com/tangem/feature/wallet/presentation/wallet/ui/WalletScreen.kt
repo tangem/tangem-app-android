@@ -444,9 +444,9 @@ private fun BottomSheetStateEffects(
     val isSheetHidden = bottomSheetState.targetValue == SheetValue.PartiallyExpanded
     LaunchedEffect(isSheetHidden) {
         if (isSheetHidden) {
-            state.expandableState.value = ExpandableState.COLLAPSED
+            state.manageTokensExpandableState.value = ExpandableState.COLLAPSED
         } else {
-            state.expandableState.value = ExpandableState.EXPANDED
+            state.manageTokensExpandableState.value = ExpandableState.EXPANDED
         }
     }
 

@@ -85,7 +85,7 @@ internal class WalletViewModel @Inject constructor(
 
     fun setExpandableState(state: MutableState<ExpandableState>) {
         stateHolder.update {
-            it.copy(expandableState = state)
+            it.copy(manageTokensExpandableState = state)
         }
     }
 
