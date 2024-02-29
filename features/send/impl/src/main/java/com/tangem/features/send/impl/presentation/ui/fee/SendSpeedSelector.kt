@@ -10,18 +10,23 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
@@ -43,7 +48,6 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
-import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import java.math.BigDecimal
 
@@ -60,10 +64,7 @@ internal fun SendSpeedSelector(
     clickIntents: SendClickIntents,
     modifier: Modifier = Modifier,
 ) {
-    FooterContainer(
-        footer = stringResource(R.string.common_fee_selector_footer),
-        modifier = modifier,
-    ) {
+    Column(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -116,10 +117,7 @@ internal fun SendSpeedSelector(
                                 visible = fees.normal is Fee.Ethereum,
                                 label = "Custom fee appearance animation",
                             ) {
-                                val showWarning = state.notifications.any {
-                                    it is SendFeeNotification.Warning.TooHigh ||
-                                        it is SendFeeNotification.Warning.TooLow
-                                }
+                                val showWarning = state.notifications.any { it is SendFeeNotification.Warning.TooHigh }
                                 SendSpeedSelectorItem(
                                     titleRes = R.string.common_fee_selector_option_custom,
                                     iconRes = R.drawable.ic_edit_24,
@@ -147,7 +145,41 @@ internal fun SendSpeedSelector(
                 }
             }
         }
+        FooterText(clickIntents::onReadMoreClick)
     }
+}
+
+@Composable
+private fun FooterText(onReadMoreClick: () -> Unit) {
+    val linkText = stringResource(R.string.common_read_more)
+    val fullString = stringResource(R.string.common_fee_selector_footer, linkText)
+    val linkTextPosition = fullString.length - linkText.length
+    val defaultStyle = TangemTheme.colors.text.tertiary
+    val linkStyle = TangemTheme.colors.text.accent
+    val annotatedString = remember(defaultStyle, linkStyle) {
+        buildAnnotatedString {
+            withStyle(SpanStyle(defaultStyle)) {
+                append(fullString.substring(0, linkTextPosition))
+            }
+            withStyle(SpanStyle(linkStyle)) {
+                append(fullString.substring(linkTextPosition, fullString.length))
+            }
+        }
+    }
+
+    val click = { i: Int ->
+        val readMoreStyle = requireNotNull(annotatedString.spanStyles.getOrNull(1))
+        if (i in readMoreStyle.start..readMoreStyle.end) {
+            onReadMoreClick()
+        }
+    }
+
+    ClickableText(
+        text = annotatedString,
+        style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Start),
+        modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+        onClick = click,
+    )
 }
 
 // todo remove after refactoring [REDACTED_JIRA]
