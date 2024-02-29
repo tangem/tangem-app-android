@@ -1,7 +1,9 @@
 package com.tangem.feature.swap.models.states
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 
+@Immutable
 sealed class ProviderState {
 
     abstract val onProviderClick: ((String) -> Unit)?
@@ -26,6 +28,7 @@ sealed class ProviderState {
         val selectionType: SelectionType,
         val additionalBadge: AdditionalBadge,
         val percentLowerThenBest: PercentDifference = PercentDifference.Empty,
+        val namePrefix: PrefixType,
         override val onProviderClick: (String) -> Unit,
     ) : ProviderState()
 
@@ -39,17 +42,25 @@ sealed class ProviderState {
         override val onProviderClick: ((String) -> Unit)? = null,
     ) : ProviderState()
 
+    @Immutable
     sealed class AdditionalBadge {
         object BestTrade : AdditionalBadge()
         object Empty : AdditionalBadge()
         object PermissionRequired : AdditionalBadge()
     }
 
+    @Immutable
     enum class SelectionType {
         NONE, CLICK, SELECT
     }
+
+    @Immutable
+    enum class PrefixType {
+        NONE, PROVIDED_BY
+    }
 }
 
+@Immutable
 sealed class PercentDifference {
     data class Value(val value: Float) : PercentDifference()
     object Empty : PercentDifference()
