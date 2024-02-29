@@ -1,6 +1,7 @@
 package com.tangem.tap.common.redux
 
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -20,7 +21,7 @@ class AccessCodeRequestPolicyMiddleware {
     }
 
     private fun updateAccessCodeRequestPolicy(scanResponse: ScanResponse) {
-        store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+        store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
             isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes && scanResponse.card.isAccessCodeSet,
         )
     }
