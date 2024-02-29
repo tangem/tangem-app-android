@@ -10,7 +10,6 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -95,10 +94,6 @@ internal fun AutoSizeTextField(
                 ),
                 cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
             )
-
-            LaunchedEffect(Unit) {
-                focusRequester.requestFocus()
-            }
         }
     }
 }

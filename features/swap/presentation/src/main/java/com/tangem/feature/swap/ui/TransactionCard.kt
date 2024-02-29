@@ -47,7 +47,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun TransactionCard(
     type: TransactionCardType,
-    focusRequester: FocusRequester,
     balance: String,
     tokenIconUrl: String,
     tokenCurrency: String,
@@ -80,7 +79,6 @@ fun TransactionCard(
                 amountEquivalent = amountEquivalent,
                 textFieldValue = textFieldValue,
                 priceImpact = priceImpact,
-                focusRequester = focusRequester,
             )
         }
 
@@ -114,7 +112,6 @@ fun TransactionCard(
 @Composable
 fun TransactionCardEmpty(
     type: TransactionCardType,
-    focusRequester: FocusRequester,
     amountEquivalent: String?,
     textFieldValue: TextFieldValue?,
     modifier: Modifier = Modifier,
@@ -144,7 +141,6 @@ fun TransactionCardEmpty(
                 amountEquivalent = amountEquivalent,
                 textFieldValue = textFieldValue,
                 priceImpact = PriceImpact.Empty(),
-                focusRequester = focusRequester,
             )
         }
 
@@ -225,7 +221,6 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
 @Composable
 private fun Content(
     type: TransactionCardType,
-    focusRequester: FocusRequester,
     amountEquivalent: String?,
     priceImpact: PriceImpact,
     textFieldValue: TextFieldValue?,
@@ -268,6 +263,8 @@ private fun Content(
                     }
                 }
                 is TransactionCardType.Inputtable -> {
+                    val focusRequester = remember { FocusRequester() }
+
                     AutoSizeTextField(
                         modifier = sumTextModifier,
                         focusRequester = focusRequester,
@@ -275,6 +272,10 @@ private fun Content(
                         onAmountChange = { type.onAmountChanged(it) },
                         onFocusChange = type.onFocusChanged,
                     )
+
+                    LaunchedEffect(Unit) {
+                        focusRequester.requestFocus()
+                    }
                 }
             }
 
@@ -556,7 +557,6 @@ private fun TransactionCardPreview() {
         balance = "123",
         textFieldValue = TextFieldValue(),
         priceImpact = PriceImpact.Empty(),
-        focusRequester = FocusRequester(),
     )
 }
 
@@ -573,7 +573,6 @@ private fun TransactionCardPreviewWithPriceImpact() {
         balance = "123",
         textFieldValue = TextFieldValue(),
         priceImpact = PriceImpact.Value(0.15F),
-        focusRequester = FocusRequester(),
     )
 }
 
@@ -590,7 +589,6 @@ private fun TransactionCardPreviewWithoutPriceImpact() {
         balance = "123",
         textFieldValue = TextFieldValue(),
         priceImpact = PriceImpact.Empty(),
-        focusRequester = FocusRequester(),
     )
 }
 
