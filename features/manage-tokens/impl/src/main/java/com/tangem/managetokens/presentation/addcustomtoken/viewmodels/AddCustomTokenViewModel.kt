@@ -5,7 +5,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
@@ -102,10 +101,6 @@ internal class AddCustomTokenViewModel @Inject constructor(
         // We have to manually cancel viewModelScope's child jobs when bottom sheet is closed
         viewModelScope.coroutineContext.cancelChildren()
         // and reset state
-        uiState = stateFactory.getInitialState()
-    }
-
-    override fun onDestroy(owner: LifecycleOwner) {
         uiState = stateFactory.getInitialState()
     }
 

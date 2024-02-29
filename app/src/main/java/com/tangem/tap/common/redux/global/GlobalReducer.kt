@@ -7,7 +7,6 @@ import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingManager
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
@@ -22,8 +21,7 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
 
     return when (action) {
         is GlobalAction.Onboarding.Start -> {
-            val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
-            val onboardingManager = OnboardingManager(action.scanResponse, usedCardsPrefStorage)
+            val onboardingManager = OnboardingManager(action.scanResponse)
             globalState.copy(onboardingState = OnboardingState(true, onboardingManager))
         }
         is GlobalAction.Onboarding.StartForUnfinishedBackup -> {

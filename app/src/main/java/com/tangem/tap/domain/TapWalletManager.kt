@@ -12,6 +12,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.attestation.Attestation
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -44,8 +45,8 @@ class TapWalletManager(
     val walletManagerFactory: WalletManagerFactory by lazy {
         WalletManagerFactory(
             config = blockchainSdkConfig,
-            accountCreator = store.state.daggerGraphState.get(DaggerGraphState::accountCreator),
-            blockchainDataStorage = store.state.daggerGraphState.get(DaggerGraphState::blockchainDataStorage),
+            accountCreator = store.inject(DaggerGraphState::accountCreator),
+            blockchainDataStorage = store.inject(DaggerGraphState::blockchainDataStorage),
         )
     }
 

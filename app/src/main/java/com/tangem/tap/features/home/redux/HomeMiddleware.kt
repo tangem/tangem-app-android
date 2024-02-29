@@ -6,18 +6,15 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
-import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.extensions.eraseContext
-import com.tangem.tap.common.extensions.onUserWalletSelected
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
@@ -79,11 +76,11 @@ private fun handleHomeAction(action: Action) {
 }
 
 private suspend fun readCard(analyticsEvent: AnalyticsEvent?) {
-    store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+    store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
         isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
     )
 
-    store.state.daggerGraphState.get(DaggerGraphState::scanCardProcessor).scan(
+    store.inject(DaggerGraphState::scanCardProcessor).scan(
         analyticsEvent = analyticsEvent,
         onProgressStateChange = { showProgress ->
             if (showProgress) {

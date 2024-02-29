@@ -21,7 +21,7 @@ internal object AppPreferencesStoreModule {
     fun provideAppPreferencesStore(
         @ApplicationContext appContext: Context,
         dispatchers: CoroutineDispatcherProvider,
-        @NetworkMoshi moshi: Moshi,
+        @SdkMoshi moshi: Moshi,
     ): AppPreferencesStore {
         return AppPreferencesStore(
             preferencesDataStore = PreferencesDataStore.getInstance(context = appContext, dispatcher = dispatchers.io),
