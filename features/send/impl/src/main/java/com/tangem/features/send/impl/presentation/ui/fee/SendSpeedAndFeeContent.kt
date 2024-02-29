@@ -15,7 +15,6 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
-import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -41,8 +40,6 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
         topNotifications(notifications)
         customFee(feeSendState)
         middleNotifications(notifications)
-        subtractButton(state, clickIntents)
-        bottomNotifications(notifications)
     }
 }
 
@@ -77,21 +74,7 @@ private fun LazyListScope.middleNotifications(
     modifier: Modifier = Modifier,
 ) {
     notifications(
-        configs = configs.filter {
-            it is SendFeeNotification.Warning.TooLow ||
-                it is SendFeeNotification.Warning.TooHigh
-        }.toImmutableList(),
-        modifier = modifier,
-    )
-}
-
-private fun LazyListScope.bottomNotifications(
-    configs: ImmutableList<SendFeeNotification>,
-    modifier: Modifier = Modifier,
-) {
-    notifications(
-        configs = configs.filterIsInstance<SendFeeNotification.Warning.NetworkCoverage>().toImmutableList(),
-        isLast = true,
+        configs = configs.filterIsInstance<SendFeeNotification.Warning.TooHigh>().toImmutableList(),
         modifier = modifier,
     )
 }
@@ -157,38 +140,6 @@ internal fun LazyListScope.customFee(feeSendState: FeeSelectorState, modifier: M
                     modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
                 )
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-internal fun LazyListScope.subtractButton(
-    state: SendStates.FeeState,
-    clickIntents: SendClickIntents,
-    modifier: Modifier = Modifier,
-) {
-    val receivedAmount = state.receivedAmount
-    val isSubtract = state.isSubtract
-    val isSubtractAvailable = state.isSubtractAvailable
-    val feeSendState = state.feeSelectorState
-    if (isSubtractAvailable) {
-        item {
-            val feeStateContent = feeSendState as? FeeSelectorState.Content
-            val isCustomAvailable = feeStateContent?.customValues.isNullOrEmpty().not()
-            val isCustomSelected = feeStateContent?.selectedFee == FeeType.Custom
-            val topPadding = if (isCustomSelected && isCustomAvailable) {
-                TangemTheme.dimens.spacing12
-            } else {
-                TangemTheme.dimens.spacing20
-            }
-            SendSpeedSubtract(
-                receivingAmount = receivedAmount,
-                isSubtract = isSubtract,
-                onSelectClick = clickIntents::onSubtractSelect,
-                modifier = modifier
-                    .padding(top = topPadding)
-                    .animateItemPlacement(),
-            )
         }
     }
 }

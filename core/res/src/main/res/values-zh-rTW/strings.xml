@@ -130,7 +130,6 @@
     <string name="details_row_title_create_backup">連結更多錢包</string>
     <string name="details_row_title_currency">App Currency</string>
     <string name="details_row_title_issuer">發行人</string>
-    <string name="details_row_title_send_feedback">發送反饋</string>
     <string name="details_row_title_signed_hashes">簽署</string>
     <string name="details_title">更多</string>
     <string name="disclaimer_error_loading">檢查您的網路連接或切換到其他網絡</string>
