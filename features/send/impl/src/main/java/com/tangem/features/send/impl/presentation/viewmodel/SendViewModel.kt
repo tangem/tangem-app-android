@@ -610,13 +610,13 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
     }
 
-    override fun onReduceAmountClick(reducedAmount: String) {
+    override fun onAmountReduceClick(reducedAmount: String) {
         uiState = amountStateFactory.getOnAmountValueChange(reducedAmount)
         uiState = sendNotificationFactory.dismissHighFeeWarningState()
         loadFee()
     }
 
-    override fun onReduceAmountIgnoreClick() {
+    override fun onAmountReduceIgnoreClick() {
         uiState = sendNotificationFactory.dismissHighFeeWarningState()
     }
 
