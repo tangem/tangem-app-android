@@ -152,7 +152,7 @@ class DefaultSwapTransactionRepository(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
             )
 
-            val updatesMap = savedMap?.toMutableMap() ?: mutableMapOf()
+            val updatesMap = savedMap.toMutableMap()
             updatesMap[txId] = status
 
             mutablePreferences.setObjectMap(
@@ -232,9 +232,9 @@ class DefaultSwapTransactionRepository(
             val savedList = mutablePreferences.getObjectMap<ExchangeStatusModel>(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
             )
-            val editedList = savedList?.filterNot { it.key == txId }
+            val editedList = savedList.filterNot { it.key == txId }
 
-            if (editedList.isNullOrEmpty()) {
+            if (editedList.isEmpty()) {
                 mutablePreferences.remove(key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY)
             } else {
                 mutablePreferences.setObjectMap(
