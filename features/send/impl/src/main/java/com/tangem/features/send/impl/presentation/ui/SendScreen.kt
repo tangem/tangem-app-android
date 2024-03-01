@@ -1,16 +1,15 @@
 package com.tangem.features.send.impl.presentation.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -63,11 +62,11 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
         )
         SendScreenContent(
             uiState = uiState,
-            currentState = currentState,
+            currentState = currentState.value,
             modifier = Modifier
                 .weight(1f),
         )
-        SendNavigationButtons(uiState, currentState)
+        SendNavigationButtons(uiState, currentState.value)
     }
 
     SendEventEffect(
@@ -77,15 +76,24 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
 }
 
 @Composable
-private fun SendScreenContent(
-    uiState: SendUiState,
-    currentState: State<SendUiCurrentScreen>,
-    modifier: Modifier = Modifier,
-) {
+private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentScreen, modifier: Modifier = Modifier) {
+    var lastState by remember { mutableIntStateOf(currentState.type.ordinal) }
+    val direction = remember(currentState.type.ordinal) {
+        if (lastState < currentState.type.ordinal) {
+            AnimatedContentTransitionScope.SlideDirection.Start
+        } else {
+            AnimatedContentTransitionScope.SlideDirection.End
+        }
+    }
     AnimatedContent(
-        targetState = currentState.value,
+        targetState = currentState,
         label = "Send Scree Navigation",
         modifier = modifier,
+        transitionSpec = {
+            lastState = currentState.type.ordinal
+            slideIntoContainer(towards = direction, animationSpec = tween())
+                .togetherWith(slideOutOfContainer(towards = direction, animationSpec = tween()))
+        },
     ) { state ->
         when (state.type) {
             SendUiStateType.Amount -> SendAmountContent(
