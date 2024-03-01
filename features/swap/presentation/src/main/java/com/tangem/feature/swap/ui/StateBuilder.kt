@@ -1333,9 +1333,9 @@ internal class StateBuilder(
             subtitle = resourceReference(R.string.send_notification_high_fee_text),
             iconResId = R.drawable.img_attention_20,
             buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
-                primaryText = resourceReference(R.string.send_notification_fee_too_high_accept, wrappedList(amount)),
+                primaryText = resourceReference(R.string.xtz_withdrawal_message_reduce, wrappedList(amount)),
                 onPrimaryClick = onConfirmClick,
-                secondaryText = resourceReference(R.string.send_notification_fee_too_high_ignore),
+                secondaryText = resourceReference(R.string.xtz_withdrawal_message_ignore),
                 onSecondaryClick = onDismissClick,
             ),
         )
