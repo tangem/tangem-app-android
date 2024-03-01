@@ -65,11 +65,11 @@ class AppPreferencesStore(
     }
 
     /** Get map with [String] key and value [V] by string [key] from [MutablePreferences] */
-    inline fun <reified V> MutablePreferences.getObjectMap(key: Preferences.Key<String>): Map<String, V>? {
+    inline fun <reified V> MutablePreferences.getObjectMap(key: Preferences.Key<String>): Map<String, V> {
         val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
         val adapter = moshi.adapter<Map<String, V>>(type)
 
-        return this[key]?.let(adapter::fromJson)
+        return this[key]?.let(adapter::fromJson).orEmpty()
     }
 
     /**
