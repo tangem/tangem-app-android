@@ -57,7 +57,6 @@ internal class FeeStateFactory(
         val feeState = state.feeState ?: return state
         val feeSelectorState = (feeState.feeSelectorState as? FeeSelectorState.Content)?.copy(
             fees = fees,
-            customValues = customFeeFieldConverter.convert(fees.normal),
         ) ?: FeeSelectorState.Content(
             fees = fees,
             customValues = customFeeFieldConverter.convert(fees.normal),
