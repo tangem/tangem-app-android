@@ -3,7 +3,6 @@ package com.tangem.features.send.impl.presentation.state
 import androidx.fragment.app.FragmentManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
-import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -32,51 +31,26 @@ internal class StateRouter(
         when {
             isSuccess -> popBackStack()
             isEditingDisabled -> when (type) {
-                SendUiStateType.Send -> {
-                    analyticsEventsHandler.send(SendAnalyticEvents.BackButtonClicked(SendScreenSource.Fee))
-                    showFee()
-                }
+                SendUiStateType.Send -> showFee()
                 else -> popBackStack()
             }
             else -> when (type) {
-                SendUiStateType.Amount -> {
-                    analyticsEventsHandler.send(SendAnalyticEvents.BackButtonClicked(SendScreenSource.Address))
-                    continueToSend(::showRecipient)
-                }
-                SendUiStateType.Fee -> {
-                    analyticsEventsHandler.send(SendAnalyticEvents.BackButtonClicked(SendScreenSource.Amount))
-                    continueToSend(::showAmount)
-                }
-                SendUiStateType.Send -> {
-                    analyticsEventsHandler.send(SendAnalyticEvents.BackButtonClicked(SendScreenSource.Fee))
-                    continueToSend(::showFee)
-                }
+                SendUiStateType.Amount -> continueToSend(::showRecipient)
+                SendUiStateType.Fee -> continueToSend(::showAmount)
+                SendUiStateType.Send -> continueToSend(::showFee)
                 else -> continueToSend(::popBackStack)
             }
         }
     }
 
-    fun onNextClick(): SendUiStateType {
-        val prevState = currentState.value.type
+    fun onNextClick() {
         when (currentState.value.type) {
-            SendUiStateType.Recipient -> {
-                analyticsEventsHandler.send(SendAnalyticEvents.NextButtonClicked(SendScreenSource.Amount))
-                continueToSend(::showAmount)
-            }
-            SendUiStateType.Amount -> {
-                analyticsEventsHandler.send(SendAnalyticEvents.NextButtonClicked(SendScreenSource.Fee))
-                continueToSend(::showFee)
-            }
-            SendUiStateType.Fee -> {
-                analyticsEventsHandler.send(SendAnalyticEvents.NextButtonClicked(SendScreenSource.Fee))
-                showSend()
-            }
-            SendUiStateType.Send -> {
-                onBackClick()
-            }
+            SendUiStateType.Recipient -> continueToSend(::showAmount)
+            SendUiStateType.Amount -> continueToSend(::showFee)
+            SendUiStateType.Fee -> showSend()
+            SendUiStateType.Send -> onBackClick()
             else -> popBackStack()
         }
-        return prevState
     }
 
     fun onPrevClick() {
@@ -84,14 +58,8 @@ internal class StateRouter(
             popBackStack()
         } else {
             when (currentState.value.type) {
-                SendUiStateType.Amount -> {
-                    analyticsEventsHandler.send(SendAnalyticEvents.BackButtonClicked(SendScreenSource.Amount))
-                    showRecipient()
-                }
-                SendUiStateType.Fee -> {
-                    analyticsEventsHandler.send(SendAnalyticEvents.BackButtonClicked(SendScreenSource.Fee))
-                    showAmount()
-                }
+                SendUiStateType.Amount -> showRecipient()
+                SendUiStateType.Fee -> showAmount()
                 else -> popBackStack()
             }
         }
