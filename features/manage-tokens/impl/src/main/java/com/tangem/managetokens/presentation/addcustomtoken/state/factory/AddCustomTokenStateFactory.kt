@@ -221,8 +221,7 @@ internal class AddCustomTokenStateFactory(
     fun updateStateOnNetworkSelected(networkItemState: NetworkItemState, supportsTokens: Boolean): AddCustomTokenState {
         val uiState = currentStateProvider()
         val tokenData = if (supportsTokens) {
-            uiState.tokenData
-                ?: CustomTokenData(
+            uiState.tokenData ?: CustomTokenData(
                     contractAddressTextField = TextFieldState.Editable(
                         value = "",
                         isEnabled = true,
@@ -253,6 +252,10 @@ internal class AddCustomTokenStateFactory(
         }
         return uiState.copy(
             chooseNetworkState = uiState.chooseNetworkState.copy(selectedNetwork = networkItemState),
+            chooseDerivationState = uiState.chooseDerivationState?.copy(
+                selectedDerivation = null,
+                enterCustomDerivationState = null,
+            ),
             tokenData = tokenData,
             addTokenButton = uiState.addTokenButton.copy(isEnabled = true),
         )
