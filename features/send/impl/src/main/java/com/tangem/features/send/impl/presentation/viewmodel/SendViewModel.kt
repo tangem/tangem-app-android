@@ -40,10 +40,7 @@ import com.tangem.features.send.impl.presentation.analytics.utils.SendOnNextScre
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
-import com.tangem.features.send.impl.presentation.state.fee.FeeNotificationFactory
-import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
-import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.state.fee.checkFeeCoverage
+import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -367,7 +364,7 @@ internal class SendViewModel @Inject constructor(
         stateRouter.currentState
             .onEach {
                 when (it.type) {
-                    SendUiStateType.Fee -> if (!it.isFromConfirmation) loadFee()
+                    SendUiStateType.Fee -> loadFee()
                     SendUiStateType.Send -> sendIdleTimer = System.currentTimeMillis()
                     else -> Unit
                 }
@@ -402,9 +399,6 @@ internal class SendViewModel @Inject constructor(
         val currentState = stateRouter.currentState.value
         val isCurrentFee = currentState.type == SendUiStateType.Fee
         if (isCurrentFee) {
-            uiState = eventStateFactory.getFeeTooLowAlert(
-                onConsume = { uiState = eventStateFactory.onConsumeEventState() },
-            )
             val isFeeCoverage = checkFeeCoverage(uiState, cryptoCurrencyStatus)
             if (isAmountSubtractAvailable && isFeeCoverage) {
                 uiState = eventStateFactory.getFeeCoverageAlert(
@@ -414,6 +408,12 @@ internal class SendViewModel @Inject constructor(
             } else {
                 uiState = stateFactory.onSubtractSelect(false)
                 analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
+            }
+            if (checkIfFeeTooLow(uiState)) {
+                uiState = eventStateFactory.getFeeTooLowAlert(
+                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                )
+                return
             }
         }
 
@@ -555,7 +555,9 @@ internal class SendViewModel @Inject constructor(
 
     private fun loadFee() {
         viewModelScope.launch(dispatchers.main) {
-            uiState = feeStateFactory.onFeeOnLoadingState()
+            if (uiState.feeState?.fee == null) {
+                uiState = feeStateFactory.onFeeOnLoadingState()
+            }
             uiState = callFeeUseCase()?.fold(
                 ifRight = feeStateFactory::onFeeOnLoadedState,
                 ifLeft = { feeStateFactory.onFeeOnErrorState() },
@@ -600,24 +602,18 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun showAmount() {
-        uiState = stateFactory.onSubtractSelect(false)
         stateRouter.showAmount(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
-        analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
     }
 
     override fun showRecipient() {
-        uiState = stateFactory.onSubtractSelect(false)
         stateRouter.showRecipient(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
-        analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
     }
 
     override fun showFee() {
-        uiState = stateFactory.onSubtractSelect(false)
         stateRouter.showFee(isFromConfirmation = true)
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
-        analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
     }
 
     override fun showSend() {
