@@ -56,6 +56,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val validateContractAddressUseCase: ValidateContractAddressUseCase,
     private val getNetworksSupportedByWallet: GetNetworksSupportedByWallet,
     private val areTokensSupportedByNetworkUseCase: AreTokensSupportedByNetworkUseCase,
+    private val requiresHardenedDerivationOnlyUseCase: RequiresHardenedDerivationOnlyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel(), AddCustomTokenClickIntents, DefaultLifecycleObserver {
 
@@ -347,6 +348,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     override fun onCustomDerivationChange(input: String) {
+        val selectedWallet = getSelectedWalletSyncUseCase().getOrNull() ?: return
+
         analyticsEventHandler.send(ManageTokens.CustomTokenDerivationSelected(ManageTokens.Derivation.CUSTOM.value))
         uiState = uiState.copy(
             chooseDerivationState = uiState.chooseDerivationState?.copy(
@@ -357,9 +360,11 @@ internal class AddCustomTokenViewModel @Inject constructor(
         )
         debouncer.debounce(waitMs = DEFAULT_WAIT_TIME_MS, coroutineScope = viewModelScope + dispatchers.io) {
             val path = createDerivationPathOrNull(input)
+            val isWrongDerivationForWallet2 = isWrongDerivationForWallet2(selectedWallet.walletId, path)
             val enterDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
-                confirmButtonEnabled = path != null,
-                derivationIncorrect = input.isNotBlank() && path == null,
+                confirmButtonEnabled = path != null && !isWrongDerivationForWallet2,
+                derivationIncorrect = (input.isNotBlank() && path == null) ||
+                     isWrongDerivationForWallet2
             )
             uiState = uiState.copy(
                 chooseDerivationState = uiState.chooseDerivationState?.copy(
@@ -367,6 +372,21 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private suspend fun isWrongDerivationForWallet2(
+        selectedWalletId: UserWalletId,
+        derivationPath: DerivationPath?
+    ): Boolean {
+        val networkId = uiState.chooseNetworkState.selectedNetwork?.id ?: return false
+        val requiresHardenedDerivationOnly = requiresHardenedDerivationOnlyUseCase.invoke(
+            networkId = networkId,
+            userWalletId = selectedWalletId
+        ).getOrElse { false }
+
+        val allNodesHardened = derivationPath?.nodes?.all { it.isHardened } ?: false
+
+        return if (requiresHardenedDerivationOnly) !allNodesHardened else false
     }
 
     private fun createDerivationPathOrNull(rawPath: String): DerivationPath? {

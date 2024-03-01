@@ -17,5 +17,8 @@ interface NetworksCompatibilityRepository {
     @Throws(IllegalArgumentException::class)
     suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network>
 
+    suspend fun requiresHardenedDerivationOnly(networkId: String, userWalletId: UserWalletId): Boolean
+
     fun areTokensSupportedByNetwork(networkId: String): Boolean
+
 }
