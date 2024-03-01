@@ -101,8 +101,8 @@ data class SendUiCurrentScreen(
 
 enum class SendUiStateType {
     None,
-    Amount,
     Recipient,
+    Amount,
     Fee,
     Send,
 }
