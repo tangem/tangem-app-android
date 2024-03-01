@@ -592,7 +592,7 @@ internal class SwapInteractorImpl @Inject constructor(
             network = currencyToSend.currency.network,
         )
 
-        val externalUrl = (exchangeData.transaction as? ExpressTransactionModel.CEX)?.externalTxUrl
+        val txCexModel = exchangeData.transaction as? ExpressTransactionModel.CEX
 
         val derivationPath = currencyToSend.currency.network.derivationPath.value
         return result.fold(
@@ -607,6 +607,7 @@ internal class SwapInteractorImpl @Inject constructor(
             },
             ifRight = {
                 val timestamp = System.currentTimeMillis()
+                val txExternalUrl = txCexModel?.externalTxUrl
                 storeSwapTransaction(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
@@ -614,7 +615,8 @@ internal class SwapInteractorImpl @Inject constructor(
                     swapProvider = swapProvider,
                     swapDataModel = exchangeData,
                     timestamp = timestamp,
-                    txExternalUrl = externalUrl.orEmpty(),
+                    txExternalUrl = txExternalUrl.orEmpty(),
+                    txExternalId = txCexModel?.externalTxId.orEmpty(),
                 )
                 storeLastCryptoCurrencyId(currencyToGet.currency)
                 TxState.TxSent(
@@ -632,7 +634,7 @@ internal class SwapInteractorImpl @Inject constructor(
                         currencyToSend.currency.network.backendId,
                         derivationPath,
                     ).orEmpty(),
-                    txExternalUrl = externalUrl,
+                    txExternalUrl = txExternalUrl,
                     timestamp = timestamp,
                 )
             },
@@ -683,6 +685,7 @@ internal class SwapInteractorImpl @Inject constructor(
         swapDataModel: SwapDataModel,
         timestamp: Long,
         txExternalUrl: String,
+        txExternalId: String,
     ) {
         swapTransactionRepository.storeTransaction(
             userWalletId = UserWalletId(userWalletManager.getWalletId()),
@@ -699,6 +702,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     status = ExchangeStatus.New,
                     txId = swapDataModel.transaction.txId,
                     txExternalUrl = txExternalUrl,
+                    txExternalId = txExternalId,
                 ),
             ),
         )
