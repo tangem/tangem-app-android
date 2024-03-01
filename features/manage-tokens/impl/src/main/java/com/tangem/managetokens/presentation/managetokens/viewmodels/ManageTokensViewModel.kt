@@ -1,8 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.viewmodels
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -21,6 +19,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.managetokens.presentation.common.analytics.ManageTokens
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.Event
@@ -74,6 +73,8 @@ internal class ManageTokensViewModel @Inject constructor(
 
     var uiState: ManageTokensState by mutableStateOf(stateFactory.getInitialState(flowOf(PagingData.from(emptyList()))))
         private set
+
+    private var expandableState: ExpandableState = ExpandableState.COLLAPSED
 
     private val currenciesListJobHolder: JobHolder = JobHolder()
 
@@ -129,10 +130,16 @@ internal class ManageTokensViewModel @Inject constructor(
         }
     }
 
+    fun setExpandableState(state: State<ExpandableState>) {
+        expandableState = state.value
+    }
+
     private suspend fun subscribeToCurrencies(userWallets: List<UserWallet>) {
         wallets = CopyOnWriteArrayList(userWallets.filter { it.isMultiCurrency && !it.isLocked })
 
         combine(wallets.map { getCurrenciesUseCase.invoke(it.walletId).distinctUntilChanged() }) {
+            if (expandableState == ExpandableState.EXPANDED) return@combine
+
             allAddedCurrencies.clear()
             addedCurrenciesByWallet.clear()
 

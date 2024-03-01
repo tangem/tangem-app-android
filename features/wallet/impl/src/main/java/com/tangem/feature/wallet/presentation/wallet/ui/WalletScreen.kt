@@ -53,6 +53,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDe
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
+import com.tangem.features.managetokens.navigation.ExpandableState
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
@@ -264,6 +265,7 @@ private fun BaseScaffoldManageTokenRedesign(
 
     BottomSheetStateEffects(
         bottomSheetState = bottomSheetState,
+        state = state,
         showManageTokensBottomSheet = showManageTokensBottomSheet,
         alertConfig = alertConfig,
         keyboardShown = keyboardShown,
@@ -370,9 +372,11 @@ private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: (
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("CyclomaticComplexMethod")
 @Composable
 private fun BottomSheetStateEffects(
     bottomSheetState: SheetState,
+    state: WalletScreenState,
     showManageTokensBottomSheet: Boolean,
     alertConfig: WalletAlertState?,
     keyboardShown: State<Keyboard>,
@@ -435,6 +439,15 @@ private fun BottomSheetStateEffects(
             if (sheetHasBeenHidden) {
                 keyboardController?.hide()
             }
+        }
+    }
+
+    val isSheetHidden = bottomSheetState.targetValue == SheetValue.PartiallyExpanded
+    LaunchedEffect(isSheetHidden) {
+        if (isSheetHidden) {
+            state.manageTokensExpandableState.value = ExpandableState.COLLAPSED
+        } else {
+            state.manageTokensExpandableState.value = ExpandableState.EXPANDED
         }
     }
 }
