@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.fee
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,7 +21,10 @@ internal fun SendCustomFeeEthereum(
     selectedFee: FeeType,
     modifier: Modifier = Modifier,
 ) {
-    if (selectedFee == FeeType.Custom && customValues.isNotEmpty()) {
+    AnimatedVisibility(
+        visible = selectedFee == FeeType.Custom && customValues.isNotEmpty(),
+        label = "Custom Fee Selected Animation",
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             modifier = modifier,
