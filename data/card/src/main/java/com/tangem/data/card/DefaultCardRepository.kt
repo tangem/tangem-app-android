@@ -42,9 +42,19 @@ internal class DefaultCardRepository(
         appPreferencesStore.editData { mutablePreferences ->
             val usedCards = mutablePreferences.getUsedCards()
 
-            val updatedUsedCards = cardIds.map { cardId ->
-                usedCards.updateCard(cardId) {
-                    it.copy(isActivationStarted = true, isActivationFinished = true)
+            val newCards = cardIds.mapNotNull { newCardId ->
+                if (usedCards.none { it.cardId == newCardId }) {
+                    createDefaultUsedCardInfo(cardId = newCardId)
+                } else {
+                    null
+                }
+            }
+
+            val updatedUsedCards = (usedCards + newCards).map { card ->
+                if (cardIds.contains(card.cardId)) {
+                    card.copy(isActivationStarted = true, isActivationFinished = true)
+                } else {
+                    card
                 }
             }
 
@@ -108,7 +118,7 @@ internal class DefaultCardRepository(
         cardId: String,
         update: (UsedCardInfo) -> UsedCardInfo,
     ): List<UsedCardInfo> {
-        val card = find { it.cardId == cardId } ?: UsedCardInfo(cardId = cardId)
+        val card = find { it.cardId == cardId } ?: createDefaultUsedCardInfo(cardId = cardId)
         return addOrReplace(item = update(card), predicate = { it.cardId == cardId })
     }
 
@@ -127,4 +137,6 @@ internal class DefaultCardRepository(
             else -> null
         }
     }
+
+    private fun createDefaultUsedCardInfo(cardId: String) = UsedCardInfo(cardId = cardId)
 }
