@@ -119,28 +119,24 @@ class DetailsMiddleware {
 
                         doBeforeErase()
                         tangemSdkManager.resetToFactorySettings(card.cardId, true)
+                            .flatMap { userWalletsListManager.delete(listOfNotNull(userWalletId)) }
                             .flatMap { tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId)) }
                             .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
 
                                 val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
                                 if (selectedUserWallet != null) {
+                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                                    store.onUserWalletSelected(selectedUserWallet)
+                                } else {
                                     if (userWalletsListManager.isLockedSync) {
-                                        userWalletsListManager.delete(listOfNotNull(userWalletId))
                                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                                     } else {
-                                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                                        delay(timeMillis = 500)
-                                        userWalletsListManager.delete(listOfNotNull(userWalletId))
-                                        store.onUserWalletSelected(selectedUserWallet)
+                                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                     }
-                                } else {
-                                    userWalletsListManager.delete(listOfNotNull(userWalletId))
-                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                             }
                             .doOnFailure { error ->
-                                userWalletsListManager.delete(listOfNotNull(userWalletId))
                                 if (error is TangemSdkError && error !is TangemSdkError.UserCancelled) {
                                     Analytics.send(Settings.CardSettings.FactoryResetFinished(error))
                                 }
