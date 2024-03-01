@@ -61,6 +61,8 @@ object PreferencesKeys {
 
     val IS_TANGEM_TOS_ACCEPTED_KEY by lazy { booleanPreferencesKey(name = "tangem_tos_accepted") }
 
+    val APP_LOGS_KEY by lazy { stringPreferencesKey(name = "app_logs") }
+
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 }
 
