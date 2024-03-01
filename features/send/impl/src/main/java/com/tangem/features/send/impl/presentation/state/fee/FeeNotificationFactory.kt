@@ -3,6 +3,7 @@ package com.tangem.features.send.impl.presentation.state.fee
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.common.extensions.fromNetworkId
@@ -11,6 +12,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.StateRouter
@@ -33,6 +35,7 @@ internal class FeeNotificationFactory(
     private val stateRouterProvider: Provider<StateRouter>,
     private val clickIntents: SendClickIntents,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     fun create() = stateRouterProvider().currentState
@@ -97,7 +100,7 @@ internal class FeeNotificationFactory(
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> {
                 add(
                     SendFeeNotification.Error.ExceedsBalance(
-                        warning.coinCurrency.networkIconResId,
+                        networkIconId = warning.coinCurrency.networkIconResId,
                         networkName = warning.coinCurrency.name,
                         currencyName = cryptoCurrencyStatus.currency.name,
                         feeName = warning.coinCurrency.name,
@@ -109,6 +112,12 @@ internal class FeeNotificationFactory(
                                 currency = warning.coinCurrency,
                             )
                         },
+                    ),
+                )
+                analyticsEventHandler.send(
+                    SendAnalyticEvents.NoticeNotEnoughFee(
+                        token = cryptoCurrencyStatus.currency.symbol,
+                        blockchain = cryptoCurrencyStatus.currency.network.name,
                     ),
                 )
             }
@@ -130,6 +139,12 @@ internal class FeeNotificationFactory(
                                 )
                             }
                         },
+                    ),
+                )
+                analyticsEventHandler.send(
+                    SendAnalyticEvents.NoticeNotEnoughFee(
+                        token = warning.currency.symbol,
+                        blockchain = warning.networkName,
                     ),
                 )
             }
