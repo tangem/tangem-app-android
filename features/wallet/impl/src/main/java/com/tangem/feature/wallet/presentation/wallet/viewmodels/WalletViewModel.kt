@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,6 +27,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -79,6 +81,12 @@ internal class WalletViewModel @Inject constructor(
     fun setWalletRouter(router: InnerWalletRouter) {
         this.router = router
         clickIntents.initialize(router, viewModelScope)
+    }
+
+    fun setExpandableState(state: MutableState<ExpandableState>) {
+        stateHolder.update {
+            it.copy(manageTokensExpandableState = state)
+        }
     }
 
     fun subscribeToLifecycle(lifecycleOwner: LifecycleOwner) {
