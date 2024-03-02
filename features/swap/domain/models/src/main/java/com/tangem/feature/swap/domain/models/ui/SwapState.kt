@@ -3,10 +3,7 @@ package com.tangem.feature.swap.domain.models.ui
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
-import com.tangem.feature.swap.domain.models.domain.PreparedSwapConfigState
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
-import com.tangem.feature.swap.domain.models.domain.Warning
+import com.tangem.feature.swap.domain.models.domain.*
 import java.math.BigDecimal
 
 sealed interface SwapState {
@@ -15,11 +12,10 @@ sealed interface SwapState {
         val fromTokenInfo: TokenSwapInfo,
         val toTokenInfo: TokenSwapInfo,
         val priceImpact: PriceImpact,
-        val networkCurrency: String,
         val preparedSwapConfigState: PreparedSwapConfigState = PreparedSwapConfigState(
             isAllowedToSpend = false,
             isBalanceEnough = false,
-            isFeeEnough = false,
+            feeState = SwapFeeState.NotEnough(),
             hasOutgoingTransaction = false,
             includeFeeInAmount = IncludeFeeInAmount.Excluded,
         ),
@@ -98,7 +94,7 @@ sealed class TxFeeState {
         val fee: TxFee,
     ) : TxFeeState()
 
-    object Empty : TxFeeState()
+    data object Empty : TxFeeState()
 }
 
 data class TxFee(
