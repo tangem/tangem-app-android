@@ -932,12 +932,11 @@ internal class SwapViewModel @Inject constructor(
                     )
                 }
             },
-            onBuyClick = {
-                swapInteractor.getSelectedWallet()?.let {
-                    val fromToken = dataState.fromCryptoCurrency ?: return@let
+            onBuyClick = { currency ->
+                swapInteractor.getSelectedWallet()?.let { userWallet ->
                     swapRouter.openTokenDetails(
-                        it.walletId,
-                        swapInteractor.getNativeToken(fromToken.currency.network.backendId),
+                        userWalletId = userWallet.walletId,
+                        currency = currency,
                     )
                 }
             },
