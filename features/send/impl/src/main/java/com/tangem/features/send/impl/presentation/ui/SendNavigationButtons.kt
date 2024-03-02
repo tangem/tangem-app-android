@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +32,7 @@ import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 
 @Composable
-internal fun SendNavigationButtons(uiState: SendUiState, currentState: State<SendUiCurrentScreen>) {
+internal fun SendNavigationButtons(uiState: SendUiState, currentState: SendUiCurrentScreen) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -54,11 +53,10 @@ internal fun SendNavigationButtons(uiState: SendUiState, currentState: State<Sen
 }
 
 @Composable
-private fun SendSecondaryNavigationButton(uiState: SendUiState, currentState: State<SendUiCurrentScreen>) {
+private fun SendSecondaryNavigationButton(uiState: SendUiState, currentState: SendUiCurrentScreen) {
     val isEditingDisabled = uiState.isEditingDisabled
-    val isFromConfirmation = currentState.value.isFromConfirmation
-    val isCorrectScreen =
-        currentState.value.type == SendUiStateType.Amount || currentState.value.type == SendUiStateType.Fee
+    val isFromConfirmation = currentState.isFromConfirmation
+    val isCorrectScreen = currentState.type == SendUiStateType.Amount || currentState.type == SendUiStateType.Fee
     AnimatedVisibility(
         visible = !isEditingDisabled && isCorrectScreen && !isFromConfirmation,
         enter = expandHorizontally(expandFrom = Alignment.End),
@@ -83,7 +81,7 @@ private fun SendSecondaryNavigationButton(uiState: SendUiState, currentState: St
 @Composable
 private fun SendPrimaryNavigationButton(
     uiState: SendUiState,
-    currentState: State<SendUiCurrentScreen>,
+    currentState: SendUiCurrentScreen,
     modifier: Modifier = Modifier,
 ) {
     val isSuccess = uiState.sendState.isSuccess
@@ -107,7 +105,7 @@ private fun SendPrimaryNavigationButton(
         modifier = modifier,
     ) { textId ->
         when {
-            currentState.value.type == SendUiStateType.Send && !isSuccess -> {
+            currentState.type == SendUiStateType.Send && !isSuccess -> {
                 val hapticFeedback = rememberHapticFeedback(state = currentState, onAction = buttonClick)
                 PrimaryButtonIconEnd(
                     text = stringResource(textId),
@@ -117,7 +115,7 @@ private fun SendPrimaryNavigationButton(
                     showProgress = isSending,
                 )
             }
-            currentState.value.type == SendUiStateType.Send && isSuccess -> {
+            currentState.type == SendUiStateType.Send && isSuccess -> {
                 PrimaryButtonsDone(
                     textRes = textId,
                     txUrl = txUrl,
@@ -184,15 +182,15 @@ private fun PrimaryButtonsDone(
 
 private fun getButtonData(
     uiState: SendUiState,
-    currentState: State<SendUiCurrentScreen>,
+    currentState: SendUiCurrentScreen,
     isSuccess: Boolean,
 ): Pair<Int, () -> Unit> {
-    return when (currentState.value.type) {
+    return when (currentState.type) {
         SendUiStateType.None,
         SendUiStateType.Amount,
         SendUiStateType.Recipient,
         SendUiStateType.Fee,
-        -> if (currentState.value.isFromConfirmation) {
+        -> if (currentState.isFromConfirmation) {
             R.string.common_continue to uiState.clickIntents::onNextClick
         } else {
             R.string.common_next to uiState.clickIntents::onNextClick
@@ -205,8 +203,8 @@ private fun getButtonData(
     }
 }
 
-private fun isButtonEnabled(currentState: State<SendUiCurrentScreen>, uiState: SendUiState): Boolean {
-    return when (currentState.value.type) {
+private fun isButtonEnabled(currentState: SendUiCurrentScreen, uiState: SendUiState): Boolean {
+    return when (currentState.type) {
         SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
         SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
         SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled ?: false
