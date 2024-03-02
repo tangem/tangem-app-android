@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.models
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.ui.TxFee
 
 data class UiActions(
@@ -20,7 +21,7 @@ data class UiActions(
     val onSelectFeeType: (TxFee) -> Unit,
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
-    val onBuyClick: () -> Unit,
+    val onBuyClick: (CryptoCurrency) -> Unit,
     val onPolicyClick: (String) -> Unit,
     val onTosClick: (String) -> Unit,
     val onReceiveCardWarningClick: () -> Unit,
