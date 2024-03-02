@@ -13,7 +13,6 @@ internal class DefaultBlockchainInteractor @Inject constructor(
             NetworkInfo(
                 name = it.name,
                 blockchainId = it.blockchainId,
-                blockchainCurrency = it.blockchainCurrency,
             )
         }
     }
