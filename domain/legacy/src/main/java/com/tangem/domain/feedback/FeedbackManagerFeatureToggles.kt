@@ -1,4 +1,4 @@
-package com.tangem.tap.common.feedback
+package com.tangem.domain.feedback
 
 interface FeedbackManagerFeatureToggles {
 

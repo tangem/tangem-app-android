@@ -1,8 +1,8 @@
 package com.tangem.tap.di
 
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.tap.common.feedback.DefaultFeedbackManagerFeatureToggles
-import com.tangem.tap.common.feedback.FeedbackManagerFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
