@@ -9,8 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -359,41 +357,17 @@ internal class AddCustomTokenViewModel @Inject constructor(
             ),
         )
         debouncer.debounce(waitMs = DEFAULT_WAIT_TIME_MS, coroutineScope = viewModelScope + dispatchers.io) {
-            val path = createDerivationPathOrNull(input)
-            val isWrongDerivationForWallet2 = isWrongDerivationForWallet2(selectedWallet.walletId, path)
-            val enterDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
-                confirmButtonEnabled = path != null && !isWrongDerivationForWallet2,
-                derivationIncorrect = (input.isNotBlank() && path == null) ||
-                     isWrongDerivationForWallet2
+            val networkId = uiState.chooseNetworkState.selectedNetwork?.id ?: return@debounce
+            uiState = stateFactory.updateOnCustomDerivationEntered(
+                input = input,
+                requiresHardenedDerivationOnlyProvider = {
+                    requiresHardenedDerivationOnlyUseCase.invoke(
+                        networkId = networkId,
+                        userWalletId = selectedWallet.walletId
+                    ).getOrElse { false }
+                }
             )
-            uiState = uiState.copy(
-                chooseDerivationState = uiState.chooseDerivationState?.copy(
-                    enterCustomDerivationState = enterDerivationState,
-                ),
-            )
-        }
-    }
 
-    private suspend fun isWrongDerivationForWallet2(
-        selectedWalletId: UserWalletId,
-        derivationPath: DerivationPath?
-    ): Boolean {
-        val networkId = uiState.chooseNetworkState.selectedNetwork?.id ?: return false
-        val requiresHardenedDerivationOnly = requiresHardenedDerivationOnlyUseCase.invoke(
-            networkId = networkId,
-            userWalletId = selectedWalletId
-        ).getOrElse { false }
-
-        val allNodesHardened = derivationPath?.nodes?.all { it.isHardened } ?: false
-
-        return if (requiresHardenedDerivationOnly) !allNodesHardened else false
-    }
-
-    private fun createDerivationPathOrNull(rawPath: String): DerivationPath? {
-        return try {
-            DerivationPath(rawPath)
-        } catch (error: HDWalletError) {
-            null
         }
     }
 

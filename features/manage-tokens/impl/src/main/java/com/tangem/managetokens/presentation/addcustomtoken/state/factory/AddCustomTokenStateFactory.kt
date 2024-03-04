@@ -2,6 +2,8 @@ package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.tokens.error.AddCustomTokenError
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
@@ -72,7 +74,10 @@ internal class AddCustomTokenStateFactory(
         )
     }
 
-    private fun getListOfDerivations(supportedNetworks: List<Network>): List<Derivation> {
+    private fun getListOfDerivations(
+        supportedNetworks: List<Network>,
+        filterOnlyHardenedDerivations: Boolean = false,
+    ): List<Derivation> {
         return supportedNetworks.mapNotNull { network ->
             network.derivationPath.value?.let { rawPath ->
                 Derivation(
@@ -82,6 +87,12 @@ internal class AddCustomTokenStateFactory(
                     networkId = network.backendId,
                     onDerivationSelected = clickIntents::onDerivationSelected,
                 )
+            }.takeIf { derivation ->
+                if (filterOnlyHardenedDerivations) {
+                    derivation?.let { allNodesHardened(createDerivationPathOrNull(it.path)) } ?: false
+                } else {
+                    true
+                }
             }
         }
     }
@@ -222,31 +233,31 @@ internal class AddCustomTokenStateFactory(
         val uiState = currentStateProvider()
         val tokenData = if (supportsTokens) {
             uiState.tokenData ?: CustomTokenData(
-                    contractAddressTextField = TextFieldState.Editable(
-                        value = "",
-                        isEnabled = true,
-                        onValueChange = clickIntents::onContractAddressChange,
-                        onFocusExit = clickIntents::onContractAddressFocusExit,
-                    ),
-                    nameTextField = TextFieldState.Editable(
-                        value = "",
-                        isEnabled = false,
-                        onValueChange = clickIntents::onTokenNameChange,
-                        onFocusExit = clickIntents::onTokenNameFocusExit,
-                    ),
-                    symbolTextField = TextFieldState.Editable(
-                        value = "",
-                        isEnabled = false,
-                        onValueChange = clickIntents::onSymbolChange,
-                        onFocusExit = clickIntents::onSymbolFocusExit,
-                    ),
-                    decimalsTextField = TextFieldState.Editable(
-                        value = "",
-                        isEnabled = false,
-                        onValueChange = clickIntents::onDecimalsChange,
-                        onFocusExit = clickIntents::onDecimalsFocusExit,
-                    ),
-                )
+                contractAddressTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = true,
+                    onValueChange = clickIntents::onContractAddressChange,
+                    onFocusExit = clickIntents::onContractAddressFocusExit,
+                ),
+                nameTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = false,
+                    onValueChange = clickIntents::onTokenNameChange,
+                    onFocusExit = clickIntents::onTokenNameFocusExit,
+                ),
+                symbolTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = false,
+                    onValueChange = clickIntents::onSymbolChange,
+                    onFocusExit = clickIntents::onSymbolFocusExit,
+                ),
+                decimalsTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = false,
+                    onValueChange = clickIntents::onDecimalsChange,
+                    onFocusExit = clickIntents::onDecimalsFocusExit,
+                ),
+            )
         } else {
             null
         }
@@ -294,6 +305,52 @@ internal class AddCustomTokenStateFactory(
         )
     }
 
+    suspend fun updateOnCustomDerivationEntered(
+        input: String,
+        requiresHardenedDerivationOnlyProvider: suspend () -> Boolean,
+    ): AddCustomTokenState {
+        val uiState = currentStateProvider()
+        val path = createDerivationPathOrNull(input)
+        val isWrongDerivationForWallet2 = isWrongDerivationForWallet2(
+            requiresHardenedDerivationOnlyProvider = requiresHardenedDerivationOnlyProvider,
+            derivationPath = path
+        )
+        val enterDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
+            confirmButtonEnabled = path != null && !isWrongDerivationForWallet2,
+            derivationIncorrect = (input.isNotBlank() && path == null) || isWrongDerivationForWallet2
+        )
+        return uiState.copy(
+            chooseDerivationState = uiState.chooseDerivationState?.copy(
+                enterCustomDerivationState = enterDerivationState,
+            ),
+        )
+    }
+
+    private suspend fun isWrongDerivationForWallet2(
+        requiresHardenedDerivationOnlyProvider: suspend () -> Boolean,
+        derivationPath: DerivationPath?,
+    ): Boolean {
+        val requiresHardenedDerivationOnly = requiresHardenedDerivationOnlyProvider()
+
+        return if (requiresHardenedDerivationOnly) {
+            !allNodesHardened(derivationPath)
+        } else {
+            false
+        }
+    }
+
+    private fun allNodesHardened(derivationPath: DerivationPath?): Boolean {
+        return derivationPath?.nodes?.all { it.isHardened } ?: false
+    }
+
+    private fun createDerivationPathOrNull(rawPath: String): DerivationPath? {
+        return try {
+            DerivationPath(rawPath)
+        } catch (error: HDWalletError) {
+            null
+        }
+    }
+
     fun updateStateOnLoadingTokenInfo(contractAddress: String): AddCustomTokenState {
         return currentStateProvider().copy(
             tokenData = CustomTokenData(
@@ -303,7 +360,7 @@ internal class AddCustomTokenStateFactory(
                     onValueChange = clickIntents::onContractAddressChange,
                     onFocusExit = clickIntents::onContractAddressFocusExit,
 
-                ),
+                    ),
                 nameTextField = TextFieldState.Loading,
                 symbolTextField = TextFieldState.Loading,
                 decimalsTextField = TextFieldState.Loading,
