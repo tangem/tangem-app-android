@@ -26,6 +26,7 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
+import com.tangem.tap.common.feedback.FeedbackManagerFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
@@ -65,4 +66,5 @@ data class DaggerGraphState(
     val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
     val cardRepository: CardRepository? = null,
+    val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
 ) : StateType

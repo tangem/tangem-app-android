@@ -50,6 +50,7 @@ import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandle
 import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
+import com.tangem.tap.common.feedback.FeedbackManagerFeatureToggles
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.log.TimberFormatStrategy
@@ -174,6 +175,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var cardRepository: CardRepository
+
+    @Inject
+    lateinit var feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
     // endregion Injected
 
     override fun onCreate() {
@@ -261,6 +265,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
                     cardRepository = cardRepository,
+                    feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
                 ),
             ),
         )
