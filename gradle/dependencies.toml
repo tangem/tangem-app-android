@@ -82,6 +82,7 @@ listenableFuture = "1.0"
 swipeRefreshLayout = "1.1.0"
 spr-client = "3.6.2"
 web3j = "4.10.1"
+leakcanary = "2.13"
 # endregion Other libraries
 
 # region Tangem
@@ -249,4 +250,5 @@ camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "and
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "androidXCamera" }
 camera-view = { module = "androidx.camera:camera-view", version.ref = "androidXCamera" }
 web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
+leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 # endregion Other
