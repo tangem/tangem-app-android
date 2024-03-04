@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
+import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -25,6 +26,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -53,15 +55,18 @@ class DefaultWalletManagersFacade(
     configManager: ConfigManager,
     blockchainDataStorage: BlockchainDataStorage,
     accountCreator: AccountCreator,
+    blockchainSDKLogger: BlockchainSDKLogger,
+    feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
     private val walletManagerFactory by lazy {
         WalletManagerFactory(
-            configManager,
-            accountCreator,
-            blockchainDataStorage,
+            configManager = configManager,
+            accountCreator = accountCreator,
+            blockchainDataStorage = blockchainDataStorage,
+            blockchainSDKLogger = if (feedbackManagerFeatureToggles.isLocalLogsEnabled) blockchainSDKLogger else null,
         )
     }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
