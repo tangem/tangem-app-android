@@ -313,14 +313,14 @@ internal class AddCustomTokenStateFactory(
         )
     }
 
-    suspend fun updateOnCustomDerivationEntered(
+    fun updateOnCustomDerivationEntered(
         input: String,
-        requiresHardenedDerivationOnlyProvider: suspend () -> Boolean,
+        requiresHardenedDerivationOnly: Boolean,
     ): AddCustomTokenState {
         val uiState = currentStateProvider()
         val path = createDerivationPathOrNull(input)
         val isWrongDerivationForWallet2 = isWrongDerivationForWallet2(
-            requiresHardenedDerivationOnlyProvider = requiresHardenedDerivationOnlyProvider,
+            requiresHardenedDerivationOnly = requiresHardenedDerivationOnly,
             derivationPath = path
         )
         val enterDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
@@ -334,12 +334,10 @@ internal class AddCustomTokenStateFactory(
         )
     }
 
-    private suspend fun isWrongDerivationForWallet2(
-        requiresHardenedDerivationOnlyProvider: suspend () -> Boolean,
+    private fun isWrongDerivationForWallet2(
+        requiresHardenedDerivationOnly: Boolean,
         derivationPath: DerivationPath?,
     ): Boolean {
-        val requiresHardenedDerivationOnly = requiresHardenedDerivationOnlyProvider()
-
         return if (requiresHardenedDerivationOnly) {
             !allNodesHardened(derivationPath)
         } else {
