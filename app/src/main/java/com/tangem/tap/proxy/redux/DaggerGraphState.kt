@@ -1,7 +1,9 @@
 package com.tangem.tap.proxy.redux
 
+import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.AccountCreator
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
+import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -67,4 +69,6 @@ data class DaggerGraphState(
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
     val cardRepository: CardRepository? = null,
     val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
+    val tangemSdkLogger: TangemSdkLogger? = null,
+    val blockchainSDKLogger: BlockchainSDKLogger? = null,
 ) : StateType
