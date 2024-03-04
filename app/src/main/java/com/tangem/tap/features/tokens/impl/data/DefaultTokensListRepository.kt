@@ -29,7 +29,7 @@ internal class DefaultTokensListRepository(
     private val testnetTokensStorage: TestnetTokensStorage,
 ) : TokensListRepository {
 
-    override fun getAvailableTokens(searchText: String?): Flow<PagingData<Token>> {
+    override fun getAvailableTokens(searchText: String?, needFilterExcluded: Boolean): Flow<PagingData<Token>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 100,
@@ -42,6 +42,7 @@ internal class DefaultTokensListRepository(
                     dispatchers = dispatchers,
                     getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                     searchText = searchText,
+                    needFilterExcluded = needFilterExcluded,
                 )
 
                 getSelectedWalletSyncUseCase().fold(
