@@ -6,7 +6,9 @@ import arrow.core.raise.either
 import com.tangem.domain.tokens.repository.NetworksCompatibilityRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
-class RequiresHardenedDerivationOnlyUseCase(private val repository: NetworksCompatibilityRepository) {
+class RequiresHardenedDerivationOnlyUseCase(
+    private val repository: NetworksCompatibilityRepository
+) {
 
     suspend operator fun invoke(
         networkId: String,

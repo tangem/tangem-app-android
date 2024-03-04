@@ -75,10 +75,10 @@ internal class AddCustomTokenStateFactory(
     }
 
     private fun getListOfDerivations(
-        supportedNetworks: List<Network>,
+        networksListToGenerateDerivations: List<Network>,
         filterOnlyHardenedDerivations: Boolean = false,
     ): List<Derivation> {
-        return supportedNetworks.mapNotNull { network ->
+        return networksListToGenerateDerivations.mapNotNull { network ->
             network.derivationPath.value?.let { rawPath ->
                 Derivation(
                     networkName = network.name,
@@ -229,7 +229,12 @@ internal class AddCustomTokenStateFactory(
         )
     }
 
-    fun updateStateOnNetworkSelected(networkItemState: NetworkItemState, supportsTokens: Boolean): AddCustomTokenState {
+    fun updateStateOnNetworkSelected(
+        networkItemState: NetworkItemState,
+        supportsTokens: Boolean,
+        networks: List<Network>,
+        requiresHardenedDerivationOnly: Boolean
+    ): AddCustomTokenState {
         val uiState = currentStateProvider()
         val tokenData = if (supportsTokens) {
             uiState.tokenData ?: CustomTokenData(
@@ -261,12 +266,15 @@ internal class AddCustomTokenStateFactory(
         } else {
             null
         }
+
+        val derivations = getListOfDerivations(networks, requiresHardenedDerivationOnly)
+        val chooseDerivationState = createChooseDerivationState(derivations)
+
         return uiState.copy(
-            chooseNetworkState = uiState.chooseNetworkState.copy(selectedNetwork = networkItemState),
-            chooseDerivationState = uiState.chooseDerivationState?.copy(
-                selectedDerivation = null,
-                enterCustomDerivationState = null,
+            chooseNetworkState = uiState.chooseNetworkState.copy(
+                selectedNetwork = networkItemState,
             ),
+            chooseDerivationState = chooseDerivationState,
             tokenData = tokenData,
             addTokenButton = uiState.addTokenButton.copy(isEnabled = true),
         )

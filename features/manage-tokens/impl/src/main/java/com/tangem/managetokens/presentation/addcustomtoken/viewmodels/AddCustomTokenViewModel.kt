@@ -134,13 +134,24 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
     private fun selectNetwork(networkItemState: NetworkItemState) {
         viewModelScope.launch(dispatchers.io) {
-            val selectedWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId
+            val selectedWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId ?: return@launch
             val supportsTokens = areTokensSupportedByNetworkUseCase(
                 networkId = networkItemState.id,
                 userWalletId = selectedWalletId,
             ).getOrNull() ?: false
+
+            val networksForDerivations = getSupportedNetworks(selectedWalletId)
+
             withContext(dispatchers.main) {
-                uiState = stateFactory.updateStateOnNetworkSelected(networkItemState, supportsTokens)
+                uiState = stateFactory.updateStateOnNetworkSelected(
+                    networkItemState = networkItemState,
+                    supportsTokens = supportsTokens,
+                    networks = networksForDerivations,
+                    requiresHardenedDerivationOnly = requiresHardenedDerivationOnly(
+                        networkId = networkItemState.id,
+                        userWalletId = selectedWalletId,
+                    ),
+                )
             }
         }
     }
@@ -361,14 +372,18 @@ internal class AddCustomTokenViewModel @Inject constructor(
             uiState = stateFactory.updateOnCustomDerivationEntered(
                 input = input,
                 requiresHardenedDerivationOnlyProvider = {
-                    requiresHardenedDerivationOnlyUseCase.invoke(
-                        networkId = networkId,
-                        userWalletId = selectedWallet.walletId
-                    ).getOrElse { false }
+                    requiresHardenedDerivationOnly(networkId, selectedWallet.walletId)
                 }
             )
 
         }
+    }
+
+    private suspend fun requiresHardenedDerivationOnly(networkId: String, userWalletId: UserWalletId): Boolean {
+        return requiresHardenedDerivationOnlyUseCase.invoke(
+            networkId = networkId,
+            userWalletId = userWalletId,
+        ).getOrElse { false }
     }
 
     override fun onCustomDerivationSelected() {
