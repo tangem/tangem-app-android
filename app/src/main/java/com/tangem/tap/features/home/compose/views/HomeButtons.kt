@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -15,6 +16,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.common.compose.resources.C
 import com.tangem.wallet.R
 
 @Composable
@@ -29,13 +31,17 @@ internal fun HomeButtons(
         modifier = modifier,
     ) {
         ScanCardButton(
-            modifier = Modifier.weight(weight = 1f),
+            modifier = Modifier
+                .weight(weight = 1f)
+                .testTag(C.Tag.STORIES_SCREEN_SCAN_BUTTON),
             showProgress = btnScanStateInProgress,
             onClick = onScanButtonClick,
         )
         SpacerW12()
         OrderCardButton(
-            modifier = Modifier.weight(weight = 1f),
+            modifier = Modifier
+                .weight(weight = 1f)
+                .testTag(C.Tag.STORIES_SCREEN_ORDER_BUTTON),
             onClick = onShopButtonClick,
         )
     }
