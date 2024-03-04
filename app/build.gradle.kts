@@ -230,6 +230,9 @@ dependencies {
     implementation(deps.listenableFuture)
     implementation(deps.mlKit.barcodeScanning)
 
+    /** Leakcanary */
+    debugImplementation(deps.leakcanary)
+
     /** Excluded dependencies */
     implementation("com.google.guava:guava:30.0-android") {
         // excludes version 9999.0-empty-to-avoid-conflict-with-guava
