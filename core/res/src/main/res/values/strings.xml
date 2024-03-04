@@ -89,7 +89,7 @@
   <string name="common_explore_transaction_history">Explore transaction history</string>
   <string name="common_explorer">Explorer</string>
   <string name="common_fee_label">Fee</string>
-  <string name="common_fee_selector_footer">Network fees are charges users pay to process and confirm transactions. The fee amount can be affected by network congestion, transaction size, and execution priority.</string>
+  <string name="common_fee_selector_footer">Network fees are charges users pay to process and confirm transactions. The fee amount can be affected by network congestion, transaction size, and execution priority. %s</string>
   <string name="common_fee_selector_option_custom">Custom</string>
   <string name="common_fee_selector_option_fast">Fast</string>
   <string name="common_fee_selector_option_market">Market</string>
@@ -196,7 +196,8 @@
   <string name="exchange_tokens_available_tokens_header">My tokens</string>
   <string name="exchange_tokens_empty_tokens">You haven\'t added any tokens yet. Add tokens via Market to swap</string>
   <string name="exchange_tokens_unavailable_tokens_header">Cannot be swapped for %s</string>
-  <string name="express_by_provider">Provided by %s</string>
+  <string name="express_by_provider">Provided by</string>
+  <string name="express_by_provider_placeholder">Provided by %s</string>
   <string name="express_cex_fee_explanation">Additionally, the network fee for sending the exchanged funds back to your address is included in the rate</string>
   <string name="express_cex_status_button_title">Status</string>
   <string name="express_choose_providers_subtitle">Tangem offers token swaps via 3rd-party providers according to each provider\'s terms</string>
