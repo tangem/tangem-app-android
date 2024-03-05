@@ -5,6 +5,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.data.source.preferences"
+}
+
 dependencies {
     implementation(deps.androidx.core.ktx)
     implementation(deps.moshi)
