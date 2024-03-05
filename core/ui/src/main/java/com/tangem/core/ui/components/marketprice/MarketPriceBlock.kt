@@ -163,11 +163,13 @@ private fun PriceChangeInPercent(config: PriceChangeState.Content) {
                     id = when (type) {
                         PriceChangeType.UP -> R.drawable.ic_arrow_up_8
                         PriceChangeType.DOWN -> R.drawable.ic_arrow_down_8
+                        PriceChangeType.NEUTRAL -> R.drawable.ic_elipse_8
                     },
                 ),
                 tint = when (type) {
                     PriceChangeType.UP -> TangemTheme.colors.icon.accent
                     PriceChangeType.DOWN -> TangemTheme.colors.icon.warning
+                    PriceChangeType.NEUTRAL -> TangemTheme.colors.icon.inactive
                 },
                 contentDescription = null,
             )
@@ -177,6 +179,7 @@ private fun PriceChangeInPercent(config: PriceChangeState.Content) {
                 color = when (type) {
                     PriceChangeType.UP -> TangemTheme.colors.text.accent
                     PriceChangeType.DOWN -> TangemTheme.colors.text.warning
+                    PriceChangeType.NEUTRAL -> TangemTheme.colors.text.disabled
                 },
                 style = TangemTheme.typography.body2,
             )
@@ -249,6 +252,14 @@ private class WalletMarketPriceBlockStateProvider : CollectionPreviewParameterPr
             priceChangeConfig = PriceChangeState.Content(
                 valueInPercent = "10.89%",
                 type = PriceChangeType.UP,
+            ),
+        ),
+        MarketPriceBlockState.Content(
+            currencySymbol = "BTC",
+            price = "98900 $",
+            priceChangeConfig = PriceChangeState.Content(
+                valueInPercent = "0.00%",
+                type = PriceChangeType.NEUTRAL,
             ),
         ),
         MarketPriceBlockState.Loading(currencySymbol = "BTC"),
