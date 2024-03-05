@@ -9,6 +9,7 @@ import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -119,7 +120,7 @@ internal class SwapViewModel @Inject constructor(
                 val cryptoCurrencyStatus =
                     getCryptoCurrencyStatusUseCase(it.walletId, initialCryptoCurrency.id).getOrNull()
                 if (cryptoCurrencyStatus == null) {
-                    uiState = stateBuilder.addAlert(uiState, swapRouter::back)
+                    uiState = stateBuilder.addAlert(uiState = uiState, onClick = swapRouter::back)
                 } else {
                     initialCryptoCurrencyStatus = cryptoCurrencyStatus
                     initTokens()
@@ -482,7 +483,12 @@ internal class SwapViewModel @Inject constructor(
             return
         }
         val fromCurrency = requireNotNull(dataState.fromCryptoCurrency)
-        val fee = requireNotNull(dataState.selectedFee)
+        val fee = dataState.selectedFee
+        // TODO: unexpected crash for some users, this workaround to prevent app crash and follow to support
+        if (fee == null) {
+            makeDefaultAlert(TextReference.Str("Fee estimation error. Please send feedback to support."))
+            return
+        }
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
@@ -817,6 +823,12 @@ internal class SwapViewModel @Inject constructor(
 
     private fun makeDefaultAlert() {
         uiState = stateBuilder.addAlert(uiState) {
+            uiState = stateBuilder.clearAlert(uiState)
+        }
+    }
+
+    private fun makeDefaultAlert(message: TextReference) {
+        uiState = stateBuilder.addAlert(uiState, message) {
             uiState = stateBuilder.clearAlert(uiState)
         }
     }
