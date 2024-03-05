@@ -164,11 +164,6 @@ class UserWalletManagerImpl(
         }
     }
 
-    override fun getNetworkCurrency(networkId: String): String {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        return blockchain.currency
-    }
-
     @Throws(IllegalArgumentException::class)
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
         val selectedUserWallet = requireNotNull(

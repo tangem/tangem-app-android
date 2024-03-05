@@ -9,9 +9,9 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.scanCard.chains.*
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
@@ -24,7 +24,7 @@ internal object UseCaseScanProcessor {
         cardId: String? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
-        val scanCardUseCase = store.state.daggerGraphState.get(DaggerGraphState::scanCardUseCase)
+        val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         return scanCardUseCase(cardId, allowsRequestAccessCodeFromRepository)
             .fold(
                 ifLeft = { CompletionResult.Failure(scanCardExceptionConverter.convertBack(it)) },
@@ -45,14 +45,14 @@ internal object UseCaseScanProcessor {
     ) = progressScope(onProgressStateChange) {
         onScanStateChange(true)
 
-        val scanCardUseCase = store.state.daggerGraphState.get(DaggerGraphState::scanCardUseCase)
+        val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         val chains = buildList {
             add(ScanningFinishedChain { onScanStateChange(false) })
             if (analyticsEvent != null) {
                 add(AnalyticsChain(analyticsEvent))
             }
             add(DisclaimerChain(store, disclaimerWillShow))
-            add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager, preferencesStorage))
+            add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
         }
 
         scanCardUseCase(cardId, afterScanChains = chains)
