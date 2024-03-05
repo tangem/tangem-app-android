@@ -134,6 +134,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
     private fun selectNetwork(networkItemState: NetworkItemState) {
         viewModelScope.launch(dispatchers.io) {
+            // TODO AND-6324
             val selectedWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId ?: return@launch
             val supportsTokens = areTokensSupportedByNetworkUseCase(
                 networkId = networkItemState.id,
