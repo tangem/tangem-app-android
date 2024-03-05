@@ -85,9 +85,9 @@ web3j = "4.10.1"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-510"
+tangemBlockchainSdk = "develop-514"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-324"
+tangemCardSdk = "develop-332"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
