@@ -10,6 +10,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.customtoken.impl.domain.models.FoundToken
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -31,8 +32,8 @@ class DefaultCustomTokenInteractor(
 
     // TODO: Move to DI
     private val addCryptoCurrenciesUseCase by lazy(LazyThreadSafetyMode.NONE) {
-        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
-        val networksRepository = store.state.daggerGraphState.get(DaggerGraphState::networksRepository)
+        val currenciesRepository = store.inject(DaggerGraphState::currenciesRepository)
+        val networksRepository = store.inject(DaggerGraphState::networksRepository)
 
         AddCryptoCurrenciesUseCase(currenciesRepository, networksRepository)
     }

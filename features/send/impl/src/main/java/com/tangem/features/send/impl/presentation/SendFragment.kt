@@ -73,7 +73,7 @@ internal class SendFragment : ComposeFragment() {
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
-        SendScreen(viewModel.uiState)
+        SendScreen(viewModel.uiState, viewModel.stateRouter.currentState)
     }
 
     override fun onDestroy() {
