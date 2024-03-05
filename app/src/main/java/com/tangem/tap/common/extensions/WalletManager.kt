@@ -37,7 +37,7 @@ suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try 
 } catch (exception: Exception) {
     Timber.e(exception)
 
-    val networkConnectionManager = store.state.daggerGraphState.get(DaggerGraphState::networkConnectionManager)
+    val networkConnectionManager = store.inject(DaggerGraphState::networkConnectionManager)
     if (!networkConnectionManager.isOnline) {
         Result.Failure(TapError.NoInternetConnection)
     } else {

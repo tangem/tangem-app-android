@@ -7,6 +7,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.feature.onboarding"
+}
+
 dependencies {
     /** Core modules */
     implementation(project(":common"))

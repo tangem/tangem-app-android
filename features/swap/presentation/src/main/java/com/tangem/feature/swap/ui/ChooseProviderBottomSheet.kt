@@ -19,7 +19,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
-import com.tangem.feature.swap.models.states.PercentLowerThanBest
+import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.toImmutableList
@@ -114,7 +114,7 @@ private fun ChooseProviderBottomSheet_Preview() {
             iconUrl = "",
             subtitle = stringReference("1 000 000"),
             additionalBadge = ProviderState.AdditionalBadge.BestTrade,
-            percentLowerThenBest = PercentLowerThanBest.Value(-1.0f),
+            percentLowerThenBest = PercentDifference.Value(-1.0f),
             selectionType = ProviderState.SelectionType.SELECT,
             namePrefix = ProviderState.PrefixType.NONE,
             onProviderClick = {},
