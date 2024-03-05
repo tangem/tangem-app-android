@@ -15,8 +15,9 @@ internal interface TokensListRepository {
      * Get available tokens list
      *
      * @param searchText search text
+     * @param needFilterExcluded flag that determines if excluded tokens should be filtered
      *
      * @throws com.tangem.datasource.api.common.response.ApiResponseError
      */
-    fun getAvailableTokens(searchText: String?): Flow<PagingData<Token>>
+    fun getAvailableTokens(searchText: String?, needFilterExcluded: Boolean): Flow<PagingData<Token>>
 }
