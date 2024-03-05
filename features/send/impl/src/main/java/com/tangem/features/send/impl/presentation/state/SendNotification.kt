@@ -49,7 +49,7 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             val amountLimit: String,
             val onConfirmClick: () -> Unit,
         ) : Error(
-            title = resourceReference(R.string.send_notifiaction_transaction_limit_title),
+            title = resourceReference(R.string.send_notification_transaction_limit_title),
             subtitle = resourceReference(
                 R.string.send_notification_transaction_limit_text,
                 wrappedList(cryptoCurrency, utxoLimit, amountLimit),
