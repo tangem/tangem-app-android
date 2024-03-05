@@ -73,16 +73,13 @@ internal class DefaultNetworksCompatibilityRepository(
             }
     }
 
-    override suspend fun requiresHardenedDerivationOnly(
-        networkId: String,
-        userWalletId: UserWalletId,
-    ): Boolean {
+    override suspend fun requiresHardenedDerivationOnly(networkId: String, userWalletId: UserWalletId): Boolean {
         val scanResponse = getWalletOrThrow(userWalletId).scanResponse
         val config = CardConfig.createConfig(scanResponse.card)
         val blockchain = Blockchain.fromNetworkId(networkId) ?: return false
 
-        return config.primaryCurve(blockchain) == EllipticCurve.Ed25519Slip0010
-            && scanResponse.cardTypesResolver.isWallet2()
+        return config.primaryCurve(blockchain) == EllipticCurve.Ed25519Slip0010 &&
+            scanResponse.cardTypesResolver.isWallet2()
     }
 
     override fun areTokensSupportedByNetwork(networkId: String): Boolean {

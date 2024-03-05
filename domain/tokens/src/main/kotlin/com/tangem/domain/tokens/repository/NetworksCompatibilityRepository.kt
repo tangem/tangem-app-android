@@ -20,5 +20,4 @@ interface NetworksCompatibilityRepository {
     suspend fun requiresHardenedDerivationOnly(networkId: String, userWalletId: UserWalletId): Boolean
 
     fun areTokensSupportedByNetwork(networkId: String): Boolean
-
 }

@@ -371,9 +371,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
             val networkId = uiState.chooseNetworkState.selectedNetwork?.id ?: return@debounce
             uiState = stateFactory.updateOnCustomDerivationEntered(
                 input = input,
-                requiresHardenedDerivationOnly = requiresHardenedDerivationOnly(networkId, selectedWallet.walletId)
+                requiresHardenedDerivationOnly = requiresHardenedDerivationOnly(networkId, selectedWallet.walletId),
             )
-
         }
     }
 

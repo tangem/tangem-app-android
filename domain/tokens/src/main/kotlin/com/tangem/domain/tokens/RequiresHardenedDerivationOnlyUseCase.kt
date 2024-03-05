@@ -10,13 +10,10 @@ import com.tangem.domain.wallets.models.UserWalletId
  * Ed25519Slip0010 requires only hardened derivations on Wallet 2
  */
 class RequiresHardenedDerivationOnlyUseCase(
-    private val repository: NetworksCompatibilityRepository
+    private val repository: NetworksCompatibilityRepository,
 ) {
 
-    suspend operator fun invoke(
-        networkId: String,
-        userWalletId: UserWalletId,
-    ): Either<Throwable, Boolean> {
+    suspend operator fun invoke(networkId: String, userWalletId: UserWalletId): Either<Throwable, Boolean> {
         return either {
             catch(
                 block = {
@@ -26,5 +23,4 @@ class RequiresHardenedDerivationOnlyUseCase(
             )
         }
     }
-
 }

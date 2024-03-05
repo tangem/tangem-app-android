@@ -17,6 +17,7 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 
+@Suppress("LargeClass")
 internal class AddCustomTokenStateFactory(
     private val currentStateProvider: Provider<AddCustomTokenState>,
     private val clickIntents: AddCustomTokenClickIntents,
@@ -233,7 +234,7 @@ internal class AddCustomTokenStateFactory(
         networkItemState: NetworkItemState,
         supportsTokens: Boolean,
         networks: List<Network>,
-        requiresHardenedDerivationOnly: Boolean
+        requiresHardenedDerivationOnly: Boolean,
     ): AddCustomTokenState {
         val uiState = currentStateProvider()
         val tokenData = if (supportsTokens) {
@@ -313,19 +314,16 @@ internal class AddCustomTokenStateFactory(
         )
     }
 
-    fun updateOnCustomDerivationEntered(
-        input: String,
-        requiresHardenedDerivationOnly: Boolean,
-    ): AddCustomTokenState {
+    fun updateOnCustomDerivationEntered(input: String, requiresHardenedDerivationOnly: Boolean): AddCustomTokenState {
         val uiState = currentStateProvider()
         val path = createDerivationPathOrNull(input)
         val isWrongDerivationForWallet2 = isWrongDerivationForWallet2(
             requiresHardenedDerivationOnly = requiresHardenedDerivationOnly,
-            derivationPath = path
+            derivationPath = path,
         )
         val enterDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
             confirmButtonEnabled = path != null && !isWrongDerivationForWallet2,
-            derivationIncorrect = (input.isNotBlank() && path == null) || isWrongDerivationForWallet2
+            derivationIncorrect = input.isNotBlank() && path == null || isWrongDerivationForWallet2,
         )
         return uiState.copy(
             chooseDerivationState = uiState.chooseDerivationState?.copy(
@@ -366,7 +364,7 @@ internal class AddCustomTokenStateFactory(
                     onValueChange = clickIntents::onContractAddressChange,
                     onFocusExit = clickIntents::onContractAddressFocusExit,
 
-                    ),
+                ),
                 nameTextField = TextFieldState.Loading,
                 symbolTextField = TextFieldState.Loading,
                 decimalsTextField = TextFieldState.Loading,

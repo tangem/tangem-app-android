@@ -307,8 +307,6 @@ internal object TokensDomainModule {
         return ValidateContractAddressUseCase(tokensListRepository = tokensListRepository)
     }
 
-
-
     @Provides
     @ViewModelScoped
     fun provideAreTokensSupportedByNetworkUseCase(
