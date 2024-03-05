@@ -17,8 +17,9 @@ object WalletActivationErrorDialog {
             setTitle(context.getString(R.string.onboarding_activation_error_title))
             setMessage(context.getString(R.string.onboarding_activation_error_message))
             setPositiveButton(R.string.common_ok) { _, _ -> dialog.onConfirm() }
-            setNegativeButton(R.string.chat_button_title) { _, _ ->
-                store.dispatch(GlobalAction.OpenChat(SupportInfo()))
+            setNegativeButton(R.string.common_support) { _, _ ->
+                // changed on email support [REDACTED_TASK_KEY]
+                store.dispatch(GlobalAction.SendEmail(SupportInfo()))
             }
             setOnDismissListener { store.dispatchDialogHide() }
             setCancelable(false)
