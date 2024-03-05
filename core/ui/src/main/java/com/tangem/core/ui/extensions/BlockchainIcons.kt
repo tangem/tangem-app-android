@@ -54,6 +54,9 @@ fun getActiveIconRes(blockchainId: String): Int {
         "hedera", "hedera/test" -> R.drawable.img_hedera_22
         "playa3ull" -> R.drawable.img_playa3ull_22
         "DUC" -> R.drawable.img_ducatus_22
+        "aurora", "aurora/test" -> R.drawable.img_aurora_22
+        "areon", "areon/test" -> R.drawable.img_areon_22
+        "pls", "pls/test" -> R.drawable.img_pls_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -109,6 +112,9 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "hedera-hashgraph", "hedera/test" -> R.drawable.img_hedera_22
         "playa3ull-games" -> R.drawable.img_playa3ull_22
         "ducatus" -> R.drawable.img_ducatus_22
+        "aurora", "aurora/test" -> R.drawable.img_aurora_22
+        "areon", "areon/test" -> R.drawable.img_areon_22
+        "pls", "pls/test" -> R.drawable.img_pls_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -161,6 +167,9 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "hedera-hashgraph" -> R.drawable.img_hedera_22
         "playa3ull-games-2" -> R.drawable.img_playa3ull_22
         "ducatus" -> R.drawable.img_ducatus_22
+        "aurora-near" -> R.drawable.img_aurora_22
+        "areon" -> R.drawable.img_areon_22
+        "pls" -> R.drawable.img_pls_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -216,6 +225,9 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "hedera", "hedera/test" -> R.drawable.ic_hedera_22
         "playa3ull" -> R.drawable.ic_playa3ull_22
         "DUC" -> R.drawable.ic_ducatus_22
+        "aurora", "aurora/test" -> R.drawable.ic_aurora_22
+        "areon", "areon/test" -> R.drawable.ic_areon_22
+        "pls", "pls/test" -> R.drawable.ic_pls_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -271,6 +283,9 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "hedera-hashgraph", "hedera/test" -> R.drawable.ic_hedera_22
         "playa3ull-games" -> R.drawable.ic_playa3ull_22
         "ducatus" -> R.drawable.ic_ducatus_22
+        "aurora", "aurora/test" -> R.drawable.ic_aurora_22
+        "areon", "areon/test" -> R.drawable.ic_areon_22
+        "pls", "pls/test" -> R.drawable.ic_pls_22
         else -> R.drawable.ic_alert_24
     }
 }
