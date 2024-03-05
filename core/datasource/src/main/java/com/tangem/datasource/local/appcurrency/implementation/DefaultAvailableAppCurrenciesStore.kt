@@ -15,8 +15,20 @@ internal class DefaultAvailableAppCurrenciesStore(
     }
 
     override suspend fun store(response: CurrenciesResponse) {
-        val currencies = response.currencies.associateBy(CurrenciesResponse.Currency::code)
+        val currencies = response.currencies
+            .map {
+                it.copy(
+                    iconSmallUrl = response.imageHost?.plus(IMAGE_SMALL)?.format(it.id),
+                    iconMediumUrl = response.imageHost?.plus(IMAGE_MEDIUM)?.format(it.id),
+                )
+            }
+            .associateBy(CurrenciesResponse.Currency::code)
 
         dataStore.store(currencies)
+    }
+
+    private companion object {
+        const val IMAGE_MEDIUM = "medium/%s.png"
+        const val IMAGE_SMALL = "small/%s.png"
     }
 }

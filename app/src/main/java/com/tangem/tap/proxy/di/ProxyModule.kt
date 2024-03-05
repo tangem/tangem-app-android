@@ -1,6 +1,5 @@
 package com.tangem.tap.proxy.di
 
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -43,13 +42,11 @@ internal object ProxyModule {
     @Singleton
     fun provideTransactionManager(
         appStateHolder: AppStateHolder,
-        analytics: AnalyticsEventHandler,
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
     ): TransactionManager {
         return TransactionManagerImpl(
             appStateHolder = appStateHolder,
-            analytics = analytics,
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
         )

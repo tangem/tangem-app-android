@@ -79,7 +79,6 @@ internal class StateBuilder(
                 isBalanceHidden = true,
             ),
             fee = FeeItemState.Empty,
-            networkCurrency = networkInfo.blockchainCurrency,
             swapButton = SwapButton(enabled = false, onClick = {}),
             onRefresh = {},
             onBackClicked = actions.onBackClicked,
@@ -255,7 +254,6 @@ internal class StateBuilder(
                 balance = toCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
-            networkCurrency = quoteModel.networkCurrency,
             warnings = warnings,
             permissionState = convertPermissionState(
                 lastPermissionState = uiStateHolder.permissionState,
@@ -321,7 +319,8 @@ internal class StateBuilder(
         ignoreAmountReduce: Boolean,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
-
+        maybeAddDomainWarnings(quoteModel, warnings, ignoreAmountReduce)
+        maybeAddUnableCoverFeeWarning(quoteModel, fromToken, warnings)
         maybeAddDomainWarnings(quoteModel, warnings, ignoreAmountReduce)
         maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
         maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
@@ -444,7 +443,7 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
     ) {
         if (!quoteModel.preparedSwapConfigState.isAllowedToSpend &&
-            quoteModel.preparedSwapConfigState.isFeeEnough &&
+            quoteModel.preparedSwapConfigState.feeState is SwapFeeState.Enough &&
             quoteModel.permissionState is PermissionDataState.PermissionReadyForRequest
         ) {
             warnings.add(
@@ -475,7 +474,8 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         warnings: MutableList<SwapWarning>,
     ) {
-        if (!quoteModel.preparedSwapConfigState.isFeeEnough &&
+        val feeEnoughState = quoteModel.preparedSwapConfigState.feeState
+        if (feeEnoughState is SwapFeeState.NotEnough &&
             quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading
         ) {
@@ -483,7 +483,9 @@ internal class StateBuilder(
                 SwapWarning.UnableToCoverFeeWarning(
                     createUnableToCoverFeeNotificationConfig(
                         fromToken = fromToken,
-                        onBuyClick = actions.onBuyClick,
+                        feeCurrency = feeEnoughState.feeCurrency,
+                        currencyName = feeEnoughState.currencyName ?: fromToken.network.name,
+                        currencySymbol = feeEnoughState.currencySymbol ?: fromToken.network.currencySymbol,
                     ),
                 ),
             )
@@ -523,7 +525,7 @@ internal class StateBuilder(
             IncludeFeeInAmount.Excluded ->
                 preparedSwapConfigState.isAllowedToSpend &&
                     preparedSwapConfigState.isBalanceEnough &&
-                    preparedSwapConfigState.isFeeEnough
+                    preparedSwapConfigState.feeState is SwapFeeState.Enough
             is IncludeFeeInAmount.Included -> true
         }
     }
@@ -999,10 +1001,10 @@ internal class StateBuilder(
         )
     }
 
-    fun addAlert(uiState: SwapStateHolder, onClick: () -> Unit): SwapStateHolder {
+    fun addAlert(uiState: SwapStateHolder, message: TextReference? = null, onClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
-                message = null,
+                message = message,
                 onClick = onClick,
             ),
         )
@@ -1333,8 +1335,16 @@ internal class StateBuilder(
 
     private fun createUnableToCoverFeeNotificationConfig(
         fromToken: CryptoCurrency,
-        onBuyClick: () -> Unit,
+        feeCurrency: CryptoCurrency?,
+        currencyName: String,
+        currencySymbol: String,
     ): NotificationConfig {
+        val buttonState = feeCurrency?.let {
+            NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.common_buy_currency, wrappedList(currencySymbol)),
+                onClick = { actions.onBuyClick(it) },
+            )
+        }
         return NotificationConfig(
             title = resourceReference(
                 R.string.warning_express_not_enough_fee_for_token_tx_title,
@@ -1342,13 +1352,10 @@ internal class StateBuilder(
             ),
             subtitle = resourceReference(
                 R.string.warning_express_not_enough_fee_for_token_tx_description,
-                wrappedList(fromToken.network.name, fromToken.network.currencySymbol),
+                wrappedList(currencyName, currencySymbol),
             ),
             iconResId = fromToken.networkIconResId,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.common_buy_currency, wrappedList(fromToken.network.currencySymbol)),
-                onClick = onBuyClick,
-            ),
+            buttonsState = buttonState,
         )
     }
 

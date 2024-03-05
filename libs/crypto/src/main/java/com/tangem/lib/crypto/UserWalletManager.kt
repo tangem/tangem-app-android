@@ -59,13 +59,6 @@ interface UserWalletManager {
     @Throws(IllegalStateException::class)
     suspend fun getNativeTokenBalance(networkId: String, derivationPath: String?): ProxyAmount?
 
-    /**
-     * @param networkId
-     * @return currency name
-     */
-    @Throws(IllegalStateException::class)
-    fun getNetworkCurrency(networkId: String): String
-
     @Throws(IllegalStateException::class)
     suspend fun getLastTransactionHash(networkId: String, derivationPath: String?): String?
 }

@@ -28,6 +28,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScree
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
+import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import kotlin.properties.Delegates
@@ -62,10 +63,13 @@ internal class DefaultWalletRouter(
                     state = viewModel.uiState.collectAsStateWithLifecycle().value,
                     bottomSheetHeaderHeightProvider = { bottomSheetHeaderHeight },
                     bottomSheetContent = {
+                        val state = remember { mutableStateOf(ExpandableState.COLLAPSED) }
                         // Manage Tokens
                         manageTokensUi.Content(
                             onHeaderSizeChange = { bottomSheetHeaderHeight = it },
+                            state = state,
                         )
+                        viewModel.setExpandableState(state)
                     },
                 )
             }

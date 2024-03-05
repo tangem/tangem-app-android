@@ -1,9 +1,12 @@
 package com.tangem.features.send.impl.presentation.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.VALIDATION
+import com.tangem.core.analytics.models.AnalyticsParam.OnOffState
 
 /**
  * Send screen analytics
@@ -13,24 +16,9 @@ internal sealed class SendAnalyticEvents(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(category = "Token / Send", event = event, params = params) {
 
-    /** Send screen opened */
-    object SendOpened : SendAnalyticEvents(event = "Send Screen Opened")
-
-    /** Next button clicked */
-    data class NextButtonClicked(val source: SendScreenSource) : SendAnalyticEvents(
-        event = "Button - Next",
-        params = mapOf(SOURCE to source.name),
-    )
-
-    /** Back button clicked */
-    data class BackButtonClicked(val source: SendScreenSource) : SendAnalyticEvents(
-        event = "Button - Back",
-        params = mapOf(SOURCE to source.name),
-    )
-
     // region Address
     /** Recipient address screen opened */
-    object AddressScreenOpened : SendAnalyticEvents(event = "Address Screen Opened")
+    data object AddressScreenOpened : SendAnalyticEvents(event = "Address Screen Opened")
 
     /** Address to send entered */
     data class AddressEntered(val source: EnterAddressSource, val isValid: Boolean) : SendAnalyticEvents(
@@ -41,21 +29,13 @@ internal sealed class SendAnalyticEvents(
         ),
     )
 
-    /** Paste from clipboard button clicked */
-    data class PasteButtonClicked(val type: PasteType) : SendAnalyticEvents(
-        event = "Button - Paste",
-        params = mapOf(
-            TYPE to type.name,
-        ),
-    )
-
     /** Qr Code button clicked */
-    object QrCodeButtonClicked : SendAnalyticEvents(event = "Button - QR Code")
+    data object QrCodeButtonClicked : SendAnalyticEvents(event = "Button - QR Code")
     // endregion
 
     // region Amount
     /** Amount screen opened */
-    object AmountScreenOpened : SendAnalyticEvents(event = "Amount Screen Opened")
+    data object AmountScreenOpened : SendAnalyticEvents(event = "Amount Screen Opened")
 
     /** Selected currency */
     data class SelectedCurrency(val type: SelectedCurrencyType) : SendAnalyticEvents(
@@ -63,36 +43,36 @@ internal sealed class SendAnalyticEvents(
         params = mapOf(TYPE to type.value),
     )
 
-    /** Currency selector button clicked */
-    object SwapCurrencyButtonClicked : SendAnalyticEvents(event = "Button - Swap Currency")
+    /** Max amount button clicked */
+    data object MaxAmountButtonClicked : SendAnalyticEvents(event = "Max Amount Taped")
     // endregion
 
     // region Fee
     /** Fee screen opened */
-    object FeeScreenOpened : SendAnalyticEvents(event = "Fee Screen Opened")
+    data object FeeScreenOpened : SendAnalyticEvents(event = "Fee Screen Opened")
 
     /** Selected fee (send after next screen opened) */
-    data class SelectedFee(val fee: String) : SendAnalyticEvents(
+    data class SelectedFee(val feeType: SelectedFeeType) : SendAnalyticEvents(
         event = "Fee Selected",
-        params = mapOf("Commission" to fee),
+        params = mapOf("Fee Type" to feeType.name),
     )
 
     /** Custom fee selected */
-    object CustomFeeButtonClicked : SendAnalyticEvents(event = "Custom Fee Clicked")
+    data object CustomFeeButtonClicked : SendAnalyticEvents(event = "Custom Fee Clicked")
 
     /** Custom fee edited */
-    object GasPriceInserter : SendAnalyticEvents(event = "Gas Price Inserted")
+    data object GasPriceInserter : SendAnalyticEvents(event = "Gas Price Inserted")
 
     /** Subtract from amount selector switched (send after next screen opened) */
-    object SubtractFromAmount : SendAnalyticEvents(event = "Subtract from Amount")
+    data class SubtractFromAmount(val status: Boolean) : SendAnalyticEvents(
+        event = "Subtract from Amount",
+        params = mapOf("Status" to if (status) OnOffState.On.value else OnOffState.Off.value),
+    )
     // endregion
 
     // region Confirmation
     /** Confirmation screen opened */
-    object ConfirmationScreenOpened : SendAnalyticEvents(event = "Confirm Screen Opened")
-
-    /** Send transaction button clicked */
-    object SendButtonClicked : SendAnalyticEvents(event = "Button - Send")
+    data object ConfirmationScreenOpened : SendAnalyticEvents(event = "Confirm Screen Opened")
 
     /** Screen reopened from confirmation screen */
     data class ScreenReopened(val source: SendScreenSource) : SendAnalyticEvents(
@@ -103,13 +83,31 @@ internal sealed class SendAnalyticEvents(
 
     // region Transaction Result
     /** Transaction send screen opened */
-    object TransactionScreenOpened : SendAnalyticEvents(event = "Transaction Sent Screen Opened")
+    data object TransactionScreenOpened : SendAnalyticEvents(event = "Transaction Sent Screen Opened")
 
     /** Share button clicked */
-    object ShareButtonClicked : SendAnalyticEvents(event = "Button - Share")
+    data object ShareButtonClicked : SendAnalyticEvents(event = "Button - Share")
 
     /** Expore button clicked */
-    object ExploreButtonClicked : SendAnalyticEvents(event = "Button - Explore")
+    data object ExploreButtonClicked : SendAnalyticEvents(event = "Button - Explore")
+
+    /** If not enough fee notification is present */
+    data class NoticeNotEnoughFee(val token: String, val blockchain: String) : SendAnalyticEvents(
+        event = "Notice - Not Enough Fee",
+        params = mapOf(TOKEN to token, BLOCKCHAIN to blockchain),
+    )
+
+    /** If transaction delays notification is present */
+    data class NoticeTransactionDelays(val token: String) : SendAnalyticEvents(
+        event = "Notice - Transaction Delays Are Possible",
+        params = mapOf(TOKEN to token),
+    )
+
+    /** If error occurs during send transactions */
+    data class TransactionError(val token: String) : SendAnalyticEvents(
+        event = "Error - Transaction Rejected",
+        params = mapOf(TOKEN to token),
+    )
     // endregion
 }
 
@@ -125,12 +123,15 @@ internal enum class EnterAddressSource {
     RecentAddress,
 }
 
-internal enum class PasteType {
-    Address,
-    Memo,
-}
-
 internal enum class SelectedCurrencyType(val value: String) {
     Token("Token"),
     AppCurrency("App Currency"),
+}
+
+internal enum class SelectedFeeType {
+    Min,
+    Max,
+    Fixed,
+    Normal,
+    Custom,
 }

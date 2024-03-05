@@ -77,16 +77,18 @@ internal class DefaultAppCurrencyRepository(
         }
     }
 
-    private suspend fun fetchDefaultAppCurrency() {
-        fetchAvailableCurrenciesIfExpired()
-
-        changeAppCurrency(DEFAULT_CURRENCY_CODE)
+    override suspend fun fetchDefaultAppCurrency(isRefresh: Boolean) {
+        withContext(dispatchers.io) {
+            fetchAvailableCurrenciesIfExpired(isRefresh)
+            val appCurrency = appPreferencesStore.getSyncOrNull(PreferencesKeys.SELECTED_APP_CURRENCY_KEY)
+            changeAppCurrency(appCurrency ?: DEFAULT_CURRENCY_CODE)
+        }
     }
 
-    private suspend fun fetchAvailableCurrenciesIfExpired() {
+    private suspend fun fetchAvailableCurrenciesIfExpired(isRefresh: Boolean = false) {
         cacheRegistry.invokeOnExpire(
             key = AVAILABLE_CURRENCIES_CACHE_KEY,
-            skipCache = false,
+            skipCache = isRefresh,
             expireIn = Duration.standardMinutes(AVAILABLE_CURRENCIES_CACHE_KEY_EXPIRE_MINUTES),
             block = { fetchAvailableCurrencies() },
         )
