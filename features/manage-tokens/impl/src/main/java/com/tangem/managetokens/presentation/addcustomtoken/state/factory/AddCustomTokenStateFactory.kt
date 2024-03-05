@@ -350,7 +350,7 @@ internal class AddCustomTokenStateFactory(
     private fun createDerivationPathOrNull(rawPath: String): DerivationPath? {
         return try {
             DerivationPath(rawPath)
-        } catch (error: HDWalletError) {
+        } catch (error: Throwable) {
             null
         }
     }
