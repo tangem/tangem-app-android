@@ -3,10 +3,12 @@ package com.tangem.tap.proxy
 import androidx.core.text.isDigitsOnly
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.Message
+import com.tangem.blockchain.blockchains.algorand.AlgorandTransactionExtras
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
+import com.tangem.blockchain.blockchains.hedera.HederaTransactionBuilder
 import com.tangem.blockchain.blockchains.optimism.OptimismWalletManager
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
@@ -21,7 +23,6 @@ import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -39,7 +40,6 @@ import java.math.RoundingMode
 @Suppress("LargeClass")
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
-    private val analytics: AnalyticsEventHandler,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
 ) : TransactionManager {
@@ -140,12 +140,10 @@ class TransactionManagerImpl(
             Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
             Blockchain.Cosmos -> CosmosTransactionExtras(memo)
             Blockchain.TON -> TonTransactionExtras(memo)
+            Blockchain.Hedera -> HederaTransactionBuilder.HederaTransactionExtras(memo)
+            Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             else -> null
         }
-    }
-
-    override fun getNativeTokenDecimals(networkId: String): Int {
-        return Blockchain.fromNetworkId(networkId)?.decimals() ?: error("blockchain not found")
     }
 
     override suspend fun updateWalletManager(networkId: String, derivationPath: String?) {
@@ -205,7 +203,6 @@ class TransactionManagerImpl(
         return ProxyNetworkInfo(
             name = blockchain.fullName,
             blockchainId = blockchain.id,
-            blockchainCurrency = blockchain.currency,
         )
     }
 

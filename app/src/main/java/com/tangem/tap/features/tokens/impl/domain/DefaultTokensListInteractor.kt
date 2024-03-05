@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.Flow
  */
 internal class DefaultTokensListInteractor(private val repository: TokensListRepository) : TokensListInteractor {
 
-    override fun getTokensList(searchText: String): Flow<PagingData<Token>> {
-        return repository.getAvailableTokens(searchText = searchText.ifBlank(defaultValue = { null }))
+    override fun getTokensList(searchText: String, needFilterExcluded: Boolean): Flow<PagingData<Token>> {
+        return repository.getAvailableTokens(
+            searchText = searchText.ifBlank(defaultValue = { null }),
+            needFilterExcluded = needFilterExcluded,
+        )
     }
 }
