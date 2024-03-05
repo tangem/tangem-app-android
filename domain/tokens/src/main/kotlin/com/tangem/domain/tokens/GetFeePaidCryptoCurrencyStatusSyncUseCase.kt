@@ -35,14 +35,14 @@ class GetFeePaidCryptoCurrencyStatusSyncUseCase(
 
         return either {
             when (feePaidCurrency) {
-                FeePaidCurrency.Coin -> getCryptoCurrency(operations, cryptoCurrency.id)
+                FeePaidCurrency.Coin -> getCryptoCurrencyStatus(operations, cryptoCurrency.id)
                 FeePaidCurrency.SameCurrency -> cryptoCurrencyStatus
-                is FeePaidCurrency.Token -> getCryptoCurrency(operations, feePaidCurrency.tokenId)
+                is FeePaidCurrency.Token -> getCryptoCurrencyStatus(operations, feePaidCurrency.tokenId)
             }
         }
     }
 
-    private suspend fun getCryptoCurrency(
+    private suspend fun getCryptoCurrencyStatus(
         operations: CurrenciesStatusesOperations,
         cryptoCurrencyId: CryptoCurrency.ID,
     ): CryptoCurrencyStatus? {

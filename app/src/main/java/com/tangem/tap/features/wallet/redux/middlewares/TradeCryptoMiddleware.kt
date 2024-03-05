@@ -47,9 +47,7 @@ object TradeCryptoMiddleware {
     }
 
     private val isSendRedesignedEnabled: Boolean
-        get() = store.state.daggerGraphState.get(
-            getDependency = DaggerGraphState::sendFeatureToggles,
-        ).isRedesignedSendEnabled
+        get() = store.inject(getDependency = DaggerGraphState::sendFeatureToggles).isRedesignedSendEnabled
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun handle(state: () -> AppState?, action: TradeCryptoAction) {
@@ -106,8 +104,7 @@ object TradeCryptoMiddleware {
 
         if (currency is CryptoCurrency.Token && currency.network.isTestnet) {
             scope.launch {
-                val walletManager = store.state.daggerGraphState
-                    .get(DaggerGraphState::walletManagersFacade)
+                val walletManager = store.inject(DaggerGraphState::walletManagersFacade)
                     .getOrCreateWalletManager(
                         userWalletId = action.userWallet.walletId,
                         blockchain = blockchain,
@@ -175,8 +172,7 @@ object TradeCryptoMiddleware {
         val blockchain = Blockchain.fromId(currency.network.id.value)
 
         scope.launch {
-            val walletManager = store.state.daggerGraphState
-                .get(DaggerGraphState::walletManagersFacade)
+            val walletManager = store.inject(DaggerGraphState::walletManagersFacade)
                 .getOrCreateWalletManager(
                     userWalletId = action.userWallet.walletId,
                     blockchain = blockchain,
@@ -234,8 +230,7 @@ object TradeCryptoMiddleware {
         val blockchain = Blockchain.fromId(currency.network.id.value)
 
         scope.launch {
-            val walletManager = store.state.daggerGraphState
-                .get(DaggerGraphState::walletManagersFacade)
+            val walletManager = store.inject(DaggerGraphState::walletManagersFacade)
                 .getOrCreateWalletManager(
                     userWalletId = action.userWallet.walletId,
                     blockchain = blockchain,
