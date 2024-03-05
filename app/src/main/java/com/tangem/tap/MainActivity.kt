@@ -141,9 +141,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
 
-    @Inject
-    lateinit var generalUserWalletsListManager: UserWalletsListManager
-
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
