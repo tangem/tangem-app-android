@@ -16,7 +16,7 @@ internal object AccountCreatorModule {
 
     @Provides
     @Singleton
-    fun provideAccountCreator(authProvider: AuthProvider, @DevTangemApi tangemTechApi: TangemTechApi): AccountCreator {
+    fun provideAccountCreator(authProvider: AuthProvider, tangemTechApi: TangemTechApi): AccountCreator {
         return DefaultAccountCreator(authProvider, tangemTechApi)
     }
 }
