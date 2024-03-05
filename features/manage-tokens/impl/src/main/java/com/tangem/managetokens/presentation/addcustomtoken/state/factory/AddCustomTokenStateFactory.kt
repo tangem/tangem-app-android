@@ -3,7 +3,6 @@ package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.tokens.error.AddCustomTokenError
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
