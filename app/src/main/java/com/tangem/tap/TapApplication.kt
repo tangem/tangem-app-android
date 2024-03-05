@@ -57,7 +57,6 @@ import com.tangem.tap.common.log.TimberFormatStrategy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.shop.TangemShopService
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
@@ -82,7 +81,6 @@ lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
-lateinit var shopService: TangemShopService
 internal lateinit var derivationsFinder: DerivationsFinder
 
 @HiltAndroidApp
@@ -290,7 +288,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initWithConfigDependency(config: Config) {
-        shopService = TangemShopService(this, config.shopify!!)
         initAnalytics(this, config)
         initFeedbackManager(this, foregroundActivityObserver, store)
     }
