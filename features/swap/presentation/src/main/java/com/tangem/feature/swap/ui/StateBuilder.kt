@@ -361,7 +361,7 @@ internal class StateBuilder(
     private fun maybeAddDomainWarnings(
         quoteModel: SwapState.QuotesLoadedState,
         warnings: MutableList<SwapWarning>,
-        ignoreAmountReduce: Boolean
+        ignoreAmountReduce: Boolean,
     ) {
         quoteModel.warnings.forEach {
             when (it) {
@@ -408,7 +408,7 @@ internal class StateBuilder(
                                     onConfirmClick = actions.onReduceAmount,
                                     onDismissClick = actions.onReduceAmountIgnoreClick,
                                 ),
-                            )
+                            ),
                         )
                     }
                 }
