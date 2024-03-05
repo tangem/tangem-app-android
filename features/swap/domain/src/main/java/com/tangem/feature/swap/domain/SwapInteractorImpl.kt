@@ -373,6 +373,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val warnings = mutableListOf<Warning>()
         manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken)
         manageDustWarning(warnings, feeState, userWalletId, fromTokenStatus, amount)
+        manageReduceAmountWarning(warnings, fromTokenStatus, amount)
         return warnings
     }
 
@@ -418,6 +419,17 @@ internal class SwapInteractorImpl @Inject constructor(
             if (isShowWarning) {
                 warnings.add(Warning.MinAmountWarning(dust))
             }
+        }
+    }
+
+    private fun manageReduceAmountWarning(
+        warnings: MutableList<Warning>,
+        fromTokenStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+    ) {
+        val isTezos = fromTokenStatus.currency.network.id.value == Blockchain.Tezos.id
+        if (isTezos && amount.value == fromTokenStatus.value.amount) {
+            warnings.add(Warning.ReduceAmountWarning(TEZOS_FEE_THRESHOLD))
         }
     }
 
@@ -1481,6 +1493,7 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private const val INFINITY_SYMBOL = "∞"
+        private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
 
         private val ONE_INCH_SUPPORTED_NETWORKS = listOf(
             "ethereum",

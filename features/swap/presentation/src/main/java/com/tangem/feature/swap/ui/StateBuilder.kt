@@ -2,7 +2,6 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -213,7 +212,6 @@ internal class StateBuilder(
         isNeedBestRateBadge: Boolean,
         selectedFeeType: FeeType,
         isReverseSwapPossible: Boolean,
-        tezosFeeThresHold: BigDecimal,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -221,7 +219,6 @@ internal class StateBuilder(
             quoteModel = quoteModel,
             fromToken = fromToken,
             ignoreAmountReduce = uiStateHolder.reduceAmountIgnore,
-            tezosFeeThreshold = tezosFeeThresHold,
         )
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
@@ -322,13 +319,11 @@ internal class StateBuilder(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
         ignoreAmountReduce: Boolean,
-        tezosFeeThreshold: BigDecimal,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
 
-        maybeAddDomainWarnings(quoteModel, warnings)
+        maybeAddDomainWarnings(quoteModel, warnings, ignoreAmountReduce)
         maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
-        maybeAddReduceAmountWarning(quoteModel, warnings, ignoreAmountReduce, tezosFeeThreshold)
         maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
         maybeAddNetworkFeeCoverageWarning(quoteModel, warnings)
         maybeAddUnableCoverFeeWarning(quoteModel, fromToken, warnings)
@@ -363,7 +358,11 @@ internal class StateBuilder(
         }
     }
 
-    private fun maybeAddDomainWarnings(quoteModel: SwapState.QuotesLoadedState, warnings: MutableList<SwapWarning>) {
+    private fun maybeAddDomainWarnings(
+        quoteModel: SwapState.QuotesLoadedState,
+        warnings: MutableList<SwapWarning>,
+        ignoreAmountReduce: Boolean
+    ) {
         quoteModel.warnings.forEach {
             when (it) {
                 is Warning.ExistentialDepositWarning -> {
@@ -400,6 +399,19 @@ internal class StateBuilder(
                         ),
                     )
                 }
+                is Warning.ReduceAmountWarning -> {
+                    if (!ignoreAmountReduce) {
+                        warnings.add(
+                            SwapWarning.ReduceAmount(
+                                notificationConfig = createReduceAmountNotificationConfig(
+                                    amount = it.tezosFeeThreshold.toPlainString(),
+                                    onConfirmClick = actions.onReduceAmount,
+                                    onDismissClick = actions.onReduceAmountIgnoreClick,
+                                ),
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -416,35 +428,13 @@ internal class StateBuilder(
             if (amount < amountToCreateAccount) {
                 warnings.add(
                     SwapWarning.NeedReserveToCreateAccount(
-                        notificationConfig = createActivateAccountWarning(
+                        notificationConfig = createActivateAccountNotificationConfig(
                             status.amountToCreateAccount,
                             quoteModel.toTokenInfo.cryptoCurrencyStatus.currency.name,
                         ),
                     ),
                 )
             }
-        }
-    }
-
-    private fun maybeAddReduceAmountWarning(
-        quoteModel: SwapState.QuotesLoadedState,
-        warnings: MutableList<SwapWarning>,
-        ignoreAmountReduce: Boolean,
-        tezosFeeThreshold: BigDecimal,
-    ) {
-        val isTezos = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
-        if (!ignoreAmountReduce && isTezos &&
-            quoteModel.fromTokenInfo.tokenAmount.value == quoteModel.fromTokenInfo.cryptoCurrencyStatus.value.amount
-        ) {
-            warnings.add(
-                SwapWarning.ReduceAmount(
-                    notificationConfig = createReduceAmount(
-                        amount = tezosFeeThreshold.toPlainString(),
-                        onConfirmClick = actions.onReduceAmount,
-                        onDismissClick = actions.onReduceAmountIgnoreClick,
-                    ),
-                ),
-            )
         }
     }
 
@@ -1312,7 +1302,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun createActivateAccountWarning(amount: BigDecimal, token: String): NotificationConfig {
+    private fun createActivateAccountNotificationConfig(amount: BigDecimal, token: String): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(
                 id = R.string.send_notification_invalid_reserve_amount_title,
@@ -1323,7 +1313,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun createReduceAmount(
+    private fun createReduceAmountNotificationConfig(
         amount: String,
         onConfirmClick: () -> Unit,
         onDismissClick: () -> Unit,

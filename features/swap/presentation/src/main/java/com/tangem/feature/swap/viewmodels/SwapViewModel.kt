@@ -357,7 +357,6 @@ internal class SwapViewModel @Inject constructor(
                     isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     isReverseSwapPossible = isReverseSwapPossible(),
-                    tezosFeeThresHold = TEZOS_FEE_THRESHOLD,
                 )
                 if (uiState.warnings.any { it is SwapWarning.UnableToCoverFeeWarning }) {
                     analyticsEventHandler.send(
