@@ -3,6 +3,7 @@ package com.tangem.features.send.impl.presentation.viewmodel
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
+import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 
 @Suppress("TooManyFunctions")
@@ -33,7 +34,7 @@ internal interface SendClickIntents {
     // region Recipient
     fun onRecipientAddressValueChange(value: String, type: EnterAddressSource? = null)
 
-    fun onRecipientMemoValueChange(value: String, isPasted: Boolean = false)
+    fun onRecipientMemoValueChange(value: String)
     // endregion
 
     // region Fee
@@ -43,7 +44,9 @@ internal interface SendClickIntents {
 
     fun onCustomFeeValueChange(index: Int, value: String)
 
-    fun onSubtractSelect(value: Boolean)
+    fun onSubtractSelect()
+
+    fun onReadMoreClick()
     // endregion
 
     // region Send
@@ -55,12 +58,14 @@ internal interface SendClickIntents {
 
     fun showFee()
 
-    fun onExploreClick(txUrl: String)
+    fun showSend()
+
+    fun onExploreClick()
 
     fun onShareClick()
 
-    fun onAmountReduceClick(reducedAmount: String)
+    fun onAmountReduceClick(reducedAmount: String, clazz: Class<out SendNotification>)
 
-    fun onAmountReduceIgnoreClick()
+    fun onNotificationCancel(clazz: Class<out SendNotification>)
     // endregion
 }

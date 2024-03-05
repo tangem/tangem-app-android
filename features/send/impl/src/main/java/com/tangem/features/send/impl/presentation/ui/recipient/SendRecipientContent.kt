@@ -1,8 +1,9 @@
 package com.tangem.features.send.impl.presentation.ui.recipient
 
+import androidx.annotation.StringRes
+import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,9 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.itemContentType
-import androidx.paging.compose.itemKey
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -29,18 +27,17 @@ import com.tangem.features.send.impl.presentation.domain.SendRecipientListConten
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import kotlinx.collections.immutable.ImmutableList
 
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
 private const val MEMO_FIELD_KEY = "MEMO_FIELD_KEY"
-private const val MY_WALLETS_HEADER_KEY = "MY_WALLETS_HEADER_KEY"
 
 @Composable
-internal fun SendRecipientContent(
-    uiState: SendStates.RecipientState?,
-    clickIntents: SendClickIntents,
-    recipientList: LazyPagingItems<SendRecipientListContent>,
-) {
+internal fun SendRecipientContent(uiState: SendStates.RecipientState?, clickIntents: SendClickIntents) {
     if (uiState == null) return
+    val recipients = uiState.recent
+    val wallets = uiState.wallets
+    val memoField = uiState.memoTextField
     val address = uiState.addressTextField
     val isValidating by remember(uiState.isValidating) { derivedStateOf { uiState.isValidating } }
     val isError by remember(address.isError) { derivedStateOf { address.isError } }
@@ -72,7 +69,7 @@ internal fun SendRecipientContent(
                 )
             }
         }
-        uiState.memoTextField?.let { memoField ->
+        if (memoField != null) {
             item(key = MEMO_FIELD_KEY) {
                 val placeholder = if (memoField.isEnabled) memoField.placeholder else memoField.disabledText
                 TextFieldWithPaste(
@@ -81,7 +78,7 @@ internal fun SendRecipientContent(
                     placeholder = placeholder,
                     footer = stringResource(R.string.send_recipient_memo_footer),
                     onValueChange = memoField.onValueChange,
-                    onPasteClick = { clickIntents.onRecipientMemoValueChange(it, isPasted = true) },
+                    onPasteClick = clickIntents::onRecipientMemoValueChange,
                     modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
                     isError = memoField.isError,
                     error = memoField.error,
@@ -89,144 +86,115 @@ internal fun SendRecipientContent(
                 )
             }
         }
-        recipientListItem(
-            recipientList = recipientList,
-            clickIntents = clickIntents,
+        listHeaderItem(
+            titleRes = R.string.send_recipient_wallets_title,
+            isVisible = wallets.isNotEmpty() && wallets.first().isVisible,
+            isFirst = true,
         )
+        listItem(wallets, clickIntents, isLast = recipients.isEmpty())
+        listHeaderItem(
+            titleRes = R.string.send_recent_transactions,
+            isVisible = recipients.isNotEmpty() && recipients.first().isVisible,
+            isFirst = wallets.isEmpty(),
+        )
+        listItem(recipients, clickIntents, isLast = true)
     }
 }
 
-@Suppress("LongMethod")
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.recipientListItem(
-    recipientList: LazyPagingItems<SendRecipientListContent>,
+private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Boolean, isFirst: Boolean) {
+    item(
+        key = titleRes,
+    ) {
+        AnimatedVisibility(
+            visible = isVisible,
+            label = "Header Appearance Animation",
+            enter = slideInVertically() + fadeIn(),
+            exit = slideOutVertically() + fadeOut(),
+            modifier = Modifier
+                .animateItemPlacement()
+                .animateContentSize(),
+        ) {
+            val (topPadding, paddingFromTop) = if (isFirst) {
+                TangemTheme.dimens.spacing20 to TangemTheme.dimens.spacing12
+            } else {
+                TangemTheme.dimens.spacing0 to TangemTheme.dimens.spacing8
+            }
+            val topRadius = if (isFirst) {
+                TangemTheme.dimens.radius12
+            } else {
+                TangemTheme.dimens.radius0
+            }
+            Text(
+                text = stringResource(titleRes),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = topPadding)
+                    .clip(
+                        RoundedCornerShape(
+                            topEnd = topRadius,
+                            topStart = topRadius,
+                        ),
+                    )
+                    .background(TangemTheme.colors.background.action)
+                    .padding(
+                        top = paddingFromTop,
+                        bottom = TangemTheme.dimens.spacing8,
+                        start = TangemTheme.dimens.spacing12,
+                        end = TangemTheme.dimens.spacing12,
+                    ),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+private fun LazyListScope.listItem(
+    list: ImmutableList<SendRecipientListContent>,
     clickIntents: SendClickIntents,
+    isLast: Boolean,
 ) {
     items(
-        count = recipientList.itemCount,
-        key = recipientList.itemKey {
-            when (it) {
-                is SendRecipientListContent.Wallets -> MY_WALLETS_HEADER_KEY
-                is SendRecipientListContent.Item -> it.id
-            }
-        },
-        contentType = recipientList.itemContentType { it::class.java },
+        count = list.size,
+        key = { list[it].id },
+        contentType = { list[it]::class.java },
     ) { index ->
-        recipientList[index]?.let { item ->
-            when (item) {
-                is SendRecipientListContent.Wallets -> {
-                    RecipientWalletListItem(
-                        item = item,
-                        clickIntents = clickIntents,
-                        modifier = Modifier
-                            .animateItemPlacement()
-                            .padding(top = TangemTheme.dimens.spacing20)
-                            .then(
-                                if (index == 0) {
-                                    val bottomRadius = if (item.isWalletsOnly) {
-                                        TangemTheme.dimens.radius12
-                                    } else {
-                                        TangemTheme.dimens.radius0
-                                    }
-                                    Modifier.clip(
-                                        RoundedCornerShape(
-                                            topEnd = TangemTheme.dimens.radius12,
-                                            topStart = TangemTheme.dimens.radius12,
-                                            bottomStart = bottomRadius,
-                                            bottomEnd = bottomRadius,
-                                        ),
-                                    )
-                                } else {
-                                    Modifier
-                                },
-                            ),
-                    )
-                }
-                is SendRecipientListContent.Item -> {
-                    val title = item.title.resolveReference()
-                    ListItemWithIcon(
-                        title = item.title.resolveReference(),
-                        subtitle = item.subtitle.resolveReference(),
-                        info = item.timestamp?.resolveReference(),
-                        subtitleEndOffset = item.subtitleEndOffset,
-                        subtitleIconRes = item.subtitleIconRes,
-                        modifier = Modifier
-                            .then(
-                                if (index == recipientList.itemCount - 1) {
-                                    Modifier
-                                        .padding(bottom = TangemTheme.dimens.spacing20)
-                                        .clip(
-                                            RoundedCornerShape(
-                                                bottomEnd = TangemTheme.dimens.radius12,
-                                                bottomStart = TangemTheme.dimens.radius12,
-                                            ),
-                                        )
-                                } else {
-                                    Modifier
-                                },
-                            )
-                            .background(TangemTheme.colors.background.action),
-                        onClick = {
-                            clickIntents.onRecipientAddressValueChange(title, EnterAddressSource.RecentAddress)
+        val item = list[index]
+        val title = item.title.resolveReference()
+        AnimatedVisibility(
+            visible = item.isVisible,
+            label = "Header Appearance Animation",
+            enter = slideInVertically() + fadeIn(),
+            exit = slideOutVertically() + fadeOut(),
+            modifier = Modifier
+                .animateItemPlacement()
+                .animateContentSize(),
+        ) {
+            ListItemWithIcon(
+                title = title,
+                subtitle = item.subtitle.resolveReference(),
+                info = item.timestamp?.resolveReference(),
+                subtitleEndOffset = item.subtitleEndOffset,
+                subtitleIconRes = item.subtitleIconRes,
+                onClick = { clickIntents.onRecipientAddressValueChange(title, EnterAddressSource.RecentAddress) },
+                modifier = Modifier
+                    .then(
+                        if (isLast && index == list.lastIndex) {
+                            Modifier
+                                .padding(bottom = TangemTheme.dimens.spacing12)
+                                .clip(
+                                    shape = RoundedCornerShape(
+                                        bottomStart = TangemTheme.dimens.radius16,
+                                        bottomEnd = TangemTheme.dimens.radius16,
+                                    ),
+                                )
+                        } else {
+                            Modifier
                         },
                     )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun RecipientWalletListItem(
-    item: SendRecipientListContent.Wallets,
-    clickIntents: SendClickIntents,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.action)
-            .padding(top = TangemTheme.dimens.spacing12),
-    ) {
-        if (item.list.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.send_recipient_wallets_title),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing12,
-                        bottom = TangemTheme.dimens.spacing8,
-                    ),
-            )
-        }
-        item.list.forEachIndexed { _, wallet ->
-            val title = wallet.title.resolveReference()
-            ListItemWithIcon(
-                title = wallet.title.resolveReference(),
-                subtitle = wallet.subtitle.resolveReference(),
-                onClick = { clickIntents.onRecipientAddressValueChange(title, EnterAddressSource.RecentAddress) },
-            )
-        }
-        if (!item.isWalletsOnly) {
-            val topPadding = if (item.list.isNotEmpty()) {
-                TangemTheme.dimens.spacing8
-            } else {
-                TangemTheme.dimens.spacing0
-            }
-            Text(
-                text = stringResource(R.string.send_recent_transactions),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        top = topPadding,
-                        bottom = TangemTheme.dimens.spacing8,
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing12,
-                    ),
+                    .background(TangemTheme.colors.background.action),
             )
         }
     }
