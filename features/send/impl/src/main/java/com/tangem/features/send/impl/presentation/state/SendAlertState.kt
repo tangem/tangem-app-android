@@ -20,7 +20,7 @@ internal sealed class SendAlertState {
     ) : SendAlertState() {
         override val message: TextReference = resourceReference(R.string.common_unknown_error)
         override val confirmButtonText: TextReference =
-            resourceReference(id = R.string.send_alert_button_request_support)
+            resourceReference(id = R.string.common_support)
     }
 
     data class TransactionError(
@@ -35,7 +35,7 @@ internal sealed class SendAlertState {
             formatArgs = wrappedList(causeTextReference ?: cause.orEmpty(), code),
         )
         override val confirmButtonText: TextReference =
-            resourceReference(id = R.string.send_alert_button_request_support)
+            resourceReference(id = R.string.common_support)
     }
 
     data class DemoMode(
@@ -45,9 +45,26 @@ internal sealed class SendAlertState {
         override val message: TextReference = resourceReference(id = R.string.warning_demo_mode_message)
     }
 
-    object FeeIncreased : SendAlertState() {
+    data object FeeIncreased : SendAlertState() {
         override val title: TextReference? = null
         override val message: TextReference = resourceReference(id = R.string.send_notification_high_fee_title)
+    }
+
+    data class FeeTooLow(
+        override val onConfirmClick: () -> Unit,
+    ) : SendAlertState() {
+        override val title: TextReference? = null
+        override val message: TextReference = resourceReference(id = R.string.send_alert_fee_too_low_text)
+        override val confirmButtonText: TextReference = resourceReference(R.string.common_continue)
+    }
+
+    data class FeeCoverage(
+        override val onConfirmClick: (() -> Unit),
+    ) : SendAlertState() {
+        override val title: TextReference? = null
+        override val message: TextReference = resourceReference(id = R.string.send_alert_fee_coverage_title)
+        override val confirmButtonText: TextReference =
+            resourceReference(id = R.string.send_alert_fee_coverage_subract_text)
     }
 
     data class ReserveAmount(val amount: String) : SendAlertState() {
