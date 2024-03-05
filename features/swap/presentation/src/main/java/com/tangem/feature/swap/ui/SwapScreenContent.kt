@@ -490,7 +490,6 @@ private val state = SwapStateHolder(
             ),
         ),
     ),
-    networkCurrency = "MATIC",
     swapButton = SwapButton(enabled = true, onClick = {}),
     onRefresh = {},
     onBackClicked = {},

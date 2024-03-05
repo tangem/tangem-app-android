@@ -1,8 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.viewmodels
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -21,6 +19,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.managetokens.presentation.common.analytics.ManageTokens
 import com.tangem.managetokens.presentation.common.state.AlertState
 import com.tangem.managetokens.presentation.common.state.Event
@@ -33,11 +32,15 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.Debouncer.Companion.DEFAULT_WAIT_TIME_MS
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
-import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import kotlin.collections.set
 import kotlin.properties.Delegates
@@ -62,8 +65,6 @@ internal class ManageTokensViewModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel(), ManageTokensClickIntents, ManageTokensUiEvents {
 
-    private val debouncer = Debouncer()
-
     private val stateFactory = ManageTokensStateFactory(
         currentStateProvider = Provider { uiState },
         clickIntents = this,
@@ -73,11 +74,19 @@ internal class ManageTokensViewModel @Inject constructor(
     var uiState: ManageTokensState by mutableStateOf(stateFactory.getInitialState(flowOf(PagingData.from(emptyList()))))
         private set
 
-    private var allAddedCurrencies: MutableList<CryptoCurrency> = mutableListOf()
+    private var expandableState: ExpandableState = ExpandableState.COLLAPSED
 
-    private var wallets: List<UserWallet> by Delegates.notNull()
+    private val currenciesListJobHolder: JobHolder = JobHolder()
 
-    private var addedCurrenciesByWallet: MutableMap<UserWallet, MutableList<CryptoCurrency>> = mutableMapOf()
+    private val debouncer = Debouncer()
+
+    private var allAddedCurrencies: MutableList<CryptoCurrency> = Collections.synchronizedList(
+        mutableListOf<CryptoCurrency>(),
+    )
+
+    private var wallets: CopyOnWriteArrayList<UserWallet> by Delegates.notNull()
+
+    private var addedCurrenciesByWallet: MutableMap<UserWallet, MutableList<CryptoCurrency>> = ConcurrentHashMap()
 
     private var selectedWallet: UserWallet? = null
 
@@ -114,32 +123,57 @@ internal class ManageTokensViewModel @Inject constructor(
             getWalletsUseCase()
                 .distinctUntilChanged()
                 .collectLatest { userWallets ->
-                    wallets = userWallets.filter { it.isMultiCurrency && !it.isLocked }
-                    wallets.map { wallet ->
-                        val currencies = getCurrenciesUseCase(wallet.walletId).fold(
-                            ifLeft = { emptyList() },
-                            ifRight = { it },
-                        )
-                        allAddedCurrencies += currencies
-                        addedCurrenciesByWallet[wallet] = currencies.toMutableList()
-                    }
-                    withContext(dispatchers.main) {
-                        uiState = uiState.copy(tokens = getInitialTokensList())
-                    }
-                    selectedWallet = getSelectedWalletSyncUseCase().fold(
-                        ifLeft = { null },
-                        ifRight = { if (!it.isMultiCurrency || it.isLocked) null else it },
-                    )
-                    if (selectedWallet == null && wallets.isNotEmpty()) {
-                        selectWalletUseCase(wallets.first().walletId)
-                        selectedWallet = wallets.first()
-                    }
-                    updateDerivationNotificationState()
-                    withContext(dispatchers.main) {
-                        uiState = stateFactory.updateChooseWalletState(wallets, userWallets, selectedWallet)
-                    }
+                    launch {
+                        subscribeToCurrencies(userWallets)
+                    }.saveIn(currenciesListJobHolder)
                 }
         }
+    }
+
+    fun setExpandableState(state: State<ExpandableState>) {
+        expandableState = state.value
+    }
+
+    private suspend fun subscribeToCurrencies(userWallets: List<UserWallet>) {
+        wallets = CopyOnWriteArrayList(userWallets.filter { it.isMultiCurrency && !it.isLocked })
+
+        combine(wallets.map { getCurrenciesUseCase.invoke(it.walletId).distinctUntilChanged() }) {
+            if (expandableState == ExpandableState.EXPANDED) return@combine
+
+            allAddedCurrencies.clear()
+            addedCurrenciesByWallet.clear()
+
+            val walletsWithCurrencies = wallets.zip(
+                it.map { currencyList ->
+                    currencyList.getOrElse {
+                        Timber.e("Couldn't retrieve currency list")
+                        emptyList()
+                    }
+                },
+            )
+
+            allAddedCurrencies = walletsWithCurrencies.flatMap { it.second }.toMutableList()
+
+            walletsWithCurrencies.forEach { (wallet, currencies) ->
+                addedCurrenciesByWallet[wallet] = currencies.toMutableList()
+            }
+
+            withContext(dispatchers.main) {
+                uiState = uiState.copy(tokens = getInitialTokensList())
+            }
+            selectedWallet = getSelectedWalletSyncUseCase().fold(
+                ifLeft = { null },
+                ifRight = { if (!it.isMultiCurrency || it.isLocked) null else it },
+            )
+            if (selectedWallet == null && wallets.isNotEmpty()) {
+                selectWalletUseCase(wallets.first().walletId)
+                selectedWallet = wallets.first()
+            }
+            updateDerivationNotificationState()
+            withContext(dispatchers.main) {
+                uiState = stateFactory.updateChooseWalletState(wallets, userWallets, selectedWallet)
+            }
+        }.collect()
     }
 
     private fun getInitialTokensList(searchText: String = ""): Flow<PagingData<TokenItemState>> {

@@ -17,7 +17,6 @@ import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.feedback.FeedbackEmail
-import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -88,8 +87,9 @@ internal class DetailsViewModel(
             SettingsItem.AppSettings(::navigateToAppSettings)
                 .let(::add)
 
-            SettingsItem.Chat(::navigateToChat)
-                .let(::add)
+            // removed chat in task AND-6202
+            // SettingsItem.Chat(::navigateToChat)
+            //     .let(::add)
 
             SettingsItem.SendFeedback(::sendFeedback)
                 .let(::add)
@@ -138,11 +138,6 @@ internal class DetailsViewModel(
     private fun sendFeedback() {
         Analytics.send(Settings.ButtonSendFeedback())
         store.dispatchOnMain(GlobalAction.SendEmail(FeedbackEmail()))
-    }
-
-    private fun navigateToChat() {
-        Analytics.send(Settings.ButtonChat())
-        store.dispatchOnMain(GlobalAction.OpenChat(SupportInfo()))
     }
 
     private fun navigateToAppSettings() {
