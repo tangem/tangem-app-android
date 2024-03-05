@@ -71,6 +71,7 @@ private fun ExchangeStatusBottomSheetContent(content: ExchangeStatusBottomSheetC
         ExchangeProvider(
             providerName = TextReference.Str(config.provider.name),
             providerType = TextReference.Str(config.provider.type.name),
+            providerTxId = config.txExternalId,
             imageUrl = config.provider.imageLarge,
         )
         SpacerH12()

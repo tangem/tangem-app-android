@@ -15,7 +15,6 @@ import com.tangem.feature.swap.models.states.ProviderState
 data class SwapStateHolder(
     val sendCardData: SwapCardState,
     val receiveCardData: SwapCardState,
-    val networkCurrency: String,
     val blockchainId: String, // not the same as networkId, its local id in app
     val warnings: List<SwapWarning> = emptyList(),
     val alert: SwapWarning.GenericWarning? = null,
