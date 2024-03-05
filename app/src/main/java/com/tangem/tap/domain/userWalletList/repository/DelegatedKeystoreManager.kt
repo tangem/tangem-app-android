@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.userWalletList.repository
 
-import com.tangem.common.authentication.KeystoreManager
+import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.utils.Provider
 import javax.crypto.SecretKey
 
@@ -8,15 +8,18 @@ internal class DelegatedKeystoreManager(
     private val keystoreManagerProvider: Provider<KeystoreManager>,
 ) : KeystoreManager {
 
-    override suspend fun get(keyAlias: String): SecretKey? {
-        return keystoreManagerProvider().get(keyAlias)
+    override suspend fun get(masterKeyConfig: KeystoreManager.MasterKeyConfig, keyAlias: String): SecretKey? {
+        return keystoreManagerProvider().get(masterKeyConfig, keyAlias)
     }
 
-    override suspend fun get(keyAliases: Collection<String>): Map<String, SecretKey> {
-        return keystoreManagerProvider().get(keyAliases)
+    override suspend fun get(
+        masterKeyConfig: KeystoreManager.MasterKeyConfig,
+        keyAliases: Collection<String>,
+    ): Map<String, SecretKey> {
+        return keystoreManagerProvider().get(masterKeyConfig, keyAliases)
     }
 
-    override suspend fun store(keyAlias: String, key: SecretKey) {
-        return keystoreManagerProvider().store(keyAlias, key)
+    override suspend fun store(masterKeyConfig: KeystoreManager.MasterKeyConfig, keyAlias: String, key: SecretKey) {
+        keystoreManagerProvider().store(masterKeyConfig, keyAlias, key)
     }
 }
