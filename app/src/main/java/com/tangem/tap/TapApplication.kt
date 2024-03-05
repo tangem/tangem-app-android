@@ -30,11 +30,16 @@ import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
+import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
@@ -155,6 +160,24 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var accountCreator: AccountCreator
+
+    @Inject
+    lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
+
+    @Inject
+    lateinit var generalUserWalletsListManager: UserWalletsListManager
+
+    @Inject
+    lateinit var wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase
+
+    @Inject
+    lateinit var saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase
+
+    @Inject
+    lateinit var cardRepository: CardRepository
+
+    @Inject
+    lateinit var feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
     // endregion Injected
 
     override fun onCreate() {
@@ -183,8 +206,13 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         // TODO: Try to performance and user experience.
         //  [REDACTED_JIRA]
         runBlocking {
-            initUserWalletsListManager()
             featureTogglesManager.init()
+
+            if (userWalletsListManagerFeatureToggles.isGeneralManagerEnabled) {
+                store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
+            } else {
+                initUserWalletsListManager()
+            }
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
@@ -232,6 +260,12 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     sendFeatureToggles = sendFeatureToggles,
                     blockchainDataStorage = blockchainDataStorage,
                     accountCreator = accountCreator,
+                    userWalletsListManagerFeatureToggles = userWalletsListManagerFeatureToggles,
+                    generalUserWalletsListManager = generalUserWalletsListManager,
+                    wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
+                    saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
+                    cardRepository = cardRepository,
+                    feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
                 ),
             ),
         )
