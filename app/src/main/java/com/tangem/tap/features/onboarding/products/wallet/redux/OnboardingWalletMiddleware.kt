@@ -27,6 +27,8 @@ import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
@@ -72,8 +74,10 @@ private fun handleWalletAction(action: Action) {
     when (action) {
         OnboardingWalletAction.Init -> {
             ifNotNull(onboardingManager, card) { manager, notNullCard ->
-                if (!manager.isActivationStarted(notNullCard.cardId)) {
-                    Analytics.send(Onboarding.Started())
+                mainScope.launch {
+                    if (!manager.isActivationStarted(notNullCard.cardId)) {
+                        Analytics.send(Onboarding.Started())
+                    }
                 }
             }
             when {
@@ -144,8 +148,10 @@ private fun handleWalletAction(action: Action) {
                     onboardingManager.scanResponse = updatedResponse
 
                     store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(false))
-                    startCardActivation(updatedResponse)
-                    store.dispatch(OnboardingWalletAction.ResumeBackup)
+                    mainScope.launch {
+                        onboardingManager.startActivation(updatedResponse.card.cardId)
+                        store.dispatchWithMain(OnboardingWalletAction.ResumeBackup)
+                    }
                 }
                 is CompletionResult.Failure -> {
                     if (result.error is TangemSdkError.WalletAlreadyCreated) {
@@ -398,8 +404,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(true))
             backupService.addBackupCard { result ->
                 backupService.skipCompatibilityChecks = false
-                store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk
-                    .config.filter.cardIdFilter = null
+                store.inject(DaggerGraphState::cardSdkConfigRepository).sdk.config.filter.cardIdFilter = null
                 store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(false))
                 when (result) {
                     is CompletionResult.Success -> {
@@ -493,11 +498,13 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             backupService.discardSavedBackup()
         }
         is BackupAction.DiscardSavedBackup -> {
-            backupService.primaryCardId?.let {
-                Analytics.send(Onboarding.Finished())
-                finishCardsActivationForDiscardedUnfinishedBackup(it)
+            mainScope.launch {
+                backupService.primaryCardId?.let {
+                    Analytics.send(Onboarding.Finished())
+                    store.state.globalState.onboardingState.onboardingManager?.finishActivation(it)
+                }
+                backupService.discardSavedBackup()
             }
-            backupService.discardSavedBackup()
         }
         is BackupAction.CheckForUnfinishedBackup -> {
             if (backupService.hasIncompletedBackup) {
@@ -514,17 +521,21 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
         is BackupAction.SkipBackup -> {
             Analytics.send(Onboarding.Backup.Skipped())
-
             Analytics.send(Onboarding.Finished())
-            finishCardActivation(gatherCardIds(backupState, card))
+
+            scope.launch {
+                store.state.globalState.onboardingState.onboardingManager?.finishActivation(
+                    cardIds = gatherCardIds(backupState, card),
+                )
+            }
         }
         is BackupAction.FinishBackup -> {
-            if (action.withAnalytics) {
-                Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
-            }
+            scope.launch {
+                if (action.withAnalytics) {
+                    Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
+                }
 
-            if (scanResponse != null) {
-                scope.launch {
+                if (scanResponse != null) {
                     val userWallet = UserWalletBuilder(scanResponse)
                         .backupCardsIds(backupState.backupCardIds.toSet())
                         .build()
@@ -546,16 +557,22 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     )
                     store.dispatchOnMain(GlobalAction.UpdateUserWalletsListManager(userWalletsListManager))
                 }
+
+                val notActivatedCardIds = gatherCardIds(backupState, card).mapNotNull {
+                    if (store.state.globalState.onboardingState.onboardingManager?.isActivationFinished(it) == true) {
+                        null
+                    } else {
+                        it
+                    }
+                }
+
+                // All cardIds may already be activated if the backup was skipped before.
+                if (notActivatedCardIds.isEmpty()) return@launch
+
+                Analytics.send(Onboarding.Finished())
+
+                store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
             }
-
-            val notActivatedCardIds = gatherCardIds(backupState, card)
-                .mapNotNull { if (cardActivationIsFinished(it)) null else it }
-
-            // All cardIds may already be activated if the backup was skipped before.
-            if (notActivatedCardIds.isEmpty()) return
-
-            Analytics.send(Onboarding.Finished())
-            finishCardActivation(notActivatedCardIds)
         }
 
         is BackupAction.ResetBackupCard -> {
@@ -566,34 +583,10 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
     }
 }
 
-private fun cardActivationIsFinished(cardId: String): Boolean {
-    return preferencesStorage.usedCardsPrefStorage.isActivationFinished(cardId)
-}
-
-/**
- * Standard Wallet cards start activation at OnboardingWalletAction.CreateWallet
- */
-private fun startCardActivation(scanResponse: ScanResponse) {
-    preferencesStorage.usedCardsPrefStorage.activationStarted(scanResponse.card.cardId)
-}
-
-/**
- * Standard Wallet cards finish activation at BackupAction.SkipBackup and BackupAction.FinishBackup
- */
-internal fun finishCardActivation(cardIds: List<String>) {
-    cardIds.forEach { cardId ->
-        preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
-    }
-}
-
 internal fun gatherCardIds(backupState: BackupState, card: CardDTO?): List<String> {
     return (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
         .filterNotNull()
         .distinct()
-}
-
-private fun finishCardsActivationForDiscardedUnfinishedBackup(cardId: String) {
-    preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
 }
 
 private fun handleOnBackPressed(state: OnboardingWalletState) {
