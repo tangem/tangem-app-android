@@ -165,7 +165,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
 
     object TopUpWithoutReserve : Informational(
         title = resourceReference(id = R.string.warning_no_account_title),
-        subtitle = resourceReference(id = R.string.no_account_bnb),
+        subtitle = resourceReference(id = R.string.no_account_send_to_create),
     )
 
     class HasPendingTransactions(val coinSymbol: String) : Informational(
