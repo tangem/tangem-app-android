@@ -10,6 +10,7 @@ import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -65,4 +66,5 @@ data class DaggerGraphState(
     val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
     val cardRepository: CardRepository? = null,
+    val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
 ) : StateType

@@ -87,8 +87,6 @@ sealed class Onboarding(
         class SetupFinished : Twins("Twin Setup Finished")
     }
 
-    class ButtonChat : Onboarding("Onboarding", "Button - Chat")
-
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : Onboarding(
         category = "Onboarding / Biometric",
         event = "Enable Biometric",
