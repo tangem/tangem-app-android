@@ -109,6 +109,18 @@ internal class CurrenciesStatusesOperations(
         }
     }
 
+    suspend fun getNetworkCoinSync(
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): Either<Error, CryptoCurrencyStatus> {
+        val currency = recover(
+            block = { getNetworkCoin(networkId, derivationPath) },
+            recover = { return it.left() },
+        )
+
+        return getCurrencyStatusSync(currency.id)
+    }
+
     suspend fun getPrimaryCurrencyStatusSync(): Either<Error, CryptoCurrencyStatus> = either {
         val currency = catch(
             block = { currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId) },
