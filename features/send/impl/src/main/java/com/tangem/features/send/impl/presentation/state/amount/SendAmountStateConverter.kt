@@ -45,7 +45,7 @@ internal class SendAmountStateConverter(
                 ),
                 SendAmountSegmentedButtonsConfig(
                     title = stringReference(appCurrency.code),
-                    iconState = iconStateConverter.convert(status),
+                    iconUrl = appCurrency.iconSmallUrl,
                     isFiat = true,
                 ),
             ),
