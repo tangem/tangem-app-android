@@ -20,21 +20,11 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
             buttonsState = buttonsState,
         ),
     ) {
-        object TooLow : Warning(
-            title = resourceReference(id = R.string.send_notification_transaction_delay_title),
-            subtitle = resourceReference(id = R.string.send_notification_transaction_delay_text),
-        )
-
         data class TooHigh(
             val value: String,
         ) : Warning(
             title = resourceReference(id = R.string.send_notification_fee_too_high_title),
             subtitle = resourceReference(id = R.string.send_notification_fee_too_high_text, wrappedList(value)),
-        )
-
-        object NetworkCoverage : Warning(
-            title = resourceReference(id = R.string.send_network_fee_warning_title),
-            subtitle = resourceReference(id = R.string.send_network_fee_warning_content),
         )
 
         data class NetworkFeeUnreachable(val onRefresh: () -> Unit) : Warning(
@@ -66,6 +56,7 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
             val feeName: String,
             val feeSymbol: String,
             val networkName: String,
+            val mergeFeeNetworkName: Boolean = false,
             val onClick: (() -> Unit)? = null,
         ) : Error(
             title = resourceReference(
@@ -79,7 +70,16 @@ sealed class SendFeeNotification(val config: NotificationConfig) {
             iconResId = networkIconId,
             buttonsState = onClick?.let {
                 NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                    text = resourceReference(R.string.common_buy_currency, wrappedList(feeName)),
+                    text = resourceReference(
+                        R.string.common_buy_currency,
+                        wrappedList(
+                            if (mergeFeeNetworkName) {
+                                "$currencyName ($feeSymbol)"
+                            } else {
+                                feeName
+                            },
+                        ),
+                    ),
                     onClick = onClick,
                 )
             },
