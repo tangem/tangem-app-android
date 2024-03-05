@@ -915,10 +915,10 @@ internal class StateBuilder(
         )
     }
 
-    fun addAlert(uiState: SwapStateHolder, onClick: () -> Unit): SwapStateHolder {
+    fun addAlert(uiState: SwapStateHolder, message: TextReference? = null, onClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
-                message = null,
+                message = message,
                 onClick = onClick,
             ),
         )
