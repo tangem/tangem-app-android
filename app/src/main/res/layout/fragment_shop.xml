@@ -218,7 +218,7 @@
                         android:layout_height="wrap_content"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:text="@string/shop_total"
+                        android:text="remove AND-6253"
                         android:textColor="@color/textBlack"
                         android:textSize="15sp"
                         app:layout_constraintBottom_toBottomOf="parent"
