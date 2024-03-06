@@ -29,8 +29,6 @@ import com.tangem.tap.features.saveWallet.redux.SaveWalletMiddleware
 import com.tangem.tap.features.saveWallet.redux.SaveWalletState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.shop.redux.ShopMiddleware
-import com.tangem.tap.features.shop.redux.ShopState
 import com.tangem.tap.features.signin.redux.SignInMiddleware
 import com.tangem.tap.features.signin.redux.SignInState
 import com.tangem.tap.features.tokens.legacy.redux.TokensState
@@ -56,7 +54,6 @@ data class AppState(
     val disclaimerState: DisclaimerState = DisclaimerState(),
     val tokensState: TokensState = TokensState(),
     val walletConnectState: WalletConnectState = WalletConnectState(),
-    val shopState: ShopState = ShopState(),
     val welcomeState: WelcomeState = WelcomeState(),
     val saveWalletState: SaveWalletState = SaveWalletState(),
     val signInState: SignInState = SignInState(),
@@ -92,7 +89,6 @@ data class AppState(
                 DisclaimerMiddleware().disclaimerMiddleware,
                 WalletConnectMiddleware().walletConnectMiddleware,
                 BackupMiddleware().backupMiddleware,
-                ShopMiddleware().shopMiddleware,
                 WelcomeMiddleware().middleware,
                 SaveWalletMiddleware().middleware,
                 LockUserWalletsTimerMiddleware().middleware,
