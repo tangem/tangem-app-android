@@ -1,3 +1,4 @@
+
 package com.tangem.features.send.impl.presentation.viewmodel
 
 import androidx.compose.runtime.getValue
@@ -66,6 +67,7 @@ internal class SendViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
@@ -108,6 +110,7 @@ internal class SendViewModel @Inject constructor(
         userWalletProvider = Provider { userWallet },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
     )
@@ -120,7 +123,7 @@ internal class SendViewModel @Inject constructor(
     private val feeStateFactory = FeeStateFactory(
         clickIntents = this,
         currentStateProvider = Provider { uiState },
-        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isFeeApproximateUseCase = isFeeApproximateUseCase,
     )
@@ -165,6 +168,7 @@ internal class SendViewModel @Inject constructor(
     private var isAmountSubtractAvailable: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    private var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
 
     private var balanceJobHolder = JobHolder()
     private var balanceHidingJobHolder = JobHolder()
@@ -237,6 +241,7 @@ internal class SendViewModel @Inject constructor(
                         onDataLoaded(
                             currencyStatus = it,
                             coinCurrencyStatus = it,
+                            feeCurrencyStatus = getFeeCurrencyStatusSync(it),
                         )
                     }
                 }
@@ -247,11 +252,13 @@ internal class SendViewModel @Inject constructor(
             combine(
                 flow = getCoinCurrencyStatusUpdates(isSingleWallet = isSingleWallet),
                 flow2 = getCurrencyStatusUpdates(isSingleWallet = isSingleWallet),
-            ) { coinStatus, currencyStatus ->
-                if (coinStatus.isRight() && currencyStatus.isRight()) {
+            ) { coinStatus, maybeCurrencyStatus ->
+                if (coinStatus.isRight() && maybeCurrencyStatus.isRight()) {
+                    val currencyStatus = maybeCurrencyStatus.getOrElse { error("Currency status is unreachable") }
                     onDataLoaded(
-                        currencyStatus = currencyStatus.getOrElse { error("Currency status is unreachable") },
+                        currencyStatus = currencyStatus,
                         coinCurrencyStatus = coinStatus.getOrElse { error("Coin status is unreachable") },
+                        feeCurrencyStatus = getFeeCurrencyStatusSync(currencyStatus),
                     )
                 }
             }
@@ -274,6 +281,12 @@ internal class SendViewModel @Inject constructor(
         isSingleWalletWithTokens = isSingleWallet,
     ).conflate().distinctUntilChanged()
 
+    private suspend fun getFeeCurrencyStatusSync(cryptoCurrencyStatus: CryptoCurrencyStatus) =
+        getFeePaidCryptoCurrencyStatusSyncUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        ).getOrNull() ?: error("Fee currency is unreachable")
+
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
         return getSelectedAppCurrencyUseCase()
             .map { maybeAppCurrency ->
@@ -286,9 +299,14 @@ internal class SendViewModel @Inject constructor(
             )
     }
 
-    private fun onDataLoaded(currencyStatus: CryptoCurrencyStatus, coinCurrencyStatus: CryptoCurrencyStatus) {
+    private fun onDataLoaded(
+        currencyStatus: CryptoCurrencyStatus,
+        coinCurrencyStatus: CryptoCurrencyStatus,
+        feeCurrencyStatus: CryptoCurrencyStatus,
+    ) {
         cryptoCurrencyStatus = currencyStatus
         coinCryptoCurrencyStatus = coinCurrencyStatus
+        feeCryptoCurrencyStatus = feeCurrencyStatus
 
         if (transactionId != null && amount != null && destinationAddress != null) {
             uiState = stateFactory.getReadyState(amount, destinationAddress)
