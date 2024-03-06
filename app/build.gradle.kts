@@ -11,6 +11,9 @@ plugins {
 
 android {
     namespace = "com.tangem.wallet"
+    testOptions {
+        animationsDisabled = true
+    }
 }
 
 configurations.all {
@@ -207,6 +210,11 @@ dependencies {
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
+    androidTestImplementation(deps.test.espresso.intents)
+    androidTestImplementation(deps.test.kaspresso)
+    androidTestImplementation(deps.test.kaspresso.compose)
+    androidTestImplementation(deps.test.compose.junit)
+    androidTestImplementation(deps.test.hamcrest)
 
     /** Chucker */
     debugImplementation(deps.chucker)
