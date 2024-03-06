@@ -11,6 +11,9 @@ plugins {
 
 android {
     namespace = "com.tangem.wallet"
+    testOptions {
+        animationsDisabled = true
+    }
 }
 
 configurations.all {
@@ -180,10 +183,6 @@ dependencies {
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
-    implementation(deps.shopify.buy) {
-        exclude(group = "com.shopify.graphql.support")
-        exclude(module = "joda-time")
-    }
     implementation(deps.compose.accompanist.appCompatTheme)
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.accompanist.webView)
@@ -207,6 +206,11 @@ dependencies {
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
+    androidTestImplementation(deps.test.espresso.intents)
+    androidTestImplementation(deps.test.kaspresso)
+    androidTestImplementation(deps.test.kaspresso.compose)
+    androidTestImplementation(deps.test.compose.junit)
+    androidTestImplementation(deps.test.hamcrest)
 
     /** Chucker */
     debugImplementation(deps.chucker)
@@ -221,6 +225,9 @@ dependencies {
 
     implementation(deps.listenableFuture)
     implementation(deps.mlKit.barcodeScanning)
+
+    /** Leakcanary */
+    debugImplementation(deps.leakcanary)
 
     /** Excluded dependencies */
     implementation("com.google.guava:guava:30.0-android") {
