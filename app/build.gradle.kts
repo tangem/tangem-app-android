@@ -183,10 +183,6 @@ dependencies {
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
-    implementation(deps.shopify.buy) {
-        exclude(group = "com.shopify.graphql.support")
-        exclude(module = "joda-time")
-    }
     implementation(deps.compose.accompanist.appCompatTheme)
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.accompanist.webView)
