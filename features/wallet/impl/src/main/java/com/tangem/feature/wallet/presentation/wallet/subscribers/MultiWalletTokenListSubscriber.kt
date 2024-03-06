@@ -36,9 +36,11 @@ internal class MultiWalletTokenListSubscriber(
     override fun tokenListFlow(): MaybeTokenListFlow = getTokenListUseCase(userWallet.walletId)
 
     override suspend fun onTokenListReceived(maybeTokenList: Either<TokenListError, TokenList>) {
-        updateSortingIfNeeded(maybeTokenList)
+// [REDACTED_TODO_COMMENT]
+        // updateSortingIfNeeded(maybeTokenList)
     }
 
+    @Suppress("UnusedPrivateMember")
     private suspend fun updateSortingIfNeeded(maybeTokenList: Either<TokenListError, TokenList>) {
         val tokenList = maybeTokenList.getOrElse { return }
         if (!checkNeedSorting(tokenList)) return
