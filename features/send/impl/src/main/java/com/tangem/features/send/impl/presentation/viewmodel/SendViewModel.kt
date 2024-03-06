@@ -475,6 +475,7 @@ internal class SendViewModel @Inject constructor(
                 val isValidAddress = validateAddress(value)
                 uiState = stateFactory.getOnRecipientAddressValidState(value, isValidAddress)
                 type?.let { analyticsEventHandler.send(SendAnalyticEvents.AddressEntered(it, isValidAddress)) }
+                autoNextFromRecipient(type, isValidAddress)
             }
         }.saveIn(addressValidationJobHolder)
     }
@@ -518,6 +519,12 @@ internal class SendViewModel @Inject constructor(
                 wallets = recipientState.wallets.map { it.copy(isVisible = !isValidAddress) }.toPersistentList(),
             ),
         )
+    }
+
+    private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean) {
+        val isRecent = type == EnterAddressSource.RecentAddress
+        val isAddressOnly = uiState.recipientState?.memoTextField == null
+        if (isRecent && isAddressOnly && isValidAddress) onNextClick()
     }
     // endregion
 
