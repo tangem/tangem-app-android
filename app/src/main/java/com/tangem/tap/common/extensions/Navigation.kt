@@ -24,7 +24,6 @@ import com.tangem.tap.features.onboarding.products.twins.ui.OnboardingTwinsFragm
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
-import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.impl.presentation.TokensListFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -122,7 +121,6 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
         AppScreen.Home -> HomeFragment()
-        AppScreen.Shop -> ShopFragment()
         AppScreen.OnboardingNote -> OnboardingNoteFragment()
         AppScreen.OnboardingWallet -> OnboardingWalletFragment()
         AppScreen.OnboardingTwins -> OnboardingTwinsFragment()
