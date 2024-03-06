@@ -402,7 +402,13 @@ internal class StateBuilder(
                             SwapWarning.ReduceAmount(
                                 notificationConfig = createReduceAmountNotificationConfig(
                                     amount = it.tezosFeeThreshold.toPlainString(),
-                                    onConfirmClick = actions.onReduceAmount,
+                                    onConfirmClick = {
+                                        val fromAmount = quoteModel.fromTokenInfo.tokenAmount
+                                        val patchedAmount = fromAmount.copy(
+                                            value = fromAmount.value - it.tezosFeeThreshold,
+                                        )
+                                        actions.onReduceAmount(patchedAmount)
+                                    },
                                     onDismissClick = actions.onReduceAmountIgnoreClick,
                                 ),
                             ),
@@ -1320,7 +1326,7 @@ internal class StateBuilder(
     ): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.send_notification_high_fee_title),
-            subtitle = resourceReference(R.string.send_notification_high_fee_text),
+            subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(amount)),
             iconResId = R.drawable.img_attention_20,
             buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
                 primaryText = resourceReference(R.string.xtz_withdrawal_message_reduce, wrappedList(amount)),

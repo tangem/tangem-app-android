@@ -27,6 +27,7 @@ import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.ExpressException
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
@@ -810,14 +811,8 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun onReduceAmountClicked() {
-        dataState.fromCryptoCurrency?.let {
-            val balance = swapInteractor.getTokenBalance(it)
-            val patchedBalance = balance.copy(
-                value = balance.value - TEZOS_FEE_THRESHOLD,
-            )
-            onAmountChanged(patchedBalance.formatToUIRepresentation())
-        }
+    private fun onReduceAmountClicked(newAmount: SwapAmount) {
+        onAmountChanged(newAmount.formatToUIRepresentation())
     }
 
     @Suppress("UnusedPrivateMember")
@@ -1174,6 +1169,5 @@ internal class SwapViewModel @Inject constructor(
         const val UPDATE_DELAY = 10000L
         const val DEBOUNCE_AMOUNT_DELAY = 1000L
         const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
-        val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
     }
 }
