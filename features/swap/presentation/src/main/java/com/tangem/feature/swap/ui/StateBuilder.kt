@@ -320,8 +320,6 @@ internal class StateBuilder(
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
         maybeAddDomainWarnings(quoteModel, warnings, ignoreAmountReduce)
-        maybeAddUnableCoverFeeWarning(quoteModel, fromToken, warnings)
-        maybeAddDomainWarnings(quoteModel, warnings, ignoreAmountReduce)
         maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
         maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
         maybeAddNetworkFeeCoverageWarning(quoteModel, warnings)
