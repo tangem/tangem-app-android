@@ -15,7 +15,6 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
@@ -674,7 +673,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private fun createDerivationPathOrNull(rawPath: String): DerivationPath? {
         return try {
             DerivationPath(rawPath)
-        } catch (error: HDWalletError) {
+        } catch (error: Throwable) {
             null
         }
     }
