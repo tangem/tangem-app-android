@@ -13,14 +13,14 @@ import com.tangem.utils.converter.Converter
 internal class FeeConverter(
     private val clickIntents: SendClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) : Converter<FeeSelectorState.Content, Fee> {
 
     private val ethereumCustomFeeConverter by lazy {
         EthereumCustomFeeConverter(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
     }
 
