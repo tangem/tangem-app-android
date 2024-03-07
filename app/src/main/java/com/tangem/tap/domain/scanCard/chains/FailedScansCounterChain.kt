@@ -4,7 +4,7 @@ import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.models.scan.ScanResponse
 
-internal class UnsuccessfulScansCounterChain(
+internal class FailedScansCounterChain(
     private val onMaxUnsuccessfulScansReached: () -> Unit,
     private val maxUnsuccessfulScans: Int = 3,
 ) : Chain<ScanCardException, ScanResponse> {

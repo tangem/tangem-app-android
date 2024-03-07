@@ -5,7 +5,7 @@ import arrow.core.right
 import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
-import com.tangem.domain.core.chain.FlatMapChain
+import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -31,7 +31,7 @@ import kotlin.coroutines.resume
 internal class DisclaimerChain(
     private val store: Store<AppState>,
     private val disclaimerWillShow: () -> Unit = {},
-) : FlatMapChain<ScanCardException, ScanResponse>() {
+) : ResultChain<ScanCardException, ScanResponse>() {
 
     override suspend fun launch(previousChainResult: ScanResponse): ScanChainResult {
         val disclaimer = previousChainResult.card.createDisclaimer()

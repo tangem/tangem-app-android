@@ -22,21 +22,22 @@ interface Chain<E, R> {
 /**
  * A chain in the [ChainProcessor] class for processing a chain of operations with the ability to handle errors.
  *
- * Handles only the right side of the previous chain result.
+ * This chain will be launched only if the previous chains in the [ChainProcessor] have
+ * returned a right side of [Either].
  *
  * @param E the type of error
  * @param R the type of result
  */
-abstract class FlatMapChain<E, R> : Chain<E, R> {
+abstract class ResultChain<E, R> : Chain<E, R> {
 
-    override suspend fun launch(previousChainResult: Either<E, R>): Either<E, R> {
+    final override suspend fun launch(previousChainResult: Either<E, R>): Either<E, R> {
         return previousChainResult.flatMap { launch(it) }
     }
 
     /**
      * Invokes the chain with the previous chain result as input and returns a result.
      *
-     * @param previousChainResult the previous chain result as right side of [Either]
+     * @param previousChainResult the previous chain result
      * @return the result of the chain processing as an [Either]
      */
     abstract suspend fun launch(previousChainResult: R): Either<E, R>

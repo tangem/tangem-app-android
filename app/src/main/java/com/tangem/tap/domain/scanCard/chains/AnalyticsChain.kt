@@ -5,7 +5,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
-import com.tangem.domain.core.chain.FlatMapChain
+import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 
@@ -19,7 +19,7 @@ import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
  */
 class AnalyticsChain(
     private val event: AnalyticsEvent,
-) : FlatMapChain<ScanCardException, ScanResponse>() {
+) : ResultChain<ScanCardException, ScanResponse>() {
 
     override suspend fun launch(previousChainResult: ScanResponse): ScanChainResult {
         val interceptor = CardContextInterceptor(previousChainResult)
