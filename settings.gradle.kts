@@ -138,6 +138,7 @@ include(":domain:transaction")
 include(":domain:analytics")
 include(":domain:visa")
 include(":domain:onboarding")
+include(":domain:feedback")
 // endregion Domain modules
 
 // region Data modules
