@@ -70,6 +70,7 @@ data class BackupState(
     val canSkipBackup: Boolean = true,
     val isInterruptedBackup: Boolean = false,
     val showBtnLoading: Boolean = false,
+    val hasBackupError: Boolean = false,
 )
 
 enum class AccessCodeError {
