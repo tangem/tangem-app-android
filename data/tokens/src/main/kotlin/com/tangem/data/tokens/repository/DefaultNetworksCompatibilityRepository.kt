@@ -1,8 +1,10 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.card.EllipticCurve
 import com.tangem.data.tokens.utils.getNetwork
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.extensions.*
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -69,6 +71,15 @@ internal class DefaultNetworksCompatibilityRepository(
             .mapNotNull { blockchain ->
                 getNetwork(blockchain, null, scanResponse.derivationStyleProvider)
             }
+    }
+
+    override suspend fun requiresHardenedDerivationOnly(networkId: String, userWalletId: UserWalletId): Boolean {
+        val scanResponse = getWalletOrThrow(userWalletId).scanResponse
+        val config = CardConfig.createConfig(scanResponse.card)
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return false
+
+        return config.primaryCurve(blockchain) == EllipticCurve.Ed25519Slip0010 &&
+            scanResponse.cardTypesResolver.isWallet2()
     }
 
     override fun areTokensSupportedByNetwork(networkId: String): Boolean {
