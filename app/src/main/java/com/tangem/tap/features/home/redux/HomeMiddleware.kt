@@ -13,12 +13,10 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
-import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
-import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.signin.redux.SignInAction
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -30,6 +28,8 @@ import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
+
+private const val HIDE_PROGRESS_DELAY = 400L
 
 object HomeMiddleware {
     val handler = homeMiddleware
@@ -84,17 +84,16 @@ private suspend fun readCard(analyticsEvent: AnalyticsEvent?) {
         analyticsEvent = analyticsEvent,
         onProgressStateChange = { showProgress ->
             if (showProgress) {
-                changeButtonState(ButtonState.PROGRESS)
+                store.dispatch(HomeAction.ScanInProgress(scanInProgress = true))
             } else {
-                changeButtonState(ButtonState.ENABLED)
+                delay(HIDE_PROGRESS_DELAY)
+                store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
             }
-        },
-        onScanStateChange = { scanInProgress ->
-            store.dispatch(HomeAction.ScanInProgress(scanInProgress))
         },
         onFailure = {
             Timber.e(it, "Unable to scan card")
-            changeButtonState(ButtonState.ENABLED)
+            delay(HIDE_PROGRESS_DELAY)
+            store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
         },
         onSuccess = { scanResponse ->
             proceedWithScanResponse(scanResponse)
@@ -113,7 +112,7 @@ private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
             Timber.e(error, "Unable to save user wallet")
         }
         .doOnSuccess {
-            scope.launch { store.onUserWalletSelected(userWallet = userWallet) }
+            scope.launch { store.onUserWalletSelected(userWallet) }
         }
         .doOnResult {
             store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
@@ -123,10 +122,6 @@ private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
 
 private suspend fun navigateTo(appScreen: AppScreen) {
     store.dispatchOnMain(NavigationAction.NavigateTo(appScreen))
-    delay(timeMillis = 200)
-    changeButtonState(ButtonState.ENABLED)
-}
-
-private fun changeButtonState(state: ButtonState) {
-    store.dispatchOnMain(HomeAction.ChangeScanCardButtonState(IndeterminateProgressButton(state)))
+    delay(HIDE_PROGRESS_DELAY)
+    store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
 }
