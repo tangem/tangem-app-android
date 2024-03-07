@@ -64,6 +64,7 @@ dependencies {
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
     implementation(projects.domain.onboarding)
+    implementation(projects.domain.feedback)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
