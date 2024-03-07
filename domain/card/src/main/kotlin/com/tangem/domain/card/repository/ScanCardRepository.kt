@@ -1,6 +1,5 @@
 package com.tangem.domain.card.repository
 
-import arrow.core.Either
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
 
@@ -15,10 +14,8 @@ interface ScanCardRepository {
      * @param cardId an optional card ID to scan. If null, the repository should scan any card present.
      * @param allowRequestAccessCodeFromStorage whether the access code can be requested from
      * internal storage during the scan process
-     * @return an [Either] that contains a [ScanCardException] in case of an error or a [ScanResponse].
+     * @return a [ScanResponse] object with the result of the scan.
+     * @throws [ScanCardException] if the scan process fails.
      */
-    suspend fun scanCard(
-        cardId: String?,
-        allowRequestAccessCodeFromStorage: Boolean,
-    ): Either<ScanCardException, ScanResponse>
+    suspend fun scanCard(cardId: String?, allowRequestAccessCodeFromStorage: Boolean): ScanResponse
 }
