@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem</string>
-  <string name="chat_bot_name">Tangem Bot</string>
   <string name="common_accept">J\'accepte</string>
   <string name="common_balance">Solde : %s</string>
   <string name="common_camera_denied_alert_message">Vous n\'avez pas octroyé l\'accès à votre caméra, veuillez modifier vos paramètres de confidentialité</string>
@@ -34,7 +33,6 @@
   <string name="initial_message_scan_header">Posez pour scanner</string>
   <string name="initial_message_sign_header">Touchez pour signer</string>
   <string name="initial_message_tap_header">Posez la carte</string>
-  <string name="main_processing_full_amount">Le montant n\'inclut pas certains de vos fonds</string>
   <string name="onboarding_create_wallet_button_create_wallet">Créer un portefeuille</string>
   <string name="send_amount_label">Somme</string>
   <string name="send_destination_hint_address">Adresse</string>
@@ -54,19 +52,9 @@
   <string name="send_validation_invalid_address">Adresse incorrecte</string>
   <string name="shop_one_wallet">Tangem Wallet</string>
   <string name="twins_recreate_toolbar">Tangem Twin</string>
-  <string name="wallet_balance_loading">Solde est en cours de téléchargement…</string>
-  <string name="wallet_balance_tx_in_progress">Transaction en cours…</string>
-  <string name="wallet_balance_verified">Solde confirmé</string>
   <string name="wallet_connect_title">WalletConnect</string>
-  <string name="wallet_error_no_account">Compte n\'est pas créé</string>
-  <string name="wallet_error_unsupported_blockchain">Cette carte n\'est pas prise en charge</string>
-  <string name="wallet_error_unsupported_blockchain_subtitle">Votre carte Tangem a été créée pour fonctionner avec une autre application. Regardez le nom et les instructions sur votre carte et installez l\'application pertinente</string>
   <string name="wallet_notification_address_copied">L\'adresse a été copiée avec succès</string>
   <string name="wallet_notification_no_internet">Pas de connexion internet</string>
-  <string name="wallet_pending_tx_receiving">Réception</string>
-  <string name="wallet_pending_tx_receiving_address_format">de %s</string>
-  <string name="wallet_pending_tx_sending">Envoi</string>
-  <string name="wallet_pending_tx_sending_address_format">jusqu\'à %s</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_button_ok">Ok, je l\'ai!</string>
 </resources>
