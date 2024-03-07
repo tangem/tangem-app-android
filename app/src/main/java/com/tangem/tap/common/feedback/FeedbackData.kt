@@ -73,15 +73,9 @@ class SendTransactionFailedEmail(
 
 class FeedbackEmail : FeedbackData {
     override val subjectResId: Int
-        get() = if (isS2CCard) s2cSubject else tangemSubject
-    override val mainMessageResId: Int
-        get() = if (isS2CCard) s2cMainMessage else tangemMainMessage
+        get() = if (isS2CCard) R.string.feedback_subject_support else R.string.feedback_subject_support_tangem
 
-    private val tangemSubject: Int = R.string.feedback_subject_support_tangem
-    private val tangemMainMessage: Int = R.string.feedback_preface_support
-
-    private val s2cSubject: Int = R.string.feedback_subject_support
-    private val s2cMainMessage: Int = R.string.feedback_preface_support
+    override val mainMessageResId: Int = R.string.feedback_preface_support
 
     private var isS2CCard = false
 
