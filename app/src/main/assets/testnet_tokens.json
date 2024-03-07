@@ -610,7 +610,7 @@
             ]
         },
         {
-            "id": "aurora-near",
+            "id": "aurora-ethereum",
             "name": "Aurora Testnet",
             "symbol": "ETH",
             "networks": [

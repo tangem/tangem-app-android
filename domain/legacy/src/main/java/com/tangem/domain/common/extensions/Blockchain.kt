@@ -246,7 +246,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Unknown -> "unknown"
         Blockchain.Hedera -> "hedera-hashgraph"
         Blockchain.HederaTestnet -> "hedera-hashgraph/test"
-        Blockchain.Aurora, Blockchain.AuroraTestnet -> "aurora-near"
+        Blockchain.Aurora, Blockchain.AuroraTestnet -> "aurora-ethereum"
         Blockchain.Areon, Blockchain.AreonTestnet -> "areon-network"
         Blockchain.PulseChain, Blockchain.PulseChainTestnet -> "pulsechain"
     }
