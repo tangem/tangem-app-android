@@ -11,6 +11,7 @@ class UserWalletBuilder(
     private val getCardImageUseCase: GetCardImageUseCase = GetCardImageUseCase(),
 ) {
     private var backupCardsIds: Set<String> = emptySet()
+    private var hasBackupError: Boolean = false
 
     private val CardDTO.isBackupNotAllowed: Boolean
         get() = !this.settings.isBackupAllowed
@@ -41,6 +42,13 @@ class UserWalletBuilder(
         }
     }
 
+    /**
+     * Sets if UserWallet has any backup errors (wrong curves etc). Use in onboarding
+     */
+    fun hasBackupError(hasBackupError: Boolean) = this.apply {
+        this.hasBackupError = hasBackupError
+    }
+
     suspend fun build(): UserWallet? {
         return with(scanResponse) {
             UserWalletIdBuilder.scanResponse(scanResponse)
@@ -53,6 +61,7 @@ class UserWalletBuilder(
                         cardsInWallet = backupCardsIds.plus(card.cardId),
                         scanResponse = this,
                         isMultiCurrency = cardTypesResolver.isMultiwalletAllowed(),
+                        hasBackupError = hasBackupError,
                     )
                 }
         }
