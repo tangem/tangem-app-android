@@ -27,14 +27,19 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     ) {
 
-        object DevCard : Critical(
+        data object DevCard : Critical(
             title = resourceReference(id = R.string.warning_developer_card_title),
             subtitle = resourceReference(id = R.string.warning_developer_card_message),
         )
 
-        object FailedCardValidation : Critical(
+        data object FailedCardValidation : Critical(
             title = resourceReference(id = R.string.warning_failed_to_verify_card_title),
             subtitle = resourceReference(id = R.string.warning_failed_to_verify_card_message),
+        )
+
+        data object BackupError : Critical(
+            title = resourceReference(R.string.warning_backup_errors_title),
+            subtitle = resourceReference(R.string.warning_backup_errors_message),
         )
     }
 
