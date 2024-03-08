@@ -926,11 +926,7 @@ internal class StateBuilder(
 
     fun clearAlert(uiState: SwapStateHolder): SwapStateHolder = uiState.copy(alert = null)
 
-    fun addWarning(
-        uiState: SwapStateHolder,
-        message: TextReference?,
-        onClick: () -> Unit,
-    ): SwapStateHolder {
+    fun addWarning(uiState: SwapStateHolder, message: TextReference?, onClick: () -> Unit): SwapStateHolder {
         val renewWarnings = uiState.warnings.filterNot { it is SwapWarning.GenericWarning }.toMutableList()
         renewWarnings.add(
             SwapWarning.GenericWarning(
