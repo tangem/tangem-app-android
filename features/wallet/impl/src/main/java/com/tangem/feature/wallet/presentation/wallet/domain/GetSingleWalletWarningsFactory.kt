@@ -9,21 +9,17 @@ import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 import javax.inject.Inject
 
 @ViewModelScoped
 internal class GetSingleWalletWarningsFactory @Inject constructor(
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
@@ -33,15 +29,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
 
     private var readyForRateAppNotification = false
 
-    fun create(clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
-        val userWallet = getSelectedWalletSyncUseCase().fold(
-            ifLeft = {
-                Timber.e("Failed to get selected wallet $it")
-                return flowOf(value = persistentListOf())
-            },
-            ifRight = { it },
-        )
-
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         return combine(
