@@ -14,22 +14,23 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.repository.PromoRepository
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.*
-import timber.log.Timber
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
+import kotlin.collections.count
 
 @Suppress("LongParameterList")
 @ViewModelScoped
 internal class GetMultiWalletWarningsFactory @Inject constructor(
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
@@ -40,15 +41,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private var readyForRateAppNotification = false
 
-    fun create(clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
-        val userWallet = getSelectedWalletSyncUseCase().fold(
-            ifLeft = {
-                Timber.e("Failed to get selected wallet $it")
-                return flowOf(value = persistentListOf())
-            },
-            ifRight = { it },
-        )
-
+    fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         val promoFlow = flow { emit(promoRepository.getChangellyPromoBanner()) }
