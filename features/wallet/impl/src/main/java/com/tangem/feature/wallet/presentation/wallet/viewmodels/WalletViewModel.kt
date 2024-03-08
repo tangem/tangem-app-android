@@ -249,17 +249,17 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
+        walletScreenContentLoader.load(
+            userWallet = action.selectedWallet,
+            clickIntents = clickIntents,
+            coroutineScope = viewModelScope,
+        )
+
         stateHolder.update(
             AddWalletTransformer(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
             ),
-        )
-
-        walletScreenContentLoader.load(
-            userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
-            coroutineScope = viewModelScope,
         )
 
         withContext(dispatchers.io) { delay(timeMillis = 700) }
