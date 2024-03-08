@@ -22,9 +22,6 @@ private fun internalReduce(action: Action, appState: AppState): HomeState {
         is HomeAction.ScanInProgress -> {
             state = state.copy(scanInProgress = action.scanInProgress)
         }
-        is HomeAction.ChangeScanCardButtonState -> {
-            state = state.copy(btnScanState = action.state)
-        }
         is HomeAction.UpdateCountryCode -> {
             state.onCountryCodeUpdate(state, action.userCountryCode)
         }
