@@ -27,12 +27,12 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     ) {
 
-        object DevCard : Critical(
+        data object DevCard : Critical(
             title = resourceReference(id = R.string.warning_developer_card_title),
             subtitle = resourceReference(id = R.string.warning_developer_card_message),
         )
 
-        object FailedCardValidation : Critical(
+        data object FailedCardValidation : Critical(
             title = resourceReference(id = R.string.warning_failed_to_verify_card_title),
             subtitle = resourceReference(id = R.string.warning_failed_to_verify_card_message),
         )
@@ -64,12 +64,12 @@ sealed class WalletNotification(val config: NotificationConfig) {
             ),
         )
 
-        object NetworksUnreachable : Warning(
+        data object NetworksUnreachable : Warning(
             title = resourceReference(id = R.string.warning_network_unreachable_title),
             subtitle = resourceReference(id = R.string.warning_network_unreachable_message),
         )
 
-        object SomeNetworksUnreachable : Warning(
+        data object SomeNetworksUnreachable : Warning(
             title = resourceReference(id = R.string.warning_some_networks_unreachable_title),
             subtitle = resourceReference(id = R.string.warning_some_networks_unreachable_message),
         )
@@ -80,7 +80,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
             onCloseClick = onCloseClick,
         )
 
-        object TestNetCard : Warning(
+        data object TestNetCard : Warning(
             title = resourceReference(id = R.string.warning_testnet_card_title),
             subtitle = resourceReference(id = R.string.warning_testnet_card_message),
         )
