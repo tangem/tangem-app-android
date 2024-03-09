@@ -94,6 +94,7 @@ dependencies {
     implementation(projects.data.visa)
     implementation(projects.data.promo)
     implementation(projects.data.onboarding)
+    implementation(projects.data.feedback)
 
     /** Features */
     implementation(projects.features.onboarding)
