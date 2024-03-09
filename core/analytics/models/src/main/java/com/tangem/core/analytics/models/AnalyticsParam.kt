@@ -11,6 +11,11 @@ sealed class AnalyticsParam {
         companion object
     }
 
+    sealed class TokenBalanceState(val value: String) {
+        data object Empty : TokenBalanceState("Empty")
+        data object Full : TokenBalanceState("Full")
+    }
+
     sealed class RateApp(val value: String) {
         object Liked : RateApp("Liked")
         object Disliked : RateApp("Disliked")
@@ -124,6 +129,7 @@ sealed class AnalyticsParam {
         const val TOKEN = "Token"
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
+        const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"
         const val FEE_TYPE = "Fee Type"
