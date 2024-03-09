@@ -1,10 +1,13 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
 import com.tangem.domain.analytics.model.WalletBalanceState
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
@@ -24,6 +27,8 @@ internal class TokenListAnalyticsSender @Inject constructor(
     private val screenLifecycleProvider: ScreenLifecycleProvider,
 ) {
 
+    private val balanceWasSentMap = mutableMapOf<String, Boolean>()
+
     suspend fun send(displayedUiState: WalletState?, userWallet: UserWallet, tokenList: TokenList) {
         if (screenLifecycleProvider.isBackground) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
@@ -34,6 +39,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
         sendBalanceLoadedEventIfNeeded(tokenList.totalFiatBalance, currenciesStatuses)
         sendToppedUpEventIfNeeded(userWallet, tokenList.totalFiatBalance, currenciesStatuses)
         sendUnreachableNetworksEventIfNeeded(currenciesStatuses)
+        sendTokenBalancesIfNeeded(currenciesStatuses)
     }
 
     private fun getCurrenciesStatuses(tokenList: TokenList): List<CryptoCurrencyStatus> = when (tokenList) {
@@ -69,6 +75,48 @@ internal class TokenListAnalyticsSender @Inject constructor(
                 AnalyticsParam.CardBalanceState.NoRate
             }
             else -> AnalyticsParam.CardBalanceState.BlockchainError
+        }
+    }
+
+    private fun sendTokenBalancesIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
+        currenciesStatuses.forEach {
+            val status = it.value
+            if (status is CryptoCurrencyStatus.Loaded) {
+                sendTokenBalancesForSpecificBlockchains(it, status)
+            }
+        }
+    }
+
+    // TODO hotfix/5.7.4 send event for log if tokens from polkadot ecosystem have balance
+    private fun sendTokenBalancesForSpecificBlockchains(
+        currencyStatus: CryptoCurrencyStatus,
+        balanceStatus: CryptoCurrencyStatus.Loaded,
+    ) {
+        // for now send only for Polkadot ecosystem blockchains
+        // later dependency on Blockchain will be removed and use token name
+        when (val blockchain = Blockchain.fromNetworkId(currencyStatus.currency.network.backendId)) {
+            Blockchain.Polkadot,
+            Blockchain.AlephZero,
+            Blockchain.Kusama,
+            -> {
+                if (balanceWasSentMap[blockchain.currency] != true) {
+                    val tokenBalance = if (balanceStatus.amount.isZero()) {
+                        AnalyticsParam.TokenBalanceState.Empty
+                    } else {
+                        AnalyticsParam.TokenBalanceState.Full
+                    }
+                    analyticsEventHandler.send(
+                        Basic.TokenBalance(
+                            balance = tokenBalance,
+                            token = blockchain.currency,
+                        ),
+                    )
+                    balanceWasSentMap[blockchain.currency] = true
+                }
+            }
+            else -> {
+                /* no-op */
+            }
         }
     }
 
