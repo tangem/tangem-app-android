@@ -157,4 +157,5 @@ include(":data:transaction")
 include(":data:visa")
 include(":data:promo")
 include(":data:onboarding")
+include(":data:feedback")
 // endregion Data modules
