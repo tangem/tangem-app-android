@@ -3,10 +3,8 @@ package com.tangem.data.settings
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
-import com.tangem.domain.settings.models.AppLogsModel
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -34,11 +32,6 @@ internal class DefaultSettingsRepository(
             key = PreferencesKeys.WALLETS_SCROLL_PREVIEW_KEY,
             value = isEnabled,
         )
-    }
-
-    override suspend fun getAppLogs(): List<AppLogsModel> {
-        return appPreferencesStore.getObjectMap<String>(key = PreferencesKeys.APP_LOGS_KEY)
-            .map { AppLogsModel(timestamp = it.key.toLong(), message = it.value) }
     }
 
     override suspend fun updateAppLogs(message: String) {
