@@ -38,6 +38,14 @@ sealed class WalletScreenAnalyticsEvent {
                 AnalyticsParam.BALANCE to balance.value,
             ),
         )
+
+        class TokenBalance(balance: AnalyticsParam.TokenBalanceState, token: String) : Basic(
+            event = "Token Balance",
+            params = mapOf(
+                AnalyticsParam.STATE to balance.value,
+                AnalyticsParam.TOKEN to token,
+            ),
+        )
     }
 
     sealed class MainScreen(
