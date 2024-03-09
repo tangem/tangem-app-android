@@ -12,8 +12,8 @@ sealed class AnalyticsParam {
     }
 
     sealed class TokenBalanceState(val value: String) {
-        data object Empty : TokenBalanceState("Empty")
-        data object Full : TokenBalanceState("Full")
+        object Empty : TokenBalanceState("Empty")
+        object Full : TokenBalanceState("Full")
     }
 
     sealed class RateApp(val value: String) {
