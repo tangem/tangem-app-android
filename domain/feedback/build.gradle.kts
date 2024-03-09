@@ -9,5 +9,8 @@ android {
 }
 
 dependencies {
+    implementation(deps.arrow.core)
+    implementation(deps.jodatime)
+
     implementation(projects.core.res)
 }
