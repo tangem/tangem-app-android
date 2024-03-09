@@ -4,6 +4,7 @@ import com.tangem.domain.feedback.models.BlockchainInfo
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.PhoneInfo
 import com.tangem.domain.feedback.utils.breakLine
+import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainAddresses
 
 internal class FeedbackDataBuilder {
 
@@ -40,8 +41,16 @@ internal class FeedbackDataBuilder {
             }
 
             builder.appendKeyValue("Host", host)
-            builder.appendKeyValue("Wallet address", addresses)
-            builder.appendKeyValue("Explorer link", explorerLink)
+
+            builder.appendAddresses(
+                key = "Wallet address${addresses.isMultiple(suffix = "es")}",
+                addresses = addresses,
+            )
+
+            builder.appendAddresses(
+                key = "Explorer link${explorerLinks.isMultiple(suffix = "s")}",
+                addresses = explorerLinks,
+            )
 
             if (!isLastIndex) builder.appendDelimiter()
         }
@@ -55,7 +64,7 @@ internal class FeedbackDataBuilder {
 
     fun addDelimiter(): StringBuilder = builder.appendDelimiter()
 
-    fun build(): String = builder.toString()
+    fun build(): String = builder.trimEnd().toString()
 
     private fun StringBuilder.appendKeyValue(key: String, value: String?) {
         if (value.isNullOrBlank()) return
@@ -68,6 +77,24 @@ internal class FeedbackDataBuilder {
         signedHashesList.forEach {
             appendKeyValue("Signed hashes [${it.curve}]", it.total)
         }
+    }
+
+    private fun StringBuilder.appendAddresses(key: String, addresses: BlockchainAddresses) {
+        appendKeyValue(
+            key = key,
+            value = when (addresses) {
+                is BlockchainInfo.Addresses.Multiple -> {
+                    addresses.values.joinToString(separator = "\n", prefix = "\n") {
+                        "${it.type} — ${it.value}"
+                    }
+                }
+                is BlockchainInfo.Addresses.Single -> addresses.value
+            },
+        )
+    }
+
+    private fun BlockchainAddresses.isMultiple(suffix: String): String {
+        return if (this is BlockchainAddresses.Multiple) suffix else ""
     }
 
     private fun StringBuilder.appendDelimiter(): StringBuilder = append("----------\n")
