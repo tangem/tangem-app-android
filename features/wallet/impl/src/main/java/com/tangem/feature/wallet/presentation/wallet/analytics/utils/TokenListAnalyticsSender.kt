@@ -17,6 +17,8 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import dagger.hilt.android.scopes.ViewModelScoped
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -28,6 +30,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
 ) {
 
     private val balanceWasSentMap = mutableMapOf<String, Boolean>()
+    private val mutex = Mutex()
 
     suspend fun send(displayedUiState: WalletState?, userWallet: UserWallet, tokenList: TokenList) {
         if (screenLifecycleProvider.isBackground) return
@@ -78,7 +81,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
         }
     }
 
-    private fun sendTokenBalancesIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
+    private suspend fun sendTokenBalancesIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
         currenciesStatuses.forEach {
             val status = it.value
             if (status is CryptoCurrencyStatus.Loaded) {
@@ -88,7 +91,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
     }
 
     // TODO hotfix/5.7.4 send event for log if tokens from polkadot ecosystem have balance
-    private fun sendTokenBalancesForSpecificBlockchains(
+    private suspend fun sendTokenBalancesForSpecificBlockchains(
         currencyStatus: CryptoCurrencyStatus,
         balanceStatus: CryptoCurrencyStatus.Loaded,
     ) {
@@ -111,7 +114,9 @@ internal class TokenListAnalyticsSender @Inject constructor(
                             token = blockchain.currency,
                         ),
                     )
-                    balanceWasSentMap[blockchain.currency] = true
+                    mutex.withLock {
+                        balanceWasSentMap[blockchain.currency] = true
+                    }
                 }
             }
             else -> {
