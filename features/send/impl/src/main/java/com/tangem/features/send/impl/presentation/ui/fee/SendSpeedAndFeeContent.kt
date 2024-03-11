@@ -18,7 +18,6 @@ import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 
 private const val FEE_SELECTOR_KEY = "FEE_SELECTOR_KEY"
 private const val FEE_CUSTOM_KEY = "FEE_CUSTOM_KEY"
@@ -37,9 +36,8 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
             ),
     ) {
         feeSelector(state, clickIntents)
-        topNotifications(notifications)
         customFee(feeSendState)
-        middleNotifications(notifications)
+        notifications(notifications)
     }
 }
 
@@ -54,29 +52,6 @@ private fun LazyListScope.feeSelector(state: SendStates.FeeState, clickIntents: 
             modifier = Modifier.animateItemPlacement(),
         )
     }
-}
-
-private fun LazyListScope.topNotifications(
-    configs: ImmutableList<SendFeeNotification>,
-    modifier: Modifier = Modifier,
-) {
-    notifications(
-        configs = configs.filter {
-            it is SendFeeNotification.Error.ExceedsBalance ||
-                it is SendFeeNotification.Warning.NetworkFeeUnreachable
-        }.toImmutableList(),
-        modifier = modifier,
-    )
-}
-
-private fun LazyListScope.middleNotifications(
-    configs: ImmutableList<SendFeeNotification>,
-    modifier: Modifier = Modifier,
-) {
-    notifications(
-        configs = configs.filterIsInstance<SendFeeNotification.Warning.TooHigh>().toImmutableList(),
-        modifier = modifier,
-    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
