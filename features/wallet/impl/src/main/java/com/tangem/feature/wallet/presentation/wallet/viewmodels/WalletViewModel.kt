@@ -5,6 +5,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.CanUseBiometryUseCase
@@ -199,6 +200,14 @@ internal class WalletViewModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
+            is WalletsUpdateActionResolver.Action.NoAccessibleWallets -> {
+                stateHolder.clear()
+                router.popBackStack(screen = AppScreen.Welcome)
+            }
+            is WalletsUpdateActionResolver.Action.NoWallets -> {
+                stateHolder.clear()
+                router.popBackStack(screen = AppScreen.Home)
+            }
             is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
     }
@@ -274,23 +283,22 @@ internal class WalletViewModel @Inject constructor(
             coroutineScope = viewModelScope,
         )
 
-        if (action.selectedWalletIndex != 0) {
-            /*
-             * If card is reset to factory settings, then Compose need some time to draw the WalletScreen.
-             * Otherwise, scroll isn't happened
-             */
-            withContext(dispatchers.io) { delay(timeMillis = 700) }
+        /*
+         * If card is reset to factory settings, then Compose need some time to draw the WalletScreen.
+         * Otherwise, scroll isn't happened
+         */
+        withContext(dispatchers.io) { delay(timeMillis = 1000) }
 
-            scrollToWallet(index = action.selectedWalletIndex)
-
-            withContext(dispatchers.io) { delay(timeMillis = 1000) }
-        }
-
-        stateHolder.update(
-            DeleteWalletTransformer(
-                selectedWalletIndex = action.selectedWalletIndex,
-                deletedWalletId = action.deletedWalletId,
-            ),
+        scrollToWallet(
+            index = action.selectedWalletIndex,
+            onConsume = {
+                stateHolder.update(
+                    DeleteWalletTransformer(
+                        selectedWalletIndex = action.selectedWalletIndex,
+                        deletedWalletId = action.deletedWalletId,
+                    ),
+                )
+            },
         )
     }
 
@@ -311,12 +319,13 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    private fun scrollToWallet(index: Int) {
+    private fun scrollToWallet(index: Int, onConsume: () -> Unit = {}) {
         stateHolder.update(
             ScrollToWalletTransformer(
                 index = index,
                 currentStateProvider = Provider(action = stateHolder::value),
                 stateUpdater = { newState -> stateHolder.update { newState } },
+                onConsume = onConsume,
             ),
         )
     }
