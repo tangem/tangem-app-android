@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.impl.R
+import okhttp3.internal.format
 
 /**
  * Wallet bottom sheet config
@@ -36,7 +37,10 @@ sealed class WalletBottomSheetConfig(
         ),
         iconResId = R.drawable.ic_locked_24,
         primaryButtonConfig = ButtonConfig(
-            text = resourceReference(id = R.string.user_wallet_list_unlock_all),
+            text = resourceReference(
+                id = R.string.user_wallet_list_unlock_all_with,
+                formatArgs = wrappedList(resourceReference(R.string.common_biometrics))
+            ),
             onClick = onUnlockClick,
         ),
         secondaryButtonConfig = ButtonConfig(
