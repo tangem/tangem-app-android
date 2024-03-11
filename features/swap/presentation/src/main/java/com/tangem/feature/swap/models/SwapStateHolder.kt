@@ -108,7 +108,6 @@ sealed interface SwapWarning {
         val title: TextReference? = null,
         val message: TextReference? = null,
         val type: GenericWarningType = GenericWarningType.OTHER,
-        val shouldWrapMessage: Boolean = false,
         val onClick: () -> Unit,
     ) : SwapWarning
     data class GeneralError(val notificationConfig: NotificationConfig) : SwapWarning
