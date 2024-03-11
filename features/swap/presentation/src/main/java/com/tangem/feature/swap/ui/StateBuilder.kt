@@ -336,8 +336,8 @@ internal class StateBuilder(
         if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
             warnings.add(
                 SwapWarning.TransactionInProgressWarning(
-                    title = resourceReference(R.string.swapping_pending_transaction_title),
-                    description = resourceReference(R.string.swapping_pending_transaction_subtitle),
+                    title = resourceReference(R.string.warning_express_approval_in_progress_title),
+                    description = resourceReference(R.string.warning_express_approval_in_progress_message),
                 ),
             )
         } else if (quoteModel.preparedSwapConfigState.hasOutgoingTransaction) {
@@ -911,8 +911,8 @@ internal class StateBuilder(
         warnings.add(
             0,
             SwapWarning.TransactionInProgressWarning(
-                title = resourceReference(R.string.swapping_pending_transaction_title),
-                description = resourceReference(R.string.swapping_pending_transaction_subtitle),
+                title = resourceReference(R.string.warning_express_approval_in_progress_title),
+                description = resourceReference(R.string.warning_express_approval_in_progress_message),
             ),
         )
         return uiState.copy(
@@ -1016,17 +1016,11 @@ internal class StateBuilder(
 
     fun clearAlert(uiState: SwapStateHolder): SwapStateHolder = uiState.copy(alert = null)
 
-    fun addWarning(
-        uiState: SwapStateHolder,
-        message: TextReference?,
-        shouldWrapMessage: Boolean = false,
-        onClick: () -> Unit,
-    ): SwapStateHolder {
+    fun addWarning(uiState: SwapStateHolder, message: TextReference?, onClick: () -> Unit): SwapStateHolder {
         val renewWarnings = uiState.warnings.filterNot { it is SwapWarning.GenericWarning }.toMutableList()
         renewWarnings.add(
             SwapWarning.GenericWarning(
                 message = message,
-                shouldWrapMessage = shouldWrapMessage,
                 onClick = onClick,
             ),
         )

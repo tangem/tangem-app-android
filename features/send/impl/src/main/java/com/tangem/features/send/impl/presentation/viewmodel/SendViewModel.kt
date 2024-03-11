@@ -1,4 +1,3 @@
-
 package com.tangem.features.send.impl.presentation.viewmodel
 
 import androidx.compose.runtime.getValue
@@ -308,15 +307,22 @@ internal class SendViewModel @Inject constructor(
         coinCryptoCurrencyStatus = coinCurrencyStatus
         feeCryptoCurrencyStatus = feeCurrencyStatus
 
-        if (transactionId != null && amount != null && destinationAddress != null) {
-            uiState = stateFactory.getReadyState(amount, destinationAddress)
-            stateRouter.showFee()
-        } else {
-            getWalletsAndRecent()
-            uiState = stateFactory.getReadyState()
-            stateRouter.showRecipient()
+        when {
+            uiState.sendState.isSuccess -> {
+                stateRouter.showSend()
+            }
+            transactionId != null && amount != null && destinationAddress != null -> {
+                uiState = stateFactory.getReadyState(amount, destinationAddress)
+                stateRouter.showFee()
+                updateNotifications()
+            }
+            else -> {
+                getWalletsAndRecent()
+                uiState = stateFactory.getReadyState()
+                stateRouter.showRecipient()
+                updateNotifications()
+            }
         }
-        updateNotifications()
     }
 
     private fun getWalletsAndRecent() {

@@ -36,7 +36,12 @@ import com.tangem.core.ui.utils.DEFAULT_ANIMATION_DURATION
 fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifier: Modifier = Modifier) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
-
+    val isPasteEnabled = !clipboardManager.getText()?.text.isNullOrEmpty()
+    val color = if (isPasteEnabled) {
+        TangemTheme.colors.button.primary
+    } else {
+        TangemTheme.colors.button.secondary
+    }
     AnimatedVisibility(
         visible = isPasteButtonVisible,
         label = "Paste Button Visibility Animation",
@@ -50,7 +55,7 @@ fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifi
             color = TangemTheme.colors.text.primary2,
             modifier = Modifier
                 .background(
-                    color = TangemTheme.colors.button.primary,
+                    color = color,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
                 .padding(
@@ -60,6 +65,7 @@ fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifi
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = rememberRipple(radius = TangemTheme.dimens.radius8),
+                    enabled = isPasteEnabled,
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         onClick(
