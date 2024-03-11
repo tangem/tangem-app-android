@@ -50,7 +50,6 @@
   <string name="send_total_subtitle_format">Sera envoyé %s</string>
   <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
   <string name="send_validation_invalid_address">Adresse incorrecte</string>
-  <string name="shop_one_wallet">Tangem Wallet</string>
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="wallet_connect_title">WalletConnect</string>
   <string name="wallet_notification_address_copied">L\'adresse a été copiée avec succès</string>
