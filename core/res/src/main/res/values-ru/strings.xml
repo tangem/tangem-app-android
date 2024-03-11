@@ -15,6 +15,7 @@
   <string name="alert_manage_tokens_unsupported_message">Токены в сети %1$s не поддерживаются этой картой из-за ограничений прошивки.</string>
   <string name="alert_troubleshooting_scan_card_title">У вас возникли трудности со сканированием карты?</string>
   <string name="alert_unsupported_card">Эта карта не предназначена для работы с этим приложением</string>
+  <string name="app_settings_default_fee_footer">Подключите функцию комиссии по умолчанию и при формировании транзакции на отправку средств комиссия будет выставлена автоматически, а экран комиссии пропущен. Вы всегда сможете на него вернуться.</string>
   <string name="app_settings_enable_biometrics_description">Перейдите в настройки, чтобы включить биометрическую аутентификацию в приложении Tangem</string>
   <string name="app_settings_enable_biometrics_title">Включите биометрическую аутентификацию</string>
   <string name="app_settings_off_saved_access_code_alert_message">Все сохраненные коды доступа будут удалены. Вам потребуется вводить код доступа при работе с кошельком.</string>
@@ -139,6 +140,7 @@
   <string name="custom_token_creation_error_invalid_contract_address">Адрес контракта некорректен</string>
   <string name="custom_token_creation_error_invalid_derivation_path">Путь деривации некорректен</string>
   <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
+  <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %li</string>
   <string name="custom_token_custom_derivation">Своя деривация</string>
   <string name="custom_token_custom_derivation_placeholder">Например m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">Введите свою деривацию</string>
@@ -185,7 +187,6 @@
   <string name="exchange_tokens_empty_tokens">У вас нет добавленных токенов. Добавьте токены для обмена</string>
   <string name="exchange_tokens_unavailable_tokens_header">Недоступен для обмена с %s</string>
   <string name="express_by_provider">Предоставлено</string>
-  <string name="express_by_provider_placeholder">Предоставлено %s</string>
   <string name="express_cex_status_button_title">Статус</string>
   <string name="express_choose_providers_subtitle">Tangem предоставляет доступ к обмену через сторонних поставщиков в соответствии с их правилами</string>
   <string name="express_choose_providers_title">Выберите провайдера</string>
@@ -262,6 +263,7 @@
   <string name="main_tokens">Токены</string>
   <string name="manage_tokens_add">Добавить</string>
   <string name="manage_tokens_edit">Изменить</string>
+  <string name="manage_tokens_list_header_title">Рыночная капитализация</string>
   <string name="manage_tokens_network_selector_native_title">Основная сеть</string>
   <string name="manage_tokens_network_selector_non_native_subtitle">Не основной или основной блокчейн, на котором размещен токен</string>
   <string name="manage_tokens_network_selector_non_native_title">Не основные сети</string>
@@ -275,7 +277,6 @@
     <item quantity="other">%1$d из %2$d кошельков</item>
   </plurals>
   <string name="manage_tokens_search_placeholder">например Bitcoin</string>
-  <string name="manage_tokens_title">Рыночная капитализация</string>
   <string name="manage_tokens_unavailable_description">Выбранный токен не доступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_selector_title">Выберите кошелек</string>
@@ -320,7 +321,19 @@
   <string name="onboarding_navbar_title_creating_backup">Резервная копия</string>
   <string name="onboarding_seed_button_read_more">Прочитать о seed-фразе</string>
   <string name="onboarding_seed_generate_message">Запишите эти 12 слов в порядке, указанном ниже, и сохраните их в надежном месте.</string>
+  <plurals name="onboarding_seed_generate_message_words_count">
+    <item quantity="one"></item>
+    <item quantity="few">Запишите эти %d слова в порядке, указанном ниже, и сохраните их в надежном месте.</item>
+    <item quantity="many">Запишите эти %d слов в порядке, указанном ниже, и сохраните их в надежном месте.</item>
+    <item quantity="other">Запишите эти %d слов в порядке, указанном ниже, и сохраните их в надежном месте.</item>
+  </plurals>
   <string name="onboarding_seed_generate_title">Ваша seed-фраза</string>
+  <plurals name="onboarding_seed_generate_words_count">
+    <item quantity="one"></item>
+    <item quantity="few">%d слова</item>
+    <item quantity="many">%d слов</item>
+    <item quantity="other">%d слов</item>
+  </plurals>
   <string name="onboarding_seed_import_message">Чтобы импортировать кошелек, введите seed-фразу в поле ниже</string>
   <string name="onboarding_seed_intro_button_generate">Создать seed-фразу</string>
   <string name="onboarding_seed_intro_button_import">Импорт кошелька</string>
@@ -484,10 +497,6 @@
   <string name="send_total_subtitle_format">%s будет отправлено</string>
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
   <string name="send_validation_invalid_address">Неверный адрес</string>
-  <string name="shop_buy_now">Купить сейчас</string>
-  <string name="shop_i_have_a_promo_code">У меня есть промо-код…</string>
-  <string name="shop_one_wallet">Tangem Wallet</string>
-  <string name="shop_other_payment_methods">Другие способы оплаты</string>
   <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
   <string name="story_awe_title">Революционный аппаратный кошелек</string>
   <string name="story_backup_description">До трех карт с одним кошельком</string>
@@ -509,14 +518,11 @@
   <string name="swapping_alert_title">Комиссии</string>
   <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
   <string name="swapping_approve_information_title">Подтвердить</string>
-  <string name="swapping_error_wrapper">Ошибка: %s</string>
   <string name="swapping_from_title">Вы отправляете</string>
   <string name="swapping_give_permission">Дать разрешение</string>
   <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
   <string name="swapping_insufficient_funds">Недостаточно средств</string>
   <string name="swapping_network_fee_warning_content">Сумма отправки будет уменьшена для покрытия выбранного уровня комиссии</string>
-  <string name="swapping_pending_transaction_subtitle">Транзакция в процессе…</string>
-  <string name="swapping_pending_transaction_title">Подождите</string>
   <string name="swapping_permission_buttons_approve">Подтвердить</string>
   <string name="swapping_permission_current_transaction">Текущая транзакция</string>
   <string name="swapping_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>

@@ -337,13 +337,8 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                     )
                 }
                 is SwapWarning.GenericWarning -> {
-                    val message = warning.message?.let {
-                        if (warning.shouldWrapMessage) {
-                            String.format(stringResource(id = R.string.swapping_error_wrapper), it.resolveReference())
-                        } else {
-                            it.resolveReference()
-                        }
-                    } ?: stringResource(id = R.string.common_unknown_error)
+                    val message = warning.message?.resolveReference()
+                        ?: stringResource(id = R.string.common_unknown_error)
                     RefreshableWaringCard(
                         title = stringResource(id = R.string.common_warning),
                         description = message,
