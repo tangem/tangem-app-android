@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -105,7 +106,7 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
 
     val signer = TangemSigner(
         card = card,
-        tangemSdk = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk,
+        tangemSdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk,
         initialMessage = Message(),
     ) { signResponse ->
         store.dispatch(

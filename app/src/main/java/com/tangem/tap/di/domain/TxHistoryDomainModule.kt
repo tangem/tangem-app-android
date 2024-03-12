@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.tokens.*
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
+import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import dagger.Module
@@ -33,5 +34,11 @@ internal object TxHistoryDomainModule {
         txHistoryRepository: TxHistoryRepository,
     ): GetExplorerTransactionUrlUseCase {
         return GetExplorerTransactionUrlUseCase(repository = txHistoryRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesGetFixedTxHistoryItemsUseCase(txHistoryRepository: TxHistoryRepository): GetFixedTxHistoryItemsUseCase {
+        return GetFixedTxHistoryItemsUseCase(repository = txHistoryRepository)
     }
 }
