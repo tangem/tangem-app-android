@@ -5,6 +5,8 @@ import androidx.appcompat.app.AlertDialog
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.module.ModuleMessageConverter
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.sdk.extensions.localizedDescription
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.feedback.SendTransactionFailedEmail
@@ -30,7 +32,8 @@ object SendTransactionFailsDialog {
         return AlertDialog.Builder(context).apply {
             setTitle(R.string.alert_failed_to_send_transaction_title)
             setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
-            setNeutralButton(R.string.alert_button_send_feedback) { _, _ ->
+            setNeutralButton(R.string.details_row_title_contact_to_support) { _, _ ->
+                Analytics.send(Basic.ButtonSupport())
                 store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
             }
             setPositiveButton(R.string.common_cancel) { _, _ -> }

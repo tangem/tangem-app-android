@@ -1,5 +1,8 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
@@ -17,7 +20,6 @@ internal class SendAmountFieldMaxAmountConverter(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val amountState = state.amountState ?: return state
         val amountTextField = amountState.amountTextField
-        val feeState = state.feeState ?: return state
 
         val cryptoDecimals = amountTextField.cryptoAmount.decimals
         val fiatDecimals = amountTextField.fiatAmount.decimals
@@ -26,6 +28,7 @@ internal class SendAmountFieldMaxAmountConverter(
 
         if (decimalCryptoValue.isNullOrZero()) return state
 
+        val isDoneActionEnabled = !decimalCryptoValue.isNullOrZero()
         val cryptoValue = decimalCryptoValue?.parseBigDecimal(cryptoDecimals).orEmpty()
         val fiatValue = decimalFiatValue?.parseBigDecimal(fiatDecimals).orEmpty()
         return state.copy(
@@ -37,10 +40,11 @@ internal class SendAmountFieldMaxAmountConverter(
                     isError = false,
                     cryptoAmount = amountTextField.cryptoAmount.copy(value = decimalCryptoValue),
                     fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = if (isDoneActionEnabled) ImeAction.Done else ImeAction.None,
+                        keyboardType = KeyboardType.Number,
+                    ),
                 ),
-            ),
-            feeState = feeState.copy(
-                isSubtract = true,
             ),
         )
     }
