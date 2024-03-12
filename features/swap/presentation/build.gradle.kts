@@ -7,6 +7,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.feature.swap.presentation"
+}
+
 dependencies {
     /** Core modules */
     implementation(projects.core.analytics)
