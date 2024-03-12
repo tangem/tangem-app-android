@@ -32,9 +32,12 @@ import com.tangem.operations.backup.StartPrimaryCardLinkingTask
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.preferencesStorage
+import com.tangem.tap.mainScope
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
+import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import kotlin.collections.set
 
@@ -186,23 +189,28 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val activationInProgress = preferencesStorage.usedCardsPrefStorage.isActivationInProgress(card.cardId)
+        mainScope.launch {
+            val activationInProgress = store.inject(DaggerGraphState::cardRepository)
+                .isActivationInProgress(card.cardId)
 
-        @Suppress("ComplexCondition")
-        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() && activationInProgress) {
-            StartPrimaryCardLinkingTask().run(session) { linkingResult ->
-                when (linkingResult) {
-                    is CompletionResult.Success -> {
-                        primaryCard = linkingResult.data
-                        deriveKeysIfNeeded(card, session, callback)
-                    }
-                    is CompletionResult.Failure -> {
-                        deriveKeysIfNeeded(card, session, callback)
+            @Suppress("ComplexCondition")
+            if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
+                activationInProgress
+            ) {
+                StartPrimaryCardLinkingTask().run(session) { linkingResult ->
+                    when (linkingResult) {
+                        is CompletionResult.Success -> {
+                            primaryCard = linkingResult.data
+                            deriveKeysIfNeeded(card, session, callback)
+                        }
+                        is CompletionResult.Failure -> {
+                            deriveKeysIfNeeded(card, session, callback)
+                        }
                     }
                 }
+            } else {
+                deriveKeysIfNeeded(card, session, callback)
             }
-        } else {
-            deriveKeysIfNeeded(card, session, callback)
         }
     }
 
