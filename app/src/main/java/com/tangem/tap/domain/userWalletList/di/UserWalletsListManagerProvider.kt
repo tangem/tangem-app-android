@@ -21,7 +21,7 @@ import com.tangem.tap.domain.userWalletList.utils.json.*
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.Provider
 
-private const val USER_WALLETS_STORAGE_NAME = "user_wallets_storage"
+internal const val USER_WALLETS_STORAGE_NAME = "user_wallets_storage"
 
 fun UserWalletsListManager.Companion.provideBiometricImplementation(
     applicationContext: Context,

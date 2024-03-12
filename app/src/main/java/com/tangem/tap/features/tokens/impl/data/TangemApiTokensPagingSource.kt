@@ -27,8 +27,10 @@ internal class TangemApiTokensPagingSource(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val searchText: String?,
+    needFilterExcluded: Boolean = false,
 ) : PagingSource<Int, Token>() {
 
+    private val coinsResponseConverter = CoinsResponseConverter(needFilterExcluded)
     override fun getRefreshKey(state: PagingState<Int, Token>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             state.closestPageToPosition(anchorPosition)?.prevKey?.plus(other = 1)
@@ -41,7 +43,7 @@ internal class TangemApiTokensPagingSource(
 
         return runCatching(dispatchers.io) {
             val supportedBlockchains = getSelectedWalletSyncUseCase().fold(
-                ifLeft = { Blockchain.values().toList() },
+                ifLeft = { Blockchain.entries },
                 ifRight = { it.scanResponse.card.supportedBlockchains(it.scanResponse.cardTypesResolver) },
             )
 
@@ -55,7 +57,7 @@ internal class TangemApiTokensPagingSource(
         }.fold(
             onSuccess = { response ->
                 LoadResult.Page(
-                    data = CoinsResponseConverter.convert(response),
+                    data = coinsResponseConverter.convert(response),
                     prevKey = if (page == 0) null else page.minus(other = 1),
                     nextKey = if (response.coins.isEmpty()) null else page.plus(other = 1),
                 )
