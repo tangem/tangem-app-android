@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getGreyedOutIconRes
 import com.tangem.domain.card.DerivePublicKeysUseCase
@@ -24,6 +26,7 @@ import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.TokenWithBlockchain
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getNetworkName
 import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
@@ -122,6 +125,7 @@ internal class TokensListViewModel @Inject constructor(
                 isDifferentAddressesBlockVisible = isDifferentAddressesBlockVisible(),
                 tokens = getInitialTokensList(),
                 onTokensLoadStateChanged = actionsHandler::onTokensLoadStateChanged,
+                isSavingInProgress = false,
                 onSaveButtonClick = actionsHandler::onSaveButtonClick,
             )
         } else {
@@ -308,13 +312,20 @@ internal class TokensListViewModel @Inject constructor(
         }
 
         fun onSaveButtonClick() {
+            val state = uiState as? TokensListStateHolder.ManageContent ?: return
+
             analyticsSender.sendWhenSaveButtonClicked()
 
             viewModelScope.launch(dispatchers.main) {
+                uiState = state.copy(isSavingInProgress = true)
+
                 tokensListMigration.onSaveButtonClick(
                     changedTokensList = changedTokensList,
                     changedBlockchainList = changedBlockchainList,
                 )
+
+                uiState = state.copy(isSavingInProgress = false)
+                store.dispatchWithMain(NavigationAction.PopBackTo(screen = AppScreen.Wallet))
             }
         }
 
