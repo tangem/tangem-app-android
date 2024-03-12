@@ -1,5 +1,8 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
@@ -28,9 +31,10 @@ internal class TokenDetailsNotificationConverter(
         return when (warning) {
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> NetworkFeeWithBuyButton(
                 currency = warning.tokenCurrency,
-                networkName = warning.coinCurrency.name,
+                networkName = warning.coinCurrency.network.name,
                 feeCurrencyName = warning.coinCurrency.name,
                 feeCurrencySymbol = warning.coinCurrency.symbol,
+                mergeFeeNetworkName = warning.coinCurrency.shouldMergeFeeNetworkName(),
                 onBuyClick = { clickIntents.onBuyCoinClick(warning.coinCurrency) },
             )
             is CryptoCurrencyWarning.CustomTokenNotEnoughForFee -> {
@@ -41,6 +45,7 @@ internal class TokenDetailsNotificationConverter(
                         networkName = feeCurrency.network.name,
                         feeCurrencyName = warning.feeCurrencyName,
                         feeCurrencySymbol = warning.feeCurrencySymbol,
+                        mergeFeeNetworkName = warning.currency.shouldMergeFeeNetworkName(),
                         onBuyClick = { clickIntents.onBuyCoinClick(feeCurrency) },
                     )
                 } else {
@@ -74,5 +79,10 @@ internal class TokenDetailsNotificationConverter(
                 onCloseClick = clickIntents::onSwapPromoDismiss,
             )
         }
+    }
+
+    // workaround for networks that users have misunderstanding
+    private fun CryptoCurrency.shouldMergeFeeNetworkName(): Boolean {
+        return Blockchain.fromNetworkId(this.network.backendId) == Blockchain.Arbitrum
     }
 }
