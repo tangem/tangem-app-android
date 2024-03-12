@@ -6,6 +6,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.feature.referral.presentation"
+}
+
 dependencies {
     /** Core modules */
     implementation(project(":core:analytics"))
