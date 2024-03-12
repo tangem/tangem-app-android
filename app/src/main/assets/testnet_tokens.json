@@ -608,6 +608,36 @@
                     "networkId": "hedera-hashgraph/test"
                 }
             ]
+        },
+        {
+            "id": "aurora-ethereum",
+            "name": "Aurora Testnet",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "aurora/test"
+                }
+            ]
+        },
+        {
+            "id": "areon-network",
+            "name": "Areon Network Testnet",
+            "symbol": "TAREA",
+            "networks": [
+                {
+                    "networkId": "areon-network/test"
+                }
+            ]
+        },
+        {
+            "id": "pulsechain",
+            "name": "PulseChain Testnet v4",
+            "symbol": "tPLS",
+            "networks": [
+                {
+                    "networkId": "pulsechain/test"
+                }
+            ]
         }
     ]
 }
