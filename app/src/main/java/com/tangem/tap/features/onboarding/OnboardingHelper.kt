@@ -15,10 +15,7 @@ import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.onUserWalletSelected
-import com.tangem.tap.common.extensions.removeContext
-import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
@@ -29,26 +26,26 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 object OnboardingHelper {
-    fun isOnboardingCase(response: ScanResponse): Boolean {
-        val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
+    suspend fun isOnboardingCase(response: ScanResponse): Boolean {
+        val onboardingManager = store.state.globalState.onboardingState.onboardingManager
         val cardId = response.card.cardId
         return when {
             response.cardTypesResolver.isTangemTwins() -> {
                 if (!response.twinsIsTwinned()) {
                     true
                 } else {
-                    cardInfoStorage.isActivationInProgress(cardId)
+                    onboardingManager?.isActivationInProgress(cardId) ?: false
                 }
             }
 
             response.cardTypesResolver.isWallet2() || response.cardTypesResolver.isShibaWallet() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
-                val activationInProgress = cardInfoStorage.isActivationInProgress(cardId)
+                val activationInProgress = onboardingManager?.isActivationInProgress(cardId)
                 val backupNotActive = response.card.backupStatus?.isActive != true
-                emptyWallets || activationInProgress || backupNotActive
+                emptyWallets || activationInProgress == true || backupNotActive
             }
 
-            response.card.wallets.isNotEmpty() -> cardInfoStorage.isActivationInProgress(cardId)
+            response.card.wallets.isNotEmpty() -> onboardingManager?.isActivationInProgress(cardId) ?: false
             else -> true
         }
     }
@@ -80,7 +77,7 @@ object OnboardingHelper {
         scope.launch {
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
-                store.state.daggerGraphState.get(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
+                store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
                     proceedWithScanResponse(scanResponse, backupCardsIds)
 
                     store.dispatchOnMain(
