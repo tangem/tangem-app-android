@@ -26,17 +26,21 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     private var canSaveWallets: Boolean = false
 
     fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState, canSaveWallets: Boolean): Action {
-        val selectedWallet = wallets.getSelectedWallet() ?: return Action.Unknown
+        val selectedWallet = wallets.getSelectedWallet()
 
-        val action = when {
-            isFirstInitialization(currentState) -> {
-                createInitializeWalletsAction(wallets, selectedWallet, canSaveWallets)
+        val action = if (selectedWallet == null) {
+            createNoSelectedWalletAction(wallets)
+        } else {
+            when {
+                isFirstInitialization(currentState) -> {
+                    createInitializeWalletsAction(wallets, selectedWallet, canSaveWallets)
+                }
+                isReinitialization(canSaveWallets) -> {
+                    this.canSaveWallets = canSaveWallets
+                    Action.ReinitializeWallets(selectedWallet = selectedWallet)
+                }
+                else -> getUpdateContentAction(currentState, wallets, selectedWallet)
             }
-            isReinitialization(canSaveWallets) -> {
-                this.canSaveWallets = canSaveWallets
-                Action.ReinitializeWallets(selectedWallet = selectedWallet)
-            }
-            else -> getUpdateContentAction(currentState, wallets, selectedWallet)
         }
 
         Timber.d("Resolved action: $action")
@@ -47,8 +51,16 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     private fun List<UserWallet>.getSelectedWallet(): UserWallet? {
         return when {
             isEmpty() -> null
-            size == 1 -> first()
+            size == 1 -> if (first().isLocked) null else first()
             else -> getSelectedWalletSyncUseCase().fold(ifLeft = { null }, ifRight = { it })
+        }
+    }
+
+    private fun createNoSelectedWalletAction(wallets: List<UserWallet>): Action {
+        return when {
+            wallets.isEmpty() -> Action.NoWallets
+            wallets.all(UserWallet::isLocked) -> Action.NoAccessibleWallets
+            else -> Action.Unknown
         }
     }
 
@@ -305,8 +317,10 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             }
         }
 
-        object Unknown : Action() {
-            override fun toString(): String = "Unknown"
-        }
+        data object NoAccessibleWallets : Action()
+
+        data object NoWallets : Action()
+
+        data object Unknown : Action()
     }
 }
