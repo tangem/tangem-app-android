@@ -4,9 +4,11 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.flow.firstOrNull
@@ -76,12 +78,12 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
             saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
             selectedAppCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = runBlocking {
-                store.state.daggerGraphState
-                    .get { appThemeModeRepository }.getAppThemeMode().firstOrNull() ?: AppThemeMode.DEFAULT
+                store.inject(DaggerGraphState::appThemeModeRepository).getAppThemeMode().firstOrNull()
+                    ?: AppThemeMode.DEFAULT
             },
             isHidingEnabled = runBlocking {
-                store.state.daggerGraphState
-                    .get { balanceHidingRepository }.getBalanceHidingSettings().isHidingEnabledInSettings
+                store.inject(DaggerGraphState::balanceHidingRepository)
+                    .getBalanceHidingSettings().isHidingEnabledInSettings
             },
         ),
     )

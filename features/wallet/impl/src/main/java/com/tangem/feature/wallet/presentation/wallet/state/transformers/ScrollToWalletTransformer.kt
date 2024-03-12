@@ -10,6 +10,7 @@ internal class ScrollToWalletTransformer(
     private val index: Int,
     private val currentStateProvider: Provider<WalletScreenState>,
     private val stateUpdater: (WalletScreenState) -> Unit,
+    private val onConsume: () -> Unit = {},
 ) : WalletScreenStateTransformer {
 
     override fun transform(prevState: WalletScreenState): WalletScreenState {
@@ -23,6 +24,8 @@ internal class ScrollToWalletTransformer(
                             event = consumedEvent(),
                         ),
                     )
+
+                    onConsume()
                 },
             ),
         )

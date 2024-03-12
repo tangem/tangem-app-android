@@ -3,7 +3,6 @@ package com.tangem.domain.tokens
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.domain.tokens.error.TokenListError
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
@@ -35,17 +34,13 @@ class GetFeePaidCryptoCurrencyStatusSyncUseCase(
 
         return either {
             when (feePaidCurrency) {
-                FeePaidCurrency.Coin -> getCryptoCurrency(operations, cryptoCurrency.id)
+                FeePaidCurrency.Coin ->
+                    operations
+                        .getNetworkCoinSync(cryptoCurrency.network.id, cryptoCurrency.network.derivationPath)
+                        .getOrNull()
                 FeePaidCurrency.SameCurrency -> cryptoCurrencyStatus
-                is FeePaidCurrency.Token -> getCryptoCurrency(operations, feePaidCurrency.tokenId)
+                is FeePaidCurrency.Token -> operations.getCurrencyStatusSync(feePaidCurrency.tokenId).getOrNull()
             }
         }
-    }
-
-    private suspend fun getCryptoCurrency(
-        operations: CurrenciesStatusesOperations,
-        cryptoCurrencyId: CryptoCurrency.ID,
-    ): CryptoCurrencyStatus? {
-        return operations.getCurrencyStatusSync(cryptoCurrencyId).getOrNull()
     }
 }

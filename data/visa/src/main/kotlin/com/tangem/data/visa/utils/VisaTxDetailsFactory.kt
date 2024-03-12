@@ -1,6 +1,7 @@
 package com.tangem.data.visa.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.domain.visa.model.VisaTxDetails
 import com.tangem.lib.visa.model.VisaTxHistoryResponse
 
@@ -43,7 +44,12 @@ internal class VisaTxDetailsFactory {
             txHash = request.txHash,
             txStatus = request.txStatus,
             fiatCurrency = findCurrencyByNumericCode(request.transactionCurrencyCode),
-            exploreUrl = request.txHash?.let(walletBlockchain::getExploreTxUrl),
+            exploreUrl = request.txHash?.let {
+                when (val txUrl = walletBlockchain.getExploreTxUrl(it)) {
+                    is TxExploreState.Url -> txUrl.url
+                    is TxExploreState.Unsupported -> ""
+                }
+            },
         )
     }
 }

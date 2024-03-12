@@ -11,7 +11,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 
-private const val DEFAULT_PAGE_SIZE = 50
+const val DEFAULT_PAGE_SIZE = 50
 // [REDACTED_TODO_COMMENT]
 class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {
 // [REDACTED_TODO_COMMENT]

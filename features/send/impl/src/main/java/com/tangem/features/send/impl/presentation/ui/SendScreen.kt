@@ -1,35 +1,34 @@
 package com.tangem.features.send.impl.presentation.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.ui.amount.SendAmountContent
 import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
 import com.tangem.features.send.impl.presentation.ui.send.SendContent
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-internal fun SendScreen(uiState: SendUiState) {
-    val currentState = uiState.currentState.collectAsStateWithLifecycle()
-    val isSuccess = uiState.sendState.isSuccess
+internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUiCurrentScreen>) {
+    val currentState = currentStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     BackHandler { uiState.clickIntents.onBackClick() }
     Column(
@@ -40,14 +39,14 @@ internal fun SendScreen(uiState: SendUiState) {
             .background(color = TangemTheme.colors.background.tertiary),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val titleRes = when (currentState.value) {
+        val titleRes = when (currentState.value.type) {
             SendUiStateType.Amount -> R.string.send_amount_label
             SendUiStateType.Recipient -> R.string.send_recipient_label
             SendUiStateType.Fee -> R.string.common_fee_selector_title
-            SendUiStateType.Send -> if (!isSuccess) R.string.send_confirm_label else null
+            SendUiStateType.Send -> if (!uiState.sendState.isSuccess) R.string.send_confirm_label else null
             else -> null
         }
-        val iconRes = if (currentState.value == SendUiStateType.Recipient) {
+        val iconRes = if (currentState.value.type == SendUiStateType.Recipient) {
             R.drawable.ic_qrcode_scan_24
         } else {
             null
@@ -63,11 +62,11 @@ internal fun SendScreen(uiState: SendUiState) {
         )
         SendScreenContent(
             uiState = uiState,
-            currentState = currentState,
+            currentState = currentState.value,
             modifier = Modifier
                 .weight(1f),
         )
-        SendNavigationButtons(uiState)
+        SendNavigationButtons(uiState, currentState.value)
     }
 
     SendEventEffect(
@@ -77,18 +76,26 @@ internal fun SendScreen(uiState: SendUiState) {
 }
 
 @Composable
-private fun SendScreenContent(
-    uiState: SendUiState,
-    currentState: State<SendUiStateType>,
-    modifier: Modifier = Modifier,
-) {
-    val recipientList = uiState.recipientList.collectAsLazyPagingItems()
+private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentScreen, modifier: Modifier = Modifier) {
+    var lastState by remember { mutableIntStateOf(currentState.type.ordinal) }
+    val direction = remember(currentState.type.ordinal) {
+        if (lastState < currentState.type.ordinal) {
+            AnimatedContentTransitionScope.SlideDirection.Start
+        } else {
+            AnimatedContentTransitionScope.SlideDirection.End
+        }
+    }
     AnimatedContent(
-        targetState = currentState.value,
+        targetState = currentState,
         label = "Send Scree Navigation",
         modifier = modifier,
+        transitionSpec = {
+            lastState = currentState.type.ordinal
+            slideIntoContainer(towards = direction, animationSpec = tween())
+                .togetherWith(slideOutOfContainer(towards = direction, animationSpec = tween()))
+        },
     ) { state ->
-        when (state) {
+        when (state.type) {
             SendUiStateType.Amount -> SendAmountContent(
                 amountState = uiState.amountState,
                 isBalanceHiding = uiState.isBalanceHidden,
@@ -97,7 +104,6 @@ private fun SendScreenContent(
             SendUiStateType.Recipient -> SendRecipientContent(
                 uiState = uiState.recipientState,
                 clickIntents = uiState.clickIntents,
-                recipientList = recipientList,
             )
             SendUiStateType.Fee -> SendSpeedAndFeeContent(
                 state = uiState.feeState,

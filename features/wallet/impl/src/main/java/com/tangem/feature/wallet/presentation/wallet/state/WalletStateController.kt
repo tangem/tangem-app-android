@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import androidx.compose.runtime.mutableStateOf
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.domain.wallets.models.UserWalletId
@@ -11,6 +12,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBot
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.WalletScreenStateTransformer
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
+import com.tangem.features.managetokens.navigation.ExpandableState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -86,6 +88,7 @@ internal class WalletStateController @Inject constructor(
             event = consumedEvent(),
             isHidingMode = false,
             manageTokenRedesignToggle = manageTokensFeatureToggles.isRedesignedScreenEnabled,
+            manageTokensExpandableState = mutableStateOf(ExpandableState.EXPANDED),
         )
     }
 }

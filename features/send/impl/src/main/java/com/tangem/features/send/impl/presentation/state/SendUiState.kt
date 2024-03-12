@@ -2,7 +2,6 @@ package com.tangem.features.send.impl.presentation.state
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.paging.PagingData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.event.StateEvent
@@ -17,8 +16,6 @@ import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
 
 /**
@@ -32,8 +29,6 @@ internal data class SendUiState(
     val recipientState: SendStates.RecipientState? = null,
     val feeState: SendStates.FeeState? = null,
     val sendState: SendStates.SendState = SendStates.SendState(),
-    val recipientList: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
-    val currentState: StateFlow<SendUiStateType>,
     val isBalanceHidden: Boolean,
     val event: StateEvent<SendEvent>,
 )
@@ -64,7 +59,8 @@ internal sealed class SendStates {
         override val isPrimaryButtonEnabled: Boolean,
         val addressTextField: SendTextField.RecipientAddress,
         val memoTextField: SendTextField.RecipientMemo?,
-        val recipients: MutableStateFlow<PagingData<SendRecipientListContent>> = MutableStateFlow(PagingData.empty()),
+        val recent: ImmutableList<SendRecipientListContent>,
+        val wallets: ImmutableList<SendRecipientListContent>,
         val network: String,
         val isValidating: Boolean = false,
     ) : SendStates()
@@ -75,12 +71,7 @@ internal sealed class SendStates {
         override val type: SendUiStateType = SendUiStateType.Fee,
         override val isPrimaryButtonEnabled: Boolean = false,
         val feeSelectorState: FeeSelectorState,
-        val isSubtractAvailable: Boolean,
-        val isSubtract: Boolean,
-        val isUserSubtracted: Boolean,
         val fee: Fee?,
-        val receivedAmountValue: BigDecimal,
-        val receivedAmount: String,
         val rate: BigDecimal?,
         val appCurrency: AppCurrency,
         val isFeeApproximate: Boolean,
@@ -94,17 +85,24 @@ internal sealed class SendStates {
         override val isPrimaryButtonEnabled: Boolean = true,
         val isSending: Boolean = false,
         val isSuccess: Boolean = false,
+        val isSubtract: Boolean = false,
         val transactionDate: Long = 0L,
         val txUrl: String = "",
         val ignoreAmountReduce: Boolean = false,
+        val isFromConfirmation: Boolean = true,
         val notifications: ImmutableList<SendNotification> = persistentListOf(),
     ) : SendStates()
 }
 
+data class SendUiCurrentScreen(
+    val type: SendUiStateType,
+    val isFromConfirmation: Boolean,
+)
+
 enum class SendUiStateType {
     None,
-    Amount,
     Recipient,
+    Amount,
     Fee,
     Send,
 }

@@ -35,6 +35,8 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
             AppConfig.versionName
         }
 
+        buildFeatures.buildConfig = true
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 }
