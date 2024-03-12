@@ -1,7 +1,9 @@
 package com.tangem.features.send.impl.presentation.analytics.utils
 
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.features.send.impl.presentation.analytics.SelectedCurrencyType
+import com.tangem.features.send.impl.presentation.analytics.SelectedFeeType
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
@@ -21,15 +23,12 @@ internal class SendOnNextScreenAnalyticSender(
                     if (selectedFee == FeeType.Custom && isCustomFeeEdited) {
                         analyticsEventHandler.send(SendAnalyticEvents.GasPriceInserter)
                     }
-                    analyticsEventHandler.send(SendAnalyticEvents.SelectedFee(selectedFee.name))
-                }
-                if (feeState.isSubtract) {
-                    analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount)
+                    sendSelectedFeeAnalytics(feeSelectorState)
                 }
             }
             SendUiStateType.Amount -> {
                 val isFiatSelected = state.amountState?.amountTextField?.isFiatValue ?: return
-                val selectedCurrency = if (isFiatSelected) {
+                val selectedCurrency = if (!isFiatSelected) {
                     SelectedCurrencyType.Token
                 } else {
                     SelectedCurrencyType.AppCurrency
@@ -40,5 +39,18 @@ internal class SendOnNextScreenAnalyticSender(
             }
             else -> Unit
         }
+    }
+
+    private fun sendSelectedFeeAnalytics(feeSelectorState: FeeSelectorState.Content) {
+        val type = when (feeSelectorState.fees) {
+            is TransactionFee.Single -> SelectedFeeType.Fixed
+            is TransactionFee.Choosable -> when (feeSelectorState.selectedFee) {
+                FeeType.Slow -> SelectedFeeType.Min
+                FeeType.Market -> SelectedFeeType.Normal
+                FeeType.Fast -> SelectedFeeType.Max
+                FeeType.Custom -> SelectedFeeType.Custom
+            }
+        }
+        analyticsEventHandler.send(SendAnalyticEvents.SelectedFee(type))
     }
 }
