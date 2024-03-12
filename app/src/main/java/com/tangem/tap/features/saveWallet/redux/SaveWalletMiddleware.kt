@@ -18,6 +18,7 @@ import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
@@ -42,6 +43,7 @@ internal class SaveWalletMiddleware {
     private fun handleAction(action: SaveWalletAction, state: SaveWalletState) {
         when (action) {
             is SaveWalletAction.Save -> saveWalletIfBiometricsEnrolled(state)
+            is SaveWalletAction.AllowToUseBiometrics -> allowToUseBiometrics(state)
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
             is SaveWalletAction.SaveWalletWasShown -> saveWalletWasShown()
             is SaveWalletAction.Dismiss -> dismiss(state)
@@ -96,11 +98,16 @@ internal class SaveWalletMiddleware {
                     .build()
                 ?: return@launch
 
-            provideLockableUserWalletsListManagerIfNot()
+            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
+            if (featureToggles.isGeneralManagerEnabled) {
+                store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+            } else {
+                provideLockableUserWalletsListManagerIfNot()
+            }
 
             val isFirstSavedWallet = !userWalletsListManager.hasUserWallets
 
-            saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
+            saveAccessCodeIfNeeded(accessCode = state.backupInfo?.accessCode, cardsInWallet = userWallet.cardsInWallet)
                 .flatMap {
                     // Save wallet only at first time (SaveWalletBottomSheet).
                     // Otherwise (Example, add new wallet in Details) userWalletsListManager.wallets subscribers will
@@ -116,16 +123,14 @@ internal class SaveWalletMiddleware {
                     store.dispatchWithMain(SaveWalletAction.Save.Error(error))
                 }
                 .doOnSuccess {
-                    store.state.daggerGraphState.get(DaggerGraphState::walletsRepository)
-                        .saveShouldSaveUserWallets(item = true)
+                    store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
 
                     // Enable saving access codes only if this is the first time user save the wallet
                     if (isFirstSavedWallet) {
                         preferencesStorage.shouldSaveAccessCodes = true
-                        store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository)
-                            .setAccessCodeRequestPolicy(
-                                isBiometricsRequestPolicy = userWallet.hasAccessCode,
-                            )
+                        store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                            isBiometricsRequestPolicy = userWallet.hasAccessCode,
+                        )
                     }
 
                     store.dispatchOnMain(SaveWalletAction.Save.Success)
@@ -137,6 +142,46 @@ internal class SaveWalletMiddleware {
                             NavigationAction.NavigateTo(AppScreen.Wallet)
                         },
                     )
+                }
+        }
+    }
+
+    private fun allowToUseBiometrics(state: SaveWalletState) {
+        val scanResponse = state.backupInfo?.scanResponse
+            ?: store.state.globalState.scanResponse
+            ?: return
+
+        if (state.backupInfo != null) {
+            // TODO: Remove after onboarding refactoring
+            Analytics.send(Onboarding.EnableBiometrics(AnalyticsParam.OnOffState.On))
+        } else {
+            Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.On))
+        }
+
+        scope.launch {
+            val userWallet = userWalletsListManager.selectedUserWalletSync
+                ?: UserWalletBuilder(scanResponse)
+                    .backupCardsIds(state.backupInfo?.backupCardsIds)
+                    .build()
+                ?: return@launch
+
+            store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+
+            saveAccessCodeIfNeeded(accessCode = state.backupInfo?.accessCode, cardsInWallet = userWallet.cardsInWallet)
+                .flatMap {
+                    userWalletsListManager.save(userWallet, canOverride = true)
+                }
+                .doOnFailure { error ->
+                    store.dispatchWithMain(SaveWalletAction.Save.Error(error))
+                }
+                .doOnSuccess {
+                    preferencesStorage.shouldSaveAccessCodes = true
+                    store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                        isBiometricsRequestPolicy = userWallet.hasAccessCode,
+                    )
+
+                    store.dispatchOnMain(SaveWalletAction.Save.Success)
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                 }
         }
     }
