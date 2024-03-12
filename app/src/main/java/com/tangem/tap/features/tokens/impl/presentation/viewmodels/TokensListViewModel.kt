@@ -250,7 +250,7 @@ internal class TokensListViewModel @Inject constructor(
     }
 
     private fun getTokensListBySearchText(text: String): Flow<PagingData<TokenItemState>> {
-        return interactor.getTokensList(searchText = text)
+        return interactor.getTokensList(searchText = text, needFilterExcluded = !isManageAccess)
             .mapToTokenItemState()
             .cachedIn(viewModelScope)
     }
