@@ -19,10 +19,10 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -40,7 +40,6 @@ import java.math.RoundingMode
 @Suppress("LargeClass")
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
-    private val analytics: AnalyticsEventHandler,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
 ) : TransactionManager {
@@ -119,7 +118,10 @@ class TransactionManagerImpl(
 
     override fun getExplorerTransactionLink(networkId: String, txAddress: String): String {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: error("blockchain not found")
-        return blockchain.getExploreTxUrl(txAddress)
+        return when (val txUrlState = blockchain.getExploreTxUrl(txAddress)) {
+            TxExploreState.Unsupported -> ""
+            is TxExploreState.Url -> txUrlState.url
+        }
     }
 
     override fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
@@ -142,10 +144,6 @@ class TransactionManagerImpl(
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             else -> null
         }
-    }
-
-    override fun getNativeTokenDecimals(networkId: String): Int {
-        return Blockchain.fromNetworkId(networkId)?.decimals() ?: error("blockchain not found")
     }
 
     override suspend fun updateWalletManager(networkId: String, derivationPath: String?) {
@@ -205,7 +203,6 @@ class TransactionManagerImpl(
         return ProxyNetworkInfo(
             name = blockchain.fullName,
             blockchainId = blockchain.id,
-            blockchainCurrency = blockchain.currency,
         )
     }
 
