@@ -1,6 +1,5 @@
 package com.tangem.features.send.impl.presentation.state
 
-import androidx.paging.PagingData
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
@@ -23,7 +22,6 @@ import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
 
 @Suppress("LongParameterList")
@@ -78,7 +76,6 @@ internal class SendStateFactory(
     // region UI states
     fun getInitialState(): SendUiState = SendUiState(
         clickIntents = clickIntents,
-        currentState = MutableStateFlow(SendUiStateType.None),
         event = consumedEvent(),
         isEditingDisabled = false,
         isBalanceHidden = false,
@@ -109,17 +106,11 @@ internal class SendStateFactory(
     //endregion
 
     //region recipient
-    fun onLoadedRecipientList(
-        wallets: List<AvailableWallet?>,
-        txHistory: PagingData<TxHistoryItem>,
-        txHistoryCount: Int,
-    ) {
+    fun onLoadedRecipientList(wallets: List<AvailableWallet?>, txHistory: List<TxHistoryItem>): SendUiState =
         recipientListStateConverter.convert(
             wallets = wallets,
             txHistory = txHistory,
-            txHistoryCount = txHistoryCount,
         )
-    }
 
     fun onRecipientAddressValueChange(value: String, isXAddress: Boolean = false): SendUiState {
         val state = currentStateProvider()
@@ -223,6 +214,13 @@ internal class SendStateFactory(
     //endregion
 
     //region send
+    fun onSubtractSelect(isSubtract: Boolean): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            sendState = state.sendState.copy(isSubtract = isSubtract),
+        )
+    }
+
     fun getSendingStateUpdate(isSending: Boolean): SendUiState {
         val state = currentStateProvider()
         return state.copy(sendState = state.sendState.copy(isSending = isSending))

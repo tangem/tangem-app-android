@@ -75,4 +75,6 @@ sealed class Basic(
     )
 
     class WalletOpened : Basic(event = "Wallet Opened")
+
+    class ButtonSupport : Basic("Request Support")
 }
