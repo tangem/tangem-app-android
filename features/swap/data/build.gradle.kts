@@ -6,6 +6,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.feature.swap.data"
+}
+
 dependencies {
 
     /** AndroidX */

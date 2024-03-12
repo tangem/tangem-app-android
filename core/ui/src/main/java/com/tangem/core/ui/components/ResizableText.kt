@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components
 
 import androidx.annotation.FloatRange
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -84,9 +85,11 @@ fun ResizableText(
     var readyToDraw by remember { mutableStateOf(value = false) }
 
     Text(
-        modifier = modifier.drawWithContent {
-            if (readyToDraw) drawContent()
-        },
+        modifier = modifier
+            .drawWithContent {
+                if (readyToDraw) drawContent()
+            }
+            .wrapContentHeight(),
         text = text,
         color = color,
         fontSize = fontSize,

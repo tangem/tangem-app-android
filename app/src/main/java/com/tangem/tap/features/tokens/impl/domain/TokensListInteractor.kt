@@ -12,5 +12,5 @@ import kotlinx.coroutines.flow.Flow
 internal interface TokensListInteractor {
 
     /** Get tokens list using filter by text [searchText] */
-    fun getTokensList(searchText: String): Flow<PagingData<Token>>
+    fun getTokensList(searchText: String, needFilterExcluded: Boolean): Flow<PagingData<Token>>
 }
