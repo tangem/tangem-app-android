@@ -13,12 +13,8 @@ import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.common.extensions.addContext
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -26,6 +22,10 @@ import com.tangem.tap.features.disclaimer.redux.DisclaimerCallback
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -165,7 +165,10 @@ internal object LegacyScanProcessor {
             navigateTo(appScreen) { onProgressStateChange(it) }
         } else {
             Analytics.setContext(scanResponse)
-            if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
+
+            val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase).invokeSync()
+
+            if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
                 onWalletNotCreated()
                 store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
                 navigateTo(AppScreen.OnboardingTwins) { onProgressStateChange(it) }
