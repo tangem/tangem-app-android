@@ -20,6 +20,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
@@ -59,7 +60,7 @@ class WalletConnectSdkHelper {
         val decimals = wallet.blockchain.decimals()
 
         val value = (transaction.value ?: "0").hexToBigDecimal()
-            ?.movePointLeft(decimals) ?: return null
+            .movePointLeft(decimals) ?: return null
 
         val gasLimit = getGasLimitFromTx(value, walletManager, transaction)
 
@@ -118,8 +119,7 @@ class WalletConnectSdkHelper {
 
     private suspend fun getWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager? {
         val userWallet = userWalletsListManager.selectedUserWalletSync ?: return null
-        val walletManagerFacade = store.state.daggerGraphState
-            .get(DaggerGraphState::walletManagersFacade)
+        val walletManagerFacade = store.inject(DaggerGraphState::walletManagersFacade)
         return walletManagerFacade.getOrCreateWalletManager(
             userWalletId = userWallet.walletId,
             blockchain = blockchain,
@@ -172,7 +172,7 @@ class WalletConnectSdkHelper {
         val result = (data.walletManager as TransactionSender).send(
             transactionData = data.transaction,
             signer = CommonSigner(
-                tangemSdk = store.state.daggerGraphState.get(DaggerGraphState::cardSdkConfigRepository).sdk,
+                tangemSdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk,
                 cardId = cardId,
             ),
         )
