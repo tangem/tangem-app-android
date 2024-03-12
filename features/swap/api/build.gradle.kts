@@ -7,6 +7,10 @@ plugins {
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.feature.swap.api"
+}
+
 dependencies {
     /** DI */
     implementation(deps.hilt.android)
