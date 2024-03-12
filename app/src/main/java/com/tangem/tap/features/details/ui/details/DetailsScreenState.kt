@@ -89,7 +89,7 @@ internal sealed class SettingsItem(
         override val onClick: () -> Unit,
     ) : SettingsItem(
         iconResId = R.drawable.ic_comment,
-        title = resourceReference(R.string.details_row_title_send_feedback),
+        title = resourceReference(R.string.details_row_title_contact_to_support),
     )
 
     data class ReferralProgram(
