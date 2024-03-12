@@ -55,9 +55,6 @@ interface TransactionManager {
     ): ProxyFees
 
     @Throws(IllegalStateException::class)
-    fun getNativeTokenDecimals(networkId: String): Int
-
-    @Throws(IllegalStateException::class)
     suspend fun updateWalletManager(networkId: String, derivationPath: String?)
 
     fun calculateFee(networkId: String, gasPrice: String, estimatedGas: Int): BigDecimal
