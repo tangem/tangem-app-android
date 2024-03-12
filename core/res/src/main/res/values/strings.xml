@@ -7,7 +7,6 @@
   <string name="alert_app_feedback_sent_title">Sent successfully</string>
   <string name="alert_button_request_support">Request support</string>
   <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
-  <string name="alert_failed_to_send_email_title">Failed to send the email</string>
   <string name="alert_failed_to_send_transaction_message">Reason: %s</string>
   <string name="alert_failed_to_send_transaction_title">Can\'t send a transaction</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">The selected does not support the %1$s network</string>
@@ -45,7 +44,6 @@
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Disable this option if you don\'t want this card to be used to reset access codes on other cards in this wallet. Please note that this will also prevent you from resetting the access code on this card.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
-  <string name="card_settings_access_code_recovery_footer">Disable the ability to reset the access code on this card or other cards in this wallet</string>
   <string name="card_settings_access_code_recovery_title">Access code recovery</string>
   <string name="card_settings_action_sheet_reset">Reset</string>
   <string name="card_settings_action_sheet_title">Are you sure you want to do this?</string>
@@ -93,7 +91,6 @@
   <string name="common_generate_addresses">Get addresses</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_import">Import</string>
-  <string name="common_learn_and_earn">Learn &amp; Earn</string>
   <string name="common_locked">Locked</string>
   <string name="common_main_network">Main network</string>
   <string name="common_network_fee_title">Network fee</string>
@@ -102,7 +99,6 @@
   <string name="common_no_address">No address</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Primary Card</string>
-  <string name="common_paste">Paste</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_reject">Reject</string>
@@ -119,7 +115,6 @@
   <string name="common_share">Share</string>
   <string name="common_sign">Sign</string>
   <string name="common_sign_and_send">Sign and send</string>
-  <string name="common_stake">Stake</string>
   <string name="common_start">Start</string>
   <string name="common_submit">Submit</string>
   <string name="common_success">Success</string>
@@ -209,13 +204,11 @@
   <string name="express_exchange_status_receiving">Awaiting deposit</string>
   <string name="express_exchange_status_receiving_active">Awaiting deposit...</string>
   <string name="express_exchange_status_refunded">Refunded</string>
-  <string name="express_exchange_status_refunded_active">Refunding...</string>
   <string name="express_exchange_status_sending">Sending to you</string>
   <string name="express_exchange_status_sending_active">Sending to you...</string>
   <string name="express_exchange_status_sent">Sent</string>
   <string name="express_exchange_status_subtitle">Provider-sourced data. Estimated amount subject to change due to market conditions.</string>
   <string name="express_exchange_status_title">Exchange status</string>
-  <string name="express_exchange_status_verified">Verified</string>
   <string name="express_exchange_status_verifying">Verification required</string>
   <string name="express_exchange_token_list_subtitle">List of all tokens added to your wallet</string>
   <string name="express_fetch_best_rates">Fetching best rates...</string>
@@ -249,9 +242,7 @@
   <string name="initial_message_change_access_code_body">To change the access code tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
-  <string name="initial_message_purge_wallet_body">To reset to factory settings tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_scan_header">Tap to scan</string>
-  <string name="initial_message_sign_body">To sign tap the card as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_sign_header">Tap to sign</string>
   <string name="initial_message_tap_header">Tap the card</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card to enter</string>
@@ -435,7 +426,6 @@
   <string name="send_additional_field_already_included">Already included in the entered address</string>
   <string name="send_alert_fee_coverage_subract_text">Subtract</string>
   <string name="send_alert_fee_coverage_title">Not enough funds to cover the network commission. Subtract the commission from the amount sent?</string>
-  <string name="send_alert_fee_increased_title">Fee is increased</string>
   <string name="send_alert_fee_too_low_text">You specified a commission below the recommended amount, which could cause a delay in your transaction. Continue?</string>
   <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
@@ -478,7 +468,7 @@
   <string name="send_notification_high_fee_title">Fee is increased</string>
   <string name="send_notification_invalid_amount_text">The included commission exceeds the transfer amount, leading to a negative value</string>
   <string name="send_notification_invalid_amount_title">Invalid amount</string>
-  <string name="send_notification_invalid_minimum_amount_text">The minimum sending amount is %1$s. Please ensure that the remaining balance after sending will not be less than %1$s.</string>
+  <string name="send_notification_invalid_minimum_amount_text">The minimum sending amount is %1$s. Please ensure that the remaining balance after sending will not be less than %2$s.</string>
   <string name="send_notification_invalid_reserve_amount_text">Target account is not created. Please change the amount to send.</string>
   <string name="send_notification_invalid_reserve_amount_title">The amount to send must be at least %s</string>
   <string name="send_notification_reduce_by">Reduce by %s</string>
@@ -509,16 +499,11 @@
   <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
   <string name="story_awe_title">Revolutionary Hardware Wallet</string>
   <string name="story_backup_description">Up to 3 physical cards to one wallet</string>
-  <string name="story_backup_description_1">Up to</string>
-  <string name="story_backup_description_2_bold">3 physical cards</string>
-  <string name="story_backup_description_3">to one wallet</string>
   <string name="story_backup_title">Ultra Secure Backup</string>
   <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously – all in one card</string>
   <string name="story_currencies_title">Thousands of Currencies</string>
   <string name="story_finish_description">Use it on the go, anywhere, anytime. No wires or batteries. Just tap the card to your phone when you need your crypto.</string>
   <string name="story_finish_title">The Wallet for Everyone</string>
-  <string name="story_learn_description">Take three lessons, get a discount on your Tangem Wallet, and receive 1INCH tokens to your wallet</string>
-  <string name="story_learn_learn">Learn</string>
   <string name="story_meet_title">Meet Tangem</string>
   <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
   <string name="story_web3_title">Web 3.0 Compatible</string>
@@ -586,14 +571,12 @@
   <string name="user_wallet_list_rename_popup_title">Rename Wallet</string>
   <string name="user_wallet_list_unlock_all">Unlock all</string>
   <string name="user_wallet_list_unlock_all_with">Unlock all with %s</string>
-  <string name="wallet_address_button_explore">Transaction history</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
   <string name="wallet_balance_missing_derivation">Scan the card</string>
   <string name="wallet_connect_alert_sign_message">Requesting to sign a message.\n\n%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, requesting to\nsign BNB transaction.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Trade order for %1$s\nPrice: %2$s\nAmount to receive: %3$s\nAmount to pay: %4$s</string>
   <string name="wallet_connect_bnb_transaction_message">Transaction details:\nFrom: %1$s\nTo: %2$s\nAmount: %3$s</string>
-  <string name="wallet_connect_bnb_transaction_signed">The BNB transaction has been successfully signed and sent to the Dapp</string>
   <string name="wallet_connect_clipboard_alert">Clipboard contain WalletConnect code. Use copied value or scan QR-code</string>
   <string name="wallet_connect_create_tx_message">Request to create transaction for %1$s\n%2$s\n\nAmount: %3$s\nFee: %4$s\nTotal: %5$s\nBalance: %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">Can\'t send transaction. Not enough funds.</string>
@@ -607,8 +590,6 @@
   <string name="wallet_connect_error_wrong_card_selected">Wrong card selected in Tangem App</string>
   <string name="wallet_connect_failed_to_build_tx">Failed to create transaction from Dapp data. Code: %s</string>
   <string name="wallet_connect_generic_error_with_code">We\'ve encountered unknown error. Error code: %d. If the problem persists — feel free to contact our support</string>
-  <string name="wallet_connect_message_signed">The message has been successfully signed and sent to the Dapp</string>
-  <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
   <string name="wallet_connect_no_sessions_message">No opened WalletConnect sessions</string>
   <string name="wallet_connect_no_sessions_title">Ooops. No Sessions.</string>
   <string name="wallet_connect_pairing_error">Failed to pairing WalletConnect session: %1$s</string>
@@ -620,14 +601,9 @@
   <string name="wallet_connect_scanner_error_not_valid_card">This card can\'t be used to establish WalletConnect session</string>
   <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
   <string name="wallet_connect_select_network">Select network</string>
-  <string name="wallet_connect_service_no_chain_id">Dapp didn\'t provide essential data to establish WalletConnect session</string>
-  <string name="wallet_connect_session_not_found">Failed to find session for request</string>
   <string name="wallet_connect_sessions_title">WalletConnect Sessions</string>
   <string name="wallet_connect_subtitle">Connect to dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>
-  <string name="wallet_connect_transaction_signed">The transaction has been successfully signed and sent to the Dapp</string>
-  <string name="wallet_connect_transaction_signed_and_send">The transaction has been succesfully signed and sent to the blockchain</string>
-  <string name="wallet_connect_tx_not_found">Failed to find transaction hash</string>
   <string name="wallet_marketplace_block_title">%s Market Price</string>
   <string name="wallet_marketprice_block_update_time">last 24h</string>
   <string name="wallet_network_group_title">%s network</string>
@@ -638,7 +614,6 @@
   <string name="warning_backup_errors_message">Please withdraw all funds from this wallet, reset it to factory settings, and create a new one. Access to the current wallet will be lost.</string>
   <string name="warning_backup_errors_title">Backup error</string>
   <string name="warning_button_could_be_better">Could be better</string>
-  <string name="warning_button_learn_more">Learn more</string>
   <string name="warning_button_like_it">Like it</string>
   <string name="warning_button_ok">Ok, Got it!</string>
   <string name="warning_button_really_cool">Really cool!</string>
@@ -653,7 +628,7 @@
   <string name="warning_express_active_transaction_title">You have active transaction</string>
   <string name="warning_express_approval_in_progress_message">Swap approval is underway and will be completed shortly</string>
   <string name="warning_express_approval_in_progress_title">Approval in progress</string>
-  <string name="warning_express_dust_message">The minimum swapping amount is %1$s. Please ensure that the remaining balance after sending will not be less than %2$s.</string>
+  <string name="warning_express_dust_message">The minimum swapping amount is %1$s. Please ensure that the remaining balance after the swap will not be less than %2$s.</string>
   <string name="warning_express_no_exchangeable_coins_description">You do not have any %s exchangeable coins in your list</string>
   <string name="warning_express_no_exchangeable_coins_title">No available tokens to swap</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">To make a transaction you need to deposit some %1$s %2$s</string>
@@ -679,7 +654,6 @@
   <string name="warning_no_backup_title">Missing backup</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">This card has been previously used for transactions. If received from an untrusted source, consider withdrawing all funds. If it\'s your card, no action is required.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Card has already signed transactions</string>
-  <string name="warning_old_device_old_card_title">Device incompatibility detected</string>
   <string name="warning_rate_app_message">Your review keeps us motivated to make Tangem Wallet even better</string>
   <string name="warning_rate_app_title">Enjoying Tangem?</string>
   <string name="warning_rent_fee_title">Network rent fee required</string>

@@ -7,7 +7,6 @@
   <string name="alert_app_feedback_sent_title">Отправлено успешно</string>
   <string name="alert_button_request_support">Обратиться в поддержку</string>
   <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
-  <string name="alert_failed_to_send_email_title">Не удалось отправить письмо</string>
   <string name="alert_failed_to_send_transaction_message">Причина: %s</string>
   <string name="alert_failed_to_send_transaction_title">Не могу отправить транзакцию</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Выбранный кошелёк не поддерживает сеть %1$s</string>
@@ -46,7 +45,6 @@
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">Отключите эту опцию, если не хотите, чтобы эта карта использовалась для сброса кодов доступа на другие карты этого кошелька. Обратите внимание, сброс кода также не будет доступен на этой карте.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Использовать эту карту для сброса кода доступа на других картах в этом кошельке</string>
-  <string name="card_settings_access_code_recovery_footer">Отключить возможность сброса кода доступа на этой карте или других картах этого кошелька</string>
   <string name="card_settings_access_code_recovery_title">Восстановление кода доступа</string>
   <string name="card_settings_action_sheet_reset">Сбросить</string>
   <string name="card_settings_action_sheet_title">Вы уверены, что хотите это сделать?</string>
@@ -102,7 +100,6 @@
   <string name="common_no_address">Нет адреса</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
-  <string name="common_paste">Вставить</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -119,7 +116,6 @@
   <string name="common_share">Поделиться</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
-  <string name="common_stake">Стейкинг</string>
   <string name="common_start">Начать</string>
   <string name="common_submit">Отправить</string>
   <string name="common_success">Успешно</string>
@@ -209,13 +205,11 @@
   <string name="express_exchange_status_receiving">Ожидание депозита</string>
   <string name="express_exchange_status_receiving_active">Ожидаем пополнения...</string>
   <string name="express_exchange_status_refunded">Возвращено</string>
-  <string name="express_exchange_status_refunded_active">Возврат...</string>
   <string name="express_exchange_status_sending">Отправляем </string>
   <string name="express_exchange_status_sending_active">Отправка средств...</string>
   <string name="express_exchange_status_sent">Отправлено</string>
   <string name="express_exchange_status_subtitle">Данные провайдера. Сумма к получению может измениться в зависимости от рыночных условий.</string>
   <string name="express_exchange_status_title">Статус обмена</string>
-  <string name="express_exchange_status_verified">Верифицировано</string>
   <string name="express_exchange_status_verifying">Требуется верификация</string>
   <string name="express_exchange_token_list_subtitle">Список токенов в вашем кошельке</string>
   <string name="express_fetch_best_rates">Получение наилучших курсов...</string>
@@ -248,9 +242,7 @@
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_change_passcode_body">Чтобы изменить пароль, приложите карту как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_create_wallet_body">Чтобы создать кошелек, приложите карту как показано выше и не убирайте до окончания операции</string>
-  <string name="initial_message_purge_wallet_body">Чтобы сбросить настройки до заводских, приложите карту как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_scan_header">Приложите, чтобы отсканировать</string>
-  <string name="initial_message_sign_body">Чтобы подписать транзакцию, приложите карту как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_sign_header">Приложите, чтобы подписать</string>
   <string name="initial_message_tap_header">Приложите карту</string>
   <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту для входа</string>
@@ -438,7 +430,6 @@
   <string name="send_additional_field_already_included">Уже содержится в введенном адресе</string>
   <string name="send_alert_fee_coverage_subract_text">Вычесть</string>
   <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию из отправляемой сумму?</string>
-  <string name="send_alert_fee_increased_title">Комиссия увеличилась</string>
   <string name="send_alert_fee_too_low_text">Вы указали комиссию ниже рекомендуемой, это может привести к задержке исполнения вашей транзакции. Продолжить?</string>
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
@@ -471,10 +462,10 @@
   <string name="send_notification_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
   <string name="send_notification_high_fee_text">Комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить %s.</string>
-  <string name="send_notification_high_fee_title">Увеличение комиссии</string>
+  <string name="send_notification_high_fee_title">Комиссия увеличилась</string>
   <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
   <string name="send_notification_invalid_amount_title">Недопустимая сумма</string>
-  <string name="send_notification_invalid_minimum_amount_text">Минимальная сумма отправки - %1$s. Пожалуйста, убедитесь, что остаток после отправки также не будет меньше %1$s.</string>
+  <string name="send_notification_invalid_minimum_amount_text">Минимальная сумма отправки - %1$s. Пожалуйста, убедитесь, что остаток после отправки также не будет меньше %2$s.</string>
   <string name="send_notification_invalid_reserve_amount_text">Адрес получателя не активирован. \nПожалуйста, измените сумму отправки, чтобы продолжить.</string>
   <string name="send_notification_invalid_reserve_amount_title">Сумма отправки не может быть менее %s</string>
   <string name="send_notification_reduce_by">Уменьшить на %s</string>
@@ -500,16 +491,11 @@
   <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
   <string name="story_awe_title">Революционный аппаратный кошелек</string>
   <string name="story_backup_description">До трех карт с одним кошельком</string>
-  <string name="story_backup_description_1">До</string>
-  <string name="story_backup_description_2_bold">трех карт</string>
-  <string name="story_backup_description_3">с одним кошельком</string>
   <string name="story_backup_title">Все ключи в безопасности</string>
   <string name="story_currencies_description">Аппаратный кошелек для ваших биткоинов, эфира и многих других валют одновременно — все в одной карте</string>
   <string name="story_currencies_title">Тысячи криптовалют</string>
   <string name="story_finish_description">Используйте его на ходу, в любом месте, в любое время. Без проводов и батареек. Как только понадобится крипта, просто приложите карту к телефону.</string>
   <string name="story_finish_title">Кошелек для каждого</string>
-  <string name="story_learn_description">Пройдите 3 урока, получите скидку на покупку Tangem Wallet и 1INCH токены</string>
-  <string name="story_learn_learn">Пройти обучение</string>
   <string name="story_meet_title">Встречайте Tangem</string>
   <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
   <string name="story_web3_title">Поддержка Web 3.0</string>
@@ -577,14 +563,12 @@
   <string name="user_wallet_list_rename_popup_title">Переименование кошелька</string>
   <string name="user_wallet_list_unlock_all">Разблокировать все</string>
   <string name="user_wallet_list_unlock_all_with">Разблокировать все с %s</string>
-  <string name="wallet_address_button_explore">История транзакций</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуйте позже.</string>
   <string name="wallet_balance_missing_derivation">Отсканируйте карту</string>
   <string name="wallet_connect_alert_sign_message">Запрос на подпись сообщения.\n\n%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, запрос на\nподпись транзакции с BNB.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Торговый ордер на %1$s\nЦена: %2$s\nСумма к получению: %3$s\nСумма к оплате: %4$s</string>
   <string name="wallet_connect_bnb_transaction_message">Детали транзакции:\nОт: %1$s\nК: %2$s\nСумма: %3$s</string>
-  <string name="wallet_connect_bnb_transaction_signed">Транзакция с BNB успешно подписана и отправлена ​​в Dapp.</string>
   <string name="wallet_connect_clipboard_alert">Буфер обмена содержит код WalletConnect. Использовать скопированное значение или отсканировать QR-код</string>
   <string name="wallet_connect_create_tx_message">Запрос на создание транзакции для %1$s\n%2$s\n\nСумма: %3$s\nКомиссия: %4$s\nВсего: %5$s\nБаланс: %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">Невозможно отправить транзакцию. Недостаточно средств.</string>
@@ -598,8 +582,6 @@
   <string name="wallet_connect_error_wrong_card_selected">Неверная карта выбрана в приложении Tangem</string>
   <string name="wallet_connect_failed_to_build_tx">Не удалось создать транзакцию из данных Dapp. Код: %s</string>
   <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
-  <string name="wallet_connect_message_signed">Сообщение было успешно подписано и отправлено в Dapp</string>
-  <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
   <string name="wallet_connect_no_sessions_message">Нет открытых сессий WalletConnect</string>
   <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>
   <string name="wallet_connect_pairing_error">Не удалось создать пару WalletConnect: %1$s</string>
@@ -611,14 +593,9 @@
   <string name="wallet_connect_scanner_error_not_valid_card">Эту карту нельзя использовать с WalletConnect.</string>
   <string name="wallet_connect_scanner_error_unsupported_network">Сеть не поддерживается. Пожалуйста, выберите другую сеть.</string>
   <string name="wallet_connect_select_network">Выберите сеть</string>
-  <string name="wallet_connect_service_no_chain_id">Dapp не предоставил необходимые данные для открытия сессии WalletConnect</string>
-  <string name="wallet_connect_session_not_found">Не удалось найти сессию для обработки запроса</string>
   <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
   <string name="wallet_connect_subtitle">Подключение к dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>
-  <string name="wallet_connect_transaction_signed">Транзакция успешно подписана и отправлена ​​в Dapp</string>
-  <string name="wallet_connect_transaction_signed_and_send">Транзакция успешно подписана и отправлена ​​в блокчейн</string>
-  <string name="wallet_connect_tx_not_found">Не удалось найти хэш транзакции</string>
   <string name="wallet_marketplace_block_title">Рыночная цена %s</string>
   <string name="wallet_marketprice_block_update_time">за 24 часа</string>
   <string name="wallet_network_group_title">Сеть %s</string>
@@ -629,7 +606,6 @@
   <string name="warning_backup_errors_message">Пожалуйста, выведите все средства из этого кошелька, сбросьте его к заводским настройкам и создайте новый. Доступ к текущему кошельку будет утерян.</string>
   <string name="warning_backup_errors_title">Ошибка активации</string>
   <string name="warning_button_could_be_better">Можно лучше</string>
-  <string name="warning_button_learn_more">Узнать больше</string>
   <string name="warning_button_like_it">Нравится</string>
   <string name="warning_button_ok">Понятно!</string>
   <string name="warning_button_really_cool">Очень круто!</string>
@@ -672,7 +648,6 @@
   <string name="warning_no_backup_title">Резервная копия отсутствует</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">Эта карта ранее использовалась для подписи транзакций. Если она получена от ненадежного источника, рассмотрите возможность вывода своих средств. Если это ваша карта, дополнительных действий не требуется.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Карта уже подписывала транзакции</string>
-  <string name="warning_old_device_old_card_title">Устройство несовместимо</string>
   <string name="warning_rate_app_message">Ваш отзыв мотивирует нас сделать кошелек Tangem еще лучше</string>
   <string name="warning_rate_app_title">Нравится Tangem?</string>
   <string name="warning_rent_fee_title">Необходима плата за аренду сети</string>
