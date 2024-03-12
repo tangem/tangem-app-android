@@ -13,13 +13,14 @@ import com.tangem.utils.converter.Converter
  */
 internal object TestnetTokensConfigConverter : Converter<TestnetTokensConfig, List<Token>> {
 
+    private val coinsResponseConverter = CoinsResponseConverter(needFilterExcluded = false)
     override fun convert(value: TestnetTokensConfig): List<Token> {
         return value.tokens.map { token ->
             Token(
                 id = token.id,
                 name = token.name,
                 symbol = token.symbol,
-                iconUrl = CoinsResponseConverter.getIconUrl(token.id),
+                iconUrl = coinsResponseConverter.getIconUrl(token.id),
                 networks = token.networks?.mapNotNull { network ->
                     val blockchain = Blockchain.fromNetworkId(network.id) ?: return@mapNotNull null
 
@@ -27,7 +28,7 @@ internal object TestnetTokensConfigConverter : Converter<TestnetTokensConfig, Li
                         id = network.id,
                         blockchain = blockchain,
                         address = network.address,
-                        iconUrl = CoinsResponseConverter.getIconUrl(network.id),
+                        iconUrl = coinsResponseConverter.getIconUrl(network.id),
                         decimalCount = network.decimalCount,
                     )
                 }.orEmpty(),
