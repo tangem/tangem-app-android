@@ -96,5 +96,6 @@ internal sealed interface TokensListStateHolder {
         override val tokens: Flow<PagingData<TokenItemState>>,
         override val onTokensLoadStateChanged: (LoadState) -> Unit,
         val onSaveButtonClick: () -> Unit,
+        val isSavingInProgress: Boolean,
     ) : TokensListStateHolder
 }
