@@ -43,6 +43,20 @@ internal class SendEventStateFactory(
         )
     }
 
+    fun getFeeCoverageAlert(onConsume: () -> Unit): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            event = triggeredEvent(
+                data = SendEvent.ShowAlert(
+                    SendAlertState.FeeCoverage(
+                        onConfirmClick = clickIntents::onSubtractSelect,
+                    ),
+                ),
+                onConsume = onConsume,
+            ),
+        )
+    }
+
     fun getFeeUpdatedAlert(fee: TransactionFee, onConsume: () -> Unit, onFeeNotIncreased: () -> Unit): SendUiState {
         val state = currentStateProvider()
         val feeSelector = state.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return state
@@ -72,6 +86,20 @@ internal class SendEventStateFactory(
             onFeeNotIncreased()
             updateFeeState
         }
+    }
+
+    fun getFeeTooLowAlert(onConsume: () -> Unit): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            event = triggeredEvent(
+                data = SendEvent.ShowAlert(
+                    SendAlertState.FeeTooLow(
+                        onConfirmClick = clickIntents::showSend,
+                    ),
+                ),
+                onConsume = onConsume,
+            ),
+        )
     }
 
     fun getGenericErrorState(error: Throwable? = null, onConsume: () -> Unit): SendUiState {
