@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
@@ -9,9 +8,7 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
@@ -76,21 +73,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             walletScreenContentLoader.cancel(userWalletId)
             deleteWalletUseCase(userWalletId)
-                .onRight { popBackIfAllWalletsIsLocked() }
                 .onLeft { Timber.e(it.toString()) }
-        }
-    }
-
-    private fun popBackIfAllWalletsIsLocked() {
-        val wallets = stateHolder.value.wallets.map(WalletState::walletCardState)
-        val unlockedWallet = wallets.count { it !is WalletCardState.LockedContent }
-
-        if (unlockedWallet == 1) {
-            stateHolder.clear()
-
-            router.popBackStack(
-                screen = if (wallets.size > 1) AppScreen.Welcome else AppScreen.Home,
-            )
         }
     }
 }

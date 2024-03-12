@@ -3,9 +3,7 @@ package com.tangem.features.send.impl.presentation.ui.recipient
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -18,9 +16,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
-import androidx.constraintlayout.compose.Visibility
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -39,7 +34,6 @@ import com.tangem.features.send.impl.R
  * @param subtitleEndOffset offset for subtitle ellipsis
  * @param subtitleIconRes icon
  */
-@Suppress("DestructuringDeclarationWithTooManyEntries", "LongMethod")
 @Composable
 fun ListItemWithIcon(
     title: String,
@@ -51,80 +45,60 @@ fun ListItemWithIcon(
     @DrawableRes subtitleIconRes: Int? = null,
 ) {
     val hapticFeedback = rememberHapticFeedback(state = title, onAction = onClick)
-    ConstraintLayout(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable { hapticFeedback() }
             .padding(horizontal = TangemTheme.dimens.spacing12),
     ) {
-        val (iconRef, titleRef, subtitleRef, subtitleIconRef) = createRefs()
-
-        val spacing2 = TangemTheme.dimens.spacing2
-        val spacing8 = TangemTheme.dimens.spacing8
-        val spacing10 = TangemTheme.dimens.spacing10
-        val spacing12 = TangemTheme.dimens.spacing12
         IdentIcon(
             address = title,
             modifier = Modifier
+                .padding(vertical = TangemTheme.dimens.spacing8)
                 .size(TangemTheme.dimens.size40)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius20))
-                .constrainAs(iconRef) {
-                    start.linkTo(parent.start)
-                    top.linkTo(parent.top, margin = spacing8)
-                    bottom.linkTo(parent.bottom, margin = spacing8)
-                },
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius20)),
         )
-        EllipsisText(
-            text = title,
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
-            textAlign = TextAlign.Justify,
-            ellipsis = TextEllipsis.Middle,
+        Column(
             modifier = Modifier
-                .constrainAs(titleRef) {
-                    start.linkTo(iconRef.end, margin = spacing12)
-                    end.linkTo(parent.end)
-                    top.linkTo(parent.top, margin = spacing10)
-                    width = Dimension.fillToConstraints
-                },
-        )
-        Icon(
-            painter = painterResource(id = subtitleIconRes ?: R.drawable.ic_arrow_down_24),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
-            modifier = Modifier
-                .size(TangemTheme.dimens.size16)
-                .background(TangemTheme.colors.icon.informative.copy(alpha = 0.1f), CircleShape)
-                .constrainAs(subtitleIconRef) {
-                    start.linkTo(iconRef.end, margin = spacing12)
-                    top.linkTo(titleRef.bottom)
-                    bottom.linkTo(parent.bottom, margin = spacing10)
-                    visibility = if (subtitleIconRes == null) Visibility.Gone else Visibility.Visible
-                },
-        )
-
-        val (text, offset) = remember(subtitle, info) {
-            if (info != null) {
-                val suffix = ", $info"
-                subtitle + suffix to suffix.length + subtitleEndOffset
-            } else {
-                subtitle to 0
+                .padding(vertical = TangemTheme.dimens.spacing10)
+                .padding(start = TangemTheme.dimens.spacing12),
+        ) {
+            EllipsisText(
+                text = title,
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.primary1,
+                textAlign = TextAlign.Justify,
+                ellipsis = TextEllipsis.Middle,
+                modifier = Modifier,
+            )
+            Row {
+                if (subtitleIconRes != null) {
+                    Icon(
+                        painter = painterResource(id = subtitleIconRes),
+                        contentDescription = null,
+                        tint = TangemTheme.colors.icon.informative,
+                        modifier = Modifier
+                            .size(TangemTheme.dimens.size16)
+                            .background(TangemTheme.colors.background.tertiary, CircleShape),
+                    )
+                }
+                val (text, offset) = remember(subtitle, info) {
+                    if (info != null) {
+                        val suffix = ", $info"
+                        subtitle + suffix to suffix.length + subtitleEndOffset
+                    } else {
+                        subtitle to 0
+                    }
+                }
+                EllipsisText(
+                    text = text,
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    ellipsis = TextEllipsis.OffsetEnd(offsetEnd = offset),
+                    modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
+                )
             }
         }
-        EllipsisText(
-            text = text,
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
-            ellipsis = TextEllipsis.OffsetEnd(offsetEnd = offset),
-            modifier = Modifier
-                .constrainAs(subtitleRef) {
-                    start.linkTo(subtitleIconRef.end, margin = spacing2, goneMargin = spacing12)
-                    end.linkTo(parent.end)
-                    top.linkTo(titleRef.bottom)
-                    bottom.linkTo(parent.bottom, margin = spacing10)
-                    width = Dimension.fillToConstraints
-                },
-        )
     }
 }
 
