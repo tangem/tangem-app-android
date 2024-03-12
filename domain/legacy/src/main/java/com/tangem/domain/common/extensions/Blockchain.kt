@@ -87,6 +87,12 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "algorand/test" -> Blockchain.AlgorandTestnet
         "hedera-hashgraph" -> Blockchain.Hedera
         "hedera-hashgraph/test" -> Blockchain.HederaTestnet
+        "aurora" -> Blockchain.Aurora
+        "aurora/test" -> Blockchain.AuroraTestnet
+        "areon-network" -> Blockchain.Areon
+        "areon-network/test" -> Blockchain.AreonTestnet
+        "pulsechain" -> Blockchain.PulseChain
+        "pulsechain/test" -> Blockchain.PulseChainTestnet
         else -> null
     }
 }
@@ -175,6 +181,12 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.AlgorandTestnet -> "algorand/test"
         Blockchain.Hedera -> "hedera-hashgraph"
         Blockchain.HederaTestnet -> "hedera-hashgraph/test"
+        Blockchain.Aurora -> "aurora"
+        Blockchain.AuroraTestnet -> "aurora/test"
+        Blockchain.Areon -> "areon-network"
+        Blockchain.AreonTestnet -> "areon-network/test"
+        Blockchain.PulseChain -> "pulsechain"
+        Blockchain.PulseChainTestnet -> "pulsechain/test"
     }
 }
 
@@ -234,6 +246,9 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Unknown -> "unknown"
         Blockchain.Hedera -> "hedera-hashgraph"
         Blockchain.HederaTestnet -> "hedera-hashgraph/test"
+        Blockchain.Aurora, Blockchain.AuroraTestnet -> "aurora-ethereum"
+        Blockchain.Areon, Blockchain.AreonTestnet -> "areon-network"
+        Blockchain.PulseChain, Blockchain.PulseChainTestnet -> "pulsechain"
     }
 }
 
@@ -252,7 +267,7 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
 }
 
 fun Blockchain.minimalAmount(): BigDecimal {
-    return 1.toBigDecimal().movePointLeft(decimals())
+    return BigDecimal.ONE.movePointLeft(decimals())
 }
 
 private const val NODL = "NODL"
