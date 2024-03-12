@@ -22,6 +22,7 @@ import com.tangem.common.CardIdFormatter
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
@@ -501,7 +502,9 @@ class OnboardingWalletFragment :
     private fun makeSeedPhraseRouter(): SeedPhraseRouter = SeedPhraseRouter(
         onBack = ::legacyOnBackHandler,
         onOpenChat = {
-            store.dispatch(GlobalAction.OpenChat(SupportInfo()))
+            Analytics.send(Basic.ButtonSupport())
+            // changed on email support [REDACTED_TASK_KEY]
+            store.dispatch(GlobalAction.SendEmail(SupportInfo()))
         },
         onOpenUriClick = { uri ->
             store.dispatchOpenUrl(uri.toString())
