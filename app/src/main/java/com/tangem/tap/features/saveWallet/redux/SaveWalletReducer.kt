@@ -21,9 +21,9 @@ internal object SaveWalletReducer {
                     backupCardsIds = action.backupCardsIds,
                 ),
             )
-            is SaveWalletAction.Save -> state.copy(
-                isSaveInProgress = true,
-            )
+            is SaveWalletAction.Save,
+            is SaveWalletAction.AllowToUseBiometrics,
+            -> state.copy(isSaveInProgress = true)
             is SaveWalletAction.Save.Error -> state.copy(
                 error = action.error,
                 isSaveInProgress = false,

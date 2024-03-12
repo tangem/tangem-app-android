@@ -24,7 +24,7 @@ sealed class CryptoCurrencyWarning {
         val feeCurrencySymbol: String,
     ) : CryptoCurrencyWarning()
 
-    object SomeNetworksUnreachable : CryptoCurrencyWarning()
+    data object SomeNetworksUnreachable : CryptoCurrencyWarning()
 
     data class SomeNetworksNoAccount(
         val amountToCreateAccount: BigDecimal,
