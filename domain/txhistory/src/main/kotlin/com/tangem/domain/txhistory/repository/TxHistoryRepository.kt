@@ -23,4 +23,12 @@ interface TxHistoryRepository {
     ): Flow<PagingData<TxHistoryItem>>
 
     fun getTxExploreUrl(txHash: String, networkId: Network.ID): String
+
+    @Throws(TxHistoryListError::class)
+    suspend fun getFixedSizeTxHistoryItems(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        pageSize: Int,
+        refresh: Boolean,
+    ): List<TxHistoryItem>
 }
