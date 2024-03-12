@@ -20,6 +20,7 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
+import com.tangem.tap.mainScope
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -57,8 +58,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
 
     when (action) {
         is OnboardingNoteAction.Init -> {
-            if (!onboardingManager.isActivationStarted(card.cardId)) {
-                Analytics.send(Onboarding.Started())
+            scope.launch {
+                if (!onboardingManager.isActivationStarted(card.cardId)) {
+                    Analytics.send(Onboarding.Started())
+                }
             }
         }
         is OnboardingNoteAction.LoadCardArtwork -> {
@@ -86,8 +89,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 }
                 OnboardingNoteStep.Done -> {
                     Analytics.send(Onboarding.Finished())
-                    onboardingManager.activationFinished(card.cardId)
-                    postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
+                    mainScope.launch {
+                        onboardingManager.finishActivation(card.cardId)
+                        postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
+                    }
                 }
                 else -> Unit
             }
@@ -101,7 +106,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                             Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                             val updatedResponse = scanResponse.copy(card = result.data.card)
                             onboardingManager.scanResponse = updatedResponse
-                            onboardingManager.activationStarted(updatedResponse.card.cardId)
+                            onboardingManager.startActivation(updatedResponse.card.cardId)
                             store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.TopUpWallet))
                         }
                         is CompletionResult.Failure -> Unit
