@@ -36,6 +36,8 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
+import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.send.api.navigation.SendRouter
@@ -139,6 +141,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var deepLinksRegistry: DeepLinksRegistry
+
+    @Inject
+    lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
+
+    @Inject
+    lateinit var generalUserWalletsListManager: UserWalletsListManager
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -438,7 +446,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
-        val canSaveWallets = userWalletsListManager is BiometricUserWalletsListManager
+        val canSaveWallets = if (userWalletsListManagerFeatureToggles.isGeneralManagerEnabled) {
+            runCatching { userWalletsListManager.asLockable()?.isLockedSync }
+                .fold(onSuccess = { true }, onFailure = { false })
+        } else {
+            userWalletsListManager is BiometricUserWalletsListManager
+        }
         val hasSavedWallets = userWalletsListManager.hasUserWallets
 
         if (canSaveWallets && hasSavedWallets) {
