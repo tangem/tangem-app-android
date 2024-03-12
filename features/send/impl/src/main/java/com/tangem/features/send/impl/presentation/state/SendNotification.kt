@@ -12,12 +12,14 @@ internal sealed class SendNotification(val config: NotificationConfig) {
         title: TextReference,
         subtitle: TextReference,
         buttonState: NotificationConfig.ButtonsState? = null,
+        onCloseClick: (() -> Unit)? = null,
     ) : SendNotification(
         config = NotificationConfig(
             title = title,
             subtitle = subtitle,
             iconResId = R.drawable.ic_alert_24,
             buttonsState = buttonState,
+            onCloseClick = onCloseClick,
         ),
     ) {
 
@@ -45,11 +47,16 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             val cryptoCurrency: String,
             val utxoLimit: String,
             val amountLimit: String,
+            val onConfirmClick: () -> Unit,
         ) : Error(
             title = resourceReference(R.string.send_notifiaction_transaction_limit_title),
             subtitle = resourceReference(
-                R.string.send_notifiaction_transaction_limit_text,
+                R.string.send_notification_transaction_limit_text,
                 wrappedList(cryptoCurrency, utxoLimit, amountLimit),
+            ),
+            buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(R.string.send_notification_reduce_to, wrappedList(amountLimit)),
+                onClick = onConfirmClick,
             ),
         )
     }
@@ -58,32 +65,49 @@ internal sealed class SendNotification(val config: NotificationConfig) {
         title: TextReference,
         subtitle: TextReference,
         buttonsState: NotificationConfig.ButtonsState? = null,
+        onCloseClick: (() -> Unit)? = null,
     ) : SendNotification(
         config = NotificationConfig(
             title = title,
             subtitle = subtitle,
             iconResId = R.drawable.img_attention_20,
             buttonsState = buttonsState,
+            onCloseClick = onCloseClick,
         ),
     ) {
         data class HighFeeError(
             val amount: String,
             val onConfirmClick: () -> Unit,
-            val onDismissClick: () -> Unit,
+            val onCloseClick: () -> Unit,
         ) : Warning(
             title = resourceReference(R.string.send_notification_high_fee_title),
             subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(amount)),
-            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
-                primaryText = resourceReference(R.string.send_notification_fee_too_high_accept, wrappedList(amount)),
-                onPrimaryClick = onConfirmClick,
-                secondaryText = resourceReference(R.string.send_notification_fee_too_high_ignore),
-                onSecondaryClick = onDismissClick,
+            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(R.string.send_notification_reduce_by, wrappedList(amount)),
+                onClick = onConfirmClick,
             ),
+            onCloseClick = onCloseClick,
         )
 
         data class ExistentialDeposit(val deposit: String) : Warning(
             title = resourceReference(R.string.send_notification_existential_deposit_title),
             subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
+        )
+
+        data class NetworkCoverage(
+            val amountReducedBy: String,
+            val amountReduced: String,
+        ) : Warning(
+            title = resourceReference(id = R.string.send_network_fee_warning_title),
+            subtitle = resourceReference(
+                id = R.string.send_network_fee_warning_content,
+                formatArgs = wrappedList(amountReducedBy, amountReduced),
+            ),
+        )
+
+        data object FeeTooLow : Warning(
+            title = resourceReference(id = R.string.send_notification_transaction_delay_title),
+            subtitle = resourceReference(id = R.string.send_notification_transaction_delay_text),
         )
     }
 }
