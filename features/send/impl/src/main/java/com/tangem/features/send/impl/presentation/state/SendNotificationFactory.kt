@@ -1,11 +1,17 @@
 package com.tangem.features.send.impl.presentation.state
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
+import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
@@ -17,40 +23,48 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class SendNotificationFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val clickIntents: SendClickIntents,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
-    fun create(): Flow<ImmutableList<SendNotification>> = currentStateProvider().currentState
-        .filter { it == SendUiStateType.Send }
+    fun create(): Flow<ImmutableList<SendNotification>> = stateRouterProvider().currentState
+        .filter { it.type == SendUiStateType.Send }
         .map {
             val state = currentStateProvider()
+            val sendState = state.sendState
             val feeState = state.feeState ?: return@map persistentListOf()
             val feeAmount = feeState.fee?.amount?.value ?: BigDecimal.ZERO
-            val amountValue = state.amountState?.amountTextField?.value?.toBigDecimalOrNull() ?: BigDecimal.ZERO
-            val sendAmount = if (feeState.isSubtract) feeState.receivedAmountValue else amountValue
+            val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
+            val sendAmount = if (sendState.isSubtract) amountValue.minus(feeAmount) else amountValue
             buildList {
                 // errors
                 addExceedBalanceNotification(feeAmount, sendAmount)
-                addInvalidAmountNotification(feeState.isSubtract, sendAmount)
+                addInvalidAmountNotification(sendState.isSubtract, sendAmount)
                 addMinimumAmountErrorNotification(feeAmount, sendAmount)
                 addDustWarningNotification(feeAmount, sendAmount)
                 addTransactionLimitErrorNotification(feeAmount, sendAmount)
                 // warnings
+                addFeeCoverageNotification(sendState.isSubtract, sendAmount)
                 addExistentialWarningNotification(feeAmount, sendAmount)
-                addHighFeeWarningNotification(amountValue, state.sendState.ignoreAmountReduce)
+                addHighFeeWarningNotification(sendAmount, sendState.ignoreAmountReduce)
+                addTooLowNotification(feeState)
             }.toImmutableList()
         }
 
-    fun dismissHighFeeWarningState(): SendUiState {
+    fun dismissNotificationState(clazz: Class<out SendNotification>): SendUiState {
         val state = currentStateProvider()
         val sendState = state.sendState
-        val updatedNotifications = sendState.notifications.filterNot { it is SendNotification.Warning.HighFeeError }
+        val notificationsToRemove = sendState.notifications.filterIsInstance(clazz)
+        val updatedNotifications = sendState.notifications.toMutableList()
+        updatedNotifications.removeAll(notificationsToRemove)
         return state.copy(
             sendState = sendState.copy(
                 ignoreAmountReduce = true,
@@ -158,6 +172,13 @@ internal class SendNotificationFactory(
                         cryptoAmount = utxoLimit.maxAmount,
                         cryptoCurrency = cryptoCurrency,
                     ),
+                    onConfirmClick = {
+                        val reduceTo = utxoLimit.maxAmount.toPlainString()
+                        clickIntents.onAmountReduceClick(
+                            reduceTo,
+                            SendNotification.Error.TransactionLimitError::class.java,
+                        )
+                    },
                 ),
             )
         }
@@ -203,9 +224,11 @@ internal class SendNotificationFactory(
                     amount = TEZOS_FEE_THRESHOLD.toPlainString(),
                     onConfirmClick = {
                         val reduceTo = sendAmount.minus(TEZOS_FEE_THRESHOLD).toPlainString()
-                        clickIntents.onAmountReduceClick(reduceTo)
+                        clickIntents.onAmountReduceClick(reduceTo, SendNotification.Warning.HighFeeError::class.java)
                     },
-                    onDismissClick = clickIntents::onAmountReduceIgnoreClick,
+                    onCloseClick = {
+                        clickIntents.onNotificationCancel(SendNotification.Warning.HighFeeError::class.java)
+                    },
                 ),
             )
         }
@@ -231,6 +254,45 @@ internal class SendNotificationFactory(
                     SendNotification.Error.MinimumAmountError(dustValue.toPlainString()),
                 )
             }
+        }
+    }
+
+    private fun MutableList<SendNotification>.addFeeCoverageNotification(
+        isSubtract: Boolean,
+        amountValue: BigDecimal,
+    ) {
+        val state = currentStateProvider()
+        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+        val feeAmount = state.feeState?.fee?.amount?.value ?: BigDecimal.ZERO
+
+        val amountReducedValue = amountValue.minus(feeAmount)
+        val amountReducedByValue = amountValue.minus(amountReducedValue)
+        val amountReducedBy = BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = amountReducedByValue,
+            cryptoCurrency = cryptoCurrency,
+        )
+        val amountReduced = BigDecimalFormatter.formatCryptoAmount(
+            cryptoAmount = amountReducedValue,
+            cryptoCurrency = cryptoCurrency,
+        )
+        if (isSubtract) {
+            add(SendNotification.Warning.NetworkCoverage(amountReducedBy, amountReduced))
+        }
+    }
+
+    private fun MutableList<SendNotification>.addTooLowNotification(feeState: SendStates.FeeState) {
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
+        val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return
+        val minimumValue = multipleFees.minimum.amount.value ?: return
+        val customAmount = feeSelectorState.customValues.firstOrNull() ?: return
+        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
+        if (feeSelectorState.selectedFee == FeeType.Custom && minimumValue > customValue) {
+            add(SendNotification.Warning.FeeTooLow)
+            analyticsEventHandler.send(
+                SendAnalyticEvents.NoticeTransactionDelays(
+                    cryptoCurrencyStatusProvider().currency.symbol,
+                ),
+            )
         }
     }
 
