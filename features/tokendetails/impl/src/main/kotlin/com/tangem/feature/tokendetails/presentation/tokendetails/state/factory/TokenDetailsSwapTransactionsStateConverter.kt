@@ -47,18 +47,18 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         val result = mutableListOf<SwapTransactionsState>()
 
         savedTransactions
-            .forEach { swapCurrency ->
-                val toCryptoCurrency = swapCurrency.toCryptoCurrency
-                val fromCryptoCurrency = swapCurrency.fromCryptoCurrency
+            .forEach { swapTransaction ->
+                val toCryptoCurrency = swapTransaction.toCryptoCurrency
+                val fromCryptoCurrency = swapTransaction.fromCryptoCurrency
 
-                swapCurrency.transactions.forEach { transaction ->
+                swapTransaction.transactions.forEach { transaction ->
                     val toAmount = transaction.toCryptoAmount
                     val fromAmount = transaction.fromCryptoAmount
                     val toFiatAmount = quotes.firstOrNull {
-                        it.rawCurrencyId == swapCurrency.toCryptoCurrency.id.rawCurrencyId
+                        it.rawCurrencyId == swapTransaction.toCryptoCurrency.id.rawCurrencyId
                     }?.fiatRate?.multiply(toAmount)
                     val fromFiatAmount = quotes.firstOrNull {
-                        it.rawCurrencyId == swapCurrency.fromCryptoCurrency.id.rawCurrencyId
+                        it.rawCurrencyId == swapTransaction.fromCryptoCurrency.id.rawCurrencyId
                     }?.fiatRate?.multiply(fromAmount)
                     val timestamp = transaction.timestamp
                     val notifications =
@@ -69,6 +69,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             txId = transaction.txId,
                             provider = transaction.provider,
                             txUrl = transaction.status?.txExternalUrl,
+                            txExternalId = transaction.status?.txExternalId,
                             timestamp = TextReference.Str(
                                 "${timestamp.toDateFormat()}, ${timestamp.toTimeFormat()}",
                             ),
