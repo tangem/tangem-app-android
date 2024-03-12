@@ -308,7 +308,6 @@ internal sealed class AddCustomTokenWarning(val description: TextReference) {
     data object WrongDerivationPath : AddCustomTokenWarning(
         description = TextReference.Res(R.string.custom_token_invalid_derivation_path),
     )
-
 }
 
 /**

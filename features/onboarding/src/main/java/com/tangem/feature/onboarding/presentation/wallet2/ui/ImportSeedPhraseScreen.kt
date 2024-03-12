@@ -208,13 +208,14 @@ private fun ImportSeedPhraseScreenPreview_Light(
             ImportSeedPhraseState(
                 tvSeedPhrase = TextFieldState(onTextFieldValueChanged = {}),
                 onSuggestedPhraseClick = {},
-                buttonCreateWallet = ButtonState(enabled = true,
+                buttonCreateWallet = ButtonState(
+                    enabled = true,
                     isClickable = true,
                     showProgress = false,
-                    onClick = {}
+                    onClick = {},
                 ),
                 suggestionsList = suggestions,
-            )
+            ),
         )
     }
 }
