@@ -20,6 +20,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.walletconnect.BnbHelper
@@ -47,9 +48,9 @@ import timber.log.Timber
 class WalletConnectMiddleware {
     private var walletConnectManager = WalletConnectManager()
     private val walletConnectInteractor: WalletConnectInteractor
-        get() = store.state.daggerGraphState.get(DaggerGraphState::walletConnectInteractor)
+        get() = store.inject(DaggerGraphState::walletConnectInteractor)
     private val walletConnectRepository: WalletConnectRepository
-        get() = store.state.daggerGraphState.get(DaggerGraphState::walletConnectRepository)
+        get() = store.inject(DaggerGraphState::walletConnectRepository)
 
     val walletConnectMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
@@ -387,8 +388,7 @@ class WalletConnectMiddleware {
     }
 
     private suspend fun getWalletManagers(): List<WalletManager> {
-        val walletManagerFacade = store.state.daggerGraphState
-            .get(DaggerGraphState::walletManagersFacade)
+        val walletManagerFacade = store.inject(DaggerGraphState::walletManagersFacade)
         val userWallet = userWalletsListManager.selectedUserWalletSync ?: return emptyList()
 
         return walletManagerFacade.getStoredWalletManagers(userWallet.walletId)
@@ -407,7 +407,7 @@ class WalletConnectMiddleware {
     }
 
     private suspend fun getAvailableEvmBlockchains(userWalletId: UserWalletId): List<Blockchain> {
-        val currenciesRepository = store.state.daggerGraphState.get(DaggerGraphState::currenciesRepository)
+        val currenciesRepository = store.inject(DaggerGraphState::currenciesRepository)
 
         return currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
             .asSequence()
@@ -496,8 +496,7 @@ class WalletConnectMiddleware {
             style = userWallet.scanResponse.derivationStyleProvider.getDerivationStyle(),
         )?.rawPath
 
-        val walletManagerFacade = store.state.daggerGraphState
-            .get(DaggerGraphState::walletManagersFacade)
+        val walletManagerFacade = store.inject(DaggerGraphState::walletManagersFacade)
 
         return walletManagerFacade.getOrCreateWalletManager(
             userWalletId = userWallet.walletId,
@@ -511,8 +510,7 @@ class WalletConnectMiddleware {
     }
 
     private suspend fun getAccountsForWc(wcInteractor: WalletConnectInteractor, userWallet: UserWallet): List<Account> {
-        val walletManagerFacade = store.state.daggerGraphState
-            .get(DaggerGraphState::walletManagersFacade)
+        val walletManagerFacade = store.inject(DaggerGraphState::walletManagersFacade)
         return walletManagerFacade.getStoredWalletManagers(userWallet.walletId).mapNotNull {
             val wallet = it.wallet
             val chainId = wcInteractor.blockchainHelper.networkIdToChainIdOrNull(
