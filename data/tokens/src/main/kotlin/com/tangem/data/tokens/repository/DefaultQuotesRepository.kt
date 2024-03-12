@@ -17,6 +17,8 @@ import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 internal class DefaultQuotesRepository(
@@ -32,6 +34,7 @@ internal class DefaultQuotesRepository(
 
     @Volatile
     private var quotesFetchedForAppCurrency: String? = null
+    private val mutex = Mutex()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<Quote>> {
@@ -42,7 +45,6 @@ internal class DefaultQuotesRepository(
             .filterNotNull()
             .flatMapLatest { appCurrency ->
                 fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = false)
-
                 quotesStore.get(currenciesIds).map(quotesConverter::convertSet)
             }
             .cancellable()
@@ -79,15 +81,19 @@ internal class DefaultQuotesRepository(
         appCurrencyId: String,
         refresh: Boolean,
     ) {
-        val expiredCurrenciesIds = filterExpiredCurrenciesIds(
-            currenciesIds = currenciesIds,
-            refresh = refresh || quotesFetchedForAppCurrency != appCurrencyId,
-        )
-        if (expiredCurrenciesIds.isEmpty()) return
+        // TODO("[REDACTED_JIRA]") need refactor working with quotesFetchedForAppCurrency,
+        //  it changes after filterExpiredCurrenciesIds
+        //  calls with different coroutines and lead to fetchQuotes
+        mutex.withLock {
+            val expiredCurrenciesIds = filterExpiredCurrenciesIds(
+                currenciesIds = currenciesIds,
+                refresh = refresh || quotesFetchedForAppCurrency != appCurrencyId,
+            )
+            if (expiredCurrenciesIds.isEmpty()) return
 
-        quotesFetchedForAppCurrency = appCurrencyId
-
-        fetchQuotes(expiredCurrenciesIds, appCurrencyId)
+            quotesFetchedForAppCurrency = appCurrencyId
+            fetchQuotes(expiredCurrenciesIds, appCurrencyId)
+        }
     }
 
     private suspend fun fetchQuotes(rawCurrenciesIds: Set<String>, appCurrencyId: String) {
@@ -118,7 +124,6 @@ internal class DefaultQuotesRepository(
     ): Set<String> {
         return currenciesIds.fold(hashSetOf()) { acc, currencyId ->
             val rawCurrencyId = currencyId.rawCurrencyId
-
             if (rawCurrencyId != null && rawCurrencyId !in acc) {
                 cacheRegistry.invokeOnExpire(
                     key = getQuoteCacheKey(rawCurrencyId),
