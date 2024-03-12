@@ -13,6 +13,7 @@ internal data class SwapTransactionsState(
     val txId: String,
     val provider: SwapProvider,
     val txUrl: String? = null,
+    val txExternalId: String? = null,
     val timestamp: TextReference,
     val fiatSymbol: String,
     val activeStatus: ExchangeStatus?,
