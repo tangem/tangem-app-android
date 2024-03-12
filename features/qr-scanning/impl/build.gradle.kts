@@ -20,6 +20,7 @@ dependencies {
 
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.activity.compose)
+    implementation(deps.lifecycle.compose)
 
     /** Camera */
     implementation(deps.camera.camera2)
