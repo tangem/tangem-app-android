@@ -128,18 +128,13 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.OnboardingTwins -> OnboardingTwinsFragment()
         AppScreen.OnboardingOther -> OnboardingOtherCardsFragment()
         AppScreen.Wallet -> {
-            store.state.daggerGraphState
-                .get(getDependency = DaggerGraphState::walletRouter)
-                .getEntryFragment()
+            store.inject(getDependency = DaggerGraphState::walletRouter).getEntryFragment()
         }
         AppScreen.Send -> {
-            val featureToggles = store.state.daggerGraphState.get(
-                getDependency = DaggerGraphState::sendFeatureToggles,
-            )
+            val featureToggles = store.inject(getDependency = DaggerGraphState::sendFeatureToggles)
+
             if (featureToggles.isRedesignedSendEnabled) {
-                store.state.daggerGraphState
-                    .get(getDependency = DaggerGraphState::sendRouter)
-                    .getEntryFragment()
+                store.inject(getDependency = DaggerGraphState::sendRouter).getEntryFragment()
             } else {
                 SendFragment()
             }
@@ -154,15 +149,11 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.ManageTokens -> TokensListFragment()
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> {
-            store.state.daggerGraphState
-                .get(getDependency = DaggerGraphState::tokenDetailsRouter)
-                .getEntryFragment()
+            store.inject(getDependency = DaggerGraphState::tokenDetailsRouter).getEntryFragment()
         }
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScanning -> {
-            store.state.daggerGraphState
-                .get(getDependency = DaggerGraphState::qrScanningRouter)
-                .getEntryFragment()
+            store.inject(getDependency = DaggerGraphState::qrScanningRouter).getEntryFragment()
         }
         AppScreen.ReferralProgram -> ReferralFragment()
         AppScreen.Swap -> SwapFragment()

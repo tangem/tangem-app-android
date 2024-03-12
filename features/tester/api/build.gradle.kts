@@ -3,3 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     id("configuration")
 }
+
+android {
+    namespace = "com.tangem.features.tester.api"
+}
