@@ -1,9 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.CanUseBiometryUseCase
@@ -26,6 +28,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.features.managetokens.navigation.ExpandableState
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -79,6 +82,12 @@ internal class WalletViewModel @Inject constructor(
     fun setWalletRouter(router: InnerWalletRouter) {
         this.router = router
         clickIntents.initialize(router, viewModelScope)
+    }
+
+    fun setExpandableState(state: MutableState<ExpandableState>) {
+        stateHolder.update {
+            it.copy(manageTokensExpandableState = state)
+        }
     }
 
     fun subscribeToLifecycle(lifecycleOwner: LifecycleOwner) {
@@ -170,7 +179,7 @@ internal class WalletViewModel @Inject constructor(
         }
     }
 
-    private fun updateWallets(action: WalletsUpdateActionResolver.Action) {
+    private suspend fun updateWallets(action: WalletsUpdateActionResolver.Action) {
         when (action) {
             is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
             is WalletsUpdateActionResolver.Action.ReinitializeWallets -> {
@@ -191,11 +200,19 @@ internal class WalletViewModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
+            is WalletsUpdateActionResolver.Action.NoAccessibleWallets -> {
+                stateHolder.clear()
+                router.popBackStack(screen = AppScreen.Welcome)
+            }
+            is WalletsUpdateActionResolver.Action.NoWallets -> {
+                stateHolder.clear()
+                router.popBackStack(screen = AppScreen.Home)
+            }
             is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
     }
 
-    private fun initializeWallets(action: WalletsUpdateActionResolver.Action.InitializeWallets) {
+    private suspend fun initializeWallets(action: WalletsUpdateActionResolver.Action.InitializeWallets) {
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
@@ -211,108 +228,104 @@ internal class WalletViewModel @Inject constructor(
             ),
         )
 
-        viewModelScope.launch(dispatchers.main) {
-            if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
-                withContext(dispatchers.io) {
-                    delay(timeMillis = 1_800)
-                }
+        if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
+            withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
-                walletEventSender.send(
-                    event = WalletEvent.DemonstrateWalletsScrollPreview(
-                        direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
-                            Direction.RIGHT
-                        } else {
-                            Direction.LEFT
-                        },
-                    ),
-                )
-            }
+            walletEventSender.send(
+                event = WalletEvent.DemonstrateWalletsScrollPreview(
+                    direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
+                        Direction.RIGHT
+                    } else {
+                        Direction.LEFT
+                    },
+                ),
+            )
         }
     }
 
     private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
-        viewModelScope.launch(dispatchers.main) {
-            walletScreenContentLoader.cancel(action.prevWalletId)
+        walletScreenContentLoader.cancel(action.prevWalletId)
 
-            walletScreenContentLoader.load(
-                userWallet = action.selectedWallet,
-                clickIntents = clickIntents,
-                coroutineScope = viewModelScope,
-            )
+        walletScreenContentLoader.load(
+            userWallet = action.selectedWallet,
+            clickIntents = clickIntents,
+            coroutineScope = viewModelScope,
+        )
 
-            stateHolder.update(
-                ReinitializeWalletTransformer(userWallet = action.selectedWallet, clickIntents = clickIntents),
-            )
-        }
+        stateHolder.update(
+            ReinitializeWalletTransformer(userWallet = action.selectedWallet, clickIntents = clickIntents),
+        )
     }
 
-    private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
-        viewModelScope.launch(dispatchers.main) {
-            stateHolder.update(
-                AddWalletTransformer(
-                    userWallet = action.selectedWallet,
-                    clickIntents = clickIntents,
-                ),
-            )
+    private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
+        walletScreenContentLoader.load(
+            userWallet = action.selectedWallet,
+            clickIntents = clickIntents,
+            coroutineScope = viewModelScope,
+        )
 
-            walletScreenContentLoader.load(
+        stateHolder.update(
+            AddWalletTransformer(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
-                coroutineScope = viewModelScope,
-            )
+            ),
+        )
 
-            withContext(dispatchers.io) { delay(timeMillis = 700) }
+        withContext(dispatchers.io) { delay(timeMillis = 700) }
 
-            scrollToWallet(index = action.selectedWalletIndex)
-        }
+        scrollToWallet(index = action.selectedWalletIndex)
     }
 
-    private fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
-        viewModelScope.launch(dispatchers.main) {
-            walletScreenContentLoader.load(
-                userWallet = action.selectedWallet,
+    private suspend fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
+        walletScreenContentLoader.load(
+            userWallet = action.selectedWallet,
+            clickIntents = clickIntents,
+            coroutineScope = viewModelScope,
+        )
+
+        /*
+         * If card is reset to factory settings, then Compose need some time to draw the WalletScreen.
+         * Otherwise, scroll isn't happened
+         */
+        withContext(dispatchers.io) { delay(timeMillis = 1000) }
+
+        scrollToWallet(
+            index = action.selectedWalletIndex,
+            onConsume = {
+                stateHolder.update(
+                    DeleteWalletTransformer(
+                        selectedWalletIndex = action.selectedWalletIndex,
+                        deletedWalletId = action.deletedWalletId,
+                    ),
+                )
+            },
+        )
+    }
+
+    private suspend fun unlockWallet(action: WalletsUpdateActionResolver.Action.UnlockWallet) {
+        withContext(dispatchers.io) { delay(timeMillis = 700) }
+
+        stateHolder.update(
+            transformer = UnlockWalletTransformer(
+                unlockedWallets = action.unlockedWallets,
                 clickIntents = clickIntents,
-                coroutineScope = viewModelScope,
-            )
+            ),
+        )
 
-            scrollToWallet(index = action.selectedWalletIndex)
-
-            withContext(dispatchers.io) { delay(timeMillis = 700) }
-
-            stateHolder.update(
-                DeleteWalletTransformer(
-                    selectedWalletIndex = action.selectedWalletIndex,
-                    deletedWalletId = action.deletedWalletId,
-                ),
-            )
-        }
+        walletScreenContentLoader.load(
+            userWallet = action.selectedWallet,
+            clickIntents = clickIntents,
+            coroutineScope = viewModelScope,
+        )
     }
 
-    private fun unlockWallet(action: WalletsUpdateActionResolver.Action.UnlockWallet) {
-        viewModelScope.launch(dispatchers.main) {
-            withContext(dispatchers.io) { delay(timeMillis = 700) }
-
-            stateHolder.update(
-                transformer = UnlockWalletTransformer(
-                    unlockedWallets = action.unlockedWallets,
-                    clickIntents = clickIntents,
-                ),
-            )
-
-            walletScreenContentLoader.load(
-                userWallet = action.selectedWallet,
-                clickIntents = clickIntents,
-                coroutineScope = viewModelScope,
-            )
-        }
-    }
-
-    private fun scrollToWallet(index: Int) {
+    private fun scrollToWallet(index: Int, onConsume: () -> Unit = {}) {
         stateHolder.update(
             ScrollToWalletTransformer(
                 index = index,
                 currentStateProvider = Provider(action = stateHolder::value),
                 stateUpdater = { newState -> stateHolder.update { newState } },
+                onConsume = onConsume,
             ),
         )
     }
