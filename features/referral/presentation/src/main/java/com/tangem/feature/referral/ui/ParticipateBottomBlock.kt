@@ -129,7 +129,7 @@ private fun Awards(expectedAwards: ExpectedAwards) {
         } else {
             ""
         },
-        endTextColor = TangemTheme . colors . text . tertiary,
+        endTextColor = TangemTheme.colors.text.tertiary,
         endTextStyle = TangemTheme.typography.body2,
         cornersToRound = CornersToRound.ZERO,
     )

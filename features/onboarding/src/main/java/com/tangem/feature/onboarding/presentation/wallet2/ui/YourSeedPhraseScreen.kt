@@ -22,7 +22,6 @@ import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Onboardi
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import okhttp3.internal.immutableListOf
 
 /**
  * @author by Anton Zhilenkov on 11.03.2023.
@@ -106,13 +105,12 @@ private fun YourSeedPhraseScreenPreview_Light() {
                     enabled = true,
                     isClickable = true,
                     showProgress = false,
-                    onClick = {}
-                )
+                    onClick = {},
+                ),
             ),
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = TangemTheme.colors.background.primary)
+                .background(color = TangemTheme.colors.background.primary),
         )
-
     }
 }
