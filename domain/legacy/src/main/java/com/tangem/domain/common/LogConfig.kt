@@ -19,7 +19,7 @@ object NetworkLogConfig {
 }
 
 object AnalyticsHandlersLogConfig {
-    const val firebase: Boolean = false
+    val firebase: Boolean = BuildConfig.LOG_ENABLED
     const val appsFlyer: Boolean = false
     val amplitude: Boolean = BuildConfig.LOG_ENABLED
 }
