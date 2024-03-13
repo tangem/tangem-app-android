@@ -429,7 +429,7 @@ internal class SendViewModel @Inject constructor(
                 )
                 return
             } else {
-                uiState = stateFactory.onSubtractSelect(false)
+                uiState = stateFactory.onSubtractSelect(false, isAmountSubtractAvailable)
                 analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
             }
             if (checkIfFeeTooLow(uiState)) {
@@ -568,7 +568,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onSubtractSelect() {
-        uiState = stateFactory.onSubtractSelect(true)
+        uiState = stateFactory.onSubtractSelect(true, isAmountSubtractAvailable)
         stateRouter.showSend()
         analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(true))
     }
@@ -675,16 +675,10 @@ internal class SendViewModel @Inject constructor(
         val fee = feeState.fee ?: return
         val memo = uiState.recipientState?.memoTextField?.value
         val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
-        val amountToSend = if (uiState.sendState.isSubtract && isAmountSubtractAvailable) {
-            val feeValue = fee.amount.value ?: return
-            amountValue.minus(feeValue)
-        } else {
-            amountValue
-        }
 
         viewModelScope.launch(dispatchers.main) {
             createTransactionUseCase(
-                amount = amountToSend.convertToAmount(cryptoCurrency),
+                amount = amountValue.convertToAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
                 destination = recipient,
