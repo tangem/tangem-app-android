@@ -130,7 +130,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="sell-request.tangem.com"
+                    android:host="redirect_sell"
                     android:scheme="tangem" />
             </intent-filter>
 
