@@ -175,9 +175,10 @@ internal class TokenDetailsViewModel @Inject constructor(
             status = cryptoCurrencyStatus ?: return,
             transactionInfo = data.let {
                 TransactionInfo(
-                    amount = it.baseCurrencyAmount,
                     transactionId = it.transactionId,
                     destinationAddress = it.depositWalletAddress,
+                    amount = it.baseCurrencyAmount,
+                    tag = it.depositWalletAddressTag,
                 )
             },
         )
