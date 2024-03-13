@@ -25,10 +25,10 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.feature.qrscanning.SourceType
-import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
