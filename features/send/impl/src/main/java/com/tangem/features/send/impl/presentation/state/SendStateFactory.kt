@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -215,9 +216,20 @@ internal class SendStateFactory(
     //endregion
 
     //region send
-    fun onSubtractSelect(isSubtract: Boolean): SendUiState {
+    fun onSubtractSelect(isSubtract: Boolean, isAmountSubtractAvailable: Boolean): SendUiState {
         val state = currentStateProvider()
+        val fee = state.feeState?.fee ?: return state
+        val amountState = state.amountState ?: return state
+        val amount = amountState.amountTextField.cryptoAmount
+        val amountValue = amount.value ?: return state
+        val amountToSend = if (isSubtract && isAmountSubtractAvailable) {
+            val feeValue = fee.amount.value ?: return state
+            amountValue.minus(feeValue)
+        } else {
+            amountValue
+        }
         return state.copy(
+            amountState = amountStateConverter.convert(amountToSend.parseBigDecimal(amount.decimals)),
             sendState = state.sendState.copy(isSubtract = isSubtract),
         )
     }
