@@ -1,7 +1,10 @@
-package com.tangem.feature.qrscanning.repo
+package com.tangem.data.qrscanning.repository
 
-import com.tangem.feature.qrscanning.SourceType
-import kotlinx.coroutines.flow.*
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
 
