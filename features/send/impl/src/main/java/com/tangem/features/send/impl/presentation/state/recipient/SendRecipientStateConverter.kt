@@ -10,7 +10,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal class SendRecipientStateConverter(
     private val clickIntents: SendClickIntents,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Converter<String, SendStates.RecipientState> {
+) : Converter<SendRecipientStateConverter.Data, SendStates.RecipientState> {
 
     private val addressFieldConverter by lazy { SendRecipientAddressFieldConverter(clickIntents) }
     private val memoFieldConverter by lazy {
@@ -20,14 +20,16 @@ internal class SendRecipientStateConverter(
         )
     }
 
-    override fun convert(value: String): SendStates.RecipientState {
+    override fun convert(value: Data): SendStates.RecipientState {
         return SendStates.RecipientState(
-            addressTextField = addressFieldConverter.convert(value),
-            memoTextField = memoFieldConverter.convertOrNull(),
+            addressTextField = addressFieldConverter.convert(value.address),
+            memoTextField = memoFieldConverter.convertOrNull(value.memo),
             network = cryptoCurrencyStatusProvider().currency.network.name,
             isPrimaryButtonEnabled = false,
             wallets = persistentListOf(),
             recent = persistentListOf(),
         )
     }
+
+    data class Data(val address: String, val memo: String? = null)
 }
