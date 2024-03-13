@@ -7,7 +7,6 @@
   <string name="alert_app_feedback_sent_title">成功送出</string>
   <string name="alert_button_request_support">請求支持</string>
   <string name="alert_demo_feature_disabled">此功能不在展示模式中提供</string>
-  <string name="alert_failed_to_send_email_title">發送電子郵件失敗</string>
   <string name="alert_failed_to_send_transaction_message">原因：%s</string>
   <string name="alert_failed_to_send_transaction_title">無法發送交易</string>
   <string name="alert_manage_tokens_unsupported_message">此卡不支持%1$s網路上的代幣因為韌體限制</string>
@@ -30,7 +29,6 @@
   </plurals>
   <string name="card_settings_access_code_recovery_disabled_description">如果您不希望使用此卡重置此錢包中其他卡上的訪問密碼，請禁用此選項。請注意，這也會阻止您重置此卡上的訪問密碼。</string>
   <string name="card_settings_access_code_recovery_enabled_description">允許您使用此卡重置此錢包中其他卡上的訪問密碼</string>
-  <string name="card_settings_access_code_recovery_footer">禁用重置此卡或此錢包中其他卡上的訪問密碼的功能</string>
   <string name="card_settings_access_code_recovery_title">恢復訪問密碼</string>
   <string name="card_settings_action_sheet_reset">重置</string>
   <string name="card_settings_action_sheet_title">您確定要這麼做嗎？</string>
@@ -137,9 +135,7 @@
   <string name="initial_message_change_access_code_body">要更改訪問密碼，請完全按照上圖所示連接手機和卡片</string>
   <string name="initial_message_change_passcode_body">要更改密碼，請完全按照上圖所示連接手機和卡</string>
   <string name="initial_message_create_wallet_body">要創建錢包，請完全按照上圖所示連接手機和卡</string>
-  <string name="initial_message_purge_wallet_body">要重置為出廠設置，請完全按照上圖所示連接手機和卡片</string>
   <string name="initial_message_scan_header">點擊掃描</string>
-  <string name="initial_message_sign_body">要簽名，請完全按照上圖所示連接手機和卡</string>
   <string name="initial_message_sign_header">點擊簽名</string>
   <string name="initial_message_tap_header">點按卡片</string>
   <string name="key_invalidated_warning_description">您已更新生物識別登入，掃描您的卡進入</string>
@@ -278,9 +274,6 @@
   <string name="story_awe_description">安全地存儲您的加密貨幣，同時將私鑰保存在您的卡中</string>
   <string name="story_awe_title">創新式的硬體錢包</string>
   <string name="story_backup_description">最多 3張實體卡片 到一個錢包</string>
-  <string name="story_backup_description_1">最多</string>
-  <string name="story_backup_description_2_bold">3張實體卡片</string>
-  <string name="story_backup_description_3">到一個錢包</string>
   <string name="story_backup_title">更多的安全備份</string>
   <string name="story_currencies_description">一個冷錢包，可同時將您的比特幣、以太幣和其他幣種-全部存在一張卡中</string>
   <string name="story_currencies_title">千種虛擬貨幣</string>
@@ -328,14 +321,12 @@
   <string name="user_wallet_list_rename_popup_placeholder">錢包名稱</string>
   <string name="user_wallet_list_rename_popup_title">重新命名錢包</string>
   <string name="user_wallet_list_unlock_all_with">用 %s 解鎖全部</string>
-  <string name="wallet_address_button_explore">交易記錄</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">區塊鍊無法使用。稍後再試</string>
   <string name="wallet_balance_missing_derivation">掃描卡片</string>
   <string name="wallet_connect_alert_sign_message">請求籤署消息。%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s，請求\n簽署 BNB 交易。\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">%1$s 的交易訂單\n價格： %2$s\n接收金額：%3$s\n支付數量： %4$s</string>
   <string name="wallet_connect_bnb_transaction_message">交易明細：\n從： %1$s\n到： %2$s\n數量： %3$s</string>
-  <string name="wallet_connect_bnb_transaction_signed">BNB 交易已成功簽署並發送至 Dapp</string>
   <string name="wallet_connect_clipboard_alert">剪貼板包含 WalletConnect 代碼。使用複制的值或掃描二維碼</string>
   <string name="wallet_connect_create_tx_message">請求為 %1$s 創建交易\n%2$s\n\n數量： %3$s\n費用： %4$s\n全部的： %5$s\n餘額： %6$s</string>
   <string name="wallet_connect_create_tx_not_enough_funds">無法交易，無足夠資金</string>
@@ -349,8 +340,6 @@
   <string name="wallet_connect_error_wrong_card_selected">在 Tangem App 中選擇了錯誤的卡</string>
   <string name="wallet_connect_failed_to_build_tx">無法從 Dapp 數據創建交易。代碼： %s</string>
   <string name="wallet_connect_generic_error_with_code">我們遇到了未知錯誤。錯誤代碼：%d。如果問題仍然存在-請隨時聯繫我們的支持人員</string>
-  <string name="wallet_connect_message_signed">消息已成功簽名並發送至Dapp</string>
-  <string name="wallet_connect_network_not_found_format">沒有 %s 網路，請先加入後再試一次</string>
   <string name="wallet_connect_no_sessions_message">沒有已連結的WalletConnect</string>
   <string name="wallet_connect_no_sessions_title">Ooops, 沒有連接</string>
   <string name="wallet_connect_paste_from_clipboard">從剪貼板貼上</string>
@@ -361,20 +350,14 @@
   <string name="wallet_connect_scanner_error_not_valid_card">此卡不能用於建立 WalletConnect 連接</string>
   <string name="wallet_connect_scanner_error_unsupported_network">不支持此網絡。請選擇其他網絡</string>
   <string name="wallet_connect_select_network">選擇網路</string>
-  <string name="wallet_connect_service_no_chain_id">Dapp 沒有提供必要的數據來建立 WalletConnect 連接</string>
-  <string name="wallet_connect_session_not_found">找不到請求的連接</string>
   <string name="wallet_connect_sessions_title">WalletConnect 連接</string>
   <string name="wallet_connect_subtitle">連結到Dapps</string>
   <string name="wallet_connect_title">WalletConnect</string>
-  <string name="wallet_connect_transaction_signed">交易已成功簽署並發送至 Dapp</string>
-  <string name="wallet_connect_transaction_signed_and_send">交易已成功簽署並發送至區塊鏈</string>
-  <string name="wallet_connect_tx_not_found">未能找到交易哈希</string>
   <string name="wallet_marketplace_block_title">%s市場價格</string>
   <string name="wallet_notification_address_copied">地址已復製到剪貼板</string>
   <string name="wallet_notification_no_internet">無網路</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_button_could_be_better">可以更好</string>
-  <string name="warning_button_learn_more">了解更多</string>
   <string name="warning_button_ok">了解</string>
   <string name="warning_button_really_cool">真的很酷！</string>
   <string name="warning_failed_to_verify_card_message">此卡可能是生產樣本或偽造品</string>
