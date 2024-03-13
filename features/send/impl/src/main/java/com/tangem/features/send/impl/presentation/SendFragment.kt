@@ -13,8 +13,8 @@ import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
-import com.tangem.feature.qrscanning.SourceType
-import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.state.StateRouter
