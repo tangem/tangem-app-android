@@ -318,6 +318,7 @@ object TradeCryptoMiddleware {
             SendRouter.TRANSACTION_ID_KEY to txInfo?.transactionId,
             SendRouter.DESTINATION_ADDRESS_KEY to txInfo?.destinationAddress,
             SendRouter.AMOUNT_KEY to txInfo?.amount,
+            SendRouter.TAG_KEY to txInfo?.tag,
         )
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
     }
