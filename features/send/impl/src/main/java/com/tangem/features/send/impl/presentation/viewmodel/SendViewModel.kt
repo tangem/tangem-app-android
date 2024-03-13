@@ -99,6 +99,7 @@ internal class SendViewModel @Inject constructor(
     private val transactionId: String? = savedStateHandle[SendRouter.TRANSACTION_ID_KEY]
     private val amount: String? = savedStateHandle[SendRouter.AMOUNT_KEY]
     private val destinationAddress: String? = savedStateHandle[SendRouter.DESTINATION_ADDRESS_KEY]
+    private val memo: String? = savedStateHandle[SendRouter.TAG_KEY]
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -342,7 +343,7 @@ internal class SendViewModel @Inject constructor(
                 stateRouter.showSend()
             }
             transactionId != null && amount != null && destinationAddress != null -> {
-                uiState = stateFactory.getReadyState(amount, destinationAddress)
+                uiState = stateFactory.getReadyState(amount, destinationAddress, memo)
                 stateRouter.showFee()
                 updateNotifications()
             }
