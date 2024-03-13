@@ -3,8 +3,6 @@
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="address_qr_code_message_format">Send only %1$s (%2$s) from %3$s network to this address. Using other tokens and networks may result in loss of funds.</string>
-  <string name="alert_app_feedback_sent_message">Thank you for your feedback</string>
-  <string name="alert_app_feedback_sent_title">Sent successfully</string>
   <string name="alert_button_request_support">Request support</string>
   <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
   <string name="alert_failed_to_send_transaction_message">Reason: %s</string>
@@ -52,7 +50,6 @@
   <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
   <string name="card_settings_security_mode">Security Mode</string>
   <string name="card_settings_title">Card Settings</string>
-  <string name="chat_button_title">Support</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
   <string name="common_apply">Apply</string>
@@ -78,7 +75,6 @@
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
   <string name="common_explore">Explore</string>
-  <string name="common_explore_history">Explore history</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
   <string name="common_explorer">Explorer</string>
   <string name="common_fee_label">Fee</string>
@@ -133,7 +129,6 @@
   <string name="custom_token_add_token">Add token</string>
   <string name="custom_token_contract_address_input_title">Contract address</string>
   <string name="custom_token_creation_error_invalid_contract_address">Contract address is invalid</string>
-  <string name="custom_token_creation_error_invalid_derivation_path">Derivation path is invalid</string>
   <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
   <string name="custom_token_creation_error_wrong_decimals">Decimal must be a valid integer, up to %li</string>
   <string name="custom_token_custom_derivation">Custom derivation</string>
@@ -431,7 +426,7 @@
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
   <string name="send_amount_label">Amount</string>
   <string name="send_confirm_label">Confirm</string>
-  <string name="send_date_format">%1$s at %2$s</string>
+  <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Address</string>
   <string name="send_destination_tag_field">Destination Tag</string>
   <string name="send_enter_address_field">Enter address</string>
@@ -486,7 +481,6 @@
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
   <string name="send_recipient_wallets_title">My wallets</string>
-  <string name="send_sending">Sending...</string>
   <string name="send_title_currency_format">Sending %s</string>
   <string name="send_total_label">Total</string>
   <string name="send_total_subtitle_asset_format">%1$s and %2$s will be sent</string>

@@ -113,15 +113,23 @@ private fun Awards(expectedAwards: ExpectedAwards) {
         thickness = TangemTheme.dimens.size0_5,
     )
     AwardText(
-        startText = stringResource(id = R.string.referral_expected_awards),
+        startText = if (expectedAwards.expectedAwards.isNotEmpty()) {
+            stringResource(id = R.string.referral_expected_awards)
+        } else {
+            stringResource(id = R.string.referral_no_expected_awards)
+        },
         startTextColor = TangemTheme.colors.text.tertiary,
         startTextStyle = TangemTheme.typography.subtitle2,
-        endText = pluralStringResource(
-            id = R.plurals.referral_number_of_wallets,
-            count = expectedAwards.numberOfWallets,
-            expectedAwards.numberOfWallets,
-        ),
-        endTextColor = TangemTheme.colors.text.tertiary,
+        endText = if (expectedAwards.expectedAwards.isNotEmpty()) {
+            pluralStringResource(
+                id = R.plurals.referral_number_of_wallets,
+                count = expectedAwards.numberOfWallets,
+                expectedAwards.numberOfWallets,
+            )
+        } else {
+            ""
+        },
+        endTextColor = TangemTheme . colors . text . tertiary,
         endTextStyle = TangemTheme.typography.body2,
         cornersToRound = CornersToRound.ZERO,
     )
@@ -332,6 +340,28 @@ private fun Preview_ParticipateBottomBlock_InLightTheme() {
                             paymentDate = "10 Aug 2023",
                         ),
                     ),
+                ),
+                onAgreementClick = {},
+                onShowCopySnackbar = {},
+                onCopyClick = {},
+                onShareClick = {},
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+private fun Preview_ParticipateBottomBlockWithEmptyAwardsList_InLightTheme() {
+    TangemTheme(isDark = false) {
+        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
+            ParticipateBottomBlock(
+                purchasedWalletCount = 3,
+                code = "x4JdK",
+                shareLink = "",
+                expectedAwards = ExpectedAwards(
+                    numberOfWallets = 3,
+                    expectedAwards = emptyList(),
                 ),
                 onAgreementClick = {},
                 onShowCopySnackbar = {},

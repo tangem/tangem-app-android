@@ -3,8 +3,6 @@
   <string name="add_custom_token_title">Добавить токен</string>
   <string name="add_tokens_title">Валюты</string>
   <string name="address_qr_code_message_format">Отправляйте только %1$s (%2$s) в сети %3$s на этот адрес. Использование другой сети может привести к утрате средств.</string>
-  <string name="alert_app_feedback_sent_message">Спасибо за ваш отзыв</string>
-  <string name="alert_app_feedback_sent_title">Отправлено успешно</string>
   <string name="alert_button_request_support">Обратиться в поддержку</string>
   <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
   <string name="alert_failed_to_send_transaction_message">Причина: %s</string>
@@ -53,7 +51,6 @@
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
   <string name="card_settings_title">Настройки карты</string>
-  <string name="chat_button_title">Чат</string>
   <string name="common_accept">Принять</string>
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_apply">Применить</string>
@@ -79,7 +76,6 @@
   <string name="common_enabled">Включено</string>
   <string name="common_error">Ошибка</string>
   <string name="common_explore">Обозреватель</string>
-  <string name="common_explore_history">Посмотреть историю</string>
   <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
   <string name="common_explorer">Обозреватель</string>
   <string name="common_fee_label">Комиссия</string>
@@ -134,7 +130,6 @@
   <string name="custom_token_add_token">Добавить токен</string>
   <string name="custom_token_contract_address_input_title">Адрес контракта</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адрес контракта некорректен</string>
-  <string name="custom_token_creation_error_invalid_derivation_path">Путь деривации некорректен</string>
   <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
   <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %li</string>
   <string name="custom_token_custom_derivation">Своя деривация</string>
@@ -435,7 +430,7 @@
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
   <string name="send_confirm_label">Подтвердить</string>
-  <string name="send_date_format">%1$s в %2$s</string>
+  <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
   <string name="send_enter_address_field">Введите адрес</string>
