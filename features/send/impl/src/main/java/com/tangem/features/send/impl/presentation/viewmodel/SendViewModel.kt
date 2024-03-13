@@ -12,9 +12,11 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
+import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -66,6 +68,7 @@ internal class SendViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
@@ -207,7 +210,13 @@ internal class SendViewModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
                     checkIfSubtractAvailable()
-                    getCurrenciesStatusUpdates(wallet)
+
+                    val isSingleWalletWithToken = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+                    val isMultiCurrency = wallet.isMultiCurrency
+                    getCurrenciesStatusUpdates(
+                        isSingleWalletWithToken = isSingleWalletWithToken,
+                        isMultiCurrency = isMultiCurrency,
+                    )
                 },
                 ifLeft = {
                     uiState = eventStateFactory.getGenericErrorState(
@@ -230,34 +239,38 @@ internal class SendViewModel @Inject constructor(
             .saveIn(balanceHidingJobHolder)
     }
 
-    private fun getCurrenciesStatusUpdates(wallet: UserWallet) {
-        val isSingleWallet = wallet.scanResponse.walletData?.token != null && !wallet.isMultiCurrency
-
+    private fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean, isMultiCurrency: Boolean) {
         if (cryptoCurrency is CryptoCurrency.Coin) {
-            getCurrencyStatusUpdates(isSingleWallet = isSingleWallet)
-                .onEach { currencyStatus ->
-                    currencyStatus.onRight {
-                        onDataLoaded(
-                            currencyStatus = it,
-                            coinCurrencyStatus = it,
-                            feeCurrencyStatus = getFeeCurrencyStatusSync(it),
-                        )
-                    }
+            getCurrencyStatusUpdates(
+                isSingleWalletWithToken = isSingleWalletWithToken,
+                isMultiCurrency = isMultiCurrency,
+            ).onEach { currencyStatus ->
+                currencyStatus.onRight {
+                    onDataLoaded(
+                        currencyStatus = it,
+                        coinCurrencyStatus = it,
+                        feeCurrencyStatus = getFeeCurrencyStatusSync(it, isMultiCurrency),
+                    )
                 }
+            }
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
                 .saveIn(balanceJobHolder)
         } else {
             combine(
-                flow = getCoinCurrencyStatusUpdates(isSingleWallet = isSingleWallet),
-                flow2 = getCurrencyStatusUpdates(isSingleWallet = isSingleWallet),
-            ) { coinStatus, maybeCurrencyStatus ->
-                if (coinStatus.isRight() && maybeCurrencyStatus.isRight()) {
+                flow = getCoinCurrencyStatusUpdates(isSingleWalletWithToken),
+                flow2 = getCurrencyStatusUpdates(
+                    isSingleWalletWithToken = isSingleWalletWithToken,
+                    isMultiCurrency = isMultiCurrency,
+                ),
+            ) { maybeCoinStatus, maybeCurrencyStatus ->
+                if (maybeCoinStatus.isRight() && maybeCurrencyStatus.isRight()) {
                     val currencyStatus = maybeCurrencyStatus.getOrElse { error("Currency status is unreachable") }
+                    val coinStatus = maybeCoinStatus.getOrElse { error("Coin status is unreachable") }
                     onDataLoaded(
                         currencyStatus = currencyStatus,
-                        coinCurrencyStatus = coinStatus.getOrElse { error("Coin status is unreachable") },
-                        feeCurrencyStatus = getFeeCurrencyStatusSync(currencyStatus),
+                        coinCurrencyStatus = coinStatus,
+                        feeCurrencyStatus = getFeeCurrencyStatusSync(currencyStatus, isMultiCurrency),
                     )
                 }
             }
@@ -267,24 +280,41 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private fun getCoinCurrencyStatusUpdates(isSingleWallet: Boolean) = getNetworkCoinStatusUseCase(
+    private fun getCoinCurrencyStatusUpdates(isSingleWalletWithToken: Boolean) = getNetworkCoinStatusUseCase(
         userWalletId = userWalletId,
         networkId = cryptoCurrency.network.id,
         derivationPath = cryptoCurrency.network.derivationPath,
-        isSingleWalletWithTokens = isSingleWallet,
+        isSingleWalletWithTokens = isSingleWalletWithToken,
     ).conflate().distinctUntilChanged()
 
-    private fun getCurrencyStatusUpdates(isSingleWallet: Boolean) = getCurrencyStatusUpdatesUseCase(
-        userWalletId = userWalletId,
-        currencyId = cryptoCurrency.id,
-        isSingleWalletWithTokens = isSingleWallet,
-    ).conflate().distinctUntilChanged()
+    private fun getCurrencyStatusUpdates(
+        isSingleWalletWithToken: Boolean,
+        isMultiCurrency: Boolean,
+    ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
+        return if (isMultiCurrency) {
+            getCurrencyStatusUpdatesUseCase(
+                userWalletId = userWalletId,
+                currencyId = cryptoCurrency.id,
+                isSingleWalletWithTokens = isSingleWalletWithToken,
+            ).conflate().distinctUntilChanged()
+        } else {
+            getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId)
+        }
+    }
 
-    private suspend fun getFeeCurrencyStatusSync(cryptoCurrencyStatus: CryptoCurrencyStatus) =
-        getFeePaidCryptoCurrencyStatusSyncUseCase(
-            userWalletId = userWalletId,
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
-        ).getOrNull() ?: error("Fee currency is unreachable")
+    private suspend fun getFeeCurrencyStatusSync(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        isMultiCurrency: Boolean,
+    ): CryptoCurrencyStatus {
+        return if (isMultiCurrency) {
+            getFeePaidCryptoCurrencyStatusSyncUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+            ).getOrNull() ?: error("Fee currency is unreachable")
+        } else {
+            cryptoCurrencyStatus
+        }
+    }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
         return getSelectedAppCurrencyUseCase()
