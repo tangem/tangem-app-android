@@ -87,16 +87,18 @@ internal class SendStateFactory(
         val state = currentStateProvider()
         return state.copy(
             amountState = state.amountState ?: amountStateConverter.convert(""),
-            recipientState = state.recipientState ?: recipientStateConverter.convert(""),
+            recipientState = state.recipientState
+                ?: recipientStateConverter.convert(SendRecipientStateConverter.Data("", null)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
         )
     }
 
-    fun getReadyState(amount: String, destinationAddress: String): SendUiState {
+    fun getReadyState(amount: String, destinationAddress: String, memo: String?): SendUiState {
         val state = currentStateProvider()
         return state.copy(
             amountState = state.amountState ?: amountStateConverter.convert(amount),
-            recipientState = state.recipientState ?: recipientStateConverter.convert(destinationAddress),
+            recipientState = state.recipientState
+                ?: recipientStateConverter.convert(SendRecipientStateConverter.Data(destinationAddress, memo)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
             isEditingDisabled = true,
         )
