@@ -385,7 +385,7 @@ internal class StateBuilder(
                             NotificationConfig(
                                 title = resourceReference(R.string.send_notification_invalid_amount_title),
                                 subtitle = resourceReference(
-                                    R.string.send_notification_invalid_minimum_amount_text,
+                                    R.string.warning_express_dust_message,
                                     wrappedList(
                                         it.dustValue.toPlainString(),
                                         it.dustValue.toPlainString(),
@@ -677,7 +677,7 @@ internal class StateBuilder(
                     subtitle = if (dataError is DataError.UnknownError) {
                         resourceReference(R.string.common_unknown_error)
                     } else {
-                        resourceReference(R.string.generic_error_code, wrappedList(dataError.code.toString()))
+                        resourceReference(R.string.express_error_code, wrappedList(dataError.code.toString()))
                     },
                     iconResId = R.drawable.img_attention_20,
                     buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
@@ -862,7 +862,7 @@ internal class StateBuilder(
                 SwapWarning.GeneralWarning(
                     notificationConfig = NotificationConfig(
                         title = TextReference.Res(R.string.warning_express_refresh_required_title),
-                        subtitle = TextReference.Res(R.string.generic_error_code, wrappedList(code)),
+                        subtitle = TextReference.Res(R.string.express_error_code, wrappedList(code)),
                         iconResId = R.drawable.ic_alert_triangle_20,
                         buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                             text = TextReference.Res(R.string.warning_button_refresh),
