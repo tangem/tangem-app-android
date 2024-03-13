@@ -139,6 +139,8 @@ include(":domain:analytics")
 include(":domain:visa")
 include(":domain:onboarding")
 include(":domain:feedback")
+include(":domain:qr-scanning")
+include(":domain:qr-scanning:models")
 // endregion Domain modules
 
 // region Data modules
@@ -158,4 +160,5 @@ include(":data:visa")
 include(":data:promo")
 include(":data:onboarding")
 include(":data:feedback")
+include(":data:qr-scanning")
 // endregion Data modules
