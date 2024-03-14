@@ -3,7 +3,7 @@ package com.tangem.tap.domain.userWalletList.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.common.authentication.AuthenticatedStorage
+import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
