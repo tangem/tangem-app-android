@@ -22,24 +22,16 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) {
 
-    private var isInitialized: Boolean = false
-    private var canSaveWallets: Boolean = false
-
-    fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState, canSaveWallets: Boolean): Action {
+    fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState): Action {
         val selectedWallet = wallets.getSelectedWallet()
 
         val action = if (selectedWallet == null) {
             createNoSelectedWalletAction(wallets)
         } else {
-            when {
-                isFirstInitialization(currentState) -> {
-                    createInitializeWalletsAction(wallets, selectedWallet, canSaveWallets)
-                }
-                isReinitialization(canSaveWallets) -> {
-                    this.canSaveWallets = canSaveWallets
-                    Action.ReinitializeWallets(selectedWallet = selectedWallet)
-                }
-                else -> getUpdateContentAction(currentState, wallets, selectedWallet)
+            if (isFirstInitialization(currentState)) {
+                createInitializeWalletsAction(wallets, selectedWallet)
+            } else {
+                getUpdateContentAction(currentState, wallets, selectedWallet)
             }
         }
 
@@ -68,23 +60,12 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         return state.selectedWalletIndex == NOT_INITIALIZED_WALLET_INDEX
     }
 
-    private fun createInitializeWalletsAction(
-        wallets: List<UserWallet>,
-        selectedWallet: UserWallet,
-        canSaveWallets: Boolean,
-    ): Action {
-        this.isInitialized = true
-        this.canSaveWallets = canSaveWallets
-
+    private fun createInitializeWalletsAction(wallets: List<UserWallet>, selectedWallet: UserWallet): Action {
         return Action.InitializeWallets(
             selectedWalletIndex = wallets.indexOfWallet(selectedWallet.walletId),
             selectedWallet = selectedWallet,
             wallets = wallets,
         )
-    }
-
-    private fun isReinitialization(canSaveWallets: Boolean): Boolean {
-        return isInitialized && this.canSaveWallets != canSaveWallets
     }
 
     private fun getUpdateContentAction(
@@ -229,18 +210,6 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                         wallets = ${wallets.joinToString { it.walletId.toString() }}
                     )
                 """.trimIndent()
-            }
-        }
-
-        /**
-         * Reinitialize wallets. Example, if user turned on wallets saving
-         *
-         * @property selectedWallet selected wallet
-         */
-        data class ReinitializeWallets(val selectedWallet: UserWallet) : Action() {
-
-            override fun toString(): String {
-                return "ReinitializeWallets(selectedWallet = ${selectedWallet.walletId})"
             }
         }
 
