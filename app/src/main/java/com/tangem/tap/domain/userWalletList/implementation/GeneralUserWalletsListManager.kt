@@ -131,16 +131,25 @@ internal class GeneralUserWalletsListManager(
                 Timber.d("Switch to ${manager::class.java.simpleName}")
 
                 implementation.value = manager
+
+                clearOldManager(manager)
             }
             .flowOn(dispatchers.io)
             .launchIn(applicationScope)
     }
 
-    /** Copy data from [old] manager and clean it */
+    /** Copy data from [old] manager */
     private suspend fun UserWalletsListManager.copyFrom(old: UserWalletsListManager): UserWalletsListManager {
         old.selectedUserWalletSync?.let { this.save(it) }
-        old.clear()
 
         return this
+    }
+
+    private suspend fun clearOldManager(current: UserWalletsListManager) {
+        if (current == biometricUserWalletsListManager) {
+            runtimeUserWalletsListManager.clear()
+        } else {
+            biometricUserWalletsListManager.clear()
+        }
     }
 }
