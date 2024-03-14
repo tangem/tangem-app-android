@@ -29,7 +29,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.paging.PagingData
-import androidx.paging.compose.*
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.TokenItemState
@@ -63,10 +66,11 @@ internal fun TokensListScreen(stateHolder: TokensListStateHolder, modifier: Modi
                 val verticalPadding = TangemTheme.dimens.spacing32
 
                 SaveChangesButton(
-                    onClick = stateHolder.onSaveButtonClick,
                     modifier = Modifier.onSizeChanged {
                         with(density) { floatingButtonHeight = it.height.toDp() + verticalPadding }
                     },
+                    showProgress = stateHolder.isSavingInProgress,
+                    onClick = stateHolder.onSaveButtonClick,
                 )
             }
         },
@@ -176,13 +180,14 @@ private fun DifferentAddressesWarning() {
 }
 
 @Composable
-private fun SaveChangesButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun SaveChangesButton(showProgress: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     PrimaryButton(
         modifier = modifier
             .imePadding()
             .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
         text = stringResource(id = R.string.common_save_changes),
+        showProgress = showProgress,
         onClick = onClick,
     )
 }
@@ -237,6 +242,7 @@ private class TokensListScreenProvider : CollectionPreviewParameterProvider<Toke
             ),
             onSaveButtonClick = {},
             onTokensLoadStateChanged = {},
+            isSavingInProgress = false,
         ),
         TokensListStateHolder.ReadContent(
             toolbarState = TokensListToolbarState.Title.Read(
