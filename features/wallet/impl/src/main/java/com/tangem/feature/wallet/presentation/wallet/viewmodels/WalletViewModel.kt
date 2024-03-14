@@ -14,7 +14,6 @@ import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -53,7 +52,6 @@ internal class WalletViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     analyticsEventsHandler: AnalyticsEventHandler,
@@ -74,7 +72,7 @@ internal class WalletViewModel @Inject constructor(
 
         suggestToEnableBiometrics()
 
-        subscribeOnWalletsUpdateFlow()
+        subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
     }
@@ -112,25 +110,12 @@ internal class WalletViewModel @Inject constructor(
         return router.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()
     }
 
-    private fun subscribeOnWalletsUpdateFlow() {
-        viewModelScope.launch(dispatchers.main) {
-            shouldSaveUserWalletsUseCase()
-                .conflate()
-                .distinctUntilChanged()
-                .collectLatest(::subscribeToUserWalletsUpdates)
-        }
-    }
-
-    private fun subscribeToUserWalletsUpdates(shouldSaveUserWallet: Boolean) {
+    private fun subscribeToUserWalletsUpdates() {
         getWalletsUseCase()
             .conflate()
             .distinctUntilChanged()
             .map {
-                walletsUpdateActionResolver.resolve(
-                    wallets = it,
-                    currentState = stateHolder.value,
-                    canSaveWallets = shouldSaveUserWallet,
-                )
+                walletsUpdateActionResolver.resolve(wallets = it, currentState = stateHolder.value)
             }
             .onEach(::updateWallets)
             .flowOn(dispatchers.main)
@@ -182,14 +167,6 @@ internal class WalletViewModel @Inject constructor(
     private suspend fun updateWallets(action: WalletsUpdateActionResolver.Action) {
         when (action) {
             is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
-            is WalletsUpdateActionResolver.Action.ReinitializeWallets -> {
-                walletScreenContentLoader.load(
-                    userWallet = action.selectedWallet,
-                    clickIntents = clickIntents,
-                    isRefresh = true,
-                    coroutineScope = viewModelScope,
-                )
-            }
             is WalletsUpdateActionResolver.Action.ReinitializeWallet -> reinitializeWallet(action)
             is WalletsUpdateActionResolver.Action.AddWallet -> addWallet(action)
             is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
