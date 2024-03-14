@@ -13,6 +13,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
@@ -32,7 +33,10 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.domain.wallets.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
@@ -75,12 +79,12 @@ internal class SendViewModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
-    private val parseSharedAddressUseCase: ParseSharedAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val parseQrCodeUseCase: ParseQrCodeUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -178,6 +182,7 @@ internal class SendViewModel @Inject constructor(
     private var recipientsJobHolder = JobHolder()
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
+    private var memoValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
     private var feeNotificationsJobHolder = JobHolder()
     private var qrScannerJobHolder = JobHolder()
@@ -509,13 +514,14 @@ internal class SendViewModel @Inject constructor(
     // region recipient state clicks
     fun onRecipientAddressScanned(address: String) {
         viewModelScope.launch(dispatchers.main) {
-            parseSharedAddressUseCase(address, cryptoCurrency.network).fold(
+            parseQrCodeUseCase(address, cryptoCurrency).fold(
                 ifRight = { parsedCode ->
                     onRecipientAddressValueChange(parsedCode.address, EnterAddressSource.QRCode)
                     parsedCode.amount?.let { onAmountValueChange(it.toPlainString()) }
                     parsedCode.memo?.let { onRecipientMemoValueChange(it) }
                 },
                 ifLeft = {
+                    onRecipientAddressValueChange(address, EnterAddressSource.QRCode)
                     Timber.w(it)
                 },
             )
@@ -543,7 +549,7 @@ internal class SendViewModel @Inject constructor(
                 val isValidAddress = validateAddress(uiState.recipientState?.addressTextField?.value.orEmpty())
                 uiState = stateFactory.getOnRecipientMemoValidState(value, isValidAddress)
             }
-        }.saveIn(addressValidationJobHolder)
+        }.saveIn(memoValidationJobHolder)
     }
 
     private suspend fun validateAddress(value: String): Boolean {
