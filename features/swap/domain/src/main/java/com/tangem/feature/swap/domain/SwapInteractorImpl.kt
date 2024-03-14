@@ -371,7 +371,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val fromToken = fromTokenStatus.currency
         val userWalletId = getSelectedWallet()?.walletId ?: return emptyList()
         val warnings = mutableListOf<Warning>()
-        manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken)
+        manageExistentialDepositWarning(warnings, userWalletId, amount, feeState, fromToken)
         manageDustWarning(warnings, feeState, userWalletId, fromTokenStatus, amount)
         return warnings
     }
@@ -380,15 +380,21 @@ internal class SwapInteractorImpl @Inject constructor(
         warnings: MutableList<Warning>,
         userWalletId: UserWalletId,
         amount: SwapAmount,
+        feeState: TxFeeState,
         fromToken: CryptoCurrency,
     ) {
         val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, fromToken.network)
+        val fee = when (feeState) {
+            TxFeeState.Empty -> BigDecimal.ZERO
+            is TxFeeState.MultipleFeeState -> feeState.priorityFee.feeValue
+            is TxFeeState.SingleFeeState -> feeState.fee.feeValue
+        }
         if (existentialDeposit != null) {
             val nativeBalance = userWalletManager.getNativeTokenBalance(
                 fromToken.network.backendId,
                 fromToken.network.derivationPath.value,
             ) ?: ProxyAmount.empty()
-            if (nativeBalance.value.minus(amount.value) < existentialDeposit) {
+            if (nativeBalance.value.minus(amount.value + fee) < existentialDeposit) {
                 warnings.add(Warning.ExistentialDepositWarning(existentialDeposit))
             }
         }
