@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.common.*
-import com.tangem.common.authentication.AuthenticatedStorage
+import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.wallets.legacy.UserWalletsListError
