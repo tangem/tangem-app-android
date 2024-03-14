@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 @Deprecated("Use shared preferences data store instead")
@@ -16,6 +18,7 @@ internal class FileDataStore<Value : Any>(
     private val adapter: JsonAdapter<Value>,
 ) : StringKeyDataStore<Value> {
 
+    private val mutex = Mutex()
     private val writeTrigger = Trigger()
     override suspend fun isEmpty(): Boolean {
         val e = NotImplementedError("`isEmpty()` function not implemented for `FileDataStore`")
@@ -28,7 +31,11 @@ internal class FileDataStore<Value : Any>(
 
     override fun get(key: String): Flow<Value> {
         return writeTrigger
-            .map { getInternal(key) }
+            .map {
+                mutex.withLock {
+                    getInternal(key)
+                }
+            }
             .filterNotNull()
             .distinctUntilChanged()
     }
@@ -53,10 +60,12 @@ internal class FileDataStore<Value : Any>(
 
     override suspend fun store(key: String, value: Value) {
         try {
-            val json = adapter.toJson(value)
+            mutex.withLock {
+                val json = adapter.toJson(value)
 
-            fileReader.rewriteFile(json, key)
-            writeTrigger.trigger()
+                fileReader.rewriteFile(json, key)
+                writeTrigger.trigger()
+            }
         } catch (e: Throwable) {
             Timber.e(e, "Unable to write file: $key")
         }
