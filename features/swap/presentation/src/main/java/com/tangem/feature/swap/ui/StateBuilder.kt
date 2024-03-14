@@ -431,8 +431,12 @@ internal class StateBuilder(
         val preparedSwapConfigState = quoteModel.preparedSwapConfigState
         // check has has outgoing transaction
         if (preparedSwapConfigState.hasOutgoingTransaction) return false
-        // check has MinAmountWarning warning
-        if (quoteModel.warnings.filterIsInstance<Warning.MinAmountWarning>().isNotEmpty()) return false
+        // check has blocking warnings
+        // TODO([REDACTED_JIRA])
+        //  ExistentialDepositWarning temporary disabled swap with remains balance lower than existential deposit
+        val hasBlockingWarnings = quoteModel.warnings
+            .any { it is Warning.MinAmountWarning || it is Warning.ExistentialDepositWarning }
+        if (hasBlockingWarnings) return false
         return when (preparedSwapConfigState.includeFeeInAmount) {
             IncludeFeeInAmount.BalanceNotEnough -> false
             IncludeFeeInAmount.Excluded ->
