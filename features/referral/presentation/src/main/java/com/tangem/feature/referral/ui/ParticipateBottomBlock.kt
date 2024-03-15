@@ -361,8 +361,20 @@ private fun ParticipateBottomBlockPreview_Dark(
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-private fun LessMoreButton_White() {
+private fun LessMoreButton_Light() {
     TangemTheme(isDark = false) {
+        LessMoreButton(
+            isExpanded = remember {
+                mutableStateOf(false)
+            },
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+private fun LessMoreButton_Dark() {
+    TangemTheme(isDark = true) {
         LessMoreButton(
             isExpanded = remember {
                 mutableStateOf(false)
