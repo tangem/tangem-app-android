@@ -175,11 +175,27 @@ class GetCurrencyWarningsUseCase(
                             coinStatus = coinStatus,
                             tokenStatus = tokenStatus,
                         )?.let(::add)
+
+                        getSolanaFeeWarning(
+                            coinStatus = coinStatus,
+                            tokenStatus = tokenStatus,
+                        )?.let(::add)
                     }
                 }
                 else -> listOf(CryptoCurrencyWarning.SomeNetworksUnreachable)
             }
         }
+    }
+
+    private fun getSolanaFeeWarning(
+        coinStatus: CryptoCurrencyStatus,
+        tokenStatus: CryptoCurrencyStatus,
+    ): CryptoCurrencyWarning? {
+        val network = coinStatus.currency.network
+        if (!network.id.value.equals(other = "solana", ignoreCase = true)) return null
+        if (tokenStatus.value.amount.isNullOrZero()) return null
+
+        return CryptoCurrencyWarning.SolanaFeeWarning
     }
 
     private suspend fun getFeeWarning(

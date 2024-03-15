@@ -73,6 +73,7 @@ internal class TokenDetailsNotificationConverter(
                 onSwapClick = clickIntents::onSwapPromoClick,
                 onCloseClick = clickIntents::onSwapPromoDismiss,
             )
+            is CryptoCurrencyWarning.SolanaFeeWarning -> SolanaFeeWarning
         }
     }
 }
