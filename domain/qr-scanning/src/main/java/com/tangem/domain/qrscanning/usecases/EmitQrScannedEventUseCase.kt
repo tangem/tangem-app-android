@@ -1,12 +1,12 @@
-package com.tangem.feature.qrscanning.usecase
+package com.tangem.domain.qrscanning.usecases
 
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.feature.qrscanning.SourceType
-import com.tangem.feature.qrscanning.repo.QrScanningEventsRepository
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
 
-internal class EmitQrScannedEventUseCase(
+class EmitQrScannedEventUseCase(
     private val repository: QrScanningEventsRepository,
 ) {
     suspend operator fun invoke(type: SourceType, qrCode: String): Either<Exception, Unit> {
