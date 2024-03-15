@@ -14,6 +14,7 @@ internal class ExchangeStatusConverter : Converter<ExchangeStatusResponse, Excha
             },
             txId = value.externalTxId,
             txExternalUrl = value.externalTxUrl,
+            txExternalId = value.externalTxId,
         )
     }
 }
