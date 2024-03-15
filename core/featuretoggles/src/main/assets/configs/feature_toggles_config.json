@@ -18,5 +18,9 @@
     {
         "name": "LOCAL_USER_LOGS_ENABLED",
         "version": "5.8.0"
+    },
+    {
+        "name": "GENERATE_XPUB_ENABLED",
+        "version": "undefined"
     }
 ]
