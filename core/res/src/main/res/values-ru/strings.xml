@@ -363,11 +363,7 @@
   <string name="organize_tokens_sort_by_balance">По балансу</string>
   <string name="organize_tokens_title">Сортировка токенов</string>
   <string name="organize_tokens_ungroup">Список</string>
-  <string name="rate_app_sheet_negative_response_button_title">Отправить отзыв</string>
-  <string name="rate_app_sheet_positive_response_button_title">Оцените приложение 🙌</string>
-  <string name="rate_app_sheet_subtitle">Поделитесь опытом использования приложения - нам важна любая деталь.</string>
   <string name="rate_app_sheet_title">Нравится наше приложение?</string>
-  <string name="receive_bottom_sheet_title">%1$s %2$s адрес в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
   <string name="referral_button_participate">Участвовать</string>
@@ -429,7 +425,6 @@
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
-  <string name="send_confirm_label">Подтвердить</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
@@ -520,6 +515,7 @@
   <string name="toast_balances_hidden">Балансы скрыты</string>
   <string name="toast_balances_shown">Балансы показаны</string>
   <string name="toast_undo">Отменить</string>
+  <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
   <string name="token_details_hide_alert_title">Скрыть %s</string>
