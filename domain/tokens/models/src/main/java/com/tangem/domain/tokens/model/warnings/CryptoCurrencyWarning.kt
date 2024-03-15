@@ -47,4 +47,6 @@ sealed class CryptoCurrencyWarning {
         val startDateTime: DateTime,
         val endDateTime: DateTime,
     ) : CryptoCurrencyWarning()
+
+    object SolanaFeeWarning : CryptoCurrencyWarning()
 }

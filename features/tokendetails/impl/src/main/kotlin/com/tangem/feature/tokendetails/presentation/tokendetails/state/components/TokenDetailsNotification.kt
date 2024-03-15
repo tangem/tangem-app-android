@@ -168,4 +168,9 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             formatArgs = wrappedList(coinSymbol),
         ),
     )
+
+    object SolanaFeeWarning : Warning(
+        title = resourceReference(R.string.warning_solana_fee_title),
+        subtitle = resourceReference(R.string.warning_solana_fee_message),
+    )
 }
