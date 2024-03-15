@@ -69,12 +69,13 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.qrScanning)
+    implementation(projects.domain.qrScanning.models)
 
     /** Feature modules */
     implementation(projects.features.send.api)
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.qrScanning.api)
-    implementation(projects.features.qrScanning.impl)
 
     /** DI */
     implementation(deps.hilt.android)
