@@ -1480,7 +1480,16 @@ internal class SwapInteractorImpl @Inject constructor(
                     fromTokenStatus.currency.network.derivationPath.value,
                 )
                 nativeTokenBalance?.let { balance ->
-                    if (balance.value.minus(spendAmount.value) > fee.multiply(percentsToFeeIncrease)) {
+                    val balanceToCheck = when (fromTokenStatus.currency) {
+                        is CryptoCurrency.Token -> {
+                            balance.value
+                        }
+                        is CryptoCurrency.Coin -> {
+                            // need to check balance minus amount only if amount to swap in native token
+                            balance.value.minus(spendAmount.value)
+                        }
+                    }
+                    if (balanceToCheck > fee.multiply(percentsToFeeIncrease)) {
                         SwapFeeState.Enough
                     } else {
                         val nativeToken = getNativeToken(fromTokenStatus.currency.network.backendId)
@@ -1510,9 +1519,9 @@ internal class SwapInteractorImpl @Inject constructor(
                 } else {
                     val token = currenciesRepository
                         .getMultiCurrencyWalletCurrenciesSync(userWalletId)
+                        .filterIsInstance<CryptoCurrency.Token>()
                         .find {
-                            it is CryptoCurrency.Token &&
-                                it.contractAddress.equals(feePaidCurrency.contractAddress, ignoreCase = true) &&
+                            it.contractAddress.equals(feePaidCurrency.contractAddress, ignoreCase = true) &&
                                 it.network.derivationPath == fromTokenStatus.currency.network.derivationPath
                         }
                     SwapFeeState.NotEnough(
