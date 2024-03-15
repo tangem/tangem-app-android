@@ -11,5 +11,5 @@ inline fun <reified T : Enum<T>> safeValueOf(type: String, default: T): T {
 }
 
 fun BigDecimal?.isNullOrZero(): Boolean {
-    return this == null || this.compareTo(BigDecimal.ZERO) == 0
+    return this == null || this.signum() == 0
 }
