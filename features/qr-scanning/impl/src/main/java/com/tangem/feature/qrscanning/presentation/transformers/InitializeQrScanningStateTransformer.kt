@@ -2,7 +2,7 @@ package com.tangem.feature.qrscanning.presentation.transformers
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.feature.qrscanning.SourceType
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.impl.R
 import com.tangem.feature.qrscanning.presentation.QrScanningState
 import com.tangem.feature.qrscanning.viewmodel.QrScanningClickIntents
