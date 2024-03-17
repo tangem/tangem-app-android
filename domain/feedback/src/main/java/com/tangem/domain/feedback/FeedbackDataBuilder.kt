@@ -3,6 +3,7 @@ package com.tangem.domain.feedback
 import com.tangem.domain.feedback.models.BlockchainInfo
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.PhoneInfo
+import com.tangem.domain.feedback.models.UserWalletsInfo
 import com.tangem.domain.feedback.utils.breakLine
 import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainAddresses
 
@@ -10,12 +11,17 @@ internal class FeedbackDataBuilder {
 
     private val builder = StringBuilder()
 
+    fun addUserWalletsInfo(userWalletsInfo: UserWalletsInfo) {
+        builder.appendKeyValue("User Wallet ID", userWalletsInfo.selectedUserWalletId)
+        builder.appendKeyValue("Total saved wallets", userWalletsInfo.totalUserWallets.toString())
+    }
+
     fun addCardInfo(cardInfo: CardInfo) {
         builder.appendKeyValue("Card ID", cardInfo.cardId)
         builder.appendKeyValue("Firmware version", cardInfo.firmwareVersion)
+        builder.appendKeyValue("Imported wallet", if (cardInfo.isImported) "yes" else "no")
         builder.appendKeyValue("Card Blockchain", cardInfo.cardBlockchain)
         builder.appendSignedHashes(cardInfo.signedHashesList)
-        builder.appendKeyValue("User Wallet ID", cardInfo.userWalletId)
     }
 
     fun addBlockchainInfoList(blockchainInfoList: List<BlockchainInfo>) {
