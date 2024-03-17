@@ -1,11 +1,11 @@
 package com.tangem.domain.feedback.models
 
 data class CardInfo(
-    val userWalletId: String,
     val cardId: String,
     val firmwareVersion: String,
     val cardBlockchain: String?,
     val signedHashesList: List<SignedHashes>,
+    val isImported: Boolean,
     val isStart2Coin: Boolean,
 ) {
 
