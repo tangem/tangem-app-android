@@ -10,10 +10,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.domain.feedback.models.AppLogModel
-import com.tangem.domain.feedback.models.BlockchainInfo
-import com.tangem.domain.feedback.models.CardInfo
-import com.tangem.domain.feedback.models.PhoneInfo
+import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.wallets.models.UserWallet
 import timber.log.Timber
@@ -37,6 +34,13 @@ internal class DefaultFeedbackRepository(
     private val walletManagersStore: WalletManagersStore,
     private val context: Context,
 ) : FeedbackRepository {
+
+    override suspend fun getUserWalletsInfo(): UserWalletsInfo {
+        return UserWalletsInfo(
+            selectedUserWalletId = getSelectedUserWallet().walletId.stringValue,
+            totalUserWallets = userWalletsStore.getAllSyncOrNull()?.size ?: error("No user wallets found"),
+        )
+    }
 
     override suspend fun getCardInfo(): CardInfo {
         return CardInfoConverter.convert(value = getSelectedUserWallet())

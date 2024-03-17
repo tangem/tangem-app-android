@@ -71,6 +71,8 @@ class GetSupportFeedbackEmailUseCase(
             skipLine()
             append(
                 FeedbackDataBuilder().apply {
+                    addUserWalletsInfo(userWalletsInfo = feedbackRepository.getUserWalletsInfo())
+                    addDelimiter()
                     addCardInfo(cardInfo)
                     addDelimiter()
                     addBlockchainInfoList(blockchainInfoList = feedbackRepository.getBlockchainInfoList())
