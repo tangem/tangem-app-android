@@ -16,5 +16,5 @@ interface FeedbackRepository {
 
     suspend fun getAppLogs(): List<AppLogModel>
 
-    suspend fun createLogFile(logs: List<String>): File?
+    suspend fun createLogFile(logs: String): File?
 }
