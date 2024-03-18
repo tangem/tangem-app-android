@@ -3,8 +3,6 @@
   <string name="add_custom_token_title">添加自定義代幣</string>
   <string name="add_tokens_title">管理代幣</string>
   <string name="address_qr_code_message_format">僅將 %1$s (%2$s) 從 %3$s 網絡發送到此地址。使用其他代幣和網絡可能會導致資金損失</string>
-  <string name="alert_app_feedback_sent_message">謝謝您的反饋</string>
-  <string name="alert_app_feedback_sent_title">成功送出</string>
   <string name="alert_button_request_support">請求支持</string>
   <string name="alert_demo_feature_disabled">此功能不在展示模式中提供</string>
   <string name="alert_failed_to_send_transaction_message">原因：%s</string>
@@ -37,7 +35,6 @@
   <string name="card_settings_reset_card_to_factory">回復至原廠設置</string>
   <string name="card_settings_security_mode">安全模式</string>
   <string name="card_settings_title">卡片設置</string>
-  <string name="chat_button_title">支援</string>
   <string name="common_accept">接受</string>
   <string name="common_attention">注意</string>
   <string name="common_balance">餘額: %s</string>
@@ -90,7 +87,6 @@
   <string name="custom_token_add_token">添加代幣</string>
   <string name="custom_token_contract_address_input_title">代幣地址</string>
   <string name="custom_token_creation_error_invalid_contract_address">無效地址</string>
-  <string name="custom_token_creation_error_invalid_derivation_path">衍生路徑錯誤</string>
   <string name="custom_token_creation_error_network_not_selected">請選擇網路</string>
   <string name="custom_token_decimals_input_title">小數點</string>
   <string name="custom_token_derivation_path_default">默認</string>
