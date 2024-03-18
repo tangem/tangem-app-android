@@ -3,8 +3,6 @@
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
   <string name="address_qr_code_message_format">Send only %1$s (%2$s) from %3$s network to this address. Using other tokens and networks may result in loss of funds.</string>
-  <string name="alert_app_feedback_sent_message">Thank you for your feedback</string>
-  <string name="alert_app_feedback_sent_title">Sent successfully</string>
   <string name="alert_button_request_support">Request support</string>
   <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
   <string name="alert_failed_to_send_transaction_message">Reason: %s</string>
@@ -52,7 +50,6 @@
   <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
   <string name="card_settings_security_mode">Security Mode</string>
   <string name="card_settings_title">Card Settings</string>
-  <string name="chat_button_title">Support</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
   <string name="common_apply">Apply</string>
@@ -78,7 +75,6 @@
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
   <string name="common_explore">Explore</string>
-  <string name="common_explore_history">Explore history</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
   <string name="common_explorer">Explorer</string>
   <string name="common_fee_label">Fee</string>
@@ -99,6 +95,7 @@
   <string name="common_no_address">No address</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Primary Card</string>
+  <string name="common_passphrase">Passphrase</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
   <string name="common_reject">Reject</string>
@@ -133,7 +130,6 @@
   <string name="custom_token_add_token">Add token</string>
   <string name="custom_token_contract_address_input_title">Contract address</string>
   <string name="custom_token_creation_error_invalid_contract_address">Contract address is invalid</string>
-  <string name="custom_token_creation_error_invalid_derivation_path">Derivation path is invalid</string>
   <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
   <string name="custom_token_creation_error_wrong_decimals">Decimal must be a valid integer, up to %li</string>
   <string name="custom_token_custom_derivation">Custom derivation</string>
@@ -288,6 +284,7 @@
   <string name="onboarding_activation_error_title">Activation error</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card. When backup process is finished you can\'t add more backup cards. If you have one more card, add it to backup. Do you like to continue the backup process?</string>
   <string name="onboarding_backup_exit_warning">The backup process is partly complete. You can\'t exit it now.</string>
+  <string name="onboarding_bottom_sheet_passphrase_description">The passphrase is an advanced security feature that crypto wallets use. It adds an extra word or phrase of your own choosing to your already existing recovery phrase to unlock a brand-new set of addresses.</string>
   <string name="onboarding_button_add_backup_card">Add a backup card</string>
   <string name="onboarding_button_backup_card_format">Scan the card #%d</string>
   <string name="onboarding_button_backup_now">Backup now</string>
@@ -368,11 +365,7 @@
   <string name="qr_scanner_camera_denied_settings_button">Settings</string>
   <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
   <string name="qr_scanner_camera_denied_title">Camera access denied</string>
-  <string name="rate_app_sheet_negative_response_button_title">Share feedback</string>
-  <string name="rate_app_sheet_positive_response_button_title">Rate the app 🙌</string>
-  <string name="rate_app_sheet_subtitle">Share your app experience – every detail counts.</string>
   <string name="rate_app_sheet_title">Enjoying our app?</string>
-  <string name="receive_bottom_sheet_title">%1$s %2$s address on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
   <string name="referral_button_participate">Participate</string>
@@ -431,7 +424,7 @@
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
   <string name="send_amount_label">Amount</string>
   <string name="send_confirm_label">Confirm</string>
-  <string name="send_date_format">%1$s at %2$s</string>
+  <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Address</string>
   <string name="send_destination_tag_field">Destination Tag</string>
   <string name="send_enter_address_field">Enter address</string>
@@ -486,7 +479,9 @@
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
   <string name="send_recipient_wallets_title">My wallets</string>
-  <string name="send_sending">Sending...</string>
+  <string name="send_summary_tap_hint">Tap any field to change it</string>
+  <string name="send_summary_title">Send %s</string>
+  <string name="send_summary_transaction_description">You are sending %1$s including a network fee of %2$s</string>
   <string name="send_title_currency_format">Sending %s</string>
   <string name="send_total_label">Total</string>
   <string name="send_total_subtitle_asset_format">%1$s and %2$s will be sent</string>
@@ -533,6 +528,7 @@
   <string name="toast_balances_hidden">Balances hidden</string>
   <string name="toast_balances_shown">Balances shown</string>
   <string name="toast_undo">Undo</string>
+  <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
   <string name="token_details_hide_alert_title">Hide %s</string>
@@ -612,7 +608,7 @@
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s or scan a card to unlock access to your wallet</string>
   <string name="warning_backup_errors_message">Please withdraw all funds from this wallet, reset it to factory settings, and create a new one. Access to the current wallet will be lost.</string>
-  <string name="warning_backup_errors_title">Backup error</string>
+  <string name="warning_backup_errors_title">Activation error</string>
   <string name="warning_button_could_be_better">Could be better</string>
   <string name="warning_button_like_it">Like it</string>
   <string name="warning_button_ok">Ok, Got it!</string>
@@ -662,6 +658,8 @@
   <string name="warning_send_blocked_pending_transactions_in_blockchain_message">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="warning_send_blocked_pending_transactions_message">Sending funds will be available once the %s transaction is complete</string>
   <string name="warning_send_blocked_pending_transactions_title">Transaction pending</string>
+  <string name="warning_solana_fee_message">The Solana network is congested. If your transaction is not processed within 2 minutes, please repeat the transaction.</string>
+  <string name="warning_solana_fee_title">Solana Network Alert</string>
   <string name="warning_solana_rent_fee_message">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
   <string name="warning_some_networks_unreachable_message">Some networks currently are unreachable. Please try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
