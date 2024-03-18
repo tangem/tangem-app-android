@@ -14,7 +14,7 @@ internal class DelegatedKeystoreManager(
 
     override suspend fun get(
         masterKeyConfig: KeystoreManager.MasterKeyConfig,
-        keyAliases: Collection<String>,
+        keyAliases: Set<String>,
     ): Map<String, SecretKey> {
         return keystoreManagerProvider().get(masterKeyConfig, keyAliases)
     }
