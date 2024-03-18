@@ -284,7 +284,7 @@
   <string name="onboarding_activation_error_title">Activation error</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card. When backup process is finished you can\'t add more backup cards. If you have one more card, add it to backup. Do you like to continue the backup process?</string>
   <string name="onboarding_backup_exit_warning">The backup process is partly complete. You can\'t exit it now.</string>
-  <string name="onboarding_bottom_sheet_passphrase_description">The passphrase is an advanced security feature that hardware wallets use. It adds an extra word of your own choosing to your already existing recovery phrase to unlock a brand-new set of addresses.</string>
+  <string name="onboarding_bottom_sheet_passphrase_description">The passphrase is an advanced security feature that crypto wallets use. It adds an extra word or phrase of your own choosing to your already existing recovery phrase to unlock a brand-new set of addresses.</string>
   <string name="onboarding_button_add_backup_card">Add a backup card</string>
   <string name="onboarding_button_backup_card_format">Scan the card #%d</string>
   <string name="onboarding_button_backup_now">Backup now</string>
@@ -423,6 +423,7 @@
   <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
   <string name="send_amount_label">Amount</string>
+  <string name="send_confirm_label">Confirm</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Address</string>
   <string name="send_destination_tag_field">Destination Tag</string>
@@ -657,6 +658,8 @@
   <string name="warning_send_blocked_pending_transactions_in_blockchain_message">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="warning_send_blocked_pending_transactions_message">Sending funds will be available once the %s transaction is complete</string>
   <string name="warning_send_blocked_pending_transactions_title">Transaction pending</string>
+  <string name="warning_solana_fee_message">The Solana network is congested. If your transaction is not processed within 2 minutes, please repeat the transaction.</string>
+  <string name="warning_solana_fee_title">Solana Network Alert</string>
   <string name="warning_solana_rent_fee_message">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
   <string name="warning_some_networks_unreachable_message">Some networks currently are unreachable. Please try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>

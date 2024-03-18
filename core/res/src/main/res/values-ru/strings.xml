@@ -96,6 +96,7 @@
   <string name="common_no_address">Нет адреса</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
+  <string name="common_passphrase">Кодовая фраза</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -283,6 +284,7 @@
   <string name="onboarding_activation_error_title">Ошибка активации</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту. После того, как процесс будет завершен, Вы больше не сможете добавить карт. Если у Вас есть еще одна карта, добавьте ее в резервную копию. Хотите продолжить?</string>
   <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
+  <string name="onboarding_bottom_sheet_passphrase_description">Кодовая фраза — это расширенная функция безопасности, которую используют криптокошельки. Она добавляет дополнительное слово или фразу по вашему выбору к уже существующей seed - фразе, чтобы разблокировать совершенно новый набор адресов.</string>
   <string name="onboarding_button_add_backup_card">Добавить резервную карту</string>
   <string name="onboarding_button_backup_card_format">Сканировать карту #%d</string>
   <string name="onboarding_button_backup_now">Создать резервную копию</string>
@@ -425,6 +427,7 @@
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
+  <string name="send_confirm_label">Подтвердить</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
@@ -647,6 +650,8 @@
   <string name="warning_send_blocked_pending_transactions_in_blockchain_message">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="warning_send_blocked_pending_transactions_message">Отправка средств станет доступной после завершения транзакции %s</string>
   <string name="warning_send_blocked_pending_transactions_title">Транзакция в обработке</string>
+  <string name="warning_solana_fee_message">Сеть Солана испытывает высокую нагрузку. Если Ваша транзакция не прошла в течение 2 минут, повторите её отправку.</string>
+  <string name="warning_solana_fee_title">Оповещение сети Солана</string>
   <string name="warning_solana_rent_fee_message">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
   <string name="warning_some_networks_unreachable_message">Некоторые сети в настоящее время недоступны. Пожалуйста, повторите попытку позже.</string>
   <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
