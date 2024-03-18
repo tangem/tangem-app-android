@@ -10,7 +10,6 @@ android {
     namespace = "com.tangem.feature.qrscanning.impl"
 }
 
-
 dependencies {
 
     /** Core */
@@ -40,7 +39,12 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
+    /** Api */
     implementation(projects.features.qrScanning.api)
+
+    /** Domain */
+    implementation(projects.domain.qrScanning)
+    implementation(projects.domain.qrScanning.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
