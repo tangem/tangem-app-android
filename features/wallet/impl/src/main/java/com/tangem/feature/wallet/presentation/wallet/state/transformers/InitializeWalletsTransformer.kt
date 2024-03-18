@@ -13,7 +13,6 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class InitializeWalletsTransformer(
     private val selectedWalletIndex: Int,
-    private val selectedWallet: UserWallet,
     private val wallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
 ) : WalletScreenStateTransformer {
@@ -23,7 +22,7 @@ internal class InitializeWalletsTransformer(
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(
             onBackClick = clickIntents::onBackClick,
-            topBarConfig = createTopBarConfig(userWallet = selectedWallet),
+            topBarConfig = createTopBarConfig(),
             selectedWalletIndex = selectedWalletIndex,
             wallets = wallets
                 .map { userWallet ->
@@ -38,13 +37,9 @@ internal class InitializeWalletsTransformer(
         )
     }
 
-    private fun createTopBarConfig(userWallet: UserWallet): WalletTopBarConfig {
+    private fun createTopBarConfig(): WalletTopBarConfig {
         return WalletTopBarConfig(
-            onDetailsClick = if (userWallet.isLocked) {
-                clickIntents::onOpenUnlockWalletsBottomSheetClick
-            } else {
-                clickIntents::onDetailsClick
-            },
+            onDetailsClick = clickIntents::onDetailsClick,
         )
     }
 
@@ -53,27 +48,24 @@ internal class InitializeWalletsTransformer(
             multiCurrencyCreator = {
                 WalletState.MultiCurrency.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
+                    bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
-                    onUnlockClick = clickIntents::onUnlockWalletClick,
-                    onScanClick = clickIntents::onScanToUnlockWalletClick,
                 )
             },
             singleCurrencyCreator = {
                 WalletState.SingleCurrency.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
+                    bottomSheetConfig = null,
                     buttons = createDisabledButtons(),
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
-                    onUnlockClick = clickIntents::onUnlockWalletClick,
-                    onScanClick = clickIntents::onScanToUnlockWalletClick,
                     onExploreClick = clickIntents::onExploreClick,
                 )
             },
             visaWalletCreator = {
                 WalletState.Visa.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
+                    bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
-                    onUnlockClick = clickIntents::onUnlockWalletClick,
-                    onScanClick = clickIntents::onScanToUnlockWalletClick,
                     onExploreClick = clickIntents::onExploreClick,
                 )
             },
