@@ -13,6 +13,7 @@ import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -135,7 +136,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics)
 
         viewModelScope.launch(dispatchers.main) {
-            unlockWalletsUseCase(throwIfNotAllWalletsUnlocked = true)
+            unlockWalletsUseCase(type = UnlockType.ALL_WITHOUT_SELECT)
                 .onRight { stateHolder.update(CloseBottomSheetTransformer(stateHolder.getSelectedWalletId())) }
                 .onLeft(::handleUnlockWalletsError)
         }
