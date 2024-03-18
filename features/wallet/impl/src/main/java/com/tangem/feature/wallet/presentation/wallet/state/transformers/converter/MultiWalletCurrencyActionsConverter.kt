@@ -8,7 +8,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletCurrencyActionsClickIntentsImplementor
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletCurrencyActionsClickIntents
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
@@ -16,7 +16,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class MultiWalletCurrencyActionsConverter(
     private val userWallet: UserWallet,
-    private val clickIntents: WalletCurrencyActionsClickIntentsImplementor,
+    private val clickIntents: WalletCurrencyActionsClickIntents,
 ) : Converter<TokenActionsState, ImmutableList<TokenActionButtonConfig>> {
 
     override fun convert(value: TokenActionsState): ImmutableList<TokenActionButtonConfig> {
