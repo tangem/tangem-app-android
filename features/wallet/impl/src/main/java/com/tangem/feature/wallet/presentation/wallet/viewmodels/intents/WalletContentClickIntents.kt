@@ -146,9 +146,11 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 ?.currency
                 ?: return@launch
 
-            router.openUrl(
-                url = getExplorerTransactionUrlUseCase(txHash = txHash, networkId = currency.network.id),
-            )
+            getExplorerTransactionUrlUseCase(txHash = txHash, networkId = currency.network.id)
+                .fold(
+                    ifLeft = { Timber.e(it.toString()) },
+                    ifRight = { router.openUrl(url = it) },
+                )
         }
     }
 }
