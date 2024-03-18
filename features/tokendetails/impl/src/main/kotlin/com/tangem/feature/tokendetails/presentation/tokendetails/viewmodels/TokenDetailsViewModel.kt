@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLinksRegistry
@@ -600,20 +599,13 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onTransactionClick(txHash: String) {
-        // TODO: Fix tx urls [REDACTED_TASK_KEY]
-        when (Blockchain.fromId(cryptoCurrency.network.id.value)) {
-            Blockchain.TON, Blockchain.TONTestnet,
-            Blockchain.Decimal, Blockchain.DecimalTestnet,
-            -> return
-            else -> {
-                router.openUrl(
-                    url = getExplorerTransactionUrlUseCase(
-                        txHash = txHash,
-                        networkId = cryptoCurrency.network.id,
-                    ),
-                )
-            }
-        }
+        getExplorerTransactionUrlUseCase(
+            txHash = txHash,
+            networkId = cryptoCurrency.network.id,
+        ).fold(
+            ifLeft = { Timber.e(it.toString()) },
+            ifRight = { router.openUrl(url = it) },
+        )
     }
 
     override fun onRefreshSwipe() {
