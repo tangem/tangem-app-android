@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
+import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.resourceReference
@@ -12,17 +13,19 @@ import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletError
-import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
@@ -57,17 +60,17 @@ internal interface WalletWarningsClickIntents {
 
 @Suppress("LongParameterList")
 @ViewModelScoped
-internal class WalletWarningsClickIntentsImplementer @Inject constructor(
+internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
-    private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
     private val fetchTokenListUseCase: FetchTokenListUseCase,
     private val setCardWasScannedUseCase: SetCardWasScannedUseCase,
     private val neverToSuggestRateAppUseCase: NeverToSuggestRateAppUseCase,
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
+    private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -82,31 +85,33 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     }
 
     private fun prepareOnboardingProcess() {
-        getSelectedWalletSyncUseCase.unwrap()?.let {
-            reduxStateHolder.dispatch(
-                LegacyAction.StartOnboardingProcess(
-                    scanResponse = it.scanResponse,
-                    canSkipBackup = false,
-                ),
-            )
+        viewModelScope.launch(dispatchers.main) {
+            getSelectedUserWallet()?.let {
+                reduxStateHolder.dispatch(
+                    LegacyAction.StartOnboardingProcess(
+                        scanResponse = it.scanResponse,
+                        canSkipBackup = false,
+                    ),
+                )
+            }
         }
     }
 
     override fun onCloseAlreadySignedHashesWarningClick() {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-
         viewModelScope.launch(dispatchers.main) {
+            val userWallet = getSelectedUserWallet() ?: return@launch
+
             setCardWasScannedUseCase(cardId = userWallet.cardId)
         }
     }
 
     override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-
         analyticsEventHandler.send(Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main))
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped)
 
         viewModelScope.launch(dispatchers.main) {
+            val userWallet = getSelectedUserWallet() ?: return@launch
+
             derivePublicKeysUseCase(
                 userWalletId = userWallet.walletId,
                 currencies = missedAddressCurrencies,
@@ -119,18 +124,19 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     override fun onOpenUnlockWalletsBottomSheetClick() {
         analyticsEventHandler.send(MainScreen.WalletUnlockTapped)
 
-        val config = requireNotNull(stateHolder.getSelectedWallet().bottomSheetConfig) {
-            "Impossible to open unlock wallet bottom sheet if it's null"
-        }
-
-        stateHolder.showBottomSheet(config.content)
+        stateHolder.showBottomSheet(
+            WalletBottomSheetConfig.UnlockWallets(
+                onUnlockClick = this::onUnlockWalletClick,
+                onScanClick = this::onScanToUnlockWalletClick,
+            ),
+        )
     }
 
     override fun onUnlockWalletClick() {
         analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics)
 
         viewModelScope.launch(dispatchers.main) {
-            unlockWalletsUseCase(throwIfNotAllWalletsUnlocked = true)
+            unlockWalletsUseCase(type = UnlockType.ALL_WITHOUT_SELECT)
                 .onRight { stateHolder.update(CloseBottomSheetTransformer(stateHolder.getSelectedWalletId())) }
                 .onLeft(::handleUnlockWalletsError)
         }
@@ -202,6 +208,21 @@ internal class WalletWarningsClickIntentsImplementer @Inject constructor(
     override fun onCloseSwapPromoClick() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoWalletUseCase.neverToShow()
+        }
+    }
+
+    private suspend fun getSelectedUserWallet(): UserWallet? {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        return getUserWalletUseCase(userWalletId).getOrElse {
+            Timber.e(
+                """
+                    Unable to get user wallet
+                    |- ID: $userWalletId
+                    |- Exception: $it
+                """.trimIndent(),
+            )
+
+            null
         }
     }
 }
