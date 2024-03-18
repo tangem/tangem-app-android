@@ -14,6 +14,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
@@ -86,7 +87,7 @@ internal class WelcomeMiddleware {
             """.trimIndent(),
         )
 
-        userWalletsListManager.unlockIfLockable()
+        userWalletsListManager.unlockIfLockable(type = UnlockType.ANY)
             .doOnFailure { error ->
                 Timber.e(error, "Unable to unlock user wallets with biometrics")
                 store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics.Error(error))
