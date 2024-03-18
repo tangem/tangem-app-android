@@ -233,7 +233,7 @@ internal class SendStateFactory(
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txData.hash.orEmpty(),
             networkId = cryptoCurrency.network.id,
-        )
+        ).getOrElse { "" }
         return state.copy(
             sendState = state.sendState.copy(
                 transactionDate = txData.date?.timeInMillis ?: System.currentTimeMillis(),
