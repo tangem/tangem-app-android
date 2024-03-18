@@ -14,6 +14,7 @@ import com.tangem.wallet.R
 
 class CustomTabsManager {
     fun openUrl(url: String, context: Context) {
+        if (url.isEmpty()) return
         val customTabsIntent = CustomTabsIntent.Builder()
             .setDefaultColorSchemeParams(
                 CustomTabColorSchemeParams.Builder()
