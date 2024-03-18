@@ -3,8 +3,6 @@
   <string name="add_custom_token_title">Добавить токен</string>
   <string name="add_tokens_title">Валюты</string>
   <string name="address_qr_code_message_format">Отправляйте только %1$s (%2$s) в сети %3$s на этот адрес. Использование другой сети может привести к утрате средств.</string>
-  <string name="alert_app_feedback_sent_message">Спасибо за ваш отзыв</string>
-  <string name="alert_app_feedback_sent_title">Отправлено успешно</string>
   <string name="alert_button_request_support">Обратиться в поддержку</string>
   <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
   <string name="alert_failed_to_send_transaction_message">Причина: %s</string>
@@ -53,7 +51,6 @@
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
   <string name="card_settings_title">Настройки карты</string>
-  <string name="chat_button_title">Чат</string>
   <string name="common_accept">Принять</string>
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_apply">Применить</string>
@@ -79,7 +76,6 @@
   <string name="common_enabled">Включено</string>
   <string name="common_error">Ошибка</string>
   <string name="common_explore">Обозреватель</string>
-  <string name="common_explore_history">Посмотреть историю</string>
   <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
   <string name="common_explorer">Обозреватель</string>
   <string name="common_fee_label">Комиссия</string>
@@ -100,6 +96,7 @@
   <string name="common_no_address">Нет адреса</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
+  <string name="common_passphrase">Кодовая фраза</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -134,7 +131,6 @@
   <string name="custom_token_add_token">Добавить токен</string>
   <string name="custom_token_contract_address_input_title">Адрес контракта</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адрес контракта некорректен</string>
-  <string name="custom_token_creation_error_invalid_derivation_path">Путь деривации некорректен</string>
   <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
   <string name="custom_token_creation_error_wrong_decimals">Десятичное число должно быть действительным целым числом, до %li</string>
   <string name="custom_token_custom_derivation">Своя деривация</string>
@@ -288,6 +284,7 @@
   <string name="onboarding_activation_error_title">Ошибка активации</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту. После того, как процесс будет завершен, Вы больше не сможете добавить карт. Если у Вас есть еще одна карта, добавьте ее в резервную копию. Хотите продолжить?</string>
   <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
+  <string name="onboarding_bottom_sheet_passphrase_description">Кодовая фраза — это расширенная функция безопасности, которую используют криптокошельки. Она добавляет дополнительное слово или фразу по вашему выбору к уже существующей seed - фразе, чтобы разблокировать совершенно новый набор адресов.</string>
   <string name="onboarding_button_add_backup_card">Добавить резервную карту</string>
   <string name="onboarding_button_backup_card_format">Сканировать карту #%d</string>
   <string name="onboarding_button_backup_now">Создать резервную копию</string>
@@ -368,11 +365,7 @@
   <string name="organize_tokens_sort_by_balance">По балансу</string>
   <string name="organize_tokens_title">Сортировка токенов</string>
   <string name="organize_tokens_ungroup">Список</string>
-  <string name="rate_app_sheet_negative_response_button_title">Отправить отзыв</string>
-  <string name="rate_app_sheet_positive_response_button_title">Оцените приложение 🙌</string>
-  <string name="rate_app_sheet_subtitle">Поделитесь опытом использования приложения - нам важна любая деталь.</string>
   <string name="rate_app_sheet_title">Нравится наше приложение?</string>
-  <string name="receive_bottom_sheet_title">%1$s %2$s адрес в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
   <string name="referral_button_participate">Участвовать</string>
@@ -435,7 +428,7 @@
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
   <string name="send_confirm_label">Подтвердить</string>
-  <string name="send_date_format">%1$s в %2$s</string>
+  <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
   <string name="send_enter_address_field">Введите адрес</string>
@@ -525,6 +518,7 @@
   <string name="toast_balances_hidden">Балансы скрыты</string>
   <string name="toast_balances_shown">Балансы показаны</string>
   <string name="toast_undo">Отменить</string>
+  <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
   <string name="token_details_hide_alert_title">Скрыть %s</string>
@@ -656,6 +650,8 @@
   <string name="warning_send_blocked_pending_transactions_in_blockchain_message">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="warning_send_blocked_pending_transactions_message">Отправка средств станет доступной после завершения транзакции %s</string>
   <string name="warning_send_blocked_pending_transactions_title">Транзакция в обработке</string>
+  <string name="warning_solana_fee_message">Сеть Солана испытывает высокую нагрузку. Если Ваша транзакция не прошла в течение 2 минут, повторите её отправку.</string>
+  <string name="warning_solana_fee_title">Оповещение сети Солана</string>
   <string name="warning_solana_rent_fee_message">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
   <string name="warning_some_networks_unreachable_message">Некоторые сети в настоящее время недоступны. Пожалуйста, повторите попытку позже.</string>
   <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
