@@ -67,15 +67,13 @@ internal class BiometricUserWalletsListManager(
                 }
             }
             .map {
-                val userWallets = state.value.userWallets
-
-                if (throwIfNotAllWalletsUnlocked && userWallets.any(UserWallet::isLocked)) {
+                if (throwIfNotAllWalletsUnlocked && isLockedSync) {
                     Timber.e("Some user wallets remain locked")
                     throw UserWalletsListError.NotAllUserWalletsUnlocked
                 }
 
                 val selectedUserWallet = selectedUserWalletSync
-                if (selectedUserWallet == null) {
+                if (selectedUserWallet == null || selectedUserWallet.isLocked) {
                     Timber.e("Unable to find selected user wallet")
                     throw UserWalletsListError.NoUserWalletSelected
                 } else {
