@@ -11,10 +11,12 @@ import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.defaultFormat
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
@@ -62,10 +64,14 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) 
                 end = TangemTheme.dimens.spacing12,
             ),
     ) {
-        val text = "${secondaryValue.ifEmpty { decimalFormat.defaultFormat() }}  ${secondaryAmount.currencySymbol}"
+        val text = if (sendField.isFiatUnavailable) {
+            BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        } else {
+            "${secondaryValue.ifEmpty { decimalFormat.defaultFormat() }} ${secondaryAmount.currencySymbol}"
+        }
         Text(
             text = text,
-            style = TangemTheme.typography.caption2,
+            style = TangemTheme.typography.caption2.copy(textDirection = TextDirection.ContentOrLtr),
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
             modifier = Modifier
