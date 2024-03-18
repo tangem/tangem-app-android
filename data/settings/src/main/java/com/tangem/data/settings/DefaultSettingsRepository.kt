@@ -44,22 +44,21 @@ internal class DefaultSettingsRepository(
         }
     }
 
-    override suspend fun deleteDeprecatedLogs() {
-        val threeDaysAgo = getThreeDaysAgoTimestamp()
-
+    override suspend fun deleteDeprecatedLogs(maxSize: Int) {
         appPreferencesStore.editData { preferences ->
             val savedLogs = preferences.getObjectMap<String>(PreferencesKeys.APP_LOGS_KEY)
 
+            var sum = 0
             preferences.setObjectMap(
                 key = PreferencesKeys.APP_LOGS_KEY,
-                value = savedLogs.filterKeys { it.toLong() > threeDaysAgo },
+                value = savedLogs.entries
+                    .sortedBy(Map.Entry<String, String>::key)
+                    .takeLastWhile {
+                        sum += it.value.length
+                        sum < maxSize
+                    }
+                    .associate { it.key to it.value },
             )
         }
-    }
-
-    private fun getThreeDaysAgoTimestamp(): Long = DateTime.now().minusDays(THREE_DAYS).millis
-
-    private companion object {
-        const val THREE_DAYS = 3
     }
 }
