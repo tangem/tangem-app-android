@@ -100,10 +100,10 @@ internal class GeneralUserWalletsListManager(
         return implementation.value.get(userWalletId)
     }
 
-    override suspend fun unlock(throwIfNotAllWalletsUnlocked: Boolean): CompletionResult<UserWallet> {
+    override suspend fun unlock(type: UserWalletsListManager.Lockable.UnlockType): CompletionResult<UserWallet> {
         val implementation = implementation.value
         return if (implementation is UserWalletsListManager.Lockable) {
-            implementation.unlock()
+            implementation.unlock(type)
         } else {
             error("RuntimeUserWalletsListManager is not lockable")
         }
