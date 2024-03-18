@@ -12,5 +12,5 @@ interface SettingsRepository {
     suspend fun updateAppLogs(message: String)
 
     @Throws
-    suspend fun deleteDeprecatedLogs()
+    suspend fun deleteDeprecatedLogs(maxSize: Int)
 }
