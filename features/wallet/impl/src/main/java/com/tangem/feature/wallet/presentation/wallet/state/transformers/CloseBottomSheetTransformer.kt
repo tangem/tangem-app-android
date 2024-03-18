@@ -7,18 +7,28 @@ internal class CloseBottomSheetTransformer(userWalletId: UserWalletId) : WalletS
 
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
-            is WalletState.MultiCurrency.Content -> {
-                prevState.copy(bottomSheetConfig = prevState.bottomSheetConfig?.copy(isShow = false))
-            }
-            is WalletState.MultiCurrency.Locked -> prevState.copy(isBottomSheetShow = false)
-            is WalletState.SingleCurrency.Content -> {
-                prevState.copy(bottomSheetConfig = prevState.bottomSheetConfig?.copy(isShow = false))
-            }
-            is WalletState.SingleCurrency.Locked -> prevState.copy(isBottomSheetShow = false)
-            is WalletState.Visa.Content -> prevState.copy(
-                bottomSheetConfig = prevState.bottomSheetConfig?.copy(isShow = false),
+            is WalletState.MultiCurrency.Content -> prevState.copy(
+                bottomSheetConfig = updateConfig(prevState),
             )
-            is WalletState.Visa.Locked -> prevState.copy(isBottomSheetShow = false)
+            is WalletState.MultiCurrency.Locked -> prevState.copy(
+                bottomSheetConfig = updateConfig(prevState),
+            )
+            is WalletState.SingleCurrency.Content -> prevState.copy(
+                bottomSheetConfig = updateConfig(prevState),
+            )
+            is WalletState.SingleCurrency.Locked -> prevState.copy(
+                bottomSheetConfig = updateConfig(prevState),
+            )
+            is WalletState.Visa.Content -> prevState.copy(
+                bottomSheetConfig = updateConfig(prevState),
+            )
+            is WalletState.Visa.Locked -> prevState.copy(
+                bottomSheetConfig = updateConfig(prevState),
+            )
         }
     }
+
+    private fun updateConfig(prevState: WalletState) = prevState.bottomSheetConfig?.copy(
+        isShow = false,
+    )
 }
