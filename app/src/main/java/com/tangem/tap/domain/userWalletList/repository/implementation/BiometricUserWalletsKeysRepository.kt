@@ -89,7 +89,6 @@ internal class BiometricUserWalletsKeysRepository(
             .doOnFailure { error ->
                 when (error) {
                     is TangemSdkError.KeystoreInvalidated -> {
-                        // If the biometric cryptography key was invalidated, then delete all encryption keys
                         getUserWalletsIds().forEach { userWalletId ->
                             deleteEncryptionKey(userWalletId)
                         }
@@ -120,7 +119,7 @@ internal class BiometricUserWalletsKeysRepository(
     }
 
     private fun deleteEncryptionKey(userWalletId: UserWalletId) {
-        return authenticatedStorage.delete(StorageKey.UserWalletEncryptionKey(userWalletId).name)
+        authenticatedStorage.delete(StorageKey.UserWalletEncryptionKey(userWalletId).name)
     }
 
     private suspend fun getUserWalletsIds(): List<UserWalletId> {
