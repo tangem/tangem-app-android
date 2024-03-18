@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
+import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
@@ -9,17 +10,19 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 internal interface WalletContentClickIntents {
@@ -43,8 +46,9 @@ internal interface WalletContentClickIntents {
 @ViewModelScoped
 internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
-    private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val currencyActionsClickIntents: WalletCurrencyActionsClickIntentsImplementor,
+    private val walletWarningsClickIntents: WalletWarningsClickIntentsImplementor,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -55,7 +59,33 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onBackClick() = router.popBackStack()
 
-    override fun onDetailsClick() = router.openDetailsScreen()
+    override fun onDetailsClick() {
+        viewModelScope.launch(dispatchers.main) {
+            val userWalletId = stateHolder.getSelectedWalletId()
+            val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
+                Timber.e(
+                    """
+                        Unable to get user wallet
+                        |- ID: $userWalletId
+                        |- Exception: $it
+                    """.trimIndent(),
+                )
+
+                return@launch
+            }
+
+            if (userWallet.isLocked) {
+                stateHolder.showBottomSheet(
+                    WalletBottomSheetConfig.UnlockWallets(
+                        onUnlockClick = walletWarningsClickIntents::onUnlockWalletClick,
+                        onScanClick = walletWarningsClickIntents::onScanToUnlockWalletClick,
+                    ),
+                )
+            } else {
+                router.openDetailsScreen()
+            }
+        }
+    }
 
     override fun onManageTokensClick() {
         analyticsEventHandler.send(PortfolioEvent.ButtonManageTokens)
@@ -74,9 +104,20 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-
         viewModelScope.launch(dispatchers.main) {
+            val userWalletId = stateHolder.getSelectedWalletId()
+            val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
+                Timber.e(
+                    """
+                        Unable to get user wallet
+                        |- ID: $userWalletId
+                        |- Exception: $it
+                    """.trimIndent(),
+                )
+
+                return@launch
+            }
+
             getCryptoCurrencyActionsUseCase(userWallet = userWallet, cryptoCurrencyStatus = cryptoCurrencyStatus)
                 .take(count = 1)
                 .collectLatest {
@@ -90,7 +131,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             ActionsBottomSheetConfig(
                 actions = MultiWalletCurrencyActionsConverter(
                     userWallet = userWallet,
-                    clickIntents = currencyActionsClickIntentsImplementor,
+                    clickIntents = currencyActionsClickIntents,
                 ).convert(tokenActionsState),
             ),
             userWallet.walletId,
