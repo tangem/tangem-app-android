@@ -59,9 +59,10 @@ internal class DefaultFeedbackRepository(
     override suspend fun getAppLogs(): List<AppLogModel> {
         return appPreferencesStore.getObjectMap<String>(key = PreferencesKeys.APP_LOGS_KEY)
             .map { AppLogModel(timestamp = it.key.toLong(), message = it.value) }
+            .sortedBy(AppLogModel::timestamp)
     }
 
-    override suspend fun createLogFile(logs: List<String>): File? {
+    override suspend fun createLogFile(logs: String): File? {
         return try {
             val file = File(context.filesDir, LOGS_FILE)
             file.delete()
@@ -69,7 +70,7 @@ internal class DefaultFeedbackRepository(
 
             val stringWriter = StringWriter()
 
-            logs.forEach(stringWriter::append)
+            stringWriter.append(logs)
 
             val fileWriter = FileWriter(file)
             fileWriter.write(stringWriter.toString())
