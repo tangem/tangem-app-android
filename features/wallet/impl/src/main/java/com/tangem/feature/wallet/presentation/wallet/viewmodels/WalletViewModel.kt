@@ -199,7 +199,6 @@ internal class WalletViewModel @Inject constructor(
         stateHolder.update(
             transformer = InitializeWalletsTransformer(
                 selectedWalletIndex = action.selectedWalletIndex,
-                selectedWallet = action.selectedWallet,
                 wallets = action.wallets,
                 clickIntents = clickIntents,
             ),
