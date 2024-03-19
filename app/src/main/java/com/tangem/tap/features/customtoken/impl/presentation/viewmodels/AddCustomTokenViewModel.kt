@@ -697,14 +697,19 @@ internal class AddCustomTokenViewModel @Inject constructor(
         return derivationNetwork.derivationPath(derivationStyle)
     }
 
-    private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
+    private fun getSupportBlockchainType(blockchain: Blockchain): SupportBlockchainType {
         return getSelectedWalletSyncUseCase().fold(
-            ifLeft = { false },
+            ifLeft = { SupportBlockchainType.UNABLE_TO_DETERMINE },
             ifRight = {
-                !it.scanResponse.card.canHandleBlockchain(
+                val canHandleBlockchain = it.scanResponse.card.canHandleBlockchain(
                     blockchain = blockchain,
                     cardTypesResolver = it.scanResponse.cardTypesResolver,
                 )
+                if (canHandleBlockchain) {
+                    SupportBlockchainType.SUPPORTED
+                } else {
+                    SupportBlockchainType.UNSUPPORTED
+                }
             },
         )
     }
@@ -824,9 +829,18 @@ internal class AddCustomTokenViewModel @Inject constructor(
         fun onAddCustomTokenClick() {
             if (!isNetworkSelected()) return
             val blockchain = uiState.form.networkSelectorField.selectedItem.blockchain
-            if (isUnsupportedBlockchain(blockchain)) {
-                featureRouter.openUnsupportedNetworkAlert(blockchain)
-                return
+            when (getSupportBlockchainType(blockchain)) {
+                SupportBlockchainType.SUPPORTED -> {
+                    /* no-op */
+                }
+                SupportBlockchainType.UNSUPPORTED -> {
+                    featureRouter.openUnsupportedNetworkAlert(blockchain)
+                    return
+                }
+                SupportBlockchainType.UNABLE_TO_DETERMINE -> {
+                    featureRouter.showGenericErrorAlertAndPopBack()
+                    return
+                }
             }
 
             val currency = when (getCustomTokenType()) {
