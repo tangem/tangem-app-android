@@ -277,6 +277,7 @@ internal class BiometricUserWalletsListManager(
 
                     prevState.copy(
                         userWallets = newUserWallets,
+                        encryptionKeys = encryptionKeys,
                         isLocked = newUserWallets.any(UserWallet::isLocked),
                     )
                 } else {
