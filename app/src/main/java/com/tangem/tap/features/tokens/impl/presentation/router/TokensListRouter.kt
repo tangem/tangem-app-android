@@ -36,6 +36,8 @@ internal interface TokensListRouter {
      */
     fun openUnsupportedNetworkAlert(blockchain: Blockchain)
 
+    fun showGenericErrorAlertAndPopBack()
+
     /**
      * Open alert with unsupported networks tokens error
      */
