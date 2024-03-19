@@ -31,7 +31,6 @@ class ConfigValueModel(
     val blockcypherTokens: Set<String>?,
     val infuraProjectId: String?,
     val appsFlyer: AppsFlyer,
-    val shopifyShop: ShopifyShop?,
     val sprinklr: SprinklrConfig?,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,

@@ -20,6 +20,7 @@ data class UserWallet(
     val artworkUrl: String,
     val cardsInWallet: Set<String>,
     val isMultiCurrency: Boolean,
+    val hasBackupError: Boolean,
     val scanResponse: ScanResponse, // TODO: Replace with [com.tangem.domain.models.scan.CardDTO]
 ) {
 
