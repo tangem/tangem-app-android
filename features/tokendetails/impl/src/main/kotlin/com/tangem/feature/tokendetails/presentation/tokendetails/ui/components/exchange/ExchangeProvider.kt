@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -67,7 +68,7 @@ internal fun ExchangeProvider(
                     )
                     Text(
                         modifier = Modifier.align(Alignment.CenterVertically),
-                        text = "ID: $providerTxId",
+                        text = stringResource(R.string.express_transaction_id, wrappedList(providerTxId)),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                     )

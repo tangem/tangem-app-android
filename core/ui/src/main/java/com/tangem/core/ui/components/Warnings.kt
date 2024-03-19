@@ -102,7 +102,7 @@ fun ClickableWarningCard(
  * >Figma component</a>
  */
 @Composable
-fun RefreshableWaringCard(
+fun RefreshableWarningCard(
     title: String,
     description: String,
     icon: @Composable (() -> Unit)? = null,
@@ -193,7 +193,7 @@ private fun WarningsPreview() {
             onClick = {},
         )
         SpacerH32()
-        RefreshableWaringCard(
+        RefreshableWarningCard(
             title = "Exchange rate has expired",
             description = "To access all the networks, you need to scan the card.",
             onClick = {},
