@@ -197,7 +197,6 @@ internal class SwapInteractorImpl @Inject constructor(
         return repository.getPairs(initialCurrency, currenciesList)
     }
 
-    @Deprecated("used in old swap mechanism")
     override suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): TxState {
         val derivationPath = permissionOptions.fromToken.network.derivationPath.value
         val dataToSign = if (permissionOptions.approveType == SwapApproveType.UNLIMITED) {
@@ -241,7 +240,6 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    @Deprecated("used in old swap mechanism")
     override suspend fun findBestQuote(
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
@@ -376,6 +374,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val warnings = mutableListOf<Warning>()
         manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken)
         manageDustWarning(warnings, feeState, userWalletId, fromTokenStatus, amount)
+        manageReduceAmountWarning(warnings, fromTokenStatus, amount)
         return warnings
     }
 
@@ -421,6 +420,17 @@ internal class SwapInteractorImpl @Inject constructor(
             if (isShowWarning) {
                 warnings.add(Warning.MinAmountWarning(dust))
             }
+        }
+    }
+
+    private fun manageReduceAmountWarning(
+        warnings: MutableList<Warning>,
+        fromTokenStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+    ) {
+        val isTezos = fromTokenStatus.currency.network.id.value == Blockchain.Tezos.id
+        if (isTezos && amount.value == fromTokenStatus.value.amount) {
+            warnings.add(Warning.ReduceAmountWarning(TEZOS_FEE_THRESHOLD))
         }
     }
 
@@ -729,14 +739,8 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    @Deprecated("used in old swap mechanism")
     override fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount {
         return SwapAmount(token.value.amount ?: BigDecimal.ZERO, token.currency.decimals)
-    }
-
-    @Deprecated("used in old swap mechanism")
-    override fun isAvailableToSwap(networkId: String): Boolean {
-        return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
     }
 
     override suspend fun selectInitialCurrencyToSwap(
@@ -1584,16 +1588,6 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private const val INFINITY_SYMBOL = "∞"
-
-        private val ONE_INCH_SUPPORTED_NETWORKS = listOf(
-            "ethereum",
-            "binance-smart-chain",
-            "polygon-pos",
-            "optimistic-ethereum",
-            "arbitrum-one",
-            "xdai",
-            "avalanche",
-            "fantom",
-        )
+        private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
     }
 }
