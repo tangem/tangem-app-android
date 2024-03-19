@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.models
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.TxFee
 
 data class UiActions(
@@ -13,6 +14,8 @@ data class UiActions(
     val onChangeCardsClicked: () -> Unit,
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
+    val onReduceAmount: (SwapAmount) -> Unit,
+    val onReduceAmountIgnoreClick: () -> Unit,
     val openPermissionBottomSheet: () -> Unit,
     val onChangeApproveType: (ApproveType) -> Unit,
     // region new actions
