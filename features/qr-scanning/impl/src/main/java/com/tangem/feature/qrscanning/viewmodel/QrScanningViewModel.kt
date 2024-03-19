@@ -10,8 +10,9 @@ import com.tangem.feature.qrscanning.SourceType
 import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
 import com.tangem.feature.qrscanning.presentation.QrScanningState
 import com.tangem.feature.qrscanning.presentation.QrScanningStateController
-import com.tangem.feature.qrscanning.presentation.transformers.ShowCameraDeniedBottomSheetTransformer
+import com.tangem.feature.qrscanning.presentation.transformers.DismissBottomSheetTransformer
 import com.tangem.feature.qrscanning.presentation.transformers.InitializeQrScanningStateTransformer
+import com.tangem.feature.qrscanning.presentation.transformers.ShowCameraDeniedBottomSheetTransformer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
@@ -42,5 +43,9 @@ internal class QrScanningViewModel @Inject constructor(
 
     fun onCameraDeniedState() {
         stateHolder.update(ShowCameraDeniedBottomSheetTransformer(clickIntents))
+    }
+
+    fun onDismissBottomSheetState() {
+        stateHolder.update(DismissBottomSheetTransformer())
     }
 }
