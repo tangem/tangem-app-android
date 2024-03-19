@@ -31,10 +31,11 @@ internal class SendAmountFieldConverter(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val cryptoDecimal = value.toBigDecimalOrDefault()
         val cryptoAmount = cryptoDecimal.convertToAmount(cryptoCurrencyStatus.currency)
+        val fiatRate = cryptoCurrencyStatus.value.fiatRate
         val fiatValue = if (value.isEmpty()) {
             ""
         } else {
-            val fiatDecimal = cryptoCurrencyStatus.value.fiatRate?.multiply(cryptoDecimal) ?: BigDecimal.ZERO
+            val fiatDecimal = fiatRate?.multiply(cryptoDecimal) ?: BigDecimal.ZERO
             fiatDecimal.parseBigDecimal(FIAT_DECIMALS)
         }
         val isDoneActionEnabled = !cryptoDecimal.isZero()
@@ -52,6 +53,7 @@ internal class SendAmountFieldConverter(
             fiatAmount = getAppCurrencyAmount(appCurrencyProvider()),
             isError = false,
             error = TextReference.Res(R.string.swapping_insufficient_funds),
+            isFiatUnavailable = fiatRate == null,
         )
     }
 
