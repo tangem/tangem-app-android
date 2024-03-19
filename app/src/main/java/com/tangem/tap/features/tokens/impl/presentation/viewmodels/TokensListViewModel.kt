@@ -29,6 +29,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getNetworkName
+import com.tangem.tap.features.customtoken.impl.presentation.models.SupportBlockchainType
 import com.tangem.tap.features.tokens.impl.domain.TokensListInteractor
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.tap.features.tokens.impl.domain.models.Token.Network
@@ -380,12 +381,18 @@ internal class TokensListViewModel @Inject constructor(
                     toggledNetwork.changeToggleState()
                 }
             } else {
-                if (isUnsupportedBlockchain(blockchain)) {
-                    router.openUnsupportedNetworkAlert(blockchain)
-                } else {
-                    analyticsSender.sendWhenBlockchainAdded(blockchain)
-                    changedBlockchainList.add(blockchain)
-                    toggledNetwork.changeToggleState()
+                when (getSupportBlockchainType(blockchain)) {
+                    SupportBlockchainType.SUPPORTED -> {
+                        analyticsSender.sendWhenBlockchainAdded(blockchain)
+                        changedBlockchainList.add(blockchain)
+                        toggledNetwork.changeToggleState()
+                    }
+                    SupportBlockchainType.UNSUPPORTED -> {
+                        router.openUnsupportedNetworkAlert(blockchain)
+                    }
+                    SupportBlockchainType.UNABLE_TO_DETERMINE -> {
+                        router.showGenericErrorAlertAndPopBack()
+                    }
                 }
             }
         }
@@ -469,14 +476,19 @@ internal class TokensListViewModel @Inject constructor(
         )
     }
 
-    private fun isUnsupportedBlockchain(blockchain: Blockchain): Boolean {
+    private fun getSupportBlockchainType(blockchain: Blockchain): SupportBlockchainType {
         return getSelectedWalletSyncUseCase().fold(
-            ifLeft = { false },
+            ifLeft = { SupportBlockchainType.UNABLE_TO_DETERMINE },
             ifRight = {
-                !it.scanResponse.card.canHandleBlockchain(
+                val canHandleBlockchain = it.scanResponse.card.canHandleBlockchain(
                     blockchain = blockchain,
                     cardTypesResolver = it.scanResponse.cardTypesResolver,
                 )
+                if (canHandleBlockchain) {
+                    SupportBlockchainType.SUPPORTED
+                } else {
+                    SupportBlockchainType.UNSUPPORTED
+                }
             },
         )
     }
