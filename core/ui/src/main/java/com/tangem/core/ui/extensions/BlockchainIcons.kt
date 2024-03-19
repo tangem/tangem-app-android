@@ -57,6 +57,10 @@ fun getActiveIconRes(blockchainId: String): Int {
         "aurora", "aurora/test" -> R.drawable.img_aurora_22
         "areon", "areon/test" -> R.drawable.img_areon_22
         "pls", "pls/test" -> R.drawable.img_pls_22
+        "zkSyncEra", "zkSyncEra/test" -> R.drawable.img_zksync_22
+        "moonbeam", "moonbeam/test" -> R.drawable.img_moonbeam_22
+        "manta", "manta/test" -> R.drawable.img_manta_22
+        "polygonZkEVM", "polygonZkEVM/test" -> R.drawable.img_polygon_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -115,6 +119,10 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "aurora", "aurora/test" -> R.drawable.img_aurora_22
         "areon", "areon/test" -> R.drawable.img_areon_22
         "pls", "pls/test" -> R.drawable.img_pls_22
+        "zksync", "zksync/test" -> R.drawable.img_zksync_22
+        "moonbeam", "moonbeam/test" -> R.drawable.img_moonbeam_22
+        "manta-network", "manta-network/test" -> R.drawable.img_manta_22
+        "polygon-zkevm", "polygon-zkevm/test" -> R.drawable.img_polygon_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -170,6 +178,10 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "aurora-near" -> R.drawable.img_aurora_22
         "areon" -> R.drawable.img_areon_22
         "pls" -> R.drawable.img_pls_22
+        "zksync-ethereum" -> R.drawable.img_zksync_22
+        "moonbeam" -> R.drawable.img_moonbeam_22
+        "manta-network-ethereum" -> R.drawable.img_manta_22
+        "polygon-zkevm-ethereum" -> R.drawable.img_polygon_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -229,6 +241,9 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "areon", "areon/test" -> R.drawable.ic_areon_22
         "pls", "pls/test" -> R.drawable.ic_pls_22
         "zkSyncEra", "zkSyncEra/test" -> R.drawable.ic_zksync_22
+        "moonbeam", "moonbeam/test" -> R.drawable.ic_moonbeam_22
+        "manta", "manta/test" -> R.drawable.ic_manta_22
+        "polygonZkEVM", "polygonZkEVM/test" -> R.drawable.ic_polygon_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -288,6 +303,9 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "areon", "areon/test" -> R.drawable.ic_areon_22
         "pls", "pls/test" -> R.drawable.ic_pls_22
         "zksync", "zksync/test" -> R.drawable.ic_zksync_22
+        "moonbeam", "moonbeam/test" -> R.drawable.ic_moonbeam_22
+        "manta-network", "manta-network/test" -> R.drawable.ic_manta_22
+        "polygon-zkevm", "polygon-zkevm/test" -> R.drawable.ic_polygon_22
         else -> R.drawable.ic_alert_24
     }
 }
