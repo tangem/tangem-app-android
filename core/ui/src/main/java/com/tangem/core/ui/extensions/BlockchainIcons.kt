@@ -190,7 +190,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "XRP" -> R.drawable.ic_xrp_22
         "XLM", "XLM/test" -> R.drawable.ic_stellar_16
         "AVALANCHE", "AVALANCHE/test" -> R.drawable.ic_avalanche_22
-        "POLYGON", "POLYGON/test" -> R.drawable.ic_polygon_16
+        "POLYGON", "POLYGON/test" -> R.drawable.ic_polygon_22
         "SOLANA", "SOLANA/test" -> R.drawable.ic_solana_16
         "FTM", "FTM/test" -> R.drawable.ic_fantom_22
         "BSC", "BSC/test", "BINANCE", "BINANCE/test" -> R.drawable.ic_bsc_16
@@ -228,6 +228,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "aurora", "aurora/test" -> R.drawable.ic_aurora_22
         "areon", "areon/test" -> R.drawable.ic_areon_22
         "pls", "pls/test" -> R.drawable.ic_pls_22
+        "zkSyncEra", "zkSyncEra/test" -> R.drawable.ic_zksync_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -249,7 +250,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "tezos" -> R.drawable.ic_tezos_16
         "xrp", "ripple" -> R.drawable.ic_xrp_22
         "stellar", "stellar/test" -> R.drawable.ic_stellar_16
-        "polygon-pos", "polygon-pos/test" -> R.drawable.ic_polygon_16
+        "polygon-pos", "polygon-pos/test" -> R.drawable.ic_polygon_22
         "solana", "solana/test" -> R.drawable.ic_solana_16
         "fantom", "fantom/test" -> R.drawable.ic_fantom_22
         "dogecoin" -> R.drawable.ic_dogecoin_16
@@ -286,6 +287,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "aurora", "aurora/test" -> R.drawable.ic_aurora_22
         "areon", "areon/test" -> R.drawable.ic_areon_22
         "pls", "pls/test" -> R.drawable.ic_pls_22
+        "zksync", "zksync/test" -> R.drawable.ic_zksync_22
         else -> R.drawable.ic_alert_24
     }
 }

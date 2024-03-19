@@ -638,6 +638,16 @@
                     "networkId": "pulsechain/test"
                 }
             ]
+        },
+        {
+            "id": "zksyncera",
+            "name": "zkSync",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "zksyncera/test"
+                }
+            ]
         }
     ]
 }
