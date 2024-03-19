@@ -36,7 +36,10 @@ sealed class WalletBottomSheetConfig(
         ),
         iconResId = R.drawable.ic_locked_24,
         primaryButtonConfig = ButtonConfig(
-            text = resourceReference(id = R.string.user_wallet_list_unlock_all),
+            text = resourceReference(
+                id = R.string.user_wallet_list_unlock_all_with,
+                formatArgs = wrappedList(resourceReference(R.string.common_biometrics)),
+            ),
             onClick = onUnlockClick,
         ),
         secondaryButtonConfig = ButtonConfig(
