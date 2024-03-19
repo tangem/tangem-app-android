@@ -745,6 +745,8 @@ internal class SwapViewModel @Inject constructor(
                     dataState = dataState.copy(toCryptoCurrency = it)
                     stateBuilder.updateReceiveCurrencyBalance(uiState, it)
                 }
+
+                startLoadingQuotesFromLastState(isSilent = true)
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
