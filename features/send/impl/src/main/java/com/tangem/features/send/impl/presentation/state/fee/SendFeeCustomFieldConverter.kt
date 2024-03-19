@@ -14,14 +14,14 @@ import kotlinx.collections.immutable.persistentListOf
 internal class SendFeeCustomFieldConverter(
     private val clickIntents: SendClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) : Converter<Fee, ImmutableList<SendTextField.CustomFee>> {
 
     private val ethereumCustomFeeConverter by lazy {
         EthereumCustomFeeConverter(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
     }
 
