@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
@@ -31,6 +32,7 @@ internal class SendStateFactory(
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
 ) {
@@ -62,7 +64,7 @@ internal class SendStateFactory(
     private val feeStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendFeeStateConverter(
             appCurrencyProvider = appCurrencyProvider,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
     }
 
@@ -85,16 +87,18 @@ internal class SendStateFactory(
         val state = currentStateProvider()
         return state.copy(
             amountState = state.amountState ?: amountStateConverter.convert(""),
-            recipientState = state.recipientState ?: recipientStateConverter.convert(""),
+            recipientState = state.recipientState
+                ?: recipientStateConverter.convert(SendRecipientStateConverter.Data("", null)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
         )
     }
 
-    fun getReadyState(amount: String, destinationAddress: String): SendUiState {
+    fun getReadyState(amount: String, destinationAddress: String, memo: String?): SendUiState {
         val state = currentStateProvider()
         return state.copy(
             amountState = state.amountState ?: amountStateConverter.convert(amount),
-            recipientState = state.recipientState ?: recipientStateConverter.convert(destinationAddress),
+            recipientState = state.recipientState
+                ?: recipientStateConverter.convert(SendRecipientStateConverter.Data(destinationAddress, memo)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
             isEditingDisabled = true,
         )
@@ -214,9 +218,20 @@ internal class SendStateFactory(
     //endregion
 
     //region send
-    fun onSubtractSelect(isSubtract: Boolean): SendUiState {
+    fun onSubtractSelect(isSubtract: Boolean, isAmountSubtractAvailable: Boolean): SendUiState {
         val state = currentStateProvider()
+        val fee = state.feeState?.fee ?: return state
+        val amountState = state.amountState ?: return state
+        val amount = amountState.amountTextField.cryptoAmount
+        val amountValue = amount.value ?: return state
+        val amountToSend = if (isSubtract && isAmountSubtractAvailable) {
+            val feeValue = fee.amount.value ?: return state
+            amountValue.minus(feeValue)
+        } else {
+            amountValue
+        }
         return state.copy(
+            amountState = amountStateConverter.convert(amountToSend.parseBigDecimal(amount.decimals)),
             sendState = state.sendState.copy(isSubtract = isSubtract),
         )
     }
