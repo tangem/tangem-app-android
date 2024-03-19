@@ -272,7 +272,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.ZkSyncEra, Blockchain.ZkSyncEraTestnet -> "zksync-ethereum"
         Blockchain.Moonbeam, Blockchain.MoonbeamTestnet -> "moonbeam"
         Blockchain.Manta, Blockchain.MantaTestnet -> "manta-network-ethereum"
-        Blockchain.PolygonZkEVM, Blockchain.PolygonZkEVMTestnet  -> "polygon-zkevm-ethereum"
+        Blockchain.PolygonZkEVM, Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm-ethereum"
         Blockchain.Nexa, Blockchain.NexaTestnet -> "nexa" // FIXME
     }
 }
