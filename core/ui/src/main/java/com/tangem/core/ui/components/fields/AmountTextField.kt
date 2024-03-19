@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -74,7 +75,7 @@ fun AmountTextField(
         },
         modifier = modifier
             .background(TangemTheme.colors.background.action),
-        textStyle = textStyle,
+        textStyle = textStyle.copy(textDirection = TextDirection.ContentOrLtr),
         color = color,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
@@ -90,7 +91,7 @@ fun AmountTextField(
                     }
                     Text(
                         text = placeholder,
-                        style = textStyle,
+                        style = textStyle.copy(textDirection = TextDirection.ContentOrLtr),
                         color = TangemTheme.colors.text.disabled,
                         textAlign = placeholderTextAlign,
                         modifier = Modifier
