@@ -9,8 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.crypto.hdWallet.HDWalletError
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -56,6 +54,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
     private val validateContractAddressUseCase: ValidateContractAddressUseCase,
     private val getNetworksSupportedByWallet: GetNetworksSupportedByWallet,
     private val areTokensSupportedByNetworkUseCase: AreTokensSupportedByNetworkUseCase,
+    private val requiresHardenedDerivationOnlyUseCase: RequiresHardenedDerivationOnlyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel(), AddCustomTokenClickIntents, DefaultLifecycleObserver {
 
@@ -135,13 +134,25 @@ internal class AddCustomTokenViewModel @Inject constructor(
 
     private fun selectNetwork(networkItemState: NetworkItemState) {
         viewModelScope.launch(dispatchers.io) {
-            val selectedWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId
+// [REDACTED_TODO_COMMENT]
+            val selectedWalletId = getSelectedWalletSyncUseCase().getOrNull()?.walletId ?: return@launch
             val supportsTokens = areTokensSupportedByNetworkUseCase(
                 networkId = networkItemState.id,
                 userWalletId = selectedWalletId,
             ).getOrNull() ?: false
+
+            val networksForDerivations = getSupportedNetworks(selectedWalletId)
+
             withContext(dispatchers.main) {
-                uiState = stateFactory.updateStateOnNetworkSelected(networkItemState, supportsTokens)
+                uiState = stateFactory.updateStateOnNetworkSelected(
+                    networkItemState = networkItemState,
+                    supportsTokens = supportsTokens,
+                    networks = networksForDerivations,
+                    requiresHardenedDerivationOnly = requiresHardenedDerivationOnly(
+                        networkId = networkItemState.id,
+                        userWalletId = selectedWalletId,
+                    ),
+                )
             }
         }
     }
@@ -347,6 +358,8 @@ internal class AddCustomTokenViewModel @Inject constructor(
     }
 
     override fun onCustomDerivationChange(input: String) {
+        val selectedWallet = getSelectedWalletSyncUseCase().getOrNull() ?: return
+
         analyticsEventHandler.send(ManageTokens.CustomTokenDerivationSelected(ManageTokens.Derivation.CUSTOM.value))
         uiState = uiState.copy(
             chooseDerivationState = uiState.chooseDerivationState?.copy(
@@ -356,25 +369,19 @@ internal class AddCustomTokenViewModel @Inject constructor(
             ),
         )
         debouncer.debounce(waitMs = DEFAULT_WAIT_TIME_MS, coroutineScope = viewModelScope + dispatchers.io) {
-            val path = createDerivationPathOrNull(input)
-            val enterDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
-                confirmButtonEnabled = path != null,
-                derivationIncorrect = input.isNotBlank() && path == null,
-            )
-            uiState = uiState.copy(
-                chooseDerivationState = uiState.chooseDerivationState?.copy(
-                    enterCustomDerivationState = enterDerivationState,
-                ),
+            val networkId = uiState.chooseNetworkState.selectedNetwork?.id ?: return@debounce
+            uiState = stateFactory.updateOnCustomDerivationEntered(
+                input = input,
+                requiresHardenedDerivationOnly = requiresHardenedDerivationOnly(networkId, selectedWallet.walletId),
             )
         }
     }
 
-    private fun createDerivationPathOrNull(rawPath: String): DerivationPath? {
-        return try {
-            DerivationPath(rawPath)
-        } catch (error: HDWalletError) {
-            null
-        }
+    private suspend fun requiresHardenedDerivationOnly(networkId: String, userWalletId: UserWalletId): Boolean {
+        return requiresHardenedDerivationOnlyUseCase.invoke(
+            networkId = networkId,
+            userWalletId = userWalletId,
+        ).getOrElse { false }
     }
 
     override fun onCustomDerivationSelected() {

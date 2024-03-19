@@ -11,7 +11,6 @@ data class NavigationState(
 
 enum class AppScreen(val isDialogFragment: Boolean = false) {
     Home,
-    Shop,
     Disclaimer,
     OnboardingNote,
     OnboardingWallet,

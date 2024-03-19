@@ -1,7 +1,6 @@
 package com.tangem.domain.core.chain
 
 import arrow.core.Either
-import arrow.core.raise.either
 // [REDACTED_TODO_COMMENT]
 // [REDACTED_TODO_COMMENT]
 /**
@@ -9,7 +8,7 @@ import arrow.core.raise.either
  * @param E the type of error
  * @param R the type of result
  */
-class ChainProcessor<E, R> {
+class ChainProcessor<E : Any, R : Any> {
 
     /**
      * The list of chains to be executed in order.
@@ -17,18 +16,20 @@ class ChainProcessor<E, R> {
     private val chains: MutableList<Chain<E, R>> = mutableListOf()
 
     /**
-     * Adds chains to the existing list of chains to be executed.
-     * @param chains the chains to be added to the list
+     * Sets the list of chains to be executed.
+     * @param chains the chains to be set
      */
-    fun addChains(chains: List<Chain<E, R>>) {
+    fun setChains(chains: List<Chain<E, R>>) {
+        this.chains.clear()
         this.chains.addAll(chains)
     }
 
-    suspend fun launchChains(initial: R): Either<E, R> {
-        return either {
-            chains.fold(initial) { prevChainResult, chain ->
-                chain.invoke(prevChainResult).bind()
-            }
+    /**
+     * Launches the chains with the [initial] value.
+     * */
+    suspend fun launchChains(initial: Either<E, R>): Either<E, R> {
+        return chains.fold(initial) { prevChainResult, chain ->
+            chain.launch(prevChainResult)
         }
     }
 }

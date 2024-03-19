@@ -1,13 +1,20 @@
 package com.tangem.domain.card
-// [REDACTED_TODO_COMMENT]
-sealed class ScanCardException : Exception() {
-    object UserCancelled : ScanCardException()
 
-    object WrongAccessCode : ScanCardException()
+sealed class ScanCardException : Exception() {
+
+    data object UserCancelled : ScanCardException() {
+        @Suppress("UnusedPrivateMember")
+        private fun readResolve(): Any = UserCancelled
+    }
+
+    data object WrongAccessCode : ScanCardException() {
+        @Suppress("UnusedPrivateMember")
+        private fun readResolve(): Any = WrongAccessCode
+    }
 
     open class ChainException : ScanCardException()
 
-    data class UnknownException(override val cause: Exception) : ScanCardException()
+    data class UnknownException(override val cause: Throwable) : ScanCardException()
 
     data class WrongCardId(val cardId: String) : ScanCardException()
 }

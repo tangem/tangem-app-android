@@ -302,7 +302,7 @@ data class CardDTO(
 
         data class Active(val cardCount: Int) : BackupStatus()
 
-        object NoBackup : BackupStatus()
+        data object NoBackup : BackupStatus()
 
         val isActive: Boolean
             get() = this is Active
