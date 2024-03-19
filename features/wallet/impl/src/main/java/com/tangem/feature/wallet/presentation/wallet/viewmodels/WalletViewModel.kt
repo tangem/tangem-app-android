@@ -177,14 +177,8 @@ internal class WalletViewModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
-            is WalletsUpdateActionResolver.Action.NoAccessibleWallets -> {
-                stateHolder.clear()
-                router.popBackStack(screen = AppScreen.Welcome)
-            }
-            is WalletsUpdateActionResolver.Action.NoWallets -> {
-                stateHolder.clear()
-                router.popBackStack(screen = AppScreen.Home)
-            }
+            is WalletsUpdateActionResolver.Action.NoAccessibleWallets -> closeScreen(screen = AppScreen.Welcome)
+            is WalletsUpdateActionResolver.Action.NoWallets -> closeScreen(screen = AppScreen.Home)
             is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
     }
@@ -293,6 +287,13 @@ internal class WalletViewModel @Inject constructor(
             clickIntents = clickIntents,
             coroutineScope = viewModelScope,
         )
+    }
+
+    private fun closeScreen(screen: AppScreen) {
+        if (!screenLifecycleProvider.isBackground) {
+            stateHolder.clear()
+            router.popBackStack(screen = screen)
+        }
     }
 
     private fun scrollToWallet(index: Int, onConsume: () -> Unit = {}) {
