@@ -40,7 +40,7 @@ sealed class DataError {
 
     data class InvalidPayoutAddressError(override val code: Int = 992) : DataError()
 
-    object UnknownError : DataError() {
+    data object UnknownError : DataError() {
         override val code: Int = -1
     }
 }
