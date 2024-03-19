@@ -2,10 +2,7 @@ package com.tangem.lib.visa;
 
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Event;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.Credentials;
@@ -32,10 +29,10 @@ import io.reactivex.Flowable;
  * <p>Auto generated code.
  * <p><strong>Do not modify!</strong>
  * <p>Please use the <a href="https://docs.web3j.io/command_line.html">web3j command line tools</a>,
- * or the org.web3j.codegen.SolidityFunctionWrapperGenerator in the
+ * or the org.web3j.codegen.SolidityFunctionWrapperGenerator in the 
  * <a href="https://github.com/web3j/web3j/tree/master/codegen">codegen module</a> to update.
  *
- * <p>Generated with web3j version 1.5.0.
+ * <p>Generated with web3j version 1.5.2.
  */
 @SuppressWarnings("rawtypes")
 class ERC20 extends Contract {
@@ -113,6 +110,16 @@ class ERC20 extends Contract {
         return typedResponse;
     }
 
+    @Deprecated
+    public static ERC20 load(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
+        return new ERC20(contractAddress, web3j, credentials, gasPrice, gasLimit);
+    }
+
+    @Deprecated
+    public static ERC20 load(String contractAddress, Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
+        return new ERC20(contractAddress, web3j, transactionManager, gasPrice, gasLimit);
+    }
+
     public static List<TransferEventResponse> getTransferEvents(TransactionReceipt transactionReceipt) {
         List<EventValuesWithLog> valueList = staticExtractEventParametersWithLog(TRANSFER_EVENT, transactionReceipt);
         ArrayList<TransferEventResponse> responses = new ArrayList<TransferEventResponse>(valueList.size());
@@ -127,16 +134,6 @@ class ERC20 extends Contract {
         return responses;
     }
 
-    @Deprecated
-    public static ERC20 load(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
-        return new ERC20(contractAddress, web3j, credentials, gasPrice, gasLimit);
-    }
-
-    @Deprecated
-    public static ERC20 load(String contractAddress, Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
-        return new ERC20(contractAddress, web3j, transactionManager, gasPrice, gasLimit);
-    }
-
     public static TransferEventResponse getTransferEventFromLog(Log log) {
         EventValuesWithLog eventValues = staticExtractEventParametersWithLog(TRANSFER_EVENT, log);
         TransferEventResponse typedResponse = new TransferEventResponse();
@@ -147,14 +144,6 @@ class ERC20 extends Contract {
         return typedResponse;
     }
 
-    public static ERC20 load(String contractAddress, Web3j web3j, Credentials credentials, ContractGasProvider contractGasProvider) {
-        return new ERC20(contractAddress, web3j, credentials, contractGasProvider);
-    }
-
-    public static ERC20 load(String contractAddress, Web3j web3j, TransactionManager transactionManager, ContractGasProvider contractGasProvider) {
-        return new ERC20(contractAddress, web3j, transactionManager, contractGasProvider);
-    }
-
     public Flowable<TransferEventResponse> transferEventFlowable(EthFilter filter) {
         return web3j.ethLogFlowable(filter).map(log -> getTransferEventFromLog(log));
     }
@@ -163,6 +152,14 @@ class ERC20 extends Contract {
         EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
         filter.addSingleTopic(EventEncoder.encode(TRANSFER_EVENT));
         return transferEventFlowable(filter);
+    }
+
+    public static ERC20 load(String contractAddress, Web3j web3j, Credentials credentials, ContractGasProvider contractGasProvider) {
+        return new ERC20(contractAddress, web3j, credentials, contractGasProvider);
+    }
+
+    public static ERC20 load(String contractAddress, Web3j web3j, TransactionManager transactionManager, ContractGasProvider contractGasProvider) {
+        return new ERC20(contractAddress, web3j, transactionManager, contractGasProvider);
     }
 
     public Flowable<ApprovalEventResponse> approvalEventFlowable(EthFilter filter) {
