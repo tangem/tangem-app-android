@@ -22,7 +22,9 @@ import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.TangemTextFieldsDefault
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
+import com.tangem.feature.onboarding.presentation.wallet2.model.ButtonState
 import com.tangem.feature.onboarding.presentation.wallet2.model.ImportSeedPhraseState
+import com.tangem.feature.onboarding.presentation.wallet2.model.TextFieldState
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.DescriptionSubTitleText
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingActionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
@@ -67,7 +69,7 @@ fun ImportSeedPhraseScreen(state: ImportSeedPhraseState, modifier: Modifier = Mo
                     PrimaryButtonIconEnd(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
+                        text = stringResource(id = R.string.common_import),
                         iconResId = R.drawable.ic_tangem_24,
                         enabled = state.buttonCreateWallet.enabled,
                         showProgress = state.buttonCreateWallet.showProgress,
@@ -192,6 +194,28 @@ private fun SuggestionsBlockPreview_Dark(
         SuggestionsBlock(
             suggestionsList = suggestions,
             onClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ImportSeedPhraseScreenPreview_Light(
+    @PreviewParameter(SuggestionsPreviewParamsProvider::class) suggestions: ImmutableList<String>,
+) {
+    TangemTheme(isDark = false) {
+        ImportSeedPhraseScreen(
+            ImportSeedPhraseState(
+                tvSeedPhrase = TextFieldState(onTextFieldValueChanged = {}),
+                onSuggestedPhraseClick = {},
+                buttonCreateWallet = ButtonState(
+                    enabled = true,
+                    isClickable = true,
+                    showProgress = false,
+                    onClick = {},
+                ),
+                suggestionsList = suggestions,
+            ),
         )
     }
 }
