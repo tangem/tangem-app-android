@@ -27,4 +27,13 @@ internal class DefaultCustomTokenRouter : CustomTokenRouter {
         )
         store.dispatchDialogShow(alert)
     }
+
+    override fun showGenericErrorAlertAndPopBack() {
+        val alert = AppDialog.SimpleOkDialogRes(
+            headerId = R.string.common_error,
+            messageId = R.string.common_unknown_error,
+            onOk = { store.dispatch(NavigationAction.PopBackTo()) },
+        )
+        store.dispatchDialogShow(alert)
+    }
 }
