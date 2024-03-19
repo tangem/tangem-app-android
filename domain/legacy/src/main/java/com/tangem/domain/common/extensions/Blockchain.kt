@@ -93,6 +93,10 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "areon-network/test" -> Blockchain.AreonTestnet
         "pulsechain" -> Blockchain.PulseChain
         "pulsechain/test" -> Blockchain.PulseChainTestnet
+        "nexa" -> Blockchain.Nexa // FIXME
+        "nexa/testnet" -> Blockchain.NexaTestnet // FIXME
+        "zksync" -> Blockchain.ZkSyncEra // FIXME
+        "zksync/testnet" -> Blockchain.ZkSyncEraTestnet // FIXME
         else -> null
     }
 }
@@ -187,6 +191,11 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.AreonTestnet -> "areon-network/test"
         Blockchain.PulseChain -> "pulsechain"
         Blockchain.PulseChainTestnet -> "pulsechain/test"
+        Blockchain.ZkSyncEra -> "zksync" // FIXME
+        Blockchain.ZkSyncEraTestnet -> "zksync/testnet" // FIXME
+        Blockchain.Nexa -> "nexa" // FIXME
+        Blockchain.NexaTestnet -> "nexa/testnet" // FIXME
+        Blockchain.Radiant -> "TODO() add" // FIXME
     }
 }
 
@@ -249,6 +258,11 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Aurora, Blockchain.AuroraTestnet -> "aurora-ethereum"
         Blockchain.Areon, Blockchain.AreonTestnet -> "areon-network"
         Blockchain.PulseChain, Blockchain.PulseChainTestnet -> "pulsechain"
+        Blockchain.ZkSyncEra -> "zksync" // FIXME
+        Blockchain.ZkSyncEraTestnet -> "zksync/testnet" // FIXME
+        Blockchain.Nexa -> "nexa" // FIXME
+        Blockchain.NexaTestnet -> "nexa/testnet" // FIXME
+        Blockchain.Radiant -> "TODO() add" // FIXME
     }
 }
 
@@ -276,4 +290,8 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Playa3ull,
+    Blockchain.ZkSyncEra,
+    Blockchain.ZkSyncEraTestnet,
+    Blockchain.Nexa,
+    Blockchain.NexaTestnet,
 )
