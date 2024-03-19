@@ -147,6 +147,11 @@ internal class SaveWalletMiddleware {
     }
 
     private fun allowToUseBiometrics(state: SaveWalletState) {
+        if (tangemSdkManager.needEnrollBiometrics) {
+            store.dispatchOnMain(SaveWalletAction.EnrollBiometrics)
+            return
+        }
+
         val scanResponse = state.backupInfo?.scanResponse
             ?: store.state.globalState.scanResponse
             ?: return
