@@ -27,6 +27,7 @@ import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.ExpressException
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
@@ -812,6 +813,10 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
+    private fun onReduceAmountClicked(newAmount: SwapAmount) {
+        onAmountChanged(newAmount.formatToUIRepresentation())
+    }
+
     @Suppress("UnusedPrivateMember")
     private fun onAmountSelected(selected: Boolean) {
         if (selected) {
@@ -874,7 +879,14 @@ internal class SwapViewModel @Inject constructor(
                 }
                 onSearchEntered("")
             },
-            onMaxAmountSelected = { onMaxAmountClicked() },
+            onMaxAmountSelected = ::onMaxAmountClicked,
+            onReduceAmount = ::onReduceAmountClicked,
+            onReduceAmountIgnoreClick = {
+                uiState = uiState.copy(
+                    reduceAmountIgnore = true,
+                    warnings = uiState.warnings.filter { it !is SwapWarning.ReduceAmount },
+                )
+            },
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
@@ -1153,11 +1165,11 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    companion object {
-        private const val loggingTag = "SwapViewModel"
-        private const val INITIAL_AMOUNT = ""
-        private const val UPDATE_DELAY = 10000L
-        private const val DEBOUNCE_AMOUNT_DELAY = 1000L
-        private const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
+    private companion object {
+        const val loggingTag = "SwapViewModel"
+        const val INITIAL_AMOUNT = ""
+        const val UPDATE_DELAY = 10000L
+        const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
     }
 }
