@@ -64,6 +64,9 @@ dependencies {
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
     implementation(projects.domain.onboarding)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.qrScanning)
+    implementation(projects.domain.qrScanning.models)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
@@ -93,6 +96,8 @@ dependencies {
     implementation(projects.data.visa)
     implementation(projects.data.promo)
     implementation(projects.data.onboarding)
+    implementation(projects.data.feedback)
+    implementation(projects.data.qrScanning)
 
     /** Features */
     implementation(projects.features.onboarding)
@@ -110,9 +115,9 @@ dependencies {
     implementation(projects.features.wallet.impl)
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.tokendetails.impl)
-    implementation(projects.features.send.api)
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.manageTokens.impl)
+    implementation(projects.features.send.api)
     implementation(projects.features.send.impl)
     implementation(projects.features.qrScanning.api)
     implementation(projects.features.qrScanning.impl)
@@ -183,10 +188,6 @@ dependencies {
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
-    implementation(deps.shopify.buy) {
-        exclude(group = "com.shopify.graphql.support")
-        exclude(module = "joda-time")
-    }
     implementation(deps.compose.accompanist.appCompatTheme)
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.accompanist.webView)
@@ -229,6 +230,9 @@ dependencies {
 
     implementation(deps.listenableFuture)
     implementation(deps.mlKit.barcodeScanning)
+
+    /** Leakcanary */
+    debugImplementation(deps.leakcanary)
 
     /** Excluded dependencies */
     implementation("com.google.guava:guava:30.0-android") {
