@@ -37,6 +37,7 @@ internal class DefaultDerivationsRepositoryTest {
         cardsInWallet = setOf(),
         isMultiCurrency = false,
         scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap()),
+        hasBackupError = false,
     )
 
     @Test
