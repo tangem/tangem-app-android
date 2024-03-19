@@ -47,6 +47,11 @@ internal class QrScanningFragment : ComposeFragment() {
     private val viewModel by viewModels<QrScanningViewModel>()
 
     private var cameraExecutor: ExecutorService by Delegates.notNull()
+    // Camera requires its own analyzer instance due to flow of frames needed to be analyzed.
+    // Each new frame can cancel previous analysis e.i. image from the gallery can be skipped.
+    private val cameraAnalyzer: MLKitBarcodeAnalyzer by lazy(LazyThreadSafetyMode.NONE) {
+        MLKitBarcodeAnalyzer(viewModel::onQrScanned)
+    }
     private val analyzer: MLKitBarcodeAnalyzer by lazy(LazyThreadSafetyMode.NONE) {
         MLKitBarcodeAnalyzer(viewModel::onQrScanned)
     }
