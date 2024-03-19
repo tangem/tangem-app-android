@@ -20,10 +20,10 @@ import com.google.mlkit.vision.common.InputImage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
-import com.tangem.feature.qrscanning.presentation.QrScanningContent
-import com.tangem.feature.qrscanning.viewmodel.QrScanningViewModel
 import com.tangem.feature.qrscanning.inner.MLKitBarcodeAnalyzer
 import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
+import com.tangem.feature.qrscanning.presentation.QrScanningContent
+import com.tangem.feature.qrscanning.viewmodel.QrScanningViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -47,6 +47,11 @@ internal class QrScanningFragment : ComposeFragment() {
     private val viewModel by viewModels<QrScanningViewModel>()
 
     private var cameraExecutor: ExecutorService by Delegates.notNull()
+    // Camera requires its own analyzer instance due to flow of frames needed to be analyzed.
+    // Each new frame can cancel previous analysis e.i. image from the gallery can be skipped.
+    private val cameraAnalyzer: MLKitBarcodeAnalyzer by lazy(LazyThreadSafetyMode.NONE) {
+        MLKitBarcodeAnalyzer(viewModel::onQrScanned)
+    }
     private val analyzer: MLKitBarcodeAnalyzer by lazy(LazyThreadSafetyMode.NONE) {
         MLKitBarcodeAnalyzer(viewModel::onQrScanned)
     }
@@ -69,6 +74,11 @@ internal class QrScanningFragment : ComposeFragment() {
         requestCameraPermission()
     }
 
+    override fun onResume() {
+        super.onResume()
+        checkPermissionGranted()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         cameraPermissionLauncher.unregister()
@@ -80,11 +90,14 @@ internal class QrScanningFragment : ComposeFragment() {
         StatusBarTransparencyDisposable()
         QrScanningContent(
             executor = { cameraExecutor },
-            analyzer = { analyzer },
+            analyzer = { cameraAnalyzer },
             uiState = viewModel.uiState.collectAsStateWithLifecycle().value,
         )
     }
 
+    /**
+     * Method for requesting permission if there isn't one.
+     */
     private fun requestCameraPermission() {
         if (
             ContextCompat.checkSelfPermission(
@@ -93,6 +106,20 @@ internal class QrScanningFragment : ComposeFragment() {
             ) == PackageManager.PERMISSION_DENIED
         ) {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    /**
+     * Method for checking if permission was granted after user opened Settings screen.
+     * If permission was granted dismiss bottom sheet.
+     */
+    private fun checkPermissionGranted() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.CAMERA,
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            viewModel.onDismissBottomSheetState()
         }
     }
 
