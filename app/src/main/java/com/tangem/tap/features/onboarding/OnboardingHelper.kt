@@ -72,13 +72,14 @@ object OnboardingHelper {
         scanResponse: ScanResponse,
         accessCode: String? = null,
         backupCardsIds: List<String>? = null,
+        hasBackupError: Boolean = false,
     ) {
         Analytics.setContext(scanResponse)
         scope.launch {
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
                 store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds)
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
 
                     store.dispatchOnMain(
                         SaveWalletAction.ProvideBackupInfo(
@@ -92,7 +93,7 @@ object OnboardingHelper {
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
                 tangemSdkManager.canUseBiometry && preferencesStorage.shouldShowSaveUserWalletScreen -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds)
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
 
                     delay(timeMillis = 1_200)
 
@@ -109,7 +110,7 @@ object OnboardingHelper {
                 }
                 // If device has no biometry and save wallet screen has been shown, then go through old scenario
                 else -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds)
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                 }
             }
@@ -129,8 +130,13 @@ object OnboardingHelper {
         }
     }
 
-    private suspend fun proceedWithScanResponse(scanResponse: ScanResponse, backupCardsIds: List<String>?) {
-        val userWallet = UserWalletBuilder(scanResponse)
+    private suspend fun proceedWithScanResponse(
+        scanResponse: ScanResponse,
+        backupCardsIds: List<String>?,
+        hasBackupError: Boolean,
+    ) {
+        val userWallet = UserWalletBuilder(scanResponse = scanResponse)
+            .hasBackupError(hasBackupError)
             .backupCardsIds(backupCardsIds?.toSet())
             .build()
             .guard {
