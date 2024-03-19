@@ -1,11 +1,11 @@
 package com.tangem.tap.domain.scanCard.chains
 
-import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
+import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 
@@ -19,11 +19,9 @@ import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
  */
 class AnalyticsChain(
     private val event: AnalyticsEvent,
-) : Chain<ScanCardException.ChainException, ScanResponse> {
+) : ResultChain<ScanCardException, ScanResponse>() {
 
-    override suspend fun invoke(
-        previousChainResult: ScanResponse,
-    ): Either<ScanCardException.ChainException, ScanResponse> {
+    override suspend fun launch(previousChainResult: ScanResponse): ScanChainResult {
         val interceptor = CardContextInterceptor(previousChainResult)
         val params = event.params.toMutableMap()
         interceptor.intercept(params)

@@ -10,6 +10,7 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
+import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,12 +18,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class MainViewModel @Inject constructor(
     private val updateBalanceHidingSettingsUseCase: UpdateBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
     private val reduxNavController: ReduxNavController,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
+    private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -41,6 +44,10 @@ internal class MainViewModel @Inject constructor(
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
+
+        viewModelScope.launch(dispatchers.main) {
+            deleteDeprecatedLogsUseCase()
+        }
     }
 
     private fun updateAppCurrencies() {

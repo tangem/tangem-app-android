@@ -278,9 +278,17 @@ internal object TokensDomainModule {
     @Provides
     @ViewModelScoped
     fun provideCheckTokenCompatibilityUseCase(
-        repository: NetworksCompatibilityRepository,
+        networksCompatibilityRepository: NetworksCompatibilityRepository,
     ): CheckCurrencyCompatibilityUseCase {
-        return CheckCurrencyCompatibilityUseCase(repository)
+        return CheckCurrencyCompatibilityUseCase(networksCompatibilityRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideNeedHardenedDerivationUseCase(
+        networksCompatibilityRepository: NetworksCompatibilityRepository,
+    ): RequiresHardenedDerivationOnlyUseCase {
+        return RequiresHardenedDerivationOnlyUseCase(networksCompatibilityRepository)
     }
 
     @Provides
