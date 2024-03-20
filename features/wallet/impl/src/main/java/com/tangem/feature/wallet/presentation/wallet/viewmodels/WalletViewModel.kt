@@ -5,6 +5,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.CanUseBiometryUseCase
@@ -13,7 +14,6 @@ import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -52,7 +52,6 @@ internal class WalletViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     analyticsEventsHandler: AnalyticsEventHandler,
@@ -73,7 +72,7 @@ internal class WalletViewModel @Inject constructor(
 
         suggestToEnableBiometrics()
 
-        subscribeOnWalletsUpdateFlow()
+        subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
     }
@@ -111,25 +110,12 @@ internal class WalletViewModel @Inject constructor(
         return router.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()
     }
 
-    private fun subscribeOnWalletsUpdateFlow() {
-        viewModelScope.launch(dispatchers.main) {
-            shouldSaveUserWalletsUseCase()
-                .conflate()
-                .distinctUntilChanged()
-                .collectLatest(::subscribeToUserWalletsUpdates)
-        }
-    }
-
-    private fun subscribeToUserWalletsUpdates(shouldSaveUserWallet: Boolean) {
+    private fun subscribeToUserWalletsUpdates() {
         getWalletsUseCase()
             .conflate()
             .distinctUntilChanged()
             .map {
-                walletsUpdateActionResolver.resolve(
-                    wallets = it,
-                    currentState = stateHolder.value,
-                    canSaveWallets = shouldSaveUserWallet,
-                )
+                walletsUpdateActionResolver.resolve(wallets = it, currentState = stateHolder.value)
             }
             .onEach(::updateWallets)
             .flowOn(dispatchers.main)
@@ -181,14 +167,6 @@ internal class WalletViewModel @Inject constructor(
     private suspend fun updateWallets(action: WalletsUpdateActionResolver.Action) {
         when (action) {
             is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
-            is WalletsUpdateActionResolver.Action.ReinitializeWallets -> {
-                walletScreenContentLoader.load(
-                    userWallet = action.selectedWallet,
-                    clickIntents = clickIntents,
-                    isRefresh = true,
-                    coroutineScope = viewModelScope,
-                )
-            }
             is WalletsUpdateActionResolver.Action.ReinitializeWallet -> reinitializeWallet(action)
             is WalletsUpdateActionResolver.Action.AddWallet -> addWallet(action)
             is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
@@ -199,6 +177,8 @@ internal class WalletViewModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
+            is WalletsUpdateActionResolver.Action.NoAccessibleWallets -> closeScreen(screen = AppScreen.Welcome)
+            is WalletsUpdateActionResolver.Action.NoWallets -> closeScreen(screen = AppScreen.Home)
             is WalletsUpdateActionResolver.Action.Unknown -> Unit
         }
     }
@@ -213,7 +193,6 @@ internal class WalletViewModel @Inject constructor(
         stateHolder.update(
             transformer = InitializeWalletsTransformer(
                 selectedWalletIndex = action.selectedWalletIndex,
-                selectedWallet = action.selectedWallet,
                 wallets = action.wallets,
                 clickIntents = clickIntents,
             ),
@@ -249,17 +228,17 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
+        walletScreenContentLoader.load(
+            userWallet = action.selectedWallet,
+            clickIntents = clickIntents,
+            coroutineScope = viewModelScope,
+        )
+
         stateHolder.update(
             AddWalletTransformer(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
             ),
-        )
-
-        walletScreenContentLoader.load(
-            userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
-            coroutineScope = viewModelScope,
         )
 
         withContext(dispatchers.io) { delay(timeMillis = 700) }
@@ -274,23 +253,22 @@ internal class WalletViewModel @Inject constructor(
             coroutineScope = viewModelScope,
         )
 
-        if (action.selectedWalletIndex != 0) {
-            /*
-             * If card is reset to factory settings, then Compose need some time to draw the WalletScreen.
-             * Otherwise, scroll isn't happened
-             */
-            withContext(dispatchers.io) { delay(timeMillis = 700) }
+        /*
+         * If card is reset to factory settings, then Compose need some time to draw the WalletScreen.
+         * Otherwise, scroll isn't happened
+         */
+        withContext(dispatchers.io) { delay(timeMillis = 1000) }
 
-            scrollToWallet(index = action.selectedWalletIndex)
-
-            withContext(dispatchers.io) { delay(timeMillis = 1000) }
-        }
-
-        stateHolder.update(
-            DeleteWalletTransformer(
-                selectedWalletIndex = action.selectedWalletIndex,
-                deletedWalletId = action.deletedWalletId,
-            ),
+        scrollToWallet(
+            index = action.selectedWalletIndex,
+            onConsume = {
+                stateHolder.update(
+                    DeleteWalletTransformer(
+                        selectedWalletIndex = action.selectedWalletIndex,
+                        deletedWalletId = action.deletedWalletId,
+                    ),
+                )
+            },
         )
     }
 
@@ -311,12 +289,20 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    private fun scrollToWallet(index: Int) {
+    private fun closeScreen(screen: AppScreen) {
+        if (!screenLifecycleProvider.isBackground) {
+            stateHolder.clear()
+            router.popBackStack(screen = screen)
+        }
+    }
+
+    private fun scrollToWallet(index: Int, onConsume: () -> Unit = {}) {
         stateHolder.update(
             ScrollToWalletTransformer(
                 index = index,
                 currentStateProvider = Provider(action = stateHolder::value),
                 stateUpdater = { newState -> stateHolder.update { newState } },
+                onConsume = onConsume,
             ),
         )
     }
