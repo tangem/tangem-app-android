@@ -105,16 +105,42 @@ interface UserWalletsListManager {
         /**
          * Receive saved [UserWallet]s, populate [userWallets] flow with it and set [isLocked] as false.
          *
-         * @param throwIfNotAllWalletsUnlocked Indicates that the function must throw
-         * [UserWalletsListError.NotAllUserWalletsUnlocked] if not all user wallets are unlocked.
+         * @param type Defines the behavior of the operation.
          *
          * @return [CompletionResult] of operation, with selected [UserWallet]
          * or null if there is no selected [UserWallet]
          */
-        suspend fun unlock(throwIfNotAllWalletsUnlocked: Boolean = false): CompletionResult<UserWallet>
+        suspend fun unlock(type: UnlockType): CompletionResult<UserWallet>
 
         /** Remove [UserWallet]s from [userWallets] and set [isLocked] as true */
         fun lock()
+
+        /**
+         * Defines the behavior of the [unlock] operation.
+         * */
+        enum class UnlockType {
+            /**
+             * Ensures that all stored [UserWallet]s are unlocked,
+             * or throws [UserWalletsListError.NotAllUserWalletsUnlocked].
+             *
+             * In this type [selectedUserWallet] is either a previously selected [UserWallet] or the first stored
+             * [UserWallet].
+             * */
+            ALL,
+
+            /**
+             * Ensures that at least one stored [UserWallet] is unlocked,
+             * or throws [UserWalletsListError.NoUserWalletSelected].
+             *
+             * In this type [selectedUserWallet] is the first stored and unlocked [UserWallet].
+             * */
+            ANY,
+
+            /**
+             * Same as [ALL] type, but this type can not change [selectedUserWallet] while unlocking.
+             * */
+            ALL_WITHOUT_SELECT,
+        }
     }
 
     // For provider
