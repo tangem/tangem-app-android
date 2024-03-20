@@ -43,7 +43,7 @@ internal class DefaultCardSdkProvider @Inject constructor() : CardSdkProvider, C
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
                 maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
                 batchIdFilter = CardFilter.Companion.ItemFilter.Deny(
-                    items = setOf("0027", "0030", "0031", "0035", "DA88"),
+                    items = setOf("0027", "0030", "0031", "0035"),
                 ),
             ),
         )
