@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.firstOrNull
 
 class GetUserWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<Any, UserWallet> = either {
+    suspend operator fun invoke(userWalletId: UserWalletId): Either<GetUserWalletError, UserWallet> = either {
         val userWalletsListManager = ensureUserWalletListManagerNotNull(
             walletsStateHolder = walletsStateHolder,
             raise = GetUserWalletError::DataError,
