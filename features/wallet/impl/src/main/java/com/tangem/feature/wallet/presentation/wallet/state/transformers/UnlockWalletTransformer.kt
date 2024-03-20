@@ -4,7 +4,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.collections.immutable.toImmutableList
@@ -19,7 +18,6 @@ internal class UnlockWalletTransformer(
 
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(
-            topBarConfig = prevState.topBarConfig.toUnlockedState(),
             wallets = prevState.wallets
                 .map { state ->
                     val unlockedWallet = getUnlockedWallet(state.walletCardState.id)
@@ -27,10 +25,6 @@ internal class UnlockWalletTransformer(
                 }
                 .toImmutableList(),
         )
-    }
-
-    private fun WalletTopBarConfig.toUnlockedState(): WalletTopBarConfig {
-        return copy(onDetailsClick = clickIntents::onDetailsClick)
     }
 
     private fun getUnlockedWallet(walletId: UserWalletId): UserWallet? {
