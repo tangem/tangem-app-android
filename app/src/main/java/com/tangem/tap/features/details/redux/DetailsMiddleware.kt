@@ -39,6 +39,7 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
@@ -217,7 +218,7 @@ class DetailsMiddleware {
                     }
                 }
                 is DetailsAction.AppSettings.CheckBiometricsStatus -> {
-                    observeBiometricsStatusChanges(state, action.lifecycleScope)
+                    observeBiometricsStatusChanges(action.lifecycleScope)
                 }
                 is DetailsAction.AppSettings.EnrollBiometrics -> {
                     enrollBiometrics()
@@ -239,20 +240,27 @@ class DetailsMiddleware {
             }
         }
 
-        private fun observeBiometricsStatusChanges(state: DetailsState, lifecycleScope: LifecycleCoroutineScope) {
-            lifecycleScope.launch(Dispatchers.IO) {
+        private fun observeBiometricsStatusChanges(lifecycleScope: LifecycleCoroutineScope) {
+            val needEnrollBiometricsFlow = flow {
                 do {
                     val needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull()
 
-                    if (needEnrollBiometrics != null &&
-                        needEnrollBiometrics != state.appSettingsState.needEnrollBiometrics
-                    ) {
-                        store.dispatchWithMain(DetailsAction.AppSettings.BiometricsStatusChanged(needEnrollBiometrics))
+                    if (needEnrollBiometrics != null) {
+                        emit(needEnrollBiometrics)
                     }
 
-                    delay(timeMillis = 500)
+                    delay(timeMillis = 200)
                 } while (true)
-            }.saveIn(checkBiometricsStatusJobHolder)
+            }
+
+            needEnrollBiometricsFlow
+                .distinctUntilChanged()
+                .onEach { needEnrollBiometrics ->
+                    store.dispatchWithMain(DetailsAction.AppSettings.BiometricsStatusChanged(needEnrollBiometrics))
+                }
+                .flowOn(Dispatchers.IO)
+                .launchIn(lifecycleScope)
+                .saveIn(checkBiometricsStatusJobHolder)
         }
 
         private fun enrollBiometrics() {
