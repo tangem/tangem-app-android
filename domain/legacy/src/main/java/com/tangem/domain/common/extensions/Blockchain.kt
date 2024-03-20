@@ -97,6 +97,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "nexa/testnet" -> Blockchain.NexaTestnet // FIXME
         "zksync" -> Blockchain.ZkSyncEra // FIXME
         "zksync/testnet" -> Blockchain.ZkSyncEraTestnet // FIXME
+        "radiant" -> Blockchain.Radiant
         else -> null
     }
 }
@@ -195,6 +196,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.ZkSyncEraTestnet -> "zksync/testnet" // FIXME
         Blockchain.Nexa -> "nexa" // FIXME
         Blockchain.NexaTestnet -> "nexa/testnet" // FIXME
+        Blockchain.Radiant -> "radiant"
     }
 }
 
@@ -261,6 +263,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.ZkSyncEraTestnet -> "zksync/testnet" // FIXME
         Blockchain.Nexa -> "nexa" // FIXME
         Blockchain.NexaTestnet -> "nexa/testnet" // FIXME
+        Blockchain.Radiant -> "radiant"
     }
 }
 
@@ -292,4 +295,5 @@ private val excludedBlockchains = listOf(
     Blockchain.ZkSyncEraTestnet,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
+    Blockchain.Radiant,
 )
