@@ -793,6 +793,7 @@ internal class StateBuilder(
         return uiState.copy(
             sendCardData = uiState.sendCardData.copy(
                 balance = cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+                token = cryptoCurrencyStatus,
             ),
         )
     }
@@ -806,6 +807,7 @@ internal class StateBuilder(
         return uiState.copy(
             receiveCardData = uiState.receiveCardData.copy(
                 balance = cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+                token = cryptoCurrencyStatus,
             ),
         )
     }
