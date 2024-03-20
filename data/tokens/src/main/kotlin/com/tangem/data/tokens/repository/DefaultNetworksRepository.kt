@@ -56,8 +56,9 @@ internal class DefaultNetworksRepository(
         .cancellable()
 
     override suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
+        val currencies = getCurrencies(userWalletId, networks)
         withContext(dispatchers.io) {
-            fetchNetworksPendingTransactions(userWalletId, networks)
+            fetchNetworksPendingTransactions(userWalletId, networks, currencies)
         }
     }
 
@@ -80,23 +81,28 @@ internal class DefaultNetworksRepository(
         networks: Set<Network>,
         refresh: Boolean,
     ) {
+        val currencies = getCurrencies(userWalletId, networks)
         coroutineScope {
             networks
                 .map { network ->
                     async {
-                        fetchNetworkStatusIfCacheExpired(userWalletId, network, refresh)
+                        fetchNetworkStatusIfCacheExpired(userWalletId, network, currencies, refresh)
                     }
                 }
                 .awaitAll()
         }
     }
 
-    private suspend fun fetchNetworksPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
+    private suspend fun fetchNetworksPendingTransactions(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+        currencies: Sequence<CryptoCurrency>,
+    ) {
         coroutineScope {
             networks
                 .map { network ->
                     async {
-                        fetchNetworkPendingTransactions(userWalletId, network)
+                        fetchNetworkPendingTransactions(userWalletId, network, currencies)
                     }
                 }
                 .awaitAll()
@@ -106,22 +112,28 @@ internal class DefaultNetworksRepository(
     private suspend fun fetchNetworkStatusIfCacheExpired(
         userWalletId: UserWalletId,
         network: Network,
+        currencies: Sequence<CryptoCurrency>,
         refresh: Boolean,
     ) {
         cacheRegistry.invokeOnExpire(
             key = getNetworksStatusesCacheKey(userWalletId, network),
             skipCache = refresh,
-            block = { fetchNetworkStatus(userWalletId, network) },
+            block = { fetchNetworkStatus(userWalletId, network, currencies) },
         )
     }
 
-    private suspend fun fetchNetworkStatus(userWalletId: UserWalletId, network: Network) {
-        val currencies = getCurrencies(userWalletId, network)
-
+    private suspend fun fetchNetworkStatus(
+        userWalletId: UserWalletId,
+        network: Network,
+        currencies: Sequence<CryptoCurrency>,
+    ) {
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,
             network = network,
-            extraTokens = currencies.filterIsInstance<CryptoCurrency.Token>().toSet(),
+            extraTokens = currencies
+                .filterIsInstance<CryptoCurrency.Token>()
+                .filter { it.network == network }
+                .toSet(),
         )
 
         withContext(NonCancellable) {
@@ -137,9 +149,11 @@ internal class DefaultNetworksRepository(
         networksStatusesStore.store(userWalletId, networkStatus)
     }
 
-    private suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, network: Network) {
-        val currencies = getCurrencies(userWalletId, network)
-
+    private suspend fun fetchNetworkPendingTransactions(
+        userWalletId: UserWalletId,
+        network: Network,
+        currencies: Sequence<CryptoCurrency>,
+    ) {
         val result = walletManagersFacade.updatePendingTransactions(
             userWalletId = userWalletId,
             network = network,
@@ -158,7 +172,7 @@ internal class DefaultNetworksRepository(
         networksStatusesStore.store(userWalletId, networkStatus)
     }
 
-    private suspend fun getCurrencies(userWalletId: UserWalletId, network: Network): Sequence<CryptoCurrency> {
+    private suspend fun getCurrencies(userWalletId: UserWalletId, networks: Set<Network>): Sequence<CryptoCurrency> {
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find user wallet with provided ID: $userWalletId"
         }
@@ -180,7 +194,7 @@ internal class DefaultNetworksRepository(
             }
         }
 
-        return currencies.filter { it.network == network }
+        return currencies.filter { networks.contains(it.network) }
     }
 
     private suspend fun invalidateCacheKeyIfNeeded(
