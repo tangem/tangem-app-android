@@ -20,5 +20,12 @@ internal suspend fun LazyListState.animateScrollByIndex(prevIndex: Int, newIndex
 }
 
 private fun calculateOffset(layoutInfo: LazyListLayoutInfo, prevIndex: Int, newIndex: Int): Float {
-    return layoutInfo.viewportSize.width.times(other = newIndex - prevIndex).toFloat()
+    val indexDifference = newIndex - prevIndex
+    val coefficient = if (indexDifference == 0) 1 else indexDifference
+
+    return layoutInfo.getItemSizeWithSpacing().times(other = coefficient).toFloat()
+}
+
+private fun LazyListLayoutInfo.getItemSizeWithSpacing(): Int {
+    return viewportSize.width - afterContentPadding - beforeContentPadding + mainAxisItemSpacing
 }
