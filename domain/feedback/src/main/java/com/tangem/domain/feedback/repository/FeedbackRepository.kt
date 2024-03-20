@@ -1,12 +1,11 @@
 package com.tangem.domain.feedback.repository
 
-import com.tangem.domain.feedback.models.AppLogModel
-import com.tangem.domain.feedback.models.BlockchainInfo
-import com.tangem.domain.feedback.models.CardInfo
-import com.tangem.domain.feedback.models.PhoneInfo
+import com.tangem.domain.feedback.models.*
 import java.io.File
 
 interface FeedbackRepository {
+
+    suspend fun getUserWalletsInfo(): UserWalletsInfo
 
     suspend fun getCardInfo(): CardInfo
 
@@ -16,5 +15,5 @@ interface FeedbackRepository {
 
     suspend fun getAppLogs(): List<AppLogModel>
 
-    suspend fun createLogFile(logs: List<String>): File?
+    suspend fun createLogFile(logs: String): File?
 }

@@ -15,13 +15,13 @@ internal object CardInfoConverter : Converter<UserWallet, CardInfo> {
     override fun convert(value: UserWallet): CardInfo {
         return with(value.scanResponse) {
             CardInfo(
-                userWalletId = value.walletId.stringValue,
                 cardId = card.cardId,
                 firmwareVersion = card.firmwareVersion.stringValue,
                 cardBlockchain = walletData?.blockchain,
                 signedHashesList = card.wallets.map {
                     CardInfo.SignedHashes(curve = it.curve.curve, total = it.totalSignedHashes?.toString())
                 },
+                isImported = value.isImported,
                 isStart2Coin = value.scanResponse.card.isStart2Coin,
             )
         }

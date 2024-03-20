@@ -10,10 +10,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.domain.feedback.models.AppLogModel
-import com.tangem.domain.feedback.models.BlockchainInfo
-import com.tangem.domain.feedback.models.CardInfo
-import com.tangem.domain.feedback.models.PhoneInfo
+import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.wallets.models.UserWallet
 import timber.log.Timber
@@ -38,6 +35,13 @@ internal class DefaultFeedbackRepository(
     private val context: Context,
 ) : FeedbackRepository {
 
+    override suspend fun getUserWalletsInfo(): UserWalletsInfo {
+        return UserWalletsInfo(
+            selectedUserWalletId = getSelectedUserWallet().walletId.stringValue,
+            totalUserWallets = userWalletsStore.getAllSyncOrNull()?.size ?: error("No user wallets found"),
+        )
+    }
+
     override suspend fun getCardInfo(): CardInfo {
         return CardInfoConverter.convert(value = getSelectedUserWallet())
     }
@@ -59,9 +63,10 @@ internal class DefaultFeedbackRepository(
     override suspend fun getAppLogs(): List<AppLogModel> {
         return appPreferencesStore.getObjectMap<String>(key = PreferencesKeys.APP_LOGS_KEY)
             .map { AppLogModel(timestamp = it.key.toLong(), message = it.value) }
+            .sortedBy(AppLogModel::timestamp)
     }
 
-    override suspend fun createLogFile(logs: List<String>): File? {
+    override suspend fun createLogFile(logs: String): File? {
         return try {
             val file = File(context.filesDir, LOGS_FILE)
             file.delete()
@@ -69,7 +74,7 @@ internal class DefaultFeedbackRepository(
 
             val stringWriter = StringWriter()
 
-            logs.forEach(stringWriter::append)
+            stringWriter.append(logs)
 
             val fileWriter = FileWriter(file)
             fileWriter.write(stringWriter.toString())

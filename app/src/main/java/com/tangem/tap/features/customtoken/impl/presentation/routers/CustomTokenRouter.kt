@@ -20,4 +20,6 @@ internal interface CustomTokenRouter {
      * @param blockchain blockchain to show alert
      */
     fun openUnsupportedNetworkAlert(blockchain: Blockchain)
+
+    fun showGenericErrorAlertAndPopBack()
 }

@@ -1,12 +1,15 @@
 package com.tangem.tap.domain.card
 
+import com.tangem.common.CompletionResult
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -49,6 +52,28 @@ internal class DefaultDerivationsRepository(
             .doOnFailure { throw it }
 
         error("This code should never be reached")
+    }
+
+    override suspend fun deriveExtendedPublicKey(
+        userWalletId: UserWalletId,
+        derivation: DerivationPath,
+    ): ExtendedPublicKey? {
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
+        val walletCard = userWallet.scanResponse.card.wallets.firstOrNull {
+            UserWalletIdBuilder.scanResponse(userWallet.scanResponse).build()?.value
+                .contentEquals(userWallet.walletId.value)
+        } ?: return null
+
+        val result = tangemSdkManager.deriveExtendedPublicKey(
+            cardId = null,
+            walletPublicKey = walletCard.publicKey,
+            derivation = derivation,
+        )
+
+        return when (result) {
+            is CompletionResult.Failure -> throw result.error
+            is CompletionResult.Success -> result.data
+        }
     }
 
     private suspend fun updatePublicKeys(userWalletId: UserWalletId, keys: DerivedKeys): Result<Unit> {

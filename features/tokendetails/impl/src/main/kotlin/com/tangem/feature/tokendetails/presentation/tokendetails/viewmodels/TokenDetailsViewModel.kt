@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLinksRegistry
@@ -19,6 +18,7 @@ import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
@@ -51,8 +51,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTrans
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
+import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -86,6 +88,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
+    private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -93,6 +96,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    featureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
@@ -122,6 +126,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
+        featureToggles = featureToggles,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -360,7 +365,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
 
-            uiState = stateFactory.getStateWithUpdatedMenu(wallet.scanResponse.cardTypesResolver)
+            uiState = stateFactory.getStateWithUpdatedMenu(
+                cardTypesResolver = wallet.scanResponse.cardTypesResolver,
+                isBitcoin = isBitcoin(cryptoCurrency.network.id.value),
+            )
         }
     }
 
@@ -497,6 +505,24 @@ internal class TokenDetailsViewModel @Inject constructor(
         }
     }
 
+    override fun onGenerateExtendedKey() {
+        viewModelScope.launch(dispatchers.main) {
+            val extendedKey = getExtendedPublicKeyForCurrencyUseCase(
+                userWalletId,
+                cryptoCurrency.network.derivationPath,
+            ).fold(
+                ifLeft = {
+                    Timber.e(it.cause?.localizedMessage.orEmpty())
+                    ""
+                },
+                ifRight = { it },
+            )
+            if (extendedKey.isNotBlank()) {
+                router.share(extendedKey)
+            }
+        }
+    }
+
     override fun onSellClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrency.symbol))
 
@@ -601,20 +627,13 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onTransactionClick(txHash: String) {
-        // TODO: Fix tx urls AND-5116
-        when (Blockchain.fromId(cryptoCurrency.network.id.value)) {
-            Blockchain.TON, Blockchain.TONTestnet,
-            Blockchain.Decimal, Blockchain.DecimalTestnet,
-            -> return
-            else -> {
-                router.openUrl(
-                    url = getExplorerTransactionUrlUseCase(
-                        txHash = txHash,
-                        networkId = cryptoCurrency.network.id,
-                    ),
-                )
-            }
-        }
+        getExplorerTransactionUrlUseCase(
+            txHash = txHash,
+            networkId = cryptoCurrency.network.id,
+        ).fold(
+            ifLeft = { Timber.e(it.toString()) },
+            ifRight = { router.openUrl(url = it) },
+        )
     }
 
     override fun onRefreshSwipe() {

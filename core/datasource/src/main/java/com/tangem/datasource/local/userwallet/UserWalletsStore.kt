@@ -9,6 +9,8 @@ interface UserWalletsStore {
 
     suspend fun getSyncOrNull(key: UserWalletId): UserWallet?
 
+    suspend fun getAllSyncOrNull(): List<UserWallet>?
+
     @Throws
     suspend fun update(userWalletId: UserWalletId, update: suspend (UserWallet) -> UserWallet)
 }

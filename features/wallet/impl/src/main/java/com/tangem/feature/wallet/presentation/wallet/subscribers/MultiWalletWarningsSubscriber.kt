@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
 
 internal class MultiWalletWarningsSubscriber(
-    private val userWalletId: UserWalletId,
+    private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntents,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
@@ -23,13 +23,13 @@ internal class MultiWalletWarningsSubscriber(
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<ImmutableList<WalletNotification>> {
-        return getMultiWalletWarningsFactory.create(clickIntents)
+        return getMultiWalletWarningsFactory.create(userWallet, clickIntents)
             .conflate()
             .distinctUntilChanged()
             .onEach { warnings ->
-                val displayedState = stateHolder.getWalletState(userWalletId)
+                val displayedState = stateHolder.getWalletState(userWallet.walletId)
 
-                stateHolder.update(SetWarningsTransformer(userWalletId, warnings))
+                stateHolder.update(SetWarningsTransformer(userWallet.walletId, warnings))
                 walletWarningsAnalyticsSender.send(displayedState, warnings)
             }
     }

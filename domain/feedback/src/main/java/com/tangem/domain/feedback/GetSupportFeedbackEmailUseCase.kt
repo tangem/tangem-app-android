@@ -71,6 +71,8 @@ class GetSupportFeedbackEmailUseCase(
             skipLine()
             append(
                 FeedbackDataBuilder().apply {
+                    addUserWalletsInfo(userWalletsInfo = feedbackRepository.getUserWalletsInfo())
+                    addDelimiter()
                     addCardInfo(cardInfo)
                     addDelimiter()
                     addBlockchainInfoList(blockchainInfoList = feedbackRepository.getBlockchainInfoList())
@@ -81,15 +83,31 @@ class GetSupportFeedbackEmailUseCase(
         }.toString()
     }
 
-    private suspend fun getLogs(): List<String> {
-        return feedbackRepository.getAppLogs().map {
-            val date = dateFormatter.print(DateTime(it.timestamp))
-            "$date: ${it.message}\n"
+    private suspend fun getLogs(): String {
+        val builder = StringBuilder()
+
+        var sum = 0
+        val appLogs = feedbackRepository.getAppLogs()
+        for (i in appLogs.lastIndex downTo 0) {
+            val log = appLogs[i]
+            val date = dateFormatter.print(DateTime(log.timestamp))
+
+            val formattedLog = "$date: ${log.message}\n"
+
+            sum += formattedLog.length
+            if (sum < GMAIL_MAX_FILE_SIZE) {
+                builder.insert(0, formattedLog)
+            } else {
+                break
+            }
         }
+
+        return builder.toString()
     }
 
     private companion object {
         const val START2COIN_SUPPORT_EMAIL = "cardsupport@start2coin.com"
         const val TANGEM_SUPPORT_EMAIL = "support@tangem.com"
+        const val GMAIL_MAX_FILE_SIZE = 24_900_000 // ≈ 25 MB
     }
 }

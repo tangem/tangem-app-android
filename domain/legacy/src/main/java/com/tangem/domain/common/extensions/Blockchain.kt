@@ -103,6 +103,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "polygon-zkevm/test" -> Blockchain.PolygonZkEVMTestnet
         "nexa" -> Blockchain.Nexa // FIXME
         "nexa/testnet" -> Blockchain.NexaTestnet // FIXME
+        "radiant" -> Blockchain.Radiant
         else -> null
     }
 }
@@ -207,6 +208,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm/test"
         Blockchain.Nexa -> "nexa" // FIXME
         Blockchain.NexaTestnet -> "nexa/test" // FIXME
+        Blockchain.Radiant -> "radiant"
     }
 }
 
@@ -266,7 +268,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Unknown -> "unknown"
         Blockchain.Hedera -> "hedera-hashgraph"
         Blockchain.HederaTestnet -> "hedera-hashgraph/test"
-        Blockchain.Aurora, Blockchain.AuroraTestnet -> "aurora-near"
+        Blockchain.Aurora, Blockchain.AuroraTestnet -> "aurora-ethereum"
         Blockchain.Areon, Blockchain.AreonTestnet -> "areon-network"
         Blockchain.PulseChain, Blockchain.PulseChainTestnet -> "pulsechain"
         Blockchain.ZkSyncEra, Blockchain.ZkSyncEraTestnet -> "zksync-ethereum"
@@ -274,6 +276,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Manta, Blockchain.MantaTestnet -> "manta-network-ethereum"
         Blockchain.PolygonZkEVM, Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm-ethereum"
         Blockchain.Nexa, Blockchain.NexaTestnet -> "nexa" // FIXME
+        Blockchain.Radiant -> "radiant"
     }
 }
 
@@ -303,4 +306,5 @@ private val excludedBlockchains = listOf(
     Blockchain.Playa3ull,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
+    Blockchain.Radiant,
 )
