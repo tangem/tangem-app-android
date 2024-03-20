@@ -113,7 +113,7 @@ private fun WalletContent(
     alertConfig: WalletAlertState?,
 ) {
     var selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
-    val selectedWallet = state.wallets[selectedWalletIndex]
+    val selectedWallet = state.wallets.getOrElse(selectedWalletIndex) { state.wallets[state.selectedWalletIndex] }
 
     val scaffoldContent: @Composable () -> Unit = {
         val movableItemModifier = Modifier.changeWalletAnimator(walletsListState)

@@ -4,6 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.email.EmailSender
@@ -145,7 +146,7 @@ internal class DetailsViewModel(
     }
 
     private fun sendFeedback() {
-        Analytics.send(Settings.ButtonSendFeedback())
+        Analytics.send(Basic.ButtonSupport())
         if (feedbackManagerFeatureToggles.isLocalLogsEnabled) {
             mainScope.launch {
                 val email = getSupportFeedbackEmailUseCase()
