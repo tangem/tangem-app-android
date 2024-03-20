@@ -69,4 +69,12 @@ internal object CardDomainModule {
     fun provideIsNeedToBackupUseCase(walletStateHolder: WalletsStateHolder): IsNeedToBackupUseCase {
         return IsNeedToBackupUseCase(walletStateHolder)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetExtendedPublicKeyForCurrencyUseCase(
+        derivationsRepository: DerivationsRepository,
+    ): GetExtendedPublicKeyForCurrencyUseCase {
+        return GetExtendedPublicKeyForCurrencyUseCase(derivationsRepository)
+    }
 }
