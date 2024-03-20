@@ -1,6 +1,7 @@
 package com.tangem.domain.wallets.legacy
 
 import com.tangem.common.CompletionResult
+import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -43,8 +44,8 @@ val UserWalletsListManager.isLockedSync: Boolean
  *
  * @see UserWalletsListManager.Lockable.unlock
  * */
-suspend fun UserWalletsListManager.unlockIfLockable(): CompletionResult<UserWallet> {
-    return asLockable()?.unlock() ?: CompletionResult.Failure(UserWalletsListError.UnableToUnlockUserWallets())
+suspend fun UserWalletsListManager.unlockIfLockable(type: UnlockType = UnlockType.ANY): CompletionResult<UserWallet> {
+    return asLockable()?.unlock(type) ?: CompletionResult.Failure(UserWalletsListError.UnableToUnlockUserWallets())
 }
 
 /**
