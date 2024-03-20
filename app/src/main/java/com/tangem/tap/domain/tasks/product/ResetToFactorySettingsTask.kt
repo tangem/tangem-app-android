@@ -33,7 +33,7 @@ class ResetToFactorySettingsTask(
     }
 
     private fun resetBackup(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
-        if (session.environment.card?.backupStatus?.isActive != true) {
+        if (session.environment.card?.backupStatus == Card.BackupStatus.NoBackup) {
             callback(CompletionResult.Success(session.environment.card!!))
             return
         }
