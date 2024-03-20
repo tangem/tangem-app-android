@@ -49,7 +49,7 @@ internal class SingleWalletContentLoader(
                 getCryptoCurrencyActionsUseCase = getCryptoCurrencyActionsUseCase,
             ),
             SingleWalletNotificationsSubscriber(
-                userWalletId = userWallet.walletId,
+                userWallet = userWallet,
                 stateHolder = stateHolder,
                 clickIntents = clickIntents,
                 getSingleWalletWarningsFactory = getSingleWalletWarningsFactory,
