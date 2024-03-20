@@ -38,7 +38,7 @@ internal class SingleWalletWithTokenContentLoader(
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             ),
             MultiWalletWarningsSubscriber(
-                userWalletId = userWallet.walletId,
+                userWallet = userWallet,
                 stateHolder = stateHolder,
                 clickIntents = clickIntents,
                 getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,

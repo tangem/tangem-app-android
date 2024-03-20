@@ -26,7 +26,7 @@ import javax.inject.Inject
 @ViewModelScoped
 internal class WalletClickIntents @Inject constructor(
     private val walletCardClickIntentsImplementor: WalletCardClickIntentsImplementor,
-    private val warningsClickIntentsImplementer: WalletWarningsClickIntentsImplementer,
+    private val warningsClickIntentsImplementer: WalletWarningsClickIntentsImplementor,
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
     private val contentClickIntentsImplementor: WalletContentClickIntentsImplementor,
     private val visaWalletIntentsImplementor: VisaWalletIntentsImplementor,
