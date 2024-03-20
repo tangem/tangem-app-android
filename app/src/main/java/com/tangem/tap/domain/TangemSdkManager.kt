@@ -6,13 +6,14 @@ import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.common.*
-import com.tangem.common.authentication.KeystoreManager
+import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -25,7 +26,6 @@ import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
-import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
