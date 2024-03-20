@@ -44,7 +44,7 @@ internal class MultiWalletContentLoader(
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
             ),
             MultiWalletWarningsSubscriber(
-                userWalletId = userWallet.walletId,
+                userWallet = userWallet,
                 stateHolder = stateHolder,
                 clickIntents = clickIntents,
                 getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,

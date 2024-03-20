@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.common.*
-import com.tangem.common.authentication.AuthenticatedStorage
+import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.wallets.legacy.UserWalletsListError
@@ -89,7 +89,6 @@ internal class BiometricUserWalletsKeysRepository(
             .doOnFailure { error ->
                 when (error) {
                     is TangemSdkError.KeystoreInvalidated -> {
-                        // If the biometric cryptography key was invalidated, then delete all encryption keys
                         getUserWalletsIds().forEach { userWalletId ->
                             deleteEncryptionKey(userWalletId)
                         }
@@ -120,7 +119,7 @@ internal class BiometricUserWalletsKeysRepository(
     }
 
     private fun deleteEncryptionKey(userWalletId: UserWalletId) {
-        return authenticatedStorage.delete(StorageKey.UserWalletEncryptionKey(userWalletId).name)
+        authenticatedStorage.delete(StorageKey.UserWalletEncryptionKey(userWalletId).name)
     }
 
     private suspend fun getUserWalletsIds(): List<UserWalletId> {

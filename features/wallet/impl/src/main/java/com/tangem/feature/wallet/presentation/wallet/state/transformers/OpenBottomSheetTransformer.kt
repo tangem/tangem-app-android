@@ -13,41 +13,30 @@ internal class OpenBottomSheetTransformer(
 
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
-            is WalletState.MultiCurrency.Content -> {
-                prevState.copy(
-                    bottomSheetConfig = TangemBottomSheetConfig(
-                        isShow = true,
-                        onDismissRequest = onDismissBottomSheet,
-                        content = content,
-                    ),
-                )
-            }
-            is WalletState.MultiCurrency.Locked -> {
-                prevState.copy(isBottomSheetShow = true, onBottomSheetDismiss = onDismissBottomSheet)
-            }
-            is WalletState.SingleCurrency.Content -> {
-                prevState.copy(
-                    bottomSheetConfig = TangemBottomSheetConfig(
-                        isShow = true,
-                        onDismissRequest = onDismissBottomSheet,
-                        content = content,
-                    ),
-                )
-            }
-            is WalletState.SingleCurrency.Locked -> {
-                prevState.copy(isBottomSheetShow = true, onBottomSheetDismiss = onDismissBottomSheet)
-            }
+            is WalletState.MultiCurrency.Content -> prevState.copy(
+                bottomSheetConfig = updateConfig(),
+            )
+            is WalletState.MultiCurrency.Locked -> prevState.copy(
+                bottomSheetConfig = updateConfig(),
+            )
+            is WalletState.SingleCurrency.Content -> prevState.copy(
+                bottomSheetConfig = updateConfig(),
+            )
+            is WalletState.SingleCurrency.Locked -> prevState.copy(
+                bottomSheetConfig = updateConfig(),
+            )
             is WalletState.Visa.Content -> prevState.copy(
-                bottomSheetConfig = TangemBottomSheetConfig(
-                    isShow = true,
-                    onDismissRequest = onDismissBottomSheet,
-                    content = content,
-                ),
+                bottomSheetConfig = updateConfig(),
             )
             is WalletState.Visa.Locked -> prevState.copy(
-                isBottomSheetShow = true,
-                onBottomSheetDismiss = onDismissBottomSheet,
+                bottomSheetConfig = updateConfig(),
             )
         }
     }
+
+    private fun updateConfig() = TangemBottomSheetConfig(
+        isShow = true,
+        onDismissRequest = onDismissBottomSheet,
+        content = content,
+    )
 }
