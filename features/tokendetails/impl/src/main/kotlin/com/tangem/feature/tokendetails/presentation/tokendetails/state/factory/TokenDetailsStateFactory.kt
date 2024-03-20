@@ -11,6 +11,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
@@ -32,9 +33,9 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.t
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,12 +45,16 @@ internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: TokenDetailsClickIntents,
+    private val featureToggles: TokenDetailsFeatureToggles,
     symbol: String,
     decimals: Int,
 ) {
 
     private val skeletonStateConverter by lazy {
-        TokenDetailsSkeletonStateConverter(clickIntents = clickIntents)
+        TokenDetailsSkeletonStateConverter(
+            clickIntents = clickIntents,
+            featureToggles = featureToggles,
+        )
     }
 
     private val notificationConverter by lazy {
@@ -282,12 +287,12 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithUpdatedMenu(cardTypesResolver: CardTypesResolver): TokenDetailsState {
+    fun getStateWithUpdatedMenu(cardTypesResolver: CardTypesResolver, isBitcoin: Boolean): TokenDetailsState {
         return with(currentStateProvider()) {
             copy(
                 topAppBarConfig = topAppBarConfig.copy(
                     tokenDetailsAppBarMenuConfig = topAppBarConfig.tokenDetailsAppBarMenuConfig
-                        ?.updateMenu(cardTypesResolver),
+                        ?.updateMenu(cardTypesResolver, isBitcoin),
                 ),
             )
         }
@@ -295,17 +300,25 @@ internal class TokenDetailsStateFactory(
 
     private fun TokenDetailsAppBarMenuConfig.updateMenu(
         cardTypesResolver: CardTypesResolver,
+        isBitcoin: Boolean,
     ): TokenDetailsAppBarMenuConfig? {
         if (cardTypesResolver.isSingleWalletWithToken()) return null
-
+        val showGenerateExtendedKey = featureToggles.isGenerateXPubEnabled() && isBitcoin
         return copy(
-            items = persistentListOf(
+            items = buildList {
+                if (showGenerateExtendedKey) {
+                    TokenDetailsAppBarMenuConfig.MenuItem(
+                        title = resourceReference(R.string.token_details_generate_xpub),
+                        textColorProvider = { TangemTheme.colors.text.primary1 },
+                        onClick = clickIntents::onGenerateExtendedKey,
+                    ).let(::add)
+                }
                 TokenDetailsAppBarMenuConfig.MenuItem(
                     title = TextReference.Res(id = R.string.token_details_hide_token),
                     textColorProvider = { TangemTheme.colors.text.warning },
                     onClick = clickIntents::onHideClick,
-                ),
-            ),
+                ).let(::add)
+            }.toImmutableList(),
         )
     }
 }
