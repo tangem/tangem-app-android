@@ -466,7 +466,6 @@ internal class SendViewModel @Inject constructor(
                 )
                 return
             } else {
-                uiState = stateFactory.onSubtractSelect(false, isAmountSubtractAvailable)
                 analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
             }
             if (checkIfFeeTooLow(uiState)) {
@@ -606,7 +605,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onSubtractSelect() {
-        uiState = stateFactory.onSubtractSelect(true, isAmountSubtractAvailable)
+        uiState = stateFactory.onSubtractSelect(isAmountSubtractAvailable)
         stateRouter.showSend()
         analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(true))
     }
