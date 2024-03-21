@@ -520,27 +520,28 @@ class DefaultWalletManagersFacade(
 
     override suspend fun getRecentTransactions(
         userWalletId: UserWalletId,
-        blockchain: Blockchain,
-        derivationPath: String?,
+        currency: CryptoCurrency,
     ): List<TxHistoryItem> {
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = derivationPath,
-        )
-        val feePaidCurrency = blockchain.feePaidCurrency()
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
 
         if (walletManager == null) {
-            Timber.e("Unable to get a wallet manager for blockchain: $blockchain")
+            Timber.e("Unable to get a wallet manager for blockchain: ${currency.network.id}")
             return emptyList()
         }
 
         val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
             walletAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
-            feePaidCurrency = feePaidCurrency,
+            feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
         )
 
-        return walletManager.wallet.recentTransactions.mapNotNull(transactionDataConverter::convert)
+        return walletManager.wallet.recentTransactions
+            .filter { transaction ->
+                when (currency) {
+                    is CryptoCurrency.Coin -> transaction.amount.type is AmountType.Coin
+                    is CryptoCurrency.Token -> transaction.contractAddress == currency.contractAddress
+                }
+            }
+            .mapNotNull(transactionDataConverter::convert)
     }
 
     override suspend fun tokenBalance(
