@@ -25,6 +25,7 @@ import java.math.BigDecimal
 internal data class SendUiState(
     val clickIntents: SendClickIntents,
     val isEditingDisabled: Boolean,
+    val cryptoCurrencySymbol: String,
     val amountState: SendStates.AmountState? = null,
     val recipientState: SendStates.RecipientState? = null,
     val feeState: SendStates.FeeState? = null,
