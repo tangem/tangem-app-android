@@ -2,10 +2,8 @@ package com.tangem.data.txhistory.repository.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.PaginationWrapper
@@ -82,17 +80,9 @@ internal class TxHistoryPagingSource(
     }
 
     private suspend fun PaginationWrapper<TxHistoryItem>.addRecentTransactions(): PaginationWrapper<TxHistoryItem> {
-        val blockchain = Blockchain.fromNetworkId(sourceParams.currency.network.backendId)
-
-        if (blockchain == null) {
-            Timber.e("Blockchain not found")
-            return this
-        }
-
         val recentItems = walletManagersFacade.getRecentTransactions(
             userWalletId = sourceParams.userWalletId,
-            blockchain = blockchain,
-            derivationPath = sourceParams.currency.network.derivationPath.value,
+            currency = sourceParams.currency,
         )
             .filterUnconfirmedTransaction()
             .filterIfTxAlreadyAdded(apiItems = items)
