@@ -1,233 +1,119 @@
 package com.tangem.features.send.impl.presentation.ui.send
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
-import com.tangem.common.Strings
-import com.tangem.core.ui.components.inputrow.InputRowDefault
-import com.tangem.core.ui.components.inputrow.InputRowImage
-import com.tangem.core.ui.components.inputrow.InputRowRecipientDefault
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.BigDecimalFormatter.formatCryptoAmount
-import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
-import com.tangem.domain.tokens.model.AmountType
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendNotification
-import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import kotlinx.collections.immutable.ImmutableList
+
+private const val TAP_HELP_KEY = "TAP_HELP_KEY"
+private const val BLOCKS_KEY = "BLOCKS_KEY"
 
 @Suppress("LongMethod")
 @Composable
 internal fun SendContent(uiState: SendUiState) {
-    val amountState = uiState.amountState ?: return
-    val recipientState = uiState.recipientState ?: return
-    val feeState = uiState.feeState ?: return
     val sendState = uiState.sendState
-
-    val isSuccess = sendState.isSuccess
-    val timestamp = sendState.transactionDate
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = TangemTheme.dimens.spacing16),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12)) {
-                AnimatedVisibility(visible = isSuccess) {
-                    TransactionDoneTitle(
-                        titleRes = R.string.sent_transaction_sent_title,
-                        date = timestamp,
-                    )
-                }
-                AnimatedVisibility(visible = !isSuccess) {
-                    FromWallet(
-                        walletName = amountState.walletName,
-                        walletBalance = amountState.walletBalance.resolveReference(),
-                        isBalanceHidden = uiState.isBalanceHidden,
-                    )
-                }
-                RecipientBlock(
-                    recipientState = recipientState,
-                    isSuccess = isSuccess,
-                    isEditingDisabled = uiState.isEditingDisabled,
-                    onClick = uiState.clickIntents::showRecipient,
-                )
-                AmountBlock(
-                    amountState = amountState,
-                    isSuccess = isSuccess,
-                    isEditingDisabled = uiState.isEditingDisabled,
-                    onClick = uiState.clickIntents::showAmount,
-                )
-                FeeBlock(
-                    feeState = feeState,
-                    isSuccess = isSuccess,
-                    onClick = uiState.clickIntents::showFee,
-                )
-            }
-        }
+        blocks(uiState)
+        tapHelp(isDisplay = sendState.notifications.isEmpty() && !uiState.sendState.isSuccess)
         notifications(sendState.notifications)
     }
 }
 
-@Composable
-private fun FromWallet(walletName: String, walletBalance: String, isBalanceHidden: Boolean) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.button.disabled)
-            .padding(TangemTheme.dimens.spacing12),
-    ) {
-        Text(
-            text = buildAnnotatedString {
-                append(stringResource(R.string.send_from_wallet_android))
-                append(" ")
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(walletName)
-                }
-            },
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
-        )
-        val balance = if (isBalanceHidden) Strings.STARS else walletBalance
-        AnimatedContent(
-            targetState = balance,
-            label = "Hide Balance Animation",
-        ) {
-            Text(
-                text = it,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
-                modifier = Modifier
-                    .padding(
-                        top = TangemTheme.dimens.spacing8,
-                    ),
+private fun LazyListScope.blocks(uiState: SendUiState) {
+    val amountState = uiState.amountState ?: return
+    val recipientState = uiState.recipientState ?: return
+    val feeState = uiState.feeState ?: return
+    val sendState = uiState.sendState
+    val isSuccess = sendState.isSuccess
+    val timestamp = sendState.transactionDate
+
+    item(key = BLOCKS_KEY) {
+        Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12)) {
+            AnimatedVisibility(
+                visible = isSuccess,
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+            ) {
+                TransactionDoneTitle(
+                    titleRes = R.string.sent_transaction_sent_title,
+                    date = timestamp,
+                )
+            }
+            RecipientBlock(
+                recipientState = recipientState,
+                isSuccess = isSuccess,
+                isEditingDisabled = uiState.isEditingDisabled,
+                onClick = uiState.clickIntents::showRecipient,
+            )
+            AmountBlock(
+                amountState = amountState,
+                isSuccess = isSuccess,
+                isEditingDisabled = uiState.isEditingDisabled,
+                onClick = uiState.clickIntents::showAmount,
+            )
+            FeeBlock(
+                feeState = feeState,
+                isSuccess = isSuccess,
+                onClick = uiState.clickIntents::showFee,
             )
         }
     }
 }
 
-@Composable
-private fun AmountBlock(
-    amountState: SendStates.AmountState,
-    isSuccess: Boolean,
-    isEditingDisabled: Boolean,
-    onClick: () -> Unit,
-) {
-    val amount = amountState.amountTextField
-
-    val cryptoAmount = formatCryptoAmount(
-        cryptoAmount = amount.cryptoAmount.value,
-        cryptoCurrency = amount.cryptoAmount.currencySymbol,
-        decimals = amount.cryptoAmount.decimals,
-    )
-    val fiatAmount = formatFiatAmount(
-        fiatAmount = amount.fiatAmount.value,
-        fiatCurrencyCode = (amount.fiatAmount.type as AmountType.FiatType).code,
-        fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
-    )
-    val backgroundColor = if (isEditingDisabled) {
-        TangemTheme.colors.button.disabled
-    } else {
-        TangemTheme.colors.background.action
-    }
-    InputRowImage(
-        title = TextReference.Res(R.string.send_amount_label),
-        subtitle = TextReference.Str(cryptoAmount),
-        caption = TextReference.Str(fiatAmount),
-        tokenIconState = amountState.tokenIconState,
-        showNetworkIcon = true,
-        modifier = Modifier
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(backgroundColor)
-            .clickable(enabled = !isSuccess && !isEditingDisabled) { onClick() },
-    )
-}
-
-@Composable
-private fun RecipientBlock(
-    recipientState: SendStates.RecipientState,
-    isSuccess: Boolean,
-    isEditingDisabled: Boolean,
-    onClick: () -> Unit,
-) {
-    val address = recipientState.addressTextField
-    val memo = recipientState.memoTextField
-    val backgroundColor = if (isEditingDisabled) {
-        TangemTheme.colors.button.disabled
-    } else {
-        TangemTheme.colors.background.action
-    }
-
-    Column(
-        modifier = Modifier
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(backgroundColor)
-            .clickable(enabled = !isSuccess && !isEditingDisabled) { onClick() },
-    ) {
-        val showMemo = memo != null && memo.value.isNotBlank()
-        InputRowRecipientDefault(
-            title = TextReference.Res(R.string.send_recipient),
-            value = address.value,
-            showDivider = showMemo,
-        )
-        if (showMemo) {
-            InputRowDefault(
-                title = TextReference.Res(R.string.send_extras_hint_memo),
-                text = TextReference.Str(memo?.value.orEmpty()),
-            )
+@OptIn(ExperimentalFoundationApi::class)
+private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modifier) {
+    if (isDisplay) {
+        item(key = TAP_HELP_KEY) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = modifier
+                    .fillMaxWidth()
+                    .animateItemPlacement(),
+            ) {
+                val background = TangemTheme.colors.button.secondary
+                Icon(
+                    painter = painterResource(id = R.drawable.send_hint_shape_12),
+                    tint = TangemTheme.colors.button.secondary,
+                    contentDescription = null,
+                    modifier = Modifier,
+                )
+                Text(
+                    text = stringResource(id = R.string.send_summary_tap_hint),
+                    style = TangemTheme.typography.caption1,
+                    color = TangemTheme.colors.text.secondary,
+                    modifier = Modifier
+                        .clip(TangemTheme.shapes.roundedCornersXMedium)
+                        .background(background)
+                        .padding(
+                            horizontal = TangemTheme.dimens.spacing14,
+                            vertical = TangemTheme.dimens.spacing12,
+                        ),
+                )
+            }
         }
     }
-}
-
-@Composable
-private fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick: () -> Unit) {
-    val fee = feeState.fee ?: return
-    val feeCryptoValue = formatCryptoAmount(
-        cryptoAmount = fee.amount.value,
-        cryptoCurrency = fee.amount.currencySymbol,
-        decimals = fee.amount.decimals,
-    )
-    val feeFiatValue = formatFiatAmount(
-        fiatAmount = feeState.rate?.let { fee.amount.value?.multiply(it) },
-        fiatCurrencyCode = feeState.appCurrency.code,
-        fiatCurrencySymbol = feeState.appCurrency.symbol,
-    )
-    InputRowDefault(
-        title = resourceReference(R.string.common_network_fee_title),
-        text = resourceReference(
-            id = R.string.send_wallet_balance_format,
-            wrappedList(feeCryptoValue, feeFiatValue),
-        ),
-        modifier = Modifier
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
-            .clickable(enabled = !isSuccess) { onClick() },
-    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
