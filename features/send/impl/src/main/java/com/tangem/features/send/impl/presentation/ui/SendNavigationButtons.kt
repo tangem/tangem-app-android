@@ -1,18 +1,12 @@
 package com.tangem.features.send.impl.presentation.ui
 
-import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,161 +16,185 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.*
-import com.tangem.core.ui.extensions.rememberHapticFeedback
+import com.tangem.core.ui.components.SecondaryButtonIconStart
+import com.tangem.core.ui.components.SpacerW12
+import com.tangem.core.ui.components.buttons.common.TangemButton
+import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 
 @Composable
 internal fun SendNavigationButtons(uiState: SendUiState, currentState: SendUiCurrentScreen) {
-    Row(
+    val isSuccess = uiState.sendState.isSuccess
+    val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
+    val isSentState = currentState.type == SendUiStateType.Send && isSuccess
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = TangemTheme.dimens.spacing12),
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            ),
     ) {
-        SendSecondaryNavigationButton(
-            uiState = uiState,
-            currentState = currentState,
+        SendingText(uiState = uiState, isVisible = isSendingState)
+        SendDoneButtons(
+            txUrl = uiState.sendState.txUrl,
+            onExploreClick = uiState.clickIntents::onExploreClick,
+            onShareClick = uiState.clickIntents::onShareClick,
+            isVisible = isSentState,
         )
-        SendPrimaryNavigationButton(
+        SendNavigationButton(
             uiState = uiState,
             currentState = currentState,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+            modifier = Modifier,
         )
     }
 }
 
 @Composable
-private fun SendSecondaryNavigationButton(uiState: SendUiState, currentState: SendUiCurrentScreen) {
-    val isEditingDisabled = uiState.isEditingDisabled
-    val isFromConfirmation = currentState.isFromConfirmation
-    val isCorrectScreen = currentState.type == SendUiStateType.Amount || currentState.type == SendUiStateType.Fee
-    AnimatedVisibility(
-        visible = !isEditingDisabled && isCorrectScreen && !isFromConfirmation,
-        enter = expandHorizontally(expandFrom = Alignment.End),
-        exit = shrinkHorizontally(shrinkTowards = Alignment.End),
-    ) {
-        Icon(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing16)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
-                .background(TangemTheme.colors.button.secondary)
-                .clickable {
-                    uiState.clickIntents.onPrevClick()
-                }
-                .padding(TangemTheme.dimens.spacing12),
-            painter = painterResource(R.drawable.ic_back_24),
-            tint = TangemTheme.colors.icon.primary1,
-            contentDescription = null,
-        )
-    }
-}
-
-@Composable
-private fun SendPrimaryNavigationButton(
+private fun SendNavigationButton(
     uiState: SendUiState,
     currentState: SendUiCurrentScreen,
     modifier: Modifier = Modifier,
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
+    val isEditingDisabled = uiState.isEditingDisabled
     val isSuccess = uiState.sendState.isSuccess
-    val isSending = uiState.sendState.isSending
-    val txUrl = uiState.sendState.txUrl
+
+    val isFromConfirmation = currentState.isFromConfirmation
+    val isCorrectScreen = currentState.type == SendUiStateType.Amount || currentState.type == SendUiStateType.Fee
+    val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = currentState,
         isSuccess = isSuccess,
         uiState = uiState,
     )
-
-    val isButtonEnabled = isButtonEnabled(
-        currentState = currentState,
-        uiState = uiState,
-    )
-
-    AnimatedContent(
-        targetState = buttonTextId,
-        label = "Update send screen state",
+    val isButtonEnabled = isButtonEnabled(currentState, uiState)
+    val buttonIcon = if (isSendingState) {
+        TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
+    } else {
+        TangemButtonIconPosition.None
+    }
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         modifier = modifier,
-    ) { textId ->
-        when {
-            currentState.type == SendUiStateType.Send && !isSuccess -> {
-                val hapticFeedback = rememberHapticFeedback(state = currentState, onAction = buttonClick)
-                PrimaryButtonIconEnd(
-                    text = stringResource(textId),
-                    iconResId = R.drawable.ic_tangem_24,
-                    enabled = isButtonEnabled,
-                    onClick = hapticFeedback,
-                    showProgress = isSending,
-                )
-            }
-            currentState.type == SendUiStateType.Send && isSuccess -> {
-                PrimaryButtonsDone(
-                    textRes = textId,
-                    txUrl = txUrl,
-                    onExploreClick = uiState.clickIntents::onExploreClick,
-                    onShareClick = uiState.clickIntents::onShareClick,
-                    onDoneClick = buttonClick,
-                    modifier = Modifier,
-                )
-            }
-            else -> {
-                PrimaryButton(
-                    text = stringResource(textId),
-                    enabled = isButtonEnabled,
-                    onClick = buttonClick,
-                )
-            }
+    ) {
+        AnimatedVisibility(
+            visible = !isEditingDisabled && isCorrectScreen && !isFromConfirmation,
+            enter = expandHorizontally(expandFrom = Alignment.End),
+            exit = shrinkHorizontally(shrinkTowards = Alignment.End),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_back_24),
+                tint = TangemTheme.colors.icon.primary1,
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                    .background(TangemTheme.colors.button.secondary)
+                    .clickable { uiState.clickIntents.onPrevClick() }
+                    .padding(TangemTheme.dimens.spacing12),
+            )
+        }
+        TangemButton(
+            text = stringResource(buttonTextId),
+            icon = buttonIcon,
+            enabled = isButtonEnabled,
+            onClick = {
+                if (isSendingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                buttonClick()
+            },
+            showProgress = uiState.sendState.isSending,
+            modifier = Modifier.fillMaxWidth(),
+            colors = TangemButtonsDefaults.primaryButtonColors,
+        )
+    }
+}
+
+@Composable
+private fun SendingText(uiState: SendUiState, isVisible: Boolean, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        visible = isVisible,
+        modifier = modifier,
+        enter = slideInVertically().plus(fadeIn()),
+        exit = slideOutVertically().plus(fadeOut()),
+        label = "Animate show sending state text",
+    ) {
+        val amountState = uiState.amountState
+        val feeState = uiState.feeState
+        val fiatRate = feeState?.rate
+        val fiatAmount = amountState?.amountTextField?.fiatAmount
+        val feeFiat = feeState?.fee?.amount?.value?.multiply(fiatRate)
+        val sendingFiat = feeFiat?.let { fiatAmount?.value?.plus(it) }
+
+        if (feeFiat != null && sendingFiat != null) {
+            val sendingValue = BigDecimalFormatter.formatFiatAmount(
+                fiatAmount = sendingFiat,
+                fiatCurrencyCode = feeState.appCurrency.code,
+                fiatCurrencySymbol = feeState.appCurrency.symbol,
+            )
+            val feeValue = BigDecimalFormatter.formatFiatAmount(
+                fiatAmount = feeFiat,
+                fiatCurrencyCode = feeState.appCurrency.code,
+                fiatCurrencySymbol = feeState.appCurrency.symbol,
+            )
+            Text(
+                text = stringResource(id = R.string.send_summary_transaction_description, sendingValue, feeValue),
+                textAlign = TextAlign.Center,
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(TangemTheme.dimens.spacing12),
+            )
         }
     }
 }
 
 @Composable
-private fun PrimaryButtonsDone(
-    @StringRes textRes: Int,
+private fun SendDoneButtons(
     txUrl: String,
     onExploreClick: () -> Unit,
     onShareClick: () -> Unit,
-    onDoneClick: () -> Unit,
+    isVisible: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val context = LocalContext.current
 
-    Column(modifier = modifier) {
-        if (txUrl.isNotBlank()) {
-            Row {
-                SecondaryButtonIconStart(
-                    text = stringResource(id = R.string.common_explore),
-                    iconResId = R.drawable.ic_web_24,
-                    onClick = onExploreClick,
-                    modifier = Modifier.weight(1f),
-                )
-                SpacerW12()
-                SecondaryButtonIconStart(
-                    text = stringResource(id = R.string.common_share),
-                    iconResId = R.drawable.ic_share_24,
-                    onClick = {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        context.shareText(txUrl)
-                        onShareClick()
-                    },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            SpacerH12()
+    AnimatedVisibility(
+        visible = isVisible && txUrl.isNotBlank(),
+        modifier = modifier,
+        enter = slideInVertically().plus(fadeIn()),
+        exit = slideOutVertically().plus(fadeOut()),
+        label = "Animate show sent state buttons",
+    ) {
+        Row(modifier = Modifier.padding(TangemTheme.dimens.spacing12)) {
+            SecondaryButtonIconStart(
+                text = stringResource(id = R.string.common_explore),
+                iconResId = R.drawable.ic_web_24,
+                onClick = onExploreClick,
+                modifier = Modifier.weight(1f),
+            )
+            SpacerW12()
+            SecondaryButtonIconStart(
+                text = stringResource(id = R.string.common_share),
+                iconResId = R.drawable.ic_share_24,
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    context.shareText(txUrl)
+                    onShareClick()
+                },
+                modifier = Modifier.weight(1f),
+            )
         }
-        PrimaryButton(
-            text = stringResource(id = textRes),
-            enabled = true,
-            onClick = onDoneClick,
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
 
