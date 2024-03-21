@@ -80,11 +80,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onAddBackupCardClick() {
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped)
 
-        prepareOnboardingProcess()
-        router.openOnboardingScreen()
+        prepareAndStartOnboardingProcess()
     }
 
-    private fun prepareOnboardingProcess() {
+    private fun prepareAndStartOnboardingProcess() {
         viewModelScope.launch(dispatchers.main) {
             getSelectedUserWallet()?.let {
                 reduxStateHolder.dispatch(
@@ -94,6 +93,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     ),
                 )
             }
+            // navigation action shouldn't be out of coroutine to avoid race
+            router.openOnboardingScreen()
         }
     }
 
