@@ -102,7 +102,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "polygon-zkevm" -> Blockchain.PolygonZkEVM
         "polygon-zkevm/test" -> Blockchain.PolygonZkEVMTestnet
         "nexa" -> Blockchain.Nexa // FIXME
-        "nexa/testnet" -> Blockchain.NexaTestnet // FIXME
+        "nexa/test" -> Blockchain.NexaTestnet // FIXME
         "radiant" -> Blockchain.Radiant
         else -> null
     }
