@@ -20,7 +20,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.isLockedSync
+import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -120,8 +120,12 @@ class DetailsMiddleware {
 
                         doBeforeErase()
                         tangemSdkManager.resetToFactorySettings(card.cardId, true)
-                            .flatMap { userWalletsListManager.delete(listOfNotNull(userWalletId)) }
-                            .flatMap { tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId)) }
+                            .flatMap {
+                                userWalletsListManager.delete(listOfNotNull(userWalletId))
+                            }
+                            .flatMap {
+                                tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId))
+                            }
                             .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
 
@@ -130,7 +134,9 @@ class DetailsMiddleware {
                                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                                     store.onUserWalletSelected(selectedUserWallet)
                                 } else {
-                                    if (userWalletsListManager.isLockedSync) {
+                                    val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
+                                        .fold(onSuccess = { true }, onFailure = { false })
+                                    if (isLocked) {
                                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                                     } else {
                                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
