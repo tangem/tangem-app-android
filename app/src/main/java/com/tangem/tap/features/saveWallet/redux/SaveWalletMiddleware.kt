@@ -12,6 +12,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.isLockable
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -23,11 +24,16 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
 
 internal class SaveWalletMiddleware {
+
+    private val saveWalletJobHolder = JobHolder()
+
     val middleware: Middleware<AppState> = { _, stateProvider ->
         { next ->
             { action ->
@@ -99,9 +105,7 @@ internal class SaveWalletMiddleware {
                 ?: return@launch
 
             val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
-            if (featureToggles.isGeneralManagerEnabled) {
-                store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
-            } else {
+            if (!featureToggles.isGeneralManagerEnabled) {
                 provideLockableUserWalletsListManagerIfNot()
             }
 
@@ -143,7 +147,7 @@ internal class SaveWalletMiddleware {
                         },
                     )
                 }
-        }
+        }.saveIn(saveWalletJobHolder)
     }
 
     private fun allowToUseBiometrics(state: SaveWalletState) {
@@ -151,10 +155,6 @@ internal class SaveWalletMiddleware {
             store.dispatchOnMain(SaveWalletAction.EnrollBiometrics)
             return
         }
-
-        val scanResponse = state.backupInfo?.scanResponse
-            ?: store.state.globalState.scanResponse
-            ?: return
 
         if (state.backupInfo != null) {
             // TODO: Remove after onboarding refactoring
@@ -164,31 +164,49 @@ internal class SaveWalletMiddleware {
         }
 
         scope.launch {
-            val userWallet = userWalletsListManager.selectedUserWalletSync
-                ?: UserWalletBuilder(scanResponse)
-                    .backupCardsIds(state.backupInfo?.backupCardsIds)
-                    .build()
-                ?: return@launch
+            val backupInfo = state.backupInfo
+            val userWalletFromBackup = backupInfo?.scanResponse
+                ?.let(::UserWalletBuilder)
+                ?.backupCardsIds(backupInfo.backupCardsIds)
+                ?.build()
 
-            store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+            if (userWalletFromBackup != null) {
+                userWalletsListManager.save(userWalletFromBackup, canOverride = true)
+                    .flatMap { saveAccessCodeIfNeeded(backupInfo.accessCode, userWalletFromBackup.cardsInWallet) }
+                    .doOnFailure {
+                        Timber.e(it, "Unable to save user wallet")
 
-            saveAccessCodeIfNeeded(accessCode = state.backupInfo?.accessCode, cardsInWallet = userWallet.cardsInWallet)
-                .flatMap {
-                    userWalletsListManager.save(userWallet, canOverride = true)
-                }
-                .doOnFailure { error ->
-                    store.dispatchWithMain(SaveWalletAction.Save.Error(error))
-                }
-                .doOnSuccess {
-                    preferencesStorage.shouldSaveAccessCodes = true
-                    store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
-                        isBiometricsRequestPolicy = userWallet.hasAccessCode,
-                    )
+                        store.dispatchWithMain(SaveWalletAction.Save.Error(it))
+                    }
+                    .doOnSuccess {
+                        handleSavingSuccess(userWalletFromBackup)
+                    }
+            } else {
+                /*
 
-                    store.dispatchOnMain(SaveWalletAction.Save.Success)
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                 * because it will be automatically saved on UserWalletsListManager switch
+                 * */
+                val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+                    val error = IllegalStateException("No selected user wallet")
+                    Timber.e(error, "Unable to save user wallet")
+                    store.dispatchWithMain(SaveWalletAction.Save.Error(TangemSdkError.ExceptionError(error)))
+                    return@launch
                 }
-        }
+
+                handleSavingSuccess(selectedUserWallet)
+            }
+        }.saveIn(saveWalletJobHolder)
+    }
+
+    private suspend fun handleSavingSuccess(userWallet: UserWallet) {
+        store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+        preferencesStorage.shouldSaveAccessCodes = true
+        store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+            isBiometricsRequestPolicy = userWallet.hasAccessCode,
+        )
+
+        store.dispatchWithMain(SaveWalletAction.Save.Success)
+        store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
     }
 
     private suspend fun provideLockableUserWalletsListManagerIfNot() {
@@ -223,14 +241,14 @@ internal class SaveWalletMiddleware {
         cardsInWallet: Set<String>,
     ): CompletionResult<Unit> {
         return when {
-            accessCode != null -> {
+            accessCode.isNullOrBlank() -> {
+                CompletionResult.Success(Unit)
+            }
+            else -> {
                 tangemSdkManager.saveAccessCode(
                     accessCode = accessCode,
                     cardsIds = cardsInWallet,
                 )
-            }
-            else -> {
-                CompletionResult.Success(Unit)
             }
         }
     }
