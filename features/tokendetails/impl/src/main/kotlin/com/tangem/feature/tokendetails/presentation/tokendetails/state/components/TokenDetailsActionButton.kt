@@ -14,30 +14,26 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
     /**
      * Buy
      *
-     * @property enabled button click availability
      * @property onClick lambda be invoked when Buy button is clicked
      */
-    data class Buy(val enabled: Boolean, override val onClick: () -> Unit) : TokenDetailsActionButton(
+    data class Buy(override val onClick: () -> Unit) : TokenDetailsActionButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_buy),
             iconResId = R.drawable.ic_plus_24,
             onClick = onClick,
-            enabled = enabled,
         ),
     )
 
     /**
      * Send
      *
-     * @property enabled button click availability
      * @property onClick lambda be invoked when Send button is clicked
      */
-    data class Send(val enabled: Boolean, override val onClick: () -> Unit) : TokenDetailsActionButton(
+    data class Send(override val onClick: () -> Unit) : TokenDetailsActionButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_send),
             iconResId = R.drawable.ic_arrow_up_24,
             onClick = onClick,
-            enabled = enabled,
         ),
     )
 
@@ -51,37 +47,32 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.common_receive),
             iconResId = R.drawable.ic_arrow_down_24,
             onClick = onClick,
-            enabled = true,
         ),
     )
 
     /**
      * Sell
      *
-     * @property enabled button click availability
      * @property onClick lambda be invoked when Sell button is clicked
      */
-    data class Sell(val enabled: Boolean, override val onClick: () -> Unit) : TokenDetailsActionButton(
+    data class Sell(override val onClick: () -> Unit) : TokenDetailsActionButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_sell),
             iconResId = R.drawable.ic_currency_24,
             onClick = onClick,
-            enabled = enabled,
         ),
     )
 
     /**
      * Swap
      *
-     * @property enabled button click availability
      * @property onClick lambda be invoked when Swap button is clicked
      */
-    data class Swap(val enabled: Boolean, override val onClick: () -> Unit) : TokenDetailsActionButton(
+    data class Swap(override val onClick: () -> Unit) : TokenDetailsActionButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.swapping_swap_action),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
-            enabled = enabled,
         ),
     )
 }

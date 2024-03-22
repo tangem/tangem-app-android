@@ -72,10 +72,10 @@ internal object TokenDetailsPreviewData {
     )
 
     private val actionButtons = persistentListOf(
-        TokenDetailsActionButton.Buy(enabled = true, onClick = {}),
-        TokenDetailsActionButton.Send(enabled = true, onClick = {}),
+        TokenDetailsActionButton.Buy(onClick = {}),
+        TokenDetailsActionButton.Send(onClick = {}),
         TokenDetailsActionButton.Receive(onClick = {}),
-        TokenDetailsActionButton.Swap(enabled = true, onClick = {}),
+        TokenDetailsActionButton.Swap(onClick = {}),
     )
 
     val balanceLoading = TokenDetailsBalanceBlockState.Loading(actionButtons = actionButtons)

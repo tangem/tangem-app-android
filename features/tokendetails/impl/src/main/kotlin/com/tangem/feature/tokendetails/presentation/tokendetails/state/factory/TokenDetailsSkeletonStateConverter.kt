@@ -84,11 +84,11 @@ internal class TokenDetailsSkeletonStateConverter(
 
     private fun createButtons(): ImmutableList<TokenDetailsActionButton> {
         return persistentListOf(
-            TokenDetailsActionButton.Buy(enabled = false, onClick = {}),
-            TokenDetailsActionButton.Send(enabled = false, onClick = {}),
+            TokenDetailsActionButton.Buy(onClick = {}),
+            TokenDetailsActionButton.Send(onClick = {}),
             TokenDetailsActionButton.Receive(onClick = {}),
-            TokenDetailsActionButton.Sell(enabled = false, onClick = {}),
-            TokenDetailsActionButton.Swap(enabled = false, onClick = {}),
+            TokenDetailsActionButton.Sell(onClick = {}),
+            TokenDetailsActionButton.Swap(onClick = {}),
         )
     }
 
