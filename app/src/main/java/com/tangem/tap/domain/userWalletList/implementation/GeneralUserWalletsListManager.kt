@@ -129,7 +129,7 @@ internal class GeneralUserWalletsListManager(
                 }
 
                 if (possibleManager == implementation.value) {
-                    error("${possibleManager::class.simpleName}} is already selected")
+                    Timber.e("Switch to same manager ${possibleManager::class.simpleName}")
                 }
 
                 Timber.d("Switch to ${possibleManager::class.simpleName}")
