@@ -82,6 +82,7 @@ class DetailsMiddleware {
     }
 
     class EraseWalletMiddleware {
+        @Suppress("CyclomaticComplexMethod")
         fun handle(action: DetailsAction.ResetToFactory) {
             when (action) {
                 is DetailsAction.ResetToFactory.Start -> {
@@ -136,7 +137,7 @@ class DetailsMiddleware {
                                 } else {
                                     val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
                                         .fold(onSuccess = { true }, onFailure = { false })
-                                    if (isLocked) {
+                                    if (isLocked && userWalletsListManager.hasUserWallets) {
                                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                                     } else {
                                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
