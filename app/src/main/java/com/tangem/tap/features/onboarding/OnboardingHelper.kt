@@ -78,9 +78,7 @@ object OnboardingHelper {
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
                 store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds)
-
-                    store.dispatchOnMain(
+                    store.dispatchWithMain(
                         SaveWalletAction.ProvideBackupInfo(
                             scanResponse = scanResponse,
                             accessCode = accessCode,
@@ -90,9 +88,9 @@ object OnboardingHelper {
 
                     val toggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
                     if (toggles.isGeneralManagerEnabled) {
-                        store.dispatchOnMain(SaveWalletAction.AllowToUseBiometrics)
+                        store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup)
                     } else {
-                        store.dispatchOnMain(SaveWalletAction.Save)
+                        store.dispatchWithMain(SaveWalletAction.Save)
                     }
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
