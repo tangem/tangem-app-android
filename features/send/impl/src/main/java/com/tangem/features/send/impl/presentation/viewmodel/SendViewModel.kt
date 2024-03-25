@@ -17,7 +17,7 @@ import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
-import com.tangem.domain.settings.NeverToShowTapHelpUseCase
+import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -88,7 +88,7 @@ internal class SendViewModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
-    private val neverToShowTapHelpUseCase: NeverToShowTapHelpUseCase,
+    private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -295,7 +295,7 @@ internal class SendViewModel @Inject constructor(
 
     private fun getTapHelpPreviewAvailability() {
         viewModelScope.launch(dispatchers.main) {
-            isTapHelpPreviewEnabled = isSendTapHelpEnabledUseCase()
+            isTapHelpPreviewEnabled = isSendTapHelpEnabledUseCase().getOrElse { false }
         }
     }
 
@@ -831,7 +831,7 @@ internal class SendViewModel @Inject constructor(
 
     private fun setNeverToShowTapHelp() {
         viewModelScope.launch(dispatchers.main) {
-            neverToShowTapHelpUseCase()
+            neverShowTapHelpUseCase()
         }
         uiState = stateFactory.getHiddenTapHelpState()
     }
