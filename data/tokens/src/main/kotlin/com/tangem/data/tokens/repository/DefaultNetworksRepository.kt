@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import timber.log.Timber
 
+@Suppress("LongParameterList")
 internal class DefaultNetworksRepository(
     private val networksStatusesStore: NetworksStatusesStore,
     private val walletManagersFacade: WalletManagersFacade,
