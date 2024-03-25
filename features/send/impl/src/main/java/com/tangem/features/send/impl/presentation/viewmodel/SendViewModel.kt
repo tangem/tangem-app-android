@@ -295,7 +295,7 @@ internal class SendViewModel @Inject constructor(
 
     private fun getTapHelpPreviewAvailability() {
         viewModelScope.launch(dispatchers.main) {
-            isTapHelpPreviewEnabled = isSendTapHelpEnabledUseCase()
+            isTapHelpPreviewEnabled = isSendTapHelpEnabledUseCase().getOrElse { false }
         }
     }
 

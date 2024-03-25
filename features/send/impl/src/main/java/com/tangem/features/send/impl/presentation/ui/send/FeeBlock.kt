@@ -15,6 +15,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.res.TangemTheme
@@ -23,6 +26,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.previewdata.FeeStatePreviewData
 
 @Composable
 internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick: () -> Unit) {
@@ -94,3 +98,37 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick
         }
     }
 }
+
+// region Preview
+@Preview
+@Composable
+private fun FeeBlockPreview_Light(@PreviewParameter(FeeBlockPreviewProvider::class) value: SendStates.FeeState) {
+    TangemTheme {
+        FeeBlock(
+            feeState = value,
+            isSuccess = true,
+            onClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun FeeBlockPreview_Dark(@PreviewParameter(FeeBlockPreviewProvider::class) value: SendStates.FeeState) {
+    TangemTheme(isDark = true) {
+        FeeBlock(
+            feeState = value,
+            isSuccess = true,
+            onClick = {},
+        )
+    }
+}
+
+private class FeeBlockPreviewProvider : PreviewParameterProvider<SendStates.FeeState> {
+
+    override val values: Sequence<SendStates.FeeState>
+        get() = sequenceOf(
+            FeeStatePreviewData.feeState,
+        )
+}
+// endregion
