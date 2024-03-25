@@ -8,6 +8,12 @@ import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletCl
 import kotlinx.collections.immutable.toImmutableList
 
 /**
+ * Reinitialize wallet transformer
+ *
+ * @property prevWalletId  reinitialized wallet id
+ * @property newUserWallet new user wallet
+ * @property clickIntents  click intents
+ *
 [REDACTED_AUTHOR]
  */
 internal class ReinitializeWalletTransformer(
