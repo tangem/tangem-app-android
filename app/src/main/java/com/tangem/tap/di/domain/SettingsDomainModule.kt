@@ -137,7 +137,7 @@ internal object SettingsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideNeverToShowTapHelpUseCase(settingsRepository: SettingsRepository): NeverToShowTapHelpUseCase {
-        return NeverToShowTapHelpUseCase(settingsRepository = settingsRepository)
+    fun provideNeverShowTapHelpUseCase(settingsRepository: SettingsRepository): NeverShowTapHelpUseCase {
+        return NeverShowTapHelpUseCase(settingsRepository = settingsRepository)
     }
 }
