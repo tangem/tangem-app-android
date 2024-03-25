@@ -10,11 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
+import com.tangem.features.send.impl.presentation.state.previewdata.RecipientStatePreviewData
 
 @Composable
 internal fun RecipientBlock(
@@ -89,3 +93,43 @@ private fun MemoBlock(memo: SendTextField.RecipientMemo?) {
         )
     }
 }
+
+// region Preview
+@Preview
+@Composable
+private fun RecipientBlockPreview_Light(
+    @PreviewParameter(RecipientBlockPreviewProvider::class) value: SendStates.RecipientState,
+) {
+    TangemTheme {
+        RecipientBlock(
+            recipientState = value,
+            isSuccess = true,
+            isEditingDisabled = false,
+            onClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun RecipientBlockPreview_Dark(
+    @PreviewParameter(RecipientBlockPreviewProvider::class) value: SendStates.RecipientState,
+) {
+    TangemTheme(isDark = true) {
+        RecipientBlock(
+            recipientState = value,
+            isSuccess = true,
+            isEditingDisabled = false,
+            onClick = {},
+        )
+    }
+}
+
+private class RecipientBlockPreviewProvider : PreviewParameterProvider<SendStates.RecipientState> {
+
+    override val values: Sequence<SendStates.RecipientState>
+        get() = sequenceOf(
+            RecipientStatePreviewData.recipientState,
+        )
+}
+// endregion
