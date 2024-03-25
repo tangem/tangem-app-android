@@ -13,6 +13,7 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletForSession
 import com.trustwallet.walletconnect.models.WCPeerMeta
 import com.trustwallet.walletconnect.models.session.WCSession
 import timber.log.Timber
+import java.io.FileNotFoundException
 import java.nio.charset.Charset
 
 class WalletConnectRepository(val context: Application) {
@@ -35,6 +36,8 @@ class WalletConnectRepository(val context: Application) {
             val json = context.readFileText(FILE_NAME_PREFIX_SESSIONS)
                 .hexToUtf8()
             walletConnectAdapter.fromJson(json)!!.map { it.toSession() }
+        } catch (e: FileNotFoundException) {
+            emptyList()
         } catch (exception: Exception) {
             Timber.w(exception)
             emptyList()
