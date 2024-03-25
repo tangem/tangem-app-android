@@ -31,7 +31,7 @@ internal class SendAmountSubtractConverter(
         val fiatValue = decimalFiatValue.parseBigDecimal(fiatDecimals)
 
         return state.copy(
-            sendState = state.sendState.copy(isSubtract = true),
+            sendState = state.sendState?.copy(isSubtract = true),
             amountState = amountState.copy(
                 amountTextField = amountTextField.copy(
                     value = cryptoValue,

@@ -39,7 +39,7 @@ internal class SendNotificationFactory(
         .filter { it.type == SendUiStateType.Send }
         .map {
             val state = currentStateProvider()
-            val sendState = state.sendState
+            val sendState = state.sendState ?: return@map persistentListOf()
             val feeState = state.feeState ?: return@map persistentListOf()
             val feeAmount = feeState.fee?.amount?.value ?: BigDecimal.ZERO
             val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
@@ -60,7 +60,7 @@ internal class SendNotificationFactory(
 
     fun dismissNotificationState(clazz: Class<out SendNotification>): SendUiState {
         val state = currentStateProvider()
-        val sendState = state.sendState
+        val sendState = state.sendState ?: return state
         val notificationsToRemove = sendState.notifications.filterIsInstance(clazz)
         val updatedNotifications = sendState.notifications.toMutableList()
         updatedNotifications.removeAll(notificationsToRemove)
