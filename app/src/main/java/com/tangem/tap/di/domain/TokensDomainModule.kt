@@ -332,4 +332,13 @@ internal object TokensDomainModule {
     ): IsAmountSubtractAvailableUseCase {
         return IsAmountSubtractAvailableUseCase(currenciesRepository, dispatchers)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideRunPolkadotAccountHealthCheckUseCase(
+        repository: PolkadotAccountHealthCheckRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): RunPolkadotAccountHealthCheckUseCase {
+        return RunPolkadotAccountHealthCheckUseCase(repository, dispatchers)
+    }
 }
