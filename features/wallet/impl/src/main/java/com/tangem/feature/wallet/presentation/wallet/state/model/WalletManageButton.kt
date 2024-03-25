@@ -15,6 +15,7 @@ import com.tangem.feature.wallet.impl.R
 @Immutable
 internal sealed class WalletManageButton(val config: ActionButtonConfig) {
 
+    // TODO also used in single currency state for pseudo loading
     /** Is click enabled */
     abstract val enabled: Boolean
 

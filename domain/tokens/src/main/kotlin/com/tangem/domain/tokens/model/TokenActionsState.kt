@@ -10,20 +10,20 @@ data class TokenActionsState(
 
     sealed class ActionState {
 
-        abstract val enabled: Boolean
+        abstract val disabledReason: ButtonDisabledReason
 
-        data class Buy(override val enabled: Boolean) : ActionState()
+        data class Buy(override val disabledReason: ButtonDisabledReason) : ActionState()
 
-        data class CopyAddress(override val enabled: Boolean) : ActionState()
+        data class CopyAddress(override val disabledReason: ButtonDisabledReason) : ActionState()
 
-        data class Sell(override val enabled: Boolean) : ActionState()
+        data class Sell(override val disabledReason: ButtonDisabledReason) : ActionState()
 
-        data class Receive(override val enabled: Boolean) : ActionState()
+        data class Receive(override val disabledReason: ButtonDisabledReason) : ActionState()
 
-        data class Swap(override val enabled: Boolean) : ActionState()
+        data class Swap(override val disabledReason: ButtonDisabledReason) : ActionState()
 
-        data class Send(override val enabled: Boolean) : ActionState()
+        data class Send(override val disabledReason: ButtonDisabledReason) : ActionState()
 
-        data class HideToken(override val enabled: Boolean) : ActionState()
+        data class HideToken(override val disabledReason: ButtonDisabledReason) : ActionState()
     }
 }
