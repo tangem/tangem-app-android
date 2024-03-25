@@ -1,20 +1,21 @@
 package com.tangem.features.send.impl.presentation.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
@@ -40,11 +41,21 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val titleRes = when (currentState.value.type) {
-            SendUiStateType.Amount -> R.string.send_amount_label
-            SendUiStateType.Recipient -> R.string.send_recipient_label
-            SendUiStateType.Fee -> R.string.common_fee_selector_title
-            SendUiStateType.Send -> if (!uiState.sendState.isSuccess) R.string.send_confirm_label else null
+            SendUiStateType.Amount -> resourceReference(R.string.send_amount_label)
+            SendUiStateType.Recipient -> resourceReference(R.string.send_recipient_label)
+            SendUiStateType.Fee -> resourceReference(R.string.common_fee_selector_title)
+            SendUiStateType.Send -> if (!uiState.sendState.isSuccess) {
+                resourceReference(R.string.send_summary_title, wrappedList(uiState.cryptoCurrencySymbol))
+            } else {
+                null
+            }
             else -> null
+        }
+        val isSending = currentState.value.type == SendUiStateType.Send && !uiState.sendState.isSuccess
+        val subtitleRes = if (isSending) {
+            uiState.amountState?.walletName
+        } else {
+            null
         }
         val iconRes = if (currentState.value.type == SendUiStateType.Recipient) {
             R.drawable.ic_qrcode_scan_24
@@ -53,12 +64,14 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
         }
 
         AppBarWithBackButtonAndIcon(
-            text = titleRes?.let { stringResource(it) },
+            text = titleRes?.resolveReference(),
+            subtitle = subtitleRes,
             onBackClick = uiState.clickIntents::popBackStack,
             onIconClick = uiState.clickIntents::onQrCodeScanClick,
             backIconRes = R.drawable.ic_close_24,
             iconRes = iconRes,
             backgroundColor = TangemTheme.colors.background.tertiary,
+            modifier = Modifier.height(TangemTheme.dimens.size56),
         )
         SendScreenContent(
             uiState = uiState,
