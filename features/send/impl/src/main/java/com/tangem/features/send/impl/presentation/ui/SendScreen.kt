@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUiCurrentScreen>) {
     val currentState = currentStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val sendState = uiState.sendState ?: return
     BackHandler { uiState.clickIntents.onBackClick() }
     Column(
         modifier = Modifier
@@ -44,7 +45,7 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
             SendUiStateType.Amount -> resourceReference(R.string.send_amount_label)
             SendUiStateType.Recipient -> resourceReference(R.string.send_recipient_label)
             SendUiStateType.Fee -> resourceReference(R.string.common_fee_selector_title)
-            SendUiStateType.Send -> if (!uiState.sendState.isSuccess) {
+            SendUiStateType.Send -> if (!sendState.isSuccess) {
                 resourceReference(R.string.send_summary_title, wrappedList(uiState.cryptoCurrencySymbol))
             } else {
                 null
