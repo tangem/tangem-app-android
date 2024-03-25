@@ -93,10 +93,16 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "areon-network/test" -> Blockchain.AreonTestnet
         "pulsechain" -> Blockchain.PulseChain
         "pulsechain/test" -> Blockchain.PulseChainTestnet
+        "zksync" -> Blockchain.ZkSyncEra
+        "zksync/test" -> Blockchain.ZkSyncEraTestnet
+        "moonbeam" -> Blockchain.Moonbeam
+        "moonbeam/test" -> Blockchain.MoonbeamTestnet
+        "manta-network" -> Blockchain.Manta
+        "manta-network/test" -> Blockchain.MantaTestnet
+        "polygon-zkevm" -> Blockchain.PolygonZkEVM
+        "polygon-zkevm/test" -> Blockchain.PolygonZkEVMTestnet
         "nexa" -> Blockchain.Nexa // FIXME
-        "nexa/testnet" -> Blockchain.NexaTestnet // FIXME
-        "zksync" -> Blockchain.ZkSyncEra // FIXME
-        "zksync/testnet" -> Blockchain.ZkSyncEraTestnet // FIXME
+        "nexa/test" -> Blockchain.NexaTestnet // FIXME
         "radiant" -> Blockchain.Radiant
         else -> null
     }
@@ -192,10 +198,16 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.AreonTestnet -> "areon-network/test"
         Blockchain.PulseChain -> "pulsechain"
         Blockchain.PulseChainTestnet -> "pulsechain/test"
-        Blockchain.ZkSyncEra -> "zksync" // FIXME
-        Blockchain.ZkSyncEraTestnet -> "zksync/testnet" // FIXME
+        Blockchain.ZkSyncEra -> "zksync"
+        Blockchain.ZkSyncEraTestnet -> "zksync/test"
+        Blockchain.Moonbeam -> "moonbeam"
+        Blockchain.MoonbeamTestnet -> "moonbeam/test"
+        Blockchain.Manta -> "manta-network"
+        Blockchain.MantaTestnet -> "manta-network/test"
+        Blockchain.PolygonZkEVM -> "polygon-zkevm"
+        Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm/test"
         Blockchain.Nexa -> "nexa" // FIXME
-        Blockchain.NexaTestnet -> "nexa/testnet" // FIXME
+        Blockchain.NexaTestnet -> "nexa/test" // FIXME
         Blockchain.Radiant -> "radiant"
     }
 }
@@ -259,10 +271,11 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Aurora, Blockchain.AuroraTestnet -> "aurora-ethereum"
         Blockchain.Areon, Blockchain.AreonTestnet -> "areon-network"
         Blockchain.PulseChain, Blockchain.PulseChainTestnet -> "pulsechain"
-        Blockchain.ZkSyncEra -> "zksync" // FIXME
-        Blockchain.ZkSyncEraTestnet -> "zksync/testnet" // FIXME
-        Blockchain.Nexa -> "nexa" // FIXME
-        Blockchain.NexaTestnet -> "nexa/testnet" // FIXME
+        Blockchain.ZkSyncEra, Blockchain.ZkSyncEraTestnet -> "zksync-ethereum"
+        Blockchain.Moonbeam, Blockchain.MoonbeamTestnet -> "moonbeam"
+        Blockchain.Manta, Blockchain.MantaTestnet -> "manta-network-ethereum"
+        Blockchain.PolygonZkEVM, Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm-ethereum"
+        Blockchain.Nexa, Blockchain.NexaTestnet -> "nexa" // FIXME
         Blockchain.Radiant -> "radiant"
     }
 }
@@ -291,8 +304,6 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Playa3ull,
-    Blockchain.ZkSyncEra,
-    Blockchain.ZkSyncEraTestnet,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
     Blockchain.Radiant,
