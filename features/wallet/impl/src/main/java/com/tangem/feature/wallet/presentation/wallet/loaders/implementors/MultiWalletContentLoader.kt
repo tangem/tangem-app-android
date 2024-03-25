@@ -4,6 +4,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -29,6 +30,7 @@ internal class MultiWalletContentLoader(
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val reduxStateHolder: ReduxStateHolder,
+    private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -42,6 +44,7 @@ internal class MultiWalletContentLoader(
                 getTokenListUseCase = getTokenListUseCase,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
+                runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
             ),
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
