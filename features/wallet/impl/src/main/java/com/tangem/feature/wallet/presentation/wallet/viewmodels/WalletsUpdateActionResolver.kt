@@ -214,7 +214,10 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         }
 
         /**
-         * Reinitialize selected wallet. Example, scanning a new card if wallets saving is turned off
+         * Reinitialize selected wallet.
+         * Uses when:
+         * 1. user scanned a new card but wallets saving is turned off;
+         * 2. user reset Twins.
          *
          * @property prevWalletId   previous selected wallet id
          * @property selectedWallet selected wallet
