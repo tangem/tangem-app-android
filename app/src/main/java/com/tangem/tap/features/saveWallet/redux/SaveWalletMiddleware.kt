@@ -1,11 +1,8 @@
 package com.tangem.tap.features.saveWallet.redux
 
-import com.tangem.common.CompletionResult
+import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.doOnFailure
-import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
-import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -20,6 +17,7 @@ import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
@@ -28,6 +26,7 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
+import org.rekotlin.Store
 import timber.log.Timber
 
 internal class SaveWalletMiddleware {
@@ -53,6 +52,7 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
             is SaveWalletAction.SaveWalletWasShown -> saveWalletWasShown()
             is SaveWalletAction.Dismiss -> dismiss(state)
+            is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(state)
             is SaveWalletAction.Save.Success,
             is SaveWalletAction.ProvideBackupInfo,
             is SaveWalletAction.CloseError,
@@ -60,6 +60,30 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.EnrollBiometrics,
             is SaveWalletAction.EnrollBiometrics.Cancel,
             -> Unit
+        }
+    }
+
+    private fun saveWalletAfterBackup(state: SaveWalletState) {
+        scope.launch {
+            val backupInfo = state.backupInfo ?: error("Backup info is null")
+
+            val userWallet = UserWalletBuilder(backupInfo.scanResponse)
+                .backupCardsIds(state.backupInfo.backupCardsIds)
+                .build()
+                .guard {
+                    Timber.e("User wallet not created")
+                    return@launch
+                }
+
+            userWalletsListManager.save(userWallet, canOverride = true)
+                .flatMap {
+                    saveAccessCodeIfNeeded(accessCode = backupInfo.accessCode, cardsInWallet = userWallet.cardsInWallet)
+                }
+                .doOnFailure { error ->
+                    Timber.e(error, "Unable to save user wallet")
+                }
+                .doOnSuccess { mainScope.launch { store.onUserWalletSelected(userWallet) } }
+                .doOnResult { store.navigateToWallet() }
         }
     }
 
@@ -138,14 +162,7 @@ internal class SaveWalletMiddleware {
                     }
 
                     store.dispatchOnMain(SaveWalletAction.Save.Success)
-
-                    store.dispatchOnMain(
-                        if (store.state.navigationState.backStack.contains(AppScreen.Wallet)) {
-                            NavigationAction.PopBackTo(AppScreen.Wallet)
-                        } else {
-                            NavigationAction.NavigateTo(AppScreen.Wallet)
-                        },
-                    )
+                    store.navigateToWallet()
                 }
         }.saveIn(saveWalletJobHolder)
     }
@@ -164,41 +181,22 @@ internal class SaveWalletMiddleware {
         }
 
         scope.launch {
-            val backupInfo = state.backupInfo
-            val userWalletFromBackup = backupInfo?.scanResponse
-                ?.let(::UserWalletBuilder)
-                ?.backupCardsIds(backupInfo.backupCardsIds)
-                ?.build()
+            /*
 
-            if (userWalletFromBackup != null) {
-                userWalletsListManager.save(userWalletFromBackup, canOverride = true)
-                    .flatMap { saveAccessCodeIfNeeded(backupInfo.accessCode, userWalletFromBackup.cardsInWallet) }
-                    .doOnFailure {
-                        Timber.e(it, "Unable to save user wallet")
-
-                        store.dispatchWithMain(SaveWalletAction.Save.Error(it))
-                    }
-                    .doOnSuccess {
-                        handleSavingSuccess(userWalletFromBackup)
-                    }
-            } else {
-                /*
-
-                 * because it will be automatically saved on UserWalletsListManager switch
-                 * */
-                val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
-                    val error = IllegalStateException("No selected user wallet")
-                    Timber.e(error, "Unable to save user wallet")
-                    store.dispatchWithMain(SaveWalletAction.Save.Error(TangemSdkError.ExceptionError(error)))
-                    return@launch
-                }
-
-                handleSavingSuccess(selectedUserWallet)
+             * because it will be automatically saved on UserWalletsListManager switch
+             */
+            val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+                val error = IllegalStateException("No selected user wallet")
+                Timber.e(error, "Unable to save user wallet")
+                store.dispatchWithMain(SaveWalletAction.Save.Error(TangemSdkError.ExceptionError(error)))
+                return@launch
             }
+
+            handleSuccessAllowing(selectedUserWallet)
         }.saveIn(saveWalletJobHolder)
     }
 
-    private suspend fun handleSavingSuccess(userWallet: UserWallet) {
+    private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
         store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
         preferencesStorage.shouldSaveAccessCodes = true
         store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
@@ -251,5 +249,15 @@ internal class SaveWalletMiddleware {
                 )
             }
         }
+    }
+
+    private suspend fun Store<AppState>.navigateToWallet() {
+        dispatchWithMain(
+            if (store.state.navigationState.backStack.contains(AppScreen.Wallet)) {
+                NavigationAction.PopBackTo(AppScreen.Wallet)
+            } else {
+                NavigationAction.NavigateTo(AppScreen.Wallet)
+            },
+        )
     }
 }
