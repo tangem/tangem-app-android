@@ -58,7 +58,7 @@ internal class DefaultVisaRepository(
 
     override suspend fun getVisaCurrency(userWalletId: UserWalletId, isRefresh: Boolean): VisaCurrency {
         val address = makeAddress(userWalletId)
-        // val address = "0x143fe062a538176aa0bf162f13d390208f90898f" // for testing
+        // val address = "0x40d8194b7168723ece51fa34d16825c60ba03dfa" // for testing
 
         fetchVisaCurrencyIfExpired(address, isRefresh)
 
@@ -97,7 +97,7 @@ internal class DefaultVisaRepository(
     ): Flow<PagingData<VisaTxHistoryItem>> {
         val userWallet = findVisaUserWallet(userWalletId)
         val cardPubKey = getCardPubKey(userWallet).toHexString()
-        // val cardPubKey = "03DEF02B1FECC8BD3CFD52CE93235194479E1DE931EF0F55DC194967E7CCC3D12C" // for testing
+        // val cardPubKey = "02C2BBA0DA1E066EA968C1EB129499F6DEBC5FD82D70D61DCAF691CDB69AF5D8B9" // for testing
         val pager = Pager(
             config = PagingConfig(
                 pageSize = pageSize,
@@ -125,7 +125,7 @@ internal class DefaultVisaRepository(
         return withContext(dispatchers.io) {
             val userWallet = findVisaUserWallet(userWalletId)
             val cardPubKey = getCardPubKey(userWallet).toHexString()
-            // val cardPubKey = "03DEF02B1FECC8BD3CFD52CE93235194479E1DE931EF0F55DC194967E7CCC3D12C" // for testing
+            // val cardPubKey = "02C2BBA0DA1E066EA968C1EB129499F6DEBC5FD82D70D61DCAF691CDB69AF5D8B9" // for testing
             val transaction = fetchedHistoryItems.value[cardPubKey]?.firstOrNull {
                 it.transactionId.toString() == txId
             }
