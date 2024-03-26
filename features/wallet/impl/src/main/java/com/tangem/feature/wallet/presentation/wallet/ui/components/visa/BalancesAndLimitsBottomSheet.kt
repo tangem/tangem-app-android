@@ -94,8 +94,8 @@ private fun LimitsBlock(limits: BalancesAndLimitsBottomSheetConfig.Limit, modifi
         title = stringReference("Limits"),
         content = {
             BlockItem(
-                title = stringReference("In-store (otp)"),
-                value = limits.inStore,
+                title = stringReference("Total"),
+                value = limits.total,
             )
             BlockItem(
                 title = stringReference("Other (no-otp)"),
@@ -193,7 +193,7 @@ private class BalancesAndLimitsBottomSheetParameterProvider :
                 ),
                 limit = BalancesAndLimitsBottomSheetConfig.Limit(
                     availableBy = "Nov, 11 USDT",
-                    inStore = "563.00 USDT",
+                    total = "563.00 USDT",
                     other = "100.00 USDT",
                     singleTransaction = "100.00 USDT",
                     onInfoClick = {},
