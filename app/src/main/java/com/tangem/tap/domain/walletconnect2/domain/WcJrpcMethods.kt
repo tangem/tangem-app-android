@@ -2,10 +2,12 @@ package com.tangem.tap.domain.walletconnect2.domain
 
 import com.squareup.moshi.*
 import com.tangem.datasource.di.SdkMoshi
-import com.tangem.tap.domain.walletconnect2.domain.models.binance.WCBinanceTxConfirmParam
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceCancelOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
 import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
+import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTxConfirmParam
+import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaSignMessage
+import com.tangem.tap.domain.walletconnect2.domain.models.solana.SolanaTransactionRequest
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,10 +20,14 @@ internal enum class WcJrpcMethods(val code: String) {
     ETH_SIGN_TYPE_DATA_V4("eth_signTypedData_v4"),
     ETH_SIGN_TRANSACTION("eth_signTransaction"),
     ETH_SEND_TRANSACTION("eth_sendTransaction"),
+
     BNB_SIGN("bnb_sign"),
     BNB_TRANSACTION_CONFIRM("bnb_tx_confirmation"),
     SIGN_TRANSACTION("trust_signTransaction"),
     WALLET_ADD_ETHEREUM_CHAIN("wallet_addEthereumChain"),
+
+    SOLANA_SIGN_TX("solana_signTransaction"),
+    SOLANA_SIGN_MESSAGE("solana_signMessage"),
     ;
 
     companion object {
@@ -47,7 +53,7 @@ data class WcSignMessage(
     val type: WCSignType,
 ) : WcRequestData {
     enum class WCSignType {
-        MESSAGE, PERSONAL_MESSAGE, TYPED_MESSAGE
+        MESSAGE, PERSONAL_MESSAGE, TYPED_MESSAGE, SOLANA_MESSAGE,
     }
 
     /**
@@ -57,6 +63,7 @@ data class WcSignMessage(
      *  - MESSAGE: `[address, data ]`
      *  - TYPED_MESSAGE: `[address, data]`
      *  - PERSONAL_MESSAGE: `[data, address]`
+     *  - SOLANA_MESSAGE: `[publicKey (address), message]`
      *
      *  reference: https://docs.walletconnect.org/json-rpc/ethereum#eth_signtypeddata
      */
@@ -72,6 +79,21 @@ data class WcSignMessage(
             else -> raw[0]
         }
 }
+
+@JsonClass(generateAdapter = true)
+data class WcSignMessageData(
+    @Json(name = "address")
+    val address: String,
+
+    @Json(name = "message")
+    val message: String,
+) : WcRequestData
+
+@JsonClass(generateAdapter = true)
+data class WcAddChain(
+    @Json(name = "chainId")
+    val chainId: String,
+) : WcRequestData
 
 @JsonClass(generateAdapter = true)
 data class WcEthereumTransaction(
@@ -121,6 +143,7 @@ sealed class WcRequest(open val data: WcRequestData) {
     data class SignTransaction(override val data: WcSignTransaction) : WcRequest(data)
     data class AddChain(override val data: WcAddChain) : WcRequest(data)
     data class CustomRequest(override val data: WcCustomRequestData) : WcRequest(data)
+    data class SolanaSignRequest(override val data: SolanaTransactionRequest) : WcRequest(data)
 }
 
 @Singleton
@@ -198,6 +221,24 @@ internal class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private 
                 ).fromJsonFirstOrNull(params) ?: return customRequest
 
                 WcRequest.AddChain(data = deserializedParams)
+            }
+            WcJrpcMethods.SOLANA_SIGN_TX -> {
+                val tx = moshi.adapter<SolanaTransactionRequest>(SolanaTransactionRequest::class.java)
+                    .fromJsonOrNull(params)
+                    ?: return customRequest
+
+                WcRequest.SolanaSignRequest(data = tx)
+            }
+            WcJrpcMethods.SOLANA_SIGN_MESSAGE -> {
+                val signMessage = moshi.adapter<SolanaSignMessage>(SolanaSignMessage::class.java)
+                    .fromJsonOrNull(params)
+                    ?: return customRequest
+                val data = WcSignMessage(
+                    raw = listOf(signMessage.publicKey, signMessage.message),
+                    type = WcSignMessage.WCSignType.SOLANA_MESSAGE,
+                )
+
+                WcRequest.EthSign(data = data)
             }
         }
     }

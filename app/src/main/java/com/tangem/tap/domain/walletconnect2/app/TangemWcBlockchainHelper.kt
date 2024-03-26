@@ -47,7 +47,15 @@ private fun Blockchain.getCaip2ChainId(): String? {
     if (this.isEvm()) return this.getChainId()?.toString()
 
     return when (this) {
+        /*
+         * The WC sample application and documentation use a commented out chain ID. However, in real dApps
+         * uncommented is used.
+         * Docs: https://docs.walletconnect.com/advanced/multichain/chain-list
+         *
+         * Blockchain.Solana -> "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+         * */
         Blockchain.Solana -> "4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ"
+        Blockchain.SolanaTestnet -> "z4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z"
         Blockchain.Polkadot -> "91b171bb158e2d3848fa23a9f1c25182"
         Blockchain.Tron -> "0x2b6653dc"
         else -> null
@@ -57,7 +65,7 @@ private fun Blockchain.getCaip2ChainId(): String? {
 private fun Blockchain.getCaip2Namespace(): String? {
     return when {
         this.isEvm() -> EVM_NAMESPACE
-        supportedNonEvmBlockchains.contains(this) -> this.toNetworkId()
+        supportedNonEvmBlockchains.contains(this) -> this.toNetworkId().substringBefore(TESTNET_SEPARATOR)
         else -> null
     }
 }
@@ -82,7 +90,8 @@ private fun Pair<String, String>.chainIdToBlockchain(): Blockchain? {
     }
 }
 
-private val supportedNonEvmBlockchains = emptySet<Blockchain>() // TODO: add supported networks
+private val supportedNonEvmBlockchains = setOf(Blockchain.Solana, Blockchain.SolanaTestnet)
 
 private const val EVM_NAMESPACE = "eip155"
 private const val CHAIN_SEPARATOR = ":"
+private const val TESTNET_SEPARATOR = "/"
