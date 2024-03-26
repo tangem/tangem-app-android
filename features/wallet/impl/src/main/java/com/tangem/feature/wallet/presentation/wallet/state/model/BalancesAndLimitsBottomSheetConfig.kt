@@ -19,7 +19,7 @@ internal data class BalancesAndLimitsBottomSheetConfig(
 
     data class Limit(
         val availableBy: String,
-        val inStore: String,
+        val total: String,
         val other: String,
         val singleTransaction: String,
         val onInfoClick: () -> Unit,
