@@ -197,7 +197,10 @@ internal class SwapInteractorImpl @Inject constructor(
         return repository.getPairs(initialCurrency, currenciesList)
     }
 
-    override suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): SwapTransactionState {
+    override suspend fun givePermissionToSwap(
+        networkId: String,
+        permissionOptions: PermissionOptions,
+    ): SwapTransactionState {
         val derivationPath = permissionOptions.fromToken.network.derivationPath.value
         val dataToSign = if (permissionOptions.approveType == SwapApproveType.UNLIMITED) {
             getApproveData(
@@ -588,7 +591,9 @@ internal class SwapInteractorImpl @Inject constructor(
             toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value ?: "",
         ).getOrElse { return SwapTransactionState.ExpressError(it) }
 
-        val exchangeDataCex = exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.UnknownError
+        val exchangeDataCex =
+            exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.UnknownError
+
         val txExtras = transactionManager.getMemoExtras(
             currencyToSend.currency.network.backendId,
             exchangeDataCex.txExtraId,

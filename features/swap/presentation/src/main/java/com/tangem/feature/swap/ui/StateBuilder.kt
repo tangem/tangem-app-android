@@ -964,18 +964,30 @@ internal class StateBuilder(
         )
     }
 
-    fun createErrorTransaction(uiState: SwapStateHolder, swapTransactionState: SwapTransactionState, onAlertClick: () -> Unit): SwapStateHolder {
+    fun createErrorTransaction(
+        uiState: SwapStateHolder,
+        swapTransactionState: SwapTransactionState,
+        onAlertClick: () -> Unit,
+    ): SwapStateHolder {
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
-                message = if (swapTransactionState is SwapTransactionState.ExpressError) getAlertErrorMessage(swapTransactionState.dataError) else null,
+                message = if (swapTransactionState is SwapTransactionState.ExpressError) {
+                    getAlertErrorMessage(swapTransactionState.dataError)
+                } else {
+                    null
+                },
                 onClick = onAlertClick,
-                type = if (swapTransactionState is SwapTransactionState.NetworkError) GenericWarningType.NETWORK else GenericWarningType.OTHER,
+                type = if (swapTransactionState is SwapTransactionState.NetworkError) {
+                    GenericWarningType.NETWORK
+                } else {
+                    GenericWarningType.OTHER
+                },
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
         )
     }
 
-    private fun getAlertErrorMessage(dataError: DataError) : TextReference? {
+    private fun getAlertErrorMessage(dataError: DataError): TextReference? {
         return when (dataError) {
             is DataError.SwapsAreUnavailableNowError -> resourceReference(
                 id = R.string.express_error_swap_unavailable,
@@ -987,7 +999,8 @@ internal class StateBuilder(
             )
             is DataError.ExchangeProviderNotActiveError,
             is DataError.ExchangeProviderNotAvailableError,
-            is DataError.ExchangeProviderProviderInternalError -> resourceReference(
+            is DataError.ExchangeProviderProviderInternalError,
+            -> resourceReference(
                 id = R.string.express_error_swap_pair_unavailable,
                 formatArgs = wrappedList(dataError.code),
             )

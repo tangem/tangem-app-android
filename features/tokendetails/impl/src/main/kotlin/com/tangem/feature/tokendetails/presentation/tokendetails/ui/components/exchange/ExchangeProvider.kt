@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
