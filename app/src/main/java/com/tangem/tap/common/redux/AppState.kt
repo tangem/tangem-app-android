@@ -31,8 +31,6 @@ import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.shop.redux.ShopMiddleware
 import com.tangem.tap.features.shop.redux.ShopState
-import com.tangem.tap.features.signin.redux.SignInMiddleware
-import com.tangem.tap.features.signin.redux.SignInState
 import com.tangem.tap.features.tokens.legacy.redux.TokensState
 import com.tangem.tap.features.wallet.redux.middlewares.TradeCryptoMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
@@ -59,7 +57,6 @@ data class AppState(
     val shopState: ShopState = ShopState(),
     val welcomeState: WelcomeState = WelcomeState(),
     val saveWalletState: SaveWalletState = SaveWalletState(),
-    val signInState: SignInState = SignInState(),
     val daggerGraphState: DaggerGraphState = DaggerGraphState(),
 ) : StateType {
 
@@ -97,7 +94,6 @@ data class AppState(
                 SaveWalletMiddleware().middleware,
                 LockUserWalletsTimerMiddleware().middleware,
                 AccessCodeRequestPolicyMiddleware().middleware,
-                SignInMiddleware.middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,
                 LegacyMiddleware.legacyMiddleware,
                 TradeCryptoMiddleware.middleware,
