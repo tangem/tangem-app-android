@@ -37,11 +37,13 @@ class WalletConnectInteractor(
     suspend fun startListening(userWalletId: String, cardId: String?) {
         this.userWalletId = userWalletId
         this.cardId = cardId
-        walletConnectRepository.updateSessions()
+
         coroutineScope {
             launch { subscribeToEvents() }
             launch { subscribeToSessions() }
         }
+
+        walletConnectRepository.updateSessions()
     }
 
     fun setUserChains(accounts: List<Account>) {
@@ -88,11 +90,12 @@ class WalletConnectInteractor(
                     is WalletConnectEvents.SessionApprovalSuccess -> {
                         sessionsRepository.saveSession(
                             userWallet = userWalletId,
-                            session = Session.fromAccounts(
+                            session = Session(
                                 accounts = wcEvent.accounts,
                                 topic = wcEvent.topic,
                             ),
                         )
+                        walletConnectRepository.updateSessions()
                         handler.onSessionEstablished()
                     }
                     is WalletConnectEvents.SessionDeleted -> {
