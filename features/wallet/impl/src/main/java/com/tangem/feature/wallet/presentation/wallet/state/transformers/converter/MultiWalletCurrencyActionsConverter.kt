@@ -3,7 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.tokens.model.ButtonDisabledReason
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
@@ -91,7 +91,7 @@ internal class MultiWalletCurrencyActionsConverter(
             iconResId = icon,
             onClick = action,
             isWarning = actionsState is TokenActionsState.ActionState.HideToken,
-            enabled = actionsState.disabledReason == ButtonDisabledReason.NONE,
+            enabled = actionsState.unavailabilityReason == ScenarioUnavailabilityReason.NONE,
         )
     }
 }

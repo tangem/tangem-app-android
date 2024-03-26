@@ -16,10 +16,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
@@ -177,6 +174,19 @@ internal class TokenDetailsStateFactory(
         )
     }
 
+    fun getStateWithActionButtonErrorDialog(unavailabilityReason: ScenarioUnavailabilityReason) : TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
+                    text = getDialogText(unavailabilityReason),
+                    onConfirmClick = clickIntents::onDismissDialog,
+                )
+            )
+        )
+    }
+
     fun getRefreshingState(): TokenDetailsState {
         return refreshStateConverter.convert(true)
     }
@@ -320,5 +330,9 @@ internal class TokenDetailsStateFactory(
                 ).let(::add)
             }.toImmutableList(),
         )
+    }
+
+    private fun getDialogText(unavailabilityReason: ScenarioUnavailabilityReason) : String {
+        return "heh"
     }
 }

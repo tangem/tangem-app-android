@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.CryptoCurrency
 
 @Suppress("TooManyFunctions")
@@ -8,13 +9,15 @@ interface TokenDetailsClickIntents {
 
     fun onBackClick()
 
-    fun onSendClick()
+    fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onReceiveClick()
+    fun onSendClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onSellClick()
+    fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onSwapClick()
+    fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onDismissDialog()
 
@@ -23,8 +26,6 @@ interface TokenDetailsClickIntents {
     fun onHideConfirmed()
 
     fun onRefreshSwipe()
-
-    fun onBuyClick()
 
     fun onBuyCoinClick(cryptoCurrency: CryptoCurrency)
 
