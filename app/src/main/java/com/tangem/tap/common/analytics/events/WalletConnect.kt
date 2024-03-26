@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 /**
  * Created by Anton Zhilenkov on 28.09.2022.
  */
-sealed class WalletConnect(
+internal sealed class WalletConnect(
     event: String,
     params: Map<String, String> = mapOf(),
     error: Throwable? = null,
@@ -65,7 +65,7 @@ sealed class WalletConnect(
         FAIL("Fail"),
     }
 
-    companion object {
-        private const val SUCCESS_CODE = "0"
+    private companion object {
+        const val SUCCESS_CODE = "0"
     }
 }

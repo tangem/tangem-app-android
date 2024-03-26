@@ -138,7 +138,7 @@ data class WcPersonalSignData(
     val topic: String,
     val id: Long,
     val dialogData: PersonalSignDialogData,
-    val type: WcEthereumSignMessage.WCSignType,
+    val type: WcSignMessage.WCSignType,
 )
 
 sealed class BinanceMessageData(

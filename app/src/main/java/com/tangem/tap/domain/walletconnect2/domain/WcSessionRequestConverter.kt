@@ -6,7 +6,7 @@ import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
 
-class WcSessionRequestConverter(
+internal class WcSessionRequestConverter(
     private val blockchainHelper: WcBlockchainHelper,
     private val sessionsRepository: WalletConnectSessionsRepository,
     private val sdkHelper: WalletConnectSdkHelper,

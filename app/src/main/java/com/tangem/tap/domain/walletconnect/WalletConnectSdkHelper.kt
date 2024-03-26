@@ -290,7 +290,7 @@ class WalletConnectSdkHelper {
             id = id,
         )
         return WcPersonalSignData(
-            hash = messageData,
+            hash = requireNotNull(messageData) { "Message data must not be null" },
             topic = topic,
             id = id,
             dialogData = dialogData,
@@ -298,7 +298,7 @@ class WalletConnectSdkHelper {
         )
     }
 
-    private fun createMessageData(message: WcEthereumSignMessage): ByteArray {
+    private fun createMessageData(message: WcSignMessage): ByteArray {
         val messageData = try {
             message.data.removePrefix(HEX_PREFIX).hexToBytes()
         } catch (exception: Exception) {

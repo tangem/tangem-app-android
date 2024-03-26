@@ -14,7 +14,8 @@ import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
 import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
 import timber.log.Timber
 
-object BnbHelper {
+internal object BnbHelper {
+
     fun createMessageData(order: WCBinanceTransferOrder): BinanceMessageData.Transfer {
         val input = order.msgs.first().inputs.first()
         val output = order.msgs.first().inputs.first()

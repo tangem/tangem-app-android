@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 
 @Suppress("LargeClass")
-class WalletConnectManager {
+internal class WalletConnectManager {
 
     private var cardId: String? = null
 
@@ -522,9 +522,9 @@ class WalletConnectManager {
     }
 }
 
-typealias Topic = String
+internal typealias Topic = String
 
-data class WalletConnectActiveData(
+internal data class WalletConnectActiveData(
     val peerId: String,
     val remotePeerId: String?,
     val client: WCClient,
@@ -547,7 +547,7 @@ data class WalletConnectActiveData(
 }
 
 @Suppress("MagicNumber")
-class RetryInterceptor : Interceptor {
+internal class RetryInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request: Request = chain.request()
         val response = chain.proceed(request)

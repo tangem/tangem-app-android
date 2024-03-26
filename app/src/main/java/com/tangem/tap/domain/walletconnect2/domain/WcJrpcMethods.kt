@@ -10,7 +10,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class WcJrpcMethods(val code: String) {
+internal enum class WcJrpcMethods(val code: String) {
 
     ETH_SIGN("eth_sign"),
     ETH_PERSONAL_SIGN("personal_sign"),
@@ -30,7 +30,7 @@ enum class WcJrpcMethods(val code: String) {
 }
 
 @JsonClass(generateAdapter = true)
-data class WCSignTransaction(
+data class WcSignTransaction(
     @Json(name = "network")
     val network: Int,
 
@@ -39,13 +39,7 @@ data class WCSignTransaction(
 ) : WcRequestData
 
 @JsonClass(generateAdapter = true)
-data class WcAddChain(
-    @Json(name = "chainId")
-    val chainId: String,
-) : WcRequestData
-
-@JsonClass(generateAdapter = true)
-data class WcEthereumSignMessage(
+data class WcSignMessage(
     @Json(name = "raw")
     val raw: List<String>,
 
@@ -117,20 +111,20 @@ interface WcRequestData
 data class WcCustomRequestData(val data: String) : WcRequestData
 
 sealed class WcRequest(open val data: WcRequestData) {
-    data class EthSign(override val data: WcEthereumSignMessage) : WcRequest(data)
+    data class EthSign(override val data: WcSignMessage) : WcRequest(data)
     data class EthSignTransaction(override val data: WcEthereumTransaction) : WcRequest(data)
     data class EthSendTransaction(override val data: WcEthereumTransaction) : WcRequest(data)
     data class BnbTrade(override val data: WcBinanceTradeOrder) : WcRequest(data)
     data class BnbCancel(override val data: WcBinanceCancelOrder) : WcRequest(data)
     data class BnbTransfer(override val data: WcBinanceTransferOrder) : WcRequest(data)
-    data class BnbTxConfirm(override val data: WCBinanceTxConfirmParam) : WcRequest(data)
-    data class SignTransaction(override val data: WCSignTransaction) : WcRequest(data)
+    data class BnbTxConfirm(override val data: WcBinanceTxConfirmParam) : WcRequest(data)
+    data class SignTransaction(override val data: WcSignTransaction) : WcRequest(data)
     data class AddChain(override val data: WcAddChain) : WcRequest(data)
     data class CustomRequest(override val data: WcCustomRequestData) : WcRequest(data)
 }
 
 @Singleton
-class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi: Moshi) {
+internal class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi: Moshi) {
 
     @Suppress("ComplexMethod", "LongMethod")
     fun deserialize(method: String, params: String): WcRequest {
@@ -154,9 +148,9 @@ class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi
                 val deserializedParams = moshi.adapter<List<String>>(
                     Types.newParameterizedType(List::class.java, String::class.java),
                 ).fromJsonOrNull(params) ?: return customRequest
-                val data = WcEthereumSignMessage(
+                val data = WcSignMessage(
                     raw = deserializedParams,
-                    type = WcEthereumSignMessage.WCSignType.MESSAGE,
+                    type = WcSignMessage.WCSignType.MESSAGE,
                 )
                 WcRequest.EthSign(data = data)
             }
@@ -164,9 +158,9 @@ class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi
                 val deserializedParams = moshi.adapter<List<String>>(
                     Types.newParameterizedType(List::class.java, String::class.java),
                 ).fromJsonOrNull(params) ?: return customRequest
-                val data = WcEthereumSignMessage(
+                val data = WcSignMessage(
                     raw = deserializedParams,
-                    type = WcEthereumSignMessage.WCSignType.PERSONAL_MESSAGE,
+                    type = WcSignMessage.WCSignType.PERSONAL_MESSAGE,
                 )
                 WcRequest.EthSign(data = data)
             }
@@ -175,9 +169,9 @@ class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi
                     params.substring(params.indexOf("\"") + 1, params.indexOf("\"", startIndex = 2)),
                     params.substring(params.indexOfFirst { it == '{' }, params.indexOfLast { it == '}' } + 1),
                 )
-                val data = WcEthereumSignMessage(
+                val data = WcSignMessage(
                     deserializedParams,
-                    WcEthereumSignMessage.WCSignType.TYPED_MESSAGE,
+                    WcSignMessage.WCSignType.TYPED_MESSAGE,
                 )
                 Timber.d("TypedData params: $deserializedParams")
                 WcRequest.EthSign(data)
@@ -186,21 +180,23 @@ class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private val moshi
                 return deserializeBnb(moshi, params) ?: customRequest
             }
             WcJrpcMethods.BNB_TRANSACTION_CONFIRM -> {
-                val deserializedParams = moshi.adapter<List<WCBinanceTxConfirmParam>>(
-                    Types.newParameterizedType(List::class.java, WCBinanceTxConfirmParam::class.java),
+                val deserializedParams = moshi.adapter<List<WcBinanceTxConfirmParam>>(
+                    Types.newParameterizedType(List::class.java, WcBinanceTxConfirmParam::class.java),
                 ).fromJsonFirstOrNull(params) ?: return customRequest
                 WcRequest.BnbTxConfirm(data = deserializedParams)
             }
             WcJrpcMethods.SIGN_TRANSACTION -> {
-                val deserializedParams = moshi.adapter<List<WCSignTransaction>>(
-                    Types.newParameterizedType(List::class.java, WCSignTransaction::class.java),
+                val deserializedParams = moshi.adapter<List<WcSignTransaction>>(
+                    Types.newParameterizedType(List::class.java, WcSignTransaction::class.java),
                 ).fromJsonFirstOrNull(params) ?: return customRequest
+
                 WcRequest.SignTransaction(data = deserializedParams)
             }
             WcJrpcMethods.WALLET_ADD_ETHEREUM_CHAIN -> {
                 val deserializedParams: WcAddChain = moshi.adapter<List<WcAddChain>>(
                     Types.newParameterizedType(List::class.java, WcAddChain::class.java),
                 ).fromJsonFirstOrNull(params) ?: return customRequest
+
                 WcRequest.AddChain(data = deserializedParams)
             }
         }
