@@ -1027,7 +1027,6 @@ internal class StateBuilder(
     fun showSelectProviderBottomSheet(
         uiState: SwapStateHolder,
         selectedProviderId: String,
-        bestRatedProviderId: String,
         pricesLowerBest: Map<String, Float>,
         providersStates: Map<SwapProvider, SwapState>,
         unavailableProviders: List<SwapProvider>,
@@ -1035,7 +1034,7 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
             .mapNotNull {
-                it.convertToProviderBottomSheetState(pricesLowerBest, bestRatedProviderId, actions.onProviderSelect)
+                it.convertToProviderBottomSheetState(pricesLowerBest, actions.onProviderSelect)
             }
             .sortedWith(ProviderPercentDiffComparator)
         val unavailableProviderStates = unavailableProviders.map {
@@ -1183,7 +1182,6 @@ internal class StateBuilder(
 
     private fun Map.Entry<SwapProvider, SwapState>.convertToProviderBottomSheetState(
         pricesLowerBest: Map<String, Float>,
-        bestRatedProviderId: String,
         onProviderSelect: (String) -> Unit,
     ): ProviderState? {
         val provider = this.key
@@ -1191,7 +1189,6 @@ internal class StateBuilder(
             is SwapState.EmptyAmountState -> null
             is SwapState.QuotesLoadedState -> {
                 provider.convertToContentSelectableProviderState(
-                    isBestRate = bestRatedProviderId == provider.providerId,
                     state = state,
                     onProviderClick = onProviderSelect,
                     pricesLowerBest = pricesLowerBest,
@@ -1301,7 +1298,6 @@ internal class StateBuilder(
     }
 
     private fun SwapProvider.convertToContentSelectableProviderState(
-        isBestRate: Boolean,
         state: SwapState.QuotesLoadedState,
         selectionType: ProviderState.SelectionType,
         pricesLowerBest: Map<String, Float>,
@@ -1311,8 +1307,6 @@ internal class StateBuilder(
         val rateString = toTokenInfo.tokenAmount.getFormattedCryptoAmount(toTokenInfo.cryptoCurrencyStatus.currency)
         val additionalBadge = if (state.permissionState is PermissionDataState.PermissionReadyForRequest) {
             ProviderState.AdditionalBadge.PermissionRequired
-        } else if (isBestRate) {
-            ProviderState.AdditionalBadge.BestTrade
         } else {
             ProviderState.AdditionalBadge.Empty
         }
