@@ -36,6 +36,7 @@ import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.lang.IllegalArgumentException
 
 @Suppress("TooManyFunctions")
 internal class TokenDetailsStateFactory(
@@ -180,7 +181,7 @@ internal class TokenDetailsStateFactory(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
-                    text = getDialogText(unavailabilityReason),
+                    text = getUnavailabilityReasonText(unavailabilityReason),
                     onConfirmClick = clickIntents::onDismissDialog,
                 )
             )
@@ -332,7 +333,15 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    private fun getDialogText(unavailabilityReason: ScenarioUnavailabilityReason) : String {
-        return "heh"
+    private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason) : String {
+        return when (unavailabilityReason) {
+            ScenarioUnavailabilityReason.NONE -> {
+                // send
+                // ScenarioUnavailabilityReason.PENDING_TRANSACTION -> {
+                //
+                // }
+                throw IllegalArgumentException("The unavailabilityReason must be other than NONE")
+            }
+        }
     }
 }

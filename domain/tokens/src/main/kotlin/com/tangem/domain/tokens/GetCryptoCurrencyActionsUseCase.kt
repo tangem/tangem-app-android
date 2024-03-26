@@ -164,9 +164,9 @@ class GetCryptoCurrencyActionsUseCase(
         } else {
             actionsList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.BUY_UNAVAILABLE))
         }
-        actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.GENERAL_ERROR))
-        actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.GENERAL_ERROR))
-        actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.GENERAL_ERROR))
+        actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.NO_QUOTES))
+        actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.NO_QUOTES))
+        actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.NO_QUOTES))
 
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             actionsList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.NONE))

@@ -11,11 +11,11 @@ enum class ScenarioUnavailabilityReason {
     // buy-specific
     BUY_UNAVAILABLE,
 
-    //swap-specific
+    // swap-specific
     NOT_EXCHANGEABLE,
 
-    //sell-specific
+    // sell-specific
     SELL_UNAVAILABLE,
 
-    GENERAL_ERROR,
+    NO_QUOTES,
 }
