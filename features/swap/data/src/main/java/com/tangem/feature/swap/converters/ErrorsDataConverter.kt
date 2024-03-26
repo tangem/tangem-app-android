@@ -18,9 +18,11 @@ internal class ErrorsDataConverter(
 
             return when (error.code) {
                 2010 -> DataError.BadRequest(code = error.code)
+                2200 -> DataError.SwapsAreUnavailableNowError(code = error.code)
                 2210 -> DataError.ExchangeProviderNotFoundError(code = error.code)
                 2220 -> DataError.ExchangeProviderNotActiveError(code = error.code)
                 2230 -> DataError.ExchangeProviderNotAvailableError(code = error.code)
+                2231 -> DataError.ExchangeProviderProviderInternalError(code = error.code)
                 2240 -> DataError.ExchangeNotPossibleError(code = error.code)
                 2250 -> tryParseExchangeTooSmallAmountError(error = error)
                 2251 -> tryParseExchangeTooBigAmountError(error = error)

@@ -967,12 +967,32 @@ internal class StateBuilder(
     fun createErrorTransaction(uiState: SwapStateHolder, txState: TxState, onAlertClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
-                message = null,
+                message = if (txState is TxState.ExpressError) getErrorMessage(txState.dataError) else null,
                 onClick = onAlertClick,
                 type = if (txState is TxState.NetworkError) GenericWarningType.NETWORK else GenericWarningType.OTHER,
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
         )
+    }
+
+    private fun getErrorMessage(dataError: DataError) : TextReference? {
+        return when (dataError) {
+            is DataError.SwapsAreUnavailableNowError -> resourceReference(
+                id = R.string.express_error_swap_unavailable,
+                formatArgs = wrappedList(dataError.code),
+            )
+            is DataError.ExchangeNotPossibleError -> resourceReference(
+                id = R.string.express_error_provider_unavailable,
+                formatArgs = wrappedList(dataError.code),
+            )
+            is DataError.ExchangeProviderNotActiveError,
+            is DataError.ExchangeProviderNotAvailableError,
+            is DataError.ExchangeProviderProviderInternalError -> resourceReference(
+                id = R.string.express_error_swap_pair_unavailable,
+                formatArgs = wrappedList(dataError.code),
+            )
+            else -> null
+        }
     }
 
     fun createAlert(

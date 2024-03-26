@@ -139,11 +139,9 @@
   <string name="main_scan_card_warning_view_subtitle">要訪問所有的網路您需要掃描卡片</string>
   <string name="main_scan_card_warning_view_title">掃描卡片</string>
   <string name="main_tokens">代幣</string>
-  <string name="onboarding_access_code_feature_1_description">您必須設置一個單一的訪問代碼來保護您的所有錢包</string>
   <string name="onboarding_access_code_feature_1_title">保護</string>
   <string name="onboarding_access_code_feature_2_description">您可以稍後在每張卡上設置單獨的訪問密碼</string>
   <string name="onboarding_access_code_feature_2_title">個人化</string>
-  <string name="onboarding_access_code_feature_3_description">門禁密碼可以用聯動卡恢復，不要把所有卡都放在一個地方</string>
   <string name="onboarding_access_code_feature_3_title">恢復</string>
   <string name="onboarding_access_code_hint">選擇您想要的任何單詞、短語或數字作為您的訪問代碼</string>
   <string name="onboarding_access_code_intro_title">建立訪問密碼</string>

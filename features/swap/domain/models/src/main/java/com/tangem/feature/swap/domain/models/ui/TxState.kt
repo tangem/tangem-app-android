@@ -1,7 +1,9 @@
 package com.tangem.feature.swap.domain.models.ui
 
+import com.tangem.feature.swap.domain.models.DataError
 import java.math.BigDecimal
 
+//rename this?
 sealed class TxState {
 
     data class TxSent(
@@ -14,9 +16,15 @@ sealed class TxState {
         val timestamp: Long,
     ) : TxState()
 
-    object UserCancelled : TxState()
-    object BlockchainError : TxState()
-    object TangemSdkError : TxState()
-    object NetworkError : TxState()
-    object UnknownError : TxState()
+    data object UserCancelled : TxState()
+
+    data object BlockchainError : TxState()
+
+    data object TangemSdkError : TxState()
+
+    data object NetworkError : TxState()
+
+    data object UnknownError : TxState()
+
+    data class ExpressError(val dataError: DataError) : TxState()
 }

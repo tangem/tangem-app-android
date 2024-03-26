@@ -65,6 +65,7 @@ interface SwapRepository {
         providerId: String,
         rateType: RateType,
         toAddress: String,
+        tmpFlag: Boolean,
     ): Either<DataError, SwapDataModel>
 
     fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
