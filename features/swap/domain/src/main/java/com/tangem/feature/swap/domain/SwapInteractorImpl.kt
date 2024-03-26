@@ -586,7 +586,6 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
             toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value ?: "",
-            tmpFlag = true,
         ).getOrElse { return TxState.ExpressError(it) }
 
         val exchangeDataCex = exchangeData.transaction as? ExpressTransactionModel.CEX ?: return TxState.UnknownError
@@ -1048,7 +1047,6 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
             toAddress = toToken.value.networkAddress?.defaultAddress?.value ?: "",
-            tmpFlag = false
         ).fold(
             ifRight = { swapData ->
                 val feeData = transactionManager.getFee(

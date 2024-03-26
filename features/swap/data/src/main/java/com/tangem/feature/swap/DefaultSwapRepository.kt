@@ -256,12 +256,9 @@ internal class DefaultSwapRepository @Inject constructor(
         providerId: String,
         rateType: RateType,
         toAddress: String,
-        tmpFlag: Boolean,
     ): Either<DataError, SwapDataModel> {
-        if (tmpFlag) return DataError.ExchangeNotPossibleError(code = 2280).left()
         return withContext(coroutineDispatcher.io) {
             try {
-
                 val requestId = UUID.randomUUID().toString()
                 val response = tangemExpressApi.getExchangeData(
                     fromContractAddress = fromContractAddress,
