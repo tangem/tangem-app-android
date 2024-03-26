@@ -1,6 +1,6 @@
 package com.tangem.domain.tokens.model
 
-enum class ButtonDisabledReason {
+enum class ScenarioUnavailabilityReason {
     NONE,
 
     // send-specific
