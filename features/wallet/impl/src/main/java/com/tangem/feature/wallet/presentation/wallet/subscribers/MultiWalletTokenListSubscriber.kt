@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.TokenList
@@ -24,6 +25,7 @@ internal class MultiWalletTokenListSubscriber(
     tokenListAnalyticsSender: TokenListAnalyticsSender,
     walletWithFundsChecker: WalletWithFundsChecker,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
 ) : BasicTokenListSubscriber(
     userWallet = userWallet,
     stateHolder = stateHolder,
@@ -31,6 +33,7 @@ internal class MultiWalletTokenListSubscriber(
     tokenListAnalyticsSender = tokenListAnalyticsSender,
     walletWithFundsChecker = walletWithFundsChecker,
     getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+    runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
 ) {
 
     override fun tokenListFlow(): MaybeTokenListFlow = getTokenListUseCase(userWallet.walletId)
