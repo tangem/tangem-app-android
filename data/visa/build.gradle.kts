@@ -26,7 +26,7 @@ dependencies {
     implementation(projects.domain.legacy)
 
     /** Project - Libs */
-    implementation(projects.libs.visa)
+    debugImplementation(projects.libs.visa)
 
     /** Libs - Other */
     implementation(deps.kotlin.coroutines)
