@@ -14,12 +14,9 @@ import com.walletconnect.android.CoreClient
 import com.walletconnect.android.relay.ConnectionType
 import com.walletconnect.web3.wallet.client.Wallet
 import com.walletconnect.web3.wallet.client.Web3Wallet
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -192,8 +189,8 @@ class WalletConnectRepositoryImpl @Inject constructor(
                 if (sessionDelete is Wallet.Model.SessionDelete.Success) {
                     scope.launch {
                         _events.emit(WalletConnectEvents.SessionDeleted(sessionDelete.topic))
+                        updateSessionsInternal().join()
                     }
-                    updateSessions()
                 }
                 Timber.d("onSessionDelete: $sessionDelete")
             }
@@ -209,21 +206,21 @@ class WalletConnectRepositoryImpl @Inject constructor(
                                 accounts = userNamespaces?.flatMap { it.value } ?: emptyList(),
                             ),
                         )
+                        updateSessionsInternal().join()
                     }
-                    updateSessions()
                 }
             }
 
             override fun onSessionUpdateResponse(sessionUpdateResponse: Wallet.Model.SessionUpdateResponse) {
                 // Triggered when wallet receives the session update response from Dapp
                 Timber.d("onSessionUpdateResponse: $sessionUpdateResponse")
-                updateSessions()
+                updateSessionsInternal()
             }
 
             override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {
                 // Triggered whenever the connection state is changed
                 Timber.d("onConnectionStateChange: $state")
-                if (state.isAvailable) updateSessions()
+                if (state.isAvailable) updateSessionsInternal()
             }
 
             override fun onError(error: Wallet.Model.Error) {
@@ -416,7 +413,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
                         dAppUrl = session?.url ?: "",
                     ),
                 )
-                updateSessions()
+                updateSessionsInternal()
                 Timber.d("Disconnected successfully: $it")
             },
             onError = {
@@ -440,20 +437,22 @@ class WalletConnectRepositoryImpl @Inject constructor(
     }
 
     override fun updateSessions() {
-        scope.launch {
-            val availableSessions = Web3Wallet.getListOfActiveSessions()
-                .map {
-                    WalletConnectSession(
-                        topic = it.topic,
-                        icon = it.metaData?.icons?.firstOrNull(),
-                        name = it.metaData?.name,
-                        url = it.metaData?.url,
-                    )
-                }
-            Timber.d("Available sessions: $availableSessions")
-            currentSessions = availableSessions
-            _activeSessions.emit(availableSessions)
-        }
+        updateSessionsInternal()
+    }
+
+    private fun updateSessionsInternal(): Job = scope.launch {
+        val availableSessions = Web3Wallet.getListOfActiveSessions()
+            .map {
+                WalletConnectSession(
+                    topic = it.topic,
+                    icon = it.metaData?.icons?.firstOrNull(),
+                    name = it.metaData?.name,
+                    url = it.metaData?.url,
+                )
+            }
+        Timber.d("Available sessions: $availableSessions")
+        currentSessions = availableSessions
+        _activeSessions.emit(availableSessions)
     }
 
     private fun findMissingNetworks(
