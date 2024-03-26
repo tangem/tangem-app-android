@@ -25,7 +25,6 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
-import com.tangem.tap.features.signin.redux.SignInAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -98,7 +97,6 @@ internal class WelcomeMiddleware {
                     signInType = Basic.SignedIn.SignInType.Biometric,
                 )
 
-                store.dispatchWithMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Biometric))
                 store.dispatchWithMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                 store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics.Success)
                 store.onUserWalletSelected(userWallet = selectedUserWallet)
@@ -128,7 +126,6 @@ internal class WelcomeMiddleware {
                 .doOnSuccess {
                     sendSignedInAnalyticsEvent(scanResponse = scanResponse, signInType = Basic.SignedIn.SignInType.Card)
 
-                    store.dispatchWithMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
                     store.dispatchWithMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Success)
                     store.onUserWalletSelected(userWallet = userWallet)
