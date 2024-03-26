@@ -17,6 +17,7 @@ internal class VisaCurrencyFactory {
         } else {
             balancesAndLimits.newLimits
         }
+        val remainingOtpLimit = getRemainingOtp(currentLimit, now)
 
         return VisaCurrency(
             symbol = VisaConfig.TOKEN_SYMBOL,
@@ -35,8 +36,8 @@ internal class VisaCurrencyFactory {
                 )
             },
             limits = VisaCurrency.Limits(
-                remainingOtp = getRemainingOtp(currentLimit, now),
-                remainingNoOtp = getRemainingNoOtp(currentLimit, now),
+                remainingOtp = remainingOtpLimit,
+                remainingNoOtp = minOf(remainingOtpLimit, getRemainingNoOtp(currentLimit, now)),
                 singleTransaction = currentLimit.singleTransactionLimit,
                 expirationDate = getLimitsExpirationDate(currentLimit, now),
             ),
