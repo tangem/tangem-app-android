@@ -503,7 +503,7 @@ internal class SwapViewModel @Inject constructor(
                 )
             }.onSuccess {
                 when (it) {
-                    is TxState.TxSent -> {
+                    is SwapTransactionState.TxSent -> {
                         sendSuccessSwapEvent(fromCurrency.currency, fee.feeType)
                         val url = blockchainInteractor.getExplorerTransactionLink(
                             networkId = fromCurrency.currency.network.backendId,
@@ -512,7 +512,7 @@ internal class SwapViewModel @Inject constructor(
                         updateWalletBalance()
                         uiState = stateBuilder.createSuccessState(
                             uiState = uiState,
-                            txState = it,
+                            swapTransactionState = it,
                             dataState = dataState,
                             txUrl = url,
                             onExploreClick = {
@@ -537,7 +537,7 @@ internal class SwapViewModel @Inject constructor(
 
                         swapRouter.openScreen(SwapNavScreen.Success)
                     }
-                    is TxState.UserCancelled -> {
+                    is SwapTransactionState.UserCancelled -> {
                         startLoadingQuotesFromLastState()
                     }
                     else -> {
@@ -604,14 +604,14 @@ internal class SwapViewModel @Inject constructor(
                 )
             }.onSuccess {
                 when (it) {
-                    is TxState.TxSent -> {
+                    is SwapTransactionState.TxSent -> {
                         sendApproveSuccessEvent(fromToken, feeForPermission.feeType, approveType)
                         updateWalletBalance()
                         uiState = stateBuilder.loadingPermissionState(uiState)
                         uiState = stateBuilder.dismissBottomSheet(uiState)
                         startLoadingQuotesFromLastState(isSilent = true)
                     }
-                    is TxState.UserCancelled -> Unit
+                    is SwapTransactionState.UserCancelled -> Unit
                     else -> {
                         uiState = stateBuilder.createErrorTransaction(uiState, it) {
                             uiState = stateBuilder.clearAlert(uiState)
