@@ -967,7 +967,7 @@ internal class StateBuilder(
     fun createErrorTransaction(uiState: SwapStateHolder, txState: TxState, onAlertClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
-                message = if (txState is TxState.ExpressError) getErrorMessage(txState.dataError) else null,
+                message = if (txState is TxState.ExpressError) getAlertErrorMessage(txState.dataError) else null,
                 onClick = onAlertClick,
                 type = if (txState is TxState.NetworkError) GenericWarningType.NETWORK else GenericWarningType.OTHER,
             ),
@@ -975,7 +975,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun getErrorMessage(dataError: DataError) : TextReference? {
+    private fun getAlertErrorMessage(dataError: DataError) : TextReference? {
         return when (dataError) {
             is DataError.SwapsAreUnavailableNowError -> resourceReference(
                 id = R.string.express_error_swap_unavailable,
