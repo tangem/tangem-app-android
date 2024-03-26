@@ -410,11 +410,11 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         warnings: MutableList<SwapWarning>,
     ) {
-        val feeEnoughState = quoteModel.preparedSwapConfigState.feeState
-        if (feeEnoughState is SwapFeeState.NotEnough &&
-            quoteModel.preparedSwapConfigState.isBalanceEnough &&
-            quoteModel.permissionState !is PermissionDataState.PermissionLoading
-        ) {
+        val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough ?: return
+        val needShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
+            quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
+            feeEnoughState.feeCurrency != fromToken
+        if (needShowCoverWarning) {
             warnings.add(
                 SwapWarning.UnableToCoverFeeWarning(
                     createUnableToCoverFeeNotificationConfig(
