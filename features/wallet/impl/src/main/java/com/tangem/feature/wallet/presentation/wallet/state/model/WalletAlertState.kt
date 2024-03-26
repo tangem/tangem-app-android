@@ -48,33 +48,36 @@ internal sealed interface WalletAlertState {
         override val isWarningConfirmButton: Boolean = true
     }
 
-    object WrongCardIsScanned : Basic() {
+    data class VisaLimitsInfo(
+        val totalLimit: String,
+        val otherLimit: String,
+    ) : Basic() {
+        override val title: TextReference? = null
+        override val message: TextReference = stringReference(
+            value = "Limits are needed to control costs, improve security, manage risk. " +
+                "You can spend $totalLimit during the week for card payments in shops and " +
+                "$otherLimit for other transactions, e. g. subscriptions or debts.",
+        )
+        override val onConfirmClick: (() -> Unit)? = null
+    }
+
+    data object WrongCardIsScanned : Basic() {
         override val title: TextReference = resourceReference(R.string.common_warning)
         override val message: TextReference = resourceReference(R.string.error_wrong_wallet_tapped)
         override val onConfirmClick: (() -> Unit)? = null
     }
 
-    object RescanWallets : Basic() {
+    data object RescanWallets : Basic() {
         override val title: TextReference = resourceReference(R.string.common_attention)
         override val message: TextReference = resourceReference(R.string.key_invalidated_warning_description)
         override val onConfirmClick: (() -> Unit)? = null
     }
 
-    object VisaBalancesInfo : Basic() {
+    data object VisaBalancesInfo : Basic() {
         override val title: TextReference? = null
         override val message: TextReference = stringReference(
             value = "Available balance is actual funds available, considering pending transactions, " +
                 "blocked amounts, and debit balance to prevent overdrafts.",
-        )
-        override val onConfirmClick: (() -> Unit)? = null
-    }
-
-    object VisaLimitsInfo : Basic() {
-        override val title: TextReference? = null
-        override val message: TextReference = stringReference(
-            value = "Limits are needed to control costs, improve security, manage risk. " +
-                "You can spend 1 000 USDT during the week for card payments in shops and " +
-                "100 USDT for other transactions, e. g. subscriptions or debts.",
         )
         override val onConfirmClick: (() -> Unit)? = null
     }

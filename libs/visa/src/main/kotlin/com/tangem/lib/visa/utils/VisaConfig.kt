@@ -2,8 +2,9 @@ package com.tangem.lib.visa.utils
 
 internal object VisaConfig {
 
-    const val BASE_RPC_URL = "https://rpc-mumbai.maticvigil.com/"
-    const val BRIDGE_PROCESSOR_CONTRACT_ADDRESS = "0x62119697e78178512bfcc456ae6d1b7dee9fbaa6"
+    const val BASE_RPC_URL = "https://polygon-mumbai.g.alchemy.com/v2/_1qqjXgBC_IikaXChnna8KTcV2eMMIQG/"
+    const val BRIDGE_PROCESSOR_CONTRACT_ADDRESS = "0xe32ecbbc1ec17fa9c160569cd613ad568ca50279"
+    const val PAYMENT_ACCOUNT_REGISTRY_ADDRESS = "0x3f4ae01073d1a9d5a92315fe118e57d1cdec7c44"
     const val CHAIN_ID = 80_001L
     const val DECIMALS = 9
     const val GAS_LIMIT = 500_000_000L
