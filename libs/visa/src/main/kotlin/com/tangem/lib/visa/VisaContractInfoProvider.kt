@@ -28,6 +28,7 @@ interface VisaContractInfoProvider {
         private val dispatchers: CoroutineDispatcherProvider,
         private val baseUrl: String = VisaConfig.BASE_RPC_URL,
         private val bridgeProcessorAddress: String = VisaConfig.BRIDGE_PROCESSOR_CONTRACT_ADDRESS,
+        private val paymentAccountRegistryAddress: String = VisaConfig.PAYMENT_ACCOUNT_REGISTRY_ADDRESS,
         private val chainId: Long = VisaConfig.CHAIN_ID,
         private val networkTimeoutSeconds: Long = VisaConfig.NETWORK_TIMEOUT_SECONDS,
         private val decimals: Int = VisaConfig.DECIMALS,
@@ -45,6 +46,7 @@ interface VisaContractInfoProvider {
                 transactionManager = transactionManager,
                 gasProvider = gasProvider,
                 bridgeProcessorAddress = bridgeProcessorAddress,
+                paymentAccountRegistryAddress = paymentAccountRegistryAddress,
                 dispatchers = dispatchers,
             )
         }
