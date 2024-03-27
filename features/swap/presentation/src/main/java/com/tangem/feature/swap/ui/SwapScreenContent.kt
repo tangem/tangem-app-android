@@ -337,14 +337,9 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                     )
                 }
                 is SwapWarning.GenericWarning -> {
-                    val message = warning.message?.let {
-                        if (warning.shouldWrapMessage) {
-                            String.format(stringResource(id = R.string.swapping_error_wrapper), it.resolveReference())
-                        } else {
-                            it.resolveReference()
-                        }
-                    } ?: stringResource(id = R.string.common_unknown_error)
-                    RefreshableWaringCard(
+                    val message = warning.message?.resolveReference()
+                        ?: stringResource(id = R.string.common_unknown_error)
+                    RefreshableWarningCard(
                         title = stringResource(id = R.string.common_warning),
                         description = message,
                         onClick = warning.onClick,
@@ -375,6 +370,16 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                     Notification(
                         config = warning.notificationConfig,
                         iconTint = TangemTheme.colors.icon.accent,
+                    )
+                }
+                is SwapWarning.NeedReserveToCreateAccount -> {
+                    Notification(
+                        config = warning.notificationConfig,
+                    )
+                }
+                is SwapWarning.ReduceAmount -> {
+                    Notification(
+                        config = warning.notificationConfig,
                     )
                 }
                 is SwapWarning.TransactionInProgressWarning -> {
@@ -499,6 +504,7 @@ private val state = SwapStateHolder(
     providerState = ProviderState.Loading(),
     priceImpact = PriceImpact.Empty(),
     shouldShowMaxAmount = true,
+    reduceAmountIgnore = false,
     tosState = TosState(
         tosLink = LegalState(
             title = stringReference("Terms of Use"),

@@ -16,29 +16,31 @@ sealed class DetailsAction : Action {
         val shouldSaveUserWallets: Boolean,
     ) : DetailsAction()
 
-    object ReCreateTwinsWallet : DetailsAction()
+    data object ReCreateTwinsWallet : DetailsAction()
 
     sealed class ResetToFactory : DetailsAction() {
-        object Start : ResetToFactory()
-        object Proceed : ResetToFactory()
+        data object Start : ResetToFactory()
+        data object Proceed : ResetToFactory()
         data class AcceptCondition1(val accepted: Boolean) : ResetToFactory()
         data class AcceptCondition2(val accepted: Boolean) : ResetToFactory()
-        object Failure : ResetToFactory()
-        object Success : ResetToFactory()
+        data object Failure : ResetToFactory()
+        data object Success : ResetToFactory()
+
+        data class LastWarningDialogVisibility(val isShown: Boolean) : ResetToFactory()
     }
 
-    object ScanCard : DetailsAction()
+    data object ScanCard : DetailsAction()
 
     data class PrepareCardSettingsData(val card: CardDTO, val cardTypesResolver: CardTypesResolver) : DetailsAction()
-    object ResetCardSettingsData : DetailsAction()
-    object ScanAndSaveUserWallet : DetailsAction() {
+    data object ResetCardSettingsData : DetailsAction()
+    data object ScanAndSaveUserWallet : DetailsAction() {
 
-        object Success : DetailsAction()
+        data object Success : DetailsAction()
 
         data class Error(val error: TextReference?) : DetailsAction()
     }
 
-    object DismissError : DetailsAction()
+    data object DismissError : DetailsAction()
 
     sealed class AccessCodeRecovery : DetailsAction() {
         object Open : AccessCodeRecovery()
@@ -50,14 +52,14 @@ sealed class DetailsAction : Action {
     }
 
     sealed class ManageSecurity : DetailsAction() {
-        object OpenSecurity : ManageSecurity()
+        data object OpenSecurity : ManageSecurity()
         data class SelectOption(val option: SecurityOption) : ManageSecurity()
-        object SaveChanges : ManageSecurity() {
-            object Success : ManageSecurity()
-            object Failure : ManageSecurity()
+        data object SaveChanges : ManageSecurity() {
+            data object Success : ManageSecurity()
+            data object Failure : ManageSecurity()
         }
 
-        object ChangeAccessCode : ManageSecurity()
+        data object ChangeAccessCode : ManageSecurity()
     }
 
     sealed class AppSettings : DetailsAction() {
@@ -65,7 +67,7 @@ sealed class DetailsAction : Action {
             val enable: Boolean,
             val setting: AppSetting,
         ) : AppSettings() {
-            object Success : AppSettings()
+            data object Success : AppSettings()
 
             data class Failure(
                 val prevState: Boolean,
@@ -77,7 +79,7 @@ sealed class DetailsAction : Action {
             val lifecycleScope: LifecycleCoroutineScope,
         ) : AppSettings()
 
-        object EnrollBiometrics : AppSettings()
+        data object EnrollBiometrics : AppSettings()
         data class BiometricsStatusChanged(
             val needEnrollBiometrics: Boolean,
         ) : AppSettings()
