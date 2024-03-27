@@ -41,8 +41,9 @@ sealed class TradeCryptoAction : Action {
     data class Swap(val cryptoCurrency: CryptoCurrency) : TradeCryptoAction()
 
     data class TransactionInfo(
-        val amount: String,
-        val destinationAddress: String,
         val transactionId: String,
+        val destinationAddress: String,
+        val amount: String,
+        val tag: String? = null,
     )
 }
