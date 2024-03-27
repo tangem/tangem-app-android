@@ -2,8 +2,8 @@ package com.tangem.tap.features.details.ui.walletconnect
 
 import androidx.lifecycle.*
 import arrow.core.getOrElse
-import com.tangem.feature.qrscanning.SourceType
-import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
