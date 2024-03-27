@@ -120,4 +120,10 @@ internal object SettingsDomainModule {
     ): ShouldShowSwapPromoTokenUseCase {
         return ShouldShowSwapPromoTokenUseCase(swapPromoRepository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideDeleteDeprecatedLogsUseCase(settingsRepository: SettingsRepository): DeleteDeprecatedLogsUseCase {
+        return DeleteDeprecatedLogsUseCase(settingsRepository)
+    }
 }
