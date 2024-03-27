@@ -34,7 +34,9 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
  */
 @Composable
 fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier) {
-    Row(
+    var rootWidth by remember { mutableIntStateOf(value = 0) }
+
+    Column(
         modifier = modifier
             .background(
                 color = TangemTheme.colors.background.primary,
@@ -42,27 +44,13 @@ fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier
             )
             .fillMaxWidth()
             .heightIn(min = TangemTheme.dimens.size72)
-            .padding(all = TangemTheme.dimens.spacing12),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(all = TangemTheme.dimens.spacing12)
+            .onSizeChanged { rootWidth = it.width },
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        horizontalAlignment = Alignment.Start,
     ) {
-        var rootWidth by remember { mutableIntStateOf(value = 0) }
-
-        Column(
-            modifier = Modifier.onSizeChanged { rootWidth = it.width },
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
-            horizontalAlignment = Alignment.Start,
-        ) {
-            Title(currencyName = state.currencySymbol)
-            Content(state = state, rootWidth = rootWidth)
-        }
-
-        Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size20),
-            painter = painterResource(id = R.drawable.ic_chevron_right_24),
-            tint = TangemTheme.colors.icon.informative,
-            contentDescription = null,
-        )
+        Title(currencyName = state.currencySymbol)
+        Content(state = state, rootWidth = rootWidth)
     }
 }
 
