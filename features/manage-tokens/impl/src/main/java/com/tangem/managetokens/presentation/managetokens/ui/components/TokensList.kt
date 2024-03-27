@@ -25,7 +25,7 @@ internal fun TokensList(
     LazyColumn(modifier = modifier) {
         item {
             Text(
-                text = stringResource(id = R.string.manage_tokens_title),
+                text = stringResource(id = R.string.manage_tokens_list_header_title),
                 style = TangemTheme.typography.h3,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),

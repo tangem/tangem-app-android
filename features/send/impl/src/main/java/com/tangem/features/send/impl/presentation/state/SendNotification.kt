@@ -23,12 +23,12 @@ internal sealed class SendNotification(val config: NotificationConfig) {
         ),
     ) {
 
-        object TotalExceedsBalance : Error(
+        data object TotalExceedsBalance : Error(
             title = resourceReference(R.string.send_notification_exceed_balance_title),
             subtitle = resourceReference(R.string.send_notification_exceed_balance_text),
         )
 
-        object InvalidAmount : Error(
+        data object InvalidAmount : Error(
             title = resourceReference(R.string.send_notification_invalid_amount_title),
             subtitle = resourceReference(R.string.send_notification_invalid_amount_text),
         )
@@ -49,7 +49,7 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             val amountLimit: String,
             val onConfirmClick: () -> Unit,
         ) : Error(
-            title = resourceReference(R.string.send_notifiaction_transaction_limit_title),
+            title = resourceReference(R.string.send_notification_transaction_limit_title),
             subtitle = resourceReference(
                 R.string.send_notification_transaction_limit_text,
                 wrappedList(cryptoCurrency, utxoLimit, amountLimit),
@@ -92,17 +92,6 @@ internal sealed class SendNotification(val config: NotificationConfig) {
         data class ExistentialDeposit(val deposit: String) : Warning(
             title = resourceReference(R.string.send_notification_existential_deposit_title),
             subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
-        )
-
-        data class NetworkCoverage(
-            val amountReducedBy: String,
-            val amountReduced: String,
-        ) : Warning(
-            title = resourceReference(id = R.string.send_network_fee_warning_title),
-            subtitle = resourceReference(
-                id = R.string.send_network_fee_warning_content,
-                formatArgs = wrappedList(amountReducedBy, amountReduced),
-            ),
         )
 
         data object FeeTooLow : Warning(

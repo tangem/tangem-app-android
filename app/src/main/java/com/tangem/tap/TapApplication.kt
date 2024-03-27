@@ -10,8 +10,10 @@ import com.orhanobut.logger.AndroidLogAdapter
 import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
+import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.AccountCreator
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
+import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
@@ -57,7 +59,6 @@ import com.tangem.tap.common.log.TimberFormatStrategy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.shop.TangemShopService
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
@@ -82,7 +83,6 @@ lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
-lateinit var shopService: TangemShopService
 internal lateinit var derivationsFinder: DerivationsFinder
 
 @HiltAndroidApp
@@ -178,6 +178,12 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
+
+    @Inject
+    lateinit var blockchainSDKLogger: BlockchainSDKLogger
+
+    @Inject
+    lateinit var tangemSdkLogger: TangemSdkLogger
     // endregion Injected
 
     override fun onCreate() {
@@ -265,6 +271,8 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
                     cardRepository = cardRepository,
                     feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
+                    tangemSdkLogger = tangemSdkLogger,
+                    blockchainSDKLogger = blockchainSDKLogger,
                 ),
             ),
         )
@@ -289,7 +297,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initWithConfigDependency(config: Config) {
-        shopService = TangemShopService(this, config.shopify!!)
         initAnalytics(this, config)
         initFeedbackManager(this, foregroundActivityObserver, store)
     }
@@ -342,13 +349,17 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                 Log.Level.View,
                 Log.Level.Network,
                 Log.Level.Error,
+                Log.Level.Biometric,
             )
             return TangemLogCollector(logLevels, LogFormat.StairsFormatter())
         }
 
         val additionalFeedbackInfo = initAdditionalFeedbackInfo(context)
         val tangemLogCollector = initTangemLogCollector()
-        Log.addLogger(tangemLogCollector)
+
+        Log.addLogger(
+            logger = if (feedbackManagerFeatureToggles.isLocalLogsEnabled) tangemSdkLogger else tangemLogCollector,
+        )
 
         val feedbackManager = FeedbackManager(
             infoHolder = additionalFeedbackInfo,

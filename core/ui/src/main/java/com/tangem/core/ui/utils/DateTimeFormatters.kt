@@ -59,11 +59,7 @@ object DateTimeFormatters {
         DateTimeFormat.forPattern("dd.MM.yyyy HH:mm")
     }
 
-    fun formatTime(formatter: DateTimeFormatter = timeFormatter, time: DateTime): String {
-        return formatter.print(time)
-    }
-
-    fun formatDate(formatter: DateTimeFormatter = dateFormatter, date: DateTime): String {
+    fun formatDate(date: DateTime, formatter: DateTimeFormatter = dateFormatter): String {
         return formatter.print(date)
     }
 }

@@ -30,3 +30,5 @@ fun String.toQrCode(sizePx: Int = 256, paddingPx: Int = 0): Bitmap {
     }
     return bmp
 }
+
+fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }

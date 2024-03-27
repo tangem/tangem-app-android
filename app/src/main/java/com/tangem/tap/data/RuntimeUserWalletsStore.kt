@@ -21,6 +21,12 @@ internal class RuntimeUserWalletsStore(
             ?.singleOrNull { it.walletId == key }
     }
 
+    override suspend fun getAllSyncOrNull(): List<UserWallet>? {
+        return walletsStateHolder.userWalletsListManager
+            ?.userWallets
+            ?.firstOrNull()
+    }
+
     override suspend fun update(userWalletId: UserWalletId, update: suspend (UserWallet) -> UserWallet) {
         walletsStateHolder.userWalletsListManager?.update(userWalletId, update)
     }

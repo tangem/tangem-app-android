@@ -26,6 +26,8 @@ import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
@@ -136,6 +138,17 @@ class TangemSdkManager(
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): CompletionResult<DerivationTaskResponse> {
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
+    }
+
+    suspend fun deriveExtendedPublicKey(
+        cardId: String?,
+        walletPublicKey: ByteArray,
+        derivation: DerivationPath,
+    ): CompletionResult<ExtendedPublicKey> = withContext(Dispatchers.Main) {
+        runTaskAsyncReturnOnMain(
+            DeriveWalletPublicKeyTask(walletPublicKey, derivation),
+            cardId,
+        )
     }
 
     suspend fun resetToFactorySettings(
@@ -264,7 +277,7 @@ class TangemSdkManager(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
                 maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
                 batchIdFilter = CardFilter.Companion.ItemFilter.Deny(
-                    items = setOf("0027", "0030", "0031", "0035", "DA88"),
+                    items = setOf("0027", "0030", "0031", "0035"),
                 ),
             ),
         )

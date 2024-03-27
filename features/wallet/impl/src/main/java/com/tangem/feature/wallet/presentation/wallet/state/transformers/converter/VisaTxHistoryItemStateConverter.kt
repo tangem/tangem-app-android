@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.core.ui.components.transactions.state.TransactionState
+import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -18,8 +19,8 @@ internal class VisaTxHistoryItemStateConverter(
 
     override fun convert(value: VisaTxHistoryItem): TransactionState {
         val localDate = value.date.withZone(DateTimeZone.getDefault())
-        val time = DateTimeFormatters.formatTime(time = localDate)
-        val subtitle = "$time • ${value.status}"
+        val time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter)
+        val subtitle = "$time • ${value.status.capitalize()}"
 
         return TransactionState.Content(
             txHash = value.id,
@@ -37,7 +38,7 @@ internal class VisaTxHistoryItemStateConverter(
             status = TransactionState.Content.Status.Confirmed,
             direction = TransactionState.Content.Direction.INCOMING,
             iconRes = R.drawable.ic_arrow_up_24,
-            title = stringReference(value = value.merchantName ?: "Unknown merchant"),
+            title = stringReference(value = value.merchantName?.capitalize() ?: "Unknown merchant"),
             subtitle = stringReference(subtitle),
             timestamp = localDate.millis,
             onClick = { clickIntents.onVisaTransactionClick(value.id) },

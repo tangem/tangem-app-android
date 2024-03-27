@@ -67,9 +67,7 @@ fun SimpleTextField(
 
     LaunchedEffect(key1 = isSelectionChanged) {
         if (isSelectionChanged) {
-            textFieldValueState = textFieldValue.copy(
-                selection = getValueRange(value),
-            )
+            textFieldValueState = textFieldValue
         }
     }
 

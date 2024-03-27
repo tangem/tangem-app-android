@@ -28,7 +28,7 @@ import java.math.RoundingMode
 internal class EthereumCustomFeeConverter(
     private val clickIntents: SendClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) : Converter<Fee.Ethereum, ImmutableList<SendTextField.CustomFee>> {
 
     override fun convert(value: Fee.Ethereum): ImmutableList<SendTextField.CustomFee> {
@@ -152,7 +152,7 @@ internal class EthereumCustomFeeConverter(
 
     private fun getFeeFormatted(fee: BigDecimal?): TextReference {
         val appCurrency = appCurrencyProvider()
-        val rate = cryptoCurrencyStatusProvider().value.fiatRate
+        val rate = feeCryptoCurrencyStatusProvider().value.fiatRate
         val fiatFee = rate?.let { fee?.multiply(it) }
         return stringReference(
             BigDecimalFormatter.formatFiatAmount(
@@ -164,7 +164,7 @@ internal class EthereumCustomFeeConverter(
     }
 
     private fun checkExceedBalance(feeAmount: BigDecimal?): Boolean {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider()
         val currencyCryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
 
         return feeAmount == null || feeAmount.isZero() || feeAmount > currencyCryptoAmount

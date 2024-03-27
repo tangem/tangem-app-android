@@ -1,7 +1,7 @@
 package com.tangem.feature.qrscanning.viewmodel
 
 import androidx.activity.result.ActivityResultLauncher
-import com.tangem.feature.qrscanning.SourceType
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
 import kotlinx.coroutines.CoroutineScope
 import kotlin.properties.Delegates

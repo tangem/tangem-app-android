@@ -1,5 +1,6 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -8,16 +9,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerW32
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
+import com.tangem.feature.onboarding.presentation.wallet2.model.ButtonState
 import com.tangem.feature.onboarding.presentation.wallet2.model.MnemonicGridItem
 import com.tangem.feature.onboarding.presentation.wallet2.model.YourSeedPhraseState
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Description
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingActionBlock
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.OnboardingDescriptionBlock
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 /**
 * [REDACTED_AUTHOR]
@@ -87,5 +91,26 @@ private fun PhraseGreedBlock(mnemonicGridItems: ImmutableList<MnemonicGridItem>)
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun YourSeedPhraseScreenPreview_Light() {
+    TangemTheme(isDark = false) {
+        YourSeedPhraseScreen(
+            state = YourSeedPhraseState(
+                mnemonicGridItems = (1..12).map { MnemonicGridItem(it, it.toString()) }.toImmutableList(),
+                buttonContinue = ButtonState(
+                    enabled = true,
+                    isClickable = true,
+                    showProgress = false,
+                    onClick = {},
+                ),
+            ),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = TangemTheme.colors.background.primary),
+        )
     }
 }

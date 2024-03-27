@@ -226,12 +226,8 @@ interface WalletManagersFacade {
         network: Network,
     ): SimpleResult
 
-    /** Get recent transactions of [userWalletId] for [blockchain] with [derivationPath] */
-    suspend fun getRecentTransactions(
-        userWalletId: UserWalletId,
-        blockchain: Blockchain,
-        derivationPath: String?,
-    ): List<TxHistoryItem>
+    /** Get recent transactions of [userWalletId] for [currency] */
+    suspend fun getRecentTransactions(userWalletId: UserWalletId, currency: CryptoCurrency): List<TxHistoryItem>
 
     @Suppress("LongParameterList")
     suspend fun tokenBalance(

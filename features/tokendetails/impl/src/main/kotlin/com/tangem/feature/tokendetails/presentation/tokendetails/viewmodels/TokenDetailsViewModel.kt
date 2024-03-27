@@ -18,6 +18,7 @@ import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
@@ -50,8 +51,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTrans
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
+import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -85,6 +88,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
+    private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -92,6 +96,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    featureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
@@ -121,6 +126,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
+        featureToggles = featureToggles,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -174,9 +180,10 @@ internal class TokenDetailsViewModel @Inject constructor(
             status = cryptoCurrencyStatus ?: return,
             transactionInfo = data.let {
                 TransactionInfo(
-                    amount = it.baseCurrencyAmount,
                     transactionId = it.transactionId,
                     destinationAddress = it.depositWalletAddress,
+                    amount = it.baseCurrencyAmount,
+                    tag = it.depositWalletAddressTag,
                 )
             },
         )
@@ -358,7 +365,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
 
-            uiState = stateFactory.getStateWithUpdatedMenu(wallet.scanResponse.cardTypesResolver)
+            uiState = stateFactory.getStateWithUpdatedMenu(
+                cardTypesResolver = wallet.scanResponse.cardTypesResolver,
+                isBitcoin = isBitcoin(cryptoCurrency.network.id.value),
+            )
         }
     }
 
@@ -492,6 +502,24 @@ internal class TokenDetailsViewModel @Inject constructor(
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
                 },
             )
+        }
+    }
+
+    override fun onGenerateExtendedKey() {
+        viewModelScope.launch(dispatchers.main) {
+            val extendedKey = getExtendedPublicKeyForCurrencyUseCase(
+                userWalletId,
+                cryptoCurrency.network.derivationPath,
+            ).fold(
+                ifLeft = {
+                    Timber.e(it.cause?.localizedMessage.orEmpty())
+                    ""
+                },
+                ifRight = { it },
+            )
+            if (extendedKey.isNotBlank()) {
+                router.share(extendedKey)
+            }
         }
     }
 

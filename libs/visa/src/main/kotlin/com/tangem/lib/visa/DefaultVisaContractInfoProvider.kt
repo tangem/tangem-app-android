@@ -7,7 +7,6 @@ import com.tangem.lib.visa.model.VisaBalancesAndLimits.Limits
 import com.tangem.lib.visa.utils.toBigDecimal
 import com.tangem.lib.visa.utils.toInstant
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.withContext
 import org.joda.time.Instant
 import org.web3j.protocol.Web3j
 import org.web3j.tx.TransactionManager
@@ -18,39 +17,40 @@ internal class DefaultVisaContractInfoProvider(
     private val transactionManager: TransactionManager,
     private val gasProvider: ContractGasProvider,
     private val bridgeProcessorAddress: String,
+    private val paymentAccountRegistryAddress: String,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaContractInfoProvider {
 
     override suspend fun getBalancesAndLimits(walletAddress: String): VisaBalancesAndLimits {
-        return withContext(dispatchers.io) {
-            val tangemBridgeProcessor = TangemBridgeProcessor.load(
-                /* contractAddress = */ bridgeProcessorAddress,
-                /* web3j = */ web3j,
-                /* transactionManager = */ transactionManager,
-                /* contractGasProvider = */ gasProvider,
-            )
-
-            parZip(
-                dispatchers.io,
-                { loadPaymentAccount(walletAddress, tangemBridgeProcessor) },
-                { loadPaymentTokenInfo(tangemBridgeProcessor) },
-                { paymentAccount, paymentToken ->
-                    fetchBalancesAndLimits(paymentAccount, paymentToken)
-                },
-            )
-        }
+        return parZip(
+            dispatchers.io,
+            { loadPaymentAccount(walletAddress) },
+            { loadPaymentTokenInfo() },
+            { paymentAccount, paymentToken ->
+                fetchBalancesAndLimits(paymentAccount, paymentToken)
+            },
+        )
     }
 
-    private fun loadPaymentAccount(
-        walletAddress: String,
-        tangemBridgeProcessor: TangemBridgeProcessor,
-    ): TangemPaymentAccount {
-        val paymentAccountAddress = tangemBridgeProcessor.getPaymentAccount(walletAddress).send()
+    private fun loadPaymentAccount(walletAddress: String): TangemPaymentAccount {
+        val paymentAccountRegistry = TangemPaymentAccountRegistry.load(
+            /* contractAddress = */ paymentAccountRegistryAddress,
+            /* web3j = */ web3j,
+            /* transactionManager = */ transactionManager,
+            /* contractGasProvider = */ gasProvider,
+        )
+        val paymentAccountAddress = paymentAccountRegistry.paymentAccountByCard(walletAddress).send()
 
         return TangemPaymentAccount.load(paymentAccountAddress, web3j, transactionManager, gasProvider)
     }
 
-    private fun loadPaymentTokenInfo(tangemBridgeProcessor: TangemBridgeProcessor): PaymentTokenInfo {
+    private fun loadPaymentTokenInfo(): PaymentTokenInfo {
+        val tangemBridgeProcessor = TangemBridgeProcessor.load(
+            /* contractAddress = */ bridgeProcessorAddress,
+            /* web3j = */ web3j,
+            /* transactionManager = */ transactionManager,
+            /* contractGasProvider = */ gasProvider,
+        )
         val paymentTokenContractAddress = tangemBridgeProcessor.paymentToken().send()
         val paymentTokenContract = ERC20.load(paymentTokenContractAddress, web3j, transactionManager, gasProvider)
         val paymentTokenDecimals = paymentTokenContract.decimals().send()

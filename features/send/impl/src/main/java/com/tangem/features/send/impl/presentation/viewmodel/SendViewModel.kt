@@ -12,9 +12,12 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.*
+import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -30,7 +33,10 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.domain.wallets.usecase.ValidateWalletAddressUseCase
+import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
@@ -66,17 +72,19 @@ internal class SendViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
+    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
-    private val parseSharedAddressUseCase: ParseSharedAddressUseCase,
     private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val parseQrCodeUseCase: ParseQrCodeUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -95,6 +103,7 @@ internal class SendViewModel @Inject constructor(
     private val transactionId: String? = savedStateHandle[SendRouter.TRANSACTION_ID_KEY]
     private val amount: String? = savedStateHandle[SendRouter.AMOUNT_KEY]
     private val destinationAddress: String? = savedStateHandle[SendRouter.DESTINATION_ADDRESS_KEY]
+    private val memo: String? = savedStateHandle[SendRouter.TAG_KEY]
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
@@ -108,6 +117,7 @@ internal class SendViewModel @Inject constructor(
         userWalletProvider = Provider { userWallet },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
     )
@@ -120,7 +130,7 @@ internal class SendViewModel @Inject constructor(
     private val feeStateFactory = FeeStateFactory(
         clickIntents = this,
         currentStateProvider = Provider { uiState },
-        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isFeeApproximateUseCase = isFeeApproximateUseCase,
     )
@@ -164,12 +174,14 @@ internal class SendViewModel @Inject constructor(
     private var isAmountSubtractAvailable: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    private var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
 
     private var balanceJobHolder = JobHolder()
     private var balanceHidingJobHolder = JobHolder()
     private var recipientsJobHolder = JobHolder()
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
+    private var memoValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
     private var feeNotificationsJobHolder = JobHolder()
     private var qrScannerJobHolder = JobHolder()
@@ -203,7 +215,13 @@ internal class SendViewModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
                     checkIfSubtractAvailable()
-                    getCurrenciesStatusUpdates(wallet)
+
+                    val isSingleWalletWithToken = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+                    val isMultiCurrency = wallet.isMultiCurrency
+                    getCurrenciesStatusUpdates(
+                        isSingleWalletWithToken = isSingleWalletWithToken,
+                        isMultiCurrency = isMultiCurrency,
+                    )
                 },
                 ifLeft = {
                     uiState = eventStateFactory.getGenericErrorState(
@@ -226,31 +244,38 @@ internal class SendViewModel @Inject constructor(
             .saveIn(balanceHidingJobHolder)
     }
 
-    private fun getCurrenciesStatusUpdates(wallet: UserWallet) {
-        val isSingleWallet = wallet.scanResponse.walletData?.token != null && !wallet.isMultiCurrency
-
+    private fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean, isMultiCurrency: Boolean) {
         if (cryptoCurrency is CryptoCurrency.Coin) {
-            getCurrencyStatusUpdates(isSingleWallet = isSingleWallet)
-                .onEach { currencyStatus ->
-                    currencyStatus.onRight {
-                        onDataLoaded(
-                            currencyStatus = it,
-                            coinCurrencyStatus = it,
-                        )
-                    }
+            getCurrencyStatusUpdates(
+                isSingleWalletWithToken = isSingleWalletWithToken,
+                isMultiCurrency = isMultiCurrency,
+            ).onEach { currencyStatus ->
+                currencyStatus.onRight {
+                    onDataLoaded(
+                        currencyStatus = it,
+                        coinCurrencyStatus = it,
+                        feeCurrencyStatus = getFeeCurrencyStatusSync(it, isMultiCurrency),
+                    )
                 }
+            }
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
                 .saveIn(balanceJobHolder)
         } else {
             combine(
-                flow = getCoinCurrencyStatusUpdates(isSingleWallet = isSingleWallet),
-                flow2 = getCurrencyStatusUpdates(isSingleWallet = isSingleWallet),
-            ) { coinStatus, currencyStatus ->
-                if (coinStatus.isRight() && currencyStatus.isRight()) {
+                flow = getCoinCurrencyStatusUpdates(isSingleWalletWithToken),
+                flow2 = getCurrencyStatusUpdates(
+                    isSingleWalletWithToken = isSingleWalletWithToken,
+                    isMultiCurrency = isMultiCurrency,
+                ),
+            ) { maybeCoinStatus, maybeCurrencyStatus ->
+                if (maybeCoinStatus.isRight() && maybeCurrencyStatus.isRight()) {
+                    val currencyStatus = maybeCurrencyStatus.getOrElse { error("Currency status is unreachable") }
+                    val coinStatus = maybeCoinStatus.getOrElse { error("Coin status is unreachable") }
                     onDataLoaded(
-                        currencyStatus = currencyStatus.getOrElse { error("Currency status is unreachable") },
-                        coinCurrencyStatus = coinStatus.getOrElse { error("Coin status is unreachable") },
+                        currencyStatus = currencyStatus,
+                        coinCurrencyStatus = coinStatus,
+                        feeCurrencyStatus = getFeeCurrencyStatusSync(currencyStatus, isMultiCurrency),
                     )
                 }
             }
@@ -260,18 +285,41 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private fun getCoinCurrencyStatusUpdates(isSingleWallet: Boolean) = getNetworkCoinStatusUseCase(
+    private fun getCoinCurrencyStatusUpdates(isSingleWalletWithToken: Boolean) = getNetworkCoinStatusUseCase(
         userWalletId = userWalletId,
         networkId = cryptoCurrency.network.id,
         derivationPath = cryptoCurrency.network.derivationPath,
-        isSingleWalletWithTokens = isSingleWallet,
+        isSingleWalletWithTokens = isSingleWalletWithToken,
     ).conflate().distinctUntilChanged()
 
-    private fun getCurrencyStatusUpdates(isSingleWallet: Boolean) = getCurrencyStatusUpdatesUseCase(
-        userWalletId = userWalletId,
-        currencyId = cryptoCurrency.id,
-        isSingleWalletWithTokens = isSingleWallet,
-    ).conflate().distinctUntilChanged()
+    private fun getCurrencyStatusUpdates(
+        isSingleWalletWithToken: Boolean,
+        isMultiCurrency: Boolean,
+    ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
+        return if (isMultiCurrency) {
+            getCurrencyStatusUpdatesUseCase(
+                userWalletId = userWalletId,
+                currencyId = cryptoCurrency.id,
+                isSingleWalletWithTokens = isSingleWalletWithToken,
+            ).conflate().distinctUntilChanged()
+        } else {
+            getPrimaryCurrencyStatusUpdatesUseCase(userWalletId = userWalletId)
+        }
+    }
+
+    private suspend fun getFeeCurrencyStatusSync(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        isMultiCurrency: Boolean,
+    ): CryptoCurrencyStatus {
+        return if (isMultiCurrency) {
+            getFeePaidCryptoCurrencyStatusSyncUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+            ).getOrNull() ?: error("Fee currency is unreachable")
+        } else {
+            cryptoCurrencyStatus
+        }
+    }
 
     private fun createSelectedAppCurrencyFlow(): StateFlow<AppCurrency> {
         return getSelectedAppCurrencyUseCase()
@@ -285,19 +333,31 @@ internal class SendViewModel @Inject constructor(
             )
     }
 
-    private fun onDataLoaded(currencyStatus: CryptoCurrencyStatus, coinCurrencyStatus: CryptoCurrencyStatus) {
+    private fun onDataLoaded(
+        currencyStatus: CryptoCurrencyStatus,
+        coinCurrencyStatus: CryptoCurrencyStatus,
+        feeCurrencyStatus: CryptoCurrencyStatus,
+    ) {
         cryptoCurrencyStatus = currencyStatus
         coinCryptoCurrencyStatus = coinCurrencyStatus
+        feeCryptoCurrencyStatus = feeCurrencyStatus
 
-        if (transactionId != null && amount != null && destinationAddress != null) {
-            uiState = stateFactory.getReadyState(amount, destinationAddress)
-            stateRouter.showFee()
-        } else {
-            getWalletsAndRecent()
-            uiState = stateFactory.getReadyState()
-            stateRouter.showRecipient()
+        when {
+            uiState.sendState.isSuccess -> {
+                stateRouter.showSend()
+            }
+            transactionId != null && amount != null && destinationAddress != null -> {
+                uiState = stateFactory.getReadyState(amount, destinationAddress, memo)
+                stateRouter.showFee()
+                updateNotifications()
+            }
+            else -> {
+                getWalletsAndRecent()
+                uiState = stateFactory.getReadyState()
+                stateRouter.showRecipient()
+                updateNotifications()
+            }
         }
-        updateNotifications()
     }
 
     private fun getWalletsAndRecent() {
@@ -405,7 +465,6 @@ internal class SendViewModel @Inject constructor(
                 )
                 return
             } else {
-                uiState = stateFactory.onSubtractSelect(false)
                 analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
             }
             if (checkIfFeeTooLow(uiState)) {
@@ -453,13 +512,14 @@ internal class SendViewModel @Inject constructor(
     // region recipient state clicks
     fun onRecipientAddressScanned(address: String) {
         viewModelScope.launch(dispatchers.main) {
-            parseSharedAddressUseCase(address, cryptoCurrency.network).fold(
+            parseQrCodeUseCase(address, cryptoCurrency).fold(
                 ifRight = { parsedCode ->
                     onRecipientAddressValueChange(parsedCode.address, EnterAddressSource.QRCode)
                     parsedCode.amount?.let { onAmountValueChange(it.toPlainString()) }
                     parsedCode.memo?.let { onRecipientMemoValueChange(it) }
                 },
                 ifLeft = {
+                    onRecipientAddressValueChange(address, EnterAddressSource.QRCode)
                     Timber.w(it)
                 },
             )
@@ -474,6 +534,7 @@ internal class SendViewModel @Inject constructor(
                 val isValidAddress = validateAddress(value)
                 uiState = stateFactory.getOnRecipientAddressValidState(value, isValidAddress)
                 type?.let { analyticsEventHandler.send(SendAnalyticEvents.AddressEntered(it, isValidAddress)) }
+                autoNextFromRecipient(type, isValidAddress)
             }
         }.saveIn(addressValidationJobHolder)
     }
@@ -486,7 +547,7 @@ internal class SendViewModel @Inject constructor(
                 val isValidAddress = validateAddress(uiState.recipientState?.addressTextField?.value.orEmpty())
                 uiState = stateFactory.getOnRecipientMemoValidState(value, isValidAddress)
             }
-        }.saveIn(addressValidationJobHolder)
+        }.saveIn(memoValidationJobHolder)
     }
 
     private suspend fun validateAddress(value: String): Boolean {
@@ -518,6 +579,12 @@ internal class SendViewModel @Inject constructor(
             ),
         )
     }
+
+    private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean) {
+        val isRecent = type == EnterAddressSource.RecentAddress
+        val isAddressOnly = uiState.recipientState?.memoTextField == null
+        if (isRecent && isAddressOnly && isValidAddress) onNextClick()
+    }
     // endregion
 
     // region fee
@@ -537,7 +604,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onSubtractSelect() {
-        uiState = stateFactory.onSubtractSelect(true)
+        uiState = stateFactory.onSubtractSelect(isAmountSubtractAvailable)
         stateRouter.showSend()
         analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(true))
     }
@@ -644,16 +711,10 @@ internal class SendViewModel @Inject constructor(
         val fee = feeState.fee ?: return
         val memo = uiState.recipientState?.memoTextField?.value
         val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
-        val amountToSend = if (uiState.sendState.isSubtract && isAmountSubtractAvailable) {
-            val feeValue = fee.amount.value ?: return
-            amountValue.minus(feeValue)
-        } else {
-            amountValue
-        }
 
         viewModelScope.launch(dispatchers.main) {
             createTransactionUseCase(
-                amount = amountToSend.convertToAmount(cryptoCurrency),
+                amount = amountValue.convertToAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
                 destination = recipient,
