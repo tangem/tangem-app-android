@@ -7,11 +7,14 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.feedback.GetSupportFeedbackEmailUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.addContext
@@ -25,6 +28,7 @@ import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.mainScope
 import com.tangem.tap.scope
 import com.tangem.tap.userWalletsListManager
 import com.tangem.wallet.BuildConfig
@@ -36,6 +40,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.rekotlin.Store
 import timber.log.Timber
 
@@ -43,6 +48,9 @@ import timber.log.Timber
 internal class DetailsViewModel(
     private val store: Store<AppState>,
     private val walletsRepository: WalletsRepository,
+    private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
+    private val getSupportFeedbackEmailUseCase: GetSupportFeedbackEmailUseCase,
+    private val emailSender: EmailSender,
 ) {
 
     var detailsScreenState: MutableState<DetailsScreenState> = mutableStateOf(updateState(store.state.detailsState))
@@ -139,7 +147,21 @@ internal class DetailsViewModel(
 
     private fun sendFeedback() {
         Analytics.send(Basic.ButtonSupport())
-        store.dispatchOnMain(GlobalAction.SendEmail(FeedbackEmail()))
+        if (feedbackManagerFeatureToggles.isLocalLogsEnabled) {
+            mainScope.launch {
+                val email = getSupportFeedbackEmailUseCase()
+                emailSender.send(
+                    email = EmailSender.Email(
+                        address = email.address,
+                        subject = email.subject,
+                        message = email.message,
+                        attachment = email.file,
+                    ),
+                )
+            }
+        } else {
+            store.dispatchOnMain(GlobalAction.SendEmail(FeedbackEmail()))
+        }
     }
 
     private fun navigateToAppSettings() {

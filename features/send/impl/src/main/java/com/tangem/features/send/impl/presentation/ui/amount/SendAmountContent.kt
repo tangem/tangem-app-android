@@ -7,15 +7,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.fiaticon.FiatIcon
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
@@ -28,6 +30,7 @@ internal fun SendAmountContent(
     clickIntents: SendClickIntents,
 ) {
     if (amountState == null) return
+    val hapticFeedback = LocalHapticFeedback.current
     Column(
         modifier = Modifier
             .background(TangemTheme.colors.background.tertiary),
@@ -41,19 +44,29 @@ internal fun SendAmountContent(
                     end = TangemTheme.dimens.spacing16,
                 ),
         ) {
-            SegmentedButtons(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(TangemTheme.dimens.size40),
-                config = amountState.segmentedButtonConfig,
-                showIndication = false,
-                onClick = { clickIntents.onCurrencyChangeClick(it.isFiat) },
-            ) {
-                SendAmountCurrencyButton(it)
+            if (amountState.segmentedButtonConfig.isNotEmpty()) {
+                SegmentedButtons(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(TangemTheme.dimens.size40),
+                    config = amountState.segmentedButtonConfig,
+                    showIndication = false,
+                    onClick = {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        clickIntents.onCurrencyChangeClick(it.isFiat)
+                    },
+                ) {
+                    SendAmountCurrencyButton(it)
+                }
+            } else {
+                SpacerWMax()
             }
             SecondaryButton(
                 text = stringResource(R.string.send_max_amount),
-                onClick = clickIntents::onMaxValueClick,
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    clickIntents.onMaxValueClick()
+                },
                 size = TangemButtonSize.Text,
                 shape = RoundedCornerShape(TangemTheme.dimens.radius26),
                 modifier = Modifier
