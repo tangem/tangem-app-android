@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
@@ -106,6 +107,8 @@ interface CurrenciesRepository {
      * ID provided.
      */
     fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
+
+    fun getMultiCurrencyWalletCurrenciesUpdatesLce(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>>
 
     /**
      * Retrieves the list of cryptocurrencies within a multi-currency wallet.

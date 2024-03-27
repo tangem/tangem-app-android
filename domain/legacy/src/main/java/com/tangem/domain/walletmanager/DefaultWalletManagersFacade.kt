@@ -285,6 +285,8 @@ class DefaultWalletManagersFacade(
     }
 
     private suspend fun updateWalletManager(walletManager: WalletManager): UpdateWalletManagerResult {
+        Timber.d("Update wallet manager: ${walletManager.wallet.blockchain}")
+
         return try {
             walletManager.update()
 

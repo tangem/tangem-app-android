@@ -2,7 +2,8 @@ package com.tangem.domain.tokens.operations
 
 import arrow.core.*
 import arrow.core.raise.*
-import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.core.utils.*
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -20,33 +21,18 @@ internal class CurrenciesStatusesOperations(
     private val userWalletId: UserWalletId,
 ) {
 
-    constructor(
-        userWalletId: UserWalletId,
-        useCase: GetTokenListUseCase,
-    ) : this(
-        currenciesRepository = useCase.currenciesRepository,
-        quotesRepository = useCase.quotesRepository,
-        networksRepository = useCase.networksRepository,
-        userWalletId = userWalletId,
-    )
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
+    fun getCurrenciesStatusesFlow(): LceFlow<Error, List<CryptoCurrencyStatus>> {
         return getMultiCurrencyWalletCurrencies().transformLatest { maybeCurrencies ->
+            emit(lceLoading())
+
             val nonEmptyCurrencies = maybeCurrencies.fold(
                 ifLeft = { error ->
-                    emit(error.left())
+                    emit(error.lceError())
                     return@transformLatest
                 },
                 ifRight = List<CryptoCurrency>::toNonEmptyListOrNull,
-            )
-
-            if (nonEmptyCurrencies == null) {
-                val emptyCurrenciesStatuses = emptyList<CryptoCurrencyStatus>()
-
-                emit(emptyCurrenciesStatuses.right())
-                return@transformLatest
-            }
+            ) ?: return@transformLatest
 
             val maybeLoadingCurrenciesStatuses = createCurrenciesStatuses(
                 currencies = nonEmptyCurrencies,
@@ -54,7 +40,7 @@ internal class CurrenciesStatusesOperations(
                 maybeQuotes = null,
             )
 
-            emit(maybeLoadingCurrenciesStatuses)
+            emit(maybeLoadingCurrenciesStatuses.toLce())
 
             val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
 
@@ -62,7 +48,7 @@ internal class CurrenciesStatusesOperations(
                 getQuotes(currenciesIds),
                 getNetworksStatuses(networks),
             ) { maybeQuotes, maybeNetworksStatuses ->
-                createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses)
+                createCurrenciesStatuses(nonEmptyCurrencies, maybeQuotes, maybeNetworksStatuses).toLce()
             }
 
             emitAll(currenciesFlow)

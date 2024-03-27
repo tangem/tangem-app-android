@@ -54,9 +54,8 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
-        dispatchers: CoroutineDispatcherProvider,
     ): GetTokenListUseCase {
-        return GetTokenListUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+        return GetTokenListUseCase(currenciesRepository, quotesRepository, networksRepository)
     }
 
     @Provides
@@ -65,9 +64,8 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
-        dispatchers: CoroutineDispatcherProvider,
     ): GetCardTokensListUseCase {
-        return GetCardTokensListUseCase(currenciesRepository, quotesRepository, networksRepository, dispatchers)
+        return GetCardTokensListUseCase(currenciesRepository, quotesRepository, networksRepository)
     }
 
     @Provides

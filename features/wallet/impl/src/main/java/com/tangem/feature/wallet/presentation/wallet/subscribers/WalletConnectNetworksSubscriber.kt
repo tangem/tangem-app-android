@@ -1,9 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import arrow.core.Either
+import com.tangem.domain.core.utils.getOrNull
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.GetTokenListUseCase
-import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
@@ -32,7 +31,7 @@ internal class WalletConnectNetworksSubscriber(
 
     private val mutex = Mutex()
 
-    override fun create(coroutineScope: CoroutineScope): Flow<Either<TokenListError, TokenList>> {
+    override fun create(coroutineScope: CoroutineScope): Flow<*> {
         return getTokenListUseCase(userWalletId = userWallet.walletId)
             .conflate()
             .distinctUntilCurrenciesChanged()
@@ -50,19 +49,18 @@ internal class WalletConnectNetworksSubscriber(
 
     private fun MaybeTokenListFlow.distinctUntilCurrenciesChanged(): MaybeTokenListFlow {
         return distinctUntilChanged { old, new ->
-            val oldCurrencies = old.fold(ifLeft = { null }, ifRight = { it.getCryptoCurrencies() })
-            val newCurrencies = new.fold(ifLeft = { null }, ifRight = { it.getCryptoCurrencies() })
+            val oldCurrencies = old.getOrNull()?.getCryptoCurrencies()
+            val newCurrencies = new.getOrNull()?.getCryptoCurrencies()
 
             oldCurrencies == newCurrencies
         }
     }
 
     private fun MaybeTokenListFlow.filterLoadedTokens(): MaybeTokenListFlow {
-        return filter { either ->
-            either.fold(
-                ifLeft = { false },
-                ifRight = { it.getCryptoCurrencies().isAllCurrenciesLoaded() },
-            )
+        return filter { maybeTokenList ->
+            val tokenList = maybeTokenList.getOrNull() ?: return@filter false
+
+            tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading
         }
     }
 
@@ -72,9 +70,5 @@ internal class WalletConnectNetworksSubscriber(
             is TokenList.GroupedByNetwork -> groups.flatMap(NetworkGroup::currencies)
             else -> emptyList()
         }
-    }
-
-    private fun List<CryptoCurrencyStatus>.isAllCurrenciesLoaded(): Boolean {
-        return none { it.value is CryptoCurrencyStatus.Loading }
     }
 }

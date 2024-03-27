@@ -12,15 +12,16 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transformLatest
 
 class GetCardTokensListUseCase(
-    internal val currenciesRepository: CurrenciesRepository,
-    internal val quotesRepository: QuotesRepository,
-    internal val networksRepository: NetworksRepository,
-    internal val dispatchers: CoroutineDispatcherProvider,
+    private val currenciesRepository: CurrenciesRepository,
+    private val quotesRepository: QuotesRepository,
+    private val networksRepository: NetworksRepository,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)

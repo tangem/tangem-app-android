@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import arrow.core.Either
-import arrow.core.getOrElse
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.core.utils.getOrNull
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
@@ -35,14 +35,12 @@ internal class MultiWalletTokenListSubscriber(
 
     override fun tokenListFlow(): MaybeTokenListFlow = getTokenListUseCase(userWallet.walletId)
 
-    override suspend fun onTokenListReceived(maybeTokenList: Either<TokenListError, TokenList>) {
-        // TODO disabled for 5.7.2 because of potential critical
-        // updateSortingIfNeeded(maybeTokenList)
+    override suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
+        updateSortingIfNeeded(maybeTokenList)
     }
 
-    @Suppress("UnusedPrivateMember")
-    private suspend fun updateSortingIfNeeded(maybeTokenList: Either<TokenListError, TokenList>) {
-        val tokenList = maybeTokenList.getOrElse { return }
+    private suspend fun updateSortingIfNeeded(maybeTokenList: Lce<TokenListError, TokenList>) {
+        val tokenList = maybeTokenList.getOrNull() ?: return
         if (!checkNeedSorting(tokenList)) return
 
         applyTokenListSortingUseCase(

@@ -7,6 +7,8 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.core.utils.getOrElse
+import com.tangem.domain.core.utils.getOrNull
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
@@ -65,7 +67,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
         UserWalletId(userWalletIdValue)
     }
 
-    private var tokenList: TokenList? = null
+    private var cachedTokenList: TokenList? = null
 
     val uiState: StateFlow<OrganizeTokensState> = stateHolder.stateFlow
 
@@ -89,7 +91,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onSortClick() {
-        val list = tokenList ?: return
+        val list = cachedTokenList ?: return
         if (list.sortedBy == TokenList.SortType.BALANCE) return
 
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
@@ -99,14 +101,14 @@ internal class OrganizeTokensViewModel @Inject constructor(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
                     stateHolder.updateStateAfterTokenListSorting(it)
-                    tokenList = it
+                    cachedTokenList = it
                 },
             )
         }
     }
 
     override fun onGroupClick() {
-        val list = tokenList ?: return
+        val list = cachedTokenList ?: return
 
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
 
@@ -115,7 +117,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
                     stateHolder.updateStateAfterTokenListSorting(it)
-                    tokenList = it
+                    cachedTokenList = it
                 },
             )
         }
@@ -138,7 +140,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
             val result = applyTokenListSortingUseCase(
                 userWalletId = userWalletId,
-                sortedTokensIds = resolver.resolve(listState, tokenList),
+                sortedTokensIds = resolver.resolve(listState, cachedTokenList),
                 isGroupedByNetwork = isGroupedByNetwork,
                 isSortedByBalance = isSortedByBalance,
             )
@@ -162,15 +164,21 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private fun bootstrapTokenList() {
         viewModelScope.launch(dispatchers.default) {
             val maybeTokenList = getTokenListUseCase(userWalletId)
-                .first { it.getOrNull()?.totalFiatBalance !is TokenList.FiatBalance.Loading }
+                .first { maybeTokenList ->
+                    maybeTokenList.getOrNull()?.totalFiatBalance !is TokenList.FiatBalance.Loading
+                }
 
-            maybeTokenList.fold(
-                ifLeft = stateHolder::updateStateWithError,
-                ifRight = {
-                    stateHolder.updateStateWithTokenList(it)
-                    tokenList = it
+            val tokenList = maybeTokenList.getOrElse(
+                ifLoading = { return@launch },
+                ifError = { error ->
+                    stateHolder.updateStateWithError(error)
+
+                    return@launch
                 },
             )
+
+            stateHolder.updateStateWithTokenList(tokenList)
+            cachedTokenList = tokenList
         }
     }
 
@@ -189,7 +197,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
         if (dragOperationType !is DragAndDropAdapter.DragOperation.Type.End) return
 
         if (uiState.value.header.isSortedByBalance && dragOperationType.isItemsOrderChanged) {
-            tokenList = tokenList?.disableSortingByBalance()
+            cachedTokenList = cachedTokenList?.disableSortingByBalance()
             stateHolder.disableSortingByBalance()
         }
     }
