@@ -9,6 +9,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
+import com.tangem.lib.auth.AppVersionProvider
 import com.tangem.lib.auth.ExpressAuthProvider
 import dagger.Module
 import dagger.Provides
@@ -30,6 +31,7 @@ class NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         expressAuthProvider: ExpressAuthProvider,
+        appVersionProvider: AppVersionProvider,
     ): TangemExpressApi {
         val url = if (BuildConfig.ENVIRONMENT == "dev") {
             DEV_EXPRESS_BASE_URL
@@ -43,6 +45,7 @@ class NetworkModule {
             .client(
                 OkHttpClient.Builder()
                     .addHeaders(Express(expressAuthProvider))
+                    .addHeaders(AppVersionPlatformHeaders(appVersionProvider))
                     .addLoggers(context)
                     .build(),
             )
