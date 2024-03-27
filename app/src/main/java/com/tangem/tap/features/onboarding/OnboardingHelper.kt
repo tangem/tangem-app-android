@@ -90,7 +90,7 @@ object OnboardingHelper {
 
                     val toggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
                     if (toggles.isGeneralManagerEnabled) {
-                        store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup)
+                        store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
                     } else {
                         store.dispatchWithMain(SaveWalletAction.Save)
                     }
