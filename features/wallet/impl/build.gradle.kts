@@ -56,6 +56,8 @@ dependencies {
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
 
+    implementation(projects.libs.crypto)
+
     /** Domain modules */
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
