@@ -102,7 +102,6 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             ),
             appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
             amplitudeApiKey = configValues.amplitudeApiKey,
-            shopify = configValues.shopifyShop,
             sprinklr = configValues.sprinklr,
             walletConnectProjectId = configValues.walletConnectProjectId,
             tangemComAuthorization = configValues.tangemComAuthorization,

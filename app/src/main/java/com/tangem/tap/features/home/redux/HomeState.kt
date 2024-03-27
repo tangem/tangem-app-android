@@ -1,15 +1,14 @@
 package com.tangem.tap.features.home.redux
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.features.send.redux.states.ButtonState
 import org.rekotlin.StateType
 import java.util.Locale
 
+@Immutable
 data class HomeState(
     val scanInProgress: Boolean = false,
-    val btnScanState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.ENABLED),
     val stories: List<Stories> = initDefaultStories(),
 ) : StateType {
 

@@ -638,6 +638,46 @@
                     "networkId": "pulsechain/test"
                 }
             ]
+        },
+        {
+            "id": "zksync-ethereum",
+            "name": "zkSync",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "zksync/test"
+                }
+            ]
+        },
+        {
+            "id": "moonbeam",
+            "name": "Moonbeam",
+            "symbol": "GLMR",
+            "networks": [
+                {
+                    "networkId": "moonbeam/test"
+                }
+            ]
+        },
+        {
+            "id": "manta-network-ethereum",
+            "name": "Manta Testnet",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "manta-network/test"
+                }
+            ]
+        },
+        {
+            "id": "polygon-zkevm-ethereum",
+            "name": "Polygon zkEvm Testnet",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "polygon-zkevm/test"
+                }
+            ]
         }
     ]
 }
