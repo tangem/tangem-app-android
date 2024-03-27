@@ -67,7 +67,7 @@ internal fun ExchangeProvider(
                     )
                     Text(
                         modifier = Modifier.align(Alignment.CenterVertically),
-                        text = "ID: $providerTxId",
+                        text = stringResource(R.string.express_transaction_id, providerTxId),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                     )
