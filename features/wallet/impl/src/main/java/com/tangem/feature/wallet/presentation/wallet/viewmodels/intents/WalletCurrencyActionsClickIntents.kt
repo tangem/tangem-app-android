@@ -402,4 +402,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             action()
         }
     }
+
+    // TODO implement check for unavailable reason
 }

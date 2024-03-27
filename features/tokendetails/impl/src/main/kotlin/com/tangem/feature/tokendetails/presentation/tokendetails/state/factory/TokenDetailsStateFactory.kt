@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.lang.IllegalArgumentException
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -174,9 +174,7 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithActionButtonErrorDialog(
-        unavailabilityReason: ScenarioUnavailabilityReason,
-    ): TokenDetailsState {
+    fun getStateWithActionButtonErrorDialog(unavailabilityReason: ScenarioUnavailabilityReason): TokenDetailsState {
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
@@ -184,8 +182,8 @@ internal class TokenDetailsStateFactory(
                 content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
                     text = getUnavailabilityReasonText(unavailabilityReason),
                     onConfirmClick = clickIntents::onDismissDialog,
-                )
-            )
+                ),
+            ),
         )
     }
 
@@ -334,50 +332,48 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    private fun getUnavailabilityReasonText(
-        unavailabilityReason: ScenarioUnavailabilityReason,
-    ): TextReference {
+    private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
         return when (unavailabilityReason) {
             // send
             is ScenarioUnavailabilityReason.PendingTransaction -> {
                 resourceReference(
                     id = R.string.warning_send_blocked_pending_transactions_message,
-                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol)
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol),
                 )
             }
             ScenarioUnavailabilityReason.EmptyBalance -> {
                 stringReference(
-                    "You do not have funds to send. Top up your account to be able to send funds from it."
+                    "You do not have funds to send. Top up your account to be able to send funds from it.",
                 )
             }
             ScenarioUnavailabilityReason.InsufficientFundsForFee -> {
                 resourceReference(
-                    id = R.string.warning_send_blocked_funds_for_fee_message
+                    id = R.string.warning_send_blocked_funds_for_fee_message,
                 )
             }
             is ScenarioUnavailabilityReason.BuyUnavailable -> {
                 stringReference(
-                    "The purchase of the %name% is currently unavailable. But we are working on adding it."
+                    "The purchase of the %name% is currently unavailable. But we are working on adding it.",
                 )
             }
             is ScenarioUnavailabilityReason.NotExchangeable -> {
                 stringReference(
-                    "%token name% swap is not available. But we are working on adding it."
+                    "%token name% swap is not available. But we are working on adding it.",
                 )
             }
             is ScenarioUnavailabilityReason.SellUnavailable -> {
-                stringReference("Sell of the %token name% coin is currently unavailable. But we are working on adding it.")
+                stringReference(
+                    "Sell of the %token name% coin is currently unavailable. But we are working on adding it.",
+                )
             }
 
             ScenarioUnavailabilityReason.NoQuotes -> {
                 stringReference("Выбранная операция в данный момент недоступна. Попробуйте позже.")
             }
 
-
             ScenarioUnavailabilityReason.None -> {
                 throw IllegalArgumentException("The unavailability reason must be other than None")
             }
-
         }
     }
 }

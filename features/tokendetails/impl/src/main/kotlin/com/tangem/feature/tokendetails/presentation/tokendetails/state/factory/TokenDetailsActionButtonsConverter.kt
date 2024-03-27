@@ -29,16 +29,24 @@ internal class TokenDetailsActionButtonsConverter(
                         TokenDetailsActionButton.Buy(onClick = { clickIntents.onBuyClick(action.unavailabilityReason) })
                     }
                     is TokenActionsState.ActionState.Receive -> {
-                        TokenDetailsActionButton.Receive(onClick = { clickIntents.onReceiveClick(action.unavailabilityReason) })
+                        TokenDetailsActionButton.Receive(
+                            onClick = { clickIntents.onReceiveClick(action.unavailabilityReason) },
+                        )
                     }
                     is TokenActionsState.ActionState.Sell -> {
-                        TokenDetailsActionButton.Sell(onClick = { clickIntents.onSellClick(action.unavailabilityReason) })
+                        TokenDetailsActionButton.Sell(
+                            onClick = { clickIntents.onSellClick(action.unavailabilityReason) },
+                        )
                     }
                     is TokenActionsState.ActionState.Send -> {
-                        TokenDetailsActionButton.Send(onClick = { clickIntents.onSendClick(action.unavailabilityReason) })
+                        TokenDetailsActionButton.Send(
+                            onClick = { clickIntents.onSendClick(action.unavailabilityReason) },
+                        )
                     }
                     is TokenActionsState.ActionState.Swap -> {
-                        TokenDetailsActionButton.Swap(onClick = { clickIntents.onSwapClick(action.unavailabilityReason) })
+                        TokenDetailsActionButton.Swap(
+                            onClick = { clickIntents.onSwapClick(action.unavailabilityReason) },
+                        )
                     }
                     else -> {
                         null

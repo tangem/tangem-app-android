@@ -129,8 +129,8 @@ class GetCryptoCurrencyActionsUseCase(
             } else {
                 actionsList.add(
                     TokenActionsState.ActionState.Swap(
-                        unavailabilityReason = ScenarioUnavailabilityReason.SellUnavailable(cryptoCurrency.name)
-                    )
+                        unavailabilityReason = ScenarioUnavailabilityReason.SellUnavailable(cryptoCurrency.name),
+                    ),
                 )
             }
         }
@@ -140,7 +140,7 @@ class GetCryptoCurrencyActionsUseCase(
             actionsList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
             actionsList.add(
-                TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.symbol))
+                TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.symbol)),
             )
         }
 
@@ -150,8 +150,8 @@ class GetCryptoCurrencyActionsUseCase(
         } else {
             actionsList.add(
                 TokenActionsState.ActionState.Sell(
-                    unavailabilityReason = ScenarioUnavailabilityReason.SellUnavailable(cryptoCurrency.name)
-                )
+                    unavailabilityReason = ScenarioUnavailabilityReason.SellUnavailable(cryptoCurrency.name),
+                ),
             )
         }
 
@@ -175,9 +175,9 @@ class GetCryptoCurrencyActionsUseCase(
             actionsList.add(
                 TokenActionsState.ActionState.Buy(
                     ScenarioUnavailabilityReason.BuyUnavailable(
-                        cryptoCurrencyName = cryptoCurrencyStatus.currency.name
-                    )
-                )
+                        cryptoCurrencyName = cryptoCurrencyStatus.currency.name,
+                    ),
+                ),
             )
         }
         actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.NoQuotes))

@@ -712,7 +712,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         onSwapClick(ScenarioUnavailabilityReason.None)
     }
 
-    private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason) : Boolean {
+    private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
         uiState = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
