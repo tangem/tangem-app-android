@@ -18,6 +18,7 @@ fun AppBarWithBackButtonAndIcon(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     text: String? = null,
+    subtitle: String? = null,
     @DrawableRes backIconRes: Int? = null,
     @DrawableRes iconRes: Int? = null,
     onIconClick: (() -> Unit)? = null,
@@ -27,6 +28,7 @@ fun AppBarWithBackButtonAndIcon(
         onBackClick = onBackClick,
         modifier = modifier,
         text = text,
+        subtitle = subtitle,
         backIconRes = backIconRes,
         backgroundColor = backgroundColor,
         iconContent = {

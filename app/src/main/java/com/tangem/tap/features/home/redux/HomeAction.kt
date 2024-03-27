@@ -3,7 +3,6 @@ package com.tangem.tap.features.home.redux
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.tap.common.entities.IndeterminateProgressButton
 import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
@@ -29,6 +28,4 @@ sealed class HomeAction : Action {
     data class GoToShop(val userCountryCode: String?) : HomeAction()
 
     data class UpdateCountryCode(val userCountryCode: String) : HomeAction()
-
-    data class ChangeScanCardButtonState(val state: IndeterminateProgressButton) : HomeAction()
 }

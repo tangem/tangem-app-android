@@ -37,6 +37,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     private val promoRepository: PromoRepository,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
+    private val backupValidator: BackupValidator,
 ) {
 
     private var readyForRateAppNotification = false
@@ -57,7 +58,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             buildList {
                 addSwapPromoNotification(shouldShowPromo, promoBanner, clickIntents)
 
-                addCriticalNotifications(cardTypesResolver)
+                addCriticalNotifications(userWallet)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
 
@@ -85,7 +86,13 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun MutableList<WalletNotification>.addCriticalNotifications(cardTypesResolver: CardTypesResolver) {
+    private fun MutableList<WalletNotification>.addCriticalNotifications(userWallet: UserWallet) {
+        val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
+        addIf(
+            element = WalletNotification.Critical.BackupError,
+            condition = !backupValidator.isValid(userWallet.scanResponse.card) || userWallet.hasBackupError,
+        )
+
         addIf(
             element = WalletNotification.Critical.DevCard,
             condition = !cardTypesResolver.isReleaseFirmwareType(),

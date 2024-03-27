@@ -1,11 +1,11 @@
 package com.tangem.tap.domain.scanCard.chains
 
-import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.core.chain.Chain
+import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -31,11 +31,9 @@ import kotlin.coroutines.resume
 internal class DisclaimerChain(
     private val store: Store<AppState>,
     private val disclaimerWillShow: () -> Unit = {},
-) : Chain<ScanCardException.ChainException, ScanResponse> {
+) : ResultChain<ScanCardException, ScanResponse>() {
 
-    override suspend fun invoke(
-        previousChainResult: ScanResponse,
-    ): Either<ScanCardException.ChainException, ScanResponse> {
+    override suspend fun launch(previousChainResult: ScanResponse): ScanChainResult {
         val disclaimer = previousChainResult.card.createDisclaimer()
 
         return if (disclaimer.isAccepted()) {
@@ -46,10 +44,7 @@ internal class DisclaimerChain(
         }
     }
 
-    private suspend fun showDisclaimer(
-        disclaimer: Disclaimer,
-        response: ScanResponse,
-    ): Either<ScanCardException.ChainException, ScanResponse> {
+    private suspend fun showDisclaimer(disclaimer: Disclaimer, response: ScanResponse): ScanChainResult {
         store.dispatchOnMain(DisclaimerAction.SetDisclaimer(disclaimer))
 
         return suspendCancellableCoroutine { continuation ->
