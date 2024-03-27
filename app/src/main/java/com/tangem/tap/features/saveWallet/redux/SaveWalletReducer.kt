@@ -47,7 +47,9 @@ internal object SaveWalletReducer {
                 needEnrollBiometrics = false,
                 isSaveInProgress = false,
             )
-            is SaveWalletAction.SaveWalletWasShown -> state
+            is SaveWalletAction.SaveWalletWasShown,
+            is SaveWalletAction.SaveWalletAfterBackup,
+            -> state
         }
     }
 }
