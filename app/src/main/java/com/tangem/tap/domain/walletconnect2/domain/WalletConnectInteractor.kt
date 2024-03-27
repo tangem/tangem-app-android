@@ -41,9 +41,9 @@ class WalletConnectInteractor(
         coroutineScope {
             launch { subscribeToEvents() }
             launch { subscribeToSessions() }
-        }
 
-        walletConnectRepository.updateSessions()
+            walletConnectRepository.updateSessions()
+        }
     }
 
     fun setUserChains(accounts: List<Account>) {
