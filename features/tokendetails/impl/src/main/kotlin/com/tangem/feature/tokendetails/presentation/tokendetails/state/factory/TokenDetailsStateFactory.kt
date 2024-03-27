@@ -10,8 +10,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
@@ -175,13 +174,16 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getStateWithActionButtonErrorDialog(unavailabilityReason: ScenarioUnavailabilityReason) : TokenDetailsState {
+    fun getStateWithActionButtonErrorDialog(
+        unavailabilityReason: ScenarioUnavailabilityReason,
+        cryptoCurrency: CryptoCurrency,
+    ): TokenDetailsState {
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
-                    text = getUnavailabilityReasonText(unavailabilityReason),
+                    text = getUnavailabilityReasonText(unavailabilityReason, cryptoCurrency),
                     onConfirmClick = clickIntents::onDismissDialog,
                 )
             )
@@ -333,15 +335,52 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason) : String {
+    // из getFeePaidCryptoCurrencyStatusSyncUseCase
+    private fun getUnavailabilityReasonText(
+        unavailabilityReason: ScenarioUnavailabilityReason,
+        cryptoCurrency: CryptoCurrency,
+    ): TextReference {
         return when (unavailabilityReason) {
-            ScenarioUnavailabilityReason.NONE -> {
-                // send
-                // ScenarioUnavailabilityReason.PENDING_TRANSACTION -> {
-                //
-                // }
-                throw IllegalArgumentException("The unavailabilityReason must be other than NONE")
+            // send
+            ScenarioUnavailabilityReason.PENDING_TRANSACTION -> {
+                resourceReference(
+                    id = R.string.warning_send_blocked_pending_transactions_message,
+                    formatArgs = wrappedList(cryptoCurrency.symbol)
+                )
             }
+            ScenarioUnavailabilityReason.EMPTY_BALANCE -> {
+                stringReference(
+                    "You do not have funds to send. Top up your account to be able to send funds from it."
+                )
+            }
+            ScenarioUnavailabilityReason.INSUFFICIENT_FUNDS_FOR_FEE -> {
+                resourceReference(
+                    id = R.string.warning_send_blocked_funds_for_fee_message
+                )
+            }
+            ScenarioUnavailabilityReason.BUY_UNAVAILABLE -> {
+                stringReference(
+                    "The purchase of the %name% coin is currently unavailable. But we are working on adding it."
+                )
+            }
+            ScenarioUnavailabilityReason.NOT_EXCHANGEABLE -> {
+                stringReference(
+                    "%token name% swap is not available. But we are working on adding it."
+                )
+            }
+            ScenarioUnavailabilityReason.SELL_UNAVAILABLE -> {
+                stringReference("Sell of the %token name% coin is currently unavailable. But we are working on adding it.")
+            }
+
+            ScenarioUnavailabilityReason.NO_QUOTES -> {
+                stringReference("Выбранная операция в данный момент недоступна. Попробуйте позже.")
+            }
+
+
+            ScenarioUnavailabilityReason.NONE -> {
+                throw IllegalArgumentException("The unavailability reason must be other than NONE")
+            }
+
         }
     }
 }

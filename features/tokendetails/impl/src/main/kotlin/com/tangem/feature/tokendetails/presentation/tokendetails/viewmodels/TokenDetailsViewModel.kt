@@ -430,6 +430,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun sendCurrency(status: CryptoCurrencyStatus, transactionInfo: TransactionInfo? = null) {
         viewModelScope.launch(dispatchers.main) {
+            // this!
             val maybeFeeCurrencyStatus =
                 getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
 
@@ -714,7 +715,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason) : Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.NONE) return false
 
-        uiState = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
+        uiState = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason, cryptoCurrency)
 
         return true
     }

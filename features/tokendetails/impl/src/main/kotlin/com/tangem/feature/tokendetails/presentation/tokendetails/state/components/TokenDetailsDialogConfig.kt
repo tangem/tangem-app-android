@@ -79,13 +79,13 @@ internal data class TokenDetailsDialogConfig(
         }
 
         data class DisabledButtonReasonDialogConfig(
-            val text: String,
+            val text: TextReference,
             val onConfirmClick: () -> Unit,
         ) : DialogContentConfig() {
 
             override val title = null
 
-            override val message: TextReference = TextReference.Str(text)
+            override val message: TextReference = text
 
             override val cancelButtonConfig = null
 
