@@ -8,11 +8,15 @@ sealed class DataError {
 
     data class BadRequest(override val code: Int) : DataError()
 
+    data class SwapsAreUnavailableNowError(override val code: Int) : DataError()
+
     data class ExchangeProviderNotFoundError(override val code: Int) : DataError()
 
     data class ExchangeProviderNotActiveError(override val code: Int) : DataError()
 
     data class ExchangeProviderNotAvailableError(override val code: Int) : DataError()
+
+    data class ExchangeProviderProviderInternalError(override val code: Int) : DataError()
 
     data class ExchangeNotPossibleError(override val code: Int) : DataError()
 
