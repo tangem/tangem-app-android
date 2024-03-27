@@ -3,9 +3,12 @@
   <string name="address_type_default">默認</string>
   <string name="address_type_legacy">遺留資產</string>
   <string name="common_fee_error">獲取費用失敗</string>
-  <string name="kaspa_withdrawal_message_warning">由於 Kaspa 的限制，只有%1$d UTXO 可以放入單次交易中。這意味著您只能發送%2$s或更少數量。您需要減少數量。</string>
-  <string name="no_account_bnb">要創建帳戶，請將資金發送到此地址</string>
+  <string name="common_utxo_validate_withdrawal_message_warning">由於 %1$s 的限制，只有%2$d UTXO 可以放入單次交易中。這意味著您只能發送%3$s或更少數量。您需要減少數量。</string>
+  <string name="eth_gas_required_exceeds_allowance">沒有足夠的資金進行交易。請先入金</string>
+  <string name="generic_error_code"></string>
+  <string name="no_account_generic"></string>
   <string name="no_account_polkadot">目標帳戶未激活。發送 %s 或更多以激活帳戶</string>
+  <string name="no_account_send_to_create">要創建帳戶，請將資金發送到此地址</string>
   <string name="send_error_dust_amount_format">最小數量是 %s</string>
   <string name="send_error_dust_change">更動太小</string>
   <string name="send_error_invalid_fee_value">無效費用</string>
