@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.scanCard.chains
 
-import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.Analytics
@@ -9,6 +8,7 @@ import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.core.chain.Chain
+import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -39,11 +39,9 @@ import org.rekotlin.Store
 class CheckForOnboardingChain(
     private val store: Store<AppState>,
     private val tapWalletManager: TapWalletManager,
-) : Chain<ScanCardException.ChainException, ScanResponse> {
+) : ResultChain<ScanCardException, ScanResponse>() {
 
-    override suspend fun invoke(
-        previousChainResult: ScanResponse,
-    ): Either<ScanCardException.ChainException, ScanResponse> {
+    override suspend fun launch(previousChainResult: ScanResponse): ScanChainResult {
         tapWalletManager.updateConfigManager(previousChainResult)
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(previousChainResult))
 
