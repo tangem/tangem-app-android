@@ -940,7 +940,6 @@ internal class SwapViewModel @Inject constructor(
                     selectedProviderId = providerId,
                     pricesLowerBest = pricesLowerBest,
                     unavailableProviders = unavailableProviders,
-                    bestRatedProviderId = findBestQuoteProvider(states)?.providerId ?: providerId,
                     providersStates = dataState.lastLoadedSwapStates,
                 ) { uiState = stateBuilder.dismissBottomSheet(uiState) }
             },
