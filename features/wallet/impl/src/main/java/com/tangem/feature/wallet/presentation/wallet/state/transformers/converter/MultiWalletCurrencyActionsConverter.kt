@@ -91,7 +91,7 @@ internal class MultiWalletCurrencyActionsConverter(
             iconResId = icon,
             onClick = action,
             isWarning = actionsState is TokenActionsState.ActionState.HideToken,
-            enabled = actionsState.unavailabilityReason == ScenarioUnavailabilityReason.NONE,
+            enabled = actionsState.unavailabilityReason == ScenarioUnavailabilityReason.None,
         )
     }
 }

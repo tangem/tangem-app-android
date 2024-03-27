@@ -709,13 +709,13 @@ internal class TokenDetailsViewModel @Inject constructor(
             shouldShowSwapPromoTokenUseCase.neverToShow()
             analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Exchange(cryptoCurrency.symbol))
         }
-        onSwapClick(ScenarioUnavailabilityReason.NONE)
+        onSwapClick(ScenarioUnavailabilityReason.None)
     }
 
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason) : Boolean {
-        if (unavailabilityReason == ScenarioUnavailabilityReason.NONE) return false
+        if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        uiState = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason, cryptoCurrency)
+        uiState = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
 
         return true
     }

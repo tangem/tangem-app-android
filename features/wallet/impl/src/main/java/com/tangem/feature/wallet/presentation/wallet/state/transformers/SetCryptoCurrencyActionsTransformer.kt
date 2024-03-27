@@ -44,25 +44,25 @@ internal class SetCryptoCurrencyActionsTransformer(
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
                         WalletManageButton.Buy(
-                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.NONE,
+                            enabled = true,
                             onClick = { clickIntents.onBuyClick(cryptoCurrencyStatus) },
                         )
                     }
                     is TokenActionsState.ActionState.Receive -> {
                         WalletManageButton.Receive(
-                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.NONE,
+                            enabled = true,
                             onClick = { clickIntents.onReceiveClick(cryptoCurrencyStatus) },
                         )
                     }
                     is TokenActionsState.ActionState.Sell -> {
                         WalletManageButton.Sell(
-                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.NONE,
+                            enabled = true,
                             onClick = { clickIntents.onSellClick(cryptoCurrencyStatus) },
                         )
                     }
                     is TokenActionsState.ActionState.Send -> {
                         WalletManageButton.Send(
-                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.NONE,
+                            enabled = true,
                             onClick = { clickIntents.onSendClick(cryptoCurrencyStatus) },
                         )
                     }

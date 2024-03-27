@@ -176,14 +176,13 @@ internal class TokenDetailsStateFactory(
 
     fun getStateWithActionButtonErrorDialog(
         unavailabilityReason: ScenarioUnavailabilityReason,
-        cryptoCurrency: CryptoCurrency,
     ): TokenDetailsState {
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
-                    text = getUnavailabilityReasonText(unavailabilityReason, cryptoCurrency),
+                    text = getUnavailabilityReasonText(unavailabilityReason),
                     onConfirmClick = clickIntents::onDismissDialog,
                 )
             )
@@ -335,50 +334,48 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    // из getFeePaidCryptoCurrencyStatusSyncUseCase
     private fun getUnavailabilityReasonText(
         unavailabilityReason: ScenarioUnavailabilityReason,
-        cryptoCurrency: CryptoCurrency,
     ): TextReference {
         return when (unavailabilityReason) {
             // send
-            ScenarioUnavailabilityReason.PENDING_TRANSACTION -> {
+            is ScenarioUnavailabilityReason.PendingTransaction -> {
                 resourceReference(
                     id = R.string.warning_send_blocked_pending_transactions_message,
-                    formatArgs = wrappedList(cryptoCurrency.symbol)
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol)
                 )
             }
-            ScenarioUnavailabilityReason.EMPTY_BALANCE -> {
+            ScenarioUnavailabilityReason.EmptyBalance -> {
                 stringReference(
                     "You do not have funds to send. Top up your account to be able to send funds from it."
                 )
             }
-            ScenarioUnavailabilityReason.INSUFFICIENT_FUNDS_FOR_FEE -> {
+            ScenarioUnavailabilityReason.InsufficientFundsForFee -> {
                 resourceReference(
                     id = R.string.warning_send_blocked_funds_for_fee_message
                 )
             }
-            ScenarioUnavailabilityReason.BUY_UNAVAILABLE -> {
+            is ScenarioUnavailabilityReason.BuyUnavailable -> {
                 stringReference(
-                    "The purchase of the %name% coin is currently unavailable. But we are working on adding it."
+                    "The purchase of the %name% is currently unavailable. But we are working on adding it."
                 )
             }
-            ScenarioUnavailabilityReason.NOT_EXCHANGEABLE -> {
+            is ScenarioUnavailabilityReason.NotExchangeable -> {
                 stringReference(
                     "%token name% swap is not available. But we are working on adding it."
                 )
             }
-            ScenarioUnavailabilityReason.SELL_UNAVAILABLE -> {
+            is ScenarioUnavailabilityReason.SellUnavailable -> {
                 stringReference("Sell of the %token name% coin is currently unavailable. But we are working on adding it.")
             }
 
-            ScenarioUnavailabilityReason.NO_QUOTES -> {
+            ScenarioUnavailabilityReason.NoQuotes -> {
                 stringReference("Выбранная операция в данный момент недоступна. Попробуйте позже.")
             }
 
 
-            ScenarioUnavailabilityReason.NONE -> {
-                throw IllegalArgumentException("The unavailability reason must be other than NONE")
+            ScenarioUnavailabilityReason.None -> {
+                throw IllegalArgumentException("The unavailability reason must be other than None")
             }
 
         }

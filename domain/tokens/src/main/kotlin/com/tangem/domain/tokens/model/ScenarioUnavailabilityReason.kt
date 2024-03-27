@@ -1,21 +1,21 @@
 package com.tangem.domain.tokens.model
 
-enum class ScenarioUnavailabilityReason {
-    NONE,
+sealed class ScenarioUnavailabilityReason {
+    data object None : ScenarioUnavailabilityReason()
 
     // send-specific
-    PENDING_TRANSACTION,
-    EMPTY_BALANCE,
-    INSUFFICIENT_FUNDS_FOR_FEE, // if token
+    data class PendingTransaction(val cryptoCurrencySymbol: String) : ScenarioUnavailabilityReason()
+    data object EmptyBalance : ScenarioUnavailabilityReason()
+    data object InsufficientFundsForFee : ScenarioUnavailabilityReason() // if token
 
     // buy-specific
-    BUY_UNAVAILABLE,
+    data class BuyUnavailable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
 
     // swap-specific
-    NOT_EXCHANGEABLE,
+    data class NotExchangeable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
 
     // sell-specific
-    SELL_UNAVAILABLE,
+    data class SellUnavailable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
 
-    NO_QUOTES,
+    data object NoQuotes : ScenarioUnavailabilityReason()
 }
