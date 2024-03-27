@@ -13,6 +13,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
+import com.tangem.features.send.impl.presentation.state.amount.SendAmountSubtractConverter
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
@@ -31,6 +32,7 @@ internal class SendStateFactory(
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
 ) {
@@ -43,7 +45,12 @@ internal class SendStateFactory(
             appCurrencyProvider = appCurrencyProvider,
         )
     }
-
+    private val amountSubtractConverter by lazy(LazyThreadSafetyMode.NONE) {
+        SendAmountSubtractConverter(
+            currentStateProvider = currentStateProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
     private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendAmountStateConverter(
             appCurrencyProvider = appCurrencyProvider,
@@ -62,7 +69,7 @@ internal class SendStateFactory(
     private val feeStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendFeeStateConverter(
             appCurrencyProvider = appCurrencyProvider,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
     }
 
@@ -79,24 +86,29 @@ internal class SendStateFactory(
         event = consumedEvent(),
         isEditingDisabled = false,
         isBalanceHidden = false,
+        cryptoCurrencySymbol = "",
     )
 
     fun getReadyState(): SendUiState {
         val state = currentStateProvider()
         return state.copy(
             amountState = state.amountState ?: amountStateConverter.convert(""),
-            recipientState = state.recipientState ?: recipientStateConverter.convert(""),
+            recipientState = state.recipientState
+                ?: recipientStateConverter.convert(SendRecipientStateConverter.Data("", null)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
+            cryptoCurrencySymbol = cryptoCurrencyStatusProvider().currency.symbol,
         )
     }
 
-    fun getReadyState(amount: String, destinationAddress: String): SendUiState {
+    fun getReadyState(amount: String, destinationAddress: String, memo: String?): SendUiState {
         val state = currentStateProvider()
         return state.copy(
             amountState = state.amountState ?: amountStateConverter.convert(amount),
-            recipientState = state.recipientState ?: recipientStateConverter.convert(destinationAddress),
+            recipientState = state.recipientState
+                ?: recipientStateConverter.convert(SendRecipientStateConverter.Data(destinationAddress, memo)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
             isEditingDisabled = true,
+            cryptoCurrencySymbol = cryptoCurrencyStatusProvider().currency.symbol,
         )
     }
 
@@ -214,11 +226,12 @@ internal class SendStateFactory(
     //endregion
 
     //region send
-    fun onSubtractSelect(isSubtract: Boolean): SendUiState {
+    fun onSubtractSelect(isAmountSubtractAvailable: Boolean): SendUiState {
         val state = currentStateProvider()
-        return state.copy(
-            sendState = state.sendState.copy(isSubtract = isSubtract),
-        )
+
+        if (!isAmountSubtractAvailable) return state
+
+        return amountSubtractConverter.convert(Unit)
     }
 
     fun getSendingStateUpdate(isSending: Boolean): SendUiState {
