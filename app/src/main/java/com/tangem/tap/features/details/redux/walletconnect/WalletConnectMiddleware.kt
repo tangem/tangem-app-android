@@ -13,12 +13,12 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
