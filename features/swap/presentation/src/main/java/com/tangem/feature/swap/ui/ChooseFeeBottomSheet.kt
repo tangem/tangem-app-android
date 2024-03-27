@@ -4,10 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -30,7 +31,10 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun ChooseFeeBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet(config) { content: ChooseFeeBottomSheetConfig ->
+    TangemBottomSheet(
+        config = config,
+        containerColor = TangemTheme.colors.background.tertiary,
+    ) { content: ChooseFeeBottomSheetConfig ->
         ChooseFeeBottomSheetContent(content = content)
     }
 }
@@ -39,7 +43,7 @@ fun ChooseFeeBottomSheet(config: TangemBottomSheetConfig) {
 private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
     Column(
         modifier = Modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors.background.tertiary)
             .padding(bottom = TangemTheme.dimens.spacing8),
     ) {
         Text(
@@ -53,6 +57,7 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
         Column(
             modifier = Modifier
                 .padding(TangemTheme.dimens.spacing16)
+                .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(
                     color = TangemTheme.colors.background.action,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -103,29 +108,36 @@ private fun FooterBlock(readMore: TextReference, readMoreUrl: String, onReadMore
 
 @Composable
 private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
-    content.feeItems.forEach { feeItem ->
+    content.feeItems.forEachIndexed { index, feeItem ->
         val isSelected = feeItem.feeType == content.selectedFee
-        val preEllipsizeText = feeItem.amountCrypto
-        val postEllipsizeText = " ${feeItem.symbolCrypto} (${feeItem.amountFiatFormatted})"
+        val showDivider = content.feeItems.lastIndex != index
+        val symbol = " ${feeItem.symbolCrypto}"
+        val preDotText = "${feeItem.amountCrypto}$symbol"
+        val postDot = feeItem.amountFiatFormatted
+        val ellipsizeOffset = symbol.length
         when (feeItem.feeType) {
             FeeType.NORMAL -> {
                 SelectorRowItem(
                     titleRes = R.string.common_fee_selector_option_market,
                     iconRes = R.drawable.ic_bird_24,
-                    preEllipsize = TextReference.Str(preEllipsizeText),
-                    postEllipsize = TextReference.Str(postEllipsizeText),
+                    preDot = TextReference.Str(preDotText),
+                    postDot = TextReference.Str(postDot),
+                    ellipsizeOffset = ellipsizeOffset,
                     isSelected = isSelected,
                     onSelect = { content.onSelectFeeType(feeItem.feeType) },
+                    showDivider = showDivider,
                 )
             }
             FeeType.PRIORITY -> {
                 SelectorRowItem(
                     titleRes = R.string.common_fee_selector_option_fast,
                     iconRes = R.drawable.ic_hare_24,
-                    preEllipsize = TextReference.Str(preEllipsizeText),
-                    postEllipsize = TextReference.Str(postEllipsizeText),
+                    preDot = TextReference.Str(preDotText),
+                    postDot = TextReference.Str(postDot),
+                    ellipsizeOffset = ellipsizeOffset,
                     isSelected = isSelected,
                     onSelect = { content.onSelectFeeType(feeItem.feeType) },
+                    showDivider = showDivider,
                 )
             }
         }
