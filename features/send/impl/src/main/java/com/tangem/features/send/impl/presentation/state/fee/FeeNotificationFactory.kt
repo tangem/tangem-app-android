@@ -43,13 +43,14 @@ internal class FeeNotificationFactory(
         .map {
             val state = currentStateProvider()
             val feeState = state.feeState ?: return@map persistentListOf()
+            val feeSelectorState = feeState.feeSelectorState
             buildList {
-                when (val feeSelectorState = feeState.feeSelectorState) {
-                    FeeSelectorState.Loading -> Unit
-                    FeeSelectorState.Error -> {
+                when {
+                    feeSelectorState.isLoading -> Unit
+                    feeSelectorState.isError -> {
                         addFeeUnreachableNotification(feeSelectorState)
                     }
-                    is FeeSelectorState.Content -> {
+                    else -> {
                         val customFee = feeSelectorState.customValues
                         val selectedFee = feeSelectorState.selectedFee
                         addTooHighNotification(feeSelectorState.fees, selectedFee, customFee)
@@ -60,13 +61,13 @@ internal class FeeNotificationFactory(
         }
 
     private fun MutableList<SendFeeNotification>.addFeeUnreachableNotification(feeSelectorState: FeeSelectorState) {
-        if (feeSelectorState is FeeSelectorState.Error) {
+        if (feeSelectorState.isError) {
             add(SendFeeNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload))
         }
     }
 
     private fun MutableList<SendFeeNotification>.addTooHighNotification(
-        transactionFee: TransactionFee,
+        transactionFee: TransactionFee?,
         selectedFee: FeeType,
         customFee: List<SendTextField.CustomFee>,
     ) {

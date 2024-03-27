@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
@@ -59,7 +58,7 @@ internal class SendEventStateFactory(
 
     fun getFeeUpdatedAlert(fee: TransactionFee, onConsume: () -> Unit, onFeeNotIncreased: () -> Unit): SendUiState {
         val state = currentStateProvider()
-        val feeSelector = state.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return state
+        val feeSelector = state.feeState?.feeSelectorState ?: return state
         val newFee = when (fee) {
             is TransactionFee.Single -> fee.normal
             is TransactionFee.Choosable -> {
@@ -73,7 +72,7 @@ internal class SendEventStateFactory(
         }
 
         val newFeeValue = newFee.amount.value ?: BigDecimal.ZERO
-        val oldFeeValue = feeStateFactory.feeConverter.convert(feeSelector).amount.value ?: BigDecimal.ZERO
+        val oldFeeValue = feeStateFactory.feeConverter.convert(feeSelector)?.amount?.value ?: BigDecimal.ZERO
         val updateFeeState = feeStateFactory.onFeeOnLoadedState(fee)
         return if (newFeeValue > oldFeeValue) {
             updateFeeState.copy(

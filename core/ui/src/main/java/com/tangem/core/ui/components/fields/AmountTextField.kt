@@ -106,7 +106,6 @@ fun AmountTextField(
             textStyle = textStyle.copy(
                 fontSize = fontSize,
                 textDirection = TextDirection.ContentOrLtr,
-                textAlign = TextAlign.Center,
             ),
             color = color,
             keyboardOptions = keyboardOptions,

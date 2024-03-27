@@ -14,7 +14,7 @@ internal class FeeConverter(
     private val clickIntents: SendClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Converter<FeeSelectorState.Content, Fee> {
+) : Converter<FeeSelectorState, Fee?> {
 
     private val ethereumCustomFeeConverter by lazy {
         EthereumCustomFeeConverter(
@@ -24,7 +24,7 @@ internal class FeeConverter(
         )
     }
 
-    override fun convert(value: FeeSelectorState.Content): Fee {
+    override fun convert(value: FeeSelectorState): Fee? {
         return when (val fees = value.fees) {
             is TransactionFee.Choosable -> {
                 when (value.selectedFee) {
@@ -35,10 +35,11 @@ internal class FeeConverter(
                 }
             }
             is TransactionFee.Single -> fees.normal
+            else -> null
         }
     }
 
-    private fun convertCustom(feeSelectorState: FeeSelectorState.Content, fees: TransactionFee): Fee {
+    private fun convertCustom(feeSelectorState: FeeSelectorState, fees: TransactionFee): Fee {
         val customValues = feeSelectorState.customValues
         val normalFee = fees.normal
         return if (customValues.isEmpty()) {
