@@ -291,12 +291,12 @@ enum class DerivationPathSelectorType {
 internal sealed class AddCustomTokenWarning(val description: TextReference) {
 
     /** Potential scam warning */
-    object PotentialScamToken : AddCustomTokenWarning(
+    data object PotentialScamToken : AddCustomTokenWarning(
         description = TextReference.Res(R.string.custom_token_validation_error_not_found),
     )
 
     /** Token already added warning */
-    object TokenAlreadyAdded : AddCustomTokenWarning(
+    data object TokenAlreadyAdded : AddCustomTokenWarning(
         description = TextReference.Res(R.string.custom_token_validation_error_already_added),
     )
 
@@ -305,7 +305,7 @@ internal sealed class AddCustomTokenWarning(val description: TextReference) {
         description = TextReference.Res(R.string.alert_manage_tokens_unsupported_message, networkName),
     )
 
-    object WrongDerivationPath : AddCustomTokenWarning(
+    data object WrongDerivationPath : AddCustomTokenWarning(
         description = TextReference.Res(R.string.custom_token_invalid_derivation_path),
     )
 }
