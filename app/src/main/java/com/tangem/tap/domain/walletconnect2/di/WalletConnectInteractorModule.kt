@@ -3,6 +3,7 @@ package com.tangem.tap.domain.walletconnect2.di
 import android.app.Application
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.files.FileReader
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
@@ -14,6 +15,7 @@ import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
+import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -32,13 +34,14 @@ internal object WalletConnectInteractorModule {
     fun provideWalletConnectInteractor(
         wcRepository: WalletConnectRepository,
         wcSessionsRepository: WalletConnectSessionsRepository,
+        walletConnectFeatureToggles: WalletConnectFeatureToggles,
     ): WalletConnectInteractor {
         return WalletConnectInteractor(
             handler = WalletConnectEventsHandlerImpl(),
             walletConnectRepository = wcRepository,
             sessionsRepository = wcSessionsRepository,
             sdkHelper = WalletConnectSdkHelper(),
-            blockchainHelper = TangemWcBlockchainHelper(),
+            blockchainHelper = TangemWcBlockchainHelper(walletConnectFeatureToggles),
             dispatcher = AppCoroutineDispatcherProvider(),
         )
     }
@@ -50,7 +53,13 @@ internal object WalletConnectModule {
 
     @Provides
     @Singleton
-    fun bindWalletConnectRepository(
+    fun provideWalletConnectFeatureToggles(featureTogglesManager: FeatureTogglesManager): WalletConnectFeatureToggles {
+        return WalletConnectFeatureToggles(featureTogglesManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWalletConnectRepository(
         application: Application,
         wcRequestDeserializer: WcJrpcRequestsDeserializer,
         analyticsHandler: AnalyticsEventHandler,
@@ -64,7 +73,7 @@ internal object WalletConnectModule {
 
     @Provides
     @Singleton
-    fun bindWalletConnectSessionsRepository(
+    fun provideWalletConnectSessionsRepository(
         @SdkMoshi moshi: Moshi,
         fileReader: FileReader,
     ): WalletConnectSessionsRepository {
