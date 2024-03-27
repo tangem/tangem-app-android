@@ -1,5 +1,6 @@
 package com.tangem.datasource.utils
 
+import com.tangem.lib.auth.AppVersionProvider
 import com.tangem.lib.auth.AuthBearerProvider
 import com.tangem.lib.auth.AuthProvider
 import com.tangem.lib.auth.ExpressAuthProvider
@@ -29,5 +30,10 @@ sealed class RequestHeader(vararg pairs: Pair<String, () -> String>) {
 
     class AuthBearerHeader(authBearerProvider: AuthBearerProvider) : RequestHeader(
         "Authorization" to { "Bearer " + authBearerProvider.getApiKey() },
+    )
+
+    class AppVersionPlatformHeaders(appVersionProvider: AppVersionProvider) : RequestHeader(
+        "version" to { appVersionProvider.getAppVersion() },
+        "platform" to { "android" },
     )
 }

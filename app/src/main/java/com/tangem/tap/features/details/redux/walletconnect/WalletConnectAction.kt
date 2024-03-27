@@ -59,8 +59,7 @@ sealed class WalletConnectAction : Action {
     ) : WalletConnectAction()
 
     data class FailureEstablishingSession(val session: WCSession?, val error: TapError? = null) : WalletConnectAction()
-    data class SetSessionsRestored(val sessions: List<WalletConnectSession>) :
-        WalletConnectAction()
+    data class SetSessionsRestored(val sessions: List<WalletConnectSession>) : WalletConnectAction()
 
     data class DisconnectSession(val topic: String, val session: WCSession?) : WalletConnectAction()
 
