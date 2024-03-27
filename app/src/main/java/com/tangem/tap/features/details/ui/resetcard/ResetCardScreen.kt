@@ -11,9 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
@@ -35,6 +33,8 @@ internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Uni
         },
         onBackClick = onBackClick,
     )
+
+    LastWarningDialog(state = state)
 }
 
 @Composable
@@ -181,6 +181,26 @@ private fun ResetButton(enabled: Boolean, onResetButtonClick: () -> Unit) {
     )
 }
 
+@Composable
+private fun LastWarningDialog(state: ResetCardScreenState) {
+    if (state is ResetCardScreenState.ResetCardScreenContent && state.lastWarningDialog.isShown) {
+        BasicDialog(
+            title = stringResource(id = R.string.common_attention),
+            message = stringResource(id = R.string.card_settings_action_sheet_title),
+            dismissButton = DialogButton(
+                title = stringResource(id = R.string.card_settings_action_sheet_reset),
+                warning = true,
+                onClick = state.lastWarningDialog.onResetButtonClick,
+            ),
+            confirmButton = DialogButton(
+                title = stringResource(id = R.string.common_cancel),
+                onClick = state.lastWarningDialog.onDismiss,
+            ),
+            onDismissDialog = state.lastWarningDialog.onDismiss,
+        )
+    }
+}
+
 // region Preview
 @Composable
 private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
@@ -196,6 +216,11 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
                 onAcceptCondition1ToggleClick = {},
                 onAcceptCondition2ToggleClick = {},
                 onResetButtonClick = {},
+                lastWarningDialog = ResetCardScreenState.ResetCardScreenContent.LastWarningDialog(
+                    isShown = false,
+                    onResetButtonClick = {},
+                    onDismiss = {},
+                ),
             ),
             onBackClick = {},
         )
