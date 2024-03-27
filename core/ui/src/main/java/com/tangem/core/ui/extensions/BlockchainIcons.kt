@@ -61,6 +61,10 @@ fun getActiveIconRes(blockchainId: String): Int {
         "moonbeam", "moonbeam/test" -> R.drawable.img_moonbeam_22
         "manta", "manta/test" -> R.drawable.img_manta_22
         "polygonZkEVM", "polygonZkEVM/test" -> R.drawable.img_polygon_22
+        "moonriver", "moonriver/test" -> R.drawable.img_moonriver_22
+        "mantle", "mantle/test" -> R.drawable.img_mantle_22
+        "flare", "flare/test" -> R.drawable.img_flare_22
+        "taraxa", "taraxa/test" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         else -> R.drawable.ic_alert_24
     }
@@ -124,6 +128,10 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "moonbeam", "moonbeam/test" -> R.drawable.img_moonbeam_22
         "manta-network", "manta-network/test" -> R.drawable.img_manta_22
         "polygon-zkevm", "polygon-zkevm/test" -> R.drawable.img_polygon_22
+        "moonriver", "moonriver/test" -> R.drawable.img_moonriver_22
+        "mantle", "mantle/test" -> R.drawable.img_mantle_22
+        "flare-network", "flare-network/test" -> R.drawable.img_flare_22
+        "taraxa", "taraxa/test" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         else -> R.drawable.ic_alert_24
     }
@@ -184,6 +192,10 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "moonbeam" -> R.drawable.img_moonbeam_22
         "manta-network-ethereum" -> R.drawable.img_manta_22
         "polygon-zkevm-ethereum" -> R.drawable.img_polygon_22
+        "moonriver" -> R.drawable.img_moonriver_22
+        "mantle" -> R.drawable.img_mantle_22
+        "flare-networks" -> R.drawable.img_flare_22
+        "taraxa" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         else -> R.drawable.ic_alert_24
     }
@@ -247,6 +259,10 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "moonbeam", "moonbeam/test" -> R.drawable.ic_moonbeam_22
         "manta", "manta/test" -> R.drawable.ic_manta_22
         "polygonZkEVM", "polygonZkEVM/test" -> R.drawable.ic_polygon_22
+        "moonriver", "moonriver/test" -> R.drawable.ic_moonriver_22
+        "mantle", "mantle/test" -> R.drawable.ic_mantle_22
+        "flare", "flare/test" -> R.drawable.ic_flare_22
+        "taraxa", "taraxa/test" -> R.drawable.ic_taraxa_22
         "radiant" -> R.drawable.ic_radiant_22
         else -> R.drawable.ic_alert_24
     }
@@ -310,6 +326,10 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "moonbeam", "moonbeam/test" -> R.drawable.ic_moonbeam_22
         "manta-network", "manta-network/test" -> R.drawable.ic_manta_22
         "polygon-zkevm", "polygon-zkevm/test" -> R.drawable.ic_polygon_22
+        "moonriver", "moonriver/test" -> R.drawable.ic_moonriver_22
+        "mantle", "mantle/test" -> R.drawable.ic_mantle_22
+        "flare-network", "flare-network/test" -> R.drawable.ic_flare_22
+        "taraxa", "taraxa/test" -> R.drawable.ic_taraxa_22
         "radiant" -> R.drawable.ic_radiant_22
         else -> R.drawable.ic_alert_24
     }
