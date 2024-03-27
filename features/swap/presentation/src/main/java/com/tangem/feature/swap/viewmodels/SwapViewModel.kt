@@ -27,6 +27,7 @@ import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.ExpressException
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
@@ -502,7 +503,7 @@ internal class SwapViewModel @Inject constructor(
                 )
             }.onSuccess {
                 when (it) {
-                    is TxState.TxSent -> {
+                    is SwapTransactionState.TxSent -> {
                         sendSuccessSwapEvent(fromCurrency.currency, fee.feeType)
                         val url = blockchainInteractor.getExplorerTransactionLink(
                             networkId = fromCurrency.currency.network.backendId,
@@ -511,7 +512,7 @@ internal class SwapViewModel @Inject constructor(
                         updateWalletBalance()
                         uiState = stateBuilder.createSuccessState(
                             uiState = uiState,
-                            txState = it,
+                            swapTransactionState = it,
                             dataState = dataState,
                             txUrl = url,
                             onExploreClick = {
@@ -536,7 +537,7 @@ internal class SwapViewModel @Inject constructor(
 
                         swapRouter.openScreen(SwapNavScreen.Success)
                     }
-                    is TxState.UserCancelled -> {
+                    is SwapTransactionState.UserCancelled -> {
                         startLoadingQuotesFromLastState()
                     }
                     else -> {
@@ -603,14 +604,14 @@ internal class SwapViewModel @Inject constructor(
                 )
             }.onSuccess {
                 when (it) {
-                    is TxState.TxSent -> {
+                    is SwapTransactionState.TxSent -> {
                         sendApproveSuccessEvent(fromToken, feeForPermission.feeType, approveType)
                         updateWalletBalance()
                         uiState = stateBuilder.loadingPermissionState(uiState)
                         uiState = stateBuilder.dismissBottomSheet(uiState)
                         startLoadingQuotesFromLastState(isSilent = true)
                     }
-                    is TxState.UserCancelled -> Unit
+                    is SwapTransactionState.UserCancelled -> Unit
                     else -> {
                         uiState = stateBuilder.createErrorTransaction(uiState, it) {
                             uiState = stateBuilder.clearAlert(uiState)
@@ -812,6 +813,10 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
+    private fun onReduceAmountClicked(newAmount: SwapAmount) {
+        onAmountChanged(newAmount.formatToUIRepresentation())
+    }
+
     @Suppress("UnusedPrivateMember")
     private fun onAmountSelected(selected: Boolean) {
         if (selected) {
@@ -874,7 +879,14 @@ internal class SwapViewModel @Inject constructor(
                 }
                 onSearchEntered("")
             },
-            onMaxAmountSelected = { onMaxAmountClicked() },
+            onMaxAmountSelected = ::onMaxAmountClicked,
+            onReduceAmount = ::onReduceAmountClicked,
+            onReduceAmountIgnoreClick = {
+                uiState = uiState.copy(
+                    reduceAmountIgnore = true,
+                    warnings = uiState.warnings.filter { it !is SwapWarning.ReduceAmount },
+                )
+            },
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
@@ -1152,11 +1164,11 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    companion object {
-        private const val loggingTag = "SwapViewModel"
-        private const val INITIAL_AMOUNT = ""
-        private const val UPDATE_DELAY = 10000L
-        private const val DEBOUNCE_AMOUNT_DELAY = 1000L
-        private const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
+    private companion object {
+        const val loggingTag = "SwapViewModel"
+        const val INITIAL_AMOUNT = ""
+        const val UPDATE_DELAY = 10000L
+        const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
     }
 }

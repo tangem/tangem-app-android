@@ -42,6 +42,7 @@ internal class VisaWalletSubscriber(
             setLoadedCurrencyState(maybeCurrency)
 
             val currency = maybeCurrency.getOrElse {
+                Timber.e(it, "Failed to load VISA currency")
                 setFailedTxHistoryState(it)
                 return@flow
             }
