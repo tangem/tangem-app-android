@@ -9,6 +9,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.twinsIsTwinned
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
@@ -41,8 +42,8 @@ object OnboardingHelper {
             response.cardTypesResolver.isWallet2() || response.cardTypesResolver.isShibaWallet() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
                 val activationInProgress = onboardingManager?.isActivationInProgress(cardId)
-                val backupNotActive = response.card.backupStatus?.isActive != true
-                emptyWallets || activationInProgress == true || backupNotActive
+                val isNoBackup = response.card.backupStatus == CardDTO.BackupStatus.NoBackup
+                emptyWallets || activationInProgress == true || isNoBackup
             }
 
             response.card.wallets.isNotEmpty() -> onboardingManager?.isActivationInProgress(cardId) ?: false
@@ -72,6 +73,7 @@ object OnboardingHelper {
         scanResponse: ScanResponse,
         accessCode: String? = null,
         backupCardsIds: List<String>? = null,
+        hasBackupError: Boolean = false,
     ) {
         Analytics.setContext(scanResponse)
         scope.launch {
@@ -96,7 +98,7 @@ object OnboardingHelper {
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
                 tangemSdkManager.canUseBiometry && preferencesStorage.shouldShowSaveUserWalletScreen -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds)
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
 
                     delay(timeMillis = 1_200)
 
@@ -113,7 +115,7 @@ object OnboardingHelper {
                 }
                 // If device has no biometry and save wallet screen has been shown, then go through old scenario
                 else -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds)
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                 }
             }
@@ -133,8 +135,13 @@ object OnboardingHelper {
         }
     }
 
-    private suspend fun proceedWithScanResponse(scanResponse: ScanResponse, backupCardsIds: List<String>?) {
-        val userWallet = UserWalletBuilder(scanResponse)
+    private suspend fun proceedWithScanResponse(
+        scanResponse: ScanResponse,
+        backupCardsIds: List<String>?,
+        hasBackupError: Boolean,
+    ) {
+        val userWallet = UserWalletBuilder(scanResponse = scanResponse)
+            .hasBackupError(hasBackupError)
             .backupCardsIds(backupCardsIds?.toSet())
             .build()
             .guard {
