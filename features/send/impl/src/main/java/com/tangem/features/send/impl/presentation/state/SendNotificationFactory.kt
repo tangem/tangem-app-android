@@ -52,7 +52,6 @@ internal class SendNotificationFactory(
                 addDustWarningNotification(feeAmount, sendAmount)
                 addTransactionLimitErrorNotification(feeAmount, sendAmount)
                 // warnings
-                addFeeCoverageNotification(sendState.isSubtract, sendAmount)
                 addExistentialWarningNotification(feeAmount, sendAmount)
                 addHighFeeWarningNotification(sendAmount, sendState.ignoreAmountReduce)
                 addTooLowNotification(feeState)
@@ -254,29 +253,6 @@ internal class SendNotificationFactory(
                     SendNotification.Error.MinimumAmountError(dustValue.toPlainString()),
                 )
             }
-        }
-    }
-
-    private fun MutableList<SendNotification>.addFeeCoverageNotification(
-        isSubtract: Boolean,
-        amountValue: BigDecimal,
-    ) {
-        val state = currentStateProvider()
-        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
-        val feeAmount = state.feeState?.fee?.amount?.value ?: BigDecimal.ZERO
-
-        val amountReducedValue = amountValue.minus(feeAmount)
-        val amountReducedByValue = amountValue.minus(amountReducedValue)
-        val amountReducedBy = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = amountReducedByValue,
-            cryptoCurrency = cryptoCurrency,
-        )
-        val amountReduced = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = amountReducedValue,
-            cryptoCurrency = cryptoCurrency,
-        )
-        if (isSubtract) {
-            add(SendNotification.Warning.NetworkCoverage(amountReducedBy, amountReduced))
         }
     }
 
