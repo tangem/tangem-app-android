@@ -223,7 +223,11 @@ internal class WalletViewModel @Inject constructor(
         )
 
         stateHolder.update(
-            ReinitializeWalletTransformer(userWallet = action.selectedWallet, clickIntents = clickIntents),
+            ReinitializeWalletTransformer(
+                prevWalletId = action.prevWalletId,
+                newUserWallet = action.selectedWallet,
+                clickIntents = clickIntents,
+            ),
         )
     }
 
