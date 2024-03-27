@@ -2,6 +2,7 @@ package com.tangem.managetokens.presentation.addcustomtoken.state.factory
 
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.tokens.error.AddCustomTokenError
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
@@ -15,6 +16,7 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 
+@Suppress("LargeClass")
 internal class AddCustomTokenStateFactory(
     private val currentStateProvider: Provider<AddCustomTokenState>,
     private val clickIntents: AddCustomTokenClickIntents,
@@ -72,8 +74,11 @@ internal class AddCustomTokenStateFactory(
         )
     }
 
-    private fun getListOfDerivations(supportedNetworks: List<Network>): List<Derivation> {
-        return supportedNetworks.mapNotNull { network ->
+    private fun getListOfDerivations(
+        networksListToGenerateDerivations: List<Network>,
+        filterOnlyHardenedDerivations: Boolean = false,
+    ): List<Derivation> {
+        return networksListToGenerateDerivations.mapNotNull { network ->
             network.derivationPath.value?.let { rawPath ->
                 Derivation(
                     networkName = network.name,
@@ -82,6 +87,12 @@ internal class AddCustomTokenStateFactory(
                     networkId = network.backendId,
                     onDerivationSelected = clickIntents::onDerivationSelected,
                 )
+            }.takeIf { derivation ->
+                if (filterOnlyHardenedDerivations) {
+                    derivation?.let { allNodesHardened(createDerivationPathOrNull(it.path)) } ?: false
+                } else {
+                    true
+                }
             }
         }
     }
@@ -218,41 +229,52 @@ internal class AddCustomTokenStateFactory(
         )
     }
 
-    fun updateStateOnNetworkSelected(networkItemState: NetworkItemState, supportsTokens: Boolean): AddCustomTokenState {
+    fun updateStateOnNetworkSelected(
+        networkItemState: NetworkItemState,
+        supportsTokens: Boolean,
+        networks: List<Network>,
+        requiresHardenedDerivationOnly: Boolean,
+    ): AddCustomTokenState {
         val uiState = currentStateProvider()
         val tokenData = if (supportsTokens) {
-            uiState.tokenData
-                ?: CustomTokenData(
-                    contractAddressTextField = TextFieldState.Editable(
-                        value = "",
-                        isEnabled = true,
-                        onValueChange = clickIntents::onContractAddressChange,
-                        onFocusExit = clickIntents::onContractAddressFocusExit,
-                    ),
-                    nameTextField = TextFieldState.Editable(
-                        value = "",
-                        isEnabled = false,
-                        onValueChange = clickIntents::onTokenNameChange,
-                        onFocusExit = clickIntents::onTokenNameFocusExit,
-                    ),
-                    symbolTextField = TextFieldState.Editable(
-                        value = "",
-                        isEnabled = false,
-                        onValueChange = clickIntents::onSymbolChange,
-                        onFocusExit = clickIntents::onSymbolFocusExit,
-                    ),
-                    decimalsTextField = TextFieldState.Editable(
-                        value = "",
-                        isEnabled = false,
-                        onValueChange = clickIntents::onDecimalsChange,
-                        onFocusExit = clickIntents::onDecimalsFocusExit,
-                    ),
-                )
+            uiState.tokenData ?: CustomTokenData(
+                contractAddressTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = true,
+                    onValueChange = clickIntents::onContractAddressChange,
+                    onFocusExit = clickIntents::onContractAddressFocusExit,
+                ),
+                nameTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = false,
+                    onValueChange = clickIntents::onTokenNameChange,
+                    onFocusExit = clickIntents::onTokenNameFocusExit,
+                ),
+                symbolTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = false,
+                    onValueChange = clickIntents::onSymbolChange,
+                    onFocusExit = clickIntents::onSymbolFocusExit,
+                ),
+                decimalsTextField = TextFieldState.Editable(
+                    value = "",
+                    isEnabled = false,
+                    onValueChange = clickIntents::onDecimalsChange,
+                    onFocusExit = clickIntents::onDecimalsFocusExit,
+                ),
+            )
         } else {
             null
         }
+
+        val derivations = getListOfDerivations(networks, requiresHardenedDerivationOnly)
+        val chooseDerivationState = createChooseDerivationState(derivations)
+
         return uiState.copy(
-            chooseNetworkState = uiState.chooseNetworkState.copy(selectedNetwork = networkItemState),
+            chooseNetworkState = uiState.chooseNetworkState.copy(
+                selectedNetwork = networkItemState,
+            ),
+            chooseDerivationState = chooseDerivationState,
             tokenData = tokenData,
             addTokenButton = uiState.addTokenButton.copy(isEnabled = true),
         )
@@ -289,6 +311,47 @@ internal class AddCustomTokenStateFactory(
                 enterCustomDerivationState = customDerivationState,
             ),
         )
+    }
+
+    fun updateOnCustomDerivationEntered(input: String, requiresHardenedDerivationOnly: Boolean): AddCustomTokenState {
+        val uiState = currentStateProvider()
+        val path = createDerivationPathOrNull(input)
+        val isWrongDerivationForWallet2 = isWrongDerivationForWallet2(
+            requiresHardenedDerivationOnly = requiresHardenedDerivationOnly,
+            derivationPath = path,
+        )
+        val enterDerivationState = uiState.chooseDerivationState?.enterCustomDerivationState?.copy(
+            confirmButtonEnabled = path != null && !isWrongDerivationForWallet2,
+            derivationIncorrect = input.isNotBlank() && path == null || isWrongDerivationForWallet2,
+        )
+        return uiState.copy(
+            chooseDerivationState = uiState.chooseDerivationState?.copy(
+                enterCustomDerivationState = enterDerivationState,
+            ),
+        )
+    }
+
+    private fun isWrongDerivationForWallet2(
+        requiresHardenedDerivationOnly: Boolean,
+        derivationPath: DerivationPath?,
+    ): Boolean {
+        return if (requiresHardenedDerivationOnly) {
+            !allNodesHardened(derivationPath)
+        } else {
+            false
+        }
+    }
+
+    private fun allNodesHardened(derivationPath: DerivationPath?): Boolean {
+        return derivationPath?.nodes?.all { it.isHardened } ?: false
+    }
+
+    private fun createDerivationPathOrNull(rawPath: String): DerivationPath? {
+        return try {
+            DerivationPath(rawPath)
+        } catch (error: Throwable) {
+            null
+        }
     }
 
     fun updateStateOnLoadingTokenInfo(contractAddress: String): AddCustomTokenState {
