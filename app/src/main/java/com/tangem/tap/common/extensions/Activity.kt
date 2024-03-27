@@ -17,6 +17,7 @@ import java.io.File
  *     </intent>
  * </queries>
  */
+@Deprecated("Use EmailSender instead")
 fun Activity.sendEmail(
     email: String,
     subject: String,
