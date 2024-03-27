@@ -197,8 +197,10 @@ internal class SwapInteractorImpl @Inject constructor(
         return repository.getPairs(initialCurrency, currenciesList)
     }
 
-    @Deprecated("used in old swap mechanism")
-    override suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): TxState {
+    override suspend fun givePermissionToSwap(
+        networkId: String,
+        permissionOptions: PermissionOptions,
+    ): SwapTransactionState {
         val derivationPath = permissionOptions.fromToken.network.derivationPath.value
         val dataToSign = if (permissionOptions.approveType == SwapApproveType.UNLIMITED) {
             getApproveData(
@@ -228,20 +230,19 @@ internal class SwapInteractorImpl @Inject constructor(
         return when (result) {
             is SendTxResult.Success -> {
                 allowPermissionsHandler.addAddressToInProgress(permissionOptions.forTokenContractAddress)
-                TxState.TxSent(
+                SwapTransactionState.TxSent(
                     txHash = userWalletManager.getLastTransactionHash(networkId, derivationPath).orEmpty(),
                     timestamp = System.currentTimeMillis(),
                 )
             }
-            SendTxResult.UserCancelledError -> TxState.UserCancelled
-            is SendTxResult.BlockchainSdkError -> TxState.BlockchainError
-            is SendTxResult.TangemSdkError -> TxState.TangemSdkError
-            is SendTxResult.NetworkError -> TxState.NetworkError
-            is SendTxResult.UnknownError -> TxState.UnknownError
+            SendTxResult.UserCancelledError -> SwapTransactionState.UserCancelled
+            is SendTxResult.BlockchainSdkError -> SwapTransactionState.BlockchainError
+            is SendTxResult.TangemSdkError -> SwapTransactionState.TangemSdkError
+            is SendTxResult.NetworkError -> SwapTransactionState.NetworkError
+            is SendTxResult.UnknownError -> SwapTransactionState.UnknownError
         }
     }
 
-    @Deprecated("used in old swap mechanism")
     override suspend fun findBestQuote(
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
@@ -376,6 +377,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val warnings = mutableListOf<Warning>()
         manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken)
         manageDustWarning(warnings, feeState, userWalletId, fromTokenStatus, amount)
+        manageReduceAmountWarning(warnings, fromTokenStatus, amount)
         return warnings
     }
 
@@ -424,6 +426,17 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    private fun manageReduceAmountWarning(
+        warnings: MutableList<Warning>,
+        fromTokenStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+    ) {
+        val isTezos = fromTokenStatus.currency.network.id.value == Blockchain.Tezos.id
+        if (isTezos && amount.value == fromTokenStatus.value.amount) {
+            warnings.add(Warning.ReduceAmountWarning(TEZOS_FEE_THRESHOLD))
+        }
+    }
+
     override suspend fun onSwap(
         swapProvider: SwapProvider,
         swapData: SwapDataModel?,
@@ -432,7 +445,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
-    ): TxState {
+    ): SwapTransactionState {
         return when (swapProvider.type) {
             ExchangeProviderType.CEX -> {
                 val amountDecimal = toBigDecimalOrNull(amountToSwap)
@@ -509,7 +522,7 @@ internal class SwapInteractorImpl @Inject constructor(
         currencyToGet: CryptoCurrency,
         amountToSwap: String,
         fee: TxFee,
-    ): TxState {
+    ): SwapTransactionState {
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
         val amount = SwapAmount(amountDecimal, currencyToSend.decimals)
         val derivationPath = currencyToSend.network.derivationPath.value
@@ -533,7 +546,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return when (result) {
             is SendTxResult.Success -> {
                 storeLastCryptoCurrencyId(currencyToGet)
-                TxState.TxSent(
+                SwapTransactionState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
                         currencyToSend.symbol,
@@ -548,11 +561,11 @@ internal class SwapInteractorImpl @Inject constructor(
                     timestamp = System.currentTimeMillis(),
                 )
             }
-            SendTxResult.UserCancelledError -> TxState.UserCancelled
-            is SendTxResult.BlockchainSdkError -> TxState.BlockchainError
-            is SendTxResult.TangemSdkError -> TxState.TangemSdkError
-            is SendTxResult.NetworkError -> TxState.NetworkError
-            is SendTxResult.UnknownError -> TxState.UnknownError
+            SendTxResult.UserCancelledError -> SwapTransactionState.UserCancelled
+            is SendTxResult.BlockchainSdkError -> SwapTransactionState.BlockchainError
+            is SendTxResult.TangemSdkError -> SwapTransactionState.TangemSdkError
+            is SendTxResult.NetworkError -> SwapTransactionState.NetworkError
+            is SendTxResult.UnknownError -> SwapTransactionState.UnknownError
         }
     }
 
@@ -564,7 +577,7 @@ internal class SwapInteractorImpl @Inject constructor(
         txFee: TxFee,
         swapProvider: SwapProvider,
         userWalletId: UserWalletId,
-    ): TxState {
+    ): SwapTransactionState {
         val exchangeData = repository.getExchangeData(
             fromContractAddress = currencyToSend.currency.getContractAddress(),
             fromNetwork = currencyToSend.currency.network.backendId,
@@ -576,15 +589,17 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
             toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value ?: "",
-        ).getOrNull()
+        ).getOrElse { return SwapTransactionState.ExpressError(it) }
 
-        val exchangeDataCex = exchangeData?.transaction as? ExpressTransactionModel.CEX ?: return TxState.UnknownError
+        val exchangeDataCex =
+            exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.UnknownError
+
         val txExtras = transactionManager.getMemoExtras(
             currencyToSend.currency.network.backendId,
             exchangeDataCex.txExtraId,
         )
         if (txExtras == null && exchangeDataCex.txExtraId != null) {
-            return TxState.UnknownError
+            return SwapTransactionState.UnknownError
         }
         val txData = walletManagersFacade.createTransaction(
             amount = amount.value.convertToAmount(currencyToSend.currency),
@@ -612,11 +627,11 @@ internal class SwapInteractorImpl @Inject constructor(
         return result.fold(
             ifLeft = {
                 when (it) {
-                    SendTransactionError.UserCancelledError -> TxState.UserCancelled
-                    is SendTransactionError.BlockchainSdkError -> TxState.BlockchainError
-                    is SendTransactionError.TangemSdkError -> TxState.TangemSdkError
-                    is SendTransactionError.NetworkError -> TxState.NetworkError
-                    else -> TxState.UnknownError
+                    SendTransactionError.UserCancelledError -> SwapTransactionState.UserCancelled
+                    is SendTransactionError.BlockchainSdkError -> SwapTransactionState.BlockchainError
+                    is SendTransactionError.TangemSdkError -> SwapTransactionState.TangemSdkError
+                    is SendTransactionError.NetworkError -> SwapTransactionState.NetworkError
+                    else -> SwapTransactionState.UnknownError
                 }
             },
             ifRight = {
@@ -633,7 +648,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     txExternalId = txCexModel?.externalTxId.orEmpty(),
                 )
                 storeLastCryptoCurrencyId(currencyToGet.currency)
-                TxState.TxSent(
+                SwapTransactionState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(
                         amount,
                         currencyToSend.currency.symbol,
@@ -729,14 +744,8 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    @Deprecated("used in old swap mechanism")
     override fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount {
         return SwapAmount(token.value.amount ?: BigDecimal.ZERO, token.currency.decimals)
-    }
-
-    @Deprecated("used in old swap mechanism")
-    override fun isAvailableToSwap(networkId: String): Boolean {
-        return ONE_INCH_SUPPORTED_NETWORKS.contains(networkId)
     }
 
     override suspend fun selectInitialCurrencyToSwap(
@@ -1584,16 +1593,6 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private const val INFINITY_SYMBOL = "∞"
-
-        private val ONE_INCH_SUPPORTED_NETWORKS = listOf(
-            "ethereum",
-            "binance-smart-chain",
-            "polygon-pos",
-            "optimistic-ethereum",
-            "arbitrum-one",
-            "xdai",
-            "avalanche",
-            "fantom",
-        )
+        private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
     }
 }
