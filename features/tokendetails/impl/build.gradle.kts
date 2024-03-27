@@ -53,10 +53,14 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
+    implementation(projects.core.featuretoggles)
+
+    implementation(projects.libs.crypto)
 
     /** Domain modules */
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
