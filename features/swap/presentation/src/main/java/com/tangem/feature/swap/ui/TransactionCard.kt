@@ -283,7 +283,7 @@ private fun Content(
 
             if (amountEquivalent != null) {
                 if (type is TransactionCardType.ReadOnly) {
-                    Row {
+                    Row(modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20)) {
                         if (priceImpact is PriceImpact.Value) {
                             Text(
                                 text = makePriceImpactBalanceWarning(
@@ -293,7 +293,6 @@ private fun Content(
                                 color = TangemTheme.colors.text.tertiary,
                                 style = TangemTheme.typography.body2,
                                 modifier = Modifier
-                                    .defaultMinSize(minHeight = TangemTheme.dimens.size20)
                                     .align(Alignment.CenterVertically),
                             )
                         } else {
@@ -302,7 +301,6 @@ private fun Content(
                                     text = it,
                                     color = TangemTheme.colors.text.tertiary,
                                     style = TangemTheme.typography.body2,
-                                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
                                 )
                             }
                         }
@@ -564,7 +562,7 @@ private fun TransactionCardPreview() {
 @Suppress("MagicNumber")
 private fun TransactionCardPreviewWithPriceImpact() {
     TransactionCard(
-        type = TransactionCardType.ReadOnly(),
+        type = TransactionCardType.ReadOnly(showWarning = true),
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",
