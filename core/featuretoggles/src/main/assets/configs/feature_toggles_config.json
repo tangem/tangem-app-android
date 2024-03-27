@@ -4,10 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "SHOPIFY_DYNAMIC_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "REDESIGNED_MANAGE_TOKENS_SCREEN_ENABLED",
         "version": "undefined"
     },
@@ -22,5 +18,9 @@
     {
         "name": "LOCAL_USER_LOGS_ENABLED",
         "version": "5.8.0"
+    },
+    {
+        "name": "GENERATE_XPUB_ENABLED",
+        "version": "undefined"
     }
 ]
