@@ -27,6 +27,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
@@ -113,14 +115,22 @@ private fun Awards(expectedAwards: ExpectedAwards) {
         thickness = TangemTheme.dimens.size0_5,
     )
     AwardText(
-        startText = stringResource(id = R.string.referral_expected_awards),
+        startText = if (expectedAwards.expectedAwards.isNotEmpty()) {
+            stringResource(id = R.string.referral_expected_awards)
+        } else {
+            stringResource(id = R.string.referral_no_expected_awards)
+        },
         startTextColor = TangemTheme.colors.text.tertiary,
         startTextStyle = TangemTheme.typography.subtitle2,
-        endText = pluralStringResource(
-            id = R.plurals.referral_number_of_wallets,
-            count = expectedAwards.numberOfWallets,
-            expectedAwards.numberOfWallets,
-        ),
+        endText = if (expectedAwards.expectedAwards.isNotEmpty()) {
+            pluralStringResource(
+                id = R.plurals.referral_number_of_wallets,
+                count = expectedAwards.numberOfWallets,
+                expectedAwards.numberOfWallets,
+            )
+        } else {
+            ""
+        },
         endTextColor = TangemTheme.colors.text.tertiary,
         endTextStyle = TangemTheme.typography.body2,
         cornersToRound = CornersToRound.ZERO,
@@ -309,34 +319,20 @@ private fun Context.shareText(text: String) {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-private fun Preview_ParticipateBottomBlock_InLightTheme() {
+private fun ParticipateBottomBlockPreview_Light(
+    @PreviewParameter(ParticipateBottomBlockDataProvider::class) data: ParticipateBottomBlockData,
+) {
     TangemTheme(isDark = false) {
         Column(Modifier.background(TangemTheme.colors.background.secondary)) {
             ParticipateBottomBlock(
-                purchasedWalletCount = 3,
-                code = "x4JdK",
-                shareLink = "",
-                expectedAwards = ExpectedAwards(
-                    numberOfWallets = 3,
-                    expectedAwards = listOf(
-                        ExpectedAward(
-                            amount = "10 USDT",
-                            paymentDate = "Today",
-                        ),
-                        ExpectedAward(
-                            amount = "20 USDT",
-                            paymentDate = "6 Aug 2023",
-                        ),
-                        ExpectedAward(
-                            amount = "30 USDT",
-                            paymentDate = "10 Aug 2023",
-                        ),
-                    ),
-                ),
-                onAgreementClick = {},
-                onShowCopySnackbar = {},
-                onCopyClick = {},
-                onShareClick = {},
+                purchasedWalletCount = data.purchasedWalletCount,
+                code = data.code,
+                shareLink = data.shareLink,
+                expectedAwards = data.expectedAwards,
+                onAgreementClick = data.onAgreementClick,
+                onShowCopySnackbar = data.onShowCopySnackbar,
+                onCopyClick = data.onCopyClick,
+                onShareClick = data.onShareClick,
             )
         }
     }
@@ -344,18 +340,20 @@ private fun Preview_ParticipateBottomBlock_InLightTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-private fun Preview_ParticipateBottomBlock_Without_Awards_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun ParticipateBottomBlockPreview_Dark(
+    @PreviewParameter(ParticipateBottomBlockDataProvider::class) state: ParticipateBottomBlockData,
+) {
+    TangemTheme(isDark = true) {
         Column(Modifier.background(TangemTheme.colors.background.secondary)) {
             ParticipateBottomBlock(
-                purchasedWalletCount = 3,
-                code = "x4JdK",
-                shareLink = "",
-                expectedAwards = null,
-                onAgreementClick = {},
-                onShowCopySnackbar = {},
-                onCopyClick = {},
-                onShareClick = {},
+                purchasedWalletCount = state.purchasedWalletCount,
+                code = state.code,
+                shareLink = state.shareLink,
+                expectedAwards = state.expectedAwards,
+                onAgreementClick = state.onAgreementClick,
+                onShowCopySnackbar = state.onShowCopySnackbar,
+                onCopyClick = state.onCopyClick,
+                onShareClick = state.onShareClick,
             )
         }
     }
@@ -363,26 +361,7 @@ private fun Preview_ParticipateBottomBlock_Without_Awards_InLightTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-private fun Preview_ParticipateBottomBlock_Without_Awards_And_Purchased_Wallets_InLightTheme() {
-    TangemTheme(isDark = false) {
-        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
-            ParticipateBottomBlock(
-                purchasedWalletCount = 0,
-                code = "x4JdK",
-                shareLink = "",
-                expectedAwards = null,
-                onAgreementClick = {},
-                onShowCopySnackbar = {},
-                onCopyClick = {},
-                onShareClick = {},
-            )
-        }
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-private fun LessMoreButton_White() {
+private fun LessMoreButton_Light() {
     TangemTheme(isDark = false) {
         LessMoreButton(
             isExpanded = remember {
@@ -394,19 +373,64 @@ private fun LessMoreButton_White() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-private fun Preview_ParticipateBottomBlock_Without_Awards_InDarkTheme() {
+private fun LessMoreButton_Dark() {
     TangemTheme(isDark = true) {
-        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
-            ParticipateBottomBlock(
-                purchasedWalletCount = 3,
-                code = "x4JdK",
-                shareLink = "",
-                expectedAwards = null,
-                onAgreementClick = {},
-                onShowCopySnackbar = {},
-                onCopyClick = {},
-                onShareClick = {},
-            )
-        }
+        LessMoreButton(
+            isExpanded = remember {
+                mutableStateOf(false)
+            },
+        )
     }
 }
+
+private class ParticipateBottomBlockDataProvider : CollectionPreviewParameterProvider<ParticipateBottomBlockData>(
+    collection = listOf(
+        ParticipateBottomBlockData(
+            purchasedWalletCount = 3,
+            expectedAwards = ExpectedAwards(
+                numberOfWallets = 3,
+                expectedAwards = listOf(
+                    ExpectedAward(
+                        amount = "10 USDT",
+                        paymentDate = "Today",
+                    ),
+                    ExpectedAward(
+                        amount = "20 USDT",
+                        paymentDate = "6 Aug 2023",
+                    ),
+                    ExpectedAward(
+                        amount = "30 USDT",
+                        paymentDate = "10 Aug 2023",
+                    ),
+                ),
+            ),
+        ),
+        ParticipateBottomBlockData(
+            purchasedWalletCount = 3,
+            expectedAwards = ExpectedAwards(
+                numberOfWallets = 3,
+                expectedAwards = emptyList(),
+            ),
+        ),
+        ParticipateBottomBlockData(
+            purchasedWalletCount = 3,
+            expectedAwards = null,
+        ),
+        ParticipateBottomBlockData(
+            purchasedWalletCount = 0,
+            expectedAwards = null,
+        ),
+
+    ),
+)
+
+private data class ParticipateBottomBlockData(
+    val purchasedWalletCount: Int,
+    val expectedAwards: ExpectedAwards?,
+    val code: String = "x4JDK",
+    val shareLink: String = "",
+    val onAgreementClick: () -> Unit = {},
+    val onShowCopySnackbar: () -> Unit = {},
+    val onCopyClick: () -> Unit = {},
+    val onShareClick: () -> Unit = {},
+)
