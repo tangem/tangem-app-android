@@ -28,11 +28,7 @@ internal fun AmountFieldContainer(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxWidth()
-            .padding(
-                top = TangemTheme.dimens.spacing4,
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-            )
+            .padding(horizontal = TangemTheme.dimens.spacing16)
             .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
             .background(TangemTheme.colors.background.action),
     ) {
