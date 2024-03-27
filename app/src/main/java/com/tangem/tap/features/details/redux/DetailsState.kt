@@ -46,6 +46,7 @@ data class CardSettingsState(
     val condition2Checked: Boolean,
     val accessCodeRecovery: AccessCodeRecoveryState? = null,
     val isShowPasswordResetRadioButton: Boolean,
+    val isLastWarningDialogShown: Boolean,
 )
 
 data class ManageSecurityState(

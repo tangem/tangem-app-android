@@ -14,6 +14,7 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.persistentListOf
 
 internal class SendAmountStateConverter(
@@ -37,18 +38,22 @@ internal class SendAmountStateConverter(
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = sendAmountFieldConverter.convert(value),
             isPrimaryButtonEnabled = false,
-            segmentedButtonConfig = persistentListOf(
-                SendAmountSegmentedButtonsConfig(
-                    title = stringReference(status.currency.symbol),
-                    iconState = iconStateConverter.convert(status),
-                    isFiat = false,
-                ),
-                SendAmountSegmentedButtonsConfig(
-                    title = stringReference(appCurrency.code),
-                    iconUrl = appCurrency.iconSmallUrl,
-                    isFiat = true,
-                ),
-            ),
+            segmentedButtonConfig = if (status.value.fiatRate.isNullOrZero()) {
+                persistentListOf()
+            } else {
+                persistentListOf(
+                    SendAmountSegmentedButtonsConfig(
+                        title = stringReference(status.currency.symbol),
+                        iconState = iconStateConverter.convert(status),
+                        isFiat = false,
+                    ),
+                    SendAmountSegmentedButtonsConfig(
+                        title = stringReference(appCurrency.code),
+                        iconUrl = appCurrency.iconSmallUrl,
+                        isFiat = true,
+                    ),
+                )
+            },
         )
     }
 }
