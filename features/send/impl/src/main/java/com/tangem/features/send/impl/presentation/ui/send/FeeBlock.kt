@@ -24,15 +24,13 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
-import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.previewdata.FeeStatePreviewData
 
 @Composable
 internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick: () -> Unit) {
     val fee = feeState.fee ?: return
-    val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
-    val (title, icon) = when (feeSelectorState.selectedFee) {
+    val (title, icon) = when (feeState.feeSelectorState.selectedFee) {
         FeeType.Slow -> R.string.common_fee_selector_option_slow to R.drawable.ic_tortoise_24
         FeeType.Market -> R.string.common_fee_selector_option_market to R.drawable.ic_bird_24
         FeeType.Fast -> R.string.common_fee_selector_option_fast to R.drawable.ic_hare_24

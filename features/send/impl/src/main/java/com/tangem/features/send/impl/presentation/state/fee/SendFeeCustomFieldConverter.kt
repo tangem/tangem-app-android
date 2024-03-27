@@ -34,13 +34,14 @@ internal class SendFeeCustomFieldConverter(
         }
     }
 
-    fun onValueChange(feeSelectorState: FeeSelectorState.Content, index: Int, value: String) = feeSelectorState.copy(
-        customValues = when (feeSelectorState.fees.normal) {
+    fun onValueChange(feeSelectorState: FeeSelectorState, index: Int, value: String) = feeSelectorState.copy(
+        customValues = when (feeSelectorState.fees?.normal) {
             is Fee.Ethereum -> ethereumCustomFeeConverter.onValueChange(
                 customValues = feeSelectorState.customValues,
                 index = index,
                 value = value,
             )
+            null -> persistentListOf()
             else -> feeSelectorState.customValues
         },
     )

@@ -142,9 +142,12 @@ internal fun LazyListScope.notifications(configs: ImmutableList<SendNotification
         key = { it::class.java },
         contentType = { it::class.java },
         itemContent = {
+            val bottomPadding = if (it == configs.last()) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing0
             Notification(
                 config = it.config,
-                modifier = modifier.animateItemPlacement(),
+                modifier = modifier
+                    .animateItemPlacement()
+                    .padding(bottom = bottomPadding),
                 containerColor = when (it) {
                     is SendNotification.Warning.HighFeeError -> TangemTheme.colors.background.action
                     else -> TangemTheme.colors.button.disabled

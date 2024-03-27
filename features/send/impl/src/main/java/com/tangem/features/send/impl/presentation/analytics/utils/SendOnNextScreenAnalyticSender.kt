@@ -17,14 +17,13 @@ internal class SendOnNextScreenAnalyticSender(
         when (prevScreen) {
             SendUiStateType.Fee -> {
                 val feeState = state.feeState ?: return
-                val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content
-                feeSelectorState?.selectedFee?.let { selectedFee ->
-                    val isCustomFeeEdited = feeState.fee?.amount?.value != feeSelectorState.fees.normal.amount.value
-                    if (selectedFee == FeeType.Custom && isCustomFeeEdited) {
-                        analyticsEventHandler.send(SendAnalyticEvents.GasPriceInserter)
-                    }
-                    sendSelectedFeeAnalytics(feeSelectorState)
+                val feeSelectorState = feeState.feeSelectorState
+                val selectedFee = feeSelectorState.selectedFee
+                val isCustomFeeEdited = feeState.fee?.amount?.value != feeSelectorState.fees?.normal?.amount?.value
+                if (selectedFee == FeeType.Custom && isCustomFeeEdited) {
+                    analyticsEventHandler.send(SendAnalyticEvents.GasPriceInserter)
                 }
+                sendSelectedFeeAnalytics(feeSelectorState)
             }
             SendUiStateType.Amount -> {
                 val isFiatSelected = state.amountState?.amountTextField?.isFiatValue ?: return
@@ -41,7 +40,7 @@ internal class SendOnNextScreenAnalyticSender(
         }
     }
 
-    private fun sendSelectedFeeAnalytics(feeSelectorState: FeeSelectorState.Content) {
+    private fun sendSelectedFeeAnalytics(feeSelectorState: FeeSelectorState) {
         val type = when (feeSelectorState.fees) {
             is TransactionFee.Single -> SelectedFeeType.Fixed
             is TransactionFee.Choosable -> when (feeSelectorState.selectedFee) {
@@ -50,6 +49,7 @@ internal class SendOnNextScreenAnalyticSender(
                 FeeType.Fast -> SelectedFeeType.Max
                 FeeType.Custom -> SelectedFeeType.Custom
             }
+            else -> return
         }
         analyticsEventHandler.send(SendAnalyticEvents.SelectedFee(type))
     }

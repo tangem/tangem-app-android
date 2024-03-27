@@ -19,7 +19,7 @@ internal fun checkFeeCoverage(state: SendUiState, cryptoCurrencyStatus: CryptoCu
  * Check if custom fee is too low
  */
 internal fun checkIfFeeTooLow(state: SendUiState): Boolean {
-    val feeSelectorState = state.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
+    val feeSelectorState = state.feeState?.feeSelectorState ?: return false
     val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return false
     val minimumValue = multipleFees.minimum.amount.value ?: return false
     val customAmount = feeSelectorState.customValues.firstOrNull() ?: return false

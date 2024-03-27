@@ -16,7 +16,7 @@ internal object FeeStatePreviewData {
     val feeState = SendStates.FeeState(
         type = SendUiStateType.Amount,
         isPrimaryButtonEnabled = false,
-        feeSelectorState = FeeSelectorState.Content(
+        feeSelectorState = FeeSelectorState(
             fees = TransactionFee.Single(
                 normal = Fee.Common(
                     amount = Amount(
@@ -27,6 +27,7 @@ internal object FeeStatePreviewData {
                     ),
                 ),
             ),
+            isLoading = false,
             selectedFee = FeeType.Market,
             customValues = persistentListOf(),
         ),
@@ -48,5 +49,13 @@ internal object FeeStatePreviewData {
         ),
         isFeeApproximate = false,
         notifications = persistentListOf(),
+    )
+
+    val loadingFeeState = feeState.copy(
+        feeSelectorState = feeState.feeSelectorState.copy(fees = null, isLoading = true),
+    )
+
+    val errorFeeState = feeState.copy(
+        feeSelectorState = feeState.feeSelectorState.copy(fees = null, isError = true),
     )
 }

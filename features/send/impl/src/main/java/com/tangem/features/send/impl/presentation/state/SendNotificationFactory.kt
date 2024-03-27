@@ -10,7 +10,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
-import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
@@ -257,7 +256,7 @@ internal class SendNotificationFactory(
     }
 
     private fun MutableList<SendNotification>.addTooLowNotification(feeState: SendStates.FeeState) {
-        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
+        val feeSelectorState = feeState.feeSelectorState
         val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return
         val minimumValue = multipleFees.minimum.amount.value ?: return
         val customAmount = feeSelectorState.customValues.firstOrNull() ?: return

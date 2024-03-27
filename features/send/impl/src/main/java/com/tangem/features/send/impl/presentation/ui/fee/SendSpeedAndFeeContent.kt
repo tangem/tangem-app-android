@@ -1,6 +1,5 @@
 package com.tangem.features.send.impl.presentation.ui.fee
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,17 +54,13 @@ private fun LazyListScope.feeSelector(state: SendStates.FeeState, clickIntents: 
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.notifications(
-    configs: ImmutableList<SendFeeNotification>,
-    modifier: Modifier = Modifier,
-    isLast: Boolean = false,
-) {
+private fun LazyListScope.notifications(configs: ImmutableList<SendFeeNotification>, modifier: Modifier = Modifier) {
     items(
         items = configs,
         key = { it::class.java },
         contentType = { it::class.java },
         itemContent = {
-            val bottomPadding = if (isLast) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing0
+            val bottomPadding = if (it == configs.last()) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing0
             Notification(
                 config = it.config,
                 modifier = modifier
@@ -100,21 +95,14 @@ internal fun LazyListScope.customFee(feeSendState: FeeSelectorState, modifier: M
     item(
         key = FEE_CUSTOM_KEY,
     ) {
-        AnimatedVisibility(
-            visible = feeSendState is FeeSelectorState.Content,
+        SendCustomFeeEthereum(
+            customValues = feeSendState.customValues,
+            selectedFee = feeSendState.selectedFee,
             modifier = modifier
                 .fillMaxWidth()
                 .animateItemPlacement()
-                .background(TangemTheme.colors.background.tertiary),
-        ) {
-            (feeSendState as? FeeSelectorState.Content)?.let { fee ->
-                val customValues = fee.customValues
-                SendCustomFeeEthereum(
-                    customValues = customValues,
-                    selectedFee = fee.selectedFee,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
-                )
-            }
-        }
+                .background(TangemTheme.colors.background.tertiary)
+                .padding(top = TangemTheme.dimens.spacing12),
+        )
     }
 }
