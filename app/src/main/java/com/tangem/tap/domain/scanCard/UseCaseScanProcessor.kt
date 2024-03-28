@@ -3,7 +3,8 @@ package com.tangem.tap.domain.scanCard
 import arrow.fx.coroutines.resourceScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
-import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.card.ScanCardException
@@ -34,7 +35,7 @@ internal object UseCaseScanProcessor {
 
     @Suppress("LongParameterList")
     suspend fun scan(
-        analyticsEvent: AnalyticsEvent?,
+        analyticsSource: AnalyticsParam.ScreensSources,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onScanStateChange: suspend (scanInProgress: Boolean) -> Unit,
@@ -48,9 +49,7 @@ internal object UseCaseScanProcessor {
         val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         val chains = buildList {
             add(ScanningFinishedChain { onScanStateChange(false) })
-            if (analyticsEvent != null) {
-                add(AnalyticsChain(analyticsEvent))
-            }
+            add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
             add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
         }
