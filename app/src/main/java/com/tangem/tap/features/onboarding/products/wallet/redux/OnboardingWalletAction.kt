@@ -38,6 +38,7 @@ sealed class OnboardingWallet2Action : OnboardingWalletAction() {
 
     data class ImportWallet(
         val mnemonicComponents: List<String>,
+        val passphrase: String?,
         val seedPhraseSource: SeedPhraseSource,
         val callback: (CompletionResult<CreateWalletResponse>) -> Unit,
     ) : OnboardingWallet2Action()
