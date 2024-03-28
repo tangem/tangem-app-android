@@ -271,6 +271,7 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                 val mediateResult = when (
                     val result = tangemSdkManager.importWallet(
                         scanResponse = scanResponse,
+                        passphrase = action.passphrase,
                         mnemonic = action.mnemonicComponents.joinToString(" "),
                         shouldReset = globalState.onboardingState.shouldResetOnCreate,
                     )
