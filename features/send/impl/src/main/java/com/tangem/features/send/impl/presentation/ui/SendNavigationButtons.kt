@@ -32,7 +32,8 @@ import com.tangem.features.send.impl.presentation.state.SendUiStateType
 
 @Composable
 internal fun SendNavigationButtons(uiState: SendUiState, currentState: SendUiCurrentScreen) {
-    val isSuccess = uiState.sendState.isSuccess
+    val sendState = uiState.sendState ?: return
+    val isSuccess = sendState.isSuccess
     val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
     val isSentState = currentState.type == SendUiStateType.Send && isSuccess
     Column(
@@ -45,7 +46,7 @@ internal fun SendNavigationButtons(uiState: SendUiState, currentState: SendUiCur
     ) {
         SendingText(uiState = uiState, isVisible = isSendingState)
         SendDoneButtons(
-            txUrl = uiState.sendState.txUrl,
+            txUrl = sendState.txUrl,
             onExploreClick = uiState.clickIntents::onExploreClick,
             onShareClick = uiState.clickIntents::onShareClick,
             isVisible = isSentState,
@@ -65,8 +66,9 @@ private fun SendNavigationButton(
     modifier: Modifier = Modifier,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
+    val sendState = uiState.sendState ?: return
     val isEditingDisabled = uiState.isEditingDisabled
-    val isSuccess = uiState.sendState.isSuccess
+    val isSuccess = sendState.isSuccess
 
     val isFromConfirmation = currentState.isFromConfirmation
     val isCorrectScreen = currentState.type == SendUiStateType.Amount || currentState.type == SendUiStateType.Fee
@@ -111,7 +113,7 @@ private fun SendNavigationButton(
                 if (isSendingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 buttonClick()
             },
-            showProgress = uiState.sendState.isSending,
+            showProgress = sendState.isSending,
             modifier = Modifier.fillMaxWidth(),
             colors = TangemButtonsDefaults.primaryButtonColors,
         )
@@ -226,7 +228,7 @@ private fun isButtonEnabled(currentState: SendUiCurrentScreen, uiState: SendUiSt
         SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
         SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
         SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Send -> uiState.sendState.isPrimaryButtonEnabled
+        SendUiStateType.Send -> uiState.sendState?.isPrimaryButtonEnabled ?: false
         else -> true
     }
 }
