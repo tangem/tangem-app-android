@@ -107,7 +107,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
-        analyticsEventHandler.send(Basic.CardWasScanned(AnalyticsParam.ScannedFrom.Main))
+        analyticsEventHandler.send(Basic.CardWasScanned(AnalyticsParam.ScreensSources.Main))
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped)
 
         viewModelScope.launch(dispatchers.main) {
