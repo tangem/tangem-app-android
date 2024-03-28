@@ -2,6 +2,7 @@ package com.tangem.feature.swap.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -30,7 +31,7 @@ import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
 /**
- * UI Item for swap provider wrapped in a [BaseContainer] with rounded corners
+ * UI Item for swap provider wrapped with rounded corners
  *
  * https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?type=design&node-id=7856-41909&mode=design&t=vo7dyElitnzSPSW3-4
  */
@@ -43,12 +44,21 @@ private val GrayscaleColorFilter: ColorFilter
 @Composable
 fun ProviderItemBlock(state: ProviderState, modifier: Modifier = Modifier) {
     if (state !is ProviderState.Empty) {
-        BaseContainer(modifier = modifier) {
-            ProviderItem(
-                state = state,
-                modifier = Modifier.align(Alignment.CenterStart),
-            )
-        }
+        ProviderItem(
+            state = state,
+            modifier = modifier
+                .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+                .background(
+                    color = TangemTheme.colors.background.action,
+                    shape = TangemTheme.shapes.roundedCornersXMedium,
+                )
+                .clickable(
+                    enabled = state.onProviderClick != null,
+                    onClick = { state.onProviderClick?.invoke(state.id) },
+                )
+                .fillMaxWidth()
+                .padding(vertical = TangemTheme.dimens.spacing12),
+        )
     }
 }
 
@@ -80,6 +90,7 @@ fun ProviderItem(state: ProviderState, modifier: Modifier = Modifier, isSelected
     }
 }
 
+@Deprecated("Replace with InputRowBestRate")
 @Suppress("LongMethod")
 @Composable
 private fun ProviderContentState(
@@ -323,22 +334,6 @@ private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType,
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun BaseContainer(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
-    Box(
-        modifier = modifier
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
-            .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = TangemTheme.dimens.size68),
-    ) {
-        content()
     }
 }
 
