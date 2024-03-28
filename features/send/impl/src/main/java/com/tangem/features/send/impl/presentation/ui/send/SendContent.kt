@@ -1,6 +1,7 @@
 package com.tangem.features.send.impl.presentation.ui.send
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,14 +25,16 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.delay
 
 private const val TAP_HELP_KEY = "TAP_HELP_KEY"
 private const val BLOCKS_KEY = "BLOCKS_KEY"
+private const val TAP_HELP_ANIMATION_DELAY = 500L
 
 @Suppress("LongMethod")
 @Composable
 internal fun SendContent(uiState: SendUiState) {
-    val sendState = uiState.sendState
+    val sendState = uiState.sendState ?: return
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -37,7 +42,7 @@ internal fun SendContent(uiState: SendUiState) {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         blocks(uiState)
-        tapHelp(isDisplay = sendState.notifications.isEmpty() && !uiState.sendState.isSuccess)
+        tapHelp(isDisplay = sendState.showTapHelp)
         notifications(sendState.notifications)
     }
 }
@@ -46,7 +51,7 @@ private fun LazyListScope.blocks(uiState: SendUiState) {
     val amountState = uiState.amountState ?: return
     val recipientState = uiState.recipientState ?: return
     val feeState = uiState.feeState ?: return
-    val sendState = uiState.sendState
+    val sendState = uiState.sendState ?: return
     val isSuccess = sendState.isSuccess
     val timestamp = sendState.transactionDate
 
@@ -84,8 +89,22 @@ private fun LazyListScope.blocks(uiState: SendUiState) {
 
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modifier) {
-    if (isDisplay) {
-        item(key = TAP_HELP_KEY) {
+    item(key = TAP_HELP_KEY) {
+        val animationState = remember { MutableTransitionState(false) }
+
+        LaunchedEffect(key1 = isDisplay) {
+            delay(TAP_HELP_ANIMATION_DELAY)
+            animationState.targetState = isDisplay
+        }
+
+        AnimatedVisibility(
+            visibleState = animationState,
+            label = "Tap Help Animation",
+            enter = slideInVertically(
+                initialOffsetY = { it / 2 },
+            ).plus(fadeIn()),
+            exit = slideOutVertically().plus(fadeOut()),
+        ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = modifier
