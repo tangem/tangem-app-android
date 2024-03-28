@@ -61,4 +61,18 @@ internal class DefaultSettingsRepository(
             )
         }
     }
+
+    override suspend fun isSendTapHelpPreviewEnabled(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.SEND_TAP_HELP_PREVIEW_KEY,
+            default = true,
+        )
+    }
+
+    override suspend fun setSendTapHelpPreviewAvailability(isEnabled: Boolean) {
+        appPreferencesStore.store(
+            key = PreferencesKeys.SEND_TAP_HELP_PREVIEW_KEY,
+            value = isEnabled,
+        )
+    }
 }

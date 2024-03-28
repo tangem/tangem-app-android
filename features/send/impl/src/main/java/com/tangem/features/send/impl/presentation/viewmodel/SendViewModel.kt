@@ -16,6 +16,8 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
+import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -85,6 +87,8 @@ internal class SendViewModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
+    private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
+    private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -120,6 +124,7 @@ internal class SendViewModel @Inject constructor(
         feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
         getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
+        isTapHelpPreviewEnabledProvider = Provider { isTapHelpPreviewEnabled },
     )
 
     private val amountStateFactory = AmountStateFactory(
@@ -172,6 +177,7 @@ internal class SendViewModel @Inject constructor(
 
     private var userWallet: UserWallet by Delegates.notNull()
     private var isAmountSubtractAvailable: Boolean = false
+    private var isTapHelpPreviewEnabled: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
@@ -191,6 +197,7 @@ internal class SendViewModel @Inject constructor(
     init {
         subscribeOnCurrencyStatusUpdates()
         subscribeOnBalanceHidden()
+        getTapHelpPreviewAvailability()
     }
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -285,6 +292,12 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
+    private fun getTapHelpPreviewAvailability() {
+        viewModelScope.launch(dispatchers.main) {
+            isTapHelpPreviewEnabled = isSendTapHelpEnabledUseCase().getOrElse { false }
+        }
+    }
+
     private fun getCoinCurrencyStatusUpdates(isSingleWalletWithToken: Boolean) = getNetworkCoinStatusUseCase(
         userWalletId = userWalletId,
         networkId = cryptoCurrency.network.id,
@@ -343,7 +356,7 @@ internal class SendViewModel @Inject constructor(
         feeCryptoCurrencyStatus = feeCurrencyStatus
 
         when {
-            uiState.sendState.isSuccess -> {
+            uiState.sendState?.isSuccess == true -> {
                 stateRouter.showSend()
             }
             transactionId != null && amount != null && destinationAddress != null -> {
@@ -453,7 +466,7 @@ internal class SendViewModel @Inject constructor(
 
     // region screen state navigation
     override fun popBackStack() = stateRouter.popBackStack()
-    override fun onBackClick() = stateRouter.onBackClick(uiState.sendState.isSuccess)
+    override fun onBackClick() = stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
     override fun onNextClick() {
         val currentState = stateRouter.currentState.value
         val isCurrentFee = currentState.type == SendUiStateType.Fee
@@ -655,7 +668,7 @@ internal class SendViewModel @Inject constructor(
 
     // region send state clicks
     override fun onSendClick() {
-        val sendState = uiState.sendState
+        val sendState = uiState.sendState ?: return
         if (sendState.isSuccess) popBackStack()
 
         uiState = stateFactory.getSendingStateUpdate(isSending = true)
@@ -669,16 +682,20 @@ internal class SendViewModel @Inject constructor(
 
     override fun showAmount() {
         stateRouter.showAmount(isFromConfirmation = true)
+        setNeverToShowTapHelp()
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
     }
 
     override fun showRecipient() {
         stateRouter.showRecipient(isFromConfirmation = true)
+        uiState = stateFactory.getHiddenTapHelpState()
+        setNeverToShowTapHelp()
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
     }
 
     override fun showFee() {
         stateRouter.showFee(isFromConfirmation = true)
+        setNeverToShowTapHelp()
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
     }
 
@@ -687,8 +704,9 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onExploreClick() {
+        val sendState = uiState.sendState ?: return
         analyticsEventHandler.send(SendAnalyticEvents.ExploreButtonClicked)
-        innerRouter.openUrl(uiState.sendState.txUrl)
+        innerRouter.openUrl(sendState.txUrl)
     }
 
     override fun onShareClick() {
@@ -771,8 +789,9 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun onCheckFeeUpdate() {
-        val isSuccess = uiState.sendState.isSuccess
-        val noErrorNotifications = uiState.sendState.notifications.none { it is SendNotification.Error }
+        val sendState = uiState.sendState ?: return
+        val isSuccess = sendState.isSuccess
+        val noErrorNotifications = sendState.notifications.none { it is SendNotification.Error }
 
         if (!isSuccess && noErrorNotifications) {
             viewModelScope.launch(dispatchers.main) {
@@ -807,6 +826,13 @@ internal class SendViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun setNeverToShowTapHelp() {
+        viewModelScope.launch(dispatchers.main) {
+            neverShowTapHelpUseCase()
+        }
+        uiState = stateFactory.getHiddenTapHelpState()
     }
     // endregion
 
