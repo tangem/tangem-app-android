@@ -106,6 +106,7 @@ class TangemSdkManager(
     suspend fun importWallet(
         scanResponse: ScanResponse,
         mnemonic: String,
+        passphrase: String?,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
         val defaultMnemonic = try {
@@ -118,6 +119,7 @@ class TangemSdkManager(
                 cardTypesResolver = scanResponse.cardTypesResolver,
                 derivationStyleProvider = scanResponse.derivationStyleProvider,
                 mnemonic = defaultMnemonic,
+                passphrase = passphrase,
                 shouldReset = shouldReset,
             ),
             scanResponse.card.cardId,

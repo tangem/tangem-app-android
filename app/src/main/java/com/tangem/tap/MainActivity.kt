@@ -405,7 +405,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isNotScannedBefore = store.state.globalState.scanResponse == null
-        val isOnboardingServiceNotActive = store.state.globalState.onboardingState.onboardingStarted
+        val isOnboardingServiceNotActive = !store.state.globalState.onboardingState.onboardingStarted
 
         when {
             !backStackIsEmpty && isNotScannedBefore && isOnboardingServiceNotActive -> {
