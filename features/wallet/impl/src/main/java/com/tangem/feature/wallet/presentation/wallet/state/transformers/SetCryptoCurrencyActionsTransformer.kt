@@ -47,7 +47,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             onClick = {
                                 clickIntents.onBuyClick(
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
-                                    unavailabilityReason = action.unavailabilityReason
+                                    unavailabilityReason = action.unavailabilityReason,
                                 )
                             },
                         )
@@ -66,7 +66,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             onClick = {
                                 clickIntents.onSellClick(
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
-                                    unavailabilityReason = action.unavailabilityReason
+                                    unavailabilityReason = action.unavailabilityReason,
                                 )
                             },
                         )
@@ -77,7 +77,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             onClick = {
                                 clickIntents.onSendClick(
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
-                                    unavailabilityReason = action.unavailabilityReason
+                                    unavailabilityReason = action.unavailabilityReason,
                                 )
                             },
                         )

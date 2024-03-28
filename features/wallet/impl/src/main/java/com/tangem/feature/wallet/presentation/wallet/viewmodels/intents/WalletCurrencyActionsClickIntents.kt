@@ -433,10 +433,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             walletEventSender.send(
                 event = WalletEvent.ShowAlert(
                     state = WalletAlertState.DefaultAlert(
-                        title = stringReference(""), // TODO
+                        title = null,
                         message = unavailabilityReasonText,
                         onConfirmClick = null,
-                    )
+                    ),
                 ),
             )
         }
