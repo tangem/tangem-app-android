@@ -346,9 +346,16 @@ internal class TokenDetailsStateFactory(
                     id = R.string.token_button_unavailability_reason_empty_balance,
                 )
             }
-            ScenarioUnavailabilityReason.InsufficientFundsForFee -> {
+            is ScenarioUnavailabilityReason.InsufficientFundsForFee -> {
                 resourceReference(
                     id = R.string.warning_send_blocked_funds_for_fee_message,
+                    formatArgs = wrappedList(
+                        unavailabilityReason.currency.name,
+                        unavailabilityReason.networkName,
+                        unavailabilityReason.currency.name,
+                        unavailabilityReason.feeCurrencyName,
+                        unavailabilityReason.feeCurrencySymbol,
+                    ),
                 )
             }
             is ScenarioUnavailabilityReason.BuyUnavailable -> {

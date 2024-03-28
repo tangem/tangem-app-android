@@ -3,6 +3,7 @@ package com.tangem.domain.tokens
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
@@ -196,9 +197,9 @@ class GetCryptoCurrencyActionsUseCase(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): ScenarioUnavailabilityReason {
-        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, cryptoCurrencyStatus.currency)
+
         val insufficientFundsForFee = insufficientFundsForFee(
-            feePaidCurrency = feePaidCurrency,
+            userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
             coinStatus = coinStatus,
         )
@@ -207,8 +208,13 @@ class GetCryptoCurrencyActionsUseCase(
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
                 ScenarioUnavailabilityReason.EmptyBalance
             }
-            insufficientFundsForFee -> {
-                ScenarioUnavailabilityReason.InsufficientFundsForFee
+            insufficientFundsForFee != null -> {
+                ScenarioUnavailabilityReason.InsufficientFundsForFee(
+                    currency = insufficientFundsForFee.currency,
+                    networkName = insufficientFundsForFee.networkName,
+                    feeCurrencyName = insufficientFundsForFee.feeCurrencyName,
+                    feeCurrencySymbol = insufficientFundsForFee.feeCurrencySymbol,
+                )
             }
             currenciesRepository.hasPendingTransactions(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -222,18 +228,75 @@ class GetCryptoCurrencyActionsUseCase(
         }
     }
 
-    private fun insufficientFundsForFee(
-        feePaidCurrency: FeePaidCurrency,
+    private suspend fun insufficientFundsForFee(
+        userWalletId: UserWalletId,
         tokenStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
-    ): Boolean {
-        return when (feePaidCurrency) {
-            FeePaidCurrency.Coin -> !tokenStatus.value.amount.isZero() && coinStatus?.value?.amount.isZero()
-            FeePaidCurrency.SameCurrency -> tokenStatus.value.amount.isZero()
-            is FeePaidCurrency.Token -> {
-                val feePaidTokenBalance = feePaidCurrency.balance
-                !tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()
+    ): FeeInfo? {
+        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency)
+        coinStatus ?: return null
+        return when {
+            feePaidCurrency is FeePaidCurrency.Coin &&
+                !tokenStatus.value.amount.isZero() &&
+                coinStatus.value.amount.isZero() -> {
+                FeeInfo(
+                    currency = tokenStatus.currency,
+                    networkName = coinStatus.currency.network.name,
+                    feeCurrencyName = coinStatus.currency.name,
+                    feeCurrencySymbol = coinStatus.currency.symbol,
+                )
             }
+            feePaidCurrency is FeePaidCurrency.SameCurrency && !tokenStatus.value.amount.isZero() -> {
+                FeeInfo(
+                    currency = tokenStatus.currency,
+                    networkName = coinStatus.currency.network.name,
+                    feeCurrencyName = coinStatus.currency.name,
+                    feeCurrencySymbol = coinStatus.currency.symbol,
+                )
+            }
+            feePaidCurrency is FeePaidCurrency.Token -> {
+                val feePaidTokenBalance = feePaidCurrency.balance
+                val amount = tokenStatus.value.amount ?: return null
+                if (!amount.isZero() && feePaidTokenBalance.isZero()) {
+                    constructTokenBalanceNotEnoughWarning(
+                        userWalletId = userWalletId,
+                        tokenStatus = tokenStatus,
+                        feePaidToken = feePaidCurrency,
+                    )
+                } else {
+                    null
+                }
+            }
+            else -> null
+        }
+    }
+
+    private suspend fun constructTokenBalanceNotEnoughWarning(
+        userWalletId: UserWalletId,
+        tokenStatus: CryptoCurrencyStatus,
+        feePaidToken: FeePaidCurrency.Token,
+    ): FeeInfo {
+        val token = currenciesRepository
+            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
+            .find {
+                it is CryptoCurrency.Token &&
+                    it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
+                    it.network.derivationPath == tokenStatus.currency.network.derivationPath
+            }
+        return if (token != null) {
+            FeeInfo(
+                currency = tokenStatus.currency,
+                networkName = token.network.name,
+                feeCurrencyName = feePaidToken.name,
+                feeCurrencySymbol = feePaidToken.symbol,
+            )
+        } else {
+            FeeInfo(
+                currency = tokenStatus.currency,
+                networkName = tokenStatus.currency.network.name,
+                feeCurrencyName = feePaidToken.name,
+                feeCurrencySymbol = feePaidToken.symbol,
+            )
         }
     }
 
@@ -249,4 +312,11 @@ class GetCryptoCurrencyActionsUseCase(
         MULTICURRENCY_WALET_MENU_ITEMS,
         TOKEN_BUTTONS,
     }
+
+    data class FeeInfo(
+        val currency: CryptoCurrency,
+        val networkName: String,
+        val feeCurrencyName: String,
+        val feeCurrencySymbol: String,
+    )
 }

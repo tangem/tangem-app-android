@@ -6,7 +6,12 @@ sealed class ScenarioUnavailabilityReason {
     // send-specific
     data class PendingTransaction(val cryptoCurrencySymbol: String) : ScenarioUnavailabilityReason()
     data object EmptyBalance : ScenarioUnavailabilityReason()
-    data object InsufficientFundsForFee : ScenarioUnavailabilityReason() // if token
+    data class InsufficientFundsForFee(
+        val currency: CryptoCurrency,
+        val networkName: String,
+        val feeCurrencyName: String,
+        val feeCurrencySymbol: String,
+    ) : ScenarioUnavailabilityReason()
 
     // buy-specific
     data class BuyUnavailable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
