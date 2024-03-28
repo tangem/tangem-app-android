@@ -3,7 +3,6 @@ package com.tangem.features.send.impl.presentation.ui.fee
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
@@ -16,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,11 +31,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerWMax
-import com.tangem.core.ui.components.atoms.text.EllipsisText
-import com.tangem.core.ui.components.atoms.text.TextEllipsis
+import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -267,55 +263,23 @@ private fun SendSpeedSelectorItem(
     showDivider: Boolean = true,
     showWarning: Boolean = false,
 ) {
-    val iconTint by animateColorAsState(
-        targetValue = if (isSelected) {
-            TangemTheme.colors.icon.accent
-        } else {
-            TangemTheme.colors.icon.informative
-        },
-        label = "Selector icon tint change",
-    )
-
-    val textStyle = if (isSelected) {
-        TangemTheme.typography.subtitle2
-    } else {
-        TangemTheme.typography.body2
-    }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onSelect() },
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            SelectorTitleContent(
-                titleRes = titleRes,
-                iconRes = iconRes,
-                iconTint = iconTint,
-                textStyle = textStyle,
-            )
-            if (amount != null && symbolLength != null && fiatAmount != null) {
-                SelectorValueContent(
-                    amount = amount,
-                    fiatAmount = fiatAmount,
-                    symbolLength = symbolLength,
-                    textStyle = textStyle,
-                )
-            } else {
-                SpacerWMax()
-            }
-            WarningIcon(showWarning = showWarning)
-        }
-        if (showDivider) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(TangemTheme.dimens.size1)
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
-                    .background(TangemTheme.colors.stroke.primary)
-                    .align(Alignment.BottomCenter),
-            )
-        }
+        SelectorRowItem(
+            titleRes = titleRes,
+            iconRes = iconRes,
+            onSelect = onSelect,
+            modifier = modifier,
+            preDot = amount,
+            postDot = fiatAmount,
+            ellipsizeOffset = symbolLength,
+            isSelected = isSelected,
+            showDivider = showDivider,
+        )
+        WarningIcon(showWarning = showWarning)
     }
 }
 
@@ -351,41 +315,6 @@ private fun SelectorTitleContent(
 }
 
 @Composable
-private fun RowScope.SelectorValueContent(
-    amount: TextReference,
-    fiatAmount: TextReference,
-    symbolLength: Int,
-    textStyle: TextStyle,
-) {
-    EllipsisText(
-        text = amount.resolveReference(),
-        style = textStyle,
-        color = TangemTheme.colors.text.primary1,
-        textAlign = TextAlign.End,
-        ellipsis = TextEllipsis.OffsetEnd(symbolLength),
-        modifier = Modifier
-            .weight(1f)
-            .padding(
-                start = TangemTheme.dimens.spacing4,
-                top = TangemTheme.dimens.spacing14,
-                bottom = TangemTheme.dimens.spacing14,
-            ),
-    )
-    Text(
-        text = "(${fiatAmount.resolveReference()})",
-        style = textStyle,
-        color = TangemTheme.colors.text.primary1,
-        modifier = Modifier
-            .padding(
-                start = TangemTheme.dimens.spacing4,
-                end = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing14,
-                bottom = TangemTheme.dimens.spacing14,
-            ),
-    )
-}
-
-@Composable
 private fun WarningIcon(showWarning: Boolean = false) {
     AnimatedVisibility(
         visible = showWarning,
@@ -393,15 +322,18 @@ private fun WarningIcon(showWarning: Boolean = false) {
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        Image(
-            painter = painterResource(R.drawable.ic_alert_triangle_20),
-            contentDescription = null,
-            modifier = Modifier
-                .padding(
-                    vertical = TangemTheme.dimens.spacing12,
-                    horizontal = TangemTheme.dimens.spacing14,
-                ),
-        )
+        Row {
+            SpacerWMax()
+            Image(
+                painter = painterResource(R.drawable.ic_alert_triangle_20),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(
+                        vertical = TangemTheme.dimens.spacing12,
+                        horizontal = TangemTheme.dimens.spacing14,
+                    ),
+            )
+        }
     }
 }
 
