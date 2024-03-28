@@ -5,6 +5,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.core.view.MenuProvider
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -21,7 +22,7 @@ class OnboardingMenuProvider : MenuProvider {
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean = when (menuItem.itemId) {
         R.id.menu_item_chat_support -> {
-            Analytics.send(Basic.ButtonSupport())
+            Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
             // changed on email support AND-6202
             store.dispatch(GlobalAction.SendEmail(SupportInfo()))
             true
