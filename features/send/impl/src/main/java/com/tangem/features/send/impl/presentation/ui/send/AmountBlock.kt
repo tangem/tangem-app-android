@@ -11,10 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
+import com.tangem.features.send.impl.presentation.state.previewdata.AmountStatePreviewData
 
 @Composable
 internal fun AmountBlock(
@@ -76,3 +80,42 @@ internal fun AmountBlock(
 private fun getAmountWithSymbol(amount: String, symbol: String): String {
     return "$amount $symbol"
 }
+
+// region Preview
+@Preview
+@Composable
+private fun AmountBlockPreview_Light(
+    @PreviewParameter(AmountBlockPreviewProvider::class) value: SendStates.AmountState,
+) {
+    TangemTheme {
+        AmountBlock(
+            amountState = value,
+            isSuccess = false,
+            isEditingDisabled = false,
+            onClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun AmountBlockPreview_Dark(
+    @PreviewParameter(AmountBlockPreviewProvider::class) value: SendStates.AmountState,
+) {
+    TangemTheme(isDark = true) {
+        AmountBlock(
+            amountState = value,
+            isSuccess = true,
+            isEditingDisabled = false,
+            onClick = {},
+        )
+    }
+}
+
+private class AmountBlockPreviewProvider : PreviewParameterProvider<SendStates.AmountState> {
+    override val values: Sequence<SendStates.AmountState>
+        get() = sequenceOf(
+            AmountStatePreviewData.amountState,
+        )
+}
+// endregion

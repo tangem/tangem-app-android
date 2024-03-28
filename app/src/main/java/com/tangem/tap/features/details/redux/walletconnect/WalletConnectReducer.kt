@@ -20,8 +20,9 @@ object WalletConnectReducer {
             is WalletConnectAction.SetNewSessionData -> {
                 state.copy(newSessionData = action.newSession)
             }
-            is WalletConnectAction.SetSessionsRestored ->
-                WalletConnectState(sessions = action.sessions)
+            is WalletConnectAction.SetSessionsRestored -> state.copy(
+                sessions = action.sessions,
+            )
             is WalletConnectAction.RemoveSession -> {
                 val sessions =
                     state.sessions.filterNot { it.session.toUri() == action.session.toUri() }

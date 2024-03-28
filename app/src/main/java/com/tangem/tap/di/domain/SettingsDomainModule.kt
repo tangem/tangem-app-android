@@ -126,4 +126,18 @@ internal object SettingsDomainModule {
     fun provideDeleteDeprecatedLogsUseCase(settingsRepository: SettingsRepository): DeleteDeprecatedLogsUseCase {
         return DeleteDeprecatedLogsUseCase(settingsRepository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIsSendTapHelpPreviewEnabledUseCase(
+        settingsRepository: SettingsRepository,
+    ): IsSendTapHelpEnabledUseCase {
+        return IsSendTapHelpEnabledUseCase(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideNeverShowTapHelpUseCase(settingsRepository: SettingsRepository): NeverShowTapHelpUseCase {
+        return NeverShowTapHelpUseCase(settingsRepository = settingsRepository)
+    }
 }

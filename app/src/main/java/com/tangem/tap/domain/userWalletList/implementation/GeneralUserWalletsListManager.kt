@@ -122,34 +122,38 @@ internal class GeneralUserWalletsListManager(
         appPreferencesStore.get(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
             .distinctUntilChanged()
             .onEach { shouldSaveUserWallets ->
-                val manager = if (shouldSaveUserWallets) {
-                    biometricUserWalletsListManager.copyFrom(runtimeUserWalletsListManager)
+                val possibleManager = if (shouldSaveUserWallets) {
+                    biometricUserWalletsListManager
                 } else {
-                    runtimeUserWalletsListManager.copyFrom(biometricUserWalletsListManager)
+                    runtimeUserWalletsListManager
                 }
 
-                Timber.d("Switch to ${manager::class.java.simpleName}")
+                if (possibleManager == implementation.value) {
+                    Timber.e("Switch to same manager ${possibleManager::class.simpleName}")
+                }
 
-                implementation.value = manager
+                Timber.d("Switch to ${possibleManager::class.simpleName}")
 
-                clearOldManager(manager)
+                val previousManager = implementation.value
+                implementation.value = copySelectedUserWallet(
+                    sourceManager = previousManager,
+                    destinationManager = possibleManager,
+                )
+
+                previousManager.clear()
             }
             .flowOn(dispatchers.io)
             .launchIn(applicationScope)
     }
 
-    /** Copy data from [old] manager */
-    private suspend fun UserWalletsListManager.copyFrom(old: UserWalletsListManager): UserWalletsListManager {
-        old.selectedUserWalletSync?.let { this.save(it) }
-
-        return this
-    }
-
-    private suspend fun clearOldManager(current: UserWalletsListManager) {
-        if (current == biometricUserWalletsListManager) {
-            runtimeUserWalletsListManager.clear()
-        } else {
-            biometricUserWalletsListManager.clear()
+    private suspend fun copySelectedUserWallet(
+        sourceManager: UserWalletsListManager,
+        destinationManager: UserWalletsListManager,
+    ): UserWalletsListManager {
+        sourceManager.selectedUserWalletSync?.let { selectedWallet ->
+            destinationManager.save(selectedWallet, canOverride = true)
         }
+
+        return destinationManager
     }
 }

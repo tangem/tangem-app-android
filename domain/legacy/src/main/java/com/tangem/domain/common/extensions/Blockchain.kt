@@ -104,6 +104,14 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "nexa" -> Blockchain.Nexa // FIXME
         "nexa/test" -> Blockchain.NexaTestnet // FIXME
         "radiant" -> Blockchain.Radiant
+        "moonriver" -> Blockchain.Moonriver
+        "moonriver/test" -> Blockchain.MoonriverTestnet
+        "mantle" -> Blockchain.Mantle
+        "mantle/test" -> Blockchain.MantleTestnet
+        "flare-network" -> Blockchain.Flare
+        "flare-network/test" -> Blockchain.FlareTestnet
+        "taraxa" -> Blockchain.Taraxa
+        "taraxa/test" -> Blockchain.TaraxaTestnet
         else -> null
     }
 }
@@ -209,6 +217,14 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Nexa -> "nexa" // FIXME
         Blockchain.NexaTestnet -> "nexa/test" // FIXME
         Blockchain.Radiant -> "radiant"
+        Blockchain.Moonriver -> "moonriver"
+        Blockchain.MoonriverTestnet -> "moonriver/test"
+        Blockchain.Mantle -> "mantle"
+        Blockchain.MantleTestnet -> "mantle/test"
+        Blockchain.Flare -> "flare-network"
+        Blockchain.FlareTestnet -> "flare-network/test"
+        Blockchain.Taraxa -> "taraxa"
+        Blockchain.TaraxaTestnet -> "taraxa/test"
     }
 }
 
@@ -277,6 +293,10 @@ fun Blockchain.toCoinId(): String {
         Blockchain.PolygonZkEVM, Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm-ethereum"
         Blockchain.Nexa, Blockchain.NexaTestnet -> "nexa" // FIXME
         Blockchain.Radiant -> "radiant"
+        Blockchain.Moonriver, Blockchain.MoonriverTestnet -> "moonriver"
+        Blockchain.Mantle, Blockchain.MantleTestnet -> "mantle"
+        Blockchain.Flare, Blockchain.FlareTestnet -> "flare-networks"
+        Blockchain.Taraxa, Blockchain.TaraxaTestnet -> "taraxa"
     }
 }
 

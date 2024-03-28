@@ -37,10 +37,12 @@ class WalletConnectInteractor(
     suspend fun startListening(userWalletId: String, cardId: String?) {
         this.userWalletId = userWalletId
         this.cardId = cardId
-        walletConnectRepository.updateSessions()
+
         coroutineScope {
             launch { subscribeToEvents() }
             launch { subscribeToSessions() }
+
+            walletConnectRepository.updateSessions()
         }
     }
 
@@ -88,11 +90,12 @@ class WalletConnectInteractor(
                     is WalletConnectEvents.SessionApprovalSuccess -> {
                         sessionsRepository.saveSession(
                             userWallet = userWalletId,
-                            session = Session.fromAccounts(
+                            session = Session(
                                 accounts = wcEvent.accounts,
                                 topic = wcEvent.topic,
                             ),
                         )
+                        walletConnectRepository.updateSessions()
                         handler.onSessionEstablished()
                     }
                     is WalletConnectEvents.SessionDeleted -> {
@@ -206,7 +209,7 @@ class WalletConnectInteractor(
         val currentRequest = this.currentRequest
         if (currentRequest == null || request.topic != currentRequest.topic) return
 
-        val networkId = blockchainHelper.chainIdToNetworkIdOrNull(currentRequest.chainId ?: "") ?: return
+        val networkId = blockchainHelper.chainIdToNetworkIdOrNull(currentRequest.chainId.orEmpty()) ?: return
         val signedHash = when (request) {
             is WcPreparedRequest.BnbTransaction -> sdkHelper.signBnbTransaction(
                 data = request.preparedRequestData.data.data,
@@ -221,12 +224,18 @@ class WalletConnectInteractor(
             is WcPreparedRequest.EthSign -> sdkHelper.signPersonalMessage(
                 hashToSign = request.preparedRequestData.hash,
                 networkId = networkId,
+                type = request.preparedRequestData.type,
+                derivationPath = request.derivationPath,
+                cardId = cardId,
+            )
+            is WcPreparedRequest.SignTransaction -> sdkHelper.signTransaction(
+                hashToSign = request.preparedRequestData.hashToSign,
+                networkId = networkId,
+                type = request.preparedRequestData.type,
                 derivationPath = request.derivationPath,
                 cardId = cardId,
             )
         }
-
-        Timber.d("Signed hash: $signedHash")
 
         val requestData = RequestData(
             topic = request.topic,

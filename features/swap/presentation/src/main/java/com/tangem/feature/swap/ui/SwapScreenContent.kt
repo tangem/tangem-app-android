@@ -62,14 +62,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
         ) {
             MainInfo(state)
 
-            ProviderItemBlock(
-                state = state.providerState,
-                modifier = Modifier
-                    .clickable(
-                        enabled = state.providerState.onProviderClick != null,
-                        onClick = { state.providerState.onProviderClick?.invoke(state.providerState.id) },
-                    ),
-            )
+            ProviderItemBlock(state = state.providerState)
 
             FeeItemBlock(state = state.fee)
 
