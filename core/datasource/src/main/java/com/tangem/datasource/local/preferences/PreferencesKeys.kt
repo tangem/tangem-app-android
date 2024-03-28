@@ -63,6 +63,8 @@ object PreferencesKeys {
 
     val APP_LOGS_KEY by lazy { stringPreferencesKey(name = "app_logs") }
 
+    val SEND_TAP_HELP_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "sendTapHelpPreview") }
+
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 }
 
