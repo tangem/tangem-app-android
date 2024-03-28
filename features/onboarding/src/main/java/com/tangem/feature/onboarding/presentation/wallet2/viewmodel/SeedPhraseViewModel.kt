@@ -74,6 +74,7 @@ class SeedPhraseViewModel @Inject constructor(
 
     private var generatedMnemonicComponents: Map<MnemonicType, List<String>> = emptyMap()
     private var importedMnemonicComponents: List<String>? = null
+    private var importedPassphrase: String? = null
 
     override fun onCleared() {
         textFieldsDebouncers.forEach { entry -> entry.value.release() }
@@ -143,7 +144,7 @@ class SeedPhraseViewModel @Inject constructor(
             buttonCreateWalletClick = {
                 val mnemonicComponents =
                     generatedMnemonicComponents[selectedMnemonicType] ?: return@CheckSeedPhraseUiAction
-                buttonImportWalletClick(mnemonicComponents, SeedPhraseSource.GENERATED)
+                buttonImportWalletClick(mnemonicComponents, null, SeedPhraseSource.GENERATED)
             },
             secondTextFieldAction = TextFieldUiAction(
                 onTextFieldChanged = { value -> onTextFieldChanged(SeedPhraseField.Second, value) },
@@ -159,10 +160,14 @@ class SeedPhraseViewModel @Inject constructor(
             phraseTextFieldAction = TextFieldUiAction(
                 onTextFieldChanged = { value -> onSeedPhraseTextFieldChanged(value) },
             ),
+            passTextFieldAction = TextFieldUiAction(
+                onTextFieldChanged = { value -> onPassPhraseTextFieldChanged(value) },
+            ),
             suggestedPhraseClick = ::buttonSuggestedPhraseClick,
+            onPassphraseInfoClick = ::buttonPassphraseInfoClick,
             buttonCreateWalletClick = {
                 analyticsEventHandler.send(SeedPhraseEvents.ButtonImport)
-                buttonImportWalletClick(importedMnemonicComponents, SeedPhraseSource.IMPORTED)
+                buttonImportWalletClick(importedMnemonicComponents, importedPassphrase, SeedPhraseSource.IMPORTED)
             },
         ),
         menuChatClick = ::menuChatClick,
@@ -208,13 +213,13 @@ class SeedPhraseViewModel @Inject constructor(
 
     // region ImportSeedPhrase
     private fun onSeedPhraseTextFieldChanged(textFieldValue: TextFieldValue) {
-        val oldTextFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
+        val oldTextFieldValue = uiState.importSeedPhraseState.fieldSeedPhrase.textFieldValue
         val isSameText = textFieldValue.text == oldTextFieldValue.text
         val isCursorMoved = textFieldValue.selection != oldTextFieldValue.selection
 
-        uiState = uiBuilder.importSeedPhrase.updateTextField(uiState, textFieldValue)
+        uiState = uiBuilder.importSeedPhrase.updateSeedPhraseTextField(uiState, textFieldValue)
 
-        val fieldState = uiState.importSeedPhraseState.tvSeedPhrase
+        val fieldState = uiState.importSeedPhraseState.fieldSeedPhrase
         val inputMnemonic = fieldState.textFieldValue.text
 
         val debouncer = createOrGetDebouncer(MNEMONIC_DEBOUNCER)
@@ -234,6 +239,11 @@ class SeedPhraseViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun onPassPhraseTextFieldChanged(textFieldValue: TextFieldValue) {
+        importedPassphrase = textFieldValue.text
+        uiState = uiBuilder.importSeedPhrase.updatePassPhraseTextField(uiState, textFieldValue)
     }
 
     private suspend fun validateMnemonic(inputMnemonic: String) {
@@ -284,11 +294,15 @@ class SeedPhraseViewModel @Inject constructor(
         }
     }
 
-    private fun buttonImportWalletClick(mnemonicComponents: List<String>?, seedPhraseSource: SeedPhraseSource) {
+    private fun buttonImportWalletClick(
+        mnemonicComponents: List<String>?,
+        passphrase: String?,
+        seedPhraseSource: SeedPhraseSource,
+    ) {
         mnemonicComponents ?: return
 
         viewModelScope.launch(dispatchers.io) {
-            mediator.importWallet(mnemonicComponents, seedPhraseSource, ::handleWalletCreationResult)
+            mediator.importWallet(mnemonicComponents, passphrase, seedPhraseSource, ::handleWalletCreationResult)
         }
     }
 
@@ -391,7 +405,7 @@ class SeedPhraseViewModel @Inject constructor(
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
         launchSingle {
-            val textFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue
+            val textFieldValue = uiState.importSeedPhraseState.fieldSeedPhrase.textFieldValue
             val word = uiState.importSeedPhraseState.suggestionsList[suggestionIndex]
             val cursorPosition = textFieldValue.selection.end
 
@@ -404,6 +418,22 @@ class SeedPhraseViewModel @Inject constructor(
                 val mediateState = uiBuilder.importSeedPhrase.insertSuggestionWord(uiState, insertResult)
                 uiBuilder.importSeedPhrase.updateSuggestions(mediateState, persistentListOf())
             }
+        }
+    }
+
+    private fun buttonPassphraseInfoClick() {
+        launchSingle {
+            updateUi {
+                uiBuilder.importSeedPhrase.showPassphraseInfoBottomSheet(uiState) {
+                    dismissPassphraseBottomSheet()
+                }
+            }
+        }
+    }
+
+    private fun dismissPassphraseBottomSheet() {
+        launchSingle {
+            updateUi { uiBuilder.importSeedPhrase.dismissPassphraseBottomSheet(uiState) }
         }
     }
     // endregion ButtonClickHandlers
