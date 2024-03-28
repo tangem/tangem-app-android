@@ -243,7 +243,12 @@ internal class SendStateFactory(
 
     fun getSendingStateUpdate(isSending: Boolean): SendUiState {
         val state = currentStateProvider()
-        return state.copy(sendState = state.sendState?.copy(isSending = isSending))
+        return state.copy(
+            sendState = state.sendState?.copy(
+                isSending = isSending,
+                isPrimaryButtonEnabled = !isSending,
+            ),
+        )
     }
 
     fun getTransactionSendState(txData: TransactionData): SendUiState {
