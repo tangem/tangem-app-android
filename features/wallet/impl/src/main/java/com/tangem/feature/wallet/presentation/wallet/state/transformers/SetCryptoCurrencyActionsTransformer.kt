@@ -44,25 +44,42 @@ internal class SetCryptoCurrencyActionsTransformer(
                     is TokenActionsState.ActionState.Buy -> {
                         WalletManageButton.Buy(
                             enabled = true,
-                            onClick = { clickIntents.onBuyClick(cryptoCurrencyStatus) },
+                            onClick = {
+                                clickIntents.onBuyClick(
+                                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                    unavailabilityReason = action.unavailabilityReason
+                                )
+                            },
                         )
                     }
                     is TokenActionsState.ActionState.Receive -> {
                         WalletManageButton.Receive(
                             enabled = true,
-                            onClick = { clickIntents.onReceiveClick(cryptoCurrencyStatus) },
+                            onClick = {
+                                clickIntents.onReceiveClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
+                            },
                         )
                     }
                     is TokenActionsState.ActionState.Sell -> {
                         WalletManageButton.Sell(
                             enabled = true,
-                            onClick = { clickIntents.onSellClick(cryptoCurrencyStatus) },
+                            onClick = {
+                                clickIntents.onSellClick(
+                                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                    unavailabilityReason = action.unavailabilityReason
+                                )
+                            },
                         )
                     }
                     is TokenActionsState.ActionState.Send -> {
                         WalletManageButton.Send(
                             enabled = true,
-                            onClick = { clickIntents.onSendClick(cryptoCurrencyStatus) },
+                            onClick = {
+                                clickIntents.onSendClick(
+                                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                    unavailabilityReason = action.unavailabilityReason
+                                )
+                            },
                         )
                     }
                     else -> {
