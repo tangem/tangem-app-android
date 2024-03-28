@@ -7,6 +7,7 @@ import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
+import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
@@ -111,7 +112,7 @@ internal class FeeStateFactory(
         )
     }
 
-    fun getFeeNotificationState(notifications: ImmutableList<SendFeeNotification>): SendUiState {
+    fun getFeeNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
         val state = currentStateProvider()
         return state.copy(
             feeState = state.feeState?.copy(
@@ -123,7 +124,7 @@ internal class FeeStateFactory(
 
     private fun isPrimaryButtonEnabled(
         feeState: SendStates.FeeState,
-        notifications: ImmutableList<SendFeeNotification>,
+        notifications: ImmutableList<SendNotification>,
     ): Boolean {
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return false
         val customValue = feeSelectorState.customValues.firstOrNull()
@@ -134,7 +135,7 @@ internal class FeeStateFactory(
         } else {
             false
         }
-        val noErrors = notifications.none { it is SendFeeNotification.Error }
+        val noErrors = notifications.none { it is SendNotification.Error }
 
         return noErrors && (isNotEmptyCustom || isNotCustom)
     }
