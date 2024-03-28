@@ -47,7 +47,9 @@ import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
 import com.tangem.features.send.impl.presentation.analytics.utils.SendOnNextScreenAnalyticSender
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
+import com.tangem.features.send.impl.presentation.state.amount.AmountNotificationFactory
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
+import com.tangem.features.send.impl.presentation.state.confirm.SendNotificationFactory
 import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
@@ -146,15 +148,16 @@ internal class SendViewModel @Inject constructor(
         feeStateFactory = feeStateFactory,
     )
 
-    private val feeNotificationFactory = FeeNotificationFactory(
-        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-        coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
+    private val amountNotificationFactory = AmountNotificationFactory(
         currentStateProvider = Provider { uiState },
-        userWalletProvider = Provider { userWallet },
         stateRouterProvider = Provider { stateRouter },
         clickIntents = this,
-        getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
-        analyticsEventHandler = analyticsEventHandler,
+    )
+
+    private val feeNotificationFactory = FeeNotificationFactory(
+        currentStateProvider = Provider { uiState },
+        stateRouterProvider = Provider { stateRouter },
+        clickIntents = this,
     )
 
     private val sendNotificationFactory = SendNotificationFactory(
@@ -166,6 +169,7 @@ internal class SendViewModel @Inject constructor(
         currencyChecksRepository = currencyChecksRepository,
         clickIntents = this,
         analyticsEventHandler = analyticsEventHandler,
+        getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
     )
 
     private val sendOnNextScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
@@ -190,6 +194,7 @@ internal class SendViewModel @Inject constructor(
     private var memoValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
     private var feeNotificationsJobHolder = JobHolder()
+    private var amountNotificationsJobHolder = JobHolder()
     private var qrScannerJobHolder = JobHolder()
 
     private var sendIdleTimer = 0L
@@ -464,6 +469,16 @@ internal class SendViewModel @Inject constructor(
             .saveIn(feeNotificationsJobHolder)
     }
 
+    private fun updateAmountNotifications() {
+        amountNotificationFactory.create()
+            .conflate()
+            .distinctUntilChanged()
+            .onEach { uiState = amountStateFactory.getAmountNotificationState(notifications = it) }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
+            .saveIn(amountNotificationsJobHolder)
+    }
+
     // region screen state navigation
     override fun popBackStack() = stateRouter.popBackStack()
     override fun onBackClick() = stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
@@ -642,6 +657,7 @@ internal class SendViewModel @Inject constructor(
                 ifLeft = { feeStateFactory.onFeeOnErrorState() },
             ) ?: feeStateFactory.onFeeOnErrorState()
             updateFeeNotifications()
+            updateAmountNotifications()
         }.saveIn(feeJobHolder)
     }
 
