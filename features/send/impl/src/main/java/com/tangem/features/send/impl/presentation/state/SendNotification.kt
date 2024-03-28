@@ -11,13 +11,14 @@ internal sealed class SendNotification(val config: NotificationConfig) {
     sealed class Error(
         title: TextReference,
         subtitle: TextReference,
+        iconResId: Int = R.drawable.ic_alert_24,
         buttonState: NotificationConfig.ButtonsState? = null,
         onCloseClick: (() -> Unit)? = null,
     ) : SendNotification(
         config = NotificationConfig(
             title = title,
             subtitle = subtitle,
-            iconResId = R.drawable.ic_alert_24,
+            iconResId = iconResId,
             buttonsState = buttonState,
             onCloseClick = onCloseClick,
         ),
@@ -59,6 +60,41 @@ internal sealed class SendNotification(val config: NotificationConfig) {
                 onClick = onConfirmClick,
             ),
         )
+
+        data class ExceedsBalance(
+            val networkIconId: Int,
+            val currencyName: String,
+            val feeName: String,
+            val feeSymbol: String,
+            val networkName: String,
+            val mergeFeeNetworkName: Boolean = false,
+            val onClick: (() -> Unit)? = null,
+        ) : Error(
+            title = resourceReference(
+                id = R.string.warning_send_blocked_funds_for_fee_title,
+                wrappedList(feeName),
+            ),
+            subtitle = resourceReference(
+                id = R.string.warning_send_blocked_funds_for_fee_message,
+                formatArgs = wrappedList(currencyName, networkName, currencyName, feeName, feeSymbol),
+            ),
+            iconResId = networkIconId,
+            buttonState = onClick?.let {
+                NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = resourceReference(
+                        R.string.common_buy_currency,
+                        wrappedList(
+                            if (mergeFeeNetworkName) {
+                                "$currencyName ($feeSymbol)"
+                            } else {
+                                feeName
+                            },
+                        ),
+                    ),
+                    onClick = onClick,
+                )
+            },
+        )
     }
 
     sealed class Warning(
@@ -97,6 +133,22 @@ internal sealed class SendNotification(val config: NotificationConfig) {
         data object FeeTooLow : Warning(
             title = resourceReference(id = R.string.send_notification_transaction_delay_title),
             subtitle = resourceReference(id = R.string.send_notification_transaction_delay_text),
+        )
+
+        data class TooHigh(
+            val value: String,
+        ) : Warning(
+            title = resourceReference(id = R.string.send_notification_fee_too_high_title),
+            subtitle = resourceReference(id = R.string.send_notification_fee_too_high_text, wrappedList(value)),
+        )
+
+        data class NetworkFeeUnreachable(val onRefresh: () -> Unit) : Warning(
+            title = resourceReference(R.string.send_fee_unreachable_error_title),
+            subtitle = resourceReference(R.string.send_fee_unreachable_error_text),
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.warning_button_refresh),
+                onClick = onRefresh,
+            ),
         )
     }
 }
