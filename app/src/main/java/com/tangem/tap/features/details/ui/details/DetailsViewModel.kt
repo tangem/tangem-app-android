@@ -4,6 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -138,7 +139,7 @@ internal class DetailsViewModel(
     }
 
     private fun sendFeedback() {
-        Analytics.send(Basic.ButtonSupport())
+        Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Settings))
         store.dispatchOnMain(GlobalAction.SendEmail(FeedbackEmail()))
     }
 

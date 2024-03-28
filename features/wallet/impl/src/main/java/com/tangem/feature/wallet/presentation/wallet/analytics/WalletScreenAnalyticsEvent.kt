@@ -25,7 +25,7 @@ sealed class WalletScreenAnalyticsEvent {
 
         object WalletOpened : Basic(event = "Wallet Opened")
 
-        class CardWasScanned(source: AnalyticsParam.ScannedFrom) : Basic(
+        class CardWasScanned(source: AnalyticsParam.ScreensSources) : Basic(
             event = "Card Was Scanned",
             params = mapOf(
                 AnalyticsParam.SOURCE to source.value,
