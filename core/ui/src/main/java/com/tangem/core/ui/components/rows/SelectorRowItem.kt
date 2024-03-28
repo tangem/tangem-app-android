@@ -14,11 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -27,12 +27,14 @@ import com.tangem.core.ui.res.TangemTheme
 fun SelectorRowItem(
     @StringRes titleRes: Int,
     @DrawableRes iconRes: Int,
-    onSelect: () -> Unit,
     modifier: Modifier = Modifier,
-    preEllipsize: TextReference? = null,
-    postEllipsize: TextReference? = null,
+    paddingValues: PaddingValues = PaddingValues(TangemTheme.dimens.spacing12),
+    preDot: TextReference? = null,
+    postDot: TextReference? = null,
+    ellipsizeOffset: Int? = null,
     isSelected: Boolean = false,
     showDivider: Boolean = true,
+    onSelect: (() -> Unit)? = null,
 ) {
     val iconTint by animateColorAsState(
         targetValue = if (isSelected) {
@@ -43,45 +45,39 @@ fun SelectorRowItem(
         label = "Selector icon tint change",
     )
 
-    val textStyle = if (isSelected) {
-        TangemTheme.typography.subtitle2
-    } else {
-        TangemTheme.typography.body2
-    }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onSelect() },
+            .then(
+                if (onSelect != null) {
+                    Modifier.clickable { onSelect() }
+                } else {
+                    Modifier
+                },
+            ),
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(paddingValues),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Icon(
                 painter = painterResource(iconRes),
                 tint = iconTint,
                 contentDescription = null,
-                modifier = Modifier
-                    .padding(
-                        start = TangemTheme.dimens.spacing12,
-                        top = TangemTheme.dimens.spacing12,
-                        bottom = TangemTheme.dimens.spacing12,
-                    ),
             )
             Text(
                 text = stringResource(titleRes),
-                style = textStyle,
+                style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary1,
-                modifier = Modifier
-                    .padding(
-                        start = TangemTheme.dimens.spacing8,
-                        top = TangemTheme.dimens.spacing14,
-                        bottom = TangemTheme.dimens.spacing14,
-                    ),
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
             )
-            if (preEllipsize != null && postEllipsize != null) {
+            if (preDot != null && postDot != null) {
                 SelectorValueContent(
-                    amount = preEllipsize,
-                    symbol = postEllipsize,
-                    textStyle = textStyle,
+                    preDot = preDot,
+                    postDot = postDot,
+                    ellipsizeOffset = ellipsizeOffset,
                 )
             }
         }
@@ -99,33 +95,37 @@ fun SelectorRowItem(
 }
 
 @Composable
-private fun RowScope.SelectorValueContent(amount: TextReference, symbol: TextReference, textStyle: TextStyle) {
-    Text(
-        text = amount.resolveReference(),
-        style = textStyle,
+private fun RowScope.SelectorValueContent(
+    preDot: TextReference,
+    postDot: TextReference,
+    ellipsizeOffset: Int? = null,
+) {
+    val ellipsis = if (ellipsizeOffset == null) {
+        TextEllipsis.End
+    } else {
+        TextEllipsis.OffsetEnd(ellipsizeOffset)
+    }
+    EllipsisText(
+        text = preDot.resolveReference(),
+        style = TangemTheme.typography.body2,
         color = TangemTheme.colors.text.primary1,
         textAlign = TextAlign.End,
-        overflow = TextOverflow.Ellipsis,
-        maxLines = 1,
+        ellipsis = ellipsis,
         modifier = Modifier
             .weight(1f)
-            .padding(
-                start = TangemTheme.dimens.spacing4,
-                top = TangemTheme.dimens.spacing14,
-                bottom = TangemTheme.dimens.spacing14,
-            ),
+            .padding(start = TangemTheme.dimens.spacing4),
     )
     Text(
-        text = symbol.resolveReference(),
-        style = textStyle,
+        text = "•",
+        style = TangemTheme.typography.caption2,
         color = TangemTheme.colors.text.primary1,
-        modifier = Modifier
-            .padding(
-                start = TangemTheme.dimens.spacing1,
-                end = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing14,
-                bottom = TangemTheme.dimens.spacing14,
-            ),
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
+    )
+    Text(
+        text = postDot.resolveReference(),
+        style = TangemTheme.typography.body2,
+        color = TangemTheme.colors.text.tertiary,
     )
 }
 
@@ -136,8 +136,9 @@ private fun SelectorRowItemPreview_Light() {
         SelectorRowItem(
             titleRes = R.string.common_fee_selector_option_slow,
             iconRes = R.drawable.ic_tortoise_24,
-            preEllipsize = TextReference.Str("1000"),
-            postEllipsize = TextReference.Str("$"),
+            preDot = TextReference.Str("1000 ETH"),
+            postDot = TextReference.Str("1000 $"),
+            ellipsizeOffset = 4,
             isSelected = true,
             onSelect = { },
         )
@@ -151,8 +152,9 @@ private fun SelectorRowItemPreview_Dark() {
         SelectorRowItem(
             titleRes = R.string.common_fee_selector_option_slow,
             iconRes = R.drawable.ic_tortoise_24,
-            preEllipsize = TextReference.Str("1000"),
-            postEllipsize = TextReference.Str("$"),
+            preDot = TextReference.Str("1000 ETH"),
+            postDot = TextReference.Str("1000 $"),
+            ellipsizeOffset = 4,
             isSelected = true,
             onSelect = { },
         )
