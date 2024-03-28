@@ -1,6 +1,5 @@
 package com.tangem.features.send.impl.presentation.ui.fee
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,17 +54,13 @@ private fun LazyListScope.feeSelector(state: SendStates.FeeState, clickIntents: 
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.notifications(
-    configs: ImmutableList<SendNotification>,
-    modifier: Modifier = Modifier,
-    isLast: Boolean = false,
-) {
+private fun LazyListScope.notifications(configs: ImmutableList<SendNotification>, modifier: Modifier = Modifier) {
     items(
         items = configs,
         key = { it::class.java },
         contentType = { it::class.java },
         itemContent = {
-            val bottomPadding = if (isLast) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing0
+            val bottomPadding = if (it == configs.last()) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing0
             Notification(
                 config = it.config,
                 modifier = modifier
@@ -75,20 +70,8 @@ private fun LazyListScope.notifications(
                     )
                     .animateItemPlacement(),
                 containerColor = when (it) {
-                    is SendNotification.Error.ExceedsBalance,
-                    is SendNotification.Warning.NetworkFeeUnreachable,
-                    -> TangemTheme.colors.background.action
+                    is SendNotification.Warning.NetworkFeeUnreachable -> TangemTheme.colors.background.action
                     else -> TangemTheme.colors.button.disabled
-                },
-                iconTint = when (it) {
-                    is SendNotification.Error.ExceedsBalance -> {
-                        if (it.config.buttonsState == null) {
-                            TangemTheme.colors.icon.warning
-                        } else {
-                            null
-                        }
-                    }
-                    else -> null
                 },
             )
         },
@@ -97,24 +80,19 @@ private fun LazyListScope.notifications(
 
 @OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.customFee(feeSendState: FeeSelectorState, modifier: Modifier = Modifier) {
-    item(
-        key = FEE_CUSTOM_KEY,
-    ) {
-        AnimatedVisibility(
-            visible = feeSendState is FeeSelectorState.Content,
-            modifier = modifier
-                .fillMaxWidth()
-                .animateItemPlacement()
-                .background(TangemTheme.colors.background.tertiary),
+    if (feeSendState is FeeSelectorState.Content) {
+        item(
+            key = FEE_CUSTOM_KEY,
         ) {
-            (feeSendState as? FeeSelectorState.Content)?.let { fee ->
-                val customValues = fee.customValues
-                SendCustomFeeEthereum(
-                    customValues = customValues,
-                    selectedFee = fee.selectedFee,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
-                )
-            }
+            SendCustomFeeEthereum(
+                customValues = feeSendState.customValues,
+                selectedFee = feeSendState.selectedFee,
+                modifier = modifier
+                    .fillMaxWidth()
+                    .animateItemPlacement()
+                    .background(TangemTheme.colors.background.tertiary)
+                    .padding(top = TangemTheme.dimens.spacing12),
+            )
         }
     }
 }
