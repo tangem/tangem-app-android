@@ -163,7 +163,11 @@ internal class DefaultWalletRouter(
     }
 
     override fun openScanFailedDialog() {
-        reduxNavController.navigate(action = NavigationAction.OpenDialog(StateDialog.ScanFailsDialog))
+        reduxNavController.navigate(
+            action = NavigationAction.OpenDialog(
+                StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN),
+            ),
+        )
     }
 
     private companion object {
