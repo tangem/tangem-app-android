@@ -45,8 +45,8 @@ internal class FeeStateFactory(
         val state = currentStateProvider()
         val feeState = state.feeState ?: return state
         return state.copy(
+            amountState = state.amountState?.copy(isFeeLoading = true),
             feeState = feeState.copy(
-                feeSelectorState = FeeSelectorState.Loading,
                 notifications = persistentListOf(),
                 isPrimaryButtonEnabled = false,
             ),
@@ -65,6 +65,7 @@ internal class FeeStateFactory(
 
         val fee = feeConverter.convert(feeSelectorState)
         return state.copy(
+            amountState = state.amountState?.copy(isFeeLoading = false),
             feeState = feeState.copy(
                 feeSelectorState = feeSelectorState,
                 fee = fee,
@@ -76,6 +77,7 @@ internal class FeeStateFactory(
     fun onFeeOnErrorState(): SendUiState {
         val state = currentStateProvider()
         return state.copy(
+            amountState = state.amountState?.copy(isFeeLoading = false),
             feeState = state.feeState?.copy(
                 feeSelectorState = FeeSelectorState.Error,
             ),
