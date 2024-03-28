@@ -172,7 +172,7 @@ internal class WelcomeMiddleware {
             isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
         )
         store.inject(DaggerGraphState::scanCardProcessor).scan(
-            analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.SignIn),
+            analyticsSource = AnalyticsParam.ScreensSources.SignIn,
             onSuccess = { scanResponse ->
                 scope.launch { onCardScanned(scanResponse) }
             },
