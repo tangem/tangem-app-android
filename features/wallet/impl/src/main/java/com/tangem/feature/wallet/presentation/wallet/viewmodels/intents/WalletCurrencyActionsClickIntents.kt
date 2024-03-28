@@ -454,8 +454,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 )
             }
             ScenarioUnavailabilityReason.EmptyBalance -> {
-                stringReference(
-                    "You do not have funds to send. Top up your account to be able to send funds from it.",
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_empty_balance,
                 )
             }
             ScenarioUnavailabilityReason.InsufficientFundsForFee -> {
@@ -464,25 +464,28 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 )
             }
             is ScenarioUnavailabilityReason.BuyUnavailable -> {
-                stringReference(
-                    "The purchase of the %name% is currently unavailable. But we are working on adding it.",
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_buy_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
                 )
             }
             is ScenarioUnavailabilityReason.NotExchangeable -> {
-                stringReference(
-                    "%token name% swap is not available. But we are working on adding it.",
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_not_exchangeable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
                 )
             }
             is ScenarioUnavailabilityReason.SellUnavailable -> {
-                stringReference(
-                    "Sell of the %token name% coin is currently unavailable. But we are working on adding it.",
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_sell_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
                 )
             }
-
             ScenarioUnavailabilityReason.NoQuotes -> {
-                stringReference("Выбранная операция в данный момент недоступна. Попробуйте позже.")
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_no_quotes
+                )
             }
-
             ScenarioUnavailabilityReason.None -> {
                 throw IllegalArgumentException("The unavailability reason must be other than None")
             }
