@@ -72,6 +72,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
+    implementation(projects.domain.settings)
 
     /** Feature modules */
     implementation(projects.features.send.api)
