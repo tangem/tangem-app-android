@@ -38,6 +38,8 @@ internal class SendAmountStateConverter(
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = sendAmountFieldConverter.convert(value),
             isPrimaryButtonEnabled = false,
+            notifications = persistentListOf(),
+            isFeeLoading = false,
             segmentedButtonConfig = if (status.value.fiatRate.isNullOrZero()) {
                 persistentListOf()
             } else {
