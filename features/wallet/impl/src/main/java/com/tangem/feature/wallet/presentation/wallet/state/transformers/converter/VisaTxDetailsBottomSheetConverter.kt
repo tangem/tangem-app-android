@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.VisaCurrency
@@ -27,14 +28,14 @@ internal class VisaTxDetailsBottomSheetConverter(
     private fun createTransaction(details: VisaTxDetails): VisaTxDetailsBottomSheetConfig.Transaction {
         return VisaTxDetailsBottomSheetConfig.Transaction(
             id = details.id,
-            type = details.type,
-            status = details.status,
+            type = details.type.capitalize(),
+            status = details.status.capitalize(),
             blockchainAmount = formatNetworkAmount(details.blockchainAmount),
             blockchainFee = formatNetworkAmount(details.blockchainFee),
             transactionAmount = formatFiatAmount(details.transactionAmount, details.fiatCurrency),
             transactionCurrencyCode = details.transactionCurrencyCode.toString(),
-            merchantName = details.merchantName ?: UNKNOWN,
-            merchantCity = details.merchantCity ?: UNKNOWN,
+            merchantName = details.merchantName?.capitalize() ?: UNKNOWN,
+            merchantCity = details.merchantCity?.capitalize() ?: UNKNOWN,
             merchantCountryCode = details.merchantCountryCode ?: UNKNOWN,
             merchantCategoryCode = details.merchantCategoryCode ?: UNKNOWN,
         )
@@ -46,16 +47,16 @@ internal class VisaTxDetailsBottomSheetConverter(
 
         return VisaTxDetailsBottomSheetConfig.Request(
             id = request.id,
-            type = request.requestType,
-            status = request.requestStatus,
+            type = request.requestType.capitalize(),
+            status = request.requestStatus.capitalize(),
             blockchainAmount = formatNetworkAmount(request.blockchainAmount),
             blockchainFee = formatNetworkAmount(request.blockchainFee),
             transactionAmount = formatFiatAmount(request.transactionAmount, request.fiatCurrency),
             currencyCode = request.billingCurrencyCode.toString(),
             errorCode = request.errorCode,
-            date = DateTimeFormatters.formatDate(DateTimeFormatters.dateTimeFormatter, date = localDate),
+            date = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.dateTimeFormatter),
             txHash = request.txHash ?: UNKNOWN,
-            txStatus = request.txStatus ?: UNKNOWN,
+            txStatus = request.txStatus?.capitalize() ?: UNKNOWN,
             onExploreClick = if (exploreUrl != null) {
                 { clickIntents.onExploreClick(exploreUrl) }
             } else {

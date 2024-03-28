@@ -114,6 +114,7 @@ private fun handlePrepareCardSettingsScreen(
             null
         },
         isShowPasswordResetRadioButton = isShowPasswordResetRadioButton,
+        isLastWarningDialogShown = false,
     )
     return state.copy(cardSettingsState = cardSettingsState)
 }
@@ -178,6 +179,13 @@ private fun handleEraseWallet(action: DetailsAction.ResetToFactory, state: Detai
                 cardSettingsState = cardSettingsState?.copy(
                     condition2Checked = action.accepted,
                     resetButtonEnabled = warning2Checked && cardSettingsState.condition1Checked,
+                ),
+            )
+        }
+        is DetailsAction.ResetToFactory.LastWarningDialogVisibility -> {
+            state.copy(
+                cardSettingsState = cardSettingsState?.copy(
+                    isLastWarningDialogShown = action.isShown,
                 ),
             )
         }

@@ -121,6 +121,10 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     onReject = state.dialog.onReject,
                 )
             }
+            is WalletConnectDialog.SignTransactionDialog -> SignTransactionDialog.create(
+                preparedData = state.dialog.data,
+                context = context,
+            )
             is BackupDialog.AttestationFailed -> AttestationFailedDialog.create(context)
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)

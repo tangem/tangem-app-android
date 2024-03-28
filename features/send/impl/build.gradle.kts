@@ -28,6 +28,7 @@ dependencies {
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.compose.material3)
+    implementation(deps.compose.material)
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
@@ -71,6 +72,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
+    implementation(projects.domain.settings)
 
     /** Feature modules */
     implementation(projects.features.send.api)

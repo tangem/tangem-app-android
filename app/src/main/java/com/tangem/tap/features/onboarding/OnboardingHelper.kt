@@ -9,6 +9,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.twinsIsTwinned
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
@@ -41,8 +42,8 @@ object OnboardingHelper {
             response.cardTypesResolver.isWallet2() || response.cardTypesResolver.isShibaWallet() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
                 val activationInProgress = onboardingManager?.isActivationInProgress(cardId)
-                val backupNotActive = response.card.backupStatus?.isActive != true
-                emptyWallets || activationInProgress == true || backupNotActive
+                val isNoBackup = response.card.backupStatus == CardDTO.BackupStatus.NoBackup
+                emptyWallets || activationInProgress == true || isNoBackup
             }
 
             response.card.wallets.isNotEmpty() -> onboardingManager?.isActivationInProgress(cardId) ?: false
@@ -79,16 +80,20 @@ object OnboardingHelper {
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
                 store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
-
-                    store.dispatchOnMain(
+                    store.dispatchWithMain(
                         SaveWalletAction.ProvideBackupInfo(
                             scanResponse = scanResponse,
                             accessCode = accessCode,
                             backupCardsIds = backupCardsIds?.toSet(),
                         ),
                     )
-                    store.dispatchOnMain(SaveWalletAction.Save)
+
+                    val toggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
+                    if (toggles.isGeneralManagerEnabled) {
+                        store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
+                    } else {
+                        store.dispatchWithMain(SaveWalletAction.Save)
+                    }
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen

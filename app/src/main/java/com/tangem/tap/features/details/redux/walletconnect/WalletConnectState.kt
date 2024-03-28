@@ -8,8 +8,8 @@ import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.core.navigation.StateDialog
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.domain.walletconnect2.domain.WcEthereumSignMessage
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
+import com.tangem.tap.domain.walletconnect2.domain.WcSignMessage
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
@@ -117,6 +117,10 @@ sealed class WalletConnectDialog : StateDialog {
     data class BnbTransactionDialog(
         val data: WcPreparedRequest.BnbTransaction,
     ) : WalletConnectDialog()
+
+    data class SignTransactionDialog(
+        val data: WcPreparedRequest.SignTransaction,
+    ) : WalletConnectDialog()
 }
 
 data class WcTransactionData(
@@ -138,7 +142,7 @@ data class WcPersonalSignData(
     val topic: String,
     val id: Long,
     val dialogData: PersonalSignDialogData,
-    val type: WcEthereumSignMessage.WCSignType,
+    val type: WcSignMessage.WCSignType,
 )
 
 sealed class BinanceMessageData(

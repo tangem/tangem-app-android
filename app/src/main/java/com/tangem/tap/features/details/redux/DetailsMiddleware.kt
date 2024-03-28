@@ -20,7 +20,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.isLockedSync
+import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -39,6 +39,7 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
@@ -81,6 +82,7 @@ class DetailsMiddleware {
     }
 
     class EraseWalletMiddleware {
+        @Suppress("CyclomaticComplexMethod")
         fun handle(action: DetailsAction.ResetToFactory) {
             when (action) {
                 is DetailsAction.ResetToFactory.Start -> {
@@ -119,8 +121,12 @@ class DetailsMiddleware {
 
                         doBeforeErase()
                         tangemSdkManager.resetToFactorySettings(card.cardId, true)
-                            .flatMap { userWalletsListManager.delete(listOfNotNull(userWalletId)) }
-                            .flatMap { tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId)) }
+                            .flatMap {
+                                userWalletsListManager.delete(listOfNotNull(userWalletId))
+                            }
+                            .flatMap {
+                                tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId))
+                            }
                             .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
 
@@ -129,7 +135,9 @@ class DetailsMiddleware {
                                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                                     store.onUserWalletSelected(selectedUserWallet)
                                 } else {
-                                    if (userWalletsListManager.isLockedSync) {
+                                    val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
+                                        .fold(onSuccess = { true }, onFailure = { false })
+                                    if (isLocked && userWalletsListManager.hasUserWallets) {
                                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                                     } else {
                                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
@@ -217,7 +225,7 @@ class DetailsMiddleware {
                     }
                 }
                 is DetailsAction.AppSettings.CheckBiometricsStatus -> {
-                    observeBiometricsStatusChanges(state, action.lifecycleScope)
+                    observeBiometricsStatusChanges(action.lifecycleScope)
                 }
                 is DetailsAction.AppSettings.EnrollBiometrics -> {
                     enrollBiometrics()
@@ -239,20 +247,27 @@ class DetailsMiddleware {
             }
         }
 
-        private fun observeBiometricsStatusChanges(state: DetailsState, lifecycleScope: LifecycleCoroutineScope) {
-            lifecycleScope.launch(Dispatchers.IO) {
+        private fun observeBiometricsStatusChanges(lifecycleScope: LifecycleCoroutineScope) {
+            val needEnrollBiometricsFlow = flow {
                 do {
                     val needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull()
 
-                    if (needEnrollBiometrics != null &&
-                        needEnrollBiometrics != state.appSettingsState.needEnrollBiometrics
-                    ) {
-                        store.dispatchWithMain(DetailsAction.AppSettings.BiometricsStatusChanged(needEnrollBiometrics))
+                    if (needEnrollBiometrics != null) {
+                        emit(needEnrollBiometrics)
                     }
 
-                    delay(timeMillis = 500)
+                    delay(timeMillis = 200)
                 } while (true)
-            }.saveIn(checkBiometricsStatusJobHolder)
+            }
+
+            needEnrollBiometricsFlow
+                .distinctUntilChanged()
+                .onEach { needEnrollBiometrics ->
+                    store.dispatchWithMain(DetailsAction.AppSettings.BiometricsStatusChanged(needEnrollBiometrics))
+                }
+                .flowOn(Dispatchers.IO)
+                .launchIn(lifecycleScope)
+                .saveIn(checkBiometricsStatusJobHolder)
         }
 
         private fun enrollBiometrics() {

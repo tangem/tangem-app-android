@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.core.analytics.Analytics
-import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.feedback.ScanFailsEmail
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -20,7 +20,7 @@ object ScanFailsDialog {
             setTitle(context.getString(R.string.common_warning))
             setMessage(R.string.alert_troubleshooting_scan_card_title)
             setPositiveButton(R.string.alert_button_request_support) { _, _ ->
-                Analytics.send(IntroductionProcess.ButtonRequestSupport())
+                Analytics.send(Basic.ButtonSupport())
                 store.dispatch(GlobalAction.SendEmail(ScanFailsEmail()))
             }
             setNeutralButton(R.string.common_cancel) { _, _ -> }

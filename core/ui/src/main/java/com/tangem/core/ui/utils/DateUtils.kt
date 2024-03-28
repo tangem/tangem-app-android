@@ -29,5 +29,5 @@ fun Long.toDateFormat(formatter: DateTimeFormatter = DateTimeFormatters.dateForm
  * Returns formatted time according to [formatter].
  */
 fun Long.toTimeFormat(formatter: DateTimeFormatter = DateTimeFormatters.timeFormatter): String {
-    return DateTimeFormatters.formatTime(formatter = formatter, time = DateTime(this, DateTimeZone.getDefault()))
+    return DateTimeFormatters.formatDate(date = DateTime(this, DateTimeZone.getDefault()), formatter = formatter)
 }
