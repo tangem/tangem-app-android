@@ -485,26 +485,22 @@ internal class SendViewModel @Inject constructor(
     override fun onBackClick() = stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
     override fun onNextClick() {
         val currentState = stateRouter.currentState.value
-        val isCurrentFee = currentState.type == SendUiStateType.Fee
-        if (isCurrentFee) {
-            val isFeeCoverage = checkFeeCoverage(uiState, cryptoCurrencyStatus)
-            if (isAmountSubtractAvailable && isFeeCoverage) {
-                uiState = eventStateFactory.getFeeCoverageAlert(
-                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
-                )
-                return
-            } else {
-                analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
+        sendOnNextScreenAnalyticSender.send(currentState.type, uiState)
+        when (currentState.type) {
+            SendUiStateType.Fee -> {
+                if (onFeeNext()) return
             }
-            if (checkIfFeeTooLow(uiState)) {
-                uiState = eventStateFactory.getFeeTooLowAlert(
-                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
-                )
-                return
+            SendUiStateType.Amount -> {
+                if (uiState.feeState?.feeSelectorState is FeeSelectorState.Content) {
+                    if (onFeeCoverageAlert()) return
+                } else {
+                    loadFee(isToNextState = true)
+                    return
+                }
             }
+            else -> Unit
         }
 
-        sendOnNextScreenAnalyticSender.send(currentState.type, uiState)
         stateRouter.onNextClick()
     }
 
@@ -521,6 +517,30 @@ internal class SendViewModel @Inject constructor(
 
     override fun onTokenDetailsClick(userWalletId: UserWalletId, currency: CryptoCurrency) =
         innerRouter.openTokenDetails(userWalletId, currency)
+
+    private fun onFeeNext(): Boolean {
+        if (onFeeCoverageAlert()) return true
+        if (checkIfFeeTooLow(uiState)) {
+            uiState = eventStateFactory.getFeeTooLowAlert(
+                onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+            )
+            return true
+        }
+        return false
+    }
+
+    private fun onFeeCoverageAlert(): Boolean {
+        val isFeeCoverage = checkFeeCoverage(uiState, cryptoCurrencyStatus)
+        return if (isAmountSubtractAvailable && isFeeCoverage) {
+            uiState = eventStateFactory.getFeeCoverageAlert(
+                onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+            )
+            true
+        } else {
+            analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
+            false
+        }
+    }
     // endregion
 
     // region amount state clicks
@@ -648,15 +668,26 @@ internal class SendViewModel @Inject constructor(
         innerRouter.openUrl(url)
     }
 
-    private fun loadFee() {
+    private fun loadFee(isToNextState: Boolean = false) {
         viewModelScope.launch(dispatchers.main) {
-            if (uiState.feeState?.fee == null) {
+            val isShowStatus = uiState.feeState?.fee == null
+            if (isShowStatus) {
                 uiState = feeStateFactory.onFeeOnLoadingState()
             }
-            uiState = callFeeUseCase()?.fold(
-                ifRight = feeStateFactory::onFeeOnLoadedState,
-                ifLeft = { feeStateFactory.onFeeOnErrorState() },
-            ) ?: feeStateFactory.onFeeOnErrorState()
+            val result = callFeeUseCase()?.fold(
+                ifRight = {
+                    uiState = feeStateFactory.onFeeOnLoadedState(it)
+                    if (isToNextState && !onFeeCoverageAlert()) {
+                        stateRouter.showSend()
+                    }
+                },
+                ifLeft = {
+                    if (isShowStatus) uiState = feeStateFactory.onFeeOnErrorState()
+                },
+            )
+            if (result == null && isShowStatus) {
+                uiState = feeStateFactory.onFeeOnErrorState()
+            }
             updateFeeNotifications()
             updateAmountNotifications()
         }.saveIn(feeJobHolder)
@@ -733,7 +764,7 @@ internal class SendViewModel @Inject constructor(
     override fun onAmountReduceClick(reducedAmount: String, clazz: Class<out SendNotification>) {
         uiState = amountStateFactory.getOnAmountValueChange(reducedAmount)
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
-        loadFee()
+        onCheckFeeUpdate()
     }
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {
