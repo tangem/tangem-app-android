@@ -3,15 +3,13 @@ package com.tangem.tap.domain.walletconnect2.data
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.files.FileReader
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.domain.walletconnect2.domain.models.Session
 import timber.log.Timber
-import javax.inject.Inject
 
-class WalletConnectSessionsRepositoryImpl @Inject constructor(
-    @SdkMoshi private val moshi: Moshi,
+internal class DefaultWalletConnectSessionsRepository(
+    private val moshi: Moshi,
     private val fileReader: FileReader,
 ) :
     WalletConnectSessionsRepository {
