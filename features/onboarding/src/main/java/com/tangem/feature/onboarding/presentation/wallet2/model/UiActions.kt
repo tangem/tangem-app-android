@@ -28,6 +28,7 @@ data class AboutUiAction(
 
 data class YourSeedPhraseUiAction(
     val buttonContinueClick: () -> Unit,
+    val onSelectType: (SegmentSeedType) -> Unit,
 )
 
 data class CheckSeedPhraseUiAction(
