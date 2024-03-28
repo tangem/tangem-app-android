@@ -182,9 +182,9 @@
   <string name="express_choose_providers_subtitle">Tangem offers token swaps via 3rd-party providers according to each provider\'s terms</string>
   <string name="express_choose_providers_title">Choose provider</string>
   <string name="express_error_code">An error occurred. Code: %s</string>
-  <string name="express_error_provider_unavailable">Oops! Swapping the selected pair through the chosen provider is temporarily unavailable. Please try again later. (Code:\u00A0%s)</string>
-  <string name="express_error_swap_pair_unavailable">Selected provider is unavailable at the moment. Please try again later. (Code:\u00A0%s)</string>
-  <string name="express_error_swap_unavailable">Swaps are unavailable at the moment. Please try again later. (Code:\u00A0%s)</string>
+  <string name="express_error_provider_unavailable">Oops! Swapping the selected pair through the chosen provider is temporarily unavailable. Please try again later. (Code: %s)</string>
+  <string name="express_error_swap_pair_unavailable">Selected provider is unavailable at the moment. Please try again later. (Code: %s)</string>
+  <string name="express_error_swap_unavailable">Swaps are unavailable at the moment. Please try again later. (Code: %s)</string>
   <string name="express_estimated_amount">Estimated amount</string>
   <string name="express_exchange_by">Exchange by %s</string>
   <string name="express_exchange_notification_failed_text">Visit provider’s website to refund your money</string>
@@ -482,6 +482,7 @@
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
   <string name="send_recipient_wallets_title">My wallets</string>
+  <string name="send_sending">Sending...</string>
   <string name="send_summary_tap_hint">Tap any field to change it</string>
   <string name="send_summary_title">Send %s</string>
   <string name="send_summary_transaction_description">You are sending %1$s including a network fee of %2$s</string>
