@@ -313,7 +313,6 @@
   <string name="onboarding_linking_error_card_with_wallets">Другой кошелек уже был создан на карте, которую вы пытаетесь добавить. Хотите сбросить его и использовать карту для бэкапа?</string>
   <string name="onboarding_navbar_title_creating_backup">Резервная копия</string>
   <string name="onboarding_seed_button_read_more">Прочитать о seed-фразе</string>
-  <string name="onboarding_seed_generate_message">Запишите эти 12 слов в порядке, указанном ниже, и сохраните их в надежном месте.</string>
   <plurals name="onboarding_seed_generate_message_words_count">
     <item quantity="one"></item>
     <item quantity="few">Запишите эти %d слова в порядке, указанном ниже, и сохраните их в надежном месте.</item>
