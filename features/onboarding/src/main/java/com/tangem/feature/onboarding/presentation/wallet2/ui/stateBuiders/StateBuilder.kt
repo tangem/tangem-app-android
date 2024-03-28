@@ -28,11 +28,16 @@ class StateBuilder(
 
     private fun getInitialImportSeedPhraseState(): ImportSeedPhraseState {
         return ImportSeedPhraseState(
-            tvSeedPhrase = TextFieldState(
+            fieldSeedPhrase = TextFieldState(
                 onTextFieldValueChanged = uiActions.importSeedPhraseActions.phraseTextFieldAction.onTextFieldChanged,
                 onFocusChanged = uiActions.importSeedPhraseActions.phraseTextFieldAction.onFocusChanged,
             ),
+            fieldPassphrase = TextFieldState(
+                onTextFieldValueChanged = uiActions.importSeedPhraseActions.passTextFieldAction.onTextFieldChanged,
+                onFocusChanged = uiActions.importSeedPhraseActions.passTextFieldAction.onFocusChanged,
+            ),
             onSuggestedPhraseClick = uiActions.importSeedPhraseActions.suggestedPhraseClick,
+            onPassphraseInfoClick = uiActions.importSeedPhraseActions.onPassphraseInfoClick,
             buttonCreateWallet = ButtonState(
                 enabled = false,
                 onClick = uiActions.importSeedPhraseActions.buttonCreateWalletClick,
