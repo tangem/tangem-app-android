@@ -13,8 +13,9 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
-import com.tangem.features.send.impl.presentation.state.amount.SendAmountSubtractConverter
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
+import com.tangem.features.send.impl.presentation.state.amount.SendAmountSubtractConverter
+import com.tangem.features.send.impl.presentation.state.confirm.SendConfirmStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientListConverter
@@ -33,6 +34,7 @@ internal class SendStateFactory(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val isTapHelpPreviewEnabledProvider: Provider<Boolean>,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
 ) {
@@ -72,7 +74,11 @@ internal class SendStateFactory(
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
     }
-
+    private val confirmStateConverter by lazy(LazyThreadSafetyMode.NONE) {
+        SendConfirmStateConverter(
+            isTapHelpPreviewEnabledProvider = isTapHelpPreviewEnabledProvider,
+        )
+    }
     private val recipientListStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendRecipientListConverter(
             currentStateProvider = currentStateProvider,
@@ -96,6 +102,7 @@ internal class SendStateFactory(
             recipientState = state.recipientState
                 ?: recipientStateConverter.convert(SendRecipientStateConverter.Data("", null)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
+            sendState = confirmStateConverter.convert(Unit),
             cryptoCurrencySymbol = cryptoCurrencyStatusProvider().currency.symbol,
         )
     }
@@ -236,21 +243,22 @@ internal class SendStateFactory(
 
     fun getSendingStateUpdate(isSending: Boolean): SendUiState {
         val state = currentStateProvider()
-        return state.copy(sendState = state.sendState.copy(isSending = isSending))
+        return state.copy(sendState = state.sendState?.copy(isSending = isSending))
     }
 
     fun getTransactionSendState(txData: TransactionData): SendUiState {
         val state = currentStateProvider()
         val cryptoCurrency = cryptoCurrencyStatusProvider().currency
-
+        val sendState = state.sendState ?: return state
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txData.hash.orEmpty(),
             networkId = cryptoCurrency.network.id,
         ).getOrElse { "" }
         return state.copy(
-            sendState = state.sendState.copy(
+            sendState = sendState.copy(
                 transactionDate = txData.date?.timeInMillis ?: System.currentTimeMillis(),
                 isSuccess = true,
+                showTapHelp = false,
                 txUrl = txUrl,
                 notifications = persistentListOf(),
             ),
@@ -259,12 +267,22 @@ internal class SendStateFactory(
 
     fun getSendNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
         val state = currentStateProvider()
+        val sendState = state.sendState ?: return state
         val hasErrorNotifications = notifications.any { it is SendNotification.Error }
         return state.copy(
-            sendState = state.sendState.copy(
+            sendState = sendState.copy(
                 isPrimaryButtonEnabled = !hasErrorNotifications,
                 notifications = notifications,
+                showTapHelp = sendState.showTapHelp && notifications.isEmpty(),
             ),
+        )
+    }
+
+    fun getHiddenTapHelpState(): SendUiState {
+        val state = currentStateProvider()
+        val sendState = state.sendState ?: return state
+        return state.copy(
+            sendState = sendState.copy(showTapHelp = false),
         )
     }
     //endregion
