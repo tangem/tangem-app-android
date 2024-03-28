@@ -89,11 +89,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     ) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
-        if (handleUnavailabilityReason(unavailabilityReason)) return
-
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
         )
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
         viewModelScope.launch(dispatchers.main) {
@@ -308,11 +308,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     ) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
-        if (handleUnavailabilityReason(unavailabilityReason)) return
-
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrencyStatus.currency.symbol),
         )
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         showErrorIfDemoModeOrElse {
             viewModelScope.launch(dispatchers.main) {
