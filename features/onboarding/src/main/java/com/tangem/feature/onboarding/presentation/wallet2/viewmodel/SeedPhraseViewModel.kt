@@ -13,18 +13,19 @@ import com.tangem.data.common.locale.LocaleProvider
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.SeedPhraseInteractor
+import com.tangem.feature.onboarding.domain.models.MnemonicType
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.CreateWalletEvents
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseEvents
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.onboarding.presentation.wallet2.model.*
+import com.tangem.feature.onboarding.presentation.wallet2.model.SegmentSeedType.Companion.fromMnemonicType
 import com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
-import com.tangem.utils.extensions.isEven
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -43,7 +44,8 @@ class SeedPhraseViewModel @Inject constructor(
 
     private var uiBuilder = StateBuilder(uiActions = createUiActions())
 
-    var uiState: OnboardingSeedPhraseState by mutableStateOf(uiBuilder.init())
+    private var selectedMnemonicType = MnemonicType.Mnemonic12
+    var uiState: OnboardingSeedPhraseState by mutableStateOf(uiBuilder.init(fromMnemonicType(selectedMnemonicType)))
         private set
 
     private lateinit var router: SeedPhraseRouter
@@ -70,7 +72,7 @@ class SeedPhraseViewModel @Inject constructor(
 
     private val textFieldsDebouncers = mutableMapOf<String, Debouncer>()
 
-    private var generatedMnemonicComponents: List<String>? = null
+    private var generatedMnemonicComponents: Map<MnemonicType, List<String>> = emptyMap()
     private var importedMnemonicComponents: List<String>? = null
 
     override fun onCleared() {
@@ -135,10 +137,13 @@ class SeedPhraseViewModel @Inject constructor(
         ),
         yourSeedPhraseActions = YourSeedPhraseUiAction(
             buttonContinueClick = ::buttonContinueClick,
+            onSelectType = ::onSelectType,
         ),
         checkSeedPhraseActions = CheckSeedPhraseUiAction(
             buttonCreateWalletClick = {
-                buttonImportWalletClick(generatedMnemonicComponents, SeedPhraseSource.GENERATED)
+                val mnemonicComponents =
+                    generatedMnemonicComponents[selectedMnemonicType] ?: return@CheckSeedPhraseUiAction
+                buttonImportWalletClick(mnemonicComponents, SeedPhraseSource.GENERATED)
             },
             secondTextFieldAction = TextFieldUiAction(
                 onTextFieldChanged = { value -> onTextFieldChanged(SeedPhraseField.Second, value) },
@@ -179,11 +184,12 @@ class SeedPhraseViewModel @Inject constructor(
             }
 
             createOrGetDebouncer(field.name).debounce(viewModelScope, context = dispatchers.io) {
-                val hasError = !interactor.isWordMatch(generatedMnemonicComponents, field, textFieldValue.text)
+                val mnemonicComponents = generatedMnemonicComponents[selectedMnemonicType] ?: return@debounce
+                val hasError = !interactor.isWordMatch(mnemonicComponents, field, textFieldValue.text)
                 if (fieldState.isError != hasError) {
                     updateUi { uiBuilder.checkSeedPhrase.updateTextFieldError(uiState, field, hasError) }
                 }
-                val isCreateWalletButtonEnabled = SeedPhraseField.values()
+                val isCreateWalletButtonEnabled = SeedPhraseField.entries
                     .map { field -> field.getState(uiState) }
                     .all { fieldState -> fieldState.textFieldValue.text.isNotEmpty() && !fieldState.isError }
 
@@ -324,50 +330,35 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonGenerateSeedPhraseClick() {
+        val mnemonicTypes = listOf(MnemonicType.Mnemonic12, MnemonicType.Mnemonic24)
         analyticsEventHandler.send(SeedPhraseEvents.ButtonGenerateSeedPhrase)
         launchSingle {
             updateUi { uiBuilder.generateMnemonicComponents(uiState) }
             delay(DELAY_GENERATE_SEED_PHRASE)
-            interactor.generateMnemonic()
-                .onSuccess { mnemonic ->
-                    generatedMnemonicComponents = mnemonic.mnemonicComponents
-                    val mnemonicGridItems = generateMnemonicGridList(mnemonic.mnemonicComponents)
+            interactor.generateMnemonics(mnemonicTypes)
+                .onSuccess { mnemonics ->
+                    generatedMnemonicComponents = mnemonics.mapValues { it.value.mnemonicComponents }
+                    val defaultMnemonic = mnemonics[selectedMnemonicType]?.mnemonicComponents ?: return@launchSingle
+                    val mnemonicGridItems = toMnemonicGridList(defaultMnemonic)
                     updateUi {
                         router.openScreen(SeedPhraseScreen.YourSeedPhrase)
-                        uiBuilder.mnemonicGenerated(uiState, mnemonicGridItems.toImmutableList())
+                        uiBuilder.mnemonicGenerated(uiState, mnemonicGridItems.toPersistentList())
                     }
                 }
                 .onFailure {
-                    generatedMnemonicComponents = null
+                    generatedMnemonicComponents = emptyMap()
                     // TODO: show error
                 }
         }
     }
 
-    private fun generateMnemonicGridList(mnemonicComponents: List<String>): ImmutableList<MnemonicGridItem> {
-        val size = mnemonicComponents.size
-        val splitIndex = if (size.isEven()) size / 2 else size / 2 + 1
-        val leftColumn = mnemonicComponents.subList(0, splitIndex)
-        val rightColumn = mnemonicComponents.subList(splitIndex, size)
-
-        val mnemonicGridItems = mutableListOf<MnemonicGridItem>()
-        for (index in 0 until splitIndex) {
-            if (index <= leftColumn.size) {
-                val item = MnemonicGridItem(
-                    index = index + 1,
-                    mnemonic = leftColumn[index],
-                )
-                mnemonicGridItems.add(item)
-            }
-            if (index < rightColumn.size) {
-                val item = MnemonicGridItem(
-                    index = index + splitIndex + 1,
-                    mnemonic = rightColumn[index],
-                )
-                mnemonicGridItems.add(item)
-            }
-        }
-        return mnemonicGridItems.toImmutableList()
+    private fun toMnemonicGridList(mnemonicComponents: List<String>): PersistentList<MnemonicGridItem> {
+        return mnemonicComponents.mapIndexed { index, word ->
+            MnemonicGridItem(
+                index = index.inc(),
+                mnemonic = word,
+            )
+        }.toPersistentList()
     }
 
     private fun buttonImportSeedPhraseClick() {
@@ -376,7 +367,26 @@ class SeedPhraseViewModel @Inject constructor(
     }
 
     private fun buttonContinueClick() {
-        router.openScreen(SeedPhraseScreen.CheckSeedPhrase)
+        launchSingle {
+            updateUi {
+                uiBuilder.clearCheckSeedPhraseState(uiState)
+            }
+            router.openScreen(SeedPhraseScreen.CheckSeedPhrase)
+        }
+    }
+
+    private fun onSelectType(selectedSeedType: SegmentSeedType) {
+        launchSingle {
+            selectedMnemonicType = selectedSeedType.toMnemonicType()
+            val selectedMnemonic = generatedMnemonicComponents[selectedMnemonicType] ?: return@launchSingle
+            updateUi {
+                uiBuilder.selectSeedType(
+                    uiState = uiState,
+                    mnemonicGridItems = toMnemonicGridList(selectedMnemonic),
+                    selectedSeedType = selectedSeedType,
+                )
+            }
+        }
     }
 
     private fun buttonSuggestedPhraseClick(suggestionIndex: Int) {
@@ -433,9 +443,9 @@ class SeedPhraseViewModel @Inject constructor(
     }
     // endregion Utils
 
-    companion object {
-        private const val MNEMONIC_DEBOUNCER = "MnemonicDebouncer"
-        private const val MNEMONIC_DEBOUNCE_DELAY = 700L
-        private const val DELAY_GENERATE_SEED_PHRASE = 300L
+    private companion object {
+        const val MNEMONIC_DEBOUNCER = "MnemonicDebouncer"
+        const val MNEMONIC_DEBOUNCE_DELAY = 700L
+        const val DELAY_GENERATE_SEED_PHRASE = 300L
     }
 }
