@@ -1,18 +1,18 @@
 package com.tangem.tap.domain.walletconnect.extensions
 
-import com.tangem.tap.domain.walletconnect2.domain.WcEthereumSignMessage
 import com.tangem.tap.domain.walletconnect2.domain.WcEthereumTransaction
+import com.tangem.tap.domain.walletconnect2.domain.WcSignMessage
 import com.trustwallet.walletconnect.models.WCPeerMeta
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
 
-fun WCPeerMeta.isDappSupported(): Boolean {
+internal fun WCPeerMeta.isDappSupported(): Boolean {
     return !unsupportedDappsList.any { this.url.contains(it) }
 }
 
 private val unsupportedDappsList: List<String> = listOf("dydx.exchange")
 
-fun WCEthereumTransaction.toWcEthTransaction(): WcEthereumTransaction {
+internal fun WCEthereumTransaction.toWcEthTransaction(): WcEthereumTransaction {
     return WcEthereumTransaction(
         from = from,
         to = to,
@@ -27,13 +27,13 @@ fun WCEthereumTransaction.toWcEthTransaction(): WcEthereumTransaction {
     )
 }
 
-fun WCEthereumSignMessage.toWcEthereumSignMessage(): WcEthereumSignMessage {
-    return WcEthereumSignMessage(
+internal fun WCEthereumSignMessage.toWcEthereumSignMessage(): WcSignMessage {
+    return WcSignMessage(
         raw = raw,
         type = when (type) {
-            WCEthereumSignMessage.WCSignType.MESSAGE -> WcEthereumSignMessage.WCSignType.MESSAGE
-            WCEthereumSignMessage.WCSignType.PERSONAL_MESSAGE -> WcEthereumSignMessage.WCSignType.PERSONAL_MESSAGE
-            WCEthereumSignMessage.WCSignType.TYPED_MESSAGE -> WcEthereumSignMessage.WCSignType.TYPED_MESSAGE
+            WCEthereumSignMessage.WCSignType.MESSAGE -> WcSignMessage.WCSignType.MESSAGE
+            WCEthereumSignMessage.WCSignType.PERSONAL_MESSAGE -> WcSignMessage.WCSignType.PERSONAL_MESSAGE
+            WCEthereumSignMessage.WCSignType.TYPED_MESSAGE -> WcSignMessage.WCSignType.TYPED_MESSAGE
         },
     )
 }

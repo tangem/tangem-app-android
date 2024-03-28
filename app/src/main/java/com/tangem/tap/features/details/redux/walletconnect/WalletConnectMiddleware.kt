@@ -375,6 +375,7 @@ class WalletConnectMiddleware {
                     is WcPreparedRequest.BnbTransaction -> WalletConnectDialog.BnbTransactionDialog(request)
                     is WcPreparedRequest.EthTransaction -> WalletConnectDialog.RequestTransaction(request)
                     is WcPreparedRequest.EthSign -> WalletConnectDialog.PersonalSign(request)
+                    is WcPreparedRequest.SignTransaction -> WalletConnectDialog.SignTransactionDialog(request)
                 }
                 store.dispatch(GlobalAction.ShowDialog(dialog))
             }
