@@ -1,6 +1,8 @@
 package com.tangem.feature.onboarding.presentation.wallet2.model
 
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.domain.models.MnemonicType
 import kotlinx.collections.immutable.ImmutableList
@@ -64,11 +66,6 @@ enum class SegmentSeedType(val count: Int) {
     }
 }
 
-data class MnemonicState(
-    val seedType: SegmentSeedType,
-    val mnemonicItems: PersistentList<MnemonicGridItem>,
-)
-
 data class MnemonicGridItem(
     val index: Int,
     val mnemonic: String,
@@ -82,13 +79,18 @@ data class CheckSeedPhraseState(
 )
 
 data class ImportSeedPhraseState(
-    val tvSeedPhrase: TextFieldState,
+    val fieldSeedPhrase: TextFieldState,
+    val fieldPassphrase: TextFieldState,
     val onSuggestedPhraseClick: (Int) -> Unit,
+    val onPassphraseInfoClick: () -> Unit,
     val buttonCreateWallet: ButtonState,
     val invalidWords: Set<String> = emptySet(),
     val suggestionsList: ImmutableList<String> = persistentListOf(),
     val error: SeedPhraseError? = null,
+    val bottomSheetConfig: TangemBottomSheetConfig? = null,
 )
+
+data class ShowPassphraseInfoBottomSheetContent(val onOkClick: () -> Unit) : TangemBottomSheetConfigContent
 
 data class TextFieldState(
     val onTextFieldValueChanged: (TextFieldValue) -> Unit,
