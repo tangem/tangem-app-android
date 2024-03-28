@@ -14,13 +14,14 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Composable
 fun OnboardingActionBlock(
+    modifier: Modifier = Modifier,
     firstActionContent: @Composable (() -> Unit)? = null,
     secondActionContent: @Composable (() -> Unit)? = null,
 ) {
     if (firstActionContent == null && secondActionContent == null) return
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = TangemTheme.dimens.size16)
             .padding(
                 top = TangemTheme.dimens.size8,
