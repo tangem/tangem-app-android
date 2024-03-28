@@ -12,7 +12,7 @@ import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 import com.tangem.tap.store
 import timber.log.Timber
 
-class WalletConnectEventsHandlerImpl : WalletConnectEventsHandler {
+internal class WalletConnectEventsHandlerImpl : WalletConnectEventsHandler {
     override fun onProposalReceived(proposal: WalletConnectEvents.SessionProposal, networksFormatted: String) {
         store.dispatchOnMain(
             GlobalAction.ShowDialog(
