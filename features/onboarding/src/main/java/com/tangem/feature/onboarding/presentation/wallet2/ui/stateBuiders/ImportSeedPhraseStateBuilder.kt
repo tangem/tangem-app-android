@@ -2,9 +2,11 @@ package com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.feature.onboarding.domain.InsertSuggestionResult
 import com.tangem.feature.onboarding.domain.SeedPhraseError
 import com.tangem.feature.onboarding.presentation.wallet2.model.OnboardingSeedPhraseState
+import com.tangem.feature.onboarding.presentation.wallet2.model.ShowPassphraseInfoBottomSheetContent
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -12,12 +14,23 @@ import kotlinx.collections.immutable.ImmutableList
  */
 class ImportSeedPhraseStateBuilder {
 
-    fun updateTextField(
+    fun updateSeedPhraseTextField(
         uiState: OnboardingSeedPhraseState,
         textFieldValue: TextFieldValue,
     ): OnboardingSeedPhraseState = uiState.copy(
         importSeedPhraseState = uiState.importSeedPhraseState.copy(
-            tvSeedPhrase = uiState.importSeedPhraseState.tvSeedPhrase.copy(
+            fieldSeedPhrase = uiState.importSeedPhraseState.fieldSeedPhrase.copy(
+                textFieldValue = textFieldValue,
+            ),
+        ),
+    )
+
+    fun updatePassPhraseTextField(
+        uiState: OnboardingSeedPhraseState,
+        textFieldValue: TextFieldValue,
+    ): OnboardingSeedPhraseState = uiState.copy(
+        importSeedPhraseState = uiState.importSeedPhraseState.copy(
+            fieldPassphrase = uiState.importSeedPhraseState.fieldPassphrase.copy(
                 textFieldValue = textFieldValue,
             ),
         ),
@@ -49,15 +62,40 @@ class ImportSeedPhraseStateBuilder {
         ),
     )
 
+    fun showPassphraseInfoBottomSheet(
+        uiState: OnboardingSeedPhraseState,
+        onDismiss: () -> Unit,
+    ): OnboardingSeedPhraseState {
+        return uiState.copy(
+            importSeedPhraseState = uiState.importSeedPhraseState.copy(
+                bottomSheetConfig = TangemBottomSheetConfig(
+                    isShow = true,
+                    onDismissRequest = onDismiss,
+                    content = ShowPassphraseInfoBottomSheetContent(onDismiss),
+                ),
+            ),
+        )
+    }
+
+    fun dismissPassphraseBottomSheet(uiState: OnboardingSeedPhraseState): OnboardingSeedPhraseState {
+        return uiState.copy(
+            importSeedPhraseState = uiState.importSeedPhraseState.copy(
+                bottomSheetConfig = uiState.importSeedPhraseState.bottomSheetConfig?.copy(
+                    isShow = false,
+                ),
+            ),
+        )
+    }
+
     fun insertSuggestionWord(
         uiState: OnboardingSeedPhraseState,
         insertResult: InsertSuggestionResult,
     ): OnboardingSeedPhraseState {
-        val newTextFieldValue = uiState.importSeedPhraseState.tvSeedPhrase.textFieldValue.copy(
+        val newTextFieldValue = uiState.importSeedPhraseState.fieldSeedPhrase.textFieldValue.copy(
             text = insertResult.text,
             selection = TextRange(insertResult.cursorPosition, insertResult.cursorPosition),
         )
-        return updateTextField(uiState, newTextFieldValue)
+        return updateSeedPhraseTextField(uiState, newTextFieldValue)
     }
 
     fun updateError(uiState: OnboardingSeedPhraseState, error: SeedPhraseError?): OnboardingSeedPhraseState {
