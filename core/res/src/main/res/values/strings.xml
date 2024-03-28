@@ -313,7 +313,6 @@
   <string name="onboarding_linking_error_card_with_wallets">Another wallet has already been created on the card you\'re trying to add. Do you want to reset it and use the card for a new wallet?</string>
   <string name="onboarding_navbar_title_creating_backup">Creating a backup</string>
   <string name="onboarding_seed_button_read_more">Read more about seed phrase</string>
-  <string name="onboarding_seed_generate_message">Write these 12 words down in the order given below and store them in a safe and secret place.</string>
   <plurals name="onboarding_seed_generate_message_words_count">
     <item quantity="one"></item>
     <item quantity="other">Write these %d words down in the order given below and store them in a safe and secret place.</item>
