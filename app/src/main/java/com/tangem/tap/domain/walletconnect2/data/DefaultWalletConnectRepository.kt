@@ -18,9 +18,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import timber.log.Timber
-import javax.inject.Inject
 
-class WalletConnectRepositoryImpl @Inject constructor(
+internal class DefaultWalletConnectRepository(
     private val application: Application,
     private val wcRequestDeserializer: WcJrpcRequestsDeserializer,
     private val analyticsHandler: AnalyticsEventHandler,
@@ -95,11 +94,11 @@ class WalletConnectRepositoryImpl @Inject constructor(
             ) {
                 // Triggered when wallet receives the session proposal sent by a Dapp
                 Timber.d("sessionProposal: $sessionProposal")
-                this@WalletConnectRepositoryImpl.sessionProposal = sessionProposal
+                this@DefaultWalletConnectRepository.sessionProposal = sessionProposal
 
                 val missingNetworks = findMissingNetworks(
                     namespaces = sessionProposal.requiredNamespaces,
-                    userNamespaces = this@WalletConnectRepositoryImpl.userNamespaces ?: emptyMap(),
+                    userNamespaces = this@DefaultWalletConnectRepository.userNamespaces ?: emptyMap(),
                 )
 
                 if (missingNetworks.isNotEmpty()) {
@@ -116,7 +115,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
 
                 val optionalWithoutMissingNetworks = removeMissingNetworks(
                     namespaces = sessionProposal.optionalNamespaces,
-                    userNamespaces = this@WalletConnectRepositoryImpl.userNamespaces ?: emptyMap(),
+                    userNamespaces = this@DefaultWalletConnectRepository.userNamespaces ?: emptyMap(),
                 )
 
                 scope.launch {
@@ -334,6 +333,7 @@ class WalletConnectRepositoryImpl @Inject constructor(
                 ),
             )
         }
+
         Web3Wallet.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = requestData.topic,
@@ -342,15 +342,19 @@ class WalletConnectRepositoryImpl @Inject constructor(
                     result = result,
                 ),
             ),
-            onSuccess = {},
-            onError = {
+            onSuccess = { response ->
+                Timber.d("Session request responded successfully: $response")
+            },
+            onError = { error ->
+                Timber.d(error.throwable, "Error while responging session request")
+
                 WalletConnect.RequestHandledParams(
                     dAppName = session?.name ?: "",
                     dAppUrl = session?.url ?: "",
                     methodName = requestData.method,
                     blockchain = requestData.blockchain,
                     errorCode = WalletConnectError.ValidationError.error,
-                    errorDescription = it.throwable.message,
+                    errorDescription = error.throwable.message,
                 )
             },
         )
