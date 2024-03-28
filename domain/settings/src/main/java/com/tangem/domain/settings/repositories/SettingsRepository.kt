@@ -13,4 +13,8 @@ interface SettingsRepository {
 
     @Throws
     suspend fun deleteDeprecatedLogs(maxSize: Int)
+
+    suspend fun isSendTapHelpPreviewEnabled(): Boolean
+
+    suspend fun setSendTapHelpPreviewAvailability(isEnabled: Boolean)
 }
