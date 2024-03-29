@@ -45,6 +45,7 @@ fun AppBarWithBackButtonAndIconContent(
 ) {
     Row(
         modifier = modifier
+            .height(TangemTheme.dimens.size56)
             .background(color = backgroundColor)
             .fillMaxWidth()
             .padding(horizontal = TangemTheme.dimens.spacing16),
