@@ -22,7 +22,7 @@ import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 
 @Composable
-internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) {
+internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean, isEnabled: Boolean) {
     val decimalFormat = rememberDecimalFormat()
     val (primaryValue, secondaryValue) = if (isFiat) {
         sendField.fiatValue to sendField.value
@@ -47,6 +47,7 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) 
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
         ),
+        isEnabled = isEnabled,
         placeholderAlignment = TopCenter,
         modifier = Modifier
             .padding(
