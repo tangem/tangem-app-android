@@ -482,7 +482,11 @@ internal class SendViewModel @Inject constructor(
 
     // region screen state navigation
     override fun popBackStack() = stateRouter.popBackStack()
-    override fun onBackClick() = stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
+    override fun onBackClick() {
+        cancelFeeRequest()
+        stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
+    }
+
     override fun onNextClick() {
         val currentState = stateRouter.currentState.value
         sendOnNextScreenAnalyticSender.send(currentState.type, uiState)
@@ -504,7 +508,10 @@ internal class SendViewModel @Inject constructor(
         stateRouter.onNextClick()
     }
 
-    override fun onPrevClick() = stateRouter.onPrevClick()
+    override fun onPrevClick() {
+        cancelFeeRequest()
+        stateRouter.onPrevClick()
+    }
 
     override fun onQrCodeScanClick() {
         analyticsEventHandler.send(SendAnalyticEvents.QrCodeButtonClicked)
@@ -539,6 +546,12 @@ internal class SendViewModel @Inject constructor(
         } else {
             analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
             false
+        }
+    }
+
+    private fun cancelFeeRequest() {
+        viewModelScope.launch(dispatchers.main) {
+            feeJobHolder.cancel()
         }
     }
     // endregion
@@ -691,6 +704,9 @@ internal class SendViewModel @Inject constructor(
             updateFeeNotifications()
             updateAmountNotifications()
         }.saveIn(feeJobHolder)
+            .invokeOnCompletion {
+                uiState = amountStateFactory.getOnAmountFeeLoadingCancel()
+            }
     }
 
     private suspend fun checkIfSubtractAvailable() {
