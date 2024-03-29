@@ -313,7 +313,6 @@
   <string name="onboarding_linking_error_card_with_wallets">Another wallet has already been created on the card you\'re trying to add. Do you want to reset it and use the card for a new wallet?</string>
   <string name="onboarding_navbar_title_creating_backup">Creating a backup</string>
   <string name="onboarding_seed_button_read_more">Read more about seed phrase</string>
-  <string name="onboarding_seed_generate_message">Write these 12 words down in the order given below and store them in a safe and secret place.</string>
   <plurals name="onboarding_seed_generate_message_words_count">
     <item quantity="one"></item>
     <item quantity="other">Write these %d words down in the order given below and store them in a safe and secret place.</item>
@@ -534,7 +533,7 @@
   <string name="toast_balances_shown">Balances shown</string>
   <string name="toast_undo">Undo</string>
   <string name="token_button_unavailability_reason_buy_unavailable">The purchase of the %s is currently unavailable. But we are working on adding it.</string>
-  <string name="token_button_unavailability_reason_empty_balance">You don\'t have funds to send. Top up your account to be able to send funds.</string>
+  <string name="token_button_unavailability_reason_empty_balance">You do not have funds to send. Top up your account to be able to send funds from it.</string>
   <string name="token_button_unavailability_reason_no_quotes">This operation is currently unavailable. Please try again later.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">%s swap is not available. But we are working on adding it.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Sell of the %s coin is currently unavailable. But we are working on adding it.</string>

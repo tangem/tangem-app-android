@@ -121,7 +121,7 @@ class GetCryptoCurrencyActionsUseCase(
             } else {
                 actionsList.add(
                     TokenActionsState.ActionState.Swap(
-                        unavailabilityReason = ScenarioUnavailabilityReason.SellUnavailable(cryptoCurrency.name),
+                        unavailabilityReason = ScenarioUnavailabilityReason.NotExchangeable(cryptoCurrency.name),
                     ),
                 )
             }
@@ -210,7 +210,7 @@ class GetCryptoCurrencyActionsUseCase(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 coinStatus = coinStatus,
             ) -> {
-                ScenarioUnavailabilityReason.PendingTransaction(coinStatus?.currency?.symbol ?: "")
+                ScenarioUnavailabilityReason.PendingTransaction(coinStatus?.currency?.symbol.orEmpty())
             }
             else -> {
                 ScenarioUnavailabilityReason.None

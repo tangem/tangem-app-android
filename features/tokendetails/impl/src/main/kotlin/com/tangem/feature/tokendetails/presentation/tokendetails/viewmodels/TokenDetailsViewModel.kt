@@ -430,7 +430,6 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun sendCurrency(status: CryptoCurrencyStatus, transactionInfo: TransactionInfo? = null) {
         viewModelScope.launch(dispatchers.main) {
-            // this!
             val maybeFeeCurrencyStatus =
                 getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
 
