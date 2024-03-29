@@ -28,7 +28,11 @@ internal fun SendAmountContent(
             .background(TangemTheme.colors.background.tertiary),
     ) {
         amountField(amountState = amountState, isBalanceHiding = isBalanceHiding)
-        buttons(amountState.segmentedButtonConfig, clickIntents)
+        buttons(
+            segmentedButtonConfig = amountState.segmentedButtonConfig,
+            clickIntents = clickIntents,
+            isMaxButtonEnabled = !amountState.isFeeLoading,
+        )
         notifications(amountState.notifications)
     }
 }
