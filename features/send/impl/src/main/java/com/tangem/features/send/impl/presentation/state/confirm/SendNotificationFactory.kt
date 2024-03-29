@@ -211,7 +211,7 @@ internal class SendNotificationFactory(
         )
         if (currencyDeposit != null && currencyDeposit > spendingAmount) {
             add(
-                SendNotification.Warning.ExistentialDeposit(
+                SendNotification.Error.ExistentialDeposit(
                     BigDecimalFormatter.formatCryptoAmount(
                         cryptoAmount = currencyDeposit,
                         cryptoCurrency = cryptoCurrency,
