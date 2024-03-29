@@ -146,12 +146,16 @@ internal fun LazyListScope.notifications(configs: ImmutableList<SendNotification
                 config = it.config,
                 modifier = modifier.animateItemPlacement(),
                 containerColor = when (it) {
-                    is SendNotification.Warning.HighFeeError -> TangemTheme.colors.background.action
+                    is SendNotification.Error.ExceedsBalance,
+                    is SendNotification.Warning.HighFeeError,
+                    -> TangemTheme.colors.background.action
                     else -> TangemTheme.colors.button.disabled
                 },
                 iconTint = when (it) {
+                    is SendNotification.Error.ExceedsBalance,
+                    is SendNotification.Warning,
+                    -> null
                     is SendNotification.Error -> TangemTheme.colors.icon.warning
-                    is SendNotification.Warning -> null
                 },
             )
         },
