@@ -9,15 +9,13 @@ import kotlinx.collections.immutable.persistentListOf
 @Immutable
 internal sealed class FeeSelectorState {
 
-    object Loading : FeeSelectorState()
-
     data class Content(
         val fees: TransactionFee,
         val selectedFee: FeeType = FeeType.Market,
         val customValues: ImmutableList<SendTextField.CustomFee> = persistentListOf(),
     ) : FeeSelectorState()
 
-    object Error : FeeSelectorState()
+    data object Error : FeeSelectorState()
 }
 
 enum class FeeType {
