@@ -105,6 +105,6 @@ enum class SendUiStateType {
     None,
     Recipient,
     Amount,
-    Fee,
     Send,
+    Fee,
 }
