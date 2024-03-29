@@ -378,7 +378,7 @@ internal class TokenDetailsStateFactory(
             }
             ScenarioUnavailabilityReason.NoQuotes -> {
                 resourceReference(
-                    id = R.string.token_button_unavailability_reason_no_quotes
+                    id = R.string.token_button_unavailability_reason_no_quotes,
                 )
             }
 

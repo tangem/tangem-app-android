@@ -490,7 +490,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             }
             ScenarioUnavailabilityReason.NoQuotes -> {
                 resourceReference(
-                    id = R.string.token_button_unavailability_reason_no_quotes
+                    id = R.string.token_button_unavailability_reason_no_quotes,
                 )
             }
             ScenarioUnavailabilityReason.None -> {

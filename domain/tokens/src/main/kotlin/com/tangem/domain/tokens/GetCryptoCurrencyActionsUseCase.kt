@@ -3,7 +3,6 @@ package com.tangem.domain.tokens
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.model.*
-import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
@@ -197,7 +196,6 @@ class GetCryptoCurrencyActionsUseCase(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): ScenarioUnavailabilityReason {
-
         val insufficientFundsForFee = insufficientFundsForFee(
             userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
