@@ -10,7 +10,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountSegmentedButtonsConfig
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
-import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -50,6 +49,8 @@ internal sealed class SendStates {
         val tokenIconState: TokenIconState,
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
         val amountTextField: SendTextField.AmountField,
+        val notifications: ImmutableList<SendNotification>,
+        val isFeeLoading: Boolean,
     ) : SendStates()
 
     /** Recipient state */
@@ -75,7 +76,7 @@ internal sealed class SendStates {
         val rate: BigDecimal?,
         val appCurrency: AppCurrency,
         val isFeeApproximate: Boolean,
-        val notifications: ImmutableList<SendFeeNotification>,
+        val notifications: ImmutableList<SendNotification>,
     ) : SendStates()
 
     /** Send state */
