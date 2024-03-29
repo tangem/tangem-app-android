@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.models.Config
@@ -54,14 +55,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             when (action.result) {
                 is CompletionResult.Success -> store.dispatch(GlobalAction.ScanFailsCounter.Reset)
                 is CompletionResult.Failure -> {
-                    if (action.result.error is TangemSdkError.UserCancelled) {
-                        store.dispatch(GlobalAction.ScanFailsCounter.Increment)
-                        if (store.state.globalState.scanCardFailsCounter >= 2) {
-                            store.dispatchDialogShow(StateDialog.ScanFailsDialog)
-                        }
-                    } else {
-                        store.dispatch(GlobalAction.ScanFailsCounter.Reset)
-                    }
+                    handleFailureChooseBehaviour(action.result, action.analyticsSource)
                 }
             }
         }
@@ -181,6 +175,26 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                 .flowOn(Dispatchers.IO)
                 .launchIn(scope)
         }
+    }
+}
+
+private fun handleFailureChooseBehaviour(
+    result: CompletionResult.Failure<ScanResponse>,
+    analyticsSource: AnalyticsParam.ScreensSources,
+) {
+    if (result.error is TangemSdkError.UserCancelled) {
+        store.dispatch(GlobalAction.ScanFailsCounter.Increment)
+        if (store.state.globalState.scanCardFailsCounter >= 2) {
+            val scanFailsSource = when (analyticsSource) {
+                is AnalyticsParam.ScreensSources.SignIn -> StateDialog.ScanFailsSource.SIGN_IN
+                is AnalyticsParam.ScreensSources.Settings -> StateDialog.ScanFailsSource.SETTINGS
+                is AnalyticsParam.ScreensSources.Intro -> StateDialog.ScanFailsSource.INTRO
+                else -> StateDialog.ScanFailsSource.MAIN
+            }
+            store.dispatchDialogShow(StateDialog.ScanFailsDialog(scanFailsSource))
+        }
+    } else {
+        store.dispatch(GlobalAction.ScanFailsCounter.Reset)
     }
 }
 
