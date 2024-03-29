@@ -104,7 +104,7 @@ private fun SendNavigationButton(
                 modifier = Modifier
                     .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
                     .background(TangemTheme.colors.button.secondary)
-                    .clickable(enabled = !showProgress) { uiState.clickIntents.onPrevClick() }
+                    .clickable { uiState.clickIntents.onPrevClick() }
                     .padding(TangemTheme.dimens.spacing12),
             )
         }
