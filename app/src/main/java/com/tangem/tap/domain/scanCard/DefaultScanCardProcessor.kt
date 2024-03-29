@@ -2,7 +2,7 @@ package com.tangem.tap.domain.scanCard
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
-import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.inject
@@ -26,7 +26,7 @@ internal class DefaultScanCardProcessor : ScanCardProcessor {
 
     @Suppress("LongParameterList")
     override suspend fun scan(
-        analyticsEvent: AnalyticsEvent?,
+        analyticsSource: AnalyticsParam.ScreensSources,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onScanStateChange: suspend (scanInProgress: Boolean) -> Unit,
@@ -37,7 +37,7 @@ internal class DefaultScanCardProcessor : ScanCardProcessor {
     ) {
         if (isNewCardScanningEnabled) {
             UseCaseScanProcessor.scan(
-                analyticsEvent,
+                analyticsSource,
                 cardId,
                 onProgressStateChange,
                 onScanStateChange,
@@ -48,7 +48,7 @@ internal class DefaultScanCardProcessor : ScanCardProcessor {
             )
         } else {
             LegacyScanProcessor.scan(
-                analyticsEvent,
+                analyticsSource,
                 cardId,
                 onProgressStateChange,
                 onScanStateChange,

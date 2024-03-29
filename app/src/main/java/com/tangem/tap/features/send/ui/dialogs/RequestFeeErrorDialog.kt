@@ -3,6 +3,7 @@ package com.tangem.tap.features.send.ui.dialogs
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.feedback.SendTransactionFailedEmail
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -21,7 +22,7 @@ object RequestFeeErrorDialog {
             setTitle(R.string.common_fee_error)
             setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
             setNegativeButton(R.string.details_row_title_contact_to_support) { _, _ ->
-                Analytics.send(Basic.ButtonSupport())
+                Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Send))
                 store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
             }
             setPositiveButton(R.string.common_retry) { _, _ -> dialog.onRetry() }

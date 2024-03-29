@@ -5,12 +5,14 @@ import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.entities.IndeterminateProgressButton
@@ -19,7 +21,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import com.tangem.tap.features.send.redux.states.ButtonState
-import com.tangem.tap.features.signin.redux.SignInAction
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
@@ -59,7 +60,7 @@ private fun handleHomeAction(action: Action) {
         }
         is HomeAction.ReadCard -> {
             action.scope.launch {
-                readCard(action.analyticsEvent)
+                readCard()
             }
         }
         is HomeAction.GoToShop -> {
@@ -75,13 +76,13 @@ private fun handleHomeAction(action: Action) {
     }
 }
 
-private suspend fun readCard(analyticsEvent: AnalyticsEvent?) {
+private suspend fun readCard() {
     store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
         isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
     )
 
     store.inject(DaggerGraphState::scanCardProcessor).scan(
-        analyticsEvent = analyticsEvent,
+        analyticsSource = AnalyticsParam.ScreensSources.Intro,
         onProgressStateChange = { showProgress ->
             if (showProgress) {
                 changeButtonState(ButtonState.PROGRESS)
@@ -113,12 +114,30 @@ private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
             Timber.e(error, "Unable to save user wallet")
         }
         .doOnSuccess {
+            sendSignedInCardAnalyticsEvent(scanResponse)
             scope.launch { store.onUserWalletSelected(userWallet = userWallet) }
         }
         .doOnResult {
-            store.dispatchOnMain(SignInAction.SetSignInType(Basic.SignedIn.SignInType.Card))
             navigateTo(AppScreen.Wallet)
         }
+}
+
+private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    val currency = ParamCardCurrencyConverter().convert(
+        value = scanResponse.cardTypesResolver,
+    )
+
+    if (currency != null) {
+        Analytics.send(
+            event = Basic.SignedIn(
+                currency = currency,
+                batch = scanResponse.card.batchId,
+                signInType = Basic.SignedIn.SignInType.Card,
+                walletsCount = userWalletsListManager.walletsCount.toString(),
+                hasBackup = scanResponse.card.backupStatus?.isActive,
+            ),
+        )
+    }
 }
 
 private suspend fun navigateTo(appScreen: AppScreen) {
