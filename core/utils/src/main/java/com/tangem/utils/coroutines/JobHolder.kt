@@ -11,10 +11,11 @@ class JobHolder {
 
     private var job: Job? = null
 
-    /** Update current [job] */
-    fun update(job: Job?) {
+    /** Update current [JobHolder.job] and return new [job] */
+    fun update(job: Job): Job {
         this.job?.cancel()
         this.job = job
+        return job
     }
 
     /** Cancel current [job] */
@@ -23,4 +24,4 @@ class JobHolder {
     }
 }
 
-fun Job.saveIn(jobHolder: JobHolder) = jobHolder.update(job = this)
+fun Job.saveIn(jobHolder: JobHolder): Job = jobHolder.update(job = this)
