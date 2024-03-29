@@ -31,11 +31,7 @@ class GetCryptoCurrencyActionsUseCase(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(
-        userWallet: UserWallet,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        resultTarget: ResultTarget = ResultTarget.MULTICURRENCY_WALET_MENU_ITEMS, // TODO
-    ): Flow<TokenActionsState> {
+    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus,): Flow<TokenActionsState> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
@@ -58,7 +54,6 @@ class GetCryptoCurrencyActionsUseCase(
                     userWallet = userWallet,
                     coinStatus = maybeCoinStatus.getOrNull(),
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    resultTarget = resultTarget,
                 )
             }
 
@@ -70,7 +65,6 @@ class GetCryptoCurrencyActionsUseCase(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        resultTarget: ResultTarget,
     ): TokenActionsState {
         return TokenActionsState(
             walletId = userWallet.walletId,
@@ -79,7 +73,6 @@ class GetCryptoCurrencyActionsUseCase(
                 userWallet = userWallet,
                 coinStatus = coinStatus,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
-                resultTarget = resultTarget,
             ),
         )
     }
@@ -92,7 +85,6 @@ class GetCryptoCurrencyActionsUseCase(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        resultTarget: ResultTarget,
     ): List<TokenActionsState.ActionState> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
@@ -304,11 +296,6 @@ class GetCryptoCurrencyActionsUseCase(
 
     private fun BigDecimal?.isZero(): Boolean {
         return this?.signum() == 0
-    }
-
-    enum class ResultTarget {
-        MULTICURRENCY_WALET_MENU_ITEMS,
-        TOKEN_BUTTONS,
     }
 
     data class FeeInfo(
