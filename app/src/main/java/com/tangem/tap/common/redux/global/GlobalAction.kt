@@ -2,6 +2,7 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.models.ChatConfig
@@ -51,7 +52,11 @@ sealed class GlobalAction : Action {
     }
 
     object ScanFailsCounter {
-        data class ChooseBehavior(val result: CompletionResult<ScanResponse>) : GlobalAction()
+        data class ChooseBehavior(
+            val result: CompletionResult<ScanResponse>,
+            val analyticsSource: AnalyticsParam.ScreensSources,
+        ) : GlobalAction()
+
         object Reset : GlobalAction()
         object Increment : GlobalAction()
     }
