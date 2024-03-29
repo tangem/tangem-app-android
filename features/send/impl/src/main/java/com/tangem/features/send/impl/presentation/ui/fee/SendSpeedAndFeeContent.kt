@@ -7,16 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
+import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.ui.common.notifications
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
-import kotlinx.collections.immutable.ImmutableList
 
 private const val FEE_SELECTOR_KEY = "FEE_SELECTOR_KEY"
 private const val FEE_CUSTOM_KEY = "FEE_CUSTOM_KEY"
@@ -24,7 +22,8 @@ private const val FEE_CUSTOM_KEY = "FEE_CUSTOM_KEY"
 @Composable
 internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: SendClickIntents) {
     if (state == null) return
-    val feeSendState = state.feeSelectorState
+    val feeSendState = state.feeSelectorState as? FeeSelectorState.Content
+    val isCustomSelected = feeSendState?.selectedFee == FeeType.Custom
     val notifications = state.notifications
     LazyColumn(
         modifier = Modifier
@@ -35,8 +34,10 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
             ),
     ) {
         feeSelector(state, clickIntents)
-        customFee(feeSendState)
-        notifications(notifications)
+        if (feeSendState != null) {
+            customFee(feeSendState)
+        }
+        notifications(notifications = notifications, hasPaddingAbove = isCustomSelected)
     }
 }
 
@@ -54,45 +55,18 @@ private fun LazyListScope.feeSelector(state: SendStates.FeeState, clickIntents: 
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.notifications(configs: ImmutableList<SendNotification>, modifier: Modifier = Modifier) {
-    items(
-        items = configs,
-        key = { it::class.java },
-        contentType = { it::class.java },
-        itemContent = {
-            val bottomPadding = if (it == configs.last()) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing0
-            Notification(
-                config = it.config,
-                modifier = modifier
-                    .padding(
-                        top = TangemTheme.dimens.spacing12,
-                        bottom = bottomPadding,
-                    )
-                    .animateItemPlacement(),
-                containerColor = when (it) {
-                    is SendNotification.Warning.NetworkFeeUnreachable -> TangemTheme.colors.background.action
-                    else -> TangemTheme.colors.button.disabled
-                },
-            )
-        },
-    )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-internal fun LazyListScope.customFee(feeSendState: FeeSelectorState, modifier: Modifier = Modifier) {
-    if (feeSendState is FeeSelectorState.Content) {
-        item(
-            key = FEE_CUSTOM_KEY,
-        ) {
-            SendCustomFeeEthereum(
-                customValues = feeSendState.customValues,
-                selectedFee = feeSendState.selectedFee,
-                modifier = modifier
-                    .fillMaxWidth()
-                    .animateItemPlacement()
-                    .background(TangemTheme.colors.background.tertiary)
-                    .padding(top = TangemTheme.dimens.spacing12),
-            )
-        }
+internal fun LazyListScope.customFee(feeSendState: FeeSelectorState.Content, modifier: Modifier = Modifier) {
+    item(
+        key = FEE_CUSTOM_KEY,
+    ) {
+        SendCustomFeeEthereum(
+            customValues = feeSendState.customValues,
+            selectedFee = feeSendState.selectedFee,
+            modifier = modifier
+                .fillMaxWidth()
+                .animateItemPlacement()
+                .background(TangemTheme.colors.background.tertiary)
+                .padding(top = TangemTheme.dimens.spacing12),
+        )
     }
 }
