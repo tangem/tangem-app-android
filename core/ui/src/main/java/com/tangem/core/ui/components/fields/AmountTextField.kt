@@ -64,6 +64,7 @@ fun AmountTextField(
         keyboardType = KeyboardType.Number,
     ),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    isEnabled: Boolean = true,
     isAutoResize: Boolean = false,
     @FloatRange(from = 0.0, to = 1.0, fromInclusive = false, toInclusive = false)
     reduceFactor: Double = 0.9,
@@ -106,21 +107,20 @@ fun AmountTextField(
             textStyle = textStyle.copy(
                 fontSize = fontSize,
                 textDirection = TextDirection.ContentOrLtr,
-                textAlign = TextAlign.Center,
             ),
             color = color,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = true,
+            readOnly = !isEnabled,
             visualTransformation = AmountVisualTransformation(decimals, symbol, decimalFormat),
             modifier = Modifier.background(TangemTheme.colors.background.action),
             decorationBox = { innerTextField ->
                 Box {
                     if (value.isBlank() && showPlaceholder) {
-                        val placeholder = if (symbol != null) {
-                            decimalFormat.defaultFormat().plus(" $symbol")
-                        } else {
-                            decimalFormat.defaultFormat()
+                        var placeholder = decimalFormat.defaultFormat()
+                        if (symbol != null) {
+                            placeholder = placeholder.plus(" $symbol")
                         }
                         Text(
                             text = placeholder,
