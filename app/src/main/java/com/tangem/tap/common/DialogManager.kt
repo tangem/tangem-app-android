@@ -46,7 +46,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
 
         dialog = when (state.dialog) {
             is AppDialog.SimpleOkDialogRes -> SimpleOkDialog.create(state.dialog, context)
-            is StateDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
+            is StateDialog.ScanFailsDialog -> ScanFailsDialog.create(context, state.dialog.source)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
             is AppDialog.RussianCardholdersWarningDialog -> RussianCardholdersWarningBottomSheetDialog(
