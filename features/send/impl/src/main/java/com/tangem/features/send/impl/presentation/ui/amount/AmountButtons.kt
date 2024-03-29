@@ -28,6 +28,7 @@ private const val AMOUNT_BUTTONS_KEY = "amountButtonsKey"
 internal fun LazyListScope.buttons(
     segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
     clickIntents: SendClickIntents,
+    isMaxButtonEnabled: Boolean,
 ) {
     item(
         key = AMOUNT_BUTTONS_KEY,
@@ -55,6 +56,7 @@ internal fun LazyListScope.buttons(
             }
             SecondaryButton(
                 text = stringResource(R.string.send_max_amount),
+                enabled = isMaxButtonEnabled,
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     clickIntents.onMaxValueClick()
