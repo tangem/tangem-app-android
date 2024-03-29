@@ -2,5 +2,9 @@ package com.tangem.core.navigation
 
 interface StateDialog {
 
-    object ScanFailsDialog : StateDialog
+    data class ScanFailsDialog(val source: ScanFailsSource) : StateDialog
+
+    enum class ScanFailsSource {
+        MAIN, SIGN_IN, SETTINGS, INTRO;
+    }
 }
