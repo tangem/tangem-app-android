@@ -7,7 +7,7 @@ sealed class ScenarioUnavailabilityReason {
     data class PendingTransaction(val cryptoCurrencySymbol: String) : ScenarioUnavailabilityReason()
     data object EmptyBalance : ScenarioUnavailabilityReason()
     data class InsufficientFundsForFee(
-        val currency: CryptoCurrency,
+        val currencyName: String,
         val networkName: String,
         val feeCurrencyName: String,
         val feeCurrencySymbol: String,

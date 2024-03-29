@@ -200,7 +200,7 @@ class GetCryptoCurrencyActionsUseCase(
             }
             insufficientFundsForFee != null -> {
                 ScenarioUnavailabilityReason.InsufficientFundsForFee(
-                    currency = insufficientFundsForFee.currency,
+                    currencyName = insufficientFundsForFee.currencyName,
                     networkName = insufficientFundsForFee.networkName,
                     feeCurrencyName = insufficientFundsForFee.feeCurrencyName,
                     feeCurrencySymbol = insufficientFundsForFee.feeCurrencySymbol,
@@ -230,7 +230,7 @@ class GetCryptoCurrencyActionsUseCase(
                 !tokenStatus.value.amount.isZero() &&
                 coinStatus.value.amount.isZero() -> {
                 FeeInfo(
-                    currency = tokenStatus.currency,
+                    currencyName = tokenStatus.currency.name,
                     networkName = coinStatus.currency.network.name,
                     feeCurrencyName = coinStatus.currency.name,
                     feeCurrencySymbol = coinStatus.currency.symbol,
@@ -238,7 +238,7 @@ class GetCryptoCurrencyActionsUseCase(
             }
             feePaidCurrency is FeePaidCurrency.SameCurrency && !tokenStatus.value.amount.isZero() -> {
                 FeeInfo(
-                    currency = tokenStatus.currency,
+                    currencyName = tokenStatus.currency.name,
                     networkName = coinStatus.currency.network.name,
                     feeCurrencyName = coinStatus.currency.name,
                     feeCurrencySymbol = coinStatus.currency.symbol,
@@ -275,14 +275,14 @@ class GetCryptoCurrencyActionsUseCase(
             }
         return if (token != null) {
             FeeInfo(
-                currency = tokenStatus.currency,
+                currencyName = tokenStatus.currency.name,
                 networkName = token.network.name,
                 feeCurrencyName = feePaidToken.name,
                 feeCurrencySymbol = feePaidToken.symbol,
             )
         } else {
             FeeInfo(
-                currency = tokenStatus.currency,
+                currencyName = tokenStatus.currency.name,
                 networkName = tokenStatus.currency.network.name,
                 feeCurrencyName = feePaidToken.name,
                 feeCurrencySymbol = feePaidToken.symbol,
@@ -299,7 +299,7 @@ class GetCryptoCurrencyActionsUseCase(
     }
 
     data class FeeInfo(
-        val currency: CryptoCurrency,
+        val currencyName: String,
         val networkName: String,
         val feeCurrencyName: String,
         val feeCurrencySymbol: String,

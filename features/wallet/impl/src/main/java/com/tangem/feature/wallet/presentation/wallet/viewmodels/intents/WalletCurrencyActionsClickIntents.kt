@@ -462,9 +462,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 resourceReference(
                     id = R.string.warning_send_blocked_funds_for_fee_message,
                     formatArgs = wrappedList(
-                        unavailabilityReason.currency.name,
+                        unavailabilityReason.currencyName,
                         unavailabilityReason.networkName,
-                        unavailabilityReason.currency.name,
+                        unavailabilityReason.currencyName,
                         unavailabilityReason.feeCurrencyName,
                         unavailabilityReason.feeCurrencySymbol,
                     ),
