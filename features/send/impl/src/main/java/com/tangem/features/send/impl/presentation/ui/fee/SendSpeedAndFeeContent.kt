@@ -13,9 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
-import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
 
@@ -56,7 +56,7 @@ private fun LazyListScope.feeSelector(state: SendStates.FeeState, clickIntents: 
 
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.notifications(
-    configs: ImmutableList<SendFeeNotification>,
+    configs: ImmutableList<SendNotification>,
     modifier: Modifier = Modifier,
     isLast: Boolean = false,
 ) {
@@ -75,13 +75,13 @@ private fun LazyListScope.notifications(
                     )
                     .animateItemPlacement(),
                 containerColor = when (it) {
-                    is SendFeeNotification.Error.ExceedsBalance,
-                    is SendFeeNotification.Warning.NetworkFeeUnreachable,
+                    is SendNotification.Error.ExceedsBalance,
+                    is SendNotification.Warning.NetworkFeeUnreachable,
                     -> TangemTheme.colors.background.action
                     else -> TangemTheme.colors.button.disabled
                 },
                 iconTint = when (it) {
-                    is SendFeeNotification.Error.ExceedsBalance -> {
+                    is SendNotification.Error.ExceedsBalance -> {
                         if (it.config.buttonsState == null) {
                             TangemTheme.colors.icon.warning
                         } else {

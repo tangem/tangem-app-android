@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,10 +39,10 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.BigDecimalFormatter.CAN_BE_LOWER_SIGN
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.state.fee.SendFeeNotification
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import java.math.BigDecimal
 
@@ -113,7 +112,7 @@ internal fun SendSpeedSelector(
                                 visible = fees.normal is Fee.Ethereum,
                                 label = "Custom fee appearance animation",
                             ) {
-                                val showWarning = state.notifications.any { it is SendFeeNotification.Warning.TooHigh }
+                                val showWarning = state.notifications.any { it is SendNotification.Warning.TooHigh }
                                 SendSpeedSelectorItem(
                                     titleRes = R.string.common_fee_selector_option_custom,
                                     iconRes = R.drawable.ic_edit_24,
