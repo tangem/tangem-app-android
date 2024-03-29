@@ -1,9 +1,10 @@
 package com.tangem.features.send.impl.presentation.ui.fee
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.inputrow.InputRowEnterAmount
@@ -24,6 +25,8 @@ internal fun SendCustomFeeEthereum(
     AnimatedVisibility(
         visible = selectedFee == FeeType.Custom && customValues.isNotEmpty(),
         label = "Custom Fee Selected Animation",
+        enter = expandVertically().plus(fadeIn()),
+        exit = shrinkVertically().plus(fadeOut()),
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
@@ -31,8 +34,14 @@ internal fun SendCustomFeeEthereum(
         ) {
             repeat(customValues.size) { index ->
                 val value = customValues[index]
+                val bottomPadding = if (index == customValues.lastIndex) {
+                    TangemTheme.dimens.spacing12
+                } else {
+                    TangemTheme.dimens.spacing0
+                }
                 FooterContainer(
                     footer = value.footer.resolveReference(),
+                    modifier = Modifier.padding(bottom = bottomPadding),
                 ) {
                     if (value.label != null) {
                         InputRowEnterInfoAmount(
