@@ -63,6 +63,7 @@ internal fun LazyListScope.amountField(
             AmountField(
                 sendField = amountState.amountTextField,
                 isFiat = amountState.amountTextField.isFiatValue,
+                isEnabled = !amountState.isFeeLoading,
             )
         }
     }
