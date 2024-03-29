@@ -61,7 +61,6 @@ internal fun SendRecipientContent(uiState: SendStates.RecipientState?, clickInte
                     isLoading = isValidating,
                     error = address.error,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing4)
                         .background(
                             color = TangemTheme.colors.background.action,
                             shape = TangemTheme.shapes.roundedCornersXMedium,
