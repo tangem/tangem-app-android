@@ -69,14 +69,17 @@ private fun SendNavigationButton(
     val sendState = uiState.sendState ?: return
     val isEditingDisabled = uiState.isEditingDisabled
     val isSuccess = sendState.isSuccess
+    val isSending = sendState.isSending
 
     val isFromConfirmation = currentState.isFromConfirmation
     val isCorrectScreen = currentState.type == SendUiStateType.Amount || currentState.type == SendUiStateType.Fee
-    val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
+    val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess && !isSending
+    val showProgress = uiState.amountState?.isFeeLoading == true
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = currentState,
         isSuccess = isSuccess,
+        isSending = isSending,
         uiState = uiState,
     )
     val isButtonEnabled = isButtonEnabled(currentState, uiState)
@@ -101,7 +104,7 @@ private fun SendNavigationButton(
                 modifier = Modifier
                     .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
                     .background(TangemTheme.colors.button.secondary)
-                    .clickable { uiState.clickIntents.onPrevClick() }
+                    .clickable(enabled = !showProgress) { uiState.clickIntents.onPrevClick() }
                     .padding(TangemTheme.dimens.spacing12),
             )
         }
@@ -113,7 +116,7 @@ private fun SendNavigationButton(
                 if (isSendingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 buttonClick()
             },
-            showProgress = sendState.isSending,
+            showProgress = showProgress,
             modifier = Modifier.fillMaxWidth(),
             colors = TangemButtonsDefaults.primaryButtonColors,
         )
@@ -204,6 +207,7 @@ private fun getButtonData(
     uiState: SendUiState,
     currentState: SendUiCurrentScreen,
     isSuccess: Boolean,
+    isSending: Boolean,
 ): Pair<Int, () -> Unit> {
     return when (currentState.type) {
         SendUiStateType.None,
@@ -215,10 +219,10 @@ private fun getButtonData(
         } else {
             R.string.common_next to uiState.clickIntents::onNextClick
         }
-        SendUiStateType.Send -> if (isSuccess) {
-            R.string.common_close
-        } else {
-            R.string.common_send
+        SendUiStateType.Send -> when {
+            isSuccess -> R.string.common_close
+            isSending -> R.string.send_sending
+            else -> R.string.common_send
         } to uiState.clickIntents::onSendClick
     }
 }

@@ -36,8 +36,8 @@ internal class StateRouter(
             }
             else -> when (type) {
                 SendUiStateType.Amount -> continueToSend(::showRecipient)
-                SendUiStateType.Fee -> continueToSend(::showAmount)
-                SendUiStateType.Send -> continueToSend(::showFee)
+                SendUiStateType.Fee -> showSend()
+                SendUiStateType.Send -> continueToSend(::showAmount)
                 else -> continueToSend(::popBackStack)
             }
         }
@@ -46,8 +46,9 @@ internal class StateRouter(
     fun onNextClick() {
         when (currentState.value.type) {
             SendUiStateType.Recipient -> continueToSend(::showAmount)
-            SendUiStateType.Amount -> continueToSend(::showFee)
-            SendUiStateType.Fee -> showSend()
+            SendUiStateType.Amount,
+            SendUiStateType.Fee,
+            -> showSend()
             SendUiStateType.Send -> onBackClick()
             else -> popBackStack()
         }
@@ -59,7 +60,6 @@ internal class StateRouter(
         } else {
             when (currentState.value.type) {
                 SendUiStateType.Amount -> showRecipient()
-                SendUiStateType.Fee -> showAmount()
                 else -> popBackStack()
             }
         }
