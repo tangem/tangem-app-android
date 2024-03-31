@@ -132,6 +132,10 @@ private fun TextField(model: AddCustomTokenInputField, isError: Boolean) {
     }
 }
 
+/**
+ * Be careful with this function – ExposedDropdownMenuBox can crash the app if it is open and user clicks system back
+ * button. It was fixed in compose-material 1.6.4.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun SelectorField(model: AddCustomTokenSelectorField) {
