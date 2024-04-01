@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.amountToCreateAccount
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.domain.TapError
@@ -58,14 +59,13 @@ suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try 
     }
 }
 
-internal fun WalletManager.getTopUpUrl(): String? {
+internal fun WalletManager.getTopUpUrl(cryptoCurrency: CryptoCurrency): String? {
     val globalState = store.state.globalState
     val defaultAddress = wallet.address
 
     return globalState.exchangeManager.getUrl(
         action = CurrencyExchangeManager.Action.Buy,
-        blockchain = wallet.blockchain,
-        cryptoCurrencyName = wallet.blockchain.currency,
+        cryptoCurrency = cryptoCurrency,
         fiatCurrencyName = globalState.appCurrency.code,
         walletAddress = defaultAddress,
         isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
