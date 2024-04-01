@@ -8,9 +8,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.model.Currency
@@ -48,19 +48,18 @@ class CurrencyExchangeManager(
 
     override fun getUrl(
         action: Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: CryptoCurrencyName,
+        cryptoCurrency: CryptoCurrency,
         fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
     ): String? {
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
         val urlBuilder = getExchangeUrlBuilder(action)
         return urlBuilder.getUrl(
             action,
-            blockchain,
-            cryptoCurrencyName,
+            cryptoCurrency,
             fiatCurrencyName,
             walletAddress,
             isDarkTheme,
