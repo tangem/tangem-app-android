@@ -20,6 +20,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal fun SendCustomFeeEthereum(
     customValues: ImmutableList<SendTextField.CustomFee>,
     selectedFee: FeeType,
+    hasNotifications: Boolean,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -34,8 +35,8 @@ internal fun SendCustomFeeEthereum(
         ) {
             repeat(customValues.size) { index ->
                 val value = customValues[index]
-                val bottomPadding = if (index == customValues.lastIndex) {
-                    TangemTheme.dimens.spacing12
+                val bottomPadding = if (index == customValues.lastIndex && !hasNotifications) {
+                    TangemTheme.dimens.spacing72
                 } else {
                     TangemTheme.dimens.spacing0
                 }
