@@ -43,7 +43,7 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId)
+        val result = useCase.launch(userWalletId)
             .take(count = 2)
             .toList()
 
@@ -59,7 +59,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(tokens = flowOf(DataError.NetworkError.NoInternetConnection.left()))
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase.launch(userWalletId).first()
 
         // Then
         assertEquals(expectedResult, result)
@@ -79,7 +79,7 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId)
+        val result = useCase.launch(userWalletId)
             .take(count = 2)
             .toList()
 
@@ -95,7 +95,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(isGrouped = flowOf(DataError.NetworkError.NoInternetConnection.left()))
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase.launch(userWalletId).first()
 
         // Then
         assertEquals(expectedResult, result)
@@ -109,7 +109,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(isSortedByBalance = flowOf(DataError.NetworkError.NoInternetConnection.left()))
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase.launch(userWalletId).first()
 
         // Then
         assertEquals(expectedResult, result)
@@ -134,7 +134,7 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId)
+        val result = useCase.launch(userWalletId)
             .take(count = 3)
             .toList()
 
@@ -153,7 +153,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(isGrouped = flowOf(true.right()))
 
         // When
-        val result = useCase(userWalletId)
+        val result = useCase.launch(userWalletId)
             .take(count = 2)
             .toList()
 
@@ -175,7 +175,7 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId)
+        val result = useCase.launch(userWalletId)
             .take(count = 2)
             .toList()
 
@@ -197,7 +197,7 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId)
+        val result = useCase.launch(userWalletId)
             .take(count = 2)
             .toList()
 
@@ -212,7 +212,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(tokens = flowOf(emptyList<CryptoCurrency>().right()))
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase.launch(userWalletId).first()
 
         // Then
         assertEquals(expectedResult, result)
@@ -225,7 +225,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(tokens = flowOf())
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase.launch(userWalletId).first()
 
         // Then
         assertEquals(expectedResult, result)
@@ -241,7 +241,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(statuses = flowOf())
 
         // When
-        val result = useCase(userWalletId)
+        val result = useCase.launch(userWalletId)
             .take(count = 2)
             .toList()
 
@@ -256,7 +256,7 @@ internal class GetTokenListUseCaseTest {
         val useCase = getUseCase(statuses = flowOf(emptySet<NetworkStatus>().right()))
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase.launch(userWalletId).first()
 
         // Then
         assertEquals(expectedResult, result)
@@ -275,7 +275,7 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId)
+        val result = useCase.launch(userWalletId)
             .take(count = 2)
             .toList()
 
@@ -293,7 +293,7 @@ internal class GetTokenListUseCaseTest {
         )
 
         // When
-        val result = useCase(userWalletId).first()
+        val result = useCase.launch(userWalletId).first()
 
         // Then
         assertEquals(expectedResult, result)
