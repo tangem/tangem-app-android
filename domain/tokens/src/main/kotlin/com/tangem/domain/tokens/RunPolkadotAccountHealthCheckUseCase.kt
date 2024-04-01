@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens
 
+import arrow.core.Either
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -11,7 +12,10 @@ class RunPolkadotAccountHealthCheckUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId, network: Network) = withContext(dispatchers.io) {
-        polkadotAccountHealthCheckRepository.runCheck(userWalletId, network)
-    }
+    suspend operator fun invoke(userWalletId: UserWalletId, network: Network): Either<Throwable, Unit> =
+        withContext(dispatchers.io) {
+            Either.catch {
+                polkadotAccountHealthCheckRepository.runCheck(userWalletId, network)
+            }
+        }
 }
