@@ -4,8 +4,10 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.entities.ProgressState
@@ -171,8 +173,13 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 return
             }
 
-            val topUpUrl = walletManager.getTopUpUrl() ?: return
             val blockchain = walletManager.wallet.blockchain
+            val cryptoCurrency = CryptoCurrencyFactory().createCoin(
+                blockchain,
+                null,
+                scanResponse.derivationStyleProvider,
+            ) ?: return
+            val topUpUrl = walletManager.getTopUpUrl(cryptoCurrency) ?: return
 
             val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
             Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
