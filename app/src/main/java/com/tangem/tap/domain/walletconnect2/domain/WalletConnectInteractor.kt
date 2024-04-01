@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
