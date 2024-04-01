@@ -163,11 +163,11 @@ private fun FeeSelectorState.Content.getAmount(feeType: FeeType): Amount? {
 private fun FeeSelectorState.Content?.getDividerAndVisibility(feeType: FeeType): Pair<Boolean, Boolean> {
     val hasCustomValues = !this?.customValues.isNullOrEmpty()
     val isNotSingle = this?.fees !is TransactionFee.Single
-    val isSingle = this?.fees is TransactionFee.Single
+    val isLoaded = this?.fees != null
     return when (feeType) {
         FeeType.Slow -> true to isNotSingle
-        FeeType.Market -> isNotSingle to isSingle
+        FeeType.Market -> isNotSingle to isLoaded
         FeeType.Fast -> hasCustomValues to isNotSingle
-        FeeType.Custom -> false to isNotSingle
+        FeeType.Custom -> false to hasCustomValues
     }
 }
