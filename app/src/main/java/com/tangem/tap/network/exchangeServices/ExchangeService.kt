@@ -1,6 +1,6 @@
 package com.tangem.tap.network.exchangeServices
 
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.feature.Feature
 import com.tangem.tap.domain.model.Currency
 
@@ -24,8 +24,7 @@ interface ExchangeService : Feature, Exchanger, ExchangeUrlBuilder {
             override fun availableForSell(currency: Currency): Boolean = false
             override fun getUrl(
                 action: CurrencyExchangeManager.Action,
-                blockchain: Blockchain,
-                cryptoCurrencyName: String,
+                cryptoCurrency: CryptoCurrency,
                 fiatCurrencyName: String,
                 walletAddress: String,
                 isDarkTheme: Boolean,
@@ -56,8 +55,7 @@ interface ExchangeUrlBuilder {
     @Suppress("LongParameterList")
     fun getUrl(
         action: CurrencyExchangeManager.Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: String,
+        cryptoCurrency: CryptoCurrency,
         fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
