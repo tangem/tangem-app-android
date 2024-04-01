@@ -96,6 +96,18 @@ internal class DefaultWalletConnectRepository(
                 Timber.d("sessionProposal: $sessionProposal")
                 this@DefaultWalletConnectRepository.sessionProposal = sessionProposal
 
+                if (sessionProposal.name in unsupportedDApps) {
+                    Timber.w("Unsupported DApp")
+                    scope.launch {
+                        _events.emit(
+                            WalletConnectEvents.SessionApprovalError(
+                                WalletConnectError.UnsupportedDApp,
+                            ),
+                        )
+                    }
+                    return
+                }
+
                 val missingNetworks = findMissingNetworks(
                     namespaces = sessionProposal.requiredNamespaces,
                     userNamespaces = this@DefaultWalletConnectRepository.userNamespaces ?: emptyMap(),
@@ -475,5 +487,10 @@ internal class DefaultWalletConnectRepository(
         val wcProvidedChains = namespaces.values.flatMap { it.chains ?: emptyList() }
         val userChains = userNamespaces.flatMap { it.value.map { account -> account.chainId } }
         return wcProvidedChains.intersect(userChains.toSet())
+    }
+
+    private companion object {
+
+        val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro")
     }
 }
