@@ -88,11 +88,12 @@ data class WalletForSession(
 
 sealed class WalletConnectDialog : StateDialog {
     data class ClipboardOrScanQr(val clipboardUri: String) : WalletConnectDialog()
-    object UnsupportedCard : WalletConnectDialog()
+    data object UnsupportedCard : WalletConnectDialog()
     data class UnsupportedNetwork(val networks: List<String>? = null) : WalletConnectDialog()
+    data object UnsupportedDapp : WalletConnectDialog()
     data class AddNetwork(val networks: List<String>) : WalletConnectDialog()
-    object OpeningSessionRejected : WalletConnectDialog()
-    object SessionTimeout : WalletConnectDialog()
+    data object OpeningSessionRejected : WalletConnectDialog()
+    data object SessionTimeout : WalletConnectDialog()
     data class ApproveWcSession(
         val session: WalletConnectSession,
         val networks: List<Blockchain>,
