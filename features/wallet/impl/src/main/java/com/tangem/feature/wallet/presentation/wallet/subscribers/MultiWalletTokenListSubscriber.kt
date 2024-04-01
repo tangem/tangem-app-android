@@ -33,7 +33,7 @@ internal class MultiWalletTokenListSubscriber(
     getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
 ) {
 
-    override fun tokenListFlow(): MaybeTokenListFlow = getTokenListUseCase(userWallet.walletId)
+    override fun tokenListFlow(): MaybeTokenListFlow = getTokenListUseCase.launch(userWallet.walletId)
 
     override suspend fun onTokenListReceived(maybeTokenList: Either<TokenListError, TokenList>) {
 // [REDACTED_TODO_COMMENT]
