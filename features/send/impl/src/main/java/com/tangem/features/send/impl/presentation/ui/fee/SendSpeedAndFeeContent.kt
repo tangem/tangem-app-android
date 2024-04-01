@@ -23,8 +23,9 @@ private const val FEE_CUSTOM_KEY = "FEE_CUSTOM_KEY"
 internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: SendClickIntents) {
     if (state == null) return
     val feeSendState = state.feeSelectorState as? FeeSelectorState.Content
-    val isCustomSelected = feeSendState?.selectedFee == FeeType.Custom
     val notifications = state.notifications
+    val isCustomSelected = feeSendState?.selectedFee == FeeType.Custom
+    val hasNotifications = notifications.isNotEmpty()
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -35,7 +36,7 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
     ) {
         feeSelector(state, clickIntents)
         if (feeSendState != null) {
-            customFee(feeSendState)
+            customFee(feeSendState = feeSendState, hasNotifications = hasNotifications)
         }
         notifications(notifications = notifications, hasPaddingAbove = isCustomSelected)
     }
@@ -55,13 +56,18 @@ private fun LazyListScope.feeSelector(state: SendStates.FeeState, clickIntents: 
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-internal fun LazyListScope.customFee(feeSendState: FeeSelectorState.Content, modifier: Modifier = Modifier) {
+internal fun LazyListScope.customFee(
+    feeSendState: FeeSelectorState.Content,
+    hasNotifications: Boolean,
+    modifier: Modifier = Modifier,
+) {
     item(
         key = FEE_CUSTOM_KEY,
     ) {
         SendCustomFeeEthereum(
             customValues = feeSendState.customValues,
             selectedFee = feeSendState.selectedFee,
+            hasNotifications = hasNotifications,
             modifier = modifier
                 .fillMaxWidth()
                 .animateItemPlacement()
