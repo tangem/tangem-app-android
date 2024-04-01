@@ -161,7 +161,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
     private fun bootstrapTokenList() {
         viewModelScope.launch(dispatchers.default) {
-            val maybeTokenList = getTokenListUseCase(userWalletId)
+            val maybeTokenList = getTokenListUseCase.launch(userWalletId)
                 .first { it.getOrNull()?.totalFiatBalance !is TokenList.FiatBalance.Loading }
 
             maybeTokenList.fold(
