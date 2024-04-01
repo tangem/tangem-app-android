@@ -7,6 +7,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import kotlinx.coroutines.*
 import timber.log.Timber
 import kotlin.time.Duration
@@ -103,12 +104,14 @@ internal class LockUserWalletsTimer(
                         |- Millis passed: ${currentTime - startTime}
                     """.trimIndent(),
                 )
-                userWalletsListManager.lock()
+
                 if (preferencesStorage.wasApplicationStopped) {
                     preferencesStorage.shouldOpenWelcomeScreenOnResume = true
                 } else {
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
+                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                 }
+
+                userWalletsListManager.lock()
             }
         }
     }
