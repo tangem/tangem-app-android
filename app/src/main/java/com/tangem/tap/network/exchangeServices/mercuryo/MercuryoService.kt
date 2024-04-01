@@ -6,7 +6,7 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
@@ -57,20 +57,21 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
 
     override fun getUrl(
         action: CurrencyExchangeManager.Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: CryptoCurrencyName,
+        cryptoCurrency: CryptoCurrency,
         fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
     ): String {
         if (action == CurrencyExchangeManager.Action.Sell) throw UnsupportedOperationException()
 
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+
         val builder = Uri.Builder()
             .scheme(ExchangeUrlBuilder.SCHEME)
             .authority("exchange.mercuryo.io")
             .appendQueryParameter("widget_id", environment.widgetId)
             .appendQueryParameter("type", action.name.lowercase())
-            .appendQueryParameter("currency", cryptoCurrencyName)
+            .appendQueryParameter("currency", cryptoCurrency.symbol)
             .appendQueryParameter("address", walletAddress)
             .appendQueryParameter("signature", signature(walletAddress))
             .appendQueryParameter("fix_currency", "true")
