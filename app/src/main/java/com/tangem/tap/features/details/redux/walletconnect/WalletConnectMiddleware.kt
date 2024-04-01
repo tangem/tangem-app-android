@@ -352,6 +352,13 @@ class WalletConnectMiddleware {
                             ),
                         )
                     }
+                    is WalletConnectError.UnsupportedDApp -> {
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                WalletConnectDialog.UnsupportedDapp,
+                            ),
+                        )
+                    }
                     is WalletConnectError.ExternalApprovalError -> {
                         Timber.e(action.error, "ExternalApprovalError ${action.error.message}")
                         // do not show dialog on this event
