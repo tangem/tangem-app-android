@@ -1,5 +1,6 @@
 package com.tangem.data.tokens.repository
 
+import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
@@ -10,6 +11,9 @@ import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.core.lce.lceFlow
+import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -20,10 +24,7 @@ import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
 internal class DefaultNetworksRepository(
@@ -40,6 +41,10 @@ internal class DefaultNetworksRepository(
     private val responseCurrenciesFactory by lazy { ResponseCryptoCurrenciesFactory() }
     private val networkStatusFactory by lazy { NetworkStatusFactory() }
 
+    private val isNetworkStatusesFetching = MutableStateFlow(
+        value = emptyMap<UserWalletId, Boolean>(),
+    )
+
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
         networks: Set<Network>,
@@ -54,6 +59,26 @@ internal class DefaultNetworksRepository(
         }
     }
         .cancellable()
+
+    override fun getNetworkStatusesUpdatesLce(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+    ): LceFlow<Throwable, Set<NetworkStatus>> = lceFlow {
+        launch(dispatchers.io) {
+            combine(
+                networksStatusesStore.get(userWalletId),
+                isNetworkStatusesFetching.map { it.getOrElse(userWalletId) { false } },
+            ) { statuses, isFetching ->
+                send(statuses, isStillLoading = isFetching)
+            }.collect()
+        }
+
+        withContext(dispatchers.io) {
+            catch({ fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false) }) {
+                raise(it.lceError())
+            }
+        }
+    }
 
     override suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
         val currencies = getCurrencies(userWalletId, networks)
@@ -81,15 +106,25 @@ internal class DefaultNetworksRepository(
         networks: Set<Network>,
         refresh: Boolean,
     ) {
-        val currencies = getCurrencies(userWalletId, networks)
-        coroutineScope {
-            networks
-                .map { network ->
-                    async {
-                        fetchNetworkStatusIfCacheExpired(userWalletId, network, currencies, refresh)
+        try {
+            isNetworkStatusesFetching.update {
+                it + (userWalletId to true)
+            }
+
+            val currencies = getCurrencies(userWalletId, networks)
+            coroutineScope {
+                networks
+                    .map { network ->
+                        async {
+                            fetchNetworkStatusIfCacheExpired(userWalletId, network, currencies, refresh)
+                        }
                     }
-                }
-                .awaitAll()
+                    .awaitAll()
+            }
+        } finally {
+            isNetworkStatusesFetching.update {
+                it - userWalletId
+            }
         }
     }
 

@@ -3,6 +3,8 @@ package com.tangem.domain.tokens.repository
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.core.utils.toLce
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
@@ -76,6 +78,12 @@ internal class MockCurrenciesRepository(
 
     override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
         return tokens.map { it.getOrElse { e -> throw e } }
+    }
+
+    override fun getMultiCurrencyWalletCurrenciesUpdatesLce(
+        userWalletId: UserWalletId,
+    ): LceFlow<Throwable, List<CryptoCurrency>> {
+        return tokens.map { it.toLce() }
     }
 
     override suspend fun getMultiCurrencyWalletCurrency(
