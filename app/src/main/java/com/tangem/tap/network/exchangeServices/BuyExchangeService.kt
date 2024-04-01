@@ -1,6 +1,6 @@
 package com.tangem.tap.network.exchangeServices
 
-import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.scope
@@ -38,16 +38,14 @@ internal class BuyExchangeService(
 
     override fun getUrl(
         action: CurrencyExchangeManager.Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: String,
+        cryptoCurrency: CryptoCurrency,
         fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
     ): String? {
         return currentService.getUrl(
             action,
-            blockchain,
-            cryptoCurrencyName,
+            cryptoCurrency,
             fiatCurrencyName,
             walletAddress,
             isDarkTheme,
