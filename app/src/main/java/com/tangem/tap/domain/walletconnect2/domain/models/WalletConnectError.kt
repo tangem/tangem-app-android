@@ -1,6 +1,9 @@
 package com.tangem.tap.domain.walletconnect2.domain.models
 
 sealed class WalletConnectError(val error: String) : Exception() {
+
+    data object UnsupportedDApp : WalletConnectError("UnsupportedDApp")
+
     data class ApprovalErrorMissingNetworks(
         val missingChains: List<String>,
     ) : WalletConnectError("ApprovalErrorMissingNetworks")
