@@ -7,7 +7,7 @@ import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.createRetrofitInstance
 import com.tangem.domain.common.extensions.withIOContext
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
@@ -51,6 +51,7 @@ class MoonPayService(
                         checkGeneralRequirements(currency) && checkUSARequirements(userStatus, currency)
                     }
                     .mapNotNull { currency ->
+                        if (!currency.isSellSupported) return@mapNotNull null
                         MoonPayAvailableCurrency(
                             currencyCode = currency.code,
                             networkCode = currency.metadata?.networkCode ?: return@mapNotNull null,
@@ -106,19 +107,33 @@ class MoonPayService(
 
     override fun getUrl(
         action: CurrencyExchangeManager.Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: CryptoCurrencyName,
+        cryptoCurrency: CryptoCurrency,
         fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
-    ): String {
+    ): String? {
         if (action == CurrencyExchangeManager.Action.Buy) throw UnsupportedOperationException()
+
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val supportedCurrency = blockchain.moonPaySupportedCurrency ?: return null
+        val moonpayCurrency = status?.availableForSell?.firstOrNull {
+            when (cryptoCurrency) {
+                is CryptoCurrency.Coin -> {
+                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
+                        it.currencyCode.equals(other = supportedCurrency.currencyCode, ignoreCase = true)
+                }
+                is CryptoCurrency.Token -> {
+                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
+                        it.contractAddress.equals(other = cryptoCurrency.contractAddress, ignoreCase = true)
+                }
+            }
+        } ?: return null
 
         val uri = Uri.Builder()
             .scheme(SCHEME)
             .authority(URL_SELL)
             .appendQueryParameter("apiKey", apiKey)
-            .appendQueryParameter("baseCurrencyCode", cryptoCurrencyName)
+            .appendQueryParameter("baseCurrencyCode", moonpayCurrency.currencyCode.uppercase())
             .appendQueryParameter("refundWalletAddress", walletAddress)
             .appendQueryParameter("redirectURL", "tangem://redirect_sell")
 
