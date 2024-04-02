@@ -7,7 +7,6 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.signedHashesCount
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -75,7 +74,9 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
         appSettingsState = AppSettingsState(
             isBiometricsAvailable = tangemSdkManager.canUseBiometry,
             saveWallets = action.shouldSaveUserWallets,
-            saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
+            saveAccessCodes = runBlocking {
+                store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+            },
             selectedAppCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = runBlocking {
                 store.inject(DaggerGraphState::appThemeModeRepository).getAppThemeMode().firstOrNull()
