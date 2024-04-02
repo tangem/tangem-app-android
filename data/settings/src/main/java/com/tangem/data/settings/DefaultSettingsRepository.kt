@@ -94,4 +94,12 @@ internal class DefaultSettingsRepository(
     override suspend fun setShouldOpenWelcomeScreenOnResume(value: Boolean) {
         appPreferencesStore.store(key = PreferencesKeys.SHOULD_OPEN_WELCOME_ON_RESUME_KEY, value = value)
     }
+
+    override suspend fun shouldSaveAccessCodes(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY, default = false)
+    }
+
+    override suspend fun setShouldSaveAccessCodes(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY, value = value)
+    }
 }
