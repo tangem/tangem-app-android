@@ -75,4 +75,23 @@ internal class DefaultSettingsRepository(
             value = isEnabled,
         )
     }
+
+    override suspend fun wasApplicationStopped(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.WAS_APPLICATION_STOPPED_KEY, default = false)
+    }
+
+    override suspend fun setWasApplicationStopped(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.WAS_APPLICATION_STOPPED_KEY, value = value)
+    }
+
+    override suspend fun shouldOpenWelcomeScreenOnResume(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.SHOULD_OPEN_WELCOME_ON_RESUME_KEY,
+            default = false,
+        )
+    }
+
+    override suspend fun setShouldOpenWelcomeScreenOnResume(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.SHOULD_OPEN_WELCOME_ON_RESUME_KEY, value = value)
+    }
 }
