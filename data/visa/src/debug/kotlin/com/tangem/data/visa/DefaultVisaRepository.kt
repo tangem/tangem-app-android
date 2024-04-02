@@ -69,7 +69,7 @@ internal class DefaultVisaRepository(
 
     private suspend fun fetchVisaCurrencyIfExpired(address: String, isRefresh: Boolean) {
         cacheRegistry.invokeOnExpire(
-            key = getBalancesAndLimitsKey(address),
+            key = getVisaCurrencyKey(address),
             skipCache = isRefresh,
             block = { fetchVisaCurrency(address) },
         )
@@ -78,12 +78,12 @@ internal class DefaultVisaRepository(
     private suspend fun fetchVisaCurrency(address: String) {
         parZip(
             dispatchers.io,
-            { visaContractInfoProvider.getBalancesAndLimits(address) },
+            { visaContractInfoProvider.getContractInfo(address) },
             { getFiatRate() },
-            { balancesAndLimits, fiatRate ->
+            { contractInfo, fiatRate ->
                 fetchedCurrencies.update { value ->
                     value.apply {
-                        put(address, currencyFactory.create(balancesAndLimits, fiatRate))
+                        put(address, currencyFactory.create(contractInfo, fiatRate))
                     }
                 }
             },
@@ -186,13 +186,13 @@ internal class DefaultVisaRepository(
         return userWallet
     }
 
-    private fun getBalancesAndLimitsKey(address: String): String {
-        return "visa_balances_and_limits_$address"
+    private fun getVisaCurrencyKey(address: String): String {
+        return "visa_currency_$address"
     }
 
     private companion object {
         // Must be `false` in production
-        const val IS_DEMO_MODE_ENABLED = true
+        const val IS_DEMO_MODE_ENABLED = false
 
         const val DEMO_ADDRESS = "0x40d8194b7168723ece51fa34d16825c60ba03dfa"
         const val DEMO_PUBLIC_KEY = "02C2BBA0DA1E066EA968C1EB129499F6DEBC5FD82D70D61DCAF691CDB69AF5D8B9"
