@@ -74,13 +74,17 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
             backgroundColor = TangemTheme.colors.background.tertiary,
             modifier = Modifier.height(TangemTheme.dimens.size56),
         )
-        SendScreenContent(
-            uiState = uiState,
-            currentState = currentState.value,
-            modifier = Modifier
-                .weight(1f),
-        )
-        SendNavigationButtons(uiState, currentState.value)
+        Box(modifier = Modifier.weight(1f)) {
+            SendScreenContent(
+                uiState = uiState,
+                currentState = currentState.value,
+            )
+            SendNavigationButtons(
+                uiState = uiState,
+                currentState = currentState.value,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
     }
 
     SendEventEffect(

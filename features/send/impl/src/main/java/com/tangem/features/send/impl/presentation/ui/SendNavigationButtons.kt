@@ -31,13 +31,17 @@ import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 
 @Composable
-internal fun SendNavigationButtons(uiState: SendUiState, currentState: SendUiCurrentScreen) {
+internal fun SendNavigationButtons(
+    uiState: SendUiState,
+    currentState: SendUiCurrentScreen,
+    modifier: Modifier = Modifier,
+) {
     val sendState = uiState.sendState ?: return
     val isSuccess = sendState.isSuccess
     val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
     val isSentState = currentState.type == SendUiStateType.Send && isSuccess
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
