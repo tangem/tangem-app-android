@@ -3,8 +3,7 @@ package com.tangem.features.send.impl.presentation.ui.amount
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.BottomCenter
@@ -22,15 +21,15 @@ import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 
 @Composable
-internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean, isEnabled: Boolean) {
+internal fun AmountField(sendField: SendTextField.AmountField, isEnabled: Boolean) {
     val decimalFormat = rememberDecimalFormat()
-    val (primaryValue, secondaryValue) = if (isFiat) {
+    val (primaryValue, secondaryValue) = if (sendField.isFiatValue) {
         sendField.fiatValue to sendField.value
     } else {
         sendField.value to sendField.fiatValue
     }
 
-    val (primaryAmount, secondaryAmount) = if (isFiat) {
+    val (primaryAmount, secondaryAmount) = if (sendField.isFiatValue) {
         sendField.fiatAmount to sendField.cryptoAmount
     } else {
         sendField.cryptoAmount to sendField.fiatAmount
@@ -48,13 +47,15 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean, 
             textAlign = TextAlign.Center,
         ),
         isEnabled = isEnabled,
+        isAutoResize = true,
         placeholderAlignment = TopCenter,
         modifier = Modifier
             .padding(
                 top = TangemTheme.dimens.spacing24,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
-            ),
+            )
+            .requiredHeightIn(min = TangemTheme.dimens.size32),
     )
 
     Box(
