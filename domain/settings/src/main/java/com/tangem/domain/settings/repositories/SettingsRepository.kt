@@ -25,4 +25,8 @@ interface SettingsRepository {
     suspend fun shouldOpenWelcomeScreenOnResume(): Boolean
 
     suspend fun setShouldOpenWelcomeScreenOnResume(value: Boolean)
+
+    suspend fun shouldSaveAccessCodes(): Boolean
+
+    suspend fun setShouldSaveAccessCodes(value: Boolean)
 }
