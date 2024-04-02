@@ -22,7 +22,7 @@ internal fun LazyListScope.notifications(
         contentType = { _, item -> item::class.java },
         itemContent = { i, item ->
             val bottomPadding = if (i == notifications.lastIndex) {
-                TangemTheme.dimens.spacing12
+                TangemTheme.dimens.spacing72
             } else {
                 TangemTheme.dimens.spacing0
             }
