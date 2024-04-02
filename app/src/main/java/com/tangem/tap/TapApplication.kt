@@ -37,6 +37,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -184,6 +185,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var tangemSdkLogger: TangemSdkLogger
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
     // endregion Injected
 
     override fun onCreate() {
@@ -274,6 +278,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
                     tangemSdkLogger = tangemSdkLogger,
                     blockchainSDKLogger = blockchainSDKLogger,
+                    settingsRepository = settingsRepository,
                 ),
             ),
         )

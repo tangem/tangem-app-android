@@ -6,6 +6,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.FUNDS_FOUND_DATE_
 import com.tangem.datasource.local.preferences.PreferencesKeys.IS_TANGEM_TOS_ACCEPTED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SAVE_USER_WALLETS_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_OPEN_WELCOME_ON_RESUME_KEY
+import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY
@@ -71,6 +72,8 @@ object PreferencesKeys {
 
     val SHOULD_OPEN_WELCOME_ON_RESUME_KEY by lazy { booleanPreferencesKey(name = "openWelcomeOnResume") }
 
+    val SHOULD_SAVE_ACCESS_CODES_KEY by lazy { booleanPreferencesKey(name = "saveAccessCodes") }
+
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 }
 
@@ -87,6 +90,7 @@ internal fun getTapPrefKeysToMigrate(): Set<String> {
         IS_TANGEM_TOS_ACCEPTED_KEY,
         WAS_APPLICATION_STOPPED_KEY,
         SHOULD_OPEN_WELCOME_ON_RESUME_KEY,
+        SHOULD_SAVE_ACCESS_CODES_KEY,
     )
         .map(Preferences.Key<*>::name)
         .toSet()

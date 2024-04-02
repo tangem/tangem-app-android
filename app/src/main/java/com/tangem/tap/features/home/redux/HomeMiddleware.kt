@@ -19,7 +19,6 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -77,8 +76,10 @@ private fun handleHomeAction(action: Action) {
 }
 
 private suspend fun readCard(analyticsEvent: AnalyticsEvent?) {
+    val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+
     store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
-        isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
+        isBiometricsRequestPolicy = shouldSaveAccessCodes,
     )
 
     store.inject(DaggerGraphState::scanCardProcessor).scan(
