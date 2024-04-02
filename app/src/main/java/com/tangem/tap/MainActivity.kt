@@ -35,6 +35,7 @@ import com.tangem.data.card.sdk.CardSdkLifecycleObserver
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.legacy.asLockable
@@ -141,6 +142,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
 
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -201,7 +205,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
-        lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
+        lockUserWalletsTimer = LockUserWalletsTimer(owner = this, settingsRepository = settingsRepository)
 
         initIntentHandlers()
 
