@@ -156,7 +156,8 @@ internal class SaveWalletMiddleware {
 
                     // Enable saving access codes only if this is the first time user save the wallet
                     if (isFirstSavedWallet) {
-                        preferencesStorage.shouldSaveAccessCodes = true
+                        store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = true)
+
                         store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
                             isBiometricsRequestPolicy = userWallet.hasAccessCode,
                         )
@@ -199,7 +200,9 @@ internal class SaveWalletMiddleware {
 
     private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
         store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
-        preferencesStorage.shouldSaveAccessCodes = true
+
+        store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = true)
+
         store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
             isBiometricsRequestPolicy = userWallet.hasAccessCode,
         )
