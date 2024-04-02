@@ -36,7 +36,10 @@ internal sealed class SendNotification(val config: NotificationConfig) {
 
         data class MinimumAmountError(val amount: String) : Error(
             title = resourceReference(R.string.send_notification_invalid_amount_title),
-            subtitle = resourceReference(R.string.send_notification_invalid_minimum_amount_text, wrappedList(amount)),
+            subtitle = resourceReference(
+                R.string.send_notification_invalid_minimum_amount_text,
+                wrappedList(amount, amount),
+            ),
         )
 
         data class ReserveAmountError(val amount: String) : Error(
