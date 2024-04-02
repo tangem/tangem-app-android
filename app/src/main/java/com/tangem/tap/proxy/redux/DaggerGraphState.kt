@@ -15,6 +15,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -71,4 +72,5 @@ data class DaggerGraphState(
     val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
     val tangemSdkLogger: TangemSdkLogger? = null,
     val blockchainSDKLogger: BlockchainSDKLogger? = null,
+    val settingsRepository: SettingsRepository? = null,
 ) : StateType
