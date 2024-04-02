@@ -4,6 +4,7 @@ import android.content.Context
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.tap.domain.DefaultTangemSdkManager
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
@@ -28,7 +29,11 @@ internal object ActivityModule {
         @ApplicationContext context: Context,
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): TangemSdkManager {
-        return TangemSdkManager(cardSdkConfigRepository = cardSdkConfigRepository, resources = context.resources)
+        return if (true) { // TODO AND-6615
+            DefaultTangemSdkManager(cardSdkConfigRepository = cardSdkConfigRepository, resources = context.resources)
+        } else {
+            DefaultTangemSdkManager(cardSdkConfigRepository = cardSdkConfigRepository, resources = context.resources)
+        }
     }
 
     @Provides
