@@ -182,7 +182,7 @@ private fun LazyListScope.listItem(
                     .then(
                         if (isLast && index == list.lastIndex) {
                             Modifier
-                                .padding(bottom = TangemTheme.dimens.spacing12)
+                                .padding(bottom = TangemTheme.dimens.spacing72)
                                 .clip(
                                     shape = RoundedCornerShape(
                                         bottomStart = TangemTheme.dimens.radius16,
