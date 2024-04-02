@@ -12,23 +12,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.rememberDecimalFormat
 
 /**
  * `Input Row Enter Info` for entering amount. Manages correct amount format and validation
 
  * @param title title reference
  * @param text primary text reference
+ * @param decimals amount text decimal count
  * @param onValueChange text change callback
  * @param modifier modifier
+ * @param symbol amount symbol
+ * @param info info text
  * @param titleColor title color
  * @param textColor text color
- * @param isSingleLine text
- * @param visualTransformation applied transformation to text
+ * @param infoColor info text color
  * @param keyboardOptions keyboard options for field
+ * @param keyboardActions keyboard actions for field
  * @param showDivider show divider
  *
  * @see [InputRowEnterInfo]
@@ -71,7 +76,11 @@ fun InputRowEnterInfoAmount(
                 AmountTextField(
                     value = text,
                     decimals = decimals,
-                    symbol = symbol,
+                    visualTransformation = AmountVisualTransformation(
+                        decimals = decimals,
+                        symbol = symbol,
+                        decimalFormat = rememberDecimalFormat(),
+                    ),
                     onValueChange = onValueChange,
                     color = textColor,
                     textStyle = TangemTheme.typography.body2,
