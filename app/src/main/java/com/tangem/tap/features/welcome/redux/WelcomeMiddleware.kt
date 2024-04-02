@@ -168,9 +168,12 @@ internal class WelcomeMiddleware {
     }
 
     private suspend inline fun scanCardInternal(crossinline onCardScanned: suspend (ScanResponse) -> Unit) {
+        val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+
         store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
-            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
+            isBiometricsRequestPolicy = shouldSaveAccessCodes,
         )
+
         store.inject(DaggerGraphState::scanCardProcessor).scan(
             analyticsEvent = Basic.CardWasScanned(AnalyticsParam.ScannedFrom.SignIn),
             onSuccess = { scanResponse ->
