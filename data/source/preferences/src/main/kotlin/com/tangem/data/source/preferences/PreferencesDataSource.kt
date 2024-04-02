@@ -29,18 +29,6 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
             putBoolean(SAVE_ACCESS_CODES_KEY, value)
         }
 
-    var wasApplicationStopped: Boolean
-        get() = preferences.getBoolean(APPLICATION_STOPPED_KEY, false)
-        set(value) = preferences.edit {
-            putBoolean(APPLICATION_STOPPED_KEY, value)
-        }
-
-    var shouldOpenWelcomeScreenOnResume: Boolean
-        get() = preferences.getBoolean(OPEN_WELCOME_ON_RESUME_KEY, false)
-        set(value) = preferences.edit {
-            putBoolean(OPEN_WELCOME_ON_RESUME_KEY, value)
-        }
-
     private fun incrementLaunchCounter() {
         var count = preferences.getInt(APP_LAUNCH_COUNT_KEY, 0)
         preferences.edit { putInt(APP_LAUNCH_COUNT_KEY, ++count) }
@@ -51,7 +39,5 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
         private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
         private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
-        private const val APPLICATION_STOPPED_KEY = "applicationStopped"
-        private const val OPEN_WELCOME_ON_RESUME_KEY = "openWelcomeOnResume"
     }
 }
