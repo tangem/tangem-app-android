@@ -2,7 +2,7 @@ package com.tangem.lib.visa
 
 import com.ihsanbal.logging.Level
 import com.ihsanbal.logging.LoggingInterceptor
-import com.tangem.lib.visa.model.VisaBalancesAndLimits
+import com.tangem.lib.visa.model.VisaContractInfo
 import com.tangem.lib.visa.utils.VisaConfig
 import com.tangem.lib.visa.utils.VisaConfig.NETWORK_LOGS_TAG
 import com.tangem.lib.visa.utils.toHexString
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 interface VisaContractInfoProvider {
 
-    suspend fun getBalancesAndLimits(walletAddress: String): VisaBalancesAndLimits
+    suspend fun getContractInfo(walletAddress: String): VisaContractInfo
 
     class Builder(
         private val isNetworkLoggingEnabled: Boolean,
