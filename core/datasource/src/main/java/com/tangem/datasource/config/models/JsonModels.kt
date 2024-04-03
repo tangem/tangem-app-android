@@ -7,6 +7,7 @@ import com.squareup.moshi.JsonClass
  * Created by Anton Zhilenkov on 12/11/2020.
  */
 
+// TODO remove
 class FeatureModel(
     val isTopUpEnabled: Boolean,
     val isCreatingTwinCardsAllowed: Boolean,

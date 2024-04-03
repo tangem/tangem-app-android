@@ -209,7 +209,10 @@ class DefaultTangemSdkManager(
         )
     }
 
-    override suspend fun setAccessCodeRecoveryEnabled(cardId: String?, enabled: Boolean): CompletionResult<SuccessResponse> {
+    override suspend fun setAccessCodeRecoveryEnabled(
+        cardId: String?,
+        enabled: Boolean,
+    ): CompletionResult<SuccessResponse> {
         return runTaskAsyncReturnOnMain(
             SetUserCodeRecoveryAllowedTask(enabled),
             cardId,

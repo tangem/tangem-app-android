@@ -76,6 +76,7 @@ private fun AndroidBuildType.configureBuildVariant(extension: AppExtension, buil
         }
         BuildType.Internal,
         BuildType.External,
+        BuildType.Mocked
         -> {
             initWith(extension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
