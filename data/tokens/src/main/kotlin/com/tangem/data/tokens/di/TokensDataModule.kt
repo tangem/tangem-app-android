@@ -125,10 +125,12 @@ internal object TokensDataModule {
     fun providePolkadotAccountHealthCheckRepository(
         walletManagersFacade: WalletManagersFacade,
         appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
     ): PolkadotAccountHealthCheckRepository {
         return DefaultPolkadotAccountHealthCheckRepository(
             walletManagersFacade = walletManagersFacade,
             appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatchers,
         )
     }
 }
