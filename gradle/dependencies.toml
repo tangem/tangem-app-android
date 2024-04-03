@@ -85,9 +85,9 @@ leakcanary = "2.13"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-547"
+tangemBlockchainSdk = "release-app_5.9-560"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-339"
+tangemCardSdk = "release-app_5.9-340"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
