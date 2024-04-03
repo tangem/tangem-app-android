@@ -75,12 +75,16 @@ internal class SendAmountFieldChangeConverter(
     }
 
     private fun SendUiState.emptyState(): SendUiState {
+        if (amountState == null) return this
+        val amountTextField = amountState.amountTextField
         return copy(
-            amountState = amountState?.copy(
+            amountState = amountState.copy(
                 isPrimaryButtonEnabled = false,
-                amountTextField = amountState.amountTextField.copy(
+                amountTextField = amountTextField.copy(
                     value = "",
                     fiatValue = "",
+                    cryptoAmount = amountTextField.cryptoAmount.copy(value = BigDecimal.ZERO),
+                    fiatAmount = amountTextField.fiatAmount.copy(value = BigDecimal.ZERO),
                     isError = false,
                 ),
             ),
