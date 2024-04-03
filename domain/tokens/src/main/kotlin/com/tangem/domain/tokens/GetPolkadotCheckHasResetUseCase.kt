@@ -7,5 +7,6 @@ class GetPolkadotCheckHasResetUseCase(
     private val polkadotAccountHealthCheckRepository: PolkadotAccountHealthCheckRepository,
 ) {
 
-    operator fun invoke(): Flow<Boolean> = polkadotAccountHealthCheckRepository.subscribeToHasResetResults()
+    operator fun invoke(): Flow<Pair<String, Boolean>> =
+        polkadotAccountHealthCheckRepository.subscribeToHasResetResults()
 }
