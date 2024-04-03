@@ -12,7 +12,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.attestation.Attestation
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -58,9 +57,7 @@ class TapWalletManager(
             // Order is important
             store.dispatch(DisclaimerAction.SetDisclaimer(card.createDisclaimer()))
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
-            store.dispatch(WalletConnectAction.ResetState)
             store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
-            store.dispatch(WalletConnectAction.RestoreSessions(scanResponse))
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
         }
     }

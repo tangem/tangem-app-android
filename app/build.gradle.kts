@@ -42,7 +42,6 @@ configurations.all {
 
 
 dependencies {
-    implementation(files("libs/walletconnect-1.5.6.aar"))
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.core)

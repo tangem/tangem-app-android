@@ -20,8 +20,6 @@ import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
-import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
-import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTransferOrder
 import com.tangem.tap.domain.walletconnect2.domain.TransactionType
 import com.tangem.tap.domain.walletconnect2.domain.WcEthereumTransaction
 import com.tangem.tap.domain.walletconnect2.domain.WcSignMessage
@@ -227,11 +225,11 @@ class WalletConnectSdkHelper {
     }
 
     fun prepareBnbTradeOrder(data: WcBinanceTradeOrder): BinanceMessageData.Trade {
-        return BnbHelper.createMessageData(data.toWCBinanceTradeOrder())
+        return BnbHelper.createMessageData(data)
     }
 
     fun prepareBnbTransferOrder(data: WcBinanceTransferOrder): BinanceMessageData.Transfer {
-        return BnbHelper.createMessageData(data.toWCBinanceTransferOrder())
+        return BnbHelper.createMessageData(data)
     }
 
     suspend fun signBnbTransaction(
