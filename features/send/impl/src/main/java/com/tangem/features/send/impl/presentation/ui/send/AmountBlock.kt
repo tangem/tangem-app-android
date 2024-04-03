@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.previewdata.AmountStatePreviewData
 
@@ -29,8 +30,16 @@ internal fun AmountBlock(
 ) {
     val amount = amountState.amountTextField
 
-    val cryptoAmount = getAmountWithSymbol(amount.value, amount.cryptoAmount.currencySymbol)
-    val fiatAmount = getAmountWithSymbol(amount.fiatValue, amount.fiatAmount.currencySymbol)
+    val cryptoAmount = BigDecimalFormatter.formatCryptoAmount(
+        cryptoAmount = amount.cryptoAmount.value,
+        cryptoCurrency = amount.cryptoAmount.currencySymbol,
+        decimals = amount.cryptoAmount.decimals,
+    )
+    val fiatAmount = BigDecimalFormatter.formatFiatAmount(
+        fiatAmount = amount.fiatAmount.value,
+        fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
+        fiatCurrencyCode = amountState.appCurrencyCode,
+    )
     val backgroundColor = if (isEditingDisabled) {
         TangemTheme.colors.button.disabled
     } else {
@@ -75,10 +84,6 @@ internal fun AmountBlock(
                 .padding(top = TangemTheme.dimens.spacing4),
         )
     }
-}
-
-private fun getAmountWithSymbol(amount: String, symbol: String): String {
-    return "$amount $symbol"
 }
 
 // region Preview
