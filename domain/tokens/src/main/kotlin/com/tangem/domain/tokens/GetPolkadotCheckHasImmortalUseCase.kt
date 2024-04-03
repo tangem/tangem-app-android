@@ -6,5 +6,6 @@ import kotlinx.coroutines.flow.Flow
 class GetPolkadotCheckHasImmortalUseCase(
     private val polkadotAccountHealthCheckRepository: PolkadotAccountHealthCheckRepository,
 ) {
-    operator fun invoke(): Flow<Boolean> = polkadotAccountHealthCheckRepository.subscribeToHasImmortalResults()
+    operator fun invoke(): Flow<Pair<String, Boolean>> =
+        polkadotAccountHealthCheckRepository.subscribeToHasImmortalResults()
 }
