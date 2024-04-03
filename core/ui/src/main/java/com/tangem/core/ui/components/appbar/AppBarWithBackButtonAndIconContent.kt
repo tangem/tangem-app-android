@@ -1,10 +1,7 @@
 package com.tangem.core.ui.components.appbar
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -66,8 +63,7 @@ fun AppBarWithBackButtonAndIconContent(
         )
         Column(
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.weight(1f)
-                .animateContentSize(),
+            modifier = Modifier.weight(1f),
         ) {
             AnimatedVisibility(
                 visible = !text.isNullOrBlank(),
@@ -84,8 +80,8 @@ fun AppBarWithBackButtonAndIconContent(
             }
             AnimatedVisibility(
                 visible = !subtitle.isNullOrBlank(),
-                enter = fadeIn(),
-                exit = fadeOut(),
+                enter = fadeIn().plus(expandVertically()),
+                exit = fadeOut().plus(shrinkVertically()),
                 label = "Toolbar subtitle change",
             ) {
                 Text(
@@ -93,6 +89,7 @@ fun AppBarWithBackButtonAndIconContent(
                     color = TangemTheme.colors.text.secondary,
                     maxLines = 1,
                     style = TangemTheme.typography.caption2,
+                    modifier = Modifier.animateContentSize(),
                 )
             }
         }
