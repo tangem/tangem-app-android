@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,12 +22,14 @@ import java.math.BigDecimal
  *
  * @property rampManager Ramp manager to check ramp availability
  */
+@Suppress("LongParameterList")
 class GetCryptoCurrencyActionsUseCase(
     private val rampManager: RampStateManager,
     private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
+    private val sendFeatureToggles: SendFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -198,12 +201,16 @@ class GetCryptoCurrencyActionsUseCase(
         tokenStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): Boolean {
-        return when (feePaidCurrency) {
-            FeePaidCurrency.Coin -> !tokenStatus.value.amount.isZero() && coinStatus?.value?.amount.isZero()
-            FeePaidCurrency.SameCurrency -> tokenStatus.value.amount.isZero()
-            is FeePaidCurrency.Token -> {
-                val feePaidTokenBalance = feePaidCurrency.balance
-                !tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()
+        return if (sendFeatureToggles.isRedesignedSendEnabled) {
+            tokenStatus.value.amount.isZero()
+        } else {
+            when (feePaidCurrency) {
+                FeePaidCurrency.Coin -> !tokenStatus.value.amount.isZero() && coinStatus?.value?.amount.isZero()
+                FeePaidCurrency.SameCurrency -> tokenStatus.value.amount.isZero()
+                is FeePaidCurrency.Token -> {
+                    val feePaidTokenBalance = feePaidCurrency.balance
+                    !tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()
+                }
             }
         }
     }
