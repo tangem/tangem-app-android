@@ -7,6 +7,7 @@ import arrow.fx.coroutines.parZip
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.VisaConfig
@@ -58,7 +59,6 @@ internal class DefaultVisaRepository(
 
     override suspend fun getVisaCurrency(userWalletId: UserWalletId, isRefresh: Boolean): VisaCurrency {
         val address = makeAddress(userWalletId)
-        // val address = "0x40d8194b7168723ece51fa34d16825c60ba03dfa" // for testing
 
         fetchVisaCurrencyIfExpired(address, isRefresh)
 
@@ -69,7 +69,7 @@ internal class DefaultVisaRepository(
 
     private suspend fun fetchVisaCurrencyIfExpired(address: String, isRefresh: Boolean) {
         cacheRegistry.invokeOnExpire(
-            key = getBalancesAndLimitsKey(address),
+            key = getVisaCurrencyKey(address),
             skipCache = isRefresh,
             block = { fetchVisaCurrency(address) },
         )
@@ -78,12 +78,12 @@ internal class DefaultVisaRepository(
     private suspend fun fetchVisaCurrency(address: String) {
         parZip(
             dispatchers.io,
-            { visaContractInfoProvider.getBalancesAndLimits(address) },
+            { visaContractInfoProvider.getContractInfo(address) },
             { getFiatRate() },
-            { balancesAndLimits, fiatRate ->
+            { contractInfo, fiatRate ->
                 fetchedCurrencies.update { value ->
                     value.apply {
-                        put(address, currencyFactory.create(balancesAndLimits, fiatRate))
+                        put(address, currencyFactory.create(contractInfo, fiatRate))
                     }
                 }
             },
@@ -96,8 +96,7 @@ internal class DefaultVisaRepository(
         isRefresh: Boolean,
     ): Flow<PagingData<VisaTxHistoryItem>> {
         val userWallet = findVisaUserWallet(userWalletId)
-        val cardPubKey = getCardPubKey(userWallet).toHexString()
-        // val cardPubKey = "02C2BBA0DA1E066EA968C1EB129499F6DEBC5FD82D70D61DCAF691CDB69AF5D8B9" // for testing
+        val cardPubKey = getCardPubKey(userWallet)
         val pager = Pager(
             config = PagingConfig(
                 pageSize = pageSize,
@@ -124,8 +123,7 @@ internal class DefaultVisaRepository(
     override suspend fun getTxDetails(userWalletId: UserWalletId, txId: String): VisaTxDetails {
         return withContext(dispatchers.io) {
             val userWallet = findVisaUserWallet(userWalletId)
-            val cardPubKey = getCardPubKey(userWallet).toHexString()
-            // val cardPubKey = "02C2BBA0DA1E066EA968C1EB129499F6DEBC5FD82D70D61DCAF691CDB69AF5D8B9" // for testing
+            val cardPubKey = getCardPubKey(userWallet)
             val transaction = fetchedHistoryItems.value[cardPubKey]?.firstOrNull {
                 it.transactionId.toString() == txId
             }
@@ -139,6 +137,8 @@ internal class DefaultVisaRepository(
     }
 
     private suspend fun makeAddress(userWalletId: UserWalletId): String {
+        if (IS_DEMO_MODE_ENABLED) return DEMO_ADDRESS
+
         val userWallet = findVisaUserWallet(userWalletId)
         val walletAddresses = makeWalletAddresses(userWallet)
         val walletAddress = walletAddresses.firstOrNull { it.type == AddressType.Default }
@@ -161,16 +161,18 @@ internal class DefaultVisaRepository(
     private fun makeWalletAddresses(userWallet: UserWallet): Set<Address> {
         val walletBlockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
 
-        return walletBlockchain.makeAddresses(getCardPubKey(userWallet))
+        return walletBlockchain.makeAddresses(getCardPubKey(userWallet).hexToBytes())
     }
 
-    private fun getCardPubKey(userWallet: UserWallet): ByteArray {
+    private fun getCardPubKey(userWallet: UserWallet): String {
+        if (IS_DEMO_MODE_ENABLED) return DEMO_PUBLIC_KEY
+
         val cardWallet = userWallet.scanResponse.card.wallets.firstOrNull {
             it.curve == EllipticCurve.Secp256k1
         }
         requireNotNull(cardWallet) { "Secp256k1 card wallet not found" }
 
-        return cardWallet.publicKey
+        return cardWallet.publicKey.toHexString()
     }
 
     private suspend fun findVisaUserWallet(userWalletId: UserWalletId): UserWallet {
@@ -184,7 +186,15 @@ internal class DefaultVisaRepository(
         return userWallet
     }
 
-    private fun getBalancesAndLimitsKey(address: String): String {
-        return "visa_balances_and_limits_$address"
+    private fun getVisaCurrencyKey(address: String): String {
+        return "visa_currency_$address"
+    }
+
+    private companion object {
+        // Must be `false` in production
+        const val IS_DEMO_MODE_ENABLED = false
+
+        const val DEMO_ADDRESS = "0x40d8194b7168723ece51fa34d16825c60ba03dfa"
+        const val DEMO_PUBLIC_KEY = "02C2BBA0DA1E066EA968C1EB129499F6DEBC5FD82D70D61DCAF691CDB69AF5D8B9"
     }
 }
