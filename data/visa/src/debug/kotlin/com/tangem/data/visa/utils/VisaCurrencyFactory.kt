@@ -1,7 +1,7 @@
 package com.tangem.data.visa.utils
 
 import com.tangem.domain.visa.model.VisaCurrency
-import com.tangem.lib.visa.model.VisaBalancesAndLimits
+import com.tangem.lib.visa.model.VisaContractInfo
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.Instant
@@ -10,22 +10,22 @@ import java.math.BigInteger
 
 internal class VisaCurrencyFactory {
 
-    fun create(balancesAndLimits: VisaBalancesAndLimits, fiatRate: BigDecimal?): VisaCurrency {
+    fun create(contractInfo: VisaContractInfo, fiatRate: BigDecimal?): VisaCurrency {
         val now = Instant.now()
-        val currentLimit = if (balancesAndLimits.limitsChangeDate > now) {
-            balancesAndLimits.oldLimits
+        val currentLimit = if (contractInfo.limitsChangeDate > now) {
+            contractInfo.oldLimits
         } else {
-            balancesAndLimits.newLimits
+            contractInfo.newLimits
         }
         val remainingOtpLimit = getRemainingOtp(currentLimit, now)
 
         return VisaCurrency(
-            symbol = VisaConfig.TOKEN_SYMBOL,
+            symbol = contractInfo.token.symbol,
             networkName = VisaConfig.NETWORK_NAME,
-            decimals = VisaConfig.TOKEN_DECIMALS,
+            decimals = contractInfo.token.decimals,
             fiatRate = fiatRate,
             fiatCurrency = VisaConfig.fiatCurrency,
-            balances = with(balancesAndLimits) {
+            balances = with(contractInfo) {
                 VisaCurrency.Balances(
                     total = balances.total,
                     verified = balances.verified,
@@ -44,7 +44,7 @@ internal class VisaCurrencyFactory {
         )
     }
 
-    private fun getRemainingOtp(currentLimit: VisaBalancesAndLimits.Limits, now: Instant): BigDecimal {
+    private fun getRemainingOtp(currentLimit: VisaContractInfo.Limits, now: Instant): BigDecimal {
         if (currentLimit.expirationDate >= now) {
             return currentLimit.spendLimit.limit - currentLimit.spendLimit.spent
         }
@@ -52,7 +52,7 @@ internal class VisaCurrencyFactory {
         return currentLimit.spendLimit.limit
     }
 
-    private fun getRemainingNoOtp(currentLimit: VisaBalancesAndLimits.Limits, now: Instant): BigDecimal {
+    private fun getRemainingNoOtp(currentLimit: VisaContractInfo.Limits, now: Instant): BigDecimal {
         if (currentLimit.expirationDate >= now) {
             return currentLimit.noOtpLimit.limit - currentLimit.noOtpLimit.spent
         }
@@ -60,7 +60,7 @@ internal class VisaCurrencyFactory {
         return currentLimit.noOtpLimit.limit
     }
 
-    private fun getLimitsExpirationDate(currentLimits: VisaBalancesAndLimits.Limits, now: Instant): DateTime {
+    private fun getLimitsExpirationDate(currentLimits: VisaContractInfo.Limits, now: Instant): DateTime {
         val expirationDate = if (currentLimits.expirationDate >= now) {
             currentLimits.expirationDate.toDateTime()
         } else {
