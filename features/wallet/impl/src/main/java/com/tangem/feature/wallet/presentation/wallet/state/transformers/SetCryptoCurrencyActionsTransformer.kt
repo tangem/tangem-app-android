@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
@@ -43,7 +44,8 @@ internal class SetCryptoCurrencyActionsTransformer(
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
                         WalletManageButton.Buy(
-                            enabled = true,
+                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onBuyClick(
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -54,7 +56,8 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Receive -> {
                         WalletManageButton.Receive(
-                            enabled = true,
+                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onReceiveClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
                             },
@@ -62,7 +65,8 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Sell -> {
                         WalletManageButton.Sell(
-                            enabled = true,
+                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSellClick(
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -73,7 +77,8 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Send -> {
                         WalletManageButton.Send(
-                            enabled = true,
+                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSendClick(
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,

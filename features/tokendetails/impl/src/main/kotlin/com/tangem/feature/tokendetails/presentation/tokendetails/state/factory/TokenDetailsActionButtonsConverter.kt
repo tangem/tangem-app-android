@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
@@ -26,7 +27,10 @@ internal class TokenDetailsActionButtonsConverter(
             .mapNotNull { action ->
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
-                        TokenDetailsActionButton.Buy(onClick = { clickIntents.onBuyClick(action.unavailabilityReason) })
+                        TokenDetailsActionButton.Buy(
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
+                            onClick = { clickIntents.onBuyClick(action.unavailabilityReason) },
+                        )
                     }
                     is TokenActionsState.ActionState.Receive -> {
                         TokenDetailsActionButton.Receive(
@@ -35,16 +39,19 @@ internal class TokenDetailsActionButtonsConverter(
                     }
                     is TokenActionsState.ActionState.Sell -> {
                         TokenDetailsActionButton.Sell(
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = { clickIntents.onSellClick(action.unavailabilityReason) },
                         )
                     }
                     is TokenActionsState.ActionState.Send -> {
                         TokenDetailsActionButton.Send(
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = { clickIntents.onSendClick(action.unavailabilityReason) },
                         )
                     }
                     is TokenActionsState.ActionState.Swap -> {
                         TokenDetailsActionButton.Swap(
+                            dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = { clickIntents.onSwapClick(action.unavailabilityReason) },
                         )
                     }

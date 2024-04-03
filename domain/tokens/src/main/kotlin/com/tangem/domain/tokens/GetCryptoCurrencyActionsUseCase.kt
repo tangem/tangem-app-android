@@ -94,16 +94,17 @@ class GetCryptoCurrencyActionsUseCase(
             return getActionsForUnreachableCurrency(cryptoCurrencyStatus)
         }
 
-        val actionsList = mutableListOf<TokenActionsState.ActionState>()
+        val activeList = mutableListOf<TokenActionsState.ActionState>()
+        val disabledList = mutableListOf<TokenActionsState.ActionState>()
 
         // copy address
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            actionsList.add(TokenActionsState.ActionState.CopyAddress(ScenarioUnavailabilityReason.None))
+            activeList.add(TokenActionsState.ActionState.CopyAddress(ScenarioUnavailabilityReason.None))
         }
 
         // receive
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            actionsList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None))
+            activeList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None))
         }
 
         // send
@@ -112,14 +113,18 @@ class GetCryptoCurrencyActionsUseCase(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             coinStatus = coinStatus,
         )
-        actionsList.add(TokenActionsState.ActionState.Send(sendUnavailabilityReason))
+        if (sendUnavailabilityReason == ScenarioUnavailabilityReason.None) {
+            activeList.add(TokenActionsState.ActionState.Send(sendUnavailabilityReason))
+        } else {
+            disabledList.add(TokenActionsState.ActionState.Send(sendUnavailabilityReason))
+        }
 
         // swap
         if (userWallet.isMultiCurrency) {
             if (marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency)) {
-                actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None))
+                activeList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None))
             } else {
-                actionsList.add(
+                disabledList.add(
                     TokenActionsState.ActionState.Swap(
                         unavailabilityReason = ScenarioUnavailabilityReason.NotExchangeable(cryptoCurrency.name),
                     ),
@@ -129,18 +134,18 @@ class GetCryptoCurrencyActionsUseCase(
 
         // buy
         if (rampManager.availableForBuy(cryptoCurrency)) {
-            actionsList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
+            activeList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
-            actionsList.add(
+            disabledList.add(
                 TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.symbol)),
             )
         }
 
         // sell
         if (rampManager.availableForSell(cryptoCurrency)) {
-            actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
+            activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
         } else {
-            actionsList.add(
+            disabledList.add(
                 TokenActionsState.ActionState.Sell(
                     unavailabilityReason = ScenarioUnavailabilityReason.SellUnavailable(cryptoCurrency.name),
                 ),
@@ -148,9 +153,9 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // hide
-        actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
+        activeList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
 
-        return actionsList
+        return activeList + disabledList
     }
 
     private fun getActionsForUnreachableCurrency(
