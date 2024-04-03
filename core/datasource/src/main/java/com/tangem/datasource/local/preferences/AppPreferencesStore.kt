@@ -72,6 +72,12 @@ class AppPreferencesStore(
         return this[key]?.let(adapter::fromJson).orEmpty()
     }
 
+    /** Get set of data [T] by string [key] */
+    inline fun <reified T> MutablePreferences.getObjectSet(key: Preferences.Key<String>): Set<T>? {
+        val adapter = moshi.adapter<Set<T>>(Types.newParameterizedType(Set::class.java, T::class.java))
+        return this[key]?.let(adapter::fromJson)
+    }
+
     /**
      * Set data [T] by string [key] to [MutablePreferences]
      *
@@ -95,6 +101,12 @@ class AppPreferencesStore(
         val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
         val adapter = moshi.adapter<Map<String, V>>(type)
 
+        this[key] = adapter.toJson(value)
+    }
+
+    /** Sets set of data [T] by string [key] to [MutablePreferences] */
+    inline fun <reified T> MutablePreferences.setObjectSet(key: Preferences.Key<String>, value: Set<T>) {
+        val adapter = moshi.adapter<Set<T>>(Types.newParameterizedType(Set::class.java, T::class.java))
         this[key] = adapter.toJson(value)
     }
 }
