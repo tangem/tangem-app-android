@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+    implementation(projects.features.send.api)
 
     /** Project - Other */
     implementation(projects.core.utils)
