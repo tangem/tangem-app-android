@@ -30,7 +30,6 @@ internal class FeeNotificationFactory(
             val feeState = state.feeState ?: return@map persistentListOf()
             buildList {
                 when (val feeSelectorState = feeState.feeSelectorState) {
-                    FeeSelectorState.Loading -> Unit
                     FeeSelectorState.Error -> {
                         addFeeUnreachableNotification(feeSelectorState)
                     }

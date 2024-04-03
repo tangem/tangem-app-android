@@ -36,7 +36,10 @@ internal sealed class SendNotification(val config: NotificationConfig) {
 
         data class MinimumAmountError(val amount: String) : Error(
             title = resourceReference(R.string.send_notification_invalid_amount_title),
-            subtitle = resourceReference(R.string.send_notification_invalid_minimum_amount_text, wrappedList(amount)),
+            subtitle = resourceReference(
+                R.string.send_notification_invalid_minimum_amount_text,
+                wrappedList(amount, amount),
+            ),
         )
 
         data class ReserveAmountError(val amount: String) : Error(
@@ -95,6 +98,11 @@ internal sealed class SendNotification(val config: NotificationConfig) {
                 )
             },
         )
+
+        data class ExistentialDeposit(val deposit: String) : Error(
+            title = resourceReference(R.string.send_notification_existential_deposit_title),
+            subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
+        )
     }
 
     sealed class Warning(
@@ -123,11 +131,6 @@ internal sealed class SendNotification(val config: NotificationConfig) {
                 onClick = onConfirmClick,
             ),
             onCloseClick = onCloseClick,
-        )
-
-        data class ExistentialDeposit(val deposit: String) : Warning(
-            title = resourceReference(R.string.send_notification_existential_deposit_title),
-            subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
         )
 
         data object FeeTooLow : Warning(

@@ -421,7 +421,7 @@
   <string name="scan_card_settings_title">Get your card ready!</string>
   <string name="send_additional_field_already_included">Already included in the entered address</string>
   <string name="send_alert_fee_coverage_subract_text">Subtract</string>
-  <string name="send_alert_fee_coverage_title">Not enough funds to cover the network commission. Subtract the commission from the amount sent?</string>
+  <string name="send_alert_fee_coverage_title">Not enough funds to cover the network commission. Subtract the commission %s from the amount sent?</string>
   <string name="send_alert_fee_too_low_text">You specified a commission below the recommended amount, which could cause a delay in your transaction. Continue?</string>
   <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
@@ -444,13 +444,13 @@
   <string name="send_fee_unreachable_error_title">Network fee info unreachable</string>
   <string name="send_from_wallet_android">From</string>
   <string name="send_gas_limit">Gas limit</string>
-  <string name="send_gas_limit_footer">Gas Limit is auto-calculated; raise it during network congestion</string>
+  <string name="send_gas_limit_footer">This is the maximum amount of gas that will be spent to complete a transaction or contract. A gas limit prevents unexpected or unlimited charges when executing a transaction.</string>
   <string name="send_gas_price">Gas price</string>
-  <string name="send_gas_price_footer">Gas Price affects transaction speed. If it\'s too low, the transaction might not be processed</string>
+  <string name="send_gas_price_footer">This is the cost you are willing to pay for each unit of gas. The higher the gas price, the faster your transaction will be processed.</string>
   <string name="send_max_amount">Max</string>
   <string name="send_max_amount_label">Maximum amount</string>
   <string name="send_max_fee">Max fee</string>
-  <string name="send_max_fee_footer">Maximum fee amount</string>
+  <string name="send_max_fee_footer">The fee that will be charged for your transaction. You can set your own value.</string>
   <string name="send_memo_destination_tag_error">Numbers only for Destination Tag</string>
   <string name="send_network_fee_warning_content">Sending amount will be reduced by %1$s to cover the selected commission level. The recipient will get %2$s.</string>
   <string name="send_network_fee_warning_title">Network fee coverage</string>

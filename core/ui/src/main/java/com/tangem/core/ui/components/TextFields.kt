@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -56,6 +57,40 @@ fun OutlineTextField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         interactionSource = interactionSource,
+    )
+}
+
+@Composable
+fun OutlineTextFieldWithIcon(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    @DrawableRes iconResId: Int,
+    iconColor: Color,
+    onIconClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    placeholder: String? = null,
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions(),
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+) {
+    TangemTextFieldWithIcon(
+        modifier = modifier,
+        value = value,
+        onValueChange = onValueChange,
+        iconResId = iconResId,
+        iconColor = iconColor,
+        singleLine = true,
+        label = label,
+        placeholder = placeholder,
+        enabled = enabled,
+        isError = isError,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        interactionSource = interactionSource,
+        onIconClick = onIconClick,
     )
 }
 
@@ -165,6 +200,84 @@ private fun TangemTextField(
                 )
             }
         }
+    }
+}
+
+@Suppress("LongMethod")
+@Composable
+private fun TangemTextFieldWithIcon(
+    value: TextFieldValue,
+    singleLine: Boolean,
+    onValueChange: (TextFieldValue) -> Unit,
+    @DrawableRes iconResId: Int,
+    iconColor: Color,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    placeholder: String? = null,
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions(),
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    colors: TangemTextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
+    size: TangemTextFieldSize = TangemTextFieldSize.Default,
+    onIconClick: () -> Unit = {},
+) {
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .heightIn(size.toHeightDp()),
+            value = value,
+            textStyle = TangemTheme.typography.body1,
+            onValueChange = onValueChange,
+            singleLine = singleLine,
+            enabled = enabled,
+            isError = isError,
+            visualTransformation = visualTransformation,
+            keyboardActions = keyboardActions,
+            keyboardOptions = keyboardOptions,
+            interactionSource = interactionSource,
+            shape = size.toShape(),
+            colors = colors,
+            label = {
+                if (!label.isNullOrEmpty()) {
+                    Text(
+                        text = label,
+                        style = TangemTheme.typography.caption2,
+                        color = colors.labelColor(
+                            enabled = enabled,
+                            error = isError,
+                            interactionSource = interactionSource,
+                        ).value,
+                    )
+                }
+            },
+            placeholder = {
+                if (!placeholder.isNullOrEmpty()) {
+                    Text(
+                        text = placeholder,
+                        style = TangemTheme.typography.body1,
+                        color = colors.placeholderColor(enabled = enabled).value,
+                    )
+                }
+            },
+            trailingIcon = {
+                IconButton(
+                    modifier = Modifier.size(32.dp),
+                    onClick = onIconClick,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(id = iconResId),
+                        tint = iconColor,
+                        contentDescription = "Clear input",
+                    )
+                }
+            },
+        )
     }
 }
 
@@ -376,6 +489,16 @@ private fun OutlineTextFieldSample(modifier: Modifier = Modifier) {
             label = "Default without value",
             placeholder = "Placeholder",
             caption = "Supporting text",
+        )
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
+        OutlineTextFieldWithIcon(
+            value = TextFieldValue(),
+            onValueChange = { /* no-op */ },
+            iconResId = R.drawable.ic_alert_24,
+            iconColor = TangemTheme.colors.icon.informative,
+            label = "Default without value",
+            placeholder = "Placeholder",
+            onIconClick = {},
         )
         Divider(modifier = Modifier.padding(vertical = 8.dp))
     }

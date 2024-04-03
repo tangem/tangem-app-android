@@ -1,13 +1,16 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -17,9 +20,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
-import com.tangem.core.ui.components.Notifier
-import com.tangem.core.ui.components.PrimaryButtonIconEnd
-import com.tangem.core.ui.components.TangemTextFieldsDefault
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.ButtonState
@@ -38,33 +39,31 @@ import kotlinx.collections.immutable.persistentListOf
  */
 @Composable
 fun ImportSeedPhraseScreen(state: ImportSeedPhraseState, modifier: Modifier = Modifier) {
-    Column(
+    val keyboard by keyboardAsState()
+    Box(
         modifier = modifier.fillMaxSize(),
     ) {
-        Box(
-            modifier = Modifier.weight(1f),
-        ) {
-            Column {
-                OnboardingDescriptionBlock(
-                    modifier = Modifier.padding(top = TangemTheme.dimens.size16),
-                ) {
-                    DescriptionSubTitleText(text = stringResource(id = R.string.onboarding_seed_import_message))
-                }
-                PhraseBlock(
-                    modifier = Modifier
-                        .padding(top = TangemTheme.dimens.size62)
-                        .padding(horizontal = TangemTheme.dimens.size16),
-                    state = state,
-                )
-                SuggestionsBlock(
-                    modifier = Modifier.padding(top = TangemTheme.dimens.size4),
-                    suggestionsList = state.suggestionsList,
-                    onClick = { index -> state.onSuggestedPhraseClick(index) },
-                )
+        Column {
+            OnboardingDescriptionBlock(
+                modifier = Modifier.padding(top = TangemTheme.dimens.size16),
+            ) {
+                DescriptionSubTitleText(text = stringResource(id = R.string.onboarding_seed_import_message))
             }
-        }
-        Box {
+            PhraseBlock(
+                modifier = Modifier
+                    .padding(top = TangemTheme.dimens.size62)
+                    .padding(horizontal = TangemTheme.dimens.size16),
+                state = state,
+            )
+
+            PassphraseBlock(
+                modifier = Modifier.padding(horizontal = TangemTheme.dimens.size16),
+                passphraseField = state.fieldPassphrase,
+                onPassphraseInfoClick = state.onPassphraseInfoClick,
+            )
+
             OnboardingActionBlock(
+                modifier = Modifier.padding(top = TangemTheme.dimens.size16),
                 firstActionContent = {
                     PrimaryButtonIconEnd(
                         modifier = Modifier
@@ -78,7 +77,39 @@ fun ImportSeedPhraseScreen(state: ImportSeedPhraseState, modifier: Modifier = Mo
                 },
             )
         }
+
+        if (keyboard is Keyboard.Opened) {
+            SuggestionsBlock(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .imePadding(),
+                suggestionsList = state.suggestionsList,
+                onClick = { index -> state.onSuggestedPhraseClick(index) },
+            )
+        }
+
+        if (state.bottomSheetConfig != null) {
+            PassphraseInfoBottomSheet(config = state.bottomSheetConfig)
+        }
     }
+}
+
+@Composable
+private fun PassphraseBlock(
+    passphraseField: TextFieldState,
+    onPassphraseInfoClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlineTextFieldWithIcon(
+        modifier = modifier.fillMaxWidth(),
+        value = passphraseField.textFieldValue,
+        onValueChange = passphraseField.onTextFieldValueChanged,
+        iconResId = R.drawable.ic_information_24,
+        iconColor = TangemTheme.colors.icon.informative,
+        label = stringResource(id = R.string.common_passphrase),
+        placeholder = stringResource(id = R.string.send_optional_field),
+        onIconClick = onPassphraseInfoClick,
+    )
 }
 
 @Composable
@@ -93,8 +124,8 @@ private fun PhraseBlock(state: ImportSeedPhraseState, modifier: Modifier = Modif
             modifier = Modifier
                 .fillMaxWidth()
                 .height(TangemTheme.dimens.size142),
-            value = state.tvSeedPhrase.textFieldValue,
-            onValueChange = state.tvSeedPhrase.onTextFieldValueChanged,
+            value = state.fieldSeedPhrase.textFieldValue,
+            onValueChange = state.fieldSeedPhrase.onTextFieldValueChanged,
             textStyle = TangemTheme.typography.body1,
             singleLine = false,
             visualTransformation = InvalidWordsColorTransformation(
@@ -131,12 +162,12 @@ private fun SuggestionsBlock(
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
+        modifier = modifier,
         enter = fadeIn() + slideIn(initialOffset = { IntOffset(x = 200, y = 0) }),
         exit = slideOut(targetOffset = { IntOffset(x = -200, y = 0) }) + fadeOut(),
         visible = suggestionsList.isNotEmpty(),
     ) {
         LazyRow(
-            modifier = modifier,
             contentPadding = PaddingValues(horizontal = TangemTheme.dimens.size16),
         ) {
             items(suggestionsList.size) { index ->
@@ -160,7 +191,7 @@ private fun SuggestionButton(text: String, onClick: () -> Unit, modifier: Modifi
     Box(modifier = modifier.clickable(onClick = onClick)) {
         Notifier(
             text = text,
-            backgroundColor = TangemTheme.colors.background.action,
+            backgroundColor = TangemTheme.colors.icon.primary1,
             textColor = TangemTheme.colors.text.primary2,
         )
     }
@@ -204,19 +235,23 @@ private fun ImportSeedPhraseScreenPreview_Light(
     @PreviewParameter(SuggestionsPreviewParamsProvider::class) suggestions: ImmutableList<String>,
 ) {
     TangemTheme(isDark = false) {
-        ImportSeedPhraseScreen(
-            ImportSeedPhraseState(
-                tvSeedPhrase = TextFieldState(onTextFieldValueChanged = {}),
-                onSuggestedPhraseClick = {},
-                buttonCreateWallet = ButtonState(
-                    enabled = true,
-                    isClickable = true,
-                    showProgress = false,
-                    onClick = {},
+        Box(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
+            ImportSeedPhraseScreen(
+                ImportSeedPhraseState(
+                    fieldSeedPhrase = TextFieldState(onTextFieldValueChanged = {}),
+                    fieldPassphrase = TextFieldState(onTextFieldValueChanged = {}),
+                    onSuggestedPhraseClick = {},
+                    onPassphraseInfoClick = {},
+                    buttonCreateWallet = ButtonState(
+                        enabled = true,
+                        isClickable = true,
+                        showProgress = false,
+                        onClick = {},
+                    ),
+                    suggestionsList = suggestions,
                 ),
-                suggestionsList = suggestions,
-            ),
-        )
+            )
+        }
     }
 }
 

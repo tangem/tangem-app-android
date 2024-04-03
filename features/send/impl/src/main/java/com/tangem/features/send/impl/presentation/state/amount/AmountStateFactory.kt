@@ -50,4 +50,11 @@ internal class AmountStateFactory(
             amountState = state.amountState?.copy(notifications = notifications),
         )
     }
+
+    fun getOnAmountFeeLoadingCancel(): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            amountState = state.amountState?.copy(isFeeLoading = false),
+        )
+    }
 }

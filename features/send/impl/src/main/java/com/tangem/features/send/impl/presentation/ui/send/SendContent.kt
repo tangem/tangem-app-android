@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,13 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
-import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendUiState
-import kotlinx.collections.immutable.ImmutableList
+import com.tangem.features.send.impl.presentation.ui.common.notifications
 import kotlinx.coroutines.delay
 
 private const val TAP_HELP_KEY = "TAP_HELP_KEY"
@@ -39,7 +36,6 @@ internal fun SendContent(uiState: SendUiState) {
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = TangemTheme.dimens.spacing16),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         blocks(uiState)
         tapHelp(isDisplay = sendState.showTapHelp)
@@ -109,7 +105,8 @@ private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modif
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = modifier
                     .fillMaxWidth()
-                    .animateItemPlacement(),
+                    .animateItemPlacement()
+                    .padding(top = TangemTheme.dimens.spacing20),
             ) {
                 val background = TangemTheme.colors.button.secondary
                 Icon(
@@ -133,31 +130,4 @@ private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modif
             }
         }
     }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-internal fun LazyListScope.notifications(configs: ImmutableList<SendNotification>, modifier: Modifier = Modifier) {
-    items(
-        items = configs,
-        key = { it::class.java },
-        contentType = { it::class.java },
-        itemContent = {
-            Notification(
-                config = it.config,
-                modifier = modifier.animateItemPlacement(),
-                containerColor = when (it) {
-                    is SendNotification.Error.ExceedsBalance,
-                    is SendNotification.Warning.HighFeeError,
-                    -> TangemTheme.colors.background.action
-                    else -> TangemTheme.colors.button.disabled
-                },
-                iconTint = when (it) {
-                    is SendNotification.Error.ExceedsBalance,
-                    is SendNotification.Warning,
-                    -> null
-                    is SendNotification.Error -> TangemTheme.colors.icon.warning
-                },
-            )
-        },
-    )
 }

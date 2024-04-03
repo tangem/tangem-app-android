@@ -61,7 +61,6 @@ internal fun SendRecipientContent(uiState: SendStates.RecipientState?, clickInte
                     isLoading = isValidating,
                     error = address.error,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing4)
                         .background(
                             color = TangemTheme.colors.background.action,
                             shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -183,7 +182,7 @@ private fun LazyListScope.listItem(
                     .then(
                         if (isLast && index == list.lastIndex) {
                             Modifier
-                                .padding(bottom = TangemTheme.dimens.spacing12)
+                                .padding(bottom = TangemTheme.dimens.spacing72)
                                 .clip(
                                     shape = RoundedCornerShape(
                                         bottomStart = TangemTheme.dimens.radius16,

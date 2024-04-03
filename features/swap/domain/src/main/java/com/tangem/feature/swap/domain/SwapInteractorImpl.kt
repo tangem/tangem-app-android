@@ -589,6 +589,8 @@ internal class SwapInteractorImpl @Inject constructor(
             providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
             toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value ?: "",
+            refundAddress = currencyToSend.value.networkAddress?.defaultAddress?.value,
+            refundExtraId = null, // currently always null
         ).getOrElse { return SwapTransactionState.ExpressError(it) }
 
         val exchangeDataCex =

@@ -31,13 +31,17 @@ import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 
 @Composable
-internal fun SendNavigationButtons(uiState: SendUiState, currentState: SendUiCurrentScreen) {
+internal fun SendNavigationButtons(
+    uiState: SendUiState,
+    currentState: SendUiCurrentScreen,
+    modifier: Modifier = Modifier,
+) {
     val sendState = uiState.sendState ?: return
     val isSuccess = sendState.isSuccess
     val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
     val isSentState = currentState.type == SendUiStateType.Send && isSuccess
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
@@ -69,14 +73,17 @@ private fun SendNavigationButton(
     val sendState = uiState.sendState ?: return
     val isEditingDisabled = uiState.isEditingDisabled
     val isSuccess = sendState.isSuccess
+    val isSending = sendState.isSending
 
     val isFromConfirmation = currentState.isFromConfirmation
     val isCorrectScreen = currentState.type == SendUiStateType.Amount || currentState.type == SendUiStateType.Fee
-    val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
+    val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess && !isSending
+    val showProgress = uiState.amountState?.isFeeLoading == true
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = currentState,
         isSuccess = isSuccess,
+        isSending = isSending,
         uiState = uiState,
     )
     val isButtonEnabled = isButtonEnabled(currentState, uiState)
@@ -113,7 +120,7 @@ private fun SendNavigationButton(
                 if (isSendingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 buttonClick()
             },
-            showProgress = sendState.isSending,
+            showProgress = showProgress,
             modifier = Modifier.fillMaxWidth(),
             colors = TangemButtonsDefaults.primaryButtonColors,
         )
@@ -204,6 +211,7 @@ private fun getButtonData(
     uiState: SendUiState,
     currentState: SendUiCurrentScreen,
     isSuccess: Boolean,
+    isSending: Boolean,
 ): Pair<Int, () -> Unit> {
     return when (currentState.type) {
         SendUiStateType.None,
@@ -215,10 +223,10 @@ private fun getButtonData(
         } else {
             R.string.common_next to uiState.clickIntents::onNextClick
         }
-        SendUiStateType.Send -> if (isSuccess) {
-            R.string.common_close
-        } else {
-            R.string.common_send
+        SendUiStateType.Send -> when {
+            isSuccess -> R.string.common_close
+            isSending -> R.string.send_sending
+            else -> R.string.common_send
         } to uiState.clickIntents::onSendClick
     }
 }
