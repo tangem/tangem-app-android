@@ -4,12 +4,20 @@ import org.joda.time.Instant
 import java.math.BigDecimal
 import java.math.BigInteger
 
-data class VisaBalancesAndLimits(
+data class VisaContractInfo(
+    val token: Token,
     val balances: Balances,
     val oldLimits: Limits,
     val newLimits: Limits,
     val limitsChangeDate: Instant,
 ) {
+
+    data class Token(
+        val name: String,
+        val symbol: String,
+        val decimals: Int,
+        val address: String,
+    )
 
     data class Balances(
         val total: BigDecimal,
