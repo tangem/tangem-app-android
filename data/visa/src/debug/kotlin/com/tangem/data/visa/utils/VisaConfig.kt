@@ -6,9 +6,7 @@ internal object VisaConfig {
 
     const val NETWORK_NAME = "Polygon PoS"
 
-    const val TOKEN_SYMBOL = "USDT"
     const val TOKEN_ID = "tether"
-    const val TOKEN_DECIMALS = 8
 
     val fiatCurrency = AppCurrency(
         code = "EUR",
