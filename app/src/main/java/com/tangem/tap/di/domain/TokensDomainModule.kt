@@ -337,8 +337,7 @@ internal object TokensDomainModule {
     @ViewModelScoped
     fun provideRunPolkadotAccountHealthCheckUseCase(
         repository: PolkadotAccountHealthCheckRepository,
-        dispatchers: CoroutineDispatcherProvider,
     ): RunPolkadotAccountHealthCheckUseCase {
-        return RunPolkadotAccountHealthCheckUseCase(repository, dispatchers)
+        return RunPolkadotAccountHealthCheckUseCase(repository)
     }
 }

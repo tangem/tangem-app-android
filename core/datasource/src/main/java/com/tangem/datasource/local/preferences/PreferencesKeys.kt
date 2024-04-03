@@ -63,13 +63,13 @@ object PreferencesKeys {
 
     val APP_LOGS_KEY by lazy { stringPreferencesKey(name = "app_logs") }
 
-    val POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX by lazy {
+    val POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX_KEY by lazy {
         stringPreferencesKey(name = "POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX")
     }
-    val POLKADOT_HEALTH_CHECKED_RESET_ACCOUNTS by lazy {
+    val POLKADOT_HEALTH_CHECKED_RESET_ACCOUNTS_KEY by lazy {
         stringPreferencesKey(name = "POLKADOT_HEALTH_CHECKED_RESET_ACCOUNTS")
     }
-    val POLKADOT_HEALTH_CHECKED_IMMUTABLE_ACCOUNTS by lazy {
+    val POLKADOT_HEALTH_CHECKED_IMMUTABLE_ACCOUNTS_KEY by lazy {
         stringPreferencesKey(name = "POLKADOT_HEALTH_CHECKED_IMMUTABLE_ACCOUNTS")
     }
 
