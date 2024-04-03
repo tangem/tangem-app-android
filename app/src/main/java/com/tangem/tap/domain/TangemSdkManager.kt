@@ -96,19 +96,4 @@ interface TangemSdkManager {
     fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String
 
     fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy)
-
-    companion object {
-        @Deprecated("Use [DefaultCardSdkProvider] instead")
-        val config = Config(
-            linkedTerminal = true,
-            allowUntrustedCards = true,
-            filter = CardFilter(
-                allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
-                maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
-                batchIdFilter = CardFilter.Companion.ItemFilter.Deny(
-                    items = setOf("0027", "0030", "0031", "0035"),
-                ),
-            ),
-        )
-    }
 }
