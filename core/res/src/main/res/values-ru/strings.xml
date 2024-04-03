@@ -431,7 +431,7 @@
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
-  <string name="send_confirm_label">Подтвердить</string>
+  <string name="send_confirm_label">Подтверждение</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
@@ -456,6 +456,7 @@
   <string name="send_max_amount_label">Максимальная сумма</string>
   <string name="send_max_fee">Комиссия не превысит </string>
   <string name="send_max_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
+  <string name="send_memo_destination_tag_error">Допустим ввод только цифр</string>
   <string name="send_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s для покрытия выбранного уровня комиссии.  Получателю будет отправлено %2$s.</string>
   <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
   <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
