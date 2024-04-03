@@ -503,13 +503,19 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         lifecycleScope.launch {
             getPolkadotCheckHasResetUseCase()
                 .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
+                .distinctUntilChanged()
                 .collect {
-                    analyticsEventsHandler.send(WalletScreenAnalyticsEvent.Token.PolkadotAccountReset(it))
+                    analyticsEventsHandler.send(WalletScreenAnalyticsEvent.Token.PolkadotAccountReset(it.second))
                 }
+        }
+        lifecycleScope.launch {
             getPolkadotCheckHasImmortalUseCase()
                 .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
+                .distinctUntilChanged()
                 .collect {
-                    analyticsEventsHandler.send(WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(it))
+                    analyticsEventsHandler.send(
+                        WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(it.second),
+                    )
                 }
         }
     }
