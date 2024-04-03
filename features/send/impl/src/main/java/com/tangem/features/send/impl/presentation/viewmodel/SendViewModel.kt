@@ -32,7 +32,6 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -75,15 +74,15 @@ internal class SendViewModel @Inject constructor(
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
-    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
+    private val getCryptoCurrencyStatusesSyncUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
-    private val walletManagersFacade: WalletManagersFacade,
     private val reduxStateHolder: ReduxStateHolder,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -403,29 +402,36 @@ internal class SendViewModel @Inject constructor(
                         .filterNot { it.walletId == userWalletId || it.isLocked }
                         .map { wallet ->
                             async(dispatchers.io) {
-                                getCryptoCurrenciesUseCase.getSync(wallet.walletId)
-                                    .fold(
-                                        ifRight = { currencyItem ->
-                                            val walletCurrency = currencyItem.firstOrNull {
-                                                it.network.id == cryptoCurrency.network.id
-                                            } ?: return@fold null
-                                            val addresses = walletManagersFacade.getAddress(
-                                                userWalletId = wallet.walletId,
-                                                network = walletCurrency.network,
-                                            )
-                                            return@fold addresses.firstOrNull()?.let {
-                                                AvailableWallet(
-                                                    name = wallet.name,
-                                                    address = it.value,
-                                                )
-                                            }
-                                        },
-                                        ifLeft = { null },
-                                    )
+                                wallet.toAvailableWallet()
                             }
                         }
                 }.awaitAll()
             }
+    }
+
+    private suspend fun UserWallet.toAvailableWallet(): AvailableWallet? {
+        return if (!isMultiCurrency) {
+            val status = getCryptoCurrencyStatusSyncUseCase(walletId).getOrNull()
+            val address = status?.value?.networkAddress
+            address?.let {
+                AvailableWallet(
+                    name = name,
+                    address = it.defaultAddress.value,
+                )
+            }
+        } else {
+            val statuses = getCryptoCurrencyStatusesSyncUseCase(walletId).getOrNull()
+            val walletCurrency = statuses?.firstOrNull {
+                it.currency.network.id == cryptoCurrency.network.id
+            }
+            val address = walletCurrency?.value?.networkAddress
+            address?.let {
+                AvailableWallet(
+                    name = name,
+                    address = it.defaultAddress.value,
+                )
+            }
+        }
     }
 
     private fun getTxHistory(): Flow<List<TxHistoryItem>> {
