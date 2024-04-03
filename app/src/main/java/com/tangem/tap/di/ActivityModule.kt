@@ -32,9 +32,9 @@ internal object ActivityModule {
         cardSdkConfigRepository: CardSdkConfigRepository,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
-            DefaultTangemSdkManager(cardSdkConfigRepository = cardSdkConfigRepository, resources = context.resources)
-        } else {
             MockTangemSdkManager(resources = context.resources)
+        } else {
+            DefaultTangemSdkManager(cardSdkConfigRepository = cardSdkConfigRepository, resources = context.resources)
         }
     }
 
