@@ -8,7 +8,7 @@ interface PolkadotAccountHealthCheckRepository {
 
     suspend fun runCheck(userWalletId: UserWalletId, network: Network)
 
-    fun subscribeToHasImmortalResults(): Flow<Boolean>
+    fun subscribeToHasImmortalResults(): Flow<Pair<String, Boolean>>
 
-    fun subscribeToHasResetResults(): Flow<Boolean>
+    fun subscribeToHasResetResults(): Flow<Pair<String, Boolean>>
 }
