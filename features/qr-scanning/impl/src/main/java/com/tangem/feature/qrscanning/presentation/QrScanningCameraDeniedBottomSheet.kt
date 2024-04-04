@@ -33,7 +33,7 @@ private fun CameraDeniedBottomSheet(content: CameraDeniedBottomSheetConfig) {
             title = stringResource(id = R.string.qr_scanner_camera_denied_settings_button),
             icon = R.drawable.ic_settings_24,
             onItemsClick = {
-                val intent: Intent = Intent(
+                val intent = Intent(
                     Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                     Uri.fromParts("package", context.packageName, null),
                 )
@@ -47,7 +47,7 @@ private fun CameraDeniedBottomSheet(content: CameraDeniedBottomSheetConfig) {
         )
         SimpleSettingsRow(
             title = stringResource(id = R.string.common_close),
-            icon = R.drawable.ic_close,
+            icon = R.drawable.ic_close_24,
             onItemsClick = content.onCancelClick,
             modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
         )
