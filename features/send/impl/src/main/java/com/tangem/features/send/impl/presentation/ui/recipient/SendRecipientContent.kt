@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -25,6 +26,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.SendStates
+import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -33,7 +35,11 @@ private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
 private const val MEMO_FIELD_KEY = "MEMO_FIELD_KEY"
 
 @Composable
-internal fun SendRecipientContent(uiState: SendStates.RecipientState?, clickIntents: SendClickIntents) {
+internal fun SendRecipientContent(
+    uiState: SendStates.RecipientState?,
+    clickIntents: SendClickIntents,
+    isBalanceHidden: Boolean,
+) {
     if (uiState == null) return
     val recipients = uiState.recent
     val wallets = uiState.wallets
@@ -47,56 +53,89 @@ internal fun SendRecipientContent(uiState: SendStates.RecipientState?, clickInte
             .background(TangemTheme.colors.background.tertiary)
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-        item(key = ADDRESS_FIELD_KEY) {
-            FooterContainer(
-                footer = stringResource(R.string.send_recipient_address_footer, uiState.network),
-            ) {
-                InputRowRecipient(
-                    value = address.value,
-                    title = address.label,
-                    placeholder = address.placeholder,
-                    onValueChange = address.onValueChange,
-                    onPasteClick = { clickIntents.onRecipientAddressValueChange(it, EnterAddressSource.PasteButton) },
-                    isError = isError,
-                    isLoading = isValidating,
-                    error = address.error,
-                    modifier = Modifier
-                        .background(
-                            color = TangemTheme.colors.background.action,
-                            shape = TangemTheme.shapes.roundedCornersXMedium,
-                        ),
-                )
-            }
-        }
-        if (memoField != null) {
-            item(key = MEMO_FIELD_KEY) {
-                val placeholder = if (memoField.isEnabled) memoField.placeholder else memoField.disabledText
-                TextFieldWithPaste(
-                    value = memoField.value,
-                    label = memoField.label,
-                    placeholder = placeholder,
-                    footer = stringResource(R.string.send_recipient_memo_footer),
-                    onValueChange = memoField.onValueChange,
-                    onPasteClick = clickIntents::onRecipientMemoValueChange,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
-                    isError = memoField.isError,
-                    error = memoField.error,
-                    isReadOnly = !memoField.isEnabled,
-                )
-            }
-        }
+        addressItem(
+            address = address,
+            network = uiState.network,
+            isError = isError,
+            isValidating = isValidating,
+            onAddressChange = clickIntents::onRecipientAddressValueChange,
+        )
+        memoField(
+            memoField = memoField,
+            onMemoChange = clickIntents::onRecipientMemoValueChange,
+        )
         listHeaderItem(
             titleRes = R.string.send_recipient_wallets_title,
             isVisible = wallets.isNotEmpty() && wallets.first().isVisible,
             isFirst = true,
         )
-        listItem(wallets, clickIntents, isLast = recipients.isEmpty())
+        listItem(
+            list = wallets,
+            clickIntents = clickIntents,
+            isLast = recipients.isEmpty(),
+            isBalanceHidden = isBalanceHidden,
+        )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
             isVisible = recipients.isNotEmpty() && recipients.first().isVisible,
             isFirst = wallets.isEmpty(),
         )
-        listItem(recipients, clickIntents, isLast = true)
+        listItem(
+            list = recipients,
+            clickIntents = clickIntents,
+            isLast = true,
+            isBalanceHidden = isBalanceHidden,
+        )
+    }
+}
+
+private fun LazyListScope.addressItem(
+    address: SendTextField.RecipientAddress,
+    network: String,
+    isError: Boolean,
+    isValidating: Boolean,
+    onAddressChange: (String, EnterAddressSource?) -> Unit,
+) {
+    item(key = ADDRESS_FIELD_KEY) {
+        FooterContainer(
+            footer = stringResource(R.string.send_recipient_address_footer, network),
+        ) {
+            InputRowRecipient(
+                value = address.value,
+                title = address.label,
+                placeholder = address.placeholder,
+                onValueChange = address.onValueChange,
+                onPasteClick = { onAddressChange(it, EnterAddressSource.PasteButton) },
+                isError = isError,
+                isLoading = isValidating,
+                error = address.error,
+                modifier = Modifier
+                    .background(
+                        color = TangemTheme.colors.background.action,
+                        shape = TangemTheme.shapes.roundedCornersXMedium,
+                    ),
+            )
+        }
+    }
+}
+
+private fun LazyListScope.memoField(memoField: SendTextField.RecipientMemo?, onMemoChange: (String) -> Unit) {
+    if (memoField != null) {
+        item(key = MEMO_FIELD_KEY) {
+            val placeholder = if (memoField.isEnabled) memoField.placeholder else memoField.disabledText
+            TextFieldWithPaste(
+                value = memoField.value,
+                label = memoField.label,
+                placeholder = placeholder,
+                footer = stringResource(R.string.send_recipient_memo_footer),
+                onValueChange = memoField.onValueChange,
+                onPasteClick = onMemoChange,
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
+                isError = memoField.isError,
+                error = memoField.error,
+                isReadOnly = !memoField.isEnabled,
+            )
+        }
     }
 }
 
@@ -154,6 +193,7 @@ private fun LazyListScope.listItem(
     list: ImmutableList<SendRecipientListContent>,
     clickIntents: SendClickIntents,
     isLast: Boolean,
+    isBalanceHidden: Boolean,
 ) {
     items(
         count = list.size,
@@ -173,7 +213,7 @@ private fun LazyListScope.listItem(
         ) {
             ListItemWithIcon(
                 title = title,
-                subtitle = item.subtitle.resolveReference(),
+                subtitle = if (isBalanceHidden) STARS else item.subtitle.resolveReference(),
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,

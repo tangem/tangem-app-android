@@ -122,6 +122,7 @@ private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentS
             SendUiStateType.Recipient -> SendRecipientContent(
                 uiState = uiState.recipientState,
                 clickIntents = uiState.clickIntents,
+                isBalanceHidden = uiState.isBalanceHidden,
             )
             SendUiStateType.Fee -> SendSpeedAndFeeContent(
                 state = uiState.feeState,
