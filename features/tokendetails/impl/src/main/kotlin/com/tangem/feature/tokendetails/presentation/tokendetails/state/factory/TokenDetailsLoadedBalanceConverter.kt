@@ -84,7 +84,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     }
 
     private fun getMarketPriceState(
-        status: CryptoCurrencyStatus.Status,
+        status: CryptoCurrencyStatus.Value,
         currencySymbol: String,
     ): MarketPriceBlockState {
         return when (status) {
@@ -106,7 +106,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         }
     }
 
-    private fun CryptoCurrencyStatus.Status.toContentConfig(currencySymbol: String): MarketPriceBlockState.Content {
+    private fun CryptoCurrencyStatus.Value.toContentConfig(currencySymbol: String): MarketPriceBlockState.Content {
         return MarketPriceBlockState.Content(
             currencySymbol = currencySymbol,
             price = formatPrice(status = this, appCurrency = appCurrencyProvider()),
@@ -117,11 +117,11 @@ internal class TokenDetailsLoadedBalanceConverter(
         )
     }
 
-    private fun getPriceChangeType(status: CryptoCurrencyStatus.Status): PriceChangeType {
+    private fun getPriceChangeType(status: CryptoCurrencyStatus.Value): PriceChangeType {
         return PriceChangeConverter.fromBigDecimal(status.priceChange)
     }
 
-    private fun formatPriceChange(status: CryptoCurrencyStatus.Status): String {
+    private fun formatPriceChange(status: CryptoCurrencyStatus.Value): String {
         val priceChange = status.priceChange ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
         return BigDecimalFormatter.formatPercent(
@@ -130,7 +130,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         )
     }
 
-    private fun formatPrice(status: CryptoCurrencyStatus.Status, appCurrency: AppCurrency): String {
+    private fun formatPrice(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
         val fiatRate = status.fiatRate ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
         return BigDecimalFormatter.formatFiatAmount(
@@ -140,7 +140,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         )
     }
 
-    private fun formatFiatAmount(status: CryptoCurrencyStatus.Status, appCurrency: AppCurrency): String {
+    private fun formatFiatAmount(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
         val fiatAmount = status.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
         return BigDecimalFormatter.formatFiatAmount(
