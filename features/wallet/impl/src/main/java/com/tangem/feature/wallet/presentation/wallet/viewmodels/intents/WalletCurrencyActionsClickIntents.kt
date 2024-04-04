@@ -121,7 +121,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun sendToken(
         cryptoCurrency: CryptoCurrency.Token,
-        cryptoCurrencyStatus: CryptoCurrencyStatus.Status,
+        cryptoCurrencyStatus: CryptoCurrencyStatus.Value,
         feeCurrencyStatus: CryptoCurrencyStatus?,
         userWallet: UserWallet,
     ) {
