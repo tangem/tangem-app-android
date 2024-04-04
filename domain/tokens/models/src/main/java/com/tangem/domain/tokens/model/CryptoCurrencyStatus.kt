@@ -15,7 +15,7 @@ import java.math.BigDecimal
  */
 data class CryptoCurrencyStatus(
     val currency: CryptoCurrency,
-    val value: Status,
+    val value: Value,
 ) {
 
     /**
@@ -23,7 +23,7 @@ data class CryptoCurrencyStatus(
      *
      * @property isError Indicates whether this status represents an error status.
      */
-    sealed class Status(val isError: Boolean) {
+    sealed class Value(val isError: Boolean) {
 
         /** The amount of the cryptocurrency. */
         open val amount: BigDecimal? = null
@@ -48,7 +48,7 @@ data class CryptoCurrencyStatus(
     }
 
     /** Represents the Loading state of a cryptocurrency, typically while fetching its details. */
-    object Loading : Status(isError = false)
+    data object Loading : Value(isError = false)
 
     /**
      * Represents a state where the cryptocurrency is not reachable.
@@ -61,19 +61,19 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
         override val networkAddress: NetworkAddress?,
-    ) : Status(isError = true)
+    ) : Value(isError = true)
 
     /** Represents a state where the cryptocurrency's network amount not found. */
     data class NoAmount(
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
-    ) : Status(isError = true)
+    ) : Value(isError = true)
 
     /** Represents a state where the cryptocurrency's derivation is missed. */
     data class MissedDerivation(
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
-    ) : Status(isError = true)
+    ) : Value(isError = true)
 
     /**
      * Represents a state where there is no account associated with the cryptocurrency
@@ -86,7 +86,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
         override val networkAddress: NetworkAddress,
-    ) : Status(isError = false) {
+    ) : Value(isError = false) {
 
         override val amount: BigDecimal = BigDecimal.ZERO
     }
@@ -110,7 +110,7 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
-    ) : Status(isError = false)
+    ) : Value(isError = false)
 
     /**
      * Represents a Custom state of a cryptocurrency, typically used for user-defined tokens.
@@ -131,7 +131,7 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
-    ) : Status(isError = false)
+    ) : Value(isError = false)
 
     /**
      * Represents a state where the cryptocurrency is available, but there is no current quote available for it.
@@ -146,5 +146,5 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
-    ) : Status(isError = false)
+    ) : Value(isError = false)
 }

@@ -17,7 +17,6 @@ import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -27,7 +26,6 @@ import org.junit.Test
 
 internal class GetTokenListUseCaseTest {
 
-    private val dispatchers = TestingCoroutineDispatcherProvider()
     private val userWalletId = UserWalletId(value = null)
 
     @Ignore
@@ -308,7 +306,6 @@ internal class GetTokenListUseCaseTest {
         isGrouped: Flow<Either<DataError, Boolean>> = flowOf(MockTokenLists.isGrouped.right()),
         isSortedByBalance: Flow<Either<DataError, Boolean>> = flowOf(MockTokenLists.isSortedByBalance.right()),
     ) = GetTokenListUseCase(
-        dispatchers = dispatchers,
         currenciesRepository = MockCurrenciesRepository(
             sortTokensResult = Unit.right(),
             removeCurrencyResult = Unit.right(),
