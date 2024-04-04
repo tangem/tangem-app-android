@@ -1,5 +1,8 @@
 package com.tangem.features.send.impl.presentation.ui.recipient
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -63,17 +66,29 @@ internal fun TextFieldWithPaste(
                             .padding(top = TangemTheme.dimens.spacing6),
                     )
                 }
-                CrossIcon(
-                    onClick = onPasteClick,
+                AnimatedVisibility(
+                    visible = !isReadOnly,
+                    label = "Animate read only status change",
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                     modifier = Modifier
                         .align(CenterVertically),
-                )
+                ) {
+                    CrossIcon(
+                        onClick = onPasteClick,
+                    )
+                }
             }
-            if (!isReadOnly) {
+            AnimatedVisibility(
+                visible = !isReadOnly,
+                label = "Animate read only status change",
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.align(CenterEnd),
+            ) {
                 PasteButton(
                     isPasteButtonVisible = value.isBlank(),
                     onClick = onPasteClick,
-                    modifier = Modifier.align(CenterEnd),
                 )
             }
         }
