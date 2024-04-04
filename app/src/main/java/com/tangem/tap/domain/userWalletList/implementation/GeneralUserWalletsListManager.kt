@@ -118,6 +118,10 @@ internal class GeneralUserWalletsListManager(
         }
     }
 
+    override fun isLockable(): Boolean {
+        return implementation.value.isLockable()
+    }
+
     private fun subscribeOnCurrentManager() {
         appPreferencesStore.get(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
             .distinctUntilChanged()

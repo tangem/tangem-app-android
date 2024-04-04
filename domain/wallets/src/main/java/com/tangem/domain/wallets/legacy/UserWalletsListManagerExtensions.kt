@@ -7,12 +7,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 /**
- * Indicates that the [UserWalletsListManager] implements [UserWalletsListManager.Lockable]
- * */
-val UserWalletsListManager.isLockable: Boolean
-    get() = this is UserWalletsListManager.Lockable
-
-/**
  * Indicates that the [UserWalletsListManager] is locked
  *
  * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable] returns [Flow] which
@@ -49,21 +43,14 @@ suspend fun UserWalletsListManager.unlockIfLockable(type: UnlockType = UnlockTyp
 }
 
 /**
- * Call [UserWalletsListManager.Lockable.lock] if [UserWalletsListManager] implements [UserWalletsListManager.Lockable]
- * or do nothing otherwise
- *
- * @see UserWalletsListManager.Lockable.lock
- * */
-fun UserWalletsListManager.lockIfLockable() {
-    asLockable()?.lock()
-}
-
-/**
  * Safe cast [UserWalletsListManager] to [UserWalletsListManager.Lockable]
  *
  * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable] then returns null or
  * [UserWalletsListManager.Lockable] otherwise
  * */
 fun UserWalletsListManager.asLockable(): UserWalletsListManager.Lockable? {
-    return this as? UserWalletsListManager.Lockable
+    if (this.isLockable()) {
+        return this as? UserWalletsListManager.Lockable
+    }
+    return null
 }
