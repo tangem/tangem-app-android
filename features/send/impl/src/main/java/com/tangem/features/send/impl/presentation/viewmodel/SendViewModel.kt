@@ -618,7 +618,9 @@ internal class SendViewModel @Inject constructor(
             network = cryptoCurrency.network,
             address = value,
         ).getOrElse { false }
-        onEnteredValidAddress(isValidAddress)
+        val isAddressInWallet = cryptoCurrencyStatus.value.networkAddress?.availableAddresses
+            ?.any { it.value == value } ?: true
+        onEnteredValidAddress(isValidAddress, isAddressInWallet)
         return isValidAddress
     }
 
@@ -632,12 +634,13 @@ internal class SendViewModel @Inject constructor(
         } ?: false
     }
 
-    private fun onEnteredValidAddress(isValidAddress: Boolean) {
+    private fun onEnteredValidAddress(isValidAddress: Boolean, isAddressInWallet: Boolean) {
         val recipientState = uiState.recipientState ?: return
+        val isVisible = isAddressInWallet || !isValidAddress
         uiState = uiState.copy(
             recipientState = recipientState.copy(
-                recent = recipientState.recent.map { it.copy(isVisible = !isValidAddress) }.toPersistentList(),
-                wallets = recipientState.wallets.map { it.copy(isVisible = !isValidAddress) }.toPersistentList(),
+                recent = recipientState.recent.map { it.copy(isVisible = isVisible) }.toPersistentList(),
+                wallets = recipientState.wallets.map { it.copy(isVisible = isVisible) }.toPersistentList(),
             ),
         )
     }
