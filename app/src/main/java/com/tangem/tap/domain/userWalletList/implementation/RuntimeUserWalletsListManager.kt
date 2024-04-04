@@ -85,6 +85,10 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
         state.value.userWallet ?: walletNotFound()
     }
 
+    override fun isLockable(): Boolean {
+        return false
+    }
+
     private fun saveInternal(userWallet: UserWallet): CompletionResult<Unit> = catching {
         state.update { prevState ->
             prevState.copy(
