@@ -17,12 +17,6 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
         incrementLaunchCounter()
     }
 
-    var shouldShowSaveUserWalletScreen: Boolean
-        get() = preferences.getBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, true)
-        set(value) = preferences.edit {
-            putBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, value)
-        }
-
     private fun incrementLaunchCounter() {
         var count = preferences.getInt(APP_LAUNCH_COUNT_KEY, 0)
         preferences.edit { putInt(APP_LAUNCH_COUNT_KEY, ++count) }
@@ -31,6 +25,5 @@ class PreferencesDataSource @Inject internal constructor(applicationContext: Con
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
-        private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
     }
 }
