@@ -5,10 +5,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.toHexString
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CreateUserNetworkAccountBody
-import com.tangem.lib.auth.AuthProvider
 
 internal class DefaultAccountCreator(
     private val authProvider: AuthProvider,
