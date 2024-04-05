@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.core.deepLinks)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
+    implementation(projects.libs.blockchainSdk)
 
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
