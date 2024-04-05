@@ -678,6 +678,16 @@
                     "networkId": "polygon-zkevm/test"
                 }
             ]
+        },
+        {
+            "id": "base-ethereum",
+            "name": "Base",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "base/test"
+                }
+            ]
         }
     ]
 }
