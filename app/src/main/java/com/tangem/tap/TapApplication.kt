@@ -12,9 +12,9 @@ import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.AccountCreator
-import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
+import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
@@ -157,9 +157,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var oneTimeEventFilter: OneTimeEventFilter
 
     @Inject
-    lateinit var blockchainDataStorage: BlockchainDataStorage
-
-    @Inject
     lateinit var accountCreator: AccountCreator
 
     @Inject
@@ -188,6 +185,9 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var blockchainSDKFactory: BlockchainSDKFactory
     // endregion Injected
 
     override fun onCreate() {
@@ -223,6 +223,8 @@ internal class TapApplication : Application(), ImageLoaderFactory {
             } else {
                 initUserWalletsListManager()
             }
+
+            blockchainSDKFactory.init()
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
@@ -268,7 +270,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
-                    blockchainDataStorage = blockchainDataStorage,
                     accountCreator = accountCreator,
                     userWalletsListManagerFeatureToggles = userWalletsListManagerFeatureToggles,
                     generalUserWalletsListManager = generalUserWalletsListManager,
@@ -279,6 +280,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     tangemSdkLogger = tangemSdkLogger,
                     blockchainSDKLogger = blockchainSDKLogger,
                     settingsRepository = settingsRepository,
+                    blockchainSDKFactory = blockchainSDKFactory,
                 ),
             ),
         )
