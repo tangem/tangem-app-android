@@ -66,6 +66,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "flare", "flare/test" -> R.drawable.img_flare_22
         "taraxa", "taraxa/test" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
+        "base" -> R.drawable.img_base_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -133,6 +134,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "flare-network", "flare-network/test" -> R.drawable.img_flare_22
         "taraxa", "taraxa/test" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
+        "base" -> R.drawable.img_base_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -197,6 +199,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "flare-networks" -> R.drawable.img_flare_22
         "taraxa" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
+        "base" -> R.drawable.img_base_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -264,6 +267,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "flare", "flare/test" -> R.drawable.ic_flare_22
         "taraxa", "taraxa/test" -> R.drawable.ic_taraxa_22
         "radiant" -> R.drawable.ic_radiant_22
+        "base", "base/test" -> R.drawable.ic_base_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -331,6 +335,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "flare-network", "flare-network/test" -> R.drawable.ic_flare_22
         "taraxa", "taraxa/test" -> R.drawable.ic_taraxa_22
         "radiant" -> R.drawable.ic_radiant_22
+        "base", "base/test" -> R.drawable.ic_base_22
         else -> R.drawable.ic_alert_24
     }
 }
