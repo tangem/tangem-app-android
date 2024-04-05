@@ -21,8 +21,7 @@ internal class AndroidAssetReader @Inject constructor(
             .use(BufferedReader::readText)
     }
 
-    override fun openFile(fileName: String): InputStream {
-        return context.assets
-            .open(fileName)
+    override fun openFile(file: String): InputStream {
+        return context.assets.open(file)
     }
 }
