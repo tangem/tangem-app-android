@@ -1,7 +1,7 @@
 package com.tangem.tap.network.auth
 
 import com.tangem.common.extensions.toHexString
-import com.tangem.lib.auth.AuthProvider
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.tap.proxy.AppStateHolder
 
 internal class DefaultAuthProvider(private val appStateHolder: AppStateHolder) : AuthProvider {
