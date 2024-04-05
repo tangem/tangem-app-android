@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":common"))
     implementation(project(":libs:auth"))
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.demo)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
