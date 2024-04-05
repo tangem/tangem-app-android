@@ -11,8 +11,6 @@ import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.AccountCreator
-import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.analytics.Analytics
@@ -157,9 +155,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var oneTimeEventFilter: OneTimeEventFilter
 
     @Inject
-    lateinit var accountCreator: AccountCreator
-
-    @Inject
     lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
 
     @Inject
@@ -176,9 +171,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
-
-    @Inject
-    lateinit var blockchainSDKLogger: BlockchainSDKLogger
 
     @Inject
     lateinit var tangemSdkLogger: TangemSdkLogger
@@ -270,7 +262,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
-                    accountCreator = accountCreator,
                     userWalletsListManagerFeatureToggles = userWalletsListManagerFeatureToggles,
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
@@ -278,7 +269,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     cardRepository = cardRepository,
                     feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
                     tangemSdkLogger = tangemSdkLogger,
-                    blockchainSDKLogger = blockchainSDKLogger,
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
                 ),

@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.blockchain
+package com.tangem.blockchainsdk.accountcreator
 
 import com.tangem.blockchain.common.AccountCreator
 import com.tangem.blockchain.common.Blockchain
@@ -16,7 +16,10 @@ internal class DefaultAccountCreator(
 ) : AccountCreator {
 
     override suspend fun createAccount(blockchain: Blockchain, walletPublicKey: ByteArray): Result<String> {
-        val request = CreateUserNetworkAccountBody(blockchain.id.removeSuffix("/test"), walletPublicKey.toHexString())
+        val request = CreateUserNetworkAccountBody(
+            networkId = blockchain.id.removeSuffix("/test"),
+            walletPublicKey = walletPublicKey.toHexString(),
+        )
         return try {
             val response = tangemTechApi.createUserNetworkAccount(
                 cardPublicKey = authProvider.getCardPublicKey(),
