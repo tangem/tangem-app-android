@@ -1,9 +1,9 @@
 package com.tangem.datasource.di
 
 import com.tangem.blockchain.common.AccountCreator
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.blockchain.DefaultAccountCreator
-import com.tangem.lib.auth.AuthProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
