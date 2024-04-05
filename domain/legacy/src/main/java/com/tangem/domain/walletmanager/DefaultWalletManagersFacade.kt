@@ -192,7 +192,16 @@ class DefaultWalletManagersFacade(
                 address = walletManager.wallet.address,
                 filterType = when (currency) {
                     is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                    is CryptoCurrency.Token -> {
+                        val blockchainToken = Token(
+                            name = currency.name,
+                            symbol = currency.symbol,
+                            contractAddress = currency.contractAddress,
+                            decimals = currency.decimals,
+                            id = currency.id.rawCurrencyId,
+                        )
+                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
+                    }
                 },
             )
             .let(txHistoryStateConverter::convert)
@@ -221,7 +230,16 @@ class DefaultWalletManagersFacade(
                 pageSize = pageSize,
                 filterType = when (currency) {
                     is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                    is CryptoCurrency.Token -> {
+                        val blockchainToken = Token(
+                            name = currency.name,
+                            symbol = currency.symbol,
+                            contractAddress = currency.contractAddress,
+                            decimals = currency.decimals,
+                            id = currency.id.rawCurrencyId,
+                        )
+                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
+                    }
                 },
             ),
         )
