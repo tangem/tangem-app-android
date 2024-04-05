@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.blockchain
+package com.tangem.blockchainsdk.datastorage
 
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
