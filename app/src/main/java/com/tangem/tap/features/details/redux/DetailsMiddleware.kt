@@ -404,7 +404,6 @@ class DetailsMiddleware {
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
 
-                    preferencesStorage.shouldShowSaveUserWalletScreen = false
                     store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
                 }
                 .doOnFailure { error ->
