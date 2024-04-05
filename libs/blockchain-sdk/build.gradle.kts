@@ -33,8 +33,7 @@ dependencies {
     // endregion
 
     // region Tangem libraries
-    implementation(deps.tangem.blockchain) {
-        exclude(module = "joda-time")
-    }
+    implementation(deps.tangem.blockchain) { exclude(module = "joda-time") }
+    implementation(deps.tangem.card.core)
     // endregion
 }
