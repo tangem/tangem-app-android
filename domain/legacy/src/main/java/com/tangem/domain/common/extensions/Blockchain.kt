@@ -112,6 +112,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "flare-network/test" -> Blockchain.FlareTestnet
         "taraxa" -> Blockchain.Taraxa
         "taraxa/test" -> Blockchain.TaraxaTestnet
+        "base" -> Blockchain.Base
+        "base/test" -> Blockchain.BaseTestnet
         else -> null
     }
 }
@@ -225,6 +227,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.FlareTestnet -> "flare-network/test"
         Blockchain.Taraxa -> "taraxa"
         Blockchain.TaraxaTestnet -> "taraxa/test"
+        Blockchain.Base -> "base"
+        Blockchain.BaseTestnet -> "base/test"
     }
 }
 
@@ -297,6 +301,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Mantle, Blockchain.MantleTestnet -> "mantle"
         Blockchain.Flare, Blockchain.FlareTestnet -> "flare-networks"
         Blockchain.Taraxa, Blockchain.TaraxaTestnet -> "taraxa"
+        Blockchain.Base, Blockchain.BaseTestnet -> "base"
     }
 }
 
