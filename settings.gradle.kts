@@ -75,8 +75,9 @@ include(":core:deep-links:global")
 // endregion Core modules
 
 // region Libs modules
-include(":libs:crypto")
 include(":libs:auth")
+include(":libs:blockchain-sdk")
+include(":libs:crypto")
 include(":libs:visa")
 // endregion Libs modules
 
