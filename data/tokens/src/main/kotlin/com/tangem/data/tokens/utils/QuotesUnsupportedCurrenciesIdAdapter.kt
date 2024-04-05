@@ -55,6 +55,7 @@ internal class QuotesUnsupportedCurrenciesIdAdapter {
             "manta-network-ethereum" to "ethereum",
             "polygon-zkevm-ethereum" to "ethereum",
             "aurora-ethereum" to "ethereum",
+            "base-ethereum" to "ethereum",
         )
     }
 }
