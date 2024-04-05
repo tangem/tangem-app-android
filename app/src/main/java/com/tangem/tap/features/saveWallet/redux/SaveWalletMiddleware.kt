@@ -50,7 +50,6 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.Save -> saveWalletIfBiometricsEnrolled(state)
             is SaveWalletAction.AllowToUseBiometrics -> allowToUseBiometrics(state)
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
-            is SaveWalletAction.SaveWalletWasShown -> saveWalletWasShown()
             is SaveWalletAction.Dismiss -> dismiss(state)
             is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(state, action.hasBackupError)
             is SaveWalletAction.Save.Success,
@@ -232,10 +231,6 @@ internal class SaveWalletMiddleware {
         } else {
             Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.Off))
         }
-    }
-
-    private fun saveWalletWasShown() {
-        preferencesStorage.shouldShowSaveUserWalletScreen = false
     }
 
     private suspend fun saveAccessCodeIfNeeded(
