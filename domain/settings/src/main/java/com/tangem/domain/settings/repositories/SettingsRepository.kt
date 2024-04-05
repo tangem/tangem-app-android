@@ -4,6 +4,8 @@ interface SettingsRepository {
 
     suspend fun shouldShowSaveUserWalletScreen(): Boolean
 
+    suspend fun setShouldShowSaveUserWalletScreen(value: Boolean)
+
     suspend fun isWalletScrollPreviewEnabled(): Boolean
 
     suspend fun setWalletScrollPreviewAvailability(isEnabled: Boolean)
