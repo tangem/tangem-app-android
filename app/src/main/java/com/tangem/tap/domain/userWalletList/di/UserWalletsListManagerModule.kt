@@ -66,7 +66,7 @@ internal object UserWalletsListManagerModule {
         val secureStorage = AndroidSecureStorage(
             preferences = SecureStorage.createEncryptedSharedPreferences(
                 context = applicationContext,
-                storageName = USER_WALLETS_STORAGE_NAME,
+                storageName = "user_wallets_storage",
             ),
         )
 
