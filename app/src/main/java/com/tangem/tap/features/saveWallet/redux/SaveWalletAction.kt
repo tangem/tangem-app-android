@@ -11,12 +11,10 @@ internal sealed interface SaveWalletAction : Action {
         val backupCardsIds: Set<String>?,
     ) : SaveWalletAction
 
-    data object Save : SaveWalletAction {
+    data object AllowToUseBiometrics : SaveWalletAction {
         data object Success : SaveWalletAction
         data class Error(val error: TangemError) : SaveWalletAction
     }
-
-    data object AllowToUseBiometrics : SaveWalletAction
 
     data object Dismiss : SaveWalletAction
 

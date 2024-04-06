@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.settings.SetSaveWalletScreenShownUseCase
-import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
@@ -24,7 +23,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SaveWalletViewModel @Inject constructor(
-    private val userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val setSaveWalletScreenShownUseCase: SetSaveWalletScreenShownUseCase,
     dispatchers: AppCoroutineDispatcherProvider,
@@ -43,12 +41,7 @@ internal class SaveWalletViewModel @Inject constructor(
 
     fun saveWallet() {
         analyticsEventHandler.send(WalletScreenAnalyticsEvent.MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.On))
-
-        if (userWalletsListManagerFeatureToggles.isGeneralManagerEnabled) {
-            store.dispatch(SaveWalletAction.AllowToUseBiometrics)
-        } else {
-            store.dispatch(SaveWalletAction.Save)
-        }
+        store.dispatch(SaveWalletAction.AllowToUseBiometrics)
     }
 
     fun cancelOrClose() {
