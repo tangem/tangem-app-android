@@ -562,7 +562,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                             )
                         },
                     )
-                    store.dispatchOnMain(GlobalAction.UpdateUserWalletsListManager(userWalletsListManager))
                 }
 
                 val notActivatedCardIds = gatherCardIds(backupState, card).mapNotNull {
