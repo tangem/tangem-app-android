@@ -39,7 +39,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
@@ -59,8 +58,6 @@ import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
-import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
@@ -150,9 +147,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var oneTimeEventFilter: OneTimeEventFilter
 
     @Inject
-    lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
-
-    @Inject
     lateinit var generalUserWalletsListManager: UserWalletsListManager
 
     @Inject
@@ -204,11 +198,7 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         runBlocking {
             featureTogglesManager.init()
 
-            if (userWalletsListManagerFeatureToggles.isGeneralManagerEnabled) {
-                store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
-            } else {
-                initUserWalletsListManager()
-            }
+            store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
 
             blockchainSDKFactory.init()
         }
@@ -256,7 +246,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
-                    userWalletsListManagerFeatureToggles = userWalletsListManagerFeatureToggles,
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
@@ -363,15 +352,5 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initWarningMessagesManager() {
         store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
-    }
-
-    private suspend fun initUserWalletsListManager() {
-        val manager = if (walletsRepository.shouldSaveUserWalletsSync()) {
-            UserWalletsListManager.provideBiometricImplementation(applicationContext)
-        } else {
-            UserWalletsListManager.provideRuntimeImplementation()
-        }
-
-        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 }
