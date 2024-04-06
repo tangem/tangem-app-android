@@ -18,7 +18,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
@@ -60,7 +59,6 @@ data class DaggerGraphState(
     val sendRouter: SendRouter? = null,
     val qrScanningRouter: QrScanningRouter? = null,
     val currenciesRepository: CurrenciesRepository? = null,
-    val userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles? = null,
     val generalUserWalletsListManager: UserWalletsListManager? = null,
     val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
