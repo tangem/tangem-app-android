@@ -104,4 +104,11 @@ internal class DefaultSettingsRepository(
     override suspend fun setShouldSaveAccessCodes(value: Boolean) {
         appPreferencesStore.store(key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY, value = value)
     }
+
+    override suspend fun incrementAppLaunchCounter() {
+        appPreferencesStore.editData { preferences ->
+            val count = preferences.getOrDefault(key = PreferencesKeys.APP_LAUNCH_COUNT_KEY, default = 0)
+            preferences[PreferencesKeys.APP_LAUNCH_COUNT_KEY] = count + 1
+        }
+    }
 }
