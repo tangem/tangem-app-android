@@ -16,7 +16,6 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
-import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.asset.AssetReader
@@ -80,7 +79,6 @@ lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
-lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
 internal lateinit var derivationsFinder: DerivationsFinder
 
@@ -105,9 +103,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
-
-    @Inject
-    lateinit var preferencesDataSource: PreferencesDataSource
 
     @Inject
     lateinit var walletConnect2Repository: WalletConnect2Repository
@@ -202,7 +197,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        preferencesStorage = preferencesDataSource
         walletConnectRepository = WalletConnectRepository(this)
 // [REDACTED_TODO_COMMENT]
 // [REDACTED_JIRA]
