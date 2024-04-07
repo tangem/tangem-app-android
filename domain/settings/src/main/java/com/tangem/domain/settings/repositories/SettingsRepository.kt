@@ -31,4 +31,6 @@ interface SettingsRepository {
     suspend fun shouldSaveAccessCodes(): Boolean
 
     suspend fun setShouldSaveAccessCodes(value: Boolean)
+
+    suspend fun incrementAppLaunchCounter()
 }
