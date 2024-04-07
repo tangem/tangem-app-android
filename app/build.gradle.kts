@@ -88,7 +88,6 @@ dependencies {
     implementation(projects.data.card)
     implementation(projects.data.common)
     implementation(projects.data.settings)
-    implementation(projects.data.source.preferences)
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
