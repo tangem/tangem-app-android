@@ -11,6 +11,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
+import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +27,7 @@ internal class MainViewModel @Inject constructor(
     private val reduxNavController: ReduxNavController,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
     private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
+    private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -40,6 +42,8 @@ internal class MainViewModel @Inject constructor(
     val state: StateFlow<MainScreenState> = stateHolder.stateFlow
 
     init {
+        viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
+
         updateAppCurrencies()
         observeFlips()
         displayBalancesHidingStatusToast()
