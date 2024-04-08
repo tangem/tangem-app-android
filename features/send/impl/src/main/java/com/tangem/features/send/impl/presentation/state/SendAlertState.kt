@@ -12,7 +12,9 @@ internal sealed class SendAlertState {
     abstract val title: TextReference?
     abstract val message: TextReference
     open val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
+    // open val cancelButtonText: TextReference = resourceReference(id = R.string.common_cancel)
     open val onConfirmClick: (() -> Unit)? = null
+    // open val onCancelClick: (() -> Unit)? = null
 
     data class GenericError(
         override val title: TextReference? = resourceReference(id = R.string.send_alert_transaction_failed_title),
