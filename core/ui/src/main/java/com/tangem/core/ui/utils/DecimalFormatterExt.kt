@@ -59,7 +59,7 @@ fun DecimalFormat.getValidatedNumberWithFixedDecimals(text: String, decimals: In
     return if (filteredChars.count { it == decimalSeparator } == 1) {
         val beforeDecimal = filteredChars.substringBefore(decimalSeparator)
         val afterDecimal = filteredChars.substringAfter(decimalSeparator)
-        beforeDecimal + decimalSeparator + afterDecimal.take(decimals)
+        decimals.getWithIntegerDecimals(beforeDecimal, decimalSeparator, afterDecimal)
     }
     // If there is no dot, just take all digits
     else {
@@ -82,7 +82,7 @@ fun DecimalFormat.formatWithThousands(text: String, decimals: Int): String {
             .joinToString(thousandsSeparator.toString())
             .reversed()
         val afterDecimal = localizedText.substringAfter(decimalSeparator)
-        beforeDecimal + decimalSeparator + afterDecimal.take(decimals)
+        decimals.getWithIntegerDecimals(beforeDecimal, decimalSeparator, afterDecimal)
     }
     // If there is no dot, just take all digits
     else {
@@ -150,4 +150,10 @@ fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = Round
     } catch (e: Exception) {
         ""
     }
+}
+
+private fun Int.getWithIntegerDecimals(before: String, separator: Char, after: String): String = if (this == 0) {
+    before
+} else {
+    before + separator + after.take(this)
 }
