@@ -57,6 +57,7 @@ fun InputRowEnterInfoAmount(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     showDivider: Boolean = false,
+    isReadOnly: Boolean = false,
 ) {
     DividerContainer(
         modifier = modifier,
@@ -83,6 +84,7 @@ fun InputRowEnterInfoAmount(
                     ),
                     onValueChange = onValueChange,
                     color = textColor,
+                    isEnabled = !isReadOnly,
                     textStyle = TangemTheme.typography.body2,
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
