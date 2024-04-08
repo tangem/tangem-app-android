@@ -75,4 +75,12 @@ internal sealed class SendAlertState {
         override val message: TextReference =
             resourceReference(id = R.string.send_notification_invalid_reserve_amount_text)
     }
+
+    data class FeeUnreachableError(
+        override val onConfirmClick: (() -> Unit),
+    ) : SendAlertState() {
+        override val title: TextReference = resourceReference(R.string.send_fee_unreachable_error_title)
+        override val message: TextReference = resourceReference(R.string.send_fee_unreachable_error_text)
+        override val confirmButtonText = resourceReference(R.string.warning_button_refresh)
+    }
 }
