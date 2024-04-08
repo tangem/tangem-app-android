@@ -140,7 +140,7 @@ private fun SendingText(uiState: SendUiState, isVisible: Boolean, modifier: Modi
         val feeState = uiState.feeState
         val fiatRate = feeState?.rate
         val fiatAmount = amountState?.amountTextField?.fiatAmount
-        val feeFiat = feeState?.fee?.amount?.value?.multiply(fiatRate)
+        val feeFiat = fiatRate?.let { feeState.fee?.amount?.value?.multiply(it) }
         val sendingFiat = feeFiat?.let { fiatAmount?.value?.plus(it) }
 
         if (feeFiat != null && sendingFiat != null) {
