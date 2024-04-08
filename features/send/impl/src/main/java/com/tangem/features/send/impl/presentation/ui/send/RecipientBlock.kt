@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,7 +40,6 @@ internal fun RecipientBlock(
             .padding(TangemTheme.dimens.spacing12),
     ) {
         AddressBlock(recipientState.addressTextField)
-        MemoBlock(recipientState.memoTextField)
     }
 }
 
@@ -68,28 +66,6 @@ private fun AddressBlock(address: SendTextField.RecipientAddress) {
             text = address.value,
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
-        )
-    }
-}
-
-@Composable
-private fun MemoBlock(memo: SendTextField.RecipientMemo?) {
-    val showMemo = memo != null && memo.value.isNotBlank()
-    if (showMemo) {
-        HorizontalDivider(
-            color = TangemTheme.colors.stroke.primary,
-            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
-        )
-        Text(
-            text = memo?.label?.resolveReference().orEmpty(),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
-        )
-        Text(
-            text = memo?.value.orEmpty(),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
         )
     }
 }
