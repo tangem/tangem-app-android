@@ -1,9 +1,8 @@
 package com.tangem.lib.visa
 
 import arrow.fx.coroutines.parZip
-import com.tangem.lib.visa.model.VisaBalancesAndLimits
-import com.tangem.lib.visa.model.VisaBalancesAndLimits.Balances
-import com.tangem.lib.visa.model.VisaBalancesAndLimits.Limits
+import com.tangem.lib.visa.model.VisaContractInfo
+import com.tangem.lib.visa.model.VisaContractInfo.*
 import com.tangem.lib.visa.utils.toBigDecimal
 import com.tangem.lib.visa.utils.toInstant
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -21,7 +20,7 @@ internal class DefaultVisaContractInfoProvider(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaContractInfoProvider {
 
-    override suspend fun getBalancesAndLimits(walletAddress: String): VisaBalancesAndLimits {
+    override suspend fun getContractInfo(walletAddress: String): VisaContractInfo {
         return parZip(
             dispatchers.io,
             { loadPaymentAccount(walletAddress) },
@@ -64,14 +63,34 @@ internal class DefaultVisaContractInfoProvider(
     private suspend fun fetchBalancesAndLimits(
         paymentAccount: TangemPaymentAccount,
         paymentToken: PaymentTokenInfo,
-    ): VisaBalancesAndLimits = parZip(
+    ): VisaContractInfo = parZip(
         dispatchers.io,
+        { fetchToken(paymentAccount) },
         { fetchBalances(paymentAccount, paymentToken) },
         { fetchLimits(paymentAccount, paymentToken) },
-        { balances, (oldLimit, newLimit, changeDate) ->
-            VisaBalancesAndLimits(balances, oldLimit, newLimit, changeDate)
+        { token, balances, (oldLimit, newLimit, changeDate) ->
+            VisaContractInfo(token, balances, oldLimit, newLimit, changeDate)
         },
     )
+
+    private suspend fun fetchToken(paymentAccount: TangemPaymentAccount): Token {
+        val paymentTokenContractAddress = paymentAccount.paymentToken().send()
+        val paymentTokenContract = ERC20.load(paymentTokenContractAddress, web3j, transactionManager, gasProvider)
+
+        return parZip(
+            dispatchers.io,
+            { paymentTokenContract.name().send() },
+            { paymentTokenContract.symbol().send() },
+            { paymentTokenContract.decimals().send() },
+        ) { name, symbol, decimals ->
+            Token(
+                name = name,
+                symbol = symbol,
+                decimals = decimals.toInt(),
+                address = paymentTokenContractAddress,
+            )
+        }
+    }
 
     private suspend fun fetchBalances(paymentAccount: TangemPaymentAccount, paymentToken: PaymentTokenInfo): Balances {
         return parZip(

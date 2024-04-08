@@ -11,14 +11,11 @@ import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.AccountCreator
-import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
-import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
+import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
-import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.asset.AssetReader
@@ -37,6 +34,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -81,7 +79,6 @@ lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
-lateinit var preferencesStorage: PreferencesDataSource
 lateinit var walletConnectRepository: WalletConnectRepository
 internal lateinit var derivationsFinder: DerivationsFinder
 
@@ -106,9 +103,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
-
-    @Inject
-    lateinit var preferencesDataSource: PreferencesDataSource
 
     @Inject
     lateinit var walletConnect2Repository: WalletConnect2Repository
@@ -156,12 +150,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var oneTimeEventFilter: OneTimeEventFilter
 
     @Inject
-    lateinit var blockchainDataStorage: BlockchainDataStorage
-
-    @Inject
-    lateinit var accountCreator: AccountCreator
-
-    @Inject
     lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
 
     @Inject
@@ -180,10 +168,13 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
 
     @Inject
-    lateinit var blockchainSDKLogger: BlockchainSDKLogger
+    lateinit var tangemSdkLogger: TangemSdkLogger
 
     @Inject
-    lateinit var tangemSdkLogger: TangemSdkLogger
+    lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var blockchainSDKFactory: BlockchainSDKFactory
     // endregion Injected
 
     override fun onCreate() {
@@ -206,7 +197,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        preferencesStorage = preferencesDataSource
         walletConnectRepository = WalletConnectRepository(this)
 
         // TODO: Try to performance and user experience.
@@ -219,6 +209,8 @@ internal class TapApplication : Application(), ImageLoaderFactory {
             } else {
                 initUserWalletsListManager()
             }
+
+            blockchainSDKFactory.init()
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
@@ -264,8 +256,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
-                    blockchainDataStorage = blockchainDataStorage,
-                    accountCreator = accountCreator,
                     userWalletsListManagerFeatureToggles = userWalletsListManagerFeatureToggles,
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
@@ -273,7 +263,8 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     cardRepository = cardRepository,
                     feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
                     tangemSdkLogger = tangemSdkLogger,
-                    blockchainSDKLogger = blockchainSDKLogger,
+                    settingsRepository = settingsRepository,
+                    blockchainSDKFactory = blockchainSDKFactory,
                 ),
             ),
         )

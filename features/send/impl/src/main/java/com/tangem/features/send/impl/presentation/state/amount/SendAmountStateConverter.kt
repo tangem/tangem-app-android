@@ -40,6 +40,7 @@ internal class SendAmountStateConverter(
             isPrimaryButtonEnabled = false,
             notifications = persistentListOf(),
             isFeeLoading = false,
+            appCurrencyCode = appCurrency.code,
             segmentedButtonConfig = if (status.value.fiatRate.isNullOrZero()) {
                 persistentListOf()
             } else {

@@ -1,4 +1,4 @@
-package com.tangem.lib.auth
+package com.tangem.datasource.api.common
 
 /**
  * Provides auth for tangemTech API

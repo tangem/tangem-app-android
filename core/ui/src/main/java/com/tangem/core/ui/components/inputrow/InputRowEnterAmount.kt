@@ -17,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.rememberDecimalFormat
 
 /**
  * Input row for entering amount. Manages correct amount format and validation
@@ -76,7 +78,11 @@ fun InputRowEnterAmount(
                 AmountTextField(
                     value = text,
                     decimals = decimals,
-                    symbol = symbol,
+                    visualTransformation = AmountVisualTransformation(
+                        decimals = decimals,
+                        symbol = symbol,
+                        decimalFormat = rememberDecimalFormat(),
+                    ),
                     onValueChange = onValueChange,
                     color = textColor,
                     textStyle = TangemTheme.typography.body2,

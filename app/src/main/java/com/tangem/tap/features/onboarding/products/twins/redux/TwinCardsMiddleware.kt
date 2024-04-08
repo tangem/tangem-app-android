@@ -6,8 +6,10 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletIdBuilder
@@ -34,6 +36,7 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
@@ -242,8 +245,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             val walletManager = if (twinCardsState.walletManager != null) {
                 twinCardsState.walletManager
             } else {
-                val wmFactory = globalState.tapWalletManager.walletManagerFactory
-                val walletManager = wmFactory.makePrimaryWalletManager(getScanResponse()).guard {
+                val wmFactory = runBlocking {
+                    store.inject(DaggerGraphState::blockchainSDKFactory).getWalletManagerFactorySync()
+                }
+                val walletManager = wmFactory?.makePrimaryWalletManager(getScanResponse()).guard {
                     val message = "Loading cancelled. Cause: wallet manager didn't created"
                     val customError = TapError.CustomError(message)
                     store.dispatchErrorNotification(customError)
@@ -293,8 +298,14 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 return
             }
 
-            val topUpUrl = walletManager.getTopUpUrl() ?: return
+            val scanResponse = onboardingManager?.scanResponse ?: return
             val blockchain = walletManager.wallet.blockchain
+            val cryptoCurrency = CryptoCurrencyFactory().createCoin(
+                blockchain,
+                null,
+                scanResponse.derivationStyleProvider,
+            ) ?: return
+            val topUpUrl = walletManager.getTopUpUrl(cryptoCurrency) ?: return
 
             val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
             Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))

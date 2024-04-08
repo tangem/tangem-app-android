@@ -50,7 +50,6 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.Save -> saveWalletIfBiometricsEnrolled(state)
             is SaveWalletAction.AllowToUseBiometrics -> allowToUseBiometrics(state)
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
-            is SaveWalletAction.SaveWalletWasShown -> saveWalletWasShown()
             is SaveWalletAction.Dismiss -> dismiss(state)
             is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(state, action.hasBackupError)
             is SaveWalletAction.Save.Success,
@@ -156,7 +155,8 @@ internal class SaveWalletMiddleware {
 
                     // Enable saving access codes only if this is the first time user save the wallet
                     if (isFirstSavedWallet) {
-                        preferencesStorage.shouldSaveAccessCodes = true
+                        store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = true)
+
                         store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
                             isBiometricsRequestPolicy = userWallet.hasAccessCode,
                         )
@@ -199,7 +199,9 @@ internal class SaveWalletMiddleware {
 
     private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
         store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
-        preferencesStorage.shouldSaveAccessCodes = true
+
+        store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = true)
+
         store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
             isBiometricsRequestPolicy = userWallet.hasAccessCode,
         )
@@ -229,10 +231,6 @@ internal class SaveWalletMiddleware {
         } else {
             Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.Off))
         }
-    }
-
-    private fun saveWalletWasShown() {
-        preferencesStorage.shouldShowSaveUserWalletScreen = false
     }
 
     private suspend fun saveAccessCodeIfNeeded(

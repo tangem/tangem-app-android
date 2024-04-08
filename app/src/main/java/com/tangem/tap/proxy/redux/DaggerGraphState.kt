@@ -1,9 +1,7 @@
 package com.tangem.tap.proxy.redux
 
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.AccountCreator
-import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
-import com.tangem.blockchain.common.logging.BlockchainSDKLogger
+import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -15,6 +13,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -61,8 +60,6 @@ data class DaggerGraphState(
     val sendRouter: SendRouter? = null,
     val qrScanningRouter: QrScanningRouter? = null,
     val currenciesRepository: CurrenciesRepository? = null,
-    val blockchainDataStorage: BlockchainDataStorage? = null,
-    val accountCreator: AccountCreator? = null,
     val userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles? = null,
     val generalUserWalletsListManager: UserWalletsListManager? = null,
     val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
@@ -70,5 +67,6 @@ data class DaggerGraphState(
     val cardRepository: CardRepository? = null,
     val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
     val tangemSdkLogger: TangemSdkLogger? = null,
-    val blockchainSDKLogger: BlockchainSDKLogger? = null,
+    val settingsRepository: SettingsRepository? = null,
+    val blockchainSDKFactory: BlockchainSDKFactory? = null,
 ) : StateType

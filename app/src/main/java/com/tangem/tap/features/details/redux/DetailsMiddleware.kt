@@ -331,8 +331,10 @@ class DetailsMiddleware {
         }
 
         private fun toggleSaveAccessCodes(state: DetailsState, enable: Boolean) = scope.launch {
+            val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+
             // Nothing to change
-            if (preferencesStorage.shouldSaveAccessCodes == enable) {
+            if (shouldSaveAccessCodes == enable) {
                 store.dispatchWithMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
                 return@launch
             }
@@ -403,7 +405,6 @@ class DetailsMiddleware {
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
 
-                    preferencesStorage.shouldShowSaveUserWalletScreen = false
                     store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
                 }
                 .doOnFailure { error ->
@@ -466,12 +467,14 @@ class DetailsMiddleware {
             return CompletionResult.Success(Unit)
         }
 
-        private fun saveAccessCodes(scanResponse: ScanResponse?): CompletionResult<Unit> {
+        private suspend fun saveAccessCodes(scanResponse: ScanResponse?): CompletionResult<Unit> {
             Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.On))
 
-            preferencesStorage.shouldSaveAccessCodes = true
-            store.inject(DaggerGraphState::cardSdkConfigRepository)
-                .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = scanResponse?.card?.isAccessCodeSet == true)
+            store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = true)
+
+            store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                isBiometricsRequestPolicy = scanResponse?.card?.isAccessCodeSet == true,
+            )
 
             return CompletionResult.Success(Unit)
         }
@@ -481,9 +484,11 @@ class DetailsMiddleware {
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.Off))
 
-                    preferencesStorage.shouldSaveAccessCodes = false
-                    store.inject(DaggerGraphState::cardSdkConfigRepository)
-                        .setAccessCodeRequestPolicy(isBiometricsRequestPolicy = false)
+                    store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = false)
+
+                    store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                        isBiometricsRequestPolicy = false,
+                    )
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to delete saved access codes")
@@ -576,9 +581,8 @@ class DetailsMiddleware {
         val prevUseBiometricsForAccessCode = cardSdkConfigRepository.isBiometricsRequestPolicy()
 
         // Update access code policy for access code saving when a card was scanned
-        cardSdkConfigRepository.setAccessCodeRequestPolicy(
-            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
-        )
+        val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+        cardSdkConfigRepository.setAccessCodeRequestPolicy(isBiometricsRequestPolicy = shouldSaveAccessCodes)
 
         store.inject(DaggerGraphState::scanCardProcessor).scan(
             analyticsEvent = Basic.CardWasScanned(CoreAnalyticsParam.ScannedFrom.MyWallets),

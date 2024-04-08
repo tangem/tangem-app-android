@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.core.deepLinks)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
+    implementation(projects.libs.blockchainSdk)
 
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
@@ -87,7 +88,6 @@ dependencies {
     implementation(projects.data.card)
     implementation(projects.data.common)
     implementation(projects.data.settings)
-    implementation(projects.data.source.preferences)
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)

@@ -4,8 +4,10 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.entities.ProgressState
@@ -21,12 +23,14 @@ import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.mainScope
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
@@ -118,8 +122,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             val walletManager = if (noteState.walletManager != null) {
                 noteState.walletManager
             } else {
-                val wmFactory = globalState.tapWalletManager.walletManagerFactory
-                val walletManager = wmFactory.makePrimaryWalletManager(scanResponse).guard {
+                val wmFactory = runBlocking {
+                    store.inject(DaggerGraphState::blockchainSDKFactory).getWalletManagerFactorySync()
+                }
+                val walletManager = wmFactory?.makePrimaryWalletManager(scanResponse).guard {
                     val message = "Loading cancelled. Cause: wallet manager didn't created"
                     val customError = TapError.CustomError(message)
                     store.dispatchErrorNotification(customError)
@@ -171,8 +177,13 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 return
             }
 
-            val topUpUrl = walletManager.getTopUpUrl() ?: return
             val blockchain = walletManager.wallet.blockchain
+            val cryptoCurrency = CryptoCurrencyFactory().createCoin(
+                blockchain,
+                null,
+                scanResponse.derivationStyleProvider,
+            ) ?: return
+            val topUpUrl = walletManager.getTopUpUrl(cryptoCurrency) ?: return
 
             val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
             Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
