@@ -123,4 +123,18 @@ internal class SendEventStateFactory(
             ),
         )
     }
+
+    fun getFeeUnreachableErrorState(onConsume: () -> Unit): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            event = triggeredEvent(
+                data = SendEvent.ShowAlert(
+                    SendAlertState.FeeUnreachableError(
+                        onConfirmClick = { clickIntents.feeReload(true) },
+                    ),
+                ),
+                onConsume = onConsume,
+            ),
+        )
+    }
 }
