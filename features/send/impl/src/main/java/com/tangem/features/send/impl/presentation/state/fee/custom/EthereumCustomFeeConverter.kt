@@ -18,7 +18,6 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
-import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -29,7 +28,7 @@ internal class EthereumCustomFeeConverter(
     private val clickIntents: SendClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
-) : Converter<Fee.Ethereum, ImmutableList<SendTextField.CustomFee>> {
+) : CustomFeeConverter<Fee.Ethereum> {
 
     override fun convert(value: Fee.Ethereum): ImmutableList<SendTextField.CustomFee> {
         val feeValue = value.amount.value
@@ -77,7 +76,7 @@ internal class EthereumCustomFeeConverter(
         )
     }
 
-    fun convertBack(normalFee: Fee.Ethereum, value: ImmutableList<SendTextField.CustomFee>): Fee.Ethereum {
+    override fun convertBack(normalFee: Fee.Ethereum, value: ImmutableList<SendTextField.CustomFee>): Fee.Ethereum {
         val feeAmount = value[FEE_AMOUNT].value.parseToBigDecimal(value[FEE_AMOUNT].decimals)
         val gasPrice = value[GAS_PRICE].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()
         val gasLimit = value[GAS_LIMIT].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()
