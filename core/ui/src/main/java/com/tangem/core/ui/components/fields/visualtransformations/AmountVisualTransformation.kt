@@ -7,7 +7,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.defaultFormat
 import com.tangem.core.ui.utils.formatWithThousands
-import com.tangem.core.ui.utils.parseToBigDecimal
 import java.text.DecimalFormat
 
 class AmountVisualTransformation(
@@ -23,21 +22,16 @@ class AmountVisualTransformation(
             decimals,
         )
         formattedAmount = formattedAmount.ifEmpty { decimalFormat.defaultFormat() }
-        val decimalValue = text.text.parseToBigDecimal(decimals)
         val formattedText = if (formattedAmount.isNotEmpty() && symbol != null) {
             AnnotatedString(
                 if (currencyCode != null) {
-                    BigDecimalFormatter.formatFiatAmount(
-                        fiatAmount = decimalValue,
+                    BigDecimalFormatter.formatFiatEditableAmount(
+                        fiatAmount = formattedAmount,
                         fiatCurrencyCode = currencyCode,
                         fiatCurrencySymbol = symbol,
                     )
                 } else {
-                    BigDecimalFormatter.formatCryptoAmountUncapped(
-                        cryptoAmount = decimalValue,
-                        cryptoSymbol = symbol,
-                        decimals = decimals,
-                    )
+                    BigDecimalFormatter.formatWithSymbol(formattedAmount, symbol)
                 },
             )
         } else {
