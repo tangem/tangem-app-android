@@ -21,7 +21,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal class FeeStateFactory(
     private val clickIntents: SendClickIntents,
     private val currentStateProvider: Provider<SendUiState>,
-    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
 ) {
@@ -153,7 +153,7 @@ internal class FeeStateFactory(
     }
 
     private fun isFeeApproximate(fee: Fee): Boolean {
-        val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider()
+        val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider() ?: return false
         return isFeeApproximateUseCase(
             networkId = cryptoCurrencyStatus.currency.network.id,
             amountType = fee.amount.type,
