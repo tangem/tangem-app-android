@@ -45,7 +45,7 @@ internal class SendAmountFieldChangeConverter(
                     cryptoAmount = amountTextField.cryptoAmount.copy(value = decimalCryptoValue),
                     fiatAmount = amountTextField.fiatAmount.copy(value = decimalFiatValue),
                     keyboardOptions = KeyboardOptions(
-                        imeAction = if (!isExceedBalance) ImeAction.Done else ImeAction.None,
+                        imeAction = getKeyboardAction(isExceedBalance, decimalCryptoValue),
                         keyboardType = KeyboardType.Number,
                     ),
                 ),
@@ -103,4 +103,11 @@ internal class SendAmountFieldChangeConverter(
             cryptoDecimal > currencyCryptoAmount
         }
     }
+
+    private fun getKeyboardAction(isExceedBalance: Boolean, decimalCryptoValue: BigDecimal) =
+        if (!isExceedBalance && !decimalCryptoValue.isZero()) {
+            ImeAction.Done
+        } else {
+            ImeAction.None
+        }
 }
