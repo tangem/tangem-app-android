@@ -33,7 +33,7 @@ internal class SendStateFactory(
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val isTapHelpPreviewEnabledProvider: Provider<Boolean>,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
