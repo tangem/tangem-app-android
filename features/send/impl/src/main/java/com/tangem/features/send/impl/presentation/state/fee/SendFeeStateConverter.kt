@@ -20,6 +20,7 @@ internal class SendFeeStateConverter(
             rate = feeCryptoCurrencyStatusProvider().value.fiatRate,
             appCurrency = appCurrencyProvider(),
             isFeeApproximate = false,
+            isCustomSelected = false,
         )
     }
 }
