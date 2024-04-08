@@ -110,7 +110,7 @@ class MockTangemSdkManager(
 
     override suspend fun setAccessCodeRecoveryEnabled(
         cardId: String?,
-        enabled: Boolean
+        enabled: Boolean,
     ): CompletionResult<SuccessResponse> {
         TODO()
     }

@@ -5,7 +5,6 @@ import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.common.*
 import com.tangem.common.authentication.keystore.KeystoreManager
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.secure.SecureStorage
