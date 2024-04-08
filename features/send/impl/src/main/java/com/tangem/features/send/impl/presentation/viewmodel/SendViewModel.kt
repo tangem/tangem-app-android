@@ -46,7 +46,6 @@ import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
 import com.tangem.features.send.impl.presentation.analytics.utils.SendOnNextScreenAnalyticSender
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
-import com.tangem.features.send.impl.presentation.state.amount.AmountNotificationFactory
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
 import com.tangem.features.send.impl.presentation.state.confirm.SendNotificationFactory
 import com.tangem.features.send.impl.presentation.state.fee.*
@@ -147,12 +146,6 @@ internal class SendViewModel @Inject constructor(
         feeStateFactory = feeStateFactory,
     )
 
-    private val amountNotificationFactory = AmountNotificationFactory(
-        currentStateProvider = Provider { uiState },
-        stateRouterProvider = Provider { stateRouter },
-        clickIntents = this,
-    )
-
     private val feeNotificationFactory = FeeNotificationFactory(
         currentStateProvider = Provider { uiState },
         stateRouterProvider = Provider { stateRouter },
@@ -194,7 +187,6 @@ internal class SendViewModel @Inject constructor(
     private var memoValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
     private var feeNotificationsJobHolder = JobHolder()
-    private var amountNotificationsJobHolder = JobHolder()
     private var qrScannerJobHolder = JobHolder()
 
     private var sendIdleTimer = 0L
@@ -412,7 +404,9 @@ internal class SendViewModel @Inject constructor(
     private suspend fun UserWallet.toAvailableWallet(): AvailableWallet? {
         return if (!isMultiCurrency) {
             val status = getCryptoCurrencyStatusSyncUseCase(walletId).getOrNull()
-            val address = status?.value?.networkAddress
+            val address = status?.value?.networkAddress.takeIf {
+                status?.currency?.network?.id == cryptoCurrency.network.id
+            }
             address?.let {
                 AvailableWallet(
                     name = name,
@@ -474,16 +468,6 @@ internal class SendViewModel @Inject constructor(
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
             .saveIn(feeNotificationsJobHolder)
-    }
-
-    private fun updateAmountNotifications() {
-        amountNotificationFactory.create()
-            .conflate()
-            .distinctUntilChanged()
-            .onEach { uiState = amountStateFactory.getAmountNotificationState(notifications = it) }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(amountNotificationsJobHolder)
     }
 
     // region screen state navigation
@@ -659,7 +643,7 @@ internal class SendViewModel @Inject constructor(
     // endregion
 
     // region fee
-    override fun feeReload() = loadFee()
+    override fun feeReload(isToNextState: Boolean) = loadFee(isToNextState = isToNextState)
 
     override fun onFeeSelectorClick(feeType: FeeType) {
         uiState = feeStateFactory.onFeeSelectedState(feeType)
@@ -704,18 +688,28 @@ internal class SendViewModel @Inject constructor(
                     }
                 },
                 ifLeft = {
-                    if (isShowStatus) uiState = feeStateFactory.onFeeOnErrorState()
+                    onFeeLoadFailed(isShowStatus, isToNextState)
                 },
             )
-            if (result == null && isShowStatus) {
-                uiState = feeStateFactory.onFeeOnErrorState()
+            if (result == null) {
+                onFeeLoadFailed(isShowStatus, isToNextState)
             }
             updateFeeNotifications()
-            updateAmountNotifications()
         }.saveIn(feeJobHolder)
             .invokeOnCompletion {
                 uiState = amountStateFactory.getOnAmountFeeLoadingCancel()
             }
+    }
+
+    private fun onFeeLoadFailed(isShowStatus: Boolean, isToNextState: Boolean) {
+        when {
+            isToNextState -> {
+                uiState = eventStateFactory.getFeeUnreachableErrorState {
+                    uiState = eventStateFactory.onConsumeEventState()
+                }
+            }
+            isShowStatus -> uiState = feeStateFactory.onFeeOnErrorState()
+        }
     }
 
     private suspend fun checkIfSubtractAvailable() {
@@ -882,8 +876,7 @@ internal class SendViewModel @Inject constructor(
                     },
                     ifLeft = {
                         uiState = stateFactory.getSendingStateUpdate(isSending = false)
-                        eventStateFactory.getGenericErrorState(
-                            error = (it as? GetFeeError.DataError)?.cause,
+                        eventStateFactory.getFeeUnreachableErrorState(
                             onConsume = { uiState = eventStateFactory.onConsumeEventState() },
                         )
                     },
@@ -893,7 +886,7 @@ internal class SendViewModel @Inject constructor(
                     feeUpdatedState
                 } else {
                     uiState = stateFactory.getSendingStateUpdate(isSending = false)
-                    eventStateFactory.getGenericErrorState(
+                    eventStateFactory.getFeeUnreachableErrorState(
                         onConsume = { uiState = eventStateFactory.onConsumeEventState() },
                     )
                 }
