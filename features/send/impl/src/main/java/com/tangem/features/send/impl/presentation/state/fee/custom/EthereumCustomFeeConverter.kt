@@ -28,7 +28,7 @@ import java.math.RoundingMode
 internal class EthereumCustomFeeConverter(
     private val clickIntents: SendClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
 ) : Converter<Fee.Ethereum, ImmutableList<SendTextField.CustomFee>> {
 
     override fun convert(value: Fee.Ethereum): ImmutableList<SendTextField.CustomFee> {
@@ -49,8 +49,8 @@ internal class EthereumCustomFeeConverter(
                 keyboardActions = KeyboardActions(),
             ),
             SendTextField.CustomFee(
-                value = value.gasPrice.toString(),
-                decimals = GAS_DECIMALS,
+                value = value.gasPrice.toBigDecimal().movePointLeft(GIGA_DECIMALS).toString(),
+                decimals = GIGA_DECIMALS,
                 symbol = ETHEREUM_GAS_UNIT,
                 title = resourceReference(R.string.send_gas_price),
                 footer = resourceReference(R.string.send_gas_price_footer),
@@ -105,7 +105,7 @@ internal class EthereumCustomFeeConverter(
 
     private fun getFeeFormatted(fee: BigDecimal?): TextReference {
         val appCurrency = appCurrencyProvider()
-        val rate = feeCryptoCurrencyStatusProvider().value.fiatRate
+        val rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate
         val fiatFee = rate?.let { fee?.multiply(it) }
         return stringReference(
             BigDecimalFormatter.formatFiatAmount(
@@ -118,7 +118,7 @@ internal class EthereumCustomFeeConverter(
 
     private fun checkExceedBalance(feeAmount: BigDecimal?): Boolean {
         val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider()
-        val currencyCryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val currencyCryptoAmount = cryptoCurrencyStatus?.value?.amount ?: BigDecimal.ZERO
 
         return feeAmount == null || feeAmount.isZero() || feeAmount > currencyCryptoAmount
     }
@@ -134,9 +134,9 @@ internal class EthereumCustomFeeConverter(
             setEmpty(GAS_PRICE)
         } else {
             val newFeeAmountDecimal = value.parseToBigDecimal(this[FEE_AMOUNT].decimals)
-            val newFeeAmount = newFeeAmountDecimal.movePointRight(this[FEE_AMOUNT].decimals)
-            val newGasPrice = newFeeAmount.divide(gasLimit, GAS_DECIMALS, RoundingMode.HALF_UP)
-            set(GAS_PRICE, this[GAS_PRICE].copy(value = newGasPrice.parseBigDecimal(GAS_DECIMALS)))
+            val newFeeAmount = newFeeAmountDecimal.movePointRight(this[GAS_PRICE].decimals) // from ETH to GWEI
+            val newGasPrice = newFeeAmount.divide(gasLimit, this[GAS_PRICE].decimals, RoundingMode.HALF_UP)
+            set(GAS_PRICE, this[GAS_PRICE].copy(value = newGasPrice.parseBigDecimal(this[GAS_PRICE].decimals)))
             set(
                 index,
                 this[index].copy(
@@ -154,8 +154,8 @@ internal class EthereumCustomFeeConverter(
             setEmpty(GAS_PRICE)
         } else {
             val newGasPrice = value.parseToBigDecimal(this[GAS_PRICE].decimals)
-                .movePointLeft(this[GAS_PRICE].decimals)
-            val newFeeAmount = (gasLimit * newGasPrice).movePointLeft(this[FEE_AMOUNT].decimals)
+                .movePointLeft(this[GAS_PRICE].decimals) // from GWEI to ETH
+            val newFeeAmount = gasLimit * newGasPrice
             set(
                 FEE_AMOUNT,
                 this[FEE_AMOUNT].copy(
@@ -174,7 +174,7 @@ internal class EthereumCustomFeeConverter(
         } else {
             val newGasLimit = value.parseToBigDecimal(this[GAS_LIMIT].decimals)
             val gasPrice = this[GAS_PRICE].value.parseToBigDecimal(this[GAS_PRICE].decimals)
-                .movePointLeft(this[FEE_AMOUNT].decimals)
+                .movePointLeft(this[GAS_PRICE].decimals) // from GWEI to ETH
             val newFeeAmount = newGasLimit * gasPrice
             set(
                 FEE_AMOUNT,
@@ -198,6 +198,7 @@ internal class EthereumCustomFeeConverter(
 
     companion object {
         private const val ETHEREUM_GAS_UNIT = "GWEI"
+        private const val GIGA_DECIMALS = 9
         private const val FEE_AMOUNT = 0
         private const val GAS_PRICE = 1
         private const val GAS_LIMIT = 2
