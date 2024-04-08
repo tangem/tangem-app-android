@@ -184,7 +184,7 @@ internal class SendViewModel @Inject constructor(
     private var isTapHelpPreviewEnabled: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
-    private var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
     private var balanceJobHolder = JobHolder()
     private var balanceHidingJobHolder = JobHolder()
@@ -328,12 +328,12 @@ internal class SendViewModel @Inject constructor(
     private suspend fun getFeeCurrencyStatusSync(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         isMultiCurrency: Boolean,
-    ): CryptoCurrencyStatus {
+    ): CryptoCurrencyStatus? {
         return if (isMultiCurrency) {
             getFeePaidCryptoCurrencyStatusSyncUseCase(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
-            ).getOrNull() ?: error("Fee currency is unreachable")
+            ).getOrNull()
         } else {
             cryptoCurrencyStatus
         }
@@ -354,7 +354,7 @@ internal class SendViewModel @Inject constructor(
     private fun onDataLoaded(
         currencyStatus: CryptoCurrencyStatus,
         coinCurrencyStatus: CryptoCurrencyStatus,
-        feeCurrencyStatus: CryptoCurrencyStatus,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
     ) {
         cryptoCurrencyStatus = currencyStatus
         coinCryptoCurrencyStatus = coinCurrencyStatus
