@@ -412,7 +412,9 @@ internal class SendViewModel @Inject constructor(
     private suspend fun UserWallet.toAvailableWallet(): AvailableWallet? {
         return if (!isMultiCurrency) {
             val status = getCryptoCurrencyStatusSyncUseCase(walletId).getOrNull()
-            val address = status?.value?.networkAddress
+            val address = status?.value?.networkAddress.takeIf {
+                status?.currency?.network?.id == cryptoCurrency.network.id
+            }
             address?.let {
                 AvailableWallet(
                     name = name,
