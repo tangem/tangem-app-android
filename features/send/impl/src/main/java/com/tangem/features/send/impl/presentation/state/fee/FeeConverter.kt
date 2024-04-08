@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.send.impl.presentation.state.fee.custom.BitcoinCustomFeeConverter
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
@@ -18,6 +19,14 @@ internal class FeeConverter(
 
     private val ethereumCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
         EthereumCustomFeeConverter(
+            clickIntents = clickIntents,
+            appCurrencyProvider = appCurrencyProvider,
+            feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
+        )
+    }
+
+    private val bitcoinCustomFeeConverter by lazy(LazyThreadSafetyMode.NONE) {
+        BitcoinCustomFeeConverter(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
@@ -46,6 +55,7 @@ internal class FeeConverter(
         } else {
             when (normalFee) {
                 is Fee.Ethereum -> ethereumCustomFeeConverter.convertBack(normalFee = normalFee, value = customValues)
+                is Fee.Bitcoin -> bitcoinCustomFeeConverter.convertBack(normalFee = normalFee, value = customValues)
                 else -> {
                     val customFee = customValues.firstOrNull()
                     Fee.Common(
