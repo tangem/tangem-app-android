@@ -27,6 +27,29 @@ internal enum class BuildType(
             BuildConfigField.TestActionEnabled(isEnabled = true),
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
+            BuildConfigField.MockDataSource(isEnabled = false),
+        ),
+    ),
+
+    /**
+     * Build type for QA and business
+     *
+     * Features:
+     * - Env: dev
+     * - Signing config: debug
+     * - Logs
+     * - Enabled mocked datasource
+     * */
+    Mocked(
+        id = "mocked",
+        appIdSuffix = "mocked",
+        versionSuffix = "mocked",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "dev"),
+            BuildConfigField.TestActionEnabled(isEnabled = false),
+            BuildConfigField.LogEnabled(isEnabled = true),
+            BuildConfigField.TesterMenuAvailability(isEnabled = false),
+            BuildConfigField.MockDataSource(isEnabled = true),
         ),
     ),
 
@@ -50,6 +73,7 @@ internal enum class BuildType(
             BuildConfigField.TestActionEnabled(isEnabled = true),
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
+            BuildConfigField.MockDataSource(isEnabled = false),
         ),
     ),
 
@@ -70,6 +94,7 @@ internal enum class BuildType(
             BuildConfigField.TestActionEnabled(isEnabled = false),
             BuildConfigField.LogEnabled(isEnabled = false),
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
+            BuildConfigField.MockDataSource(isEnabled = false),
         ),
     ),
 
@@ -88,6 +113,7 @@ internal enum class BuildType(
             BuildConfigField.TestActionEnabled(isEnabled = false),
             BuildConfigField.LogEnabled(isEnabled = false),
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
+            BuildConfigField.MockDataSource(isEnabled = false),
         ),
     ),
 }
