@@ -64,7 +64,7 @@ internal fun LazyListScope.customFee(
     item(
         key = FEE_CUSTOM_KEY,
     ) {
-        SendCustomFeeEthereum(
+        SendCustomFee(
             customValues = feeSendState.customValues,
             selectedFee = feeSendState.selectedFee,
             hasNotifications = hasNotifications,
