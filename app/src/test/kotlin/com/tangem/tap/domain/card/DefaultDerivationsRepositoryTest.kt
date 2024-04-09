@@ -10,7 +10,7 @@ import com.tangem.domain.common.configs.MultiWalletCardConfig
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.DefaultTangemSdkManager
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -21,7 +21,7 @@ import org.junit.Test
  */
 internal class DefaultDerivationsRepositoryTest {
 
-    private val tangemSdkManager = mockk<TangemSdkManager>()
+    private val tangemSdkManager = mockk<DefaultTangemSdkManager>()
     private val userWalletsStore = mockk<UserWalletsStore>()
     private val repository = DefaultDerivationsRepository(
         tangemSdkManager = tangemSdkManager,
