@@ -51,7 +51,11 @@ internal fun SendRecipientContent(
         modifier = Modifier
             .fillMaxSize()
             .background(TangemTheme.colors.background.tertiary)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            ),
     ) {
         addressItem(
             address = address,
@@ -222,7 +226,6 @@ private fun LazyListScope.listItem(
                     .then(
                         if (isLast && index == list.lastIndex) {
                             Modifier
-                                .padding(bottom = TangemTheme.dimens.spacing72)
                                 .clip(
                                     shape = RoundedCornerShape(
                                         bottomStart = TangemTheme.dimens.radius16,
