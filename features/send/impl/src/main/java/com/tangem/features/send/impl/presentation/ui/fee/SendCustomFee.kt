@@ -17,7 +17,7 @@ import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun SendCustomFeeEthereum(
+internal fun SendCustomFee(
     customValues: ImmutableList<SendTextField.CustomFee>,
     selectedFee: FeeType,
     hasNotifications: Boolean,
@@ -55,6 +55,7 @@ internal fun SendCustomFeeEthereum(
                             keyboardActions = value.keyboardActions,
                             onValueChange = value.onValueChange,
                             showDivider = false,
+                            isReadOnly = value.isReadonly,
                             modifier = Modifier
                                 .background(
                                     color = TangemTheme.colors.background.action,
