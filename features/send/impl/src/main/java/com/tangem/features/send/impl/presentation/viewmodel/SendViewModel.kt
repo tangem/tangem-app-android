@@ -464,7 +464,7 @@ internal class SendViewModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .onEach { uiState = feeStateFactory.getFeeNotificationState(notifications = it) }
-            .flowOn(dispatchers.io)
+            .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
             .saveIn(feeNotificationsJobHolder)
     }
