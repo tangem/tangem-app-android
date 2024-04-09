@@ -35,7 +35,11 @@ internal fun SendContent(uiState: SendUiState) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            ),
     ) {
         blocks(uiState)
         tapHelp(isDisplay = sendState.showTapHelp)
