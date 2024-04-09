@@ -24,7 +24,11 @@ internal fun SendAmountContent(
     if (amountState == null) return
     LazyColumn(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            )
             .background(TangemTheme.colors.background.tertiary),
     ) {
         amountField(amountState = amountState, isBalanceHiding = isBalanceHiding)
