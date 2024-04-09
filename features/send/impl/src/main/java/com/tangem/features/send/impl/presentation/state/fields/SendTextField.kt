@@ -64,5 +64,6 @@ internal sealed class SendTextField {
         val title: TextReference,
         val footer: TextReference,
         val label: TextReference? = null,
+        val isReadonly: Boolean = false,
     ) : SendTextField()
 }
