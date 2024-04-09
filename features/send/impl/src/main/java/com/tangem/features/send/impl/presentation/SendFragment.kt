@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -73,7 +74,8 @@ internal class SendFragment : ComposeFragment() {
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
-        SendScreen(viewModel.uiState, viewModel.stateRouter.currentState)
+        val currentState = viewModel.stateRouter.currentState.collectAsStateWithLifecycle()
+        SendScreen(viewModel.uiState, currentState.value)
     }
 
     override fun onDestroy() {
