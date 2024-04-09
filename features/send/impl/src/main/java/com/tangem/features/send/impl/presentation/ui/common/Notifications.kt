@@ -21,11 +21,6 @@ internal fun LazyListScope.notifications(
         key = { _, item -> item::class.java },
         contentType = { _, item -> item::class.java },
         itemContent = { i, item ->
-            val bottomPadding = if (i == notifications.lastIndex) {
-                TangemTheme.dimens.spacing72
-            } else {
-                TangemTheme.dimens.spacing0
-            }
             val topPadding = if (i == 0 && hasPaddingAbove) {
                 TangemTheme.dimens.spacing0
             } else {
@@ -34,10 +29,7 @@ internal fun LazyListScope.notifications(
             Notification(
                 config = item.config,
                 modifier = modifier
-                    .padding(
-                        top = topPadding,
-                        bottom = bottomPadding,
-                    )
+                    .padding(top = topPadding)
                     .animateItemPlacement(),
                 containerColor = when (item) {
                     is SendNotification.Error.ExceedsBalance,
