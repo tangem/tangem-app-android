@@ -197,7 +197,7 @@ class GetCurrencyWarningsUseCase(
                     coinCurrency = coinStatus.currency,
                 )
             }
-            feePaidCurrency is FeePaidCurrency.SameCurrency && !tokenStatus.value.amount.isZero() -> {
+            feePaidCurrency is FeePaidCurrency.SameCurrency && tokenStatus.value.amount.isZero() -> {
                 CryptoCurrencyWarning.BalanceNotEnoughForFee(
                     tokenCurrency = tokenStatus.currency,
                     coinCurrency = coinStatus.currency,
