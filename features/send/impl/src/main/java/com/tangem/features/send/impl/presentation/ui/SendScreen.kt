@@ -11,7 +11,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -25,11 +24,9 @@ import com.tangem.features.send.impl.presentation.ui.amount.SendAmountContent
 import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
 import com.tangem.features.send.impl.presentation.ui.send.SendContent
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUiCurrentScreen>) {
-    val currentState = currentStateFlow.collectAsStateWithLifecycle()
+internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen) {
     val snackbarHostState = remember { SnackbarHostState() }
     val sendState = uiState.sendState ?: return
     BackHandler { uiState.clickIntents.onBackClick() }
@@ -37,11 +34,10 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding()
-            .imePadding()
             .background(color = TangemTheme.colors.background.tertiary),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val titleRes = when (currentState.value.type) {
+        val titleRes = when (currentState.type) {
             SendUiStateType.Amount -> resourceReference(R.string.send_amount_label)
             SendUiStateType.Recipient -> resourceReference(R.string.send_recipient_label)
             SendUiStateType.Fee -> resourceReference(R.string.common_fee_selector_title)
@@ -52,13 +48,13 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
             }
             else -> null
         }
-        val isSending = currentState.value.type == SendUiStateType.Send && !uiState.sendState.isSuccess
+        val isSending = currentState.type == SendUiStateType.Send && !uiState.sendState.isSuccess
         val subtitleRes = if (isSending) {
             uiState.amountState?.walletName
         } else {
             null
         }
-        val iconRes = if (currentState.value.type == SendUiStateType.Recipient) {
+        val iconRes = if (currentState.type == SendUiStateType.Recipient) {
             R.drawable.ic_qrcode_scan_24
         } else {
             null
@@ -74,17 +70,16 @@ internal fun SendScreen(uiState: SendUiState, currentStateFlow: StateFlow<SendUi
             backgroundColor = TangemTheme.colors.background.tertiary,
             modifier = Modifier.height(TangemTheme.dimens.size56),
         )
-        Box(modifier = Modifier.weight(1f)) {
-            SendScreenContent(
-                uiState = uiState,
-                currentState = currentState.value,
-            )
-            SendNavigationButtons(
-                uiState = uiState,
-                currentState = currentState.value,
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
-        }
+        SendScreenContent(
+            uiState = uiState,
+            currentState = currentState,
+            modifier = Modifier.weight(1f),
+        )
+        SendNavigationButtons(
+            uiState = uiState,
+            currentState = currentState,
+            modifier = Modifier.imePadding(),
+        )
     }
 
     SendEventEffect(
