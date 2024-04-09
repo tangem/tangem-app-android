@@ -31,7 +31,9 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
             .fillMaxSize()
             .background(TangemTheme.colors.background.tertiary)
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
         feeSelector(state, clickIntents)
