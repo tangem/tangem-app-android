@@ -24,7 +24,7 @@ class MockTangemSdkManager(
 ) : TangemSdkManager {
 
     override val canUseBiometry: Boolean
-        get() = TODO()
+        get() = true
 
     override val needEnrollBiometrics: Boolean
         get() = TODO()
@@ -134,7 +134,6 @@ class MockTangemSdkManager(
 
     @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
-        TODO()
     }
 
     @Deprecated("TangemSdkManager shouldn't returns a string from resources")

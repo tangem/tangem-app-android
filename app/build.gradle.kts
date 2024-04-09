@@ -216,6 +216,8 @@ dependencies {
     androidTestImplementation(deps.test.kaspresso.compose)
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
+    androidTestImplementation(deps.test.hilt)
+    kaptAndroidTest(deps.test.hilt.compiler)
 
     /** Chucker */
     debugImplementation(deps.chucker)
