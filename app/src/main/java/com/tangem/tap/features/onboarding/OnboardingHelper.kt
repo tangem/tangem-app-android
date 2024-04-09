@@ -90,12 +90,7 @@ object OnboardingHelper {
                         ),
                     )
 
-                    val toggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
-                    if (toggles.isGeneralManagerEnabled) {
-                        store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
-                    } else {
-                        store.dispatchWithMain(SaveWalletAction.Save)
-                    }
+                    store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
