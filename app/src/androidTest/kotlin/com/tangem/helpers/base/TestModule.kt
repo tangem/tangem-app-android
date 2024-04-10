@@ -12,18 +12,18 @@ import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
 import javax.inject.Singleton
 
-// @Module
-// @TestInstallIn(
-//     components = [SingletonComponent::class],
-//     replaces = [TangemSdkManagerModule::class]
-// )
-// object TestModule {
-//
-//     @Provides
-//     @Singleton
-//     fun provideTangemSdkManager(
-//         @ApplicationContext context: Context
-//     ): TangemSdkManager {
-//         return MockTangemSdkManager(resources = context.resources)
-//     }
-// }
+@Module
+@TestInstallIn(
+    components = [SingletonComponent::class],
+    replaces = [TangemSdkManagerModule::class]
+)
+object TestModule {
+
+    @Provides
+    @Singleton
+    fun provideTangemSdkManager(
+        @ApplicationContext context: Context
+    ): TangemSdkManager {
+        return MockTangemSdkManager(resources = context.resources)
+    }
+}

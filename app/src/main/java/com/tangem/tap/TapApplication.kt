@@ -65,8 +65,13 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
+import dagger.hilt.EntryPoint
+import dagger.hilt.EntryPoints
+import dagger.hilt.InstallIn
 import dagger.hilt.android.EarlyEntryPoints
-import kotlinx.coroutines.runBlocking
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.*
 import org.rekotlin.Store
 import timber.log.Timber
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
@@ -78,9 +83,10 @@ lateinit var activityResultCaller: ActivityResultCaller
 lateinit var walletConnectRepository: WalletConnectRepository
 internal lateinit var derivationsFinder: DerivationsFinder
 
-open class TapApplication : Application(), ImageLoaderFactory {
+abstract class TapApplication : Application(), ImageLoaderFactory {
+
     private val entryPoint: ApplicationEntryPoint
-        get() = EarlyEntryPoints.get(this, ApplicationEntryPoint::class.java)
+        get() = EntryPoints.get(this, ApplicationEntryPoint::class.java)
 
     private val appStateHolder: AppStateHolder
         get() = entryPoint.getAppStateHolder()
@@ -172,6 +178,10 @@ open class TapApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
+        init()
+    }
+
+    fun init() {
         store = createReduxStore()
 
         if (BuildConfig.LOG_ENABLED) {

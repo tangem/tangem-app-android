@@ -29,11 +29,12 @@ import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsReposito
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
 import com.tangem.tap.proxy.AppStateHolder
+import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EarlyEntryPoint
 import dagger.hilt.components.SingletonComponent
 
-@EarlyEntryPoint
+@EntryPoint
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions")
 interface ApplicationEntryPoint {
