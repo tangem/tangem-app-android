@@ -17,10 +17,6 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.*
-import com.tangem.features.send.impl.presentation.state.SendNotification
-import com.tangem.features.send.impl.presentation.state.SendStates
-import com.tangem.features.send.impl.presentation.state.SendUiState
-import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
@@ -38,6 +34,7 @@ import java.math.BigDecimal
 internal class SendNotificationFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feePaidCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val currencyChecksRepository: CurrencyChecksRepository,
@@ -91,10 +88,11 @@ internal class SendNotificationFactory(
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val coinCryptoCurrencyStatus = coinCryptoCurrencyStatusProvider()
+        val feePaidCryptoCurrencyStatus = feePaidCryptoCurrencyStatusProvider()
         val cryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val coinCryptoAmount = coinCryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
 
-        val showNotification = if (cryptoCurrencyStatus.currency is CryptoCurrency.Token) {
+        val showNotification = if (cryptoCurrencyStatus.currency.id == feePaidCryptoCurrencyStatus?.currency?.id) {
             receivedAmount > cryptoAmount || feeAmount > coinCryptoAmount
         } else {
             receivedAmount + feeAmount > cryptoAmount
