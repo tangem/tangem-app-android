@@ -31,7 +31,6 @@ import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as Wa
 import com.tangem.tap.proxy.AppStateHolder
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
-import dagger.hilt.android.EarlyEntryPoint
 import dagger.hilt.components.SingletonComponent
 
 @EntryPoint
@@ -96,5 +95,4 @@ interface ApplicationEntryPoint {
     fun getSettingsRepository(): SettingsRepository
 
     fun getBlockchainSDKFactory(): BlockchainSDKFactory
-
 }
