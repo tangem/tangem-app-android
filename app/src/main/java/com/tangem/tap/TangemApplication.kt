@@ -58,7 +58,6 @@ import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
@@ -75,7 +74,6 @@ lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
-lateinit var walletConnectRepository: WalletConnectRepository
 internal lateinit var derivationsFinder: DerivationsFinder
 
 abstract class TangemApplication : Application(), ImageLoaderFactory {
@@ -193,8 +191,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         foregroundActivityObserver = ForegroundActivityObserver()
         activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
-
-        walletConnectRepository = WalletConnectRepository(this)
 
         // TODO: Try to performance and user experience.
         //  https://tangem.atlassian.net/browse/AND-3859
