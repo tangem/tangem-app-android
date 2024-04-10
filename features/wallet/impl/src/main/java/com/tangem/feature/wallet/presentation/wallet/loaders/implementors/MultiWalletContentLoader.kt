@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -12,7 +11,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsCheck
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletTokenListSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletConnectNetworksSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 
@@ -28,7 +26,6 @@ internal class MultiWalletContentLoader(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
-    private val reduxStateHolder: ReduxStateHolder,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -49,11 +46,6 @@ internal class MultiWalletContentLoader(
                 clickIntents = clickIntents,
                 getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,
                 walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
-            ),
-            WalletConnectNetworksSubscriber(
-                userWallet = userWallet,
-                getTokenListUseCase = getTokenListUseCase,
-                reduxStateHolder = reduxStateHolder,
             ),
         )
     }
