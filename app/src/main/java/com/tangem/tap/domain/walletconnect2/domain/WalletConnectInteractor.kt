@@ -1,25 +1,51 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.*
 import com.tangem.tap.features.details.ui.walletconnect.WcSessionForScreen
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
+import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@Suppress("LargeClass", "LongParameterList")
 class WalletConnectInteractor(
     private val handler: WalletConnectEventsHandler,
     private val walletConnectRepository: WalletConnectRepository,
     private val sessionsRepository: WalletConnectSessionsRepository,
     private val sdkHelper: WalletConnectSdkHelper,
-    private val dispatcher: CoroutineDispatcherProvider,
+    private val dispatchers: CoroutineDispatcherProvider,
+    private val walletManagersFacade: WalletManagersFacade,
+    private val currenciesRepository: CurrenciesRepository,
+    private val walletsStateHolder: WalletsStateHolder,
     val blockchainHelper: WcBlockchainHelper,
 ) {
+
+    private val getSelectedWalletUseCase by lazy(LazyThreadSafetyMode.NONE) {
+        GetSelectedWalletUseCase(walletsStateHolder)
+    }
+
+    private val wcScope = CoroutineScope(
+        Job() + dispatchers.io + FeatureCoroutineExceptionHandler.create("wcScope"),
+    )
+
+    private val listenerScope = CoroutineScope(
+        Job() + dispatchers.io + FeatureCoroutineExceptionHandler.create("listenScope"),
+    )
 
     private val events = walletConnectRepository.events
     private val sessions = walletConnectRepository.activeSessions
@@ -34,19 +60,56 @@ class WalletConnectInteractor(
         sdkHelper = sdkHelper,
     )
 
-    suspend fun startListening(userWalletId: String, cardId: String?) {
+    init {
+        getSelectedWalletUseCase().onRight { userWalletFlow ->
+            userWalletFlow
+                .conflate()
+                .distinctUntilChanged()
+                .onEach(::initWithWallet)
+                .flowOn(dispatchers.io)
+                .launchIn(wcScope)
+        }
+    }
+
+    private suspend fun initWithWallet(userWallet: UserWallet) {
+        if (userWallet.isMultiCurrency) {
+            Timber.d("WalletConnect: initialize and setup networks for ${userWallet.walletId}")
+            startListeningWc(userWallet.walletId.stringValue, getCardId(userWallet))
+            subscribeOnCurrenciesUpdates(userWallet)
+        }
+    }
+
+    private fun subscribeOnCurrenciesUpdates(userWallet: UserWallet) {
+        currenciesRepository.getMultiCurrencyWalletCurrenciesUpdates(userWallet.walletId)
+            .conflate()
+            .distinctUntilChanged()
+            .onEach { currencies ->
+                setupUserChains(userWallet, currencies)
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(wcScope)
+    }
+
+    private suspend fun setupUserChains(userWallet: UserWallet, currencies: List<CryptoCurrency>) {
+        val accounts = getAccountsForWc(
+            userWallet = userWallet,
+            networks = currencies.map { it.network },
+        )
+        setUserChains(accounts)
+    }
+
+    private suspend fun startListeningWc(userWalletId: String, cardId: String?) {
         this.userWalletId = userWalletId
         this.cardId = cardId
-
-        coroutineScope {
+        listenerScope.coroutineContext.cancelChildren()
+        listenerScope.launch {
             launch { subscribeToEvents() }
             launch { subscribeToSessions() }
-
             walletConnectRepository.updateSessions()
         }
     }
 
-    fun setUserChains(accounts: List<Account>) {
+    private fun setUserChains(accounts: List<Account>) {
         val userNamespaces: Map<NetworkNamespace, List<Account>> = accounts
             .groupBy { account ->
                 blockchainHelper.getNamespaceFromFullChainIdOrNull(account.chainId)
@@ -106,7 +169,7 @@ class WalletConnectInteractor(
                     }
                 }
             }
-            .flowOn(dispatcher.io)
+            .flowOn(dispatchers.io)
             .collect()
     }
 
@@ -117,7 +180,7 @@ class WalletConnectInteractor(
                 val filteredSessions = filterSessionsForUserWallet(listOfSessions, relevantTopics)
                 handler.onListOfSessionsUpdated(filteredSessions)
             }
-            .flowOn(dispatcher.io)
+            .flowOn(dispatchers.io)
             .collect()
     }
 
@@ -256,6 +319,38 @@ class WalletConnectInteractor(
 
     fun isWalletConnectUri(uri: String): Boolean {
         return uri.lowercase().startsWith(WC_SCHEME)
+    }
+
+    private fun getCardId(userWallet: UserWallet): String? {
+        return if (userWallet.scanResponse.card.backupStatus?.isActive != true) {
+            userWallet.cardId
+        } else { // if wallet has backup, any card from wallet can be used to sign
+            null
+        }
+    }
+
+    private suspend fun getAccountsForWc(userWallet: UserWallet, networks: List<Network>): List<Account> {
+        val walletManagers = networks.mapNotNull {
+            val blockchain = Blockchain.fromId(it.id.value)
+            walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWallet.walletId,
+                blockchain = blockchain,
+                derivationPath = it.derivationPath.value,
+            )
+        }
+        return walletManagers.mapNotNull {
+            val wallet = it.wallet
+            val chainId = blockchainHelper.networkIdToChainIdOrNull(
+                wallet.blockchain.toNetworkId(),
+            )
+            chainId?.let {
+                Account(
+                    chainId,
+                    wallet.address,
+                    wallet.publicKey.derivationPath?.rawPath,
+                )
+            }
+        }
     }
 
     private suspend fun prepareRequestData(sessionRequest: WalletConnectEvents.SessionRequest): WcPreparedRequest? {
