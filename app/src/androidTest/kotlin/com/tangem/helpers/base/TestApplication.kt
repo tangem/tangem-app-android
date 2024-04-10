@@ -2,5 +2,5 @@ package com.tangem.helpers.base
 
 import dagger.hilt.android.testing.CustomTestApplication
 
-@CustomTestApplication(MockedApplication::class)
+@CustomTestApplication(TangemMockedApplication::class)
 internal class TestApplication
