@@ -1,11 +1,6 @@
 package com.tangem.helpers.base
 
-import com.tangem.tap.TangemApplication
+import dagger.hilt.android.testing.CustomTestApplication
 
-open class TangemMockedApplication : TangemApplication() {
-
-    override fun onCreate() {
-        // we intentionally don't call super.onCreate()
-    }
-
-}
+@CustomTestApplication(TangemEmptyApplication::class)
+internal class TangemMockedApplication

@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
 import javax.inject.Inject
 
 @RunWith(AndroidJUnit4::class)
-abstract class BaseAutoTestCase : TestCase(
+abstract class BaseTestCase : TestCase(
     kaspressoBuilder = Kaspresso.Builder.withComposeSupport()
 ) {
 

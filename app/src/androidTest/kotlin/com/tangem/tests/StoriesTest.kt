@@ -1,7 +1,7 @@
 package com.tangem.tests
 
 import android.content.Intent.ACTION_VIEW
-import com.tangem.helpers.base.BaseAutoTestCase
+import com.tangem.helpers.base.BaseTestCase
 import com.tangem.screens.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -10,7 +10,7 @@ import io.github.kakaocup.kakao.intent.KIntent
 import org.junit.Test
 
 @HiltAndroidTest
-class StoriesTest : BaseAutoTestCase() {
+class StoriesTest : BaseTestCase() {
 
     @Test
     fun clickOnButtons() =

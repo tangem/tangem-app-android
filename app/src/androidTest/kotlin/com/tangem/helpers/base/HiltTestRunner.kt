@@ -12,6 +12,6 @@ class HiltTestRunner : AndroidJUnitRunner() {
         className: String?,
         context: Context?
     ): Application {
-        return super.newApplication(cl, TestApplication_Application::class.java.name, context)
+        return super.newApplication(cl, TangemMockedApplication_Application::class.java.name, context)
     }
 }
