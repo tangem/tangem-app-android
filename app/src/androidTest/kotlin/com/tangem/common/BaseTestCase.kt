@@ -1,4 +1,4 @@
-package com.tangem.helpers.base
+package com.tangem.common
 
 import android.Manifest
 import androidx.compose.ui.test.junit4.createAndroidComposeRule

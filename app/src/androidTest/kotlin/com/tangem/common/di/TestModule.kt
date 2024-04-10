@@ -1,7 +1,6 @@
-package com.tangem.helpers.base
+package com.tangem.common.di
 
 import android.content.Context
-import com.tangem.tap.di.ActivityModule
 import com.tangem.tap.di.TangemSdkManagerModule
 import com.tangem.tap.domain.MockTangemSdkManager
 import com.tangem.tap.domain.TangemSdkManager

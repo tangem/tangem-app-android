@@ -1,7 +1,7 @@
 package com.tangem.tests
 
 import android.content.Intent.ACTION_VIEW
-import com.tangem.helpers.base.BaseTestCase
+import com.tangem.common.BaseTestCase
 import com.tangem.screens.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import dagger.hilt.android.testing.HiltAndroidTest

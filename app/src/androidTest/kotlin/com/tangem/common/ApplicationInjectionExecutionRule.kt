@@ -1,4 +1,4 @@
-package com.tangem.helpers.base
+package com.tangem.common
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread

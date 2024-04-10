@@ -1,4 +1,4 @@
-package com.tangem.helpers.base
+package com.tangem.common
 
 import com.tangem.tap.TangemApplication
 
