@@ -249,9 +249,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode?> {
-        val tapApplication = application as TapApplication
+        val tangemApplication = application as TangemApplication
 
-        return tapApplication.getAppThemeModeUseCase()
+        return tangemApplication.getAppThemeModeUseCase()
             .map { maybeMode ->
                 maybeMode.getOrElse { AppThemeMode.DEFAULT }
             }

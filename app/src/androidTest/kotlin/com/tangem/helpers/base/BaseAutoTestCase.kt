@@ -11,7 +11,7 @@ import com.kaspersky.components.composesupport.config.withComposeSupport
 import com.kaspersky.kaspresso.kaspresso.Kaspresso
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import com.tangem.tap.MainActivity
-import com.tangem.tap.TapApplication
+import com.tangem.tap.TangemApplication
 import com.tangem.tap.domain.TangemSdkManager
 import dagger.hilt.android.testing.HiltAndroidRule
 import org.junit.Rule

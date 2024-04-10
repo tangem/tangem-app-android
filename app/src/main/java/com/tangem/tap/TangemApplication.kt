@@ -83,7 +83,7 @@ lateinit var activityResultCaller: ActivityResultCaller
 lateinit var walletConnectRepository: WalletConnectRepository
 internal lateinit var derivationsFinder: DerivationsFinder
 
-abstract class TapApplication : Application(), ImageLoaderFactory {
+abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val entryPoint: ApplicationEntryPoint
         get() = EntryPoints.get(this, ApplicationEntryPoint::class.java)
