@@ -19,10 +19,8 @@ class ApplicationInjectionExecutionRule : TestRule {
             override fun evaluate() {
                 OnComponentReadyRunner.addListener(
                     targetApplication, ApplicationEntryPoint::class.java
-                ) { entryPoint: ApplicationEntryPoint ->
-                    runOnUiThread {
-                        targetApplication.init()
-                    }
+                ) { _: ApplicationEntryPoint ->
+                    targetApplication.init()
                 }
                 base.evaluate()
             }
