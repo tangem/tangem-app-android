@@ -1,8 +1,9 @@
-package com.tangem.common.di
+package com.tangem.common
 
 import android.app.Application
 import android.content.Context
 import androidx.test.runner.AndroidJUnitRunner
+import com.tangem.common.di.TangemMockedApplication_Application
 
 class HiltTestRunner : AndroidJUnitRunner() {
 

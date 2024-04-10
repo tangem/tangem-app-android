@@ -37,7 +37,7 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
 
         buildFeatures.buildConfig = true
 
-        testInstrumentationRunner = "com.tangem.helpers.base.HiltTestRunner"
+        testInstrumentationRunner = "com.tangem.common.HiltTestRunner"
     }
 }
 
