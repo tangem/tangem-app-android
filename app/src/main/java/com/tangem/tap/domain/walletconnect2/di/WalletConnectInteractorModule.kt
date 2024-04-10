@@ -6,6 +6,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.files.FileReader
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl
@@ -35,6 +38,9 @@ internal object WalletConnectInteractorModule {
         wcRepository: WalletConnectRepository,
         wcSessionsRepository: WalletConnectSessionsRepository,
         walletConnectFeatureToggles: WalletConnectFeatureToggles,
+        currenciesRepository: CurrenciesRepository,
+        walletManagersFacade: WalletManagersFacade,
+        walletsStateHolder: WalletsStateHolder,
     ): WalletConnectInteractor {
         return WalletConnectInteractor(
             handler = WalletConnectEventsHandlerImpl(),
@@ -42,7 +48,10 @@ internal object WalletConnectInteractorModule {
             sessionsRepository = wcSessionsRepository,
             sdkHelper = WalletConnectSdkHelper(),
             blockchainHelper = TangemWcBlockchainHelper(walletConnectFeatureToggles),
-            dispatcher = AppCoroutineDispatcherProvider(),
+            currenciesRepository = currenciesRepository,
+            walletManagersFacade = walletManagersFacade,
+            walletsStateHolder = walletsStateHolder,
+            dispatchers = AppCoroutineDispatcherProvider(),
         )
     }
 }
