@@ -6,8 +6,6 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.qrscanning.models.SourceType
-import com.tangem.domain.walletconnect.WalletConnectActions
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
@@ -49,28 +47,6 @@ class WalletConnectMiddleware {
         if (DemoHelper.tryHandle(state, action)) return
 
         when (action) {
-            is WalletConnectActions.New.Initialize -> {
-                val userWallet = action.userWallet
-                val cardId = if (userWallet.scanResponse.card.backupStatus?.isActive != true) {
-                    userWallet.cardId
-                } else { // if wallet has backup, any card from wallet can be used to sign
-                    null
-                }
-                scope.launch {
-                    val wcInteractor = store.state.daggerGraphState.walletConnectInteractor ?: return@launch
-                    wcInteractor.startListening(
-                        userWalletId = userWallet.walletId.stringValue,
-                        cardId = cardId,
-                    )
-                }
-            }
-            is WalletConnectActions.New.SetupUserChains -> {
-                scope.launch {
-                    val userWallet = action.userWallet
-                    val wcInteractor = store.state.daggerGraphState.walletConnectInteractor ?: return@launch
-                    wcInteractor.setUserChains(getAccountsForWc(wcInteractor, userWallet))
-                }
-            }
             is WalletConnectAction.HandleDeepLink -> {
                 if (!action.wcUri.isNullOrBlank()) {
                     store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
@@ -205,22 +181,5 @@ class WalletConnectMiddleware {
 
     private fun isWalletConnectUri(uri: String): Boolean {
         return walletConnectInteractor.isWalletConnectUri(uri)
-    }
-
-    private suspend fun getAccountsForWc(wcInteractor: WalletConnectInteractor, userWallet: UserWallet): List<Account> {
-        val walletManagerFacade = store.inject(DaggerGraphState::walletManagersFacade)
-        return walletManagerFacade.getStoredWalletManagers(userWallet.walletId).mapNotNull {
-            val wallet = it.wallet
-            val chainId = wcInteractor.blockchainHelper.networkIdToChainIdOrNull(
-                wallet.blockchain.toNetworkId(),
-            )
-            chainId?.let {
-                Account(
-                    chainId,
-                    wallet.address,
-                    wallet.publicKey.derivationPath?.rawPath,
-                )
-            }
-        }
     }
 }
