@@ -1,7 +1,6 @@
 package com.tangem.common
 
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import com.tangem.tap.ApplicationEntryPoint
 import com.tangem.tap.TangemApplication
 import dagger.hilt.android.testing.OnComponentReadyRunner
@@ -11,16 +10,16 @@ import org.junit.runners.model.Statement
 
 class ApplicationInjectionExecutionRule : TestRule {
 
-    private val targetApplication: TangemApplication
+    private val tangemApplication: TangemApplication
         get() = ApplicationProvider.getApplicationContext()
 
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
                 OnComponentReadyRunner.addListener(
-                    targetApplication, ApplicationEntryPoint::class.java
+                    tangemApplication, ApplicationEntryPoint::class.java
                 ) { _: ApplicationEntryPoint ->
-                    targetApplication.init()
+                    tangemApplication.init()
                 }
                 base.evaluate()
             }
