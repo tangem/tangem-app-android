@@ -7,7 +7,7 @@ import com.tangem.tap.domain.walletconnect2.domain.WcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 
 internal class TangemWcBlockchainHelper(
-    private val featureToggles: WalletConnectFeatureToggles,
+    featureToggles: WalletConnectFeatureToggles,
 ) : WcBlockchainHelper {
 
     private val supportedNonEvmBlockchains = if (featureToggles.isSolanaTxSignEnabled) {
