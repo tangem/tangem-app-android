@@ -140,4 +140,20 @@ internal object SettingsDomainModule {
     fun provideNeverShowTapHelpUseCase(settingsRepository: SettingsRepository): NeverShowTapHelpUseCase {
         return NeverShowTapHelpUseCase(settingsRepository = settingsRepository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideSetSaveWalletScreenShownUseCase(
+        settingsRepository: SettingsRepository,
+    ): SetSaveWalletScreenShownUseCase {
+        return SetSaveWalletScreenShownUseCase(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIncrementAppLaunchCounterUseCase(
+        settingsRepository: SettingsRepository,
+    ): IncrementAppLaunchCounterUseCase {
+        return IncrementAppLaunchCounterUseCase(settingsRepository = settingsRepository)
+    }
 }

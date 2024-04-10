@@ -35,8 +35,8 @@ import com.tangem.data.card.sdk.CardSdkLifecycleObserver
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.features.managetokens.navigation.ManageTokensUi
@@ -53,7 +53,6 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
@@ -89,11 +88,13 @@ private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
 
-// TODO: Move to DI
-val userWalletsListManagerSafe: UserWalletsListManager?
-    get() = store.state.globalState.userWalletsListManager
-val userWalletsListManager: UserWalletsListManager
-    get() = userWalletsListManagerSafe!!
+// TODO: will be remove in this task https://tangem.atlassian.net/browse/AND-6715
+@Deprecated(message = "Provide UserWalletsListManager using DI")
+val userWalletsListManagerSafe: UserWalletsListManager? get() = store.state.globalState.userWalletsListManager
+
+// TODO: will be remove in this task https://tangem.atlassian.net/browse/AND-6715
+@Deprecated(message = "Provide UserWalletsListManager using DI")
+val userWalletsListManager: UserWalletsListManager get() = userWalletsListManagerSafe!!
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbackHolder {
@@ -139,7 +140,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var deepLinksRegistry: DeepLinksRegistry
 
     @Inject
-    lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
+    lateinit var settingsRepository: SettingsRepository
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -201,7 +202,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
-        lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
+        lockUserWalletsTimer = LockUserWalletsTimer(owner = this, settingsRepository = settingsRepository)
 
         initIntentHandlers()
 
@@ -421,15 +422,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
-        val canSaveWallets = if (userWalletsListManagerFeatureToggles.isGeneralManagerEnabled) {
-            runCatching { userWalletsListManager.asLockable()?.isLockedSync }
-                .fold(onSuccess = { true }, onFailure = { false })
-        } else {
-            userWalletsListManager is BiometricUserWalletsListManager
-        }
-        val hasSavedWallets = userWalletsListManager.hasUserWallets
+        val canSaveWallets = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
+            .fold(onSuccess = { true }, onFailure = { false })
 
-        if (canSaveWallets && hasSavedWallets) {
+        if (canSaveWallets && userWalletsListManager.hasUserWallets) {
             store.dispatch(
                 NavigationAction.NavigateTo(
                     screen = AppScreen.Welcome,

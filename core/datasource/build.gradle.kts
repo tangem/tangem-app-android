@@ -53,6 +53,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
+    mockedImplementation(deps.chuckerStub)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)

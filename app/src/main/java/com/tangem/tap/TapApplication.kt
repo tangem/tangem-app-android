@@ -11,14 +11,11 @@ import com.orhanobut.logger.Logger
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.AccountCreator
-import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
-import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
+import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
-import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.asset.AssetReader
@@ -37,11 +34,11 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
@@ -61,9 +58,6 @@ import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
-import com.tangem.tap.domain.userWalletList.di.provideRuntimeImplementation
-import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
@@ -81,8 +75,6 @@ lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
-lateinit var preferencesStorage: PreferencesDataSource
-lateinit var walletConnectRepository: WalletConnectRepository
 internal lateinit var derivationsFinder: DerivationsFinder
 
 @HiltAndroidApp
@@ -106,9 +98,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     @Inject
     lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
-
-    @Inject
-    lateinit var preferencesDataSource: PreferencesDataSource
 
     @Inject
     lateinit var walletConnect2Repository: WalletConnect2Repository
@@ -156,15 +145,6 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var oneTimeEventFilter: OneTimeEventFilter
 
     @Inject
-    lateinit var blockchainDataStorage: BlockchainDataStorage
-
-    @Inject
-    lateinit var accountCreator: AccountCreator
-
-    @Inject
-    lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
-
-    @Inject
     lateinit var generalUserWalletsListManager: UserWalletsListManager
 
     @Inject
@@ -180,10 +160,13 @@ internal class TapApplication : Application(), ImageLoaderFactory {
     lateinit var feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
 
     @Inject
-    lateinit var blockchainSDKLogger: BlockchainSDKLogger
+    lateinit var tangemSdkLogger: TangemSdkLogger
 
     @Inject
-    lateinit var tangemSdkLogger: TangemSdkLogger
+    lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var blockchainSDKFactory: BlockchainSDKFactory
     // endregion Injected
 
     override fun onCreate() {
@@ -206,19 +189,14 @@ internal class TapApplication : Application(), ImageLoaderFactory {
         activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        preferencesStorage = preferencesDataSource
-        walletConnectRepository = WalletConnectRepository(this)
-
         // TODO: Try to performance and user experience.
         //  https://tangem.atlassian.net/browse/AND-3859
         runBlocking {
             featureTogglesManager.init()
 
-            if (userWalletsListManagerFeatureToggles.isGeneralManagerEnabled) {
-                store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
-            } else {
-                initUserWalletsListManager()
-            }
+            store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
+
+            blockchainSDKFactory.init()
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
@@ -264,16 +242,14 @@ internal class TapApplication : Application(), ImageLoaderFactory {
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
                     sendFeatureToggles = sendFeatureToggles,
-                    blockchainDataStorage = blockchainDataStorage,
-                    accountCreator = accountCreator,
-                    userWalletsListManagerFeatureToggles = userWalletsListManagerFeatureToggles,
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
                     cardRepository = cardRepository,
                     feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
                     tangemSdkLogger = tangemSdkLogger,
-                    blockchainSDKLogger = blockchainSDKLogger,
+                    settingsRepository = settingsRepository,
+                    blockchainSDKFactory = blockchainSDKFactory,
                 ),
             ),
         )
@@ -372,15 +348,5 @@ internal class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initWarningMessagesManager() {
         store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
-    }
-
-    private suspend fun initUserWalletsListManager() {
-        val manager = if (walletsRepository.shouldSaveUserWalletsSync()) {
-            UserWalletsListManager.provideBiometricImplementation(applicationContext)
-        } else {
-            UserWalletsListManager.provideRuntimeImplementation()
-        }
-
-        store.dispatch(GlobalAction.UpdateUserWalletsListManager(manager))
     }
 }
