@@ -301,7 +301,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Mantle, Blockchain.MantleTestnet -> "mantle"
         Blockchain.Flare, Blockchain.FlareTestnet -> "flare-networks"
         Blockchain.Taraxa, Blockchain.TaraxaTestnet -> "taraxa"
-        Blockchain.Base, Blockchain.BaseTestnet -> "base"
+        Blockchain.Base, Blockchain.BaseTestnet -> "base-ethereum"
     }
 }
 
