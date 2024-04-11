@@ -524,7 +524,15 @@ internal class SendViewModel @Inject constructor(
             )
             return true
         }
-        return false
+        return checkIfFeeTooHigh(
+            state = uiState,
+            onShow = { diff ->
+                uiState = eventStateFactory.getFeeTooHighAlert(
+                    diff = diff,
+                    onConsume = { uiState = eventStateFactory.onConsumeEventState() },
+                )
+            },
+        )
     }
 
     private fun onFeeCoverageAlert(): Boolean {
