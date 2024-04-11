@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
+import java.math.BigInteger
 
 @Suppress("LongParameterList")
 internal class SendNotificationFactory(
@@ -64,6 +65,7 @@ internal class SendNotificationFactory(
                 // warnings
                 addExistentialWarningNotification(feeAmount, amountValue)
                 addHighFeeWarningNotification(feeAmount, amountValue, sendState.ignoreAmountReduce)
+                addTooHighNotification(feeState.feeSelectorState)
                 addTooLowNotification(feeState)
             }.toImmutableList()
         }
@@ -279,6 +281,18 @@ internal class SendNotificationFactory(
         }
     }
 
+    private fun MutableList<SendNotification>.addTooHighNotification(feeSelectorState: FeeSelectorState) {
+        if (feeSelectorState !is FeeSelectorState.Content) return
+        val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return
+        val highValue = multipleFees.priority.amount.value ?: return
+        val customAmount = feeSelectorState.customValues.firstOrNull() ?: return
+        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
+        val diff = (customValue / highValue).toBigInteger()
+        if (feeSelectorState.selectedFee == FeeType.Custom && diff > FEE_MAX_DIFF) {
+            add(SendNotification.Warning.TooHigh(diff.toString()))
+        }
+    }
+
     private suspend fun MutableList<SendNotification>.addExceedsBalanceNotification(fee: Fee?) {
         val feeValue = fee?.amount?.value ?: BigDecimal.ZERO
         val userWalletId = userWalletProvider().walletId
@@ -359,5 +373,6 @@ internal class SendNotificationFactory(
     companion object {
         private const val DOGECOIN_MINIMUM = "0.01"
         private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
+        internal val FEE_MAX_DIFF = BigInteger("5")
     }
 }
