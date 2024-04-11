@@ -79,7 +79,7 @@
   <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
   <string name="common_explorer">Обозреватель</string>
   <string name="common_fee_label">Комиссия</string>
-  <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузки на сеть, объема транзакции и приоритета исполнения. %s</string>
+  <string name="common_fee_selector_footer">Сетевые комиссии – это плата пользователя за обработку и подтверждение транзакций. Размер комиссии зависит от нагрузки на сеть, объема транзакции и приоритета исполнения. %s</string>
   <string name="common_fee_selector_option_custom">Свое</string>
   <string name="common_fee_selector_option_fast">Быстро</string>
   <string name="common_fee_selector_option_market">По рынку</string>
@@ -310,7 +310,7 @@
   <string name="onboarding_exit_alert_message">В этом случае вам будет необходимо начать процесс заново.</string>
   <string name="onboarding_exit_alert_title">Вы хотите выйти из процесса активации?</string>
   <string name="onboarding_getting_started">Подготовка</string>
-  <string name="onboarding_linking_error_card_with_wallets">Другой кошелек уже был создан на карте, которую вы пытаетесь добавить. Хотите сбросить его и использовать карту для бэкапа?</string>
+  <string name="onboarding_linking_error_card_with_wallets">Другой кошелек уже был создан на карте, которую вы пытаетесь добавить. Если на нем есть средства, пожалуйста сначала выведите их, а затем сделайте сброс до заводских настроек и используйте как резервную.</string>
   <string name="onboarding_navbar_title_creating_backup">Резервная копия</string>
   <string name="onboarding_seed_button_read_more">Прочитать о seed-фразе</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -426,12 +426,12 @@
   <string name="scan_card_settings_title">Приготовьте свою карту</string>
   <string name="send_additional_field_already_included">Уже содержится в введенном адресе</string>
   <string name="send_alert_fee_coverage_subract_text">Вычесть</string>
-  <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию %s из отправляемой сумму?</string>
+  <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию %s из отправляемой суммы?</string>
+  <string name="send_alert_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_alert_fee_too_low_text">Вы указали комиссию ниже рекомендуемой, это может привести к задержке исполнения вашей транзакции. Продолжить?</string>
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
-  <string name="send_confirm_label">Подтверждение</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
@@ -536,7 +536,7 @@
   <string name="toast_balances_hidden">Балансы скрыты</string>
   <string name="toast_balances_shown">Балансы показаны</string>
   <string name="toast_undo">Отменить</string>
-  <string name="token_button_unavailability_reason_buy_unavailable">В данный момент покупка монеты %s недоступна. Но мы работаем над её добавлением.”</string>
+  <string name="token_button_unavailability_reason_buy_unavailable">В данный момент покупка монеты %s недоступна. Но мы работаем над её добавлением.</string>
   <string name="token_button_unavailability_reason_empty_balance">У вас нет средств для отправки. Пополните счет, чтобы иметь возможность отправить с него средства.</string>
   <string name="token_button_unavailability_reason_no_quotes">Выбранная операция в данный момент недоступна. Попробуйте позже.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Обмен %s не доступен. Но мы работаем над его добавлением.</string>
