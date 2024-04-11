@@ -143,6 +143,7 @@ internal class SendViewModel @Inject constructor(
     private val eventStateFactory = SendEventStateFactory(
         clickIntents = this,
         currentStateProvider = Provider { uiState },
+        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeStateFactory = feeStateFactory,
     )
 
@@ -783,7 +784,6 @@ internal class SendViewModel @Inject constructor(
     override fun onAmountReduceClick(reducedAmount: String, clazz: Class<out SendNotification>) {
         uiState = amountStateFactory.getOnAmountValueChange(reducedAmount)
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
-        onCheckFeeUpdate()
     }
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {
