@@ -18,10 +18,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockTy
 import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchWithMain
-import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.common.extensions.onUserWalletSelected
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
@@ -141,7 +138,7 @@ internal class WelcomeMiddleware {
         val currency = ParamCardCurrencyConverter().convert(
             value = scanResponse.cardTypesResolver,
         )
-
+        Analytics.addContext(scanResponse)
         if (currency != null) {
             Analytics.send(
                 event = Basic.SignedIn(
