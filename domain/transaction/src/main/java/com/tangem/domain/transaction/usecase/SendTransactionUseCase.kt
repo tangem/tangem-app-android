@@ -67,7 +67,12 @@ class SendTransactionUseCase(
     }
 
     private fun handleError(result: SimpleResult.Failure): SendTransactionError {
-        if (ResultChecker.isNetworkError(result)) return SendTransactionError.NetworkError(result.error.message)
+        if (ResultChecker.isNetworkError(result)) {
+            return SendTransactionError.NetworkError(
+                code = result.error.message,
+                message = result.error.customMessage,
+            )
+        }
         val error = result.error as? BlockchainSdkError ?: return SendTransactionError.UnknownError()
         return when (error) {
             is BlockchainSdkError.WrappedTangemError -> {
