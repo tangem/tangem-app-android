@@ -33,6 +33,7 @@ internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen)
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .systemBarsPadding()
             .background(color = TangemTheme.colors.background.tertiary),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,7 +79,6 @@ internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen)
         SendNavigationButtons(
             uiState = uiState,
             currentState = currentState,
-            modifier = Modifier.imePadding(),
         )
     }
 
