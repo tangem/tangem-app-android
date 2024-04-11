@@ -328,7 +328,6 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
-    Blockchain.Playa3ull,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
     Blockchain.Radiant,
