@@ -115,6 +115,20 @@ internal class SendEventStateFactory(
         )
     }
 
+    fun getFeeTooHighAlert(diff: String, onConsume: () -> Unit): SendUiState {
+        return currentStateProvider().copy(
+            event = triggeredEvent(
+                data = SendEvent.ShowAlert(
+                    SendAlertState.FeeTooHigh(
+                        onConfirmClick = clickIntents::showSend,
+                        times = diff,
+                    ),
+                ),
+                onConsume = onConsume,
+            ),
+        )
+    }
+
     fun getGenericErrorState(error: Throwable? = null, onConsume: () -> Unit): SendUiState {
         val state = currentStateProvider()
         return state.copy(
