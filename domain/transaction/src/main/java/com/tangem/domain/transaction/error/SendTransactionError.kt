@@ -8,7 +8,7 @@ sealed class SendTransactionError {
 
     data class DataError(val message: String?) : SendTransactionError()
 
-    data class NetworkError(val message: String?) : SendTransactionError()
+    data class NetworkError(val message: String?, val code: String?) : SendTransactionError()
 
     data class BlockchainSdkError(val code: Int, val message: String?) : SendTransactionError()
 
