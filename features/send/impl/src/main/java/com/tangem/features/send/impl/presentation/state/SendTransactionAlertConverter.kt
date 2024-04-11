@@ -29,8 +29,8 @@ internal class SendTransactionAlertConverter(
                 onConfirmClick = { clickIntents.onFailedTxEmailClick(value.message.orEmpty()) },
             )
             is SendTransactionError.NetworkError -> SendAlertState.TransactionError(
-                code = "",
-                cause = value.message,
+                code = value.code.orEmpty(),
+                cause = value.message.orEmpty(),
                 onConfirmClick = { clickIntents.onFailedTxEmailClick(value.message.orEmpty()) },
             )
             is SendTransactionError.UnknownError -> SendAlertState.TransactionError(
