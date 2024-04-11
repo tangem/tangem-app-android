@@ -2,8 +2,8 @@ package com.tangem.common.di
 
 import android.content.Context
 import com.tangem.tap.di.TangemSdkManagerModule
-import com.tangem.tap.domain.MockTangemSdkManager
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext

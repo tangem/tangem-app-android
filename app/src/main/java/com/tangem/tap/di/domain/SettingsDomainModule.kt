@@ -9,7 +9,7 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.repositories.SwapPromoRepository
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
 import dagger.Provides
