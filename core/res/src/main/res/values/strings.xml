@@ -310,7 +310,7 @@
   <string name="onboarding_exit_alert_message">In this case, you will need to start from the beginning.</string>
   <string name="onboarding_exit_alert_title">Do you want to exit the activation process?</string>
   <string name="onboarding_getting_started">Getting started</string>
-  <string name="onboarding_linking_error_card_with_wallets">Another wallet has already been created on the card you\'re trying to add. Do you want to reset it and use the card for a new wallet?</string>
+  <string name="onboarding_linking_error_card_with_wallets">Another wallet has already been created on the card you\'re trying to add. If you have funds in this wallet, please withdraw it and then reset this card and add it as a backup.</string>
   <string name="onboarding_navbar_title_creating_backup">Creating a backup</string>
   <string name="onboarding_seed_button_read_more">Read more about seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -422,11 +422,11 @@
   <string name="send_additional_field_already_included">Already included in the entered address</string>
   <string name="send_alert_fee_coverage_subract_text">Subtract</string>
   <string name="send_alert_fee_coverage_title">Not enough funds to cover the network commission. Subtract the commission %s from the amount sent?</string>
+  <string name="send_alert_fee_too_high_text">The commission amount is %s times the recommended amount. Make sure that the custom settings are correct.</string>
   <string name="send_alert_fee_too_low_text">You specified a commission below the recommended amount, which could cause a delay in your transaction. Continue?</string>
   <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
   <string name="send_amount_label">Amount</string>
-  <string name="send_confirm_label">Confirm</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Address</string>
   <string name="send_destination_tag_field">Destination Tag</string>
