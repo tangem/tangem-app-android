@@ -15,7 +15,7 @@ import com.tangem.tap.features.demo.DemoHelper
 * [REDACTED_AUTHOR]
  */
 class CardContextInterceptor(
-    private val scanResponse: ScanResponse?,
+    private val scanResponse: ScanResponse,
 ) : ParamsInterceptor {
 
     override fun id(): String = CardContextInterceptor.id()
@@ -28,8 +28,6 @@ class CardContextInterceptor(
     }
 
     override fun intercept(params: MutableMap<String, String>) {
-        scanResponse ?: return
-
         val card = scanResponse.card
         params[AnalyticsParam.BATCH] = card.batchId
         params[AnalyticsParam.PRODUCT_TYPE] = getProductType(scanResponse)
