@@ -17,6 +17,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -32,40 +33,45 @@ internal class BitcoinCustomFeeConverter(
 
     override fun convert(value: Fee.Bitcoin): ImmutableList<SendTextField.CustomFee> {
         val feeValue = value.amount.value
-        return persistentListOf(
-            SendTextField.CustomFee(
-                value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
-                decimals = value.amount.decimals,
-                symbol = value.amount.currencySymbol,
-                onValueChange = { clickIntents.onCustomFeeValueChange(FEE_AMOUNT_INDEX, it) },
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                    keyboardType = KeyboardType.Number,
-                ),
-                title = resourceReference(R.string.send_max_fee),
-                footer = resourceReference(R.string.send_max_fee_footer),
-                label = getFeeFormatted(feeValue),
-                keyboardActions = KeyboardActions(),
-                isReadonly = true,
-            ),
-            SendTextField.CustomFee(
-                value = toSatoshiPerByte(
-                    amount = feeValue,
+        val network = feeCryptoCurrencyStatusProvider()?.currency?.network?.id?.value
+        return if (network != null && isBitcoin(network)) {
+            persistentListOf(
+                SendTextField.CustomFee(
+                    value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
                     decimals = value.amount.decimals,
-                    txSize = value.txSize,
-                ).toString(),
-                decimals = SATOSHI_DECIMALS,
-                symbol = "",
-                title = resourceReference(R.string.send_gas_price),
-                footer = resourceReference(R.string.send_gas_price_footer),
-                onValueChange = { clickIntents.onCustomFeeValueChange(FEE_SATOSHI_INDEX, it) },
-                keyboardOptions = KeyboardOptions(
-                    imeAction = if (checkExceedBalance(feeValue)) ImeAction.None else ImeAction.Done,
-                    keyboardType = KeyboardType.Number,
+                    symbol = value.amount.currencySymbol,
+                    onValueChange = { clickIntents.onCustomFeeValueChange(FEE_AMOUNT_INDEX, it) },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number,
+                    ),
+                    title = resourceReference(R.string.send_max_fee),
+                    footer = resourceReference(R.string.send_max_fee_footer),
+                    label = getFeeFormatted(feeValue),
+                    keyboardActions = KeyboardActions(),
+                    isReadonly = true,
                 ),
-                keyboardActions = KeyboardActions(),
-            ),
-        )
+                SendTextField.CustomFee(
+                    value = toSatoshiPerByte(
+                        amount = feeValue,
+                        decimals = value.amount.decimals,
+                        txSize = value.txSize,
+                    ).toString(),
+                    decimals = SATOSHI_DECIMALS,
+                    symbol = "",
+                    title = resourceReference(R.string.send_gas_price),
+                    footer = resourceReference(R.string.send_gas_price_footer),
+                    onValueChange = { clickIntents.onCustomFeeValueChange(FEE_SATOSHI_INDEX, it) },
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = if (checkExceedBalance(feeValue)) ImeAction.None else ImeAction.Done,
+                        keyboardType = KeyboardType.Number,
+                    ),
+                    keyboardActions = KeyboardActions(),
+                ),
+            )
+        } else {
+            persistentListOf()
+        }
     }
 
     override fun convertBack(normalFee: Fee.Bitcoin, value: ImmutableList<SendTextField.CustomFee>): Fee.Bitcoin {
