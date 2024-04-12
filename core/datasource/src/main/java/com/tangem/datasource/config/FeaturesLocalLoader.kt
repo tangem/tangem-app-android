@@ -2,7 +2,7 @@ package com.tangem.datasource.config
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.config.models.ConfigModel
 import com.tangem.datasource.config.models.ConfigValueModel
 import com.tangem.datasource.config.models.FeatureModel
@@ -11,6 +11,7 @@ import timber.log.Timber
 /**
 * [REDACTED_AUTHOR]
  */
+@Deprecated(message = "Use AssetReader instead")
 class FeaturesLocalLoader(
     private val assetReader: AssetReader,
     private val moshi: Moshi,
