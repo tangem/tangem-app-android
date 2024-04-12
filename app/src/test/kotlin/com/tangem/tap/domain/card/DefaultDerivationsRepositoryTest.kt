@@ -10,7 +10,7 @@ import com.tangem.domain.common.configs.MultiWalletCardConfig
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
-import com.tangem.tap.domain.DefaultTangemSdkManager
+import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
