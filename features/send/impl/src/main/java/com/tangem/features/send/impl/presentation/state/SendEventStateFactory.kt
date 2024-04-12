@@ -3,7 +3,6 @@ package com.tangem.features.send.impl.presentation.state
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
@@ -50,18 +49,10 @@ internal class SendEventStateFactory(
     }
 
     fun getFeeCoverageAlert(onConsume: () -> Unit): SendUiState {
-        val state = currentStateProvider()
-        val amount = state.feeState?.fee?.amount ?: return state
-        val feeAmount = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = amount.value,
-            cryptoCurrency = state.cryptoCurrencySymbol,
-            decimals = amount.decimals,
-        )
-        return state.copy(
+        return currentStateProvider().copy(
             event = triggeredEvent(
                 data = SendEvent.ShowAlert(
                     SendAlertState.FeeCoverage(
-                        amount = feeAmount,
                         onConfirmClick = clickIntents::onSubtractSelect,
                     ),
                 ),
