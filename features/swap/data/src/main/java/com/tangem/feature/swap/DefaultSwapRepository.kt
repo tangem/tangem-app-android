@@ -8,6 +8,7 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -20,7 +21,6 @@ import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.crypto.DataSignatureVerifier
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
