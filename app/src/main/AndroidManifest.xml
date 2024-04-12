@@ -36,7 +36,7 @@
     </queries>
 
     <application
-        android:name="com.tangem.tap.TapApplication"
+        android:name="com.tangem.tap.TangemHiltApplication"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:hardwareAccelerated="true"
