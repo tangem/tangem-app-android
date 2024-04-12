@@ -10,16 +10,12 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.tokens.error.CurrencyStatusError
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
@@ -39,8 +35,9 @@ import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.lang.IllegalArgumentException
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -171,6 +168,19 @@ internal class TokenDetailsStateFactory(
                 content = TokenDetailsDialogConfig.DialogContentConfig.HasLinkedTokensConfig(
                     currencySymbol = currency.symbol,
                     networkName = currency.network.name,
+                    onConfirmClick = clickIntents::onDismissDialog,
+                ),
+            ),
+        )
+    }
+
+    fun getStateWithActionButtonErrorDialog(unavailabilityReason: ScenarioUnavailabilityReason): TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
+                    text = getUnavailabilityReasonText(unavailabilityReason),
                     onConfirmClick = clickIntents::onDismissDialog,
                 ),
             ),
@@ -320,5 +330,61 @@ internal class TokenDetailsStateFactory(
                 ).let(::add)
             }.toImmutableList(),
         )
+    }
+
+    private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
+        return when (unavailabilityReason) {
+            // send
+            is ScenarioUnavailabilityReason.PendingTransaction -> {
+                resourceReference(
+                    id = R.string.warning_send_blocked_pending_transactions_message,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol),
+                )
+            }
+            ScenarioUnavailabilityReason.EmptyBalance -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_empty_balance,
+                )
+            }
+            is ScenarioUnavailabilityReason.InsufficientFundsForFee -> {
+                resourceReference(
+                    id = R.string.warning_send_blocked_funds_for_fee_message,
+                    formatArgs = wrappedList(
+                        unavailabilityReason.currencyName,
+                        unavailabilityReason.networkName,
+                        unavailabilityReason.currencyName,
+                        unavailabilityReason.feeCurrencyName,
+                        unavailabilityReason.feeCurrencySymbol,
+                    ),
+                )
+            }
+            is ScenarioUnavailabilityReason.BuyUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_buy_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            is ScenarioUnavailabilityReason.NotExchangeable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_not_exchangeable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            is ScenarioUnavailabilityReason.SellUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_sell_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            ScenarioUnavailabilityReason.NoQuotes -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_no_quotes,
+                )
+            }
+
+            ScenarioUnavailabilityReason.None -> {
+                throw IllegalArgumentException("The unavailability reason must be other than None")
+            }
+        }
     }
 }
