@@ -2,7 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
