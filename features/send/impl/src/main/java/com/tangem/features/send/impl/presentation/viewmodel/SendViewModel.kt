@@ -89,9 +89,9 @@ internal class SendViewModel @Inject constructor(
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
-    getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     savedStateHandle: SavedStateHandle,
@@ -123,7 +123,6 @@ internal class SendViewModel @Inject constructor(
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         validateWalletMemoUseCase = validateWalletMemoUseCase,
-        getExplorerTransactionUrlUseCase = getExplorerTransactionUrlUseCase,
         isTapHelpPreviewEnabledProvider = Provider { isTapHelpPreviewEnabled },
     )
 
@@ -844,11 +843,19 @@ internal class SendViewModel @Inject constructor(
             },
             ifRight = {
                 uiState = stateFactory.getSendingStateUpdate(isSending = false)
-                uiState = stateFactory.getTransactionSendState(txData)
+                updateTransactionStatus(txData)
                 scheduleBalanceUpdate()
                 analyticsEventHandler.send(SendAnalyticEvents.TransactionScreenOpened)
             },
         )
+    }
+
+    private suspend fun updateTransactionStatus(txData: TransactionData) {
+        val txUrl = getExplorerTransactionUrlUseCase(
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+        ).getOrElse { "" }
+        uiState = stateFactory.getTransactionSendState(txData, txUrl)
     }
 
     private fun scheduleBalanceUpdate() {

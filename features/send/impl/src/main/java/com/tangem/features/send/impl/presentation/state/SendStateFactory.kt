@@ -8,7 +8,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
@@ -36,7 +35,6 @@ internal class SendStateFactory(
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val isTapHelpPreviewEnabledProvider: Provider<Boolean>,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
-    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -251,14 +249,9 @@ internal class SendStateFactory(
         )
     }
 
-    fun getTransactionSendState(txData: TransactionData): SendUiState {
+    fun getTransactionSendState(txData: TransactionData, txUrl: String): SendUiState {
         val state = currentStateProvider()
-        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
         val sendState = state.sendState ?: return state
-        val txUrl = getExplorerTransactionUrlUseCase(
-            txHash = txData.hash.orEmpty(),
-            networkId = cryptoCurrency.network.id,
-        ).getOrElse { "" }
         return state.copy(
             sendState = sendState.copy(
                 transactionDate = txData.date?.timeInMillis ?: System.currentTimeMillis(),
