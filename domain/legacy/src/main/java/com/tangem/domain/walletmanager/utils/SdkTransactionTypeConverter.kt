@@ -40,6 +40,7 @@ class SdkTransactionTypeConverter(
         }
     }
 
+    @Deprecated(message = "Use AssetReader instead")
     private fun readSmartContractMethods(): Map<String, SmartContractMethod> {
         val json = assetReader.readJson("contract_methods")
         return adapter.fromJson(json) ?: emptyMap()

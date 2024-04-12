@@ -29,6 +29,7 @@ internal class LocalConfigLoader(
     @OptIn(ExperimentalStdlibApi::class)
     private val adapter: JsonAdapter<ConfigValueModel> = moshi.adapter()
 
+    @Deprecated(message = "Use AssetReader instead")
     override suspend fun load(): ConfigValueModel? {
         return runCatching(dispatchers.io) {
             val json = assetReader.readJson(fileName = configFileName)

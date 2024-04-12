@@ -24,6 +24,7 @@ internal class LocalFeatureTogglesStorage(
     override var featureToggles: List<FeatureToggle> by Delegates.notNull()
         private set
 
+    @Deprecated(message = "Use AssetReader instead")
     override suspend fun init() {
         runCatching { requireNotNull(jsonAdapter.fromJson(assetReader.readJson(LOCAL_CONFIG_PATH))) }
             .onSuccess { featureToggles = it }

@@ -11,6 +11,7 @@ import timber.log.Timber
 /**
  * Created by Anton Zhilenkov on 16/02/2021.
  */
+@Deprecated(message = "Use AssetReader instead")
 class FeaturesLocalLoader(
     private val assetReader: AssetReader,
     private val moshi: Moshi,

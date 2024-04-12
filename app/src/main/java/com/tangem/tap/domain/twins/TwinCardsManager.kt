@@ -88,6 +88,7 @@ class TwinCardsManager(
             )
         }
 
+        @Deprecated(message = "Use AssetReader instead")
         private fun getIssuers(reader: AssetReader): List<Issuer> {
             val file = reader.readJson(fileName = "tangem-app-config/issuers")
             return getAdapter().fromJson(file)!!

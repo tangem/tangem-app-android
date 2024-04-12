@@ -17,6 +17,7 @@ internal class DefaultTestnetTokensStorage(
     private val adapter: JsonAdapter<TestnetTokensConfig>,
 ) : TestnetTokensStorage {
 
+    @Deprecated(message = "Use AssetReader instead")
     override fun getConfig(): TestnetTokensConfig {
         return requireNotNull(
             value = adapter.fromJson(
