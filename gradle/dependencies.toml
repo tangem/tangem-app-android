@@ -197,6 +197,8 @@ test-kaspresso = { module = "com.kaspersky.android-components:kaspresso", versio
 test-kaspresso-compose = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspresso-compose"}
 test-compose-junit = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-junit" }
 test-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
+test-hilt = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
+test-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 # endregion Test
 
 # region Other
