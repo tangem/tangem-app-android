@@ -1,8 +1,8 @@
 package com.tangem.tap.domain.walletconnect2.app
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.tap.domain.walletconnect2.domain.WcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 

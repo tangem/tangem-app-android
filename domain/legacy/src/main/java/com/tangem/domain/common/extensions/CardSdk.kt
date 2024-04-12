@@ -1,6 +1,7 @@
 package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.CardTypesResolver
@@ -22,7 +23,7 @@ fun CardDTO.supportedBlockchains(cardTypesResolver: CardTypesResolver): List<Blo
         wallets.flatMap { Blockchain.fromCurve(it.curve) }.distinct().toMutableList()
     } else {
         // multiwallet supports all blockchains, move this logic to config
-        Blockchain.values().toMutableList()
+        Blockchain.entries.toMutableList()
     }
     return supportedBlockchains
         .filter { isTestCard == it.isTestnet() }

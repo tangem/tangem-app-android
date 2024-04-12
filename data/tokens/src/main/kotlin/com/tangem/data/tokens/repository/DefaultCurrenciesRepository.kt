@@ -2,6 +2,8 @@ package com.tangem.data.tokens.repository
 
 import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.*
@@ -16,8 +18,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.AssetsStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.toCoinId
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.core.error.DataError

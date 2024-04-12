@@ -2,12 +2,12 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
 import com.tangem.domain.analytics.model.WalletBalanceState
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
