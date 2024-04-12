@@ -2,6 +2,7 @@ package com.tangem.tap.features.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
@@ -28,6 +29,7 @@ internal class MainViewModel @Inject constructor(
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
     private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
     private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
+    private val blockchainSDKFactory: BlockchainSDKFactory,
     private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -41,7 +43,15 @@ internal class MainViewModel @Inject constructor(
 
     val state: StateFlow<MainScreenState> = stateHolder.stateFlow
 
+    var isSplashScreenShown: Boolean = true
+        private set
+
     init {
+        viewModelScope.launch(dispatchers.main) {
+            blockchainSDKFactory.init()
+            isSplashScreenShown = false
+        }
+
         viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
 
         updateAppCurrencies()
