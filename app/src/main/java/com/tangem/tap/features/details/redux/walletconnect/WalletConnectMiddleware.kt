@@ -2,9 +2,9 @@ package com.tangem.tap.features.details.redux.walletconnect
 
 import androidx.core.os.bundleOf
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.tap.common.extensions.dispatchOnMain
