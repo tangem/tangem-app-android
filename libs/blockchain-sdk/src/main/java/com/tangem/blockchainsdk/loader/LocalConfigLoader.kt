@@ -3,7 +3,7 @@ package com.tangem.blockchainsdk.loader
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.config.models.ConfigValueModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
@@ -29,6 +29,7 @@ internal class LocalConfigLoader(
     @OptIn(ExperimentalStdlibApi::class)
     private val adapter: JsonAdapter<ConfigValueModel> = moshi.adapter()
 
+    @Deprecated(message = "Use AssetReader instead")
     override suspend fun load(): ConfigValueModel? {
         return runCatching(dispatchers.io) {
             val json = assetReader.readJson(fileName = configFileName)
