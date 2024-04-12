@@ -92,7 +92,7 @@ internal class SendStateFactory(
         event = consumedEvent(),
         isEditingDisabled = false,
         isBalanceHidden = false,
-        cryptoCurrencySymbol = "",
+        cryptoCurrencyName = "",
     )
 
     fun getReadyState(): SendUiState {
@@ -103,7 +103,7 @@ internal class SendStateFactory(
                 ?: recipientStateConverter.convert(SendRecipientStateConverter.Data("", null)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
             sendState = confirmStateConverter.convert(Unit),
-            cryptoCurrencySymbol = cryptoCurrencyStatusProvider().currency.symbol,
+            cryptoCurrencyName = cryptoCurrencyStatusProvider().currency.name,
         )
     }
 
@@ -115,7 +115,7 @@ internal class SendStateFactory(
                 ?: recipientStateConverter.convert(SendRecipientStateConverter.Data(destinationAddress, memo)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
             isEditingDisabled = true,
-            cryptoCurrencySymbol = cryptoCurrencyStatusProvider().currency.symbol,
+            cryptoCurrencyName = cryptoCurrencyStatusProvider().currency.name,
         )
     }
 
