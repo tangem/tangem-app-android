@@ -4,7 +4,7 @@ import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.token.UserTokensStore
@@ -27,11 +27,11 @@ import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggle
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
 import com.tangem.tap.features.customtoken.api.featuretoggles.CustomTokenFeatureToggles
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
 import com.tangem.tap.proxy.AppStateHolder
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
