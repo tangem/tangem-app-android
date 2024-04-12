@@ -3,7 +3,7 @@ package com.tangem.tap.domain.scanCard.repository
 import com.tangem.common.CompletionResult
 import com.tangem.domain.card.repository.ScanCardRepository
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.scanCard.utils.ScanCardExceptionConverter
 // [REDACTED_TODO_COMMENT]
 internal class DefaultScanCardRepository(

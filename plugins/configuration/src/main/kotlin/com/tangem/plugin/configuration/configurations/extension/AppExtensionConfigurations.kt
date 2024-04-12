@@ -37,7 +37,7 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
 
         buildFeatures.buildConfig = true
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.tangem.common.HiltTestRunner"
     }
 }
 // [REDACTED_TODO_COMMENT]
