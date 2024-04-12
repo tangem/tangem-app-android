@@ -8,6 +8,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.*
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
@@ -15,7 +16,6 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
