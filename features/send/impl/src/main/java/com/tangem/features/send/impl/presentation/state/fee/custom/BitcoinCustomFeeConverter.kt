@@ -59,8 +59,8 @@ internal class BitcoinCustomFeeConverter(
                     ).toString(),
                     decimals = SATOSHI_DECIMALS,
                     symbol = "",
-                    title = resourceReference(R.string.send_gas_price),
-                    footer = resourceReference(R.string.send_gas_price_footer),
+                    title = resourceReference(R.string.send_satoshi_per_byte_title),
+                    footer = resourceReference(R.string.send_satoshi_per_byte_text),
                     onValueChange = { clickIntents.onCustomFeeValueChange(FEE_SATOSHI_INDEX, it) },
                     keyboardOptions = KeyboardOptions(
                         imeAction = if (checkExceedBalance(feeValue)) ImeAction.None else ImeAction.Done,
