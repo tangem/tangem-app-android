@@ -12,13 +12,13 @@ import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder.XrpTransactio
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
