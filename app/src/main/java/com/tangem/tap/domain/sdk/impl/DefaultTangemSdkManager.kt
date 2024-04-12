@@ -1,4 +1,4 @@
-package com.tangem.tap.domain
+package com.tangem.tap.domain.sdk.impl
 
 import android.content.res.Resources
 import androidx.annotation.DrawableRes
@@ -29,6 +29,7 @@ import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.tap.derivationsFinder
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
