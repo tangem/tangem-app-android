@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -433,7 +434,7 @@ internal class SwapInteractorImpl @Inject constructor(
     ) {
         val isTezos = fromTokenStatus.currency.network.id.value == Blockchain.Tezos.id
         if (isTezos && amount.value == fromTokenStatus.value.amount) {
-            warnings.add(Warning.ReduceAmountWarning(TEZOS_FEE_THRESHOLD))
+            warnings.add(Warning.ReduceAmountWarning(Blockchain.Tezos.minimalAmount()))
         }
     }
 
@@ -1595,6 +1596,5 @@ internal class SwapInteractorImpl @Inject constructor(
         private const val INCREASE_GAS_LIMIT_BY = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private const val INFINITY_SYMBOL = "∞"
-        private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
     }
 }
