@@ -52,7 +52,7 @@ import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.redux.NotificationsHandler
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
@@ -249,9 +249,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode?> {
-        val tapApplication = application as TapApplication
+        val tangemApplication = application as TangemApplication
 
-        return tapApplication.getAppThemeModeUseCase()
+        return tangemApplication.getAppThemeModeUseCase()
             .map { maybeMode ->
                 maybeMode.getOrElse { AppThemeMode.DEFAULT }
             }
