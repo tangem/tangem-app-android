@@ -45,7 +45,7 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
             walletCardState = userWallet.toLoadingWalletCardState(),
             warnings = persistentListOf(),
             bottomSheetConfig = null,
-            buttons = createDisabledButtons(),
+            buttons = createDimmedButtons(),
             marketPriceBlockState = MarketPriceBlockState.Loading(currencySymbol = currencySymbol),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
@@ -86,12 +86,12 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
         )
     }
 
-    private fun createDisabledButtons(): PersistentList<WalletManageButton> {
+    private fun createDimmedButtons(): PersistentList<WalletManageButton> {
         return persistentListOf(
-            WalletManageButton.Buy(enabled = false, onClick = {}),
-            WalletManageButton.Send(enabled = false, onClick = {}),
-            WalletManageButton.Receive(enabled = false, onClick = {}),
-            WalletManageButton.Sell(enabled = false, onClick = {}),
+            WalletManageButton.Receive(enabled = true, dimContent = true, onClick = {}),
+            WalletManageButton.Send(enabled = true, dimContent = true, onClick = {}),
+            WalletManageButton.Buy(enabled = true, dimContent = true, onClick = {}),
+            WalletManageButton.Sell(enabled = true, dimContent = true, onClick = {}),
         )
     }
 }
