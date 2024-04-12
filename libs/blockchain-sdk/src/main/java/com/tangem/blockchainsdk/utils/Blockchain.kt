@@ -1,4 +1,4 @@
-package com.tangem.domain.common.extensions
+package com.tangem.blockchainsdk.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
