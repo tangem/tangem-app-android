@@ -1,4 +1,4 @@
-package com.tangem.datasource.asset
+package com.tangem.datasource.asset.reader
 
 import java.io.InputStream
 
