@@ -421,8 +421,8 @@
   <string name="scan_card_settings_title">Get your card ready!</string>
   <string name="send_additional_field_already_included">Already included in the entered address</string>
   <string name="send_alert_fee_coverage_subract_text">Subtract</string>
-  <string name="send_alert_fee_coverage_title">Not enough funds to cover the network commission. Subtract the commission %s from the amount sent?</string>
-  <string name="send_alert_fee_too_high_text">The commission amount is %s times the recommended amount. Make sure that the custom settings are correct.</string>
+  <string name="send_alert_fee_coverage_title">Not enough funds to cover the network fee. Do you want to subtract the amount required to cover the fee?</string>
+  <string name="send_alert_fee_too_high_text">The commission amount is %@ times the recommended amount. Make sure that the custom settings are correct.</string>
   <string name="send_alert_fee_too_low_text">You specified a commission below the recommended amount, which could cause a delay in your transaction. Continue?</string>
   <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
@@ -482,6 +482,8 @@
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
   <string name="send_recipient_wallets_title">My wallets</string>
+  <string name="send_satoshi_per_byte_text">Это способ измерения комиссии за отправку биткоин-транзакции. Он указывает на количество самой маленькой единицы биткоина (сатоши) за каждый байт данных в транзакции. Чем выше это число, тем быстрее будет обработана транзакция сетью.</string>
+  <string name="send_satoshi_per_byte_title">Satoshi per vbyte</string>
   <string name="send_sending">Sending...</string>
   <string name="send_summary_tap_hint">Tap any field to change it</string>
   <string name="send_summary_title">Send %s</string>
