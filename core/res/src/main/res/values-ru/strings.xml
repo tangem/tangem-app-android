@@ -426,8 +426,8 @@
   <string name="scan_card_settings_title">Приготовьте свою карту</string>
   <string name="send_additional_field_already_included">Уже содержится в введенном адресе</string>
   <string name="send_alert_fee_coverage_subract_text">Вычесть</string>
-  <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть комиссию %s из отправляемой суммы?</string>
-  <string name="send_alert_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
+  <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть недостающую сумму для покрытия комиссии из отправляемой суммы?</string>
+  <string name="send_alert_fee_too_high_text">Сумма комиссии в %@ раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_alert_fee_too_low_text">Вы указали комиссию ниже рекомендуемой, это может привести к задержке исполнения вашей транзакции. Продолжить?</string>
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
@@ -487,6 +487,7 @@
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
   <string name="send_recipient_wallets_title">Мои кошельки</string>
+  <string name="send_satoshi_per_byte_text">Это способ измерения комиссии за отправку биткоин-транзакции. Он указывает на количество самой маленькой единицы биткоина (сатоши) за каждый байт данных в транзакции. Чем выше это число, тем быстрее будет обработана транзакция сетью.</string>
   <string name="send_sending">Отправка</string>
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
