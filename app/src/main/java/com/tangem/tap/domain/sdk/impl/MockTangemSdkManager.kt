@@ -1,4 +1,4 @@
-package com.tangem.tap.domain
+package com.tangem.tap.domain.sdk.impl
 
 import android.content.res.Resources
 import androidx.annotation.DrawableRes
@@ -14,6 +14,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
