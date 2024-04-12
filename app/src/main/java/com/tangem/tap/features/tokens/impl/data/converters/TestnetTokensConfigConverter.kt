@@ -1,8 +1,8 @@
 package com.tangem.tap.features.tokens.impl.data.converters
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.datasource.local.testnet.models.TestnetTokensConfig
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.utils.converter.Converter
 
