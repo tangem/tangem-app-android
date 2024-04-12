@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.testnet
 
 import com.squareup.moshi.JsonAdapter
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.local.testnet.models.TestnetTokensConfig
 
 /**

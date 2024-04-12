@@ -1,4 +1,4 @@
-package com.tangem.datasource.asset
+package com.tangem.datasource.asset.reader
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext

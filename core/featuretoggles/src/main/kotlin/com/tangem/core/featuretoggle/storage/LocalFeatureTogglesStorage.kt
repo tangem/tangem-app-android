@@ -3,7 +3,7 @@ package com.tangem.core.featuretoggle.storage
 import androidx.annotation.VisibleForTesting
 import com.squareup.moshi.JsonAdapter
 import com.tangem.core.featuretoggle.storage.LocalFeatureTogglesStorage.Companion.LOCAL_CONFIG_PATH
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import timber.log.Timber
 import kotlin.properties.Delegates
 
