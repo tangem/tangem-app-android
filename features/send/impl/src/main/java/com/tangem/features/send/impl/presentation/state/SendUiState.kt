@@ -52,6 +52,7 @@ internal sealed class SendStates {
         val notifications: ImmutableList<SendNotification>,
         val appCurrencyCode: String,
         val isFeeLoading: Boolean,
+        val subtractedFee: BigDecimal?,
     ) : SendStates()
 
     /** Recipient state */
