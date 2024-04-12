@@ -647,8 +647,7 @@ internal class SendViewModel @Inject constructor(
 
     private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean) {
         val isRecent = type == EnterAddressSource.RecentAddress
-        val isAddressOnly = uiState.recipientState?.memoTextField == null
-        if (isRecent && isAddressOnly && isValidAddress) onNextClick()
+        if (isRecent && isValidAddress) onNextClick()
     }
     // endregion
 
