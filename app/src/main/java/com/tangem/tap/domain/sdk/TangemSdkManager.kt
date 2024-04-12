@@ -1,4 +1,4 @@
-package com.tangem.tap.domain
+package com.tangem.tap.domain.sdk
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
