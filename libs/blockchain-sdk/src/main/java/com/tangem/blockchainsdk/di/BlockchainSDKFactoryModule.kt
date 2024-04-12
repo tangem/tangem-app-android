@@ -11,7 +11,7 @@ import com.tangem.blockchainsdk.loader.ConfigLoader
 import com.tangem.blockchainsdk.loader.LocalConfigLoader
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.libs.blockchain_sdk.BuildConfig
