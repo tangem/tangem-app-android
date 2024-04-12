@@ -43,6 +43,7 @@ configurations.all {
 
 dependencies {
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.card)

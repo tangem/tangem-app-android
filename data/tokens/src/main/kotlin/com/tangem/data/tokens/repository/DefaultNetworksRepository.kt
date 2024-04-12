@@ -2,6 +2,7 @@ package com.tangem.data.tokens.repository
 
 import arrow.core.raise.catch
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
@@ -9,7 +10,6 @@ import com.tangem.data.tokens.utils.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.token.UserTokensStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow

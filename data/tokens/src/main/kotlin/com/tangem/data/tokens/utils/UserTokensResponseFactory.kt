@@ -1,7 +1,7 @@
 package com.tangem.data.tokens.utils
 
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 
 class UserTokensResponseFactory {
