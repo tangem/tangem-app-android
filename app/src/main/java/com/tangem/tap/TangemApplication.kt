@@ -64,11 +64,10 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
-import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.runBlocking
+import dagger.hilt.EntryPoints
+import kotlinx.coroutines.*
 import org.rekotlin.Store
 import timber.log.Timber
-import javax.inject.Inject
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
@@ -77,101 +76,105 @@ lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var activityResultCaller: ActivityResultCaller
 internal lateinit var derivationsFinder: DerivationsFinder
 
-@HiltAndroidApp
-internal class TapApplication : Application(), ImageLoaderFactory {
+abstract class TangemApplication : Application(), ImageLoaderFactory {
 
-    // region Injected
-    @Inject
-    lateinit var appStateHolder: AppStateHolder
+    private val entryPoint: ApplicationEntryPoint
+        get() = EntryPoints.get(this, ApplicationEntryPoint::class.java)
 
-    @Inject
-    lateinit var configManager: ConfigManager
+    private val appStateHolder: AppStateHolder
+        get() = entryPoint.getAppStateHolder()
 
-    @Inject
-    lateinit var assetReader: AssetReader
+    private val configManager: ConfigManager
+        get() = entryPoint.getConfigManager()
 
-    @Inject
-    lateinit var featureTogglesManager: FeatureTogglesManager
+    private val assetReader: AssetReader
+        get() = entryPoint.getAssetReader()
 
-    @Inject
-    lateinit var networkConnectionManager: NetworkConnectionManager
+    private val featureTogglesManager: FeatureTogglesManager
+        get() = entryPoint.getFeatureTogglesManager()
 
-    @Inject
-    lateinit var customTokenFeatureToggles: CustomTokenFeatureToggles
+    private val networkConnectionManager: NetworkConnectionManager
+        get() = entryPoint.getNetworkConnectionManager()
 
-    @Inject
-    lateinit var walletConnect2Repository: WalletConnect2Repository
+    private val customTokenFeatureToggles: CustomTokenFeatureToggles
+        get() = entryPoint.getCustomTokenFeatureToggles()
 
-    @Inject
-    lateinit var walletConnectSessionsRepository: WalletConnectSessionsRepository
+    private val walletConnect2Repository: WalletConnect2Repository
+        get() = entryPoint.getWalletConnect2Repository()
 
-    @Inject
-    lateinit var manageTokensFeatureToggles: ManageTokensFeatureToggles
+    private val walletConnectSessionsRepository: WalletConnectSessionsRepository
+        get() = entryPoint.getWalletConnectSessionsRepository()
 
-    @Inject
-    lateinit var scanCardProcessor: ScanCardProcessor
+    private val manageTokensFeatureToggles: ManageTokensFeatureToggles
+        get() = entryPoint.getManageTokensFeatureToggles()
 
-    @Inject
-    lateinit var appCurrencyRepository: AppCurrencyRepository
+    private val scanCardProcessor: ScanCardProcessor
+        get() = entryPoint.getScanCardProcessor()
 
-    @Inject
-    lateinit var walletManagersFacade: WalletManagersFacade
+    private val appCurrencyRepository: AppCurrencyRepository
+        get() = entryPoint.getAppCurrencyRepository()
 
-    @Inject
-    lateinit var networksRepository: NetworksRepository
+    private val walletManagersFacade: WalletManagersFacade
+        get() = entryPoint.getWalletManagersFacade()
 
-    @Inject
-    lateinit var currenciesRepository: CurrenciesRepository
+    private val networksRepository: NetworksRepository
+        get() = entryPoint.getNetworksRepository()
 
-    @Inject
-    lateinit var appThemeModeRepository: AppThemeModeRepository
+    private val currenciesRepository: CurrenciesRepository
+        get() = entryPoint.getCurrenciesRepository()
 
-    @Inject
-    lateinit var balanceHidingRepository: BalanceHidingRepository
+    private val appThemeModeRepository: AppThemeModeRepository
+        get() = entryPoint.getAppThemeModeRepository()
 
-    @Inject
-    lateinit var userTokensStore: UserTokensStore
+    private val balanceHidingRepository: BalanceHidingRepository
+        get() = entryPoint.getBalanceHidingRepository()
 
-    @Inject
-    lateinit var getAppThemeModeUseCase: GetAppThemeModeUseCase
+    private val userTokensStore: UserTokensStore
+        get() = entryPoint.getUserTokensStore()
 
-    @Inject
-    lateinit var walletsRepository: WalletsRepository
+    val getAppThemeModeUseCase: GetAppThemeModeUseCase
+        get() = entryPoint.getGetAppThemeModeUseCase()
 
-    @Inject
-    lateinit var sendFeatureToggles: SendFeatureToggles
+    private val walletsRepository: WalletsRepository
+        get() = entryPoint.getWalletsRepository()
 
-    @Inject
-    lateinit var oneTimeEventFilter: OneTimeEventFilter
+    private val sendFeatureToggles: SendFeatureToggles
+        get() = entryPoint.getSendFeatureToggles()
 
-    @Inject
-    lateinit var generalUserWalletsListManager: UserWalletsListManager
+    private val oneTimeEventFilter: OneTimeEventFilter
+        get() = entryPoint.getOneTimeEventFilter()
 
-    @Inject
-    lateinit var wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase
+    private val generalUserWalletsListManager: UserWalletsListManager
+        get() = entryPoint.getGeneralUserWalletsListManager()
 
-    @Inject
-    lateinit var saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase
+    private val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase
+        get() = entryPoint.getWasTwinsOnboardingShownUseCase()
 
-    @Inject
-    lateinit var cardRepository: CardRepository
+    private val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase
+        get() = entryPoint.getSaveTwinsOnboardingShownUseCase()
 
-    @Inject
-    lateinit var feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
+    private val cardRepository: CardRepository
+        get() = entryPoint.getCardRepository()
 
-    @Inject
-    lateinit var tangemSdkLogger: TangemSdkLogger
+    private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles
+        get() = entryPoint.getFeedbackManagerFeatureToggles()
 
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
+    private val tangemSdkLogger: TangemSdkLogger
+        get() = entryPoint.getTangemSdkLogger()
 
-    @Inject
-    lateinit var blockchainSDKFactory: BlockchainSDKFactory
-    // endregion Injected
+    private val settingsRepository: SettingsRepository
+        get() = entryPoint.getSettingsRepository()
+
+    private val blockchainSDKFactory: BlockchainSDKFactory
+        get() = entryPoint.getBlockchainSDKFactory()
 
     override fun onCreate() {
         super.onCreate()
 
+        init()
+    }
+
+    fun init() {
         store = createReduxStore()
 
         if (BuildConfig.LOG_ENABLED) {
