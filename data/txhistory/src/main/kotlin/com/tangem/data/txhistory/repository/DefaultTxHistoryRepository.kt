@@ -9,6 +9,7 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.txhistory.models.Page
@@ -69,11 +70,25 @@ class DefaultTxHistoryRepository(
         return pager.flow
     }
 
+    @Deprecated("Replace with getTxExploreUrl [UserWalletId, Network] instead")
     override fun getTxExploreUrl(txHash: String, networkId: Network.ID): String {
         val blockchain = Blockchain.fromId(networkId.value)
         return when (val txExploreState = blockchain.getExploreTxUrl(txHash)) {
             is TxExploreState.Url -> txExploreState.url
             is TxExploreState.Unsupported -> ""
+        }
+    }
+
+    override suspend fun getTxExploreUrl(userWalletId: UserWalletId, network: Network): String {
+        val blockchain = Blockchain.fromNetworkId(network.id.value)
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = network,
+        )
+        val lastTxHash = walletManager?.wallet?.recentTransactions?.last()?.hash.orEmpty()
+        return when (val txExploreState = blockchain?.getExploreTxUrl(lastTxHash)) {
+            is TxExploreState.Url -> txExploreState.url
+            else -> ""
         }
     }
 
