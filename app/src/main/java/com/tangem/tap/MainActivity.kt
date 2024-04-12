@@ -153,10 +153,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+
         installAppTheme() // We need to call it before onCreate to prevent unnecessary activity recreation
 
         super.onCreate(savedInstanceState)
+
+        splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
         installActivityDependencies()
         observeAppThemeModeUpdates()

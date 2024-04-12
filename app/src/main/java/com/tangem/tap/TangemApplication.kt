@@ -65,7 +65,7 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
-import kotlinx.coroutines.*
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
 import timber.log.Timber
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectRepository as WalletConnect2Repository
@@ -197,8 +197,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             featureTogglesManager.init()
 
             store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
-
-            blockchainSDKFactory.init()
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
