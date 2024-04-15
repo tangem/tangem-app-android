@@ -14,11 +14,4 @@ interface UiMessageHandler {
      * @param message The UI message to handle.
      */
     fun handleMessage(message: UiMessage)
-
-    /**
-     * Handles the removal of a UI message.
-     *
-     * @param key The key of the UI message to remove.
-     */
-    fun handleMessageRemove(key: String)
 }

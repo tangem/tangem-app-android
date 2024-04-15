@@ -6,7 +6,4 @@ package com.tangem.core.decompose.ui
  * @see UiMessageSender
  * @see UiMessageHandler
  */
-interface UiMessage {
-
-    val key: String
-}
+interface UiMessage
