@@ -25,6 +25,6 @@
     },
     {
         "name": "WC_SOLANA_TX_SIGN_ENABLED",
-        "version": "5.9.0"
+        "version": "5.11.0"
     }
 ]
