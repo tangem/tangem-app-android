@@ -482,7 +482,7 @@
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
   <string name="send_recipient_wallets_title">My wallets</string>
-  <string name="send_satoshi_per_byte_text">Это способ измерения комиссии за отправку биткоин-транзакции. Он указывает на количество самой маленькой единицы биткоина (сатоши) за каждый байт данных в транзакции. Чем выше это число, тем быстрее будет обработана транзакция сетью.</string>
+  <string name="send_satoshi_per_byte_text">The fee for a Bitcoin transaction is measured by the number of the smallest Bitcoin unit (Satoshi) per byte of data. The higher this number, the faster the transaction will be processed.</string>
   <string name="send_satoshi_per_byte_title">Satoshi per vbyte</string>
   <string name="send_sending">Sending...</string>
   <string name="send_summary_tap_hint">Tap any field to change it</string>
