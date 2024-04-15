@@ -72,14 +72,12 @@ fun SimpleTextField(
     }
 
     var lastTextValue by remember(value) {
-        derivedStateOf {
-            val isSelectionLastIndex = textFieldValueState.selection.end == textFieldValueState.text.lastIndex
-            if (textFieldValueState.text.isBlank() || isSelectionLastIndex) {
-                textFieldValueState = textFieldValueState.copy(
-                    text = value,
-                    selection = getValueRange(value),
-                )
-            }
+        val isSelectionLastIndex = textFieldValueState.selection.end == textFieldValueState.text.lastIndex
+        if (textFieldValueState.text.isBlank() || isSelectionLastIndex) {
+            textFieldValueState = textFieldValueState.copy(
+                text = value,
+                selection = getValueRange(value),
+            )
         }
         mutableStateOf(value)
     }
