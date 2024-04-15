@@ -229,6 +229,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.TaraxaTestnet -> "taraxa/test"
         Blockchain.Base -> "base"
         Blockchain.BaseTestnet -> "base/test"
+        Blockchain.Koinos -> "koinos"
+        Blockchain.KoinosTestnet -> "koinos/test"
     }
 }
 
@@ -302,6 +304,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Flare, Blockchain.FlareTestnet -> "flare-networks"
         Blockchain.Taraxa, Blockchain.TaraxaTestnet -> "taraxa"
         Blockchain.Base, Blockchain.BaseTestnet -> "base"
+        Blockchain.Koinos, Blockchain.KoinosTestnet -> "koinos"
     }
 }
 
