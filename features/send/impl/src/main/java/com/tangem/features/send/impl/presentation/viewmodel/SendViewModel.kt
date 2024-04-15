@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.viewmodel
 
+import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -191,6 +192,7 @@ internal class SendViewModel @Inject constructor(
     private var qrScannerJobHolder = JobHolder()
 
     private var sendIdleTimer = 0L
+    private var feeIdleTimer = 0L
 
     init {
         subscribeOnCurrencyStatusUpdates()
@@ -444,7 +446,7 @@ internal class SendViewModel @Inject constructor(
             .onEach {
                 when (it.type) {
                     SendUiStateType.Fee -> loadFee()
-                    SendUiStateType.Send -> sendIdleTimer = System.currentTimeMillis()
+                    SendUiStateType.Send -> sendIdleTimer = SystemClock.elapsedRealtime()
                     else -> Unit
                 }
             }
@@ -683,6 +685,9 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun loadFee(isToNextState: Boolean = false) {
+        // debouncing fee request
+        if (SystemClock.elapsedRealtime() - feeIdleTimer < FEE_UPDATE_DELAY) return
+
         viewModelScope.launch(dispatchers.main) {
             val isShowStatus = uiState.feeState?.fee == null
             if (isShowStatus) {
@@ -690,6 +695,7 @@ internal class SendViewModel @Inject constructor(
             }
             val result = callFeeUseCase()?.fold(
                 ifRight = {
+                    feeIdleTimer = SystemClock.elapsedRealtime()
                     uiState = feeStateFactory.onFeeOnLoadedState(it)
                     if (isToNextState && !onFeeCoverageAlert()) {
                         stateRouter.showSend()
@@ -747,12 +753,13 @@ internal class SendViewModel @Inject constructor(
         if (sendState.isSuccess) popBackStack()
 
         uiState = stateFactory.getSendingStateUpdate(isSending = true)
-        if (System.currentTimeMillis() - sendIdleTimer < CHECK_FEE_UPDATE_DELAY) {
+        if (SystemClock.elapsedRealtime() - sendIdleTimer < CHECK_FEE_UPDATE_DELAY) {
             verifyAndSendTransaction()
         } else {
             onCheckFeeUpdate()
+            feeIdleTimer = SystemClock.elapsedRealtime()
+            sendIdleTimer = SystemClock.elapsedRealtime()
         }
-        sendIdleTimer = System.currentTimeMillis()
     }
 
     override fun showAmount() {
@@ -917,13 +924,14 @@ internal class SendViewModel @Inject constructor(
     }
     // endregion
 
-    companion object {
-        private const val CHECK_FEE_UPDATE_DELAY = 60_000L
-        private const val BALANCE_UPDATE_DELAY = 10_000L
+    private companion object {
+        const val CHECK_FEE_UPDATE_DELAY = 60_000L
+        const val FEE_UPDATE_DELAY = 10_000L
+        const val BALANCE_UPDATE_DELAY = 10_000L
 
-        private const val RU_LOCALE = "ru"
-        private const val EN_LOCALE = "en"
-        private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
-        private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
+        const val RU_LOCALE = "ru"
+        const val EN_LOCALE = "en"
+        const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
+        const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
 }
