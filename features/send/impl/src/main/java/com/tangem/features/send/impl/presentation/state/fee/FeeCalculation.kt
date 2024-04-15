@@ -13,7 +13,7 @@ internal fun checkFeeCoverage(state: SendUiState, cryptoCurrencyStatus: CryptoCu
     val balance = cryptoCurrencyStatus.value.amount ?: return false
     val fee = state.feeState?.fee?.amount?.value ?: return false
     val amount = state.amountState?.amountTextField?.cryptoAmount?.value ?: return false
-    return balance < amount + fee
+    return balance < amount + fee && balance > fee
 }
 
 /**
