@@ -114,6 +114,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "taraxa/test" -> Blockchain.TaraxaTestnet
         "base" -> Blockchain.Base
         "base/test" -> Blockchain.BaseTestnet
+        "koinos" -> Blockchain.Koinos
+        "koinos/test" -> Blockchain.KoinosTestnet
         else -> null
     }
 }
