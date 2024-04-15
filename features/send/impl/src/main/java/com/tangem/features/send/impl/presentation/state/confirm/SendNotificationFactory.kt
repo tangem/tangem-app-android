@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -224,13 +225,14 @@ internal class SendNotificationFactory(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val isTezos = cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
+        val threshold = Blockchain.Tezos.minimalAmount()
         val isTotalBalance = feeAmount.plus(sendAmount) >= balance
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
                 SendNotification.Warning.HighFeeError(
-                    amount = TEZOS_FEE_THRESHOLD.toPlainString(),
+                    amount = threshold.toPlainString(),
                     onConfirmClick = {
-                        val reduceTo = sendAmount.minus(TEZOS_FEE_THRESHOLD).toPlainString()
+                        val reduceTo = sendAmount.minus(threshold).toPlainString()
                         clickIntents.onAmountReduceClick(reduceTo, SendNotification.Warning.HighFeeError::class.java)
                     },
                     onCloseClick = {
@@ -371,7 +373,6 @@ internal class SendNotificationFactory(
 
     companion object {
         private const val DOGECOIN_MINIMUM = "0.01"
-        private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
         internal val FEE_MAX_DIFF = BigInteger("5")
     }
 }
