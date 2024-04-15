@@ -59,7 +59,6 @@ internal class SendNotificationFactory(
                 // errors
                 addExceedBalanceNotification(feeAmount, amountValue)
                 addExceedsBalanceNotification(feeState.fee)
-                addInvalidAmountNotification(sendState.isSubtract, amountValue)
                 addMinimumAmountErrorNotification(feeAmount, amountValue)
                 addDustWarningNotification(feeAmount, amountValue)
                 addTransactionLimitErrorNotification(feeAmount, amountValue)
@@ -103,15 +102,6 @@ internal class SendNotificationFactory(
 
         if (showNotification) {
             add(SendNotification.Error.TotalExceedsBalance)
-        }
-    }
-
-    private fun MutableList<SendNotification>.addInvalidAmountNotification(
-        isSubtractAmount: Boolean,
-        receivedAmount: BigDecimal,
-    ) {
-        if (isSubtractAmount && receivedAmount <= BigDecimal.ZERO) {
-            add(SendNotification.Error.InvalidAmount)
         }
     }
 
@@ -227,7 +217,7 @@ internal class SendNotificationFactory(
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val isTezos = cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
         val threshold = Blockchain.Tezos.minimalAmount()
-        val isTotalBalance = feeAmount.plus(sendAmount) >= balance
+        val isTotalBalance = feeAmount.plus(sendAmount) >= balance && balance > threshold
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
                 SendNotification.Warning.HighFeeError(
