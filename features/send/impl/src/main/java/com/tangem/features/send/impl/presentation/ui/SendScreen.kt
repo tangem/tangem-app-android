@@ -43,7 +43,7 @@ internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen)
             SendUiStateType.Recipient -> resourceReference(R.string.send_recipient_label)
             SendUiStateType.Fee -> resourceReference(R.string.common_fee_selector_title)
             SendUiStateType.Send -> if (!sendState.isSuccess) {
-                resourceReference(R.string.send_summary_title, wrappedList(uiState.cryptoCurrencySymbol))
+                resourceReference(R.string.send_summary_title, wrappedList(uiState.cryptoCurrencyName))
             } else {
                 null
             }
