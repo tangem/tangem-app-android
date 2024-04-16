@@ -51,7 +51,11 @@ internal class QuotesUnsupportedCurrenciesIdAdapter {
         private val UNSUPPORTED_IDS_WITH_REPLACEMENTS = mapOf(
             "optimistic-ethereum" to "ethereum",
             "arbitrum-one" to "ethereum",
+            "zksync-ethereum" to "ethereum",
+            "manta-network-ethereum" to "ethereum",
+            "polygon-zkevm-ethereum" to "ethereum",
             "aurora-ethereum" to "ethereum",
+            "base-ethereum" to "ethereum",
         )
     }
 }
