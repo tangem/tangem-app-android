@@ -119,4 +119,18 @@ internal object TokensDataModule {
     fun provideCurrencyChecksRepository(walletManagersFacade: WalletManagersFacade): CurrencyChecksRepository {
         return DefaultCurrencyChecksRepository(walletManagersFacade = walletManagersFacade)
     }
+
+    @Provides
+    @Singleton
+    fun providePolkadotAccountHealthCheckRepository(
+        walletManagersFacade: WalletManagersFacade,
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): PolkadotAccountHealthCheckRepository {
+        return DefaultPolkadotAccountHealthCheckRepository(
+            walletManagersFacade = walletManagersFacade,
+            appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatchers,
+        )
+    }
 }
