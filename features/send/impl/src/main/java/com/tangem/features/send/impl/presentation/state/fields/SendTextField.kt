@@ -27,6 +27,7 @@ internal sealed class SendTextField {
         val fiatAmount: Amount,
         val isFiatValue: Boolean,
         val fiatValue: String,
+        val isFiatUnavailable: Boolean,
         val isError: Boolean,
         val error: TextReference,
     ) : SendTextField()
@@ -63,5 +64,6 @@ internal sealed class SendTextField {
         val title: TextReference,
         val footer: TextReference,
         val label: TextReference? = null,
+        val isReadonly: Boolean = false,
     ) : SendTextField()
 }

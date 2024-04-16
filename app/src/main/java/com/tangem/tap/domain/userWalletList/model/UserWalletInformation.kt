@@ -18,4 +18,5 @@ internal data class UserWalletPublicInformation(
     val cardsInWallet: Set<String>,
     val scanResponse: ScanResponse,
     val isMultiCurrency: Boolean,
+    val hasBackupError: Boolean = false,
 )
