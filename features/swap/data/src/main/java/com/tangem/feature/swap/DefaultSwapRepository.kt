@@ -256,6 +256,8 @@ internal class DefaultSwapRepository @Inject constructor(
         providerId: String,
         rateType: RateType,
         toAddress: String,
+        refundAddress: String?, // for cex only
+        refundExtraId: String?, // for cex only
     ): Either<DataError, SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
@@ -272,6 +274,8 @@ internal class DefaultSwapRepository @Inject constructor(
                     rateType = rateType.name.lowercase(),
                     toAddress = toAddress,
                     requestId = requestId,
+                    refundAddress = refundAddress,
+                    refundExtraId = refundExtraId,
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
