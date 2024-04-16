@@ -1,15 +1,13 @@
 package com.tangem.blockchainsdk
 
-import com.tangem.blockchain.common.AccountCreator
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
-import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.common.network.providers.ProviderType
 import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
 import com.tangem.blockchainsdk.converters.BlockchainSDKConfigConverter
-import com.tangem.blockchainsdk.storage.RuntimeStore
+import com.tangem.blockchainsdk.loader.BlockchainProvidersResponseLoader
+import com.tangem.blockchainsdk.store.RuntimeStore
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.models.ConfigValueModel
 import com.tangem.datasource.config.models.ProviderModel
@@ -27,22 +25,20 @@ internal typealias BlockchainProviderTypes = Map<Blockchain, List<ProviderType>>
 /**
  * Implementation of Blockchain SDK components factory
  *
- * @property assetLoader                  asset loader
- * @property configStore                  blockchain sdk config store
- * @property blockchainProviderTypesStore blockchain provider types store
- * @property accountCreator               account creator
- * @property blockchainDataStorage        blockchain data storage
- * @property blockchainSDKLogger          blockchain SDK logger
+ * @property assetLoader                       asset loader
+ * @property blockchainProvidersResponseLoader blockchain providers response loader
+ * @property configStore                       blockchain sdk config store
+ * @property blockchainProviderTypesStore      blockchain provider types store
+ * @property walletManagerFactoryCreator       wallet manager factory creator
  *
  * @author Andrew Khokhlov on 04/04/2024
  */
 internal class DefaultBlockchainSDKFactory(
     private val assetLoader: AssetLoader,
+    private val blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
     private val configStore: RuntimeStore<BlockchainSdkConfig>,
     private val blockchainProviderTypesStore: RuntimeStore<BlockchainProviderTypes>,
-    private val accountCreator: AccountCreator,
-    private val blockchainDataStorage: BlockchainDataStorage,
-    private val blockchainSDKLogger: BlockchainSDKLogger,
+    private val walletManagerFactoryCreator: WalletManagerFactoryCreator,
 ) : BlockchainSDKFactory {
 
     override val walletManagerFactory: Flow<WalletManagerFactory> by lazy(::createWalletManagerFactory)
@@ -60,15 +56,8 @@ internal class DefaultBlockchainSDKFactory(
         return combine(
             flow = configStore.get(),
             flow2 = blockchainProviderTypesStore.get(),
-        ) { config, blockchainProviderTypes ->
-            WalletManagerFactory(
-                config = config,
-                blockchainProviderTypes = blockchainProviderTypes,
-                accountCreator = accountCreator,
-                blockchainDataStorage = blockchainDataStorage,
-                loggers = listOf(blockchainSDKLogger),
-            )
-        }
+            transform = walletManagerFactoryCreator::create,
+        )
     }
 
     private fun CoroutineScope.updateBlockchainSDKConfig() {
@@ -83,17 +72,15 @@ internal class DefaultBlockchainSDKFactory(
 
     private fun CoroutineScope.updateBlockchainProviderTypes() {
         launch {
-            val providerTypes = assetLoader.load<BlockchainProvidersResponse>(fileName = PROVIDER_TYPES_FILE_NAME)
-                ?: return@launch
+            val response = blockchainProvidersResponseLoader.load() ?: return@launch
 
             blockchainProviderTypesStore.store(
-                value = BlockchainProviderTypesConverter.convert(providerTypes),
+                value = BlockchainProviderTypesConverter.convert(response),
             )
         }
     }
 
     private companion object {
         const val CONFIG_FILE_NAME = "tangem-app-config/config_${BuildConfig.ENVIRONMENT}"
-        const val PROVIDER_TYPES_FILE_NAME = "tangem-app-config/providers_order"
     }
 }
