@@ -84,6 +84,7 @@ internal class WalletDeepLinksHandler @Inject constructor(
                 amount = it.baseCurrencyAmount,
                 destinationAddress = it.depositWalletAddress,
                 transactionId = it.transactionId,
+                tag = it.depositWalletAddressTag,
             )
         }
 

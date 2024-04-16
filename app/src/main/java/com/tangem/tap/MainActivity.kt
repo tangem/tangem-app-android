@@ -57,9 +57,6 @@ import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.redux.NotificationsHandler
-import com.tangem.tap.common.shop.googlepay.GooglePayService
-import com.tangem.tap.common.shop.googlepay.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
-import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -69,7 +66,6 @@ import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHan
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
-import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
@@ -152,9 +148,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
 
     @Inject
-    lateinit var generalUserWalletsListManager: UserWalletsListManager
-
-    @Inject
     lateinit var getPolkadotCheckHasResetUseCase: GetPolkadotCheckHasResetUseCase
 
     @Inject
@@ -187,8 +180,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         setContentView(R.layout.activity_main)
         initContent()
-
-        checkGooglePayAvailability()
 
         checkForNotificationPermission()
         observeStateUpdates()
@@ -270,14 +261,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         )
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-    }
-
-    private fun checkGooglePayAvailability() {
-        store.dispatch(
-            ShopAction.CheckIfGooglePayAvailable(
-                GooglePayService(createPaymentsClient(this), this),
-            ),
-        )
     }
 
     private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode?> {
@@ -393,13 +376,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onActivityResult(requestCode, resultCode, data)
 
         onActivityResultCallbacks.forEach { it(requestCode, resultCode, data) }
-        when (requestCode) {
-            LOAD_PAYMENT_DATA_REQUEST_CODE -> {
-                store.dispatch(
-                    ShopAction.BuyWithGooglePay.HandleGooglePayResponse(resultCode, data),
-                )
-            }
-        }
     }
 
     override fun addOnActivityResultCallback(callback: OnActivityResultCallback) {
@@ -447,11 +423,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isNotScannedBefore = store.state.globalState.scanResponse == null
-        val isOnboardingServiceNotActive = store.state.globalState.onboardingState.onboardingStarted
-        val isShopNotOpened = store.state.shopState.total != null
+        val isOnboardingServiceNotActive = !store.state.globalState.onboardingState.onboardingStarted
 
         when {
-            !backStackIsEmpty && isNotScannedBefore && isOnboardingServiceNotActive && isShopNotOpened -> {
+            !backStackIsEmpty && isNotScannedBefore && isOnboardingServiceNotActive -> {
                 navigateToInitialScreen(intentWhichStartedActivity)
             }
             backStackIsEmpty -> {

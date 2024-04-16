@@ -24,6 +24,10 @@ internal class DefaultTokenDetailsRouter(
         reduxNavController.navigate(NavigationAction.OpenUrl(url = url))
     }
 
+    override fun share(text: String) {
+        reduxNavController.navigate(NavigationAction.Share(text))
+    }
+
     override fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
         reduxNavController.navigate(
             action = NavigationAction.NavigateTo(

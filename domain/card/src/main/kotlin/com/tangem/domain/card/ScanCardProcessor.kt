@@ -16,7 +16,6 @@ interface ScanCardProcessor {
         analyticsSource: AnalyticsParam.ScreensSources,
         cardId: String? = null,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
-        onScanStateChange: suspend (scanInProgress: Boolean) -> Unit = {},
         onWalletNotCreated: suspend () -> Unit = {},
         disclaimerWillShow: () -> Unit = {},
         onFailure: suspend (error: TangemError) -> Unit = {},

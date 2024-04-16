@@ -20,6 +20,7 @@ import com.tangem.domain.userwallets.Artwork
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
+import com.tangem.feature.wallet.presentation.wallet.domain.BackupValidator
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
@@ -173,6 +174,7 @@ private fun handleWalletAction(action: Action) {
                     scanResponse = updatedScanResponse,
                     accessCode = backupState.accessCode,
                     backupCardsIds = backupState.backupCardIds,
+                    hasBackupError = backupState.hasBackupError,
                 )
             }
         }
@@ -269,6 +271,7 @@ private fun handleWallet2Action(action: OnboardingWallet2Action) {
                 val mediateResult = when (
                     val result = tangemSdkManager.importWallet(
                         scanResponse = scanResponse,
+                        passphrase = action.passphrase,
                         mnemonic = action.mnemonicComponents.joinToString(" "),
                         shouldReset = globalState.onboardingState.shouldResetOnCreate,
                     )
@@ -484,6 +487,10 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             backupService.proceedBackup { result ->
                 when (result) {
                     is CompletionResult.Success -> {
+                        val backupValidator = BackupValidator()
+                        if (!backupValidator.isValid(CardDTO(result.data))) {
+                            store.dispatchOnMain(BackupAction.ErrorInBackupCard)
+                        }
                         if (backupService.currentState == BackupService.State.Finished) {
                             store.dispatchOnMain(BackupAction.FinishBackup())
                         } else {
