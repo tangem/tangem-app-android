@@ -27,7 +27,7 @@ androidx-datastore = "1.0.0"
 compose-compiler = "1.5.9"
 compose-runtime = "1.6.1"
 compose-foundation = "1.6.1"
-compose-material = "1.6.1"
+compose-material = "1.6.4"
 compose-material3 = "1.2.0"
 compose-constraint = "1.0.1"
 compose-navigation = "2.7.7"
@@ -61,7 +61,6 @@ okhttp = "4.9.3"
 rekotlin = "1.0.4"
 retrofit = "2.8.1"
 retrofitMoshiConverter = "2.6.0"
-shopifyBuySdk = "12.0.0"
 spongycastleCryptoCore = "1.58.0.0"
 timber = "4.7.1"
 viewBindingDelegate = "1.5.9"
@@ -82,12 +81,13 @@ listenableFuture = "1.0"
 swipeRefreshLayout = "1.1.0"
 spr-client = "3.6.2"
 web3j = "4.10.1"
+leakcanary = "2.13"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.8-578"
+tangemBlockchainSdk = "release-app_5.9-596"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.8-341"
+tangemCardSdk = "release-app_5.9-343"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
@@ -223,7 +223,6 @@ moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okHttp-prettyLogging = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "okHttp-prettyLogging" }
-shopify-buy = { module = "com.shopify.mobilebuysdk:buy3", version.ref = "shopifyBuySdk" }
 spongecastle-core = { module = "com.madgag.spongycastle:core", version.ref = "spongycastleCryptoCore" }
 reKotlin = { module = "org.rekotlin:rekotlin", version.ref = "rekotlin" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
@@ -249,4 +248,5 @@ camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "and
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "androidXCamera" }
 camera-view = { module = "androidx.camera:camera-view", version.ref = "androidXCamera" }
 web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
+leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 # endregion Other

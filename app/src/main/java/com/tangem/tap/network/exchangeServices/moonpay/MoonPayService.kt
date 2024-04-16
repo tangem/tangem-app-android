@@ -7,11 +7,12 @@ import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.createRetrofitInstance
 import com.tangem.domain.common.extensions.withIOContext
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.SCHEME
+import com.tangem.tap.network.exchangeServices.moonpay.models.MoonPayAvailableCurrency
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -35,39 +36,44 @@ class MoonPayService(
     override suspend fun update() {
         withIOContext {
             performRequest {
-                val userStatusResult = performRequest { api.getUserStatus(apiKey) }
-                if (userStatusResult is Result.Failure) return@performRequest
-
-                val currenciesResult = performRequest { api.getCurrencies(apiKey) }
-                if (currenciesResult is Result.Failure) return@performRequest
-
-                val userStatus = (userStatusResult as Result.Success).data
-                val currencies = (currenciesResult as Result.Success).data
-
-//                val currenciesToBuy = mutableListOf<String>()
-                val currenciesToSell = mutableListOf<String>()
-
-                currencies.forEach { currencyStatus ->
-                    if (currencyStatus.type != "crypto" || currencyStatus.isSuspended ||
-                        !currencyStatus.supportsLiveMode
-                    ) {
-                        return@forEach
-                    }
-
-                    if (userStatus.countryCode == "USA") {
-                        if (!currencyStatus.isSupportedInUS) return@forEach
-                        if (currencyStatus.notAllowedUSStates.contains(userStatus.stateCode)) return@forEach
-                    }
-                    val currencyCode = currencyStatus.code.uppercase()
-//                    currenciesToBuy.add(currencyCode)
-
-                    if (currencyStatus.isSellSupported) currenciesToSell.add(currencyCode)
+                val userStatus = when (val result = performRequest { api.getUserStatus(apiKey) }) {
+                    is Result.Failure -> return@performRequest
+                    is Result.Success -> result.data
                 }
-//                currenciesToBuy.sort()
-                currenciesToSell.sort()
+
+                val currencies = when (val result = performRequest { api.getCurrencies(apiKey) }) {
+                    is Result.Failure -> return@performRequest
+                    is Result.Success -> result.data
+                }
+
+                val currenciesToSell = currencies
+                    .filter { currency ->
+                        checkGeneralRequirements(currency) && checkUSARequirements(userStatus, currency)
+                    }
+                    .mapNotNull { currency ->
+                        if (!currency.isSellSupported) return@mapNotNull null
+                        MoonPayAvailableCurrency(
+                            currencyCode = currency.code,
+                            networkCode = currency.metadata?.networkCode ?: return@mapNotNull null,
+                            contractAddress = currency.metadata.contractAddress,
+                        )
+                    }
 
                 status = MoonPayStatus(currenciesToSell, userStatus, currencies)
             }
+        }
+    }
+
+    private fun checkGeneralRequirements(currency: MoonPayCurrencies): Boolean {
+        return currency.type == "crypto" && !currency.isSuspended && currency.supportsLiveMode &&
+            currency.isSellSupported
+    }
+
+    private fun checkUSARequirements(userStatus: MoonPayUserStatus, currency: MoonPayCurrencies): Boolean {
+        return if (userStatus.countryCode == "USA") {
+            currency.isSupportedInUS && !currency.notAllowedUSStates.contains(userStatus.stateCode)
+        } else {
+            true
         }
     }
 
@@ -80,42 +86,57 @@ class MoonPayService(
     override fun availableForBuy(currency: Currency): Boolean = false
 
     override fun availableForSell(currency: Currency): Boolean {
-        val availableForSell = status?.availableForSell ?: return false
-        val metadata = status?.responseCurrencies?.filter { it.isSellSupported }?.map { it.metadata }
         if (!isSellAllowed()) return false
 
-        return when (currency) {
-            is Currency.Blockchain -> {
-                val blockchain = currency.blockchain
-                when {
-                    blockchain.isTestnet() -> false
-                    blockchain == Blockchain.Unknown || currency.blockchain == Blockchain.BSC -> false
-                    else -> availableForSell.contains(currency.currencySymbol)
+        val availableForSell = status?.availableForSell ?: return false
+
+        val supportedCurrency = currency.blockchain.moonPaySupportedCurrency ?: return false
+        return availableForSell.any {
+            when (currency) {
+                is Currency.Blockchain -> {
+                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
+                        it.currencyCode.equals(other = supportedCurrency.currencyCode, ignoreCase = true)
                 }
-            }
-            is Currency.Token -> {
-                metadata?.any { it?.contractAddress.equals(currency.token.contractAddress, ignoreCase = true) } ?: false
+                is Currency.Token -> {
+                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
+                        it.contractAddress.equals(other = currency.token.contractAddress, ignoreCase = true)
+                }
             }
         }
     }
 
     override fun getUrl(
         action: CurrencyExchangeManager.Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: CryptoCurrencyName,
-        fatCurrency: String,
+        cryptoCurrency: CryptoCurrency,
+        fiatCurrencyName: String,
         walletAddress: String,
         isDarkTheme: Boolean,
-    ): String {
+    ): String? {
         if (action == CurrencyExchangeManager.Action.Buy) throw UnsupportedOperationException()
+
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
+        val supportedCurrency = blockchain.moonPaySupportedCurrency ?: return null
+        val moonpayCurrency = status?.availableForSell?.firstOrNull {
+            when (cryptoCurrency) {
+                is CryptoCurrency.Coin -> {
+                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
+                        it.currencyCode.equals(other = supportedCurrency.currencyCode, ignoreCase = true)
+                }
+                is CryptoCurrency.Token -> {
+                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
+                        it.contractAddress.equals(other = cryptoCurrency.contractAddress, ignoreCase = true)
+                }
+            }
+        } ?: return null
 
         val uri = Uri.Builder()
             .scheme(SCHEME)
             .authority(URL_SELL)
             .appendQueryParameter("apiKey", apiKey)
-            .appendQueryParameter("baseCurrencyCode", cryptoCurrencyName)
+            .appendQueryParameter("baseCurrencyCode", moonpayCurrency.currencyCode.uppercase())
             .appendQueryParameter("refundWalletAddress", walletAddress)
-            .appendQueryParameter("redirectURL", "tangem://sell-request.tangem.com")
+            .appendQueryParameter("redirectURL", "tangem://redirect_sell")
+
         if (isDarkTheme) uri.appendQueryParameter("theme", "dark")
 
         val originalQuery = uri.build().encodedQuery ?: uri.build().toString()
@@ -147,7 +168,7 @@ class MoonPayService(
 }
 
 private data class MoonPayStatus(
-    val availableForSell: List<String>,
+    val availableForSell: List<MoonPayAvailableCurrency>,
     val responseUserStatus: MoonPayUserStatus,
     val responseCurrencies: List<MoonPayCurrencies>,
 )

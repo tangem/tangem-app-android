@@ -28,6 +28,7 @@ data class AboutUiAction(
 
 data class YourSeedPhraseUiAction(
     val buttonContinueClick: () -> Unit,
+    val onSelectType: (SegmentSeedType) -> Unit,
 )
 
 data class CheckSeedPhraseUiAction(
@@ -39,7 +40,9 @@ data class CheckSeedPhraseUiAction(
 
 data class ImportSeedPhraseUiAction(
     val phraseTextFieldAction: TextFieldUiAction,
+    val passTextFieldAction: TextFieldUiAction,
     val suggestedPhraseClick: (Int) -> Unit,
+    val onPassphraseInfoClick: () -> Unit,
     val buttonCreateWalletClick: () -> Unit,
 )
 

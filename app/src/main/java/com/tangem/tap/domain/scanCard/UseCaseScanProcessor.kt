@@ -3,12 +3,15 @@ package com.tangem.tap.domain.scanCard
 import arrow.fx.coroutines.resourceScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.StateDialog
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.scanCard.chains.*
@@ -26,9 +29,15 @@ internal object UseCaseScanProcessor {
         allowsRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<ScanResponse> {
         val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
+
         return scanCardUseCase(cardId, allowsRequestAccessCodeFromRepository)
             .fold(
-                ifLeft = { CompletionResult.Failure(scanCardExceptionConverter.convertBack(it)) },
+                ifLeft = {
+                    val error = scanCardExceptionConverter.convertBack(it)
+
+                    Analytics.send(Basic.ScanError(error))
+                    CompletionResult.Failure(error)
+                },
                 ifRight = { CompletionResult.Success(it) },
             )
     }
@@ -38,25 +47,37 @@ internal object UseCaseScanProcessor {
         analyticsSource: AnalyticsParam.ScreensSources,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
-        onScanStateChange: suspend (scanInProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
         disclaimerWillShow: () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) = progressScope(onProgressStateChange) {
-        onScanStateChange(true)
-
         val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         val chains = buildList {
-            add(ScanningFinishedChain { onScanStateChange(false) })
+            add(
+                FailedScansCounterChain(
+                    { showMaxUnsuccessfulScansReachedDialog(analyticsSource) },
+                ),
+            )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
             add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
         }
 
-        scanCardUseCase(cardId, afterScanChains = chains)
-            .map { onSuccess(it) }
-            .mapLeft { proceedWithException(it, onWalletNotCreated, onFailure) }
+        scanCardUseCase(cardId, afterScanChains = chains).fold(
+            ifLeft = { proceedWithException(it, onWalletNotCreated, onFailure) },
+            ifRight = { onSuccess(it) },
+        )
+    }
+
+    private fun showMaxUnsuccessfulScansReachedDialog(source: AnalyticsParam.ScreensSources) {
+        val scanFailsSource = when (source) {
+            is AnalyticsParam.ScreensSources.SignIn -> StateDialog.ScanFailsSource.SIGN_IN
+            is AnalyticsParam.ScreensSources.Settings -> StateDialog.ScanFailsSource.SETTINGS
+            is AnalyticsParam.ScreensSources.Intro -> StateDialog.ScanFailsSource.INTRO
+            else -> StateDialog.ScanFailsSource.MAIN
+        }
+        store.dispatchDialogShow(StateDialog.ScanFailsDialog(scanFailsSource))
     }
 
     private suspend fun proceedWithException(
@@ -74,7 +95,12 @@ internal object UseCaseScanProcessor {
             is ScanCardException.UserCancelled,
             is ScanCardException.WrongAccessCode,
             is ScanCardException.WrongCardId,
-            -> onFailure(scanCardExceptionConverter.convertBack(exception))
+            -> {
+                val error = scanCardExceptionConverter.convertBack(exception)
+
+                Analytics.send(Basic.ScanError(error))
+                onFailure(error)
+            }
         }
     }
 
@@ -88,8 +114,9 @@ internal object UseCaseScanProcessor {
                 navigateTo(exception.onboardingRoute)
                 onWalletNotCreated()
             }
-            is ScanChainException.DisclaimerWasCanceled,
-            -> onFailure(scanCardExceptionConverter.convertBack(exception))
+            is ScanChainException.DisclaimerWasCanceled -> {
+                onFailure(scanCardExceptionConverter.convertBack(exception))
+            }
         }
     }
 
