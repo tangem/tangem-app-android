@@ -9,7 +9,6 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.txhistory.models.Page
@@ -80,7 +79,7 @@ class DefaultTxHistoryRepository(
     }
 
     override suspend fun getTxExploreUrl(userWalletId: UserWalletId, network: Network): String {
-        val blockchain = Blockchain.fromNetworkId(network.id.value)
+        val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
