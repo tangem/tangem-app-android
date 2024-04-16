@@ -8,7 +8,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.res.TangemTheme
 
-internal object TangemButtonsDefaults {
+object TangemButtonsDefaults {
 
     val elevation: ButtonElevation
         @Composable
