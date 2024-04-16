@@ -28,5 +28,5 @@ internal sealed interface SaveWalletAction : Action {
 
     data object SaveWalletWasShown : SaveWalletAction
 
-    data object SaveWalletAfterBackup : SaveWalletAction
+    data class SaveWalletAfterBackup(val hasBackupError: Boolean) : SaveWalletAction
 }
