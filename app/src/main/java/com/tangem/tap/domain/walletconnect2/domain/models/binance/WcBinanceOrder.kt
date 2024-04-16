@@ -13,7 +13,7 @@ open class WcBinanceOrder<T>(
     val msgs: List<T>,
 ) : WcRequestData
 
-data class WCBinanceTxConfirmParam(
+data class WcBinanceTxConfirmParam(
     val ok: Boolean,
     val errorMsg: String?,
 ) : WcRequestData
