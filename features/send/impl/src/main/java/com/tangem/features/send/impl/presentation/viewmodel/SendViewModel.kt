@@ -30,7 +30,6 @@ import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -56,7 +55,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -183,7 +181,6 @@ internal class SendViewModel @Inject constructor(
 
     private var balanceJobHolder = JobHolder()
     private var balanceHidingJobHolder = JobHolder()
-    private var recipientsJobHolder = JobHolder()
     private var feeJobHolder = JobHolder()
     private var addressValidationJobHolder = JobHolder()
     private var memoValidationJobHolder = JobHolder()
@@ -374,34 +371,33 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun getWalletsAndRecent() {
-        combine(
-            flow = getUserWallets().conflate(),
-            flow2 = getTxHistory().conflate(),
-        ) { wallets, txHistory ->
-            uiState = stateFactory.onLoadedRecipientList(
-                wallets = wallets,
-                txHistory = txHistory,
-            )
+        getUserWallets()
+        viewModelScope.launch(dispatchers.main) {
+            getTxHistory()
         }
-            .flowOn(dispatchers.io)
-            .launchIn(viewModelScope)
-            .saveIn(recipientsJobHolder)
     }
 
-    private fun getUserWallets(): Flow<List<AvailableWallet?>> {
-        return getWalletsUseCase()
+    private fun getUserWallets() {
+        getWalletsUseCase()
+            .conflate()
             .distinctUntilChanged()
-            .map { userWallets ->
+            .onEach { userWallets ->
                 coroutineScope {
-                    userWallets
-                        .filterNot { it.walletId == userWalletId || it.isLocked }
-                        .map { wallet ->
-                            async(dispatchers.io) {
-                                wallet.toAvailableWallet()
-                            }
-                        }
-                }.awaitAll()
+                    runCatching {
+                        userWallets
+                            .filterNot { it.walletId == userWalletId || it.isLocked }
+                            .map { wallet ->
+                                async(dispatchers.io) { wallet.toAvailableWallet() }
+                            }.awaitAll()
+                    }.onSuccess { result ->
+                        uiState = stateFactory.onLoadedWalletsList(wallets = result)
+                    }.onFailure {
+                        uiState = stateFactory.onLoadedWalletsList(wallets = emptyList())
+                    }
+                }
             }
+            .flowOn(dispatchers.main)
+            .launchIn(viewModelScope)
     }
 
     private suspend fun UserWallet.toAvailableWallet(): AvailableWallet? {
@@ -431,14 +427,12 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private fun getTxHistory(): Flow<List<TxHistoryItem>> {
-        return getFixedTxHistoryItemsUseCase(
+    private suspend fun getTxHistory() {
+        val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
             userWalletId = userWalletId,
             currency = cryptoCurrency,
-        ).fold(
-            ifRight = { it.distinctUntilChanged() },
-            ifLeft = { emptyFlow() },
-        )
+        ).getOrElse { emptyList() }
+        uiState = stateFactory.onLoadedHistoryList(txHistory = txHistoryList)
     }
 
     private fun onStateActive() {
@@ -636,13 +630,9 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun onEnteredValidAddress(isValidAddress: Boolean, isAddressInWallet: Boolean) {
-        val recipientState = uiState.recipientState ?: return
-        val isVisible = isAddressInWallet || !isValidAddress
-        uiState = uiState.copy(
-            recipientState = recipientState.copy(
-                recent = recipientState.recent.map { it.copy(isVisible = isVisible) }.toPersistentList(),
-                wallets = recipientState.wallets.map { it.copy(isVisible = isVisible) }.toPersistentList(),
-            ),
+        uiState = stateFactory.getHiddenRecentListState(
+            isAddressInWallet = isAddressInWallet,
+            isValidAddress = isValidAddress,
         )
     }
 
