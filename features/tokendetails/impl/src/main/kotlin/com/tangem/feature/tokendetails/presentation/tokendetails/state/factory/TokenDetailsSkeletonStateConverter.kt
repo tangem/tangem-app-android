@@ -5,20 +5,25 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.featuretoggles.TokenDetailsFeatureToggles
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class TokenDetailsSkeletonStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
+    private val featureToggles: TokenDetailsFeatureToggles,
 ) : Converter<CryptoCurrency, TokenDetailsState> {
 
     private val iconStateConverter by lazy { TokenDetailsIconStateConverter() }
@@ -27,7 +32,7 @@ internal class TokenDetailsSkeletonStateConverter(
         return TokenDetailsState(
             topAppBarConfig = TokenDetailsTopAppBarConfig(
                 onBackClick = clickIntents::onBackClick,
-                tokenDetailsAppBarMenuConfig = createMenu(),
+                tokenDetailsAppBarMenuConfig = createMenu(value),
             ),
             tokenInfoBlockState = TokenInfoBlockState(
                 name = value.name,
@@ -60,14 +65,21 @@ internal class TokenDetailsSkeletonStateConverter(
         )
     }
 
-    private fun createMenu(): TokenDetailsAppBarMenuConfig = TokenDetailsAppBarMenuConfig(
-        items = persistentListOf(
+    private fun createMenu(cryptoCurrency: CryptoCurrency): TokenDetailsAppBarMenuConfig = TokenDetailsAppBarMenuConfig(
+        items = buildList {
+            if (featureToggles.isGenerateXPubEnabled() && isBitcoin(cryptoCurrency.network.id.value)) {
+                TokenDetailsAppBarMenuConfig.MenuItem(
+                    title = resourceReference(R.string.token_details_generate_xpub),
+                    textColorProvider = { TangemTheme.colors.text.primary1 },
+                    onClick = clickIntents::onGenerateExtendedKey,
+                ).let(::add)
+            }
             TokenDetailsAppBarMenuConfig.MenuItem(
                 title = TextReference.Res(id = R.string.token_details_hide_token),
                 textColorProvider = { TangemTheme.colors.text.warning },
                 onClick = clickIntents::onHideClick,
-            ),
-        ),
+            ).let(::add)
+        }.toImmutableList(),
     )
 
     private fun createButtons(): ImmutableList<TokenDetailsActionButton> {

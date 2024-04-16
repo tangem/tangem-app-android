@@ -67,13 +67,20 @@ fun SimpleTextField(
 
     LaunchedEffect(key1 = isSelectionChanged) {
         if (isSelectionChanged) {
-            textFieldValueState = textFieldValue.copy(
-                selection = getValueRange(value),
-            )
+            textFieldValueState = textFieldValue
         }
     }
 
-    var lastTextValue by remember(value) { mutableStateOf(value) }
+    var lastTextValue by remember(value) {
+        val isSelectionLastIndex = textFieldValueState.selection.end == textFieldValueState.text.lastIndex
+        if (textFieldValueState.text.isBlank() || isSelectionLastIndex) {
+            textFieldValueState = textFieldValueState.copy(
+                text = value,
+                selection = getValueRange(value),
+            )
+        }
+        mutableStateOf(value)
+    }
 
     CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
         BasicTextField(
@@ -84,9 +91,7 @@ fun SimpleTextField(
                 val stringChangedSinceLastInvocation = lastTextValue != newTextFieldValueState.text
                 lastTextValue = newTextFieldValueState.text
 
-                if (stringChangedSinceLastInvocation) {
-                    onValueChange(newTextFieldValueState.text)
-                }
+                if (stringChangedSinceLastInvocation) onValueChange(newTextFieldValueState.text)
             },
             textStyle = textStyle.copy(color = color),
             cursorBrush = SolidColor(TangemTheme.colors.text.primary1),

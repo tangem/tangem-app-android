@@ -31,11 +31,13 @@ internal class SendAmountFieldConverter(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val cryptoDecimal = value.toBigDecimalOrDefault()
         val cryptoAmount = cryptoDecimal.convertToAmount(cryptoCurrencyStatus.currency)
-        val fiatValue = if (value.isEmpty()) {
-            ""
+        val fiatRate = cryptoCurrencyStatus.value.fiatRate
+        val (fiatValue, fiatDecimal) = if (value.isEmpty()) {
+            "" to BigDecimal.ZERO
         } else {
-            val fiatDecimal = cryptoCurrencyStatus.value.fiatRate?.multiply(cryptoDecimal) ?: BigDecimal.ZERO
-            fiatDecimal.parseBigDecimal(FIAT_DECIMALS)
+            val fiatDecimal = fiatRate?.multiply(cryptoDecimal) ?: BigDecimal.ZERO
+            val fiatValue = fiatDecimal.parseBigDecimal(FIAT_DECIMALS)
+            fiatValue to fiatDecimal
         }
         val isDoneActionEnabled = !cryptoDecimal.isZero()
         return SendTextField.AmountField(
@@ -49,15 +51,16 @@ internal class SendAmountFieldConverter(
             keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
             isFiatValue = false,
             cryptoAmount = cryptoAmount,
-            fiatAmount = getAppCurrencyAmount(appCurrencyProvider()),
+            fiatAmount = getAppCurrencyAmount(fiatDecimal, appCurrencyProvider()),
             isError = false,
             error = TextReference.Res(R.string.swapping_insufficient_funds),
+            isFiatUnavailable = fiatRate == null,
         )
     }
 
-    private fun getAppCurrencyAmount(appCurrency: AppCurrency) = Amount(
+    private fun getAppCurrencyAmount(fiatValue: BigDecimal, appCurrency: AppCurrency) = Amount(
         currencySymbol = appCurrency.symbol,
-        value = BigDecimal.ZERO,
+        value = fiatValue,
         decimals = FIAT_DECIMALS,
         type = AmountType.FiatType(appCurrency.code),
     )
