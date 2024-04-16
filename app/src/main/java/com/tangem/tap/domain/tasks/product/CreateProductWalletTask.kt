@@ -62,6 +62,7 @@ class CreateProductWalletTask(
     private val cardTypesResolver: CardTypesResolver,
     private val derivationStyleProvider: DerivationStyleProvider,
     private val mnemonic: Mnemonic? = null,
+    private val passphrase: String? = null,
     private val shouldReset: Boolean,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
@@ -82,7 +83,7 @@ class CreateProductWalletTask(
             cardTypesResolver.isTangemTwins() ->
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
-            else -> CreateWalletTangemWallet(mnemonic, shouldReset, derivationStyleProvider, cardDto)
+            else -> CreateWalletTangemWallet(mnemonic, passphrase, shouldReset, derivationStyleProvider, cardDto)
         }
         commandProcessor.proceed(cardDto, session) {
             when (it) {
@@ -142,6 +143,7 @@ private class CreateWalletTangemNote(private val cardTypesResolver: CardTypesRes
  */
 private class CreateWalletTangemWallet(
     private val mnemonic: Mnemonic?,
+    private val passphrase: String?,
     private val shouldReset: Boolean,
     private val derivationStyleProvider: DerivationStyleProvider,
     cardDTO: CardDTO,
@@ -170,7 +172,7 @@ private class CreateWalletTangemWallet(
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        CreateWalletsTask(cardConfig.mandatoryCurves, mnemonic).run(session) { result ->
+        CreateWalletsTask(cardConfig.mandatoryCurves, mnemonic, passphrase).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     checkIfAllWalletsCreated(card, session, result.data, callback)
