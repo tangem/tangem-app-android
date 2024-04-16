@@ -4,6 +4,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.bip39.MnemonicErrorResult
 import com.tangem.feature.onboarding.data.MnemonicRepository
+import com.tangem.feature.onboarding.domain.models.MnemonicType
 import com.tangem.feature.onboarding.presentation.wallet2.model.SeedPhraseField
 import com.tangem.utils.extensions.isNotWhitespace
 import kotlinx.collections.immutable.ImmutableList
@@ -13,27 +14,23 @@ import kotlinx.collections.immutable.toPersistentList
 /**
 [REDACTED_AUTHOR]
  */
-internal class DefaultSeedPhraseInteractor constructor(
+internal class DefaultSeedPhraseInteractor(
     private val repository: MnemonicRepository,
 ) : SeedPhraseInteractor {
 
-    private var currentMnemonic: Mnemonic? = null
     private val partWordFinder: PartWordFinder = PartWordFinder()
 
     override suspend fun generateMnemonic(): Result<Mnemonic> {
         return runCatching {
-            repository.generateDefaultMnemonic().apply {
-                currentMnemonic = this
-            }
+            repository.generateDefaultMnemonic()
         }
     }
 
-    override suspend fun getMnemonicComponents(): Result<List<String>> {
+    override suspend fun generateMnemonics(mnemonicTypes: List<MnemonicType>): Result<Map<MnemonicType, Mnemonic>> {
         return runCatching {
-            val mnemonic = currentMnemonic ?: repository.generateDefaultMnemonic().apply {
-                currentMnemonic = this
+            mnemonicTypes.associateWith {
+                repository.generateMnemonic(it)
             }
-            mnemonic.mnemonicComponents
         }
     }
 
