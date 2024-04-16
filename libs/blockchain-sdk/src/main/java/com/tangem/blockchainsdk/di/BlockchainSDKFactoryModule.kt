@@ -1,11 +1,12 @@
 package com.tangem.blockchainsdk.di
 
+import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.DefaultBlockchainSDKFactory
 import com.tangem.blockchainsdk.accountcreator.DefaultAccountCreator
-import com.tangem.blockchainsdk.config.RuntimeConfigStorage
 import com.tangem.blockchainsdk.datastorage.DefaultBlockchainDataStorage
+import com.tangem.blockchainsdk.storage.DefaultRuntimeStore
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.asset.loader.AssetLoader
@@ -31,7 +32,8 @@ internal object BlockchainSDKFactoryModule {
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
             assetLoader = assetLoader,
-            configStorage = RuntimeConfigStorage(),
+            configStore = DefaultRuntimeStore(defaultValue = BlockchainSdkConfig()),
+            blockchainProviderTypesStore = DefaultRuntimeStore(defaultValue = emptyMap()),
             accountCreator = DefaultAccountCreator(authProvider, tangemTechApi),
             blockchainDataStorage = DefaultBlockchainDataStorage(appPreferencesStore),
             blockchainSDKLogger = blockchainSDKLogger,
