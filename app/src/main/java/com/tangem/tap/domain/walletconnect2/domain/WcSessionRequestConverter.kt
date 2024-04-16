@@ -1,12 +1,13 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
+import com.tangem.tap.domain.walletconnect2.domain.mapper.mapToTransaction
 import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectEvents
 import com.tangem.tap.features.details.redux.walletconnect.WcEthTransactionType
 
-class WcSessionRequestConverter(
+internal class WcSessionRequestConverter(
     private val blockchainHelper: WcBlockchainHelper,
     private val sessionsRepository: WalletConnectSessionsRepository,
     private val sdkHelper: WalletConnectSdkHelper,
@@ -107,6 +108,20 @@ class WcSessionRequestConverter(
                     derivationPath = derivationPath,
                 )
             }
+            is WcRequest.SolanaSignRequest -> {
+                val data = request.data.mapToTransaction()
+
+                WcPreparedRequest.SignTransaction(
+                    preparedRequestData = WcGenericTransactionData(
+                        hashToSign = data.getSerializedMessage(),
+                        dAppName = sessionRequest.metaName,
+                        type = TransactionType.SOLANA_TX,
+                    ),
+                    topic = sessionRequest.topic,
+                    requestId = sessionRequest.id,
+                    derivationPath = derivationPath,
+                )
+            }
             else -> null
         }
     }
@@ -118,6 +133,7 @@ class WcSessionRequestConverter(
             is WcRequest.EthSendTransaction -> request.data.from
             is WcRequest.EthSignTransaction -> request.data.from
             is WcRequest.EthSign -> request.data.address
+            is WcRequest.SolanaSignRequest -> request.data.feePayer
             else -> null
         }
     }
