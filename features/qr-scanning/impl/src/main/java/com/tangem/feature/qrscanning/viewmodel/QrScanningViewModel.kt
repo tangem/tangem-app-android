@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.feature.qrscanning.QrScanningRouter.Companion.NETWORK_KEY
 import com.tangem.feature.qrscanning.QrScanningRouter.Companion.SOURCE_KEY
-import com.tangem.feature.qrscanning.SourceType
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
 import com.tangem.feature.qrscanning.presentation.QrScanningState
 import com.tangem.feature.qrscanning.presentation.QrScanningStateController
