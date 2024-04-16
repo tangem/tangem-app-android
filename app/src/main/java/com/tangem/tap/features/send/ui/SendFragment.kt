@@ -25,10 +25,14 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.qrscanning.models.QrResult
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.feature.qrscanning.SourceType
-import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
+import com.tangem.features.send.api.navigation.SendRouter.Companion.CRYPTO_CURRENCY_KEY
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
@@ -60,6 +64,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.text.DecimalFormatSymbols
 import javax.inject.Inject
 
@@ -82,10 +87,16 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private val sendSubscriber = SendStateSubscriber(this)
     private lateinit var keyboardObserver: KeyboardObserver
 
+    private val cryptoCurrency: CryptoCurrency?
+        get() = arguments?.getParcelable(CRYPTO_CURRENCY_KEY)
+
     val binding: FragmentSendBinding by viewBinding(FragmentSendBinding::bind)
 
     @Inject
     lateinit var listenToQrScanningUseCase: ListenToQrScanningUseCase
+
+    @Inject
+    lateinit var parseQrCodeUseCase: ParseQrCodeUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -177,13 +188,21 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             listenToQrScanningUseCase(SourceType.SEND)
                 .getOrElse { emptyFlow() }
                 .flowWithLifecycle(this@SendFragment.lifecycle, minActiveState = Lifecycle.State.CREATED)
-                .collect {
+                .collect { rawQr ->
                     delay(200)
 
                     // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
                     // If do not use the delay, then etAmount error field is not displayed when
                     // inserting an incorrect amount by shareUri
-                    onCodeScanned(it)
+                    cryptoCurrency?.let { cryptoCurrency ->
+                        parseQrCodeUseCase(rawQr, cryptoCurrency = cryptoCurrency).fold(
+                            ifLeft = {
+                                onCodeScanned(QrResult(address = rawQr))
+                                Timber.w(it)
+                            },
+                            ifRight = { onCodeScanned(it) },
+                        )
+                    } ?: onCodeScanned(QrResult(address = rawQr))
                 }
         }
     }
@@ -254,15 +273,18 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             .launchIn(mainScope)
     }
 
-    private fun onCodeScanned(scannedCode: String) {
-        if (scannedCode.isEmpty()) return
+    private fun onCodeScanned(parsedQr: QrResult) {
+        if (parsedQr.address.isEmpty()) return
 
         store.dispatch(
             PasteAddress(
-                data = scannedCode,
+                data = parsedQr.address,
                 sourceType = Token.Send.AddressEntered.SourceType.QRCode,
             ),
         )
+        parsedQr.amount?.let { amount ->
+            store.dispatchOnMain(AmountAction.SetAmount(amount, isUserInput = false))
+        }
         store.dispatch(TruncateOrRestore(!binding.lSendAddress.etAddress.isFocused))
     }
 

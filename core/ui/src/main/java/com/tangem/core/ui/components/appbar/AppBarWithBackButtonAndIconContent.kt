@@ -1,10 +1,7 @@
 package com.tangem.core.ui.components.appbar
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -37,6 +34,7 @@ fun AppBarWithBackButtonAndIconContent(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     text: String? = null,
+    subtitle: String? = null,
     @DrawableRes backIconRes: Int? = null,
     backIconTint: Color = TangemTheme.colors.icon.primary1,
     backgroundColor: Color = TangemTheme.colors.background.secondary,
@@ -44,9 +42,10 @@ fun AppBarWithBackButtonAndIconContent(
 ) {
     Row(
         modifier = modifier
+            .height(TangemTheme.dimens.size56)
             .background(color = backgroundColor)
             .fillMaxWidth()
-            .padding(all = TangemTheme.dimens.spacing16),
+            .padding(horizontal = TangemTheme.dimens.spacing16),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -54,6 +53,7 @@ fun AppBarWithBackButtonAndIconContent(
             painter = painterResource(backIconRes ?: R.drawable.ic_back_24),
             contentDescription = null,
             modifier = Modifier
+                .padding(vertical = TangemTheme.dimens.spacing16)
                 .size(size = TangemTheme.dimens.size24)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -61,18 +61,35 @@ fun AppBarWithBackButtonAndIconContent(
                 ) { onBackClick() },
             tint = backIconTint,
         )
-        AnimatedContent(
-            targetState = text,
+        Column(
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier.weight(1f),
-            transitionSpec = { fadeIn().togetherWith(fadeOut()) },
-            label = "Toolbar title change",
         ) {
-            if (!it.isNullOrBlank()) {
+            AnimatedVisibility(
+                visible = !text.isNullOrBlank(),
+                enter = fadeIn(),
+                exit = fadeOut(),
+                label = "Toolbar title change",
+            ) {
                 Text(
-                    text = it,
+                    text = text.orEmpty(),
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
                     style = TangemTheme.typography.subtitle1,
+                )
+            }
+            AnimatedVisibility(
+                visible = !subtitle.isNullOrBlank(),
+                enter = fadeIn().plus(expandVertically()),
+                exit = fadeOut().plus(shrinkVertically()),
+                label = "Toolbar subtitle change",
+            ) {
+                Text(
+                    text = subtitle.orEmpty(),
+                    color = TangemTheme.colors.text.secondary,
+                    maxLines = 1,
+                    style = TangemTheme.typography.caption2,
+                    modifier = Modifier.animateContentSize(),
                 )
             }
         }
@@ -111,6 +128,7 @@ private fun PreviewAppBarWithBackButtonAndIconInDarkTheme() {
     TangemTheme(isDark = true) {
         AppBarWithBackButtonAndIconContent(
             text = "Title",
+            subtitle = "Subtitle",
             onBackClick = {},
             iconContent = {
                 Row {
