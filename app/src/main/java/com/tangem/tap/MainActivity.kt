@@ -19,12 +19,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -35,10 +37,13 @@ import com.tangem.data.card.sdk.CardSdkLifecycleObserver
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
+import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.tester.api.TesterRouter
@@ -94,6 +99,7 @@ val userWalletsListManagerSafe: UserWalletsListManager?
 val userWalletsListManager: UserWalletsListManager
     get() = userWalletsListManagerSafe!!
 
+@Suppress("LargeClass")
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbackHolder {
 
@@ -140,6 +146,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
 
+    @Inject
+    lateinit var getPolkadotCheckHasResetUseCase: GetPolkadotCheckHasResetUseCase
+
+    @Inject
+    lateinit var getPolkadotCheckHasImmortalUseCase: GetPolkadotCheckHasImmortalUseCase
+
+    @Inject
+    lateinit var analyticsEventsHandler: AnalyticsEventHandler
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -166,6 +181,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         checkForNotificationPermission()
         observeStateUpdates()
+        observePolkadotAccountHealthCheck()
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
@@ -453,6 +469,27 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+        }
+    }
+
+    private fun observePolkadotAccountHealthCheck() {
+        lifecycleScope.launch {
+            getPolkadotCheckHasResetUseCase()
+                .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
+                .distinctUntilChanged()
+                .collect {
+                    analyticsEventsHandler.send(WalletScreenAnalyticsEvent.Token.PolkadotAccountReset(it.second))
+                }
+        }
+        lifecycleScope.launch {
+            getPolkadotCheckHasImmortalUseCase()
+                .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
+                .distinctUntilChanged()
+                .collect {
+                    analyticsEventsHandler.send(
+                        WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(it.second),
+                    )
+                }
         }
     }
 }
