@@ -51,7 +51,7 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
             is SaveWalletAction.SaveWalletWasShown -> saveWalletWasShown()
             is SaveWalletAction.Dismiss -> dismiss(state)
-            is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(state)
+            is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(state, action.hasBackupError)
             is SaveWalletAction.Save.Success,
             is SaveWalletAction.ProvideBackupInfo,
             is SaveWalletAction.CloseError,
@@ -62,12 +62,13 @@ internal class SaveWalletMiddleware {
         }
     }
 
-    private fun saveWalletAfterBackup(state: SaveWalletState) {
+    private fun saveWalletAfterBackup(state: SaveWalletState, hasBackupError: Boolean) {
         scope.launch {
             val backupInfo = state.backupInfo ?: error("Backup info is null")
 
             val userWallet = UserWalletBuilder(backupInfo.scanResponse)
                 .backupCardsIds(state.backupInfo.backupCardsIds)
+                .hasBackupError(hasBackupError)
                 .build()
                 .guard {
                     Timber.e("User wallet not created")

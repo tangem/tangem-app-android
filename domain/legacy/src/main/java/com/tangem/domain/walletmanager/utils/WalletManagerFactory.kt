@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
+import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.domain.common.DerivationStyleProvider
@@ -18,10 +19,16 @@ internal class WalletManagerFactory(
     configManager: ConfigManager,
     accountCreator: AccountCreator,
     blockchainDataStorage: BlockchainDataStorage,
+    blockchainSDKLogger: BlockchainSDKLogger? = null,
 ) {
 
     private val sdkWalletManagerFactory by lazy {
-        BlockchainWalletManagerFactory(configManager.config.blockchainSdkConfig, accountCreator, blockchainDataStorage)
+        BlockchainWalletManagerFactory(
+            config = configManager.config.blockchainSdkConfig,
+            accountCreator = accountCreator,
+            blockchainDataStorage = blockchainDataStorage,
+            loggers = listOfNotNull(blockchainSDKLogger),
+        )
     }
 
     fun createWalletManager(
