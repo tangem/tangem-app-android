@@ -50,14 +50,12 @@ internal object LegacyScanProcessor {
         analyticsSource: AnalyticsParam.ScreensSources,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
-        onScanStateChange: suspend (scanInProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
         disclaimerWillShow: () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) = withMainContext {
         onProgressStateChange(true)
-        onScanStateChange(true)
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
 
@@ -68,13 +66,11 @@ internal object LegacyScanProcessor {
 
         result
             .doOnFailure { error ->
-                onScanStateChange(false)
                 onFailure(error)
             }
             .doOnSuccess { scanResponse ->
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
-                onScanStateChange(false)
                 sendAnalytics(analyticsEvent, scanResponse)
 
                 showDisclaimerIfNeed(
