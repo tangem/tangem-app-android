@@ -1,10 +1,14 @@
 package com.tangem.features.send.impl.presentation.state
 
+import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
 internal class SendTransactionAlertConverter(
+    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val clickIntents: SendClickIntents,
 ) : Converter<SendTransactionError, SendAlertState?> {
     override fun convert(value: SendTransactionError): SendAlertState? {
@@ -29,8 +33,8 @@ internal class SendTransactionAlertConverter(
                 onConfirmClick = { clickIntents.onFailedTxEmailClick(value.message.orEmpty()) },
             )
             is SendTransactionError.NetworkError -> SendAlertState.TransactionError(
-                code = "",
-                cause = value.message,
+                code = value.code.orEmpty(),
+                cause = value.message.orEmpty(),
                 onConfirmClick = { clickIntents.onFailedTxEmailClick(value.message.orEmpty()) },
             )
             is SendTransactionError.UnknownError -> SendAlertState.TransactionError(
@@ -38,7 +42,12 @@ internal class SendTransactionAlertConverter(
                 cause = value.ex?.localizedMessage,
                 onConfirmClick = { clickIntents.onFailedTxEmailClick(value.ex?.localizedMessage.orEmpty()) },
             )
-            is SendTransactionError.CreateAccountUnderfunded -> SendAlertState.ReserveAmount(value.amount)
+            is SendTransactionError.CreateAccountUnderfunded -> SendAlertState.ReserveAmount(
+                BigDecimalFormatter.formatWithSymbol(
+                    amount = value.amount,
+                    symbol = cryptoCurrencyStatusProvider().currency.symbol,
+                ),
+            )
             else -> null
         }
     }
