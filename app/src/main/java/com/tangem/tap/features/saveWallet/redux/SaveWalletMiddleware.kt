@@ -8,7 +8,6 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.isLockable
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -209,7 +208,7 @@ internal class SaveWalletMiddleware {
     }
 
     private suspend fun provideLockableUserWalletsListManagerIfNot() {
-        if (store.state.globalState.userWalletsListManager?.isLockable == true) return
+        if (store.state.globalState.userWalletsListManager?.isLockable() == true) return
 
         val context = foregroundActivityObserver.foregroundActivity?.applicationContext.guard {
             val error = IllegalStateException("No activities in foreground")
