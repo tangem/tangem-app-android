@@ -1,8 +1,8 @@
 package com.tangem.feature.qrscanning.viewmodel
 
+import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
 import com.tangem.feature.qrscanning.presentation.QrScanningStateController
 import com.tangem.feature.qrscanning.presentation.transformers.DismissBottomSheetTransformer
-import com.tangem.feature.qrscanning.usecase.EmitQrScannedEventUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch

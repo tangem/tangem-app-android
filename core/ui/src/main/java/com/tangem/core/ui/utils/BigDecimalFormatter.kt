@@ -1,8 +1,10 @@
 package com.tangem.core.ui.utils
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
@@ -66,6 +68,26 @@ object BigDecimalFormatter {
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
 
+    fun formatFiatEditableAmount(
+        fiatAmount: String?,
+        fiatCurrencyCode: String,
+        fiatCurrencySymbol: String,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (fiatAmount == null) return EMPTY_BALANCE_SIGN
+
+        val formatterCurrency = getCurrency(fiatCurrencyCode)
+        val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
+            currency = formatterCurrency
+        }
+        val formatter = requireNotNull(numberFormatter as? DecimalFormat) {
+            Timber.e("NumberFormat is null")
+            return EMPTY_BALANCE_SIGN
+        }
+        return "${formatter.positivePrefix}$fiatAmount${formatter.positiveSuffix}"
+            .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+    }
+
     fun formatPercent(
         percent: BigDecimal,
         useAbsoluteValue: Boolean,
@@ -82,6 +104,8 @@ object BigDecimalFormatter {
 
         return formatter.format(value)
     }
+
+    fun formatWithSymbol(amount: String, symbol: String) = "$amount\u2009$symbol"
 
     private fun getCurrency(code: String): Currency {
         return runCatching { Currency.getInstance(code) }
