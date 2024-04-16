@@ -14,7 +14,6 @@ data class Config(
     val isTopUpEnabled: Boolean = false,
     @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false,
-    val shopify: ShopifyShop? = null,
     val sprinklr: SprinklrConfig? = null,
     val walletConnectProjectId: String = "",
     val tangemComAuthorization: String? = null,
