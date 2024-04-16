@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -30,6 +32,7 @@ internal fun ExchangeProvider(
 ) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
@@ -54,6 +57,7 @@ internal fun ExchangeProvider(
                         .clickable {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             clipboardManager.setText(AnnotatedString(providerTxId))
+                            Toast.makeText(context, R.string.express_transaction_id_copied, Toast.LENGTH_SHORT).show()
                         },
                 ) {
                     Icon(
@@ -67,7 +71,7 @@ internal fun ExchangeProvider(
                     )
                     Text(
                         modifier = Modifier.align(Alignment.CenterVertically),
-                        text = "ID: $providerTxId",
+                        text = stringResource(R.string.express_transaction_id, providerTxId),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                     )

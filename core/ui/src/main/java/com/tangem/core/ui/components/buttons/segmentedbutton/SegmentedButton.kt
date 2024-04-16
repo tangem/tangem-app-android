@@ -47,11 +47,15 @@ inline fun <reified T> SegmentedButtons(
     selectedColor: Color = TangemTheme.colors.background.action,
     dividerColor: Color = TangemTheme.colors.stroke.primary,
     showIndication: Boolean = true,
+    selectedItem: T? = null,
     crossinline buttonContent: @Composable (T) -> Unit,
 ) {
     if (config.isEmpty() || config.size == 1) return
 
-    var selected by remember { mutableIntStateOf(0) }
+    var selected by remember {
+        val selectedIndex = if (selectedItem == null) 0 else config.indexOf(selectedItem)
+        mutableIntStateOf(selectedIndex)
+    }
 
     Row(
         modifier = modifier
