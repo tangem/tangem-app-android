@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -13,8 +14,8 @@ import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
-import com.tangem.feature.qrscanning.SourceType
-import com.tangem.feature.qrscanning.usecase.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.state.StateRouter
@@ -73,7 +74,8 @@ internal class SendFragment : ComposeFragment() {
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
-        SendScreen(viewModel.uiState, viewModel.stateRouter.currentState)
+        val currentState = viewModel.stateRouter.currentState.collectAsStateWithLifecycle()
+        SendScreen(viewModel.uiState, currentState.value)
     }
 
     override fun onDestroy() {
