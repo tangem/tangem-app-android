@@ -3,10 +3,8 @@ package com.tangem.data.settings
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
-import com.tangem.domain.settings.models.AppLogsModel
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -36,11 +34,6 @@ internal class DefaultSettingsRepository(
         )
     }
 
-    override suspend fun getAppLogs(): List<AppLogsModel> {
-        return appPreferencesStore.getObjectMap<String>(key = PreferencesKeys.APP_LOGS_KEY)
-            .map { AppLogsModel(timestamp = it.key.toLong(), message = it.value) }
-    }
-
     override suspend fun updateAppLogs(message: String) {
         val newLogs = DateTime.now().millis.toString() to message
 
@@ -51,22 +44,35 @@ internal class DefaultSettingsRepository(
         }
     }
 
-    override suspend fun deleteDeprecatedLogs() {
-        val threeDaysAgo = getThreeDaysAgoTimestamp()
-
+    override suspend fun deleteDeprecatedLogs(maxSize: Int) {
         appPreferencesStore.editData { preferences ->
             val savedLogs = preferences.getObjectMap<String>(PreferencesKeys.APP_LOGS_KEY)
 
+            var sum = 0
             preferences.setObjectMap(
                 key = PreferencesKeys.APP_LOGS_KEY,
-                value = savedLogs.filterKeys { it.toLong() > threeDaysAgo },
+                value = savedLogs.entries
+                    .sortedBy(Map.Entry<String, String>::key)
+                    .takeLastWhile {
+                        sum += it.value.length
+                        sum < maxSize
+                    }
+                    .associate { it.key to it.value },
             )
         }
     }
 
-    private fun getThreeDaysAgoTimestamp(): Long = DateTime.now().minusDays(THREE_DAYS).millis
+    override suspend fun isSendTapHelpPreviewEnabled(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.SEND_TAP_HELP_PREVIEW_KEY,
+            default = true,
+        )
+    }
 
-    private companion object {
-        const val THREE_DAYS = 3
+    override suspend fun setSendTapHelpPreviewAvailability(isEnabled: Boolean) {
+        appPreferencesStore.store(
+            key = PreferencesKeys.SEND_TAP_HELP_PREVIEW_KEY,
+            value = isEnabled,
+        )
     }
 }
