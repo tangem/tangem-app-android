@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
@@ -39,6 +40,7 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.TestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
@@ -133,7 +135,7 @@ private fun WalletContent(
             .padding(horizontal = horizontalPadding)
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().testTag(TestTags.WALLET_SCREEN),
             contentPadding = PaddingValues(
                 top = TangemTheme.dimens.spacing8,
                 bottom = TangemTheme.dimens.spacing92,
