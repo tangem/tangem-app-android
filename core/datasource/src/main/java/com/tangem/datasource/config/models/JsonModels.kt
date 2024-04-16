@@ -31,7 +31,6 @@ class ConfigValueModel(
     val blockcypherTokens: Set<String>?,
     val infuraProjectId: String?,
     val appsFlyer: AppsFlyer,
-    val shopifyShop: ShopifyShop?,
     val sprinklr: SprinklrConfig?,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
@@ -68,6 +67,9 @@ data class GetBlockAccessTokens(
     @Json(name = "dash") val dash: GetBlockToken?,
     @Json(name = "bitcoin") val bitcoin: GetBlockToken?,
     @Json(name = "algorand") val algorand: GetBlockToken?,
+    @Json(name = "polygon-zkevm") val polygonZkevm: GetBlockToken?,
+    @Json(name = "zksync") val zksync: GetBlockToken?,
+    @Json(name = "base") val base: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)
