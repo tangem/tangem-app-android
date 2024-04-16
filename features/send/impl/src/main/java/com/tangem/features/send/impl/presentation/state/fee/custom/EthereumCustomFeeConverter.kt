@@ -48,7 +48,7 @@ internal class EthereumCustomFeeConverter(
                 keyboardActions = KeyboardActions(),
             ),
             SendTextField.CustomFee(
-                value = value.gasPrice.toBigDecimal().movePointLeft(GIGA_DECIMALS).toString(),
+                value = value.gasPrice.toBigDecimal().movePointLeft(GIGA_DECIMALS).parseBigDecimal(GIGA_DECIMALS),
                 decimals = GIGA_DECIMALS,
                 symbol = ETHEREUM_GAS_UNIT,
                 title = resourceReference(R.string.send_gas_price),
