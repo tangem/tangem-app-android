@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
+import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -25,6 +26,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -53,15 +55,18 @@ class DefaultWalletManagersFacade(
     configManager: ConfigManager,
     blockchainDataStorage: BlockchainDataStorage,
     accountCreator: AccountCreator,
+    blockchainSDKLogger: BlockchainSDKLogger,
+    feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
     private val walletManagerFactory by lazy {
         WalletManagerFactory(
-            configManager,
-            accountCreator,
-            blockchainDataStorage,
+            configManager = configManager,
+            accountCreator = accountCreator,
+            blockchainDataStorage = blockchainDataStorage,
+            blockchainSDKLogger = if (feedbackManagerFeatureToggles.isLocalLogsEnabled) blockchainSDKLogger else null,
         )
     }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
@@ -515,27 +520,28 @@ class DefaultWalletManagersFacade(
 
     override suspend fun getRecentTransactions(
         userWalletId: UserWalletId,
-        blockchain: Blockchain,
-        derivationPath: String?,
+        currency: CryptoCurrency,
     ): List<TxHistoryItem> {
-        val walletManager = getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = derivationPath,
-        )
-        val feePaidCurrency = blockchain.feePaidCurrency()
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
 
         if (walletManager == null) {
-            Timber.e("Unable to get a wallet manager for blockchain: $blockchain")
+            Timber.e("Unable to get a wallet manager for blockchain: ${currency.network.id}")
             return emptyList()
         }
 
         val transactionDataConverter = TransactionDataToTxHistoryItemConverter(
             walletAddresses = SdkAddressToAddressConverter.convertList(walletManager.wallet.addresses).toSet(),
-            feePaidCurrency = feePaidCurrency,
+            feePaidCurrency = walletManager.wallet.blockchain.feePaidCurrency(),
         )
 
-        return walletManager.wallet.recentTransactions.mapNotNull(transactionDataConverter::convert)
+        return walletManager.wallet.recentTransactions
+            .filter { transaction ->
+                when (currency) {
+                    is CryptoCurrency.Coin -> transaction.amount.type is AmountType.Coin
+                    is CryptoCurrency.Token -> transaction.contractAddress == currency.contractAddress
+                }
+            }
+            .mapNotNull(transactionDataConverter::convert)
     }
 
     override suspend fun tokenBalance(
