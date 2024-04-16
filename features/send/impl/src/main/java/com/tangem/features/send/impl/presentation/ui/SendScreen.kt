@@ -98,33 +98,36 @@ private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentS
             AnimatedContentTransitionScope.SlideDirection.End
         }
     }
-    AnimatedContent(
-        targetState = currentState,
-        label = "Send Scree Navigation",
-        modifier = modifier,
-        transitionSpec = {
-            lastState = currentState.type.ordinal
-            slideIntoContainer(towards = direction, animationSpec = tween())
-                .togetherWith(slideOutOfContainer(towards = direction, animationSpec = tween()))
-        },
-    ) { state ->
-        when (state.type) {
-            SendUiStateType.Amount -> SendAmountContent(
-                amountState = uiState.amountState,
-                isBalanceHiding = uiState.isBalanceHidden,
-                clickIntents = uiState.clickIntents,
-            )
-            SendUiStateType.Recipient -> SendRecipientContent(
-                uiState = uiState.recipientState,
-                clickIntents = uiState.clickIntents,
-                isBalanceHidden = uiState.isBalanceHidden,
-            )
-            SendUiStateType.Fee -> SendSpeedAndFeeContent(
-                state = uiState.feeState,
-                clickIntents = uiState.clickIntents,
-            )
-            SendUiStateType.Send -> SendContent(uiState)
-            else -> Unit
+    // Box is needed to fix animation with resizing of AnimatedContent
+    Box(modifier = modifier) {
+        AnimatedContent(
+            targetState = currentState,
+            label = "Send Scree Navigation",
+            transitionSpec = {
+                lastState = currentState.type.ordinal
+                slideIntoContainer(towards = direction, animationSpec = tween())
+                    .togetherWith(slideOutOfContainer(towards = direction, animationSpec = tween()))
+            },
+        ) { state ->
+
+            when (state.type) {
+                SendUiStateType.Amount -> SendAmountContent(
+                    amountState = uiState.amountState,
+                    isBalanceHiding = uiState.isBalanceHidden,
+                    clickIntents = uiState.clickIntents,
+                )
+                SendUiStateType.Recipient -> SendRecipientContent(
+                    uiState = uiState.recipientState,
+                    clickIntents = uiState.clickIntents,
+                    isBalanceHidden = uiState.isBalanceHidden,
+                )
+                SendUiStateType.Fee -> SendSpeedAndFeeContent(
+                    state = uiState.feeState,
+                    clickIntents = uiState.clickIntents,
+                )
+                SendUiStateType.Send -> SendContent(uiState)
+                else -> Unit
+            }
         }
     }
 }
