@@ -1,7 +1,8 @@
 package com.tangem.feature.onboarding.presentation.wallet2.ui.stateBuiders
 
 import com.tangem.feature.onboarding.presentation.wallet2.model.*
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
 [REDACTED_AUTHOR]
@@ -13,32 +14,39 @@ class StateBuilder(
     val checkSeedPhrase: CheckSeedPhraseStateBuilder = CheckSeedPhraseStateBuilder()
     val importSeedPhrase: ImportSeedPhraseStateBuilder = ImportSeedPhraseStateBuilder()
 
-    fun init(): OnboardingSeedPhraseState = OnboardingSeedPhraseState(
-        introState = IntroState(
+    fun init(selectedSeedType: SegmentSeedType): OnboardingSeedPhraseState = OnboardingSeedPhraseState(
+        introState = getInitialIntroState(),
+        aboutState = getInitialAboutState(),
+        yourSeedPhraseState = getInitialYourSeedPhraseState(selectedSeedType),
+        checkSeedPhraseState = getInitialCheckSeedPhraseState(),
+        importSeedPhraseState = getInitialImportSeedPhraseState(),
+        menuButtonChat = ButtonState(
+            onClick = uiActions.menuChatClick,
+        ),
+        onBackClick = uiActions.menuNavigateBackClick,
+    )
+
+    private fun getInitialImportSeedPhraseState(): ImportSeedPhraseState {
+        return ImportSeedPhraseState(
+            fieldSeedPhrase = TextFieldState(
+                onTextFieldValueChanged = uiActions.importSeedPhraseActions.phraseTextFieldAction.onTextFieldChanged,
+                onFocusChanged = uiActions.importSeedPhraseActions.phraseTextFieldAction.onFocusChanged,
+            ),
+            fieldPassphrase = TextFieldState(
+                onTextFieldValueChanged = uiActions.importSeedPhraseActions.passTextFieldAction.onTextFieldChanged,
+                onFocusChanged = uiActions.importSeedPhraseActions.passTextFieldAction.onFocusChanged,
+            ),
+            onSuggestedPhraseClick = uiActions.importSeedPhraseActions.suggestedPhraseClick,
+            onPassphraseInfoClick = uiActions.importSeedPhraseActions.onPassphraseInfoClick,
             buttonCreateWallet = ButtonState(
-                onClick = uiActions.introActions.buttonCreateWalletClick,
+                enabled = false,
+                onClick = uiActions.importSeedPhraseActions.buttonCreateWalletClick,
             ),
-            buttonOtherOptions = ButtonState(
-                onClick = uiActions.introActions.buttonOtherOptionsClick,
-            ),
-        ),
-        aboutState = AboutState(
-            buttonReadMoreAboutSeedPhrase = ButtonState(
-                onClick = uiActions.aboutActions.buttonReadMoreAboutSeedPhraseClick,
-            ),
-            buttonGenerateSeedPhrase = ButtonState(
-                onClick = uiActions.aboutActions.buttonGenerateSeedPhraseClick,
-            ),
-            buttonImportSeedPhrase = ButtonState(
-                onClick = uiActions.aboutActions.buttonImportSeedPhraseClick,
-            ),
-        ),
-        yourSeedPhraseState = YourSeedPhraseState(
-            buttonContinue = ButtonState(
-                onClick = uiActions.yourSeedPhraseActions.buttonContinueClick,
-            ),
-        ),
-        checkSeedPhraseState = CheckSeedPhraseState(
+        )
+    }
+
+    private fun getInitialCheckSeedPhraseState(): CheckSeedPhraseState {
+        return CheckSeedPhraseState(
             tvSecondPhrase = TextFieldState(
                 label = "2",
                 isFocused = true,
@@ -61,23 +69,49 @@ class StateBuilder(
                 enabled = false,
                 onClick = uiActions.checkSeedPhraseActions.buttonCreateWalletClick,
             ),
-        ),
-        importSeedPhraseState = ImportSeedPhraseState(
-            tvSeedPhrase = TextFieldState(
-                onTextFieldValueChanged = uiActions.importSeedPhraseActions.phraseTextFieldAction.onTextFieldChanged,
-                onFocusChanged = uiActions.importSeedPhraseActions.phraseTextFieldAction.onFocusChanged,
+        )
+    }
+
+    private fun getInitialYourSeedPhraseState(selectedSeedType: SegmentSeedType): YourSeedPhraseState {
+        return YourSeedPhraseState(
+            segmentSeedState = SegmentSeedState(
+                seedSegments = persistentListOf(
+                    SegmentSeedType.SEED_12,
+                    SegmentSeedType.SEED_24,
+                ),
+                selectedSeedType = selectedSeedType,
+                onSelectType = uiActions.yourSeedPhraseActions.onSelectType,
             ),
-            onSuggestedPhraseClick = uiActions.importSeedPhraseActions.suggestedPhraseClick,
+            buttonContinue = ButtonState(
+                onClick = uiActions.yourSeedPhraseActions.buttonContinueClick,
+            ),
+        )
+    }
+
+    private fun getInitialAboutState(): AboutState {
+        return AboutState(
+            buttonReadMoreAboutSeedPhrase = ButtonState(
+                onClick = uiActions.aboutActions.buttonReadMoreAboutSeedPhraseClick,
+            ),
+            buttonGenerateSeedPhrase = ButtonState(
+                onClick = uiActions.aboutActions.buttonGenerateSeedPhraseClick,
+            ),
+            buttonImportSeedPhrase = ButtonState(
+                onClick = uiActions.aboutActions.buttonImportSeedPhraseClick,
+            ),
+        )
+    }
+
+    private fun getInitialIntroState(): IntroState {
+        return IntroState(
             buttonCreateWallet = ButtonState(
-                enabled = false,
-                onClick = uiActions.importSeedPhraseActions.buttonCreateWalletClick,
+                onClick = uiActions.introActions.buttonCreateWalletClick,
             ),
-        ),
-        menuButtonChat = ButtonState(
-            onClick = uiActions.menuChatClick,
-        ),
-        onBackClick = uiActions.menuNavigateBackClick,
-    )
+            buttonOtherOptions = ButtonState(
+                onClick = uiActions.introActions.buttonOtherOptionsClick,
+            ),
+        )
+    }
 
     fun setCardArtwork(uiState: OnboardingSeedPhraseState, cardArtwork: String): OnboardingSeedPhraseState =
         uiState.copy(
@@ -101,7 +135,7 @@ class StateBuilder(
 
     fun mnemonicGenerated(
         uiState: OnboardingSeedPhraseState,
-        mnemonicGridItems: ImmutableList<MnemonicGridItem>,
+        mnemonicGridItems: PersistentList<MnemonicGridItem>,
     ): OnboardingSeedPhraseState {
         return updateMnemonicComponents(uiState, mnemonicGridItems)
             .copy(
@@ -116,9 +150,45 @@ class StateBuilder(
             )
     }
 
-    fun updateMnemonicComponents(
+    fun selectSeedType(
         uiState: OnboardingSeedPhraseState,
-        mnemonicGridItems: ImmutableList<MnemonicGridItem>,
+        mnemonicGridItems: PersistentList<MnemonicGridItem>,
+        selectedSeedType: SegmentSeedType,
+    ): OnboardingSeedPhraseState = uiState.copy(
+        yourSeedPhraseState = uiState.yourSeedPhraseState.copy(
+            mnemonicGridItems = mnemonicGridItems,
+            segmentSeedState = uiState.yourSeedPhraseState.segmentSeedState.copy(
+                selectedSeedType = selectedSeedType,
+            ),
+        ),
+    )
+
+    fun clearCheckSeedPhraseState(uiState: OnboardingSeedPhraseState): OnboardingSeedPhraseState = uiState.copy(
+        checkSeedPhraseState = uiState.checkSeedPhraseState.copy(
+            tvSecondPhrase = TextFieldState(
+                label = "2",
+                isFocused = true,
+                onTextFieldValueChanged = uiActions.checkSeedPhraseActions.secondTextFieldAction.onTextFieldChanged,
+                onFocusChanged = uiActions.checkSeedPhraseActions.secondTextFieldAction.onFocusChanged,
+            ),
+            tvSeventhPhrase = TextFieldState(
+                label = "7",
+                isFocused = false,
+                onTextFieldValueChanged = uiActions.checkSeedPhraseActions.seventhTextFieldAction.onTextFieldChanged,
+                onFocusChanged = uiActions.checkSeedPhraseActions.seventhTextFieldAction.onFocusChanged,
+            ),
+            tvEleventhPhrase = TextFieldState(
+                label = "11",
+                isFocused = false,
+                onTextFieldValueChanged = uiActions.checkSeedPhraseActions.eleventhTextFieldAction.onTextFieldChanged,
+                onFocusChanged = uiActions.checkSeedPhraseActions.eleventhTextFieldAction.onFocusChanged,
+            ),
+        ),
+    )
+
+    private fun updateMnemonicComponents(
+        uiState: OnboardingSeedPhraseState,
+        mnemonicGridItems: PersistentList<MnemonicGridItem>,
     ): OnboardingSeedPhraseState = uiState.copy(
         yourSeedPhraseState = uiState.yourSeedPhraseState.copy(
             mnemonicGridItems = mnemonicGridItems,
