@@ -10,49 +10,26 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.send.impl.R
-import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
-import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.recipient.utils.RECENT_DEFAULT_COUNT
+import com.tangem.features.send.impl.presentation.state.recipient.utils.RECENT_KEY_TAG
+import com.tangem.features.send.impl.presentation.state.recipient.utils.emptyListState
 import com.tangem.utils.Provider
+import com.tangem.utils.converter.Converter
 import com.tangem.utils.toFormattedCurrencyString
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
-internal class SendRecipientListConverter(
-    private val currentStateProvider: Provider<SendUiState>,
+internal class SendRecipientHistoryListConverter(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) {
+) : Converter<List<TxHistoryItem>, ImmutableList<SendRecipientListContent>> {
 
-    fun convert(wallets: List<AvailableWallet?>, txHistory: List<TxHistoryItem>): SendUiState {
+    override fun convert(value: List<TxHistoryItem>): ImmutableList<SendRecipientListContent> {
         val cryptoCurrency = cryptoCurrencyStatusProvider().currency
-        val state = currentStateProvider()
-        val recipientState = state.recipientState ?: return state
-
-        return state.copy(
-            recipientState = recipientState.copy(
-                wallets = wallets.filterWallets(),
-                recent = txHistory.filterRecipients(cryptoCurrency),
-            ),
-        )
-    }
-
-    private fun List<AvailableWallet?>.filterWallets() = this.filterNotNull()
-        .groupBy { item -> item.name }
-        .values.map {
-            it.mapIndexed { index, item ->
-                val name = if (it.size > 1) {
-                    "${item.name} ${index.inc()}"
-                } else {
-                    item.name
-                }
-                SendRecipientListContent(
-                    id = item.address,
-                    title = TextReference.Str(item.address),
-                    subtitle = TextReference.Str(name),
-                )
-            }
+        return value.filterRecipients(cryptoCurrency).ifEmpty {
+            emptyListState(RECENT_KEY_TAG, RECENT_DEFAULT_COUNT)
         }
-        .flatten()
-        .toPersistentList()
+    }
 
     private fun List<TxHistoryItem>.filterRecipients(cryptoCurrency: CryptoCurrency) = this.filter { item ->
         val isTransfer = item.type == TxHistoryItem.TransactionType.Transfer
@@ -65,9 +42,9 @@ internal class SendRecipientListConverter(
         isTransfer && isSingleAddress && isNotContract
     }
         .take(RECENT_LIST_SIZE)
-        .map { tx ->
+        .mapIndexed { index, tx ->
             SendRecipientListContent(
-                id = tx.txHash,
+                id = "$RECENT_KEY_TAG$index",
                 title = tx.extractAddress(),
                 subtitle = stringReference(tx.getAmount(cryptoCurrency).trim()),
                 timestamp = tx.extractTimestamp(),
