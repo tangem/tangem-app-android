@@ -21,6 +21,7 @@ import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import timber.log.Timber
 
 class DefaultTxHistoryRepository(
     private val cacheRegistry: CacheRegistry,
@@ -68,11 +69,25 @@ class DefaultTxHistoryRepository(
         return pager.flow
     }
 
+    @Deprecated("Replace with getTxExploreUrl [UserWalletId, Network] instead")
     override fun getTxExploreUrl(txHash: String, networkId: Network.ID): String {
         val blockchain = Blockchain.fromId(networkId.value)
         return when (val txExploreState = blockchain.getExploreTxUrl(txHash)) {
             is TxExploreState.Url -> txExploreState.url
             is TxExploreState.Unsupported -> ""
+        }
+    }
+
+    override suspend fun getTxExploreUrl(userWalletId: UserWalletId, network: Network): String {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = network,
+        )
+        val lastTxHash = walletManager?.wallet?.recentTransactions?.last()?.hash.orEmpty()
+        return when (val txExploreState = blockchain?.getExploreTxUrl(lastTxHash)) {
+            is TxExploreState.Url -> txExploreState.url
+            else -> ""
         }
     }
 
@@ -82,16 +97,21 @@ class DefaultTxHistoryRepository(
         pageSize: Int,
         refresh: Boolean,
     ): List<TxHistoryItem> {
-        cacheRegistry.invokeOnExpire(
-            key = getTxHistoryPageKey(currency, userWalletId, Page.Initial),
-            skipCache = refresh,
-            block = { fetchFixedSizeTxHistoryItems(userWalletId, currency, pageSize) },
-        )
-        val txs = txHistoryItemsStore.getSyncOrNull(
-            key = TxHistoryItemsStore.Key(userWalletId, currency),
-            page = Page.Initial,
-        )?.items
-        return txs ?: emptyList()
+        return try {
+            cacheRegistry.invokeOnExpire(
+                key = getTxHistoryPageKey(currency, userWalletId, Page.Initial),
+                skipCache = refresh,
+                block = { fetchFixedSizeTxHistoryItems(userWalletId, currency, pageSize) },
+            )
+            val txs = txHistoryItemsStore.getSyncOrNull(
+                key = TxHistoryItemsStore.Key(userWalletId, currency),
+                page = Page.Initial,
+            )?.items
+            txs ?: emptyList()
+        } catch (e: Throwable) {
+            Timber.e(e, "Unable to load the transaction history for the requested page: ${Page.Initial}")
+            emptyList()
+        }
     }
 
     private fun getTxHistoryPageKey(currency: CryptoCurrency, userWalletId: UserWalletId, page: Page): String {

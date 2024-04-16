@@ -13,12 +13,12 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.feature.qrscanning.SourceType
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
@@ -352,6 +352,13 @@ class WalletConnectMiddleware {
                             ),
                         )
                     }
+                    is WalletConnectError.UnsupportedDApp -> {
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                WalletConnectDialog.UnsupportedDapp,
+                            ),
+                        )
+                    }
                     is WalletConnectError.ExternalApprovalError -> {
                         Timber.e(action.error, "ExternalApprovalError ${action.error.message}")
                         // do not show dialog on this event
@@ -375,6 +382,7 @@ class WalletConnectMiddleware {
                     is WcPreparedRequest.BnbTransaction -> WalletConnectDialog.BnbTransactionDialog(request)
                     is WcPreparedRequest.EthTransaction -> WalletConnectDialog.RequestTransaction(request)
                     is WcPreparedRequest.EthSign -> WalletConnectDialog.PersonalSign(request)
+                    is WcPreparedRequest.SignTransaction -> WalletConnectDialog.SignTransactionDialog(request)
                 }
                 store.dispatch(GlobalAction.ShowDialog(dialog))
             }
