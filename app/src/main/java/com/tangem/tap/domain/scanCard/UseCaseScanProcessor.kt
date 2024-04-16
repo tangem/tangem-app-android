@@ -54,7 +54,11 @@ internal object UseCaseScanProcessor {
     ) = progressScope(onProgressStateChange) {
         val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         val chains = buildList {
-            add(FailedScansCounterChain(UseCaseScanProcessor::showMaxUnsuccessfulScansReachedDialog))
+            add(
+                FailedScansCounterChain(
+                    { showMaxUnsuccessfulScansReachedDialog(analyticsSource) },
+                ),
+            )
             add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
             add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
@@ -66,8 +70,14 @@ internal object UseCaseScanProcessor {
         )
     }
 
-    private fun showMaxUnsuccessfulScansReachedDialog() {
-        store.dispatchDialogShow(StateDialog.ScanFailsDialog)
+    private fun showMaxUnsuccessfulScansReachedDialog(source: AnalyticsParam.ScreensSources) {
+        val scanFailsSource = when (source) {
+            is AnalyticsParam.ScreensSources.SignIn -> StateDialog.ScanFailsSource.SIGN_IN
+            is AnalyticsParam.ScreensSources.Settings -> StateDialog.ScanFailsSource.SETTINGS
+            is AnalyticsParam.ScreensSources.Intro -> StateDialog.ScanFailsSource.INTRO
+            else -> StateDialog.ScanFailsSource.MAIN
+        }
+        store.dispatchDialogShow(StateDialog.ScanFailsDialog(scanFailsSource))
     }
 
     private suspend fun proceedWithException(
