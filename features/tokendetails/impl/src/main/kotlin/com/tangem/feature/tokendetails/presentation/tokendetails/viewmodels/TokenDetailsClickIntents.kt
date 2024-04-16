@@ -47,4 +47,6 @@ interface TokenDetailsClickIntents {
     fun onSwapPromoDismiss()
 
     fun onSwapPromoClick()
+
+    fun onGenerateExtendedKey()
 }
