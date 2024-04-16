@@ -21,7 +21,7 @@ interface SwapInteractor {
      * @param permissionOptions data to give permissions
      */
     @Throws(IllegalStateException::class)
-    suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): TxState
+    suspend fun givePermissionToSwap(networkId: String, permissionOptions: PermissionOptions): SwapTransactionState
 
     /**
      * Find best quote for given tokens to swap
@@ -51,7 +51,7 @@ interface SwapInteractor {
      * @param currencyToGet [Currency]
      * @param amountToSwap amount to swap
      * @param fee for tx
-     * @return [TxState]
+     * @return [SwapTransactionState]
      */
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
@@ -63,7 +63,7 @@ interface SwapInteractor {
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
-    ): TxState
+    ): SwapTransactionState
 
     suspend fun updateQuotesStateWithSelectedFee(
         state: SwapState.QuotesLoadedState,
@@ -78,8 +78,6 @@ interface SwapInteractor {
      * @param token
      */
     fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount
-
-    fun isAvailableToSwap(networkId: String): Boolean
 
     fun getSelectedWallet(): UserWallet?
 

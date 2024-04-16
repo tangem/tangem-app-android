@@ -21,6 +21,9 @@ internal class BalancesAndLimitsBottomSheetConverter(
             decimals = value.decimals,
         )
 
+        val otpLimit = value.limits.remainingOtp.let(::formatAmount)
+        val noOtpLimit = value.limits.remainingNoOtp.let(::formatAmount)
+
         return BalancesAndLimitsBottomSheetConfig(
             balance = BalancesAndLimitsBottomSheetConfig.Balance(
                 totalBalance = value.balances.total.let(::formatAmount),
@@ -33,10 +36,10 @@ internal class BalancesAndLimitsBottomSheetConverter(
             ),
             limit = BalancesAndLimitsBottomSheetConfig.Limit(
                 availableBy = DateTimeFormatters.formatDate(date = value.limits.expirationDate),
-                inStore = value.limits.remainingOtp.let(::formatAmount),
-                other = value.limits.remainingNoOtp.let(::formatAmount),
+                total = otpLimit,
+                other = noOtpLimit,
                 singleTransaction = value.limits.singleTransaction.let(::formatAmount),
-                onInfoClick = this::showLimitInfo,
+                onInfoClick = { showLimitInfo(otpLimit, noOtpLimit) },
             ),
         )
     }
@@ -45,7 +48,7 @@ internal class BalancesAndLimitsBottomSheetConverter(
         eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaBalancesInfo))
     }
 
-    private fun showLimitInfo() {
-        eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaLimitsInfo))
+    private fun showLimitInfo(totalLimit: String, otherLimit: String) {
+        eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaLimitsInfo(totalLimit, otherLimit)))
     }
 }
