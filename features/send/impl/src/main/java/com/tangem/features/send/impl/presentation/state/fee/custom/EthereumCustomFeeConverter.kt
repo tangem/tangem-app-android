@@ -18,7 +18,6 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
-import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -28,8 +27,8 @@ import java.math.RoundingMode
 internal class EthereumCustomFeeConverter(
     private val clickIntents: SendClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Converter<Fee.Ethereum, ImmutableList<SendTextField.CustomFee>> {
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
+) : CustomFeeConverter<Fee.Ethereum> {
 
     override fun convert(value: Fee.Ethereum): ImmutableList<SendTextField.CustomFee> {
         val feeValue = value.amount.value
@@ -49,8 +48,8 @@ internal class EthereumCustomFeeConverter(
                 keyboardActions = KeyboardActions(),
             ),
             SendTextField.CustomFee(
-                value = value.gasPrice.toString(),
-                decimals = ETHEREUM_GAS_DECIMALS,
+                value = value.gasPrice.toBigDecimal().movePointLeft(GIGA_DECIMALS).parseBigDecimal(GIGA_DECIMALS),
+                decimals = GIGA_DECIMALS,
                 symbol = ETHEREUM_GAS_UNIT,
                 title = resourceReference(R.string.send_gas_price),
                 footer = resourceReference(R.string.send_gas_price_footer),
@@ -64,7 +63,7 @@ internal class EthereumCustomFeeConverter(
             SendTextField.CustomFee(
                 value = value.gasLimit.toString(),
                 decimals = GAS_DECIMALS,
-                symbol = null,
+                symbol = "",
                 title = resourceReference(R.string.send_gas_limit),
                 footer = resourceReference(R.string.send_gas_limit_footer),
                 onValueChange = { clickIntents.onCustomFeeValueChange(GAS_LIMIT, it) },
@@ -77,7 +76,7 @@ internal class EthereumCustomFeeConverter(
         )
     }
 
-    fun convertBack(normalFee: Fee.Ethereum, value: ImmutableList<SendTextField.CustomFee>): Fee.Ethereum {
+    override fun convertBack(normalFee: Fee.Ethereum, value: ImmutableList<SendTextField.CustomFee>): Fee.Ethereum {
         val feeAmount = value[FEE_AMOUNT].value.parseToBigDecimal(value[FEE_AMOUNT].decimals)
         val gasPrice = value[GAS_PRICE].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()
         val gasLimit = value[GAS_LIMIT].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()
@@ -95,64 +94,17 @@ internal class EthereumCustomFeeConverter(
     ): ImmutableList<SendTextField.CustomFee> {
         val mutableCustomValues = customValues.toMutableList()
         return mutableCustomValues.apply {
-            val gasLimit = this[GAS_LIMIT].value.parseToBigDecimal(this[GAS_LIMIT].decimals)
             when (index) {
-                FEE_AMOUNT -> {
-                    val newFeeAmountDecimal = value.parseToBigDecimal(this[FEE_AMOUNT].decimals)
-                    val newFeeAmount = newFeeAmountDecimal.movePointRight(this[FEE_AMOUNT].decimals)
-                    val newGasPrice = newFeeAmount.divide(gasLimit, GAS_DECIMALS, RoundingMode.HALF_UP)
-                    set(GAS_PRICE, this[GAS_PRICE].copy(value = newGasPrice.parseBigDecimal(GAS_DECIMALS)))
-                    set(
-                        index,
-                        this[index].copy(
-                            value = value,
-                            label = getFeeFormatted(newFeeAmountDecimal),
-                        ),
-                    )
-                }
-                GAS_PRICE -> {
-                    val newGasPrice = value.parseToBigDecimal(this[GAS_PRICE].decimals)
-                        .movePointLeft(this[GAS_PRICE].decimals)
-                    val newFeeAmount = gasLimit * newGasPrice
-                    set(
-                        FEE_AMOUNT,
-                        this[FEE_AMOUNT].copy(
-                            value = newFeeAmount.parseBigDecimal(this[FEE_AMOUNT].decimals),
-                            label = getFeeFormatted(newFeeAmount),
-                        ),
-                    )
-                    set(index, this[index].copy(value = value))
-                }
-                else -> {
-                    val newGasLimit = value.parseToBigDecimal(this[GAS_LIMIT].decimals)
-                    val gasPrice = this[GAS_PRICE].value.parseToBigDecimal(this[GAS_PRICE].decimals)
-                        .movePointLeft(this[FEE_AMOUNT].decimals)
-                    val newFeeAmount = newGasLimit * gasPrice
-                    set(
-                        FEE_AMOUNT,
-                        this[FEE_AMOUNT].copy(
-                            value = newFeeAmount.parseBigDecimal(this[FEE_AMOUNT].decimals),
-                            label = getFeeFormatted(newFeeAmount),
-                        ),
-                    )
-                    set(
-                        index,
-                        this[index].copy(
-                            value = value,
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = if (!checkExceedBalance(newFeeAmount)) ImeAction.None else ImeAction.Done,
-                                keyboardType = KeyboardType.Number,
-                            ),
-                        ),
-                    )
-                }
+                FEE_AMOUNT -> setOnAmountChange(value, index)
+                GAS_PRICE -> setOnGasPriceChange(value, index)
+                else -> setOnGasLimitChange(value, index)
             }
         }.toImmutableList()
     }
 
     private fun getFeeFormatted(fee: BigDecimal?): TextReference {
         val appCurrency = appCurrencyProvider()
-        val rate = cryptoCurrencyStatusProvider().value.fiatRate
+        val rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate
         val fiatFee = rate?.let { fee?.multiply(it) }
         return stringReference(
             BigDecimalFormatter.formatFiatAmount(
@@ -164,15 +116,88 @@ internal class EthereumCustomFeeConverter(
     }
 
     private fun checkExceedBalance(feeAmount: BigDecimal?): Boolean {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val currencyCryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider()
+        val currencyCryptoAmount = cryptoCurrencyStatus?.value?.amount ?: BigDecimal.ZERO
 
         return feeAmount == null || feeAmount.isZero() || feeAmount > currencyCryptoAmount
     }
 
+    private fun MutableList<SendTextField.CustomFee>.setEmpty(index: Int) {
+        set(index, this[index].copy(value = ""))
+    }
+
+    private fun MutableList<SendTextField.CustomFee>.setOnAmountChange(value: String, index: Int) {
+        val gasLimit = this[GAS_LIMIT].value.parseToBigDecimal(this[GAS_LIMIT].decimals)
+        if (value.isBlank()) {
+            setEmpty(FEE_AMOUNT)
+            setEmpty(GAS_PRICE)
+        } else {
+            val newFeeAmountDecimal = value.parseToBigDecimal(this[FEE_AMOUNT].decimals)
+            val newFeeAmount = newFeeAmountDecimal.movePointRight(this[GAS_PRICE].decimals) // from ETH to GWEI
+            val newGasPrice = newFeeAmount.divide(gasLimit, this[GAS_PRICE].decimals, RoundingMode.HALF_UP)
+            set(GAS_PRICE, this[GAS_PRICE].copy(value = newGasPrice.parseBigDecimal(this[GAS_PRICE].decimals)))
+            set(
+                index,
+                this[index].copy(
+                    value = value,
+                    label = getFeeFormatted(newFeeAmountDecimal),
+                ),
+            )
+        }
+    }
+
+    private fun MutableList<SendTextField.CustomFee>.setOnGasPriceChange(value: String, index: Int) {
+        val gasLimit = this[GAS_LIMIT].value.parseToBigDecimal(this[GAS_LIMIT].decimals)
+        if (value.isBlank()) {
+            setEmpty(FEE_AMOUNT)
+            setEmpty(GAS_PRICE)
+        } else {
+            val newGasPrice = value.parseToBigDecimal(this[GAS_PRICE].decimals)
+                .movePointLeft(this[GAS_PRICE].decimals) // from GWEI to ETH
+            val newFeeAmount = gasLimit * newGasPrice
+            set(
+                FEE_AMOUNT,
+                this[FEE_AMOUNT].copy(
+                    value = newFeeAmount.parseBigDecimal(this[FEE_AMOUNT].decimals),
+                    label = getFeeFormatted(newFeeAmount),
+                ),
+            )
+            set(index, this[index].copy(value = value))
+        }
+    }
+
+    private fun MutableList<SendTextField.CustomFee>.setOnGasLimitChange(value: String, index: Int) {
+        if (value.isBlank()) {
+            setEmpty(FEE_AMOUNT)
+            setEmpty(GAS_LIMIT)
+        } else {
+            val newGasLimit = value.parseToBigDecimal(this[GAS_LIMIT].decimals)
+            val gasPrice = this[GAS_PRICE].value.parseToBigDecimal(this[GAS_PRICE].decimals)
+                .movePointLeft(this[GAS_PRICE].decimals) // from GWEI to ETH
+            val newFeeAmount = newGasLimit * gasPrice
+            set(
+                FEE_AMOUNT,
+                this[FEE_AMOUNT].copy(
+                    value = newFeeAmount.parseBigDecimal(this[FEE_AMOUNT].decimals),
+                    label = getFeeFormatted(newFeeAmount),
+                ),
+            )
+            set(
+                index,
+                this[index].copy(
+                    value = value,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = if (!checkExceedBalance(newFeeAmount)) ImeAction.None else ImeAction.Done,
+                        keyboardType = KeyboardType.Number,
+                    ),
+                ),
+            )
+        }
+    }
+
     companion object {
         private const val ETHEREUM_GAS_UNIT = "GWEI"
-        private const val ETHEREUM_GAS_DECIMALS = 18
+        private const val GIGA_DECIMALS = 9
         private const val FEE_AMOUNT = 0
         private const val GAS_PRICE = 1
         private const val GAS_LIMIT = 2

@@ -11,6 +11,7 @@ interface SeedPhraseMediator {
     fun createWallet(callback: (CompletionResult<CreateWalletResponse>) -> Unit)
     fun importWallet(
         mnemonicComponents: List<String>,
+        passphrase: String?,
         seedPhraseSource: SeedPhraseSource,
         callback: (CompletionResult<CreateWalletResponse>) -> Unit,
     )

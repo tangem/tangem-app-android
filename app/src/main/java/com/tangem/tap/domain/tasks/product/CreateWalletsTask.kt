@@ -21,6 +21,7 @@ class CreateWalletsResponse(
 class CreateWalletsTask(
     private val curves: List<EllipticCurve>,
     private val mnemonic: Mnemonic? = null,
+    private val passphrase: String?,
 ) : CardSessionRunnable<CreateWalletsResponse> {
 
     private val createdWalletsResponses = mutableListOf<CreateWalletResponse>()
@@ -41,7 +42,7 @@ class CreateWalletsTask(
         callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit,
     ) {
         val extendedPrivateKey = mnemonic?.let {
-            AnyMasterKeyFactory(mnemonic = it, passphrase = "").makeMasterKey(curve)
+            AnyMasterKeyFactory(mnemonic = it, passphrase = passphrase ?: "").makeMasterKey(curve)
         }
         CreateWalletTask(curve, extendedPrivateKey).run(session) { result ->
             when (result) {
