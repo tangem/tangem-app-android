@@ -4,7 +4,10 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -60,7 +63,6 @@ private fun BalancesAndLimitsBlock(state: BalancesAndLimitsBlockState, modifier:
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private inline fun ContentContainer(
     enabled: Boolean,
@@ -147,7 +149,7 @@ private fun AvailableLimit(availableBalance: String, limitDays: Int, modifier: M
             color = TangemTheme.colors.text.primary1,
         )
         Text(
-            text = "available $limitDays-day limit",
+            text = "available for $limitDays day(s)",
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
         )

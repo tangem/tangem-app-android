@@ -20,6 +20,7 @@ internal val UserWallet.publicInformation: UserWalletPublicInformation
                 wallets = emptyList(),
             ),
         ),
+        hasBackupError = hasBackupError,
     )
 
 internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
@@ -30,6 +31,7 @@ internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
         cardsInWallet = cardsInWallet,
         scanResponse = scanResponse,
         isMultiCurrency = isMultiCurrency,
+        hasBackupError = hasBackupError,
     )
 }
 

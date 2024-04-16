@@ -47,6 +47,11 @@ class TapWalletManager(
             config = blockchainSdkConfig,
             accountCreator = store.inject(DaggerGraphState::accountCreator),
             blockchainDataStorage = store.inject(DaggerGraphState::blockchainDataStorage),
+            loggers = if (store.inject(DaggerGraphState::feedbackManagerFeatureToggles).isLocalLogsEnabled) {
+                listOf(store.inject(DaggerGraphState::blockchainSDKLogger))
+            } else {
+                emptyList()
+            },
         )
     }
 
