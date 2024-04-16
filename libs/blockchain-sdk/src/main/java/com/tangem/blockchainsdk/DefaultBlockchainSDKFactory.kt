@@ -12,12 +12,10 @@ import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.models.ConfigValueModel
 import com.tangem.datasource.config.models.ProviderModel
 import com.tangem.libs.blockchain_sdk.BuildConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.launch
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import timber.log.Timber
 
 internal typealias BlockchainProvidersResponse = Map<String, List<ProviderModel>>
 internal typealias BlockchainProviderTypes = Map<Blockchain, List<ProviderType>>
@@ -39,9 +37,12 @@ internal class DefaultBlockchainSDKFactory(
     private val configStore: RuntimeStore<BlockchainSdkConfig>,
     private val blockchainProviderTypesStore: RuntimeStore<BlockchainProviderTypes>,
     private val walletManagerFactoryCreator: WalletManagerFactoryCreator,
+    dispatchers: CoroutineDispatcherProvider,
 ) : BlockchainSDKFactory {
 
-    override val walletManagerFactory: Flow<WalletManagerFactory> by lazy(::createWalletManagerFactory)
+    private val walletManagerFactory: Flow<WalletManagerFactory?> by lazy(::createWalletManagerFactory)
+
+    private val mainScope = CoroutineScope(dispatchers.main)
 
     override suspend fun init() {
         coroutineScope {
@@ -52,17 +53,25 @@ internal class DefaultBlockchainSDKFactory(
 
     override suspend fun getWalletManagerFactorySync(): WalletManagerFactory? = walletManagerFactory.firstOrNull()
 
-    private fun createWalletManagerFactory(): Flow<WalletManagerFactory> {
+    private fun createWalletManagerFactory(): Flow<WalletManagerFactory?> {
         return combine(
             flow = configStore.get(),
             flow2 = blockchainProviderTypesStore.get(),
             transform = walletManagerFactoryCreator::create,
         )
+            .stateIn(scope = mainScope, started = SharingStarted.Eagerly, initialValue = null)
     }
 
     private fun CoroutineScope.updateBlockchainSDKConfig() {
         launch {
-            val config = assetLoader.load<ConfigValueModel>(fileName = CONFIG_FILE_NAME) ?: return@launch
+            val config = assetLoader.load<ConfigValueModel>(fileName = CONFIG_FILE_NAME)
+
+            if (config == null) {
+                Timber.e("Error loading BlockchainSDKConfig")
+                return@launch
+            }
+
+            Timber.d("Update BlockchainSDKConfig")
 
             configStore.store(
                 value = BlockchainSDKConfigConverter.convert(value = config),
@@ -72,7 +81,14 @@ internal class DefaultBlockchainSDKFactory(
 
     private fun CoroutineScope.updateBlockchainProviderTypes() {
         launch {
-            val response = blockchainProvidersResponseLoader.load() ?: return@launch
+            val response = blockchainProvidersResponseLoader.load()
+
+            if (response == null) {
+                Timber.e("Error loading BlockchainProviderTypes")
+                return@launch
+            }
+
+            Timber.d("Update BlockchainProviderTypes")
 
             blockchainProviderTypesStore.store(
                 value = BlockchainProviderTypesConverter.convert(response),

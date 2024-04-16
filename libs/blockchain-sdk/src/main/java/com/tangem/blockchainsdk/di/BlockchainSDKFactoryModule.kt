@@ -13,6 +13,7 @@ import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,6 +30,7 @@ internal object BlockchainSDKFactoryModule {
         assetLoader: AssetLoader,
         blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
+        dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
             assetLoader = assetLoader,
@@ -36,6 +38,7 @@ internal object BlockchainSDKFactoryModule {
             configStore = DefaultRuntimeStore(defaultValue = BlockchainSdkConfig()),
             blockchainProviderTypesStore = DefaultRuntimeStore(defaultValue = emptyMap()),
             walletManagerFactoryCreator = walletManagerFactoryCreator,
+            dispatchers = dispatchers,
         )
     }
 
