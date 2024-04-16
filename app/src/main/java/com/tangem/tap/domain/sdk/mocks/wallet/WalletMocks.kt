@@ -15,7 +15,6 @@ import java.util.Date
 
 object WalletMocks : Mocks {
 
-    @Suppress("MaximumLineLength")
     private val cardDto = CardDTO(
         cardId = "AC05000000086747",
         batchId = "AC05",
