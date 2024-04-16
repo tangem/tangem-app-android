@@ -5,6 +5,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
 internal interface SendClickIntents {
@@ -64,7 +65,7 @@ internal interface SendClickIntents {
 
     fun onShareClick()
 
-    fun onAmountReduceClick(reducedAmount: String, clazz: Class<out SendNotification>)
+    fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>)
 
     fun onNotificationCancel(clazz: Class<out SendNotification>)
     // endregion

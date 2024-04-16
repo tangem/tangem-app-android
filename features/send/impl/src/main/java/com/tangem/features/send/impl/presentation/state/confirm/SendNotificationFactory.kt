@@ -166,9 +166,8 @@ internal class SendNotificationFactory(
                         cryptoCurrency = cryptoCurrency,
                     ),
                     onConfirmClick = {
-                        val reduceTo = utxoLimit.maxAmount.toPlainString()
                         clickIntents.onAmountReduceClick(
-                            reduceTo,
+                            utxoLimit.maxAmount,
                             SendNotification.Error.TransactionLimitError::class.java,
                         )
                     },
@@ -222,7 +221,7 @@ internal class SendNotificationFactory(
                 SendNotification.Warning.HighFeeError(
                     amount = threshold.toPlainString(),
                     onConfirmClick = {
-                        val reduceTo = sendAmount.minus(threshold).toPlainString()
+                        val reduceTo = sendAmount.minus(threshold)
                         clickIntents.onAmountReduceClick(reduceTo, SendNotification.Warning.HighFeeError::class.java)
                     },
                     onCloseClick = {
