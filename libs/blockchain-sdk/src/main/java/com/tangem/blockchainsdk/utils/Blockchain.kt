@@ -114,6 +114,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "taraxa/test" -> Blockchain.TaraxaTestnet
         "base" -> Blockchain.Base
         "base/test" -> Blockchain.BaseTestnet
+        "koinos" -> Blockchain.Koinos
+        "koinos/test" -> Blockchain.KoinosTestnet
         else -> null
     }
 }
@@ -229,6 +231,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.TaraxaTestnet -> "taraxa/test"
         Blockchain.Base -> "base"
         Blockchain.BaseTestnet -> "base/test"
+        Blockchain.Koinos -> "koinos"
+        Blockchain.KoinosTestnet -> "koinos/test"
     }
 }
 
@@ -302,6 +306,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Flare, Blockchain.FlareTestnet -> "flare-networks"
         Blockchain.Taraxa, Blockchain.TaraxaTestnet -> "taraxa"
         Blockchain.Base, Blockchain.BaseTestnet -> "base"
+        Blockchain.Koinos, Blockchain.KoinosTestnet -> "koinos"
     }
 }
 
@@ -332,4 +337,6 @@ private val excludedBlockchains = listOf(
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
     Blockchain.Radiant,
+    Blockchain.Koinos,
+    Blockchain.KoinosTestnet,
 )
