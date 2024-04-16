@@ -84,6 +84,11 @@ interface UserWalletsListManager {
      */
     suspend fun get(userWalletId: UserWalletId): CompletionResult<UserWallet>
 
+    /**
+     * Indicates that the [UserWalletsListManager] supports [UserWalletsListManager.Lockable]
+     * */
+    fun isLockable(): Boolean
+
     interface Lockable : UserWalletsListManager {
 
         /**
