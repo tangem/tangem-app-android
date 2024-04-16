@@ -2,8 +2,8 @@ package com.tangem.features.send.impl.presentation.ui.recipient
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -76,13 +76,13 @@ internal fun SendRecipientContent(
         listItem(
             list = wallets,
             clickIntents = clickIntents,
-            isLast = recipients.isEmpty(),
+            isLast = recipients.any { !it.isVisible },
             isBalanceHidden = isBalanceHidden,
         )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
             isVisible = recipients.isNotEmpty() && recipients.first().isVisible,
-            isFirst = wallets.isEmpty(),
+            isFirst = wallets.any { !it.isVisible },
         )
         listItem(
             list = recipients,
@@ -143,20 +143,9 @@ private fun LazyListScope.memoField(memoField: SendTextField.RecipientMemo?, onM
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Boolean, isFirst: Boolean) {
-    item(
-        key = titleRes,
-    ) {
-        AnimatedVisibility(
-            visible = isVisible,
-            label = "Header Appearance Animation",
-            enter = slideInVertically() + fadeIn(),
-            exit = slideOutVertically() + fadeOut(),
-            modifier = Modifier
-                .animateItemPlacement()
-                .animateContentSize(),
-        ) {
+    item(key = titleRes) {
+        AnimateRecentAppearance(isVisible) {
             val (topPadding, paddingFromTop) = if (isFirst) {
                 TangemTheme.dimens.spacing20 to TangemTheme.dimens.spacing12
             } else {
@@ -192,7 +181,6 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.listItem(
     list: ImmutableList<SendRecipientListContent>,
     clickIntents: SendClickIntents,
@@ -206,22 +194,20 @@ private fun LazyListScope.listItem(
     ) { index ->
         val item = list[index]
         val title = item.title.resolveReference()
-        AnimatedVisibility(
-            visible = item.isVisible,
-            label = "Header Appearance Animation",
-            enter = slideInVertically() + fadeIn(),
-            exit = slideOutVertically() + fadeOut(),
-            modifier = Modifier
-                .animateItemPlacement()
-                .animateContentSize(),
-        ) {
+        AnimateRecentAppearance(item.isVisible) {
             ListItemWithIcon(
                 title = title,
                 subtitle = if (isBalanceHidden) STARS else item.subtitle.resolveReference(),
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,
-                onClick = { clickIntents.onRecipientAddressValueChange(title, EnterAddressSource.RecentAddress) },
+                onClick = {
+                    clickIntents.onRecipientAddressValueChange(
+                        title,
+                        EnterAddressSource.RecentAddress,
+                    )
+                },
+                isLoading = item.isLoading,
                 modifier = Modifier
                     .then(
                         if (isLast && index == list.lastIndex) {
@@ -238,6 +224,24 @@ private fun LazyListScope.listItem(
                     )
                     .background(TangemTheme.colors.background.action),
             )
+        }
+    }
+}
+
+@Composable
+private fun AnimateRecentAppearance(isVisible: Boolean, content: @Composable () -> Unit) {
+    AnimatedContent(
+        targetState = isVisible,
+        label = "Item Appearance Animation",
+        transitionSpec = {
+            (slideInHorizontally() + fadeIn())
+                .togetherWith(slideOutVertically() + fadeOut())
+        },
+    ) {
+        if (it) {
+            content()
+        } else {
+            Box(modifier = Modifier.fillMaxWidth())
         }
     }
 }
