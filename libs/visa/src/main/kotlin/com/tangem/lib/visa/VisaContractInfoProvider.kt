@@ -2,7 +2,7 @@ package com.tangem.lib.visa
 
 import com.ihsanbal.logging.Level
 import com.ihsanbal.logging.LoggingInterceptor
-import com.tangem.lib.visa.model.VisaBalancesAndLimits
+import com.tangem.lib.visa.model.VisaContractInfo
 import com.tangem.lib.visa.utils.VisaConfig
 import com.tangem.lib.visa.utils.VisaConfig.NETWORK_LOGS_TAG
 import com.tangem.lib.visa.utils.toHexString
@@ -21,13 +21,14 @@ import java.util.concurrent.TimeUnit
 
 interface VisaContractInfoProvider {
 
-    suspend fun getBalancesAndLimits(walletAddress: String): VisaBalancesAndLimits
+    suspend fun getContractInfo(walletAddress: String): VisaContractInfo
 
     class Builder(
         private val isNetworkLoggingEnabled: Boolean,
         private val dispatchers: CoroutineDispatcherProvider,
         private val baseUrl: String = VisaConfig.BASE_RPC_URL,
         private val bridgeProcessorAddress: String = VisaConfig.BRIDGE_PROCESSOR_CONTRACT_ADDRESS,
+        private val paymentAccountRegistryAddress: String = VisaConfig.PAYMENT_ACCOUNT_REGISTRY_ADDRESS,
         private val chainId: Long = VisaConfig.CHAIN_ID,
         private val networkTimeoutSeconds: Long = VisaConfig.NETWORK_TIMEOUT_SECONDS,
         private val decimals: Int = VisaConfig.DECIMALS,
@@ -45,6 +46,7 @@ interface VisaContractInfoProvider {
                 transactionManager = transactionManager,
                 gasProvider = gasProvider,
                 bridgeProcessorAddress = bridgeProcessorAddress,
+                paymentAccountRegistryAddress = paymentAccountRegistryAddress,
                 dispatchers = dispatchers,
             )
         }
