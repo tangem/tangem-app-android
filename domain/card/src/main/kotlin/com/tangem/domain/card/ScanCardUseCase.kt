@@ -1,9 +1,7 @@
 package com.tangem.domain.card
 
 import arrow.core.Either
-import arrow.core.EitherNel
-import arrow.core.flatMap
-import com.tangem.TangemSdk
+import arrow.core.raise.either
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.repository.ScanCardRepository
 import com.tangem.domain.core.chain.Chain
@@ -11,12 +9,7 @@ import com.tangem.domain.core.chain.ChainProcessor
 import com.tangem.domain.models.scan.ScanResponse
 
 /**
- * Use case responsible for scanning a card and returning a [ScanResponse] object
- *
- * @property scanCardRepository  a repository object implementing [ScanCardRepository] interface
- * @property cardSdkConfigRepository an instance of [TangemSdk] to configure the display format of the card ID
- *
- * @constructor create a new instance of [ScanCardUseCase] with the given dependencies
+ * Use case responsible for scanning a card and returning a [ScanResponse] object.
  */
 class ScanCardUseCase(
     private val scanCardRepository: ScanCardRepository,
@@ -24,37 +17,41 @@ class ScanCardUseCase(
 ) {
 
     /** A [ChainProcessor] object to launch the after-scan chains */
-    private val scanChainProcessor by lazy {
-        ChainProcessor<ScanCardException.ChainException, ScanResponse>()
-    }
+    private val scanChainProcessor = ChainProcessor<ScanCardException, ScanResponse>()
 
     /**
-     * Scan a card and return a [ScanResponse] object.
+     * Scan a card.
      *
-     * @param cardId                            an optional card ID to scan. If null, can scan any card present
-     * @param allowRequestAccessCodeFromStorage whether to prompt the user for an access code if needed
-     * @param afterScanChains                   a list of chains that should be executed after a successful card scan
-     * operation. Defaults to an empty array
+     * @param cardId An optional card ID to scan. If `null`, can scan any card present
+     * @param allowRequestAccessCodeFromStorage Whether to prompt the user for an access code if needed
+     * @param afterScanChains A list of chains that should be executed after a card scan
+     * operation. Defaults to an empty array.
      *
-     * @return a [EitherNel] object with either a non-empty list of [ScanCardException] or a [ScanResponse]
+     * @return [Either] object with either a [ScanCardException] or a [ScanResponse] object.
      */
     suspend operator fun invoke(
         cardId: String? = null,
         allowRequestAccessCodeFromStorage: Boolean = false,
-        afterScanChains: List<Chain<ScanCardException.ChainException, ScanResponse>> = emptyList(),
-    ): Either<ScanCardException, ScanResponse> {
+        afterScanChains: List<Chain<ScanCardException, ScanResponse>> = emptyList(),
+    ): Either<ScanCardException, ScanResponse> = either {
         cardSdkConfigRepository.resetCardIdDisplayFormat()
-        scanChainProcessor.addChains(afterScanChains)
+        scanChainProcessor.setChains(afterScanChains)
 
-        return scanCardRepository.scanCard(
-            cardId = cardId,
-            allowRequestAccessCodeFromStorage = allowRequestAccessCodeFromStorage,
-        )
-            .onRight { scanResponse ->
-                cardSdkConfigRepository.updateCardIdDisplayFormat(scanResponse.productType)
-            }
-            .flatMap { response ->
-                scanChainProcessor.launchChains(initial = response)
+        val maybeScanResponse = scanCard(cardId, allowRequestAccessCodeFromStorage)
+        val scanResponse = scanChainProcessor.launchChains(maybeScanResponse).bind()
+
+        cardSdkConfigRepository.updateCardIdDisplayFormat(scanResponse.productType)
+
+        scanResponse
+    }
+
+    private suspend fun scanCard(
+        cardId: String?,
+        allowRequestAccessCodeFromStorage: Boolean,
+    ): Either<ScanCardException, ScanResponse> {
+        return Either.catch { scanCardRepository.scanCard(cardId, allowRequestAccessCodeFromStorage) }
+            .mapLeft { e ->
+                e as? ScanCardException ?: ScanCardException.UnknownException(e)
             }
     }
 }
