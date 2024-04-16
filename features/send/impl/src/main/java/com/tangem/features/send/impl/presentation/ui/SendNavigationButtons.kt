@@ -185,7 +185,7 @@ private fun SendDoneButtons(
         exit = slideOutVertically().plus(fadeOut()),
         label = "Animate show sent state buttons",
     ) {
-        Row(modifier = Modifier.padding(TangemTheme.dimens.spacing12)) {
+        Row(modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12)) {
             SecondaryButtonIconStart(
                 text = stringResource(id = R.string.common_explore),
                 iconResId = R.drawable.ic_web_24,
