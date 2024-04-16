@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.tokens.GetCardTokensListUseCase
+import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -24,6 +25,7 @@ internal class SingleWalletWithTokenContentLoader(
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val getCardTokensListUseCase: GetCardTokensListUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -36,6 +38,7 @@ internal class SingleWalletWithTokenContentLoader(
                 walletWithFundsChecker = walletWithFundsChecker,
                 getCardTokensListUseCase = getCardTokensListUseCase,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+                runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
             ),
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
