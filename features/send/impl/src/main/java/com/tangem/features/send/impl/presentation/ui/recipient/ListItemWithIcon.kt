@@ -1,6 +1,10 @@
 package com.tangem.features.send.impl.presentation.ui.recipient
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
@@ -16,6 +21,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.components.CircleShimmer
+import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -43,9 +50,42 @@ fun ListItemWithIcon(
     info: String? = null,
     subtitleEndOffset: Int = 0,
     @DrawableRes subtitleIconRes: Int? = null,
+    isLoading: Boolean = false,
+) {
+    AnimatedContent(
+        targetState = isLoading,
+        label = "Recent List Content Animation",
+        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
+    ) { isLoadingState ->
+        if (isLoadingState) {
+            ListItemLoading(modifier = modifier)
+        } else {
+            ListItemWithIcon(
+                title = title,
+                subtitle = subtitle,
+                onClick = onClick,
+                info = info,
+                subtitleEndOffset = subtitleEndOffset,
+                subtitleIconRes = subtitleIconRes,
+                modifier = modifier,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ListItemWithIcon(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    info: String? = null,
+    subtitleEndOffset: Int = 0,
+    @DrawableRes subtitleIconRes: Int? = null,
 ) {
     val hapticFeedback = rememberHapticFeedback(state = title, onAction = onClick)
     Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
             .clickable { hapticFeedback() }
@@ -55,13 +95,12 @@ fun ListItemWithIcon(
             address = title,
             modifier = Modifier
                 .padding(vertical = TangemTheme.dimens.spacing8)
-                .size(TangemTheme.dimens.size40)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius20)),
+                .size(TangemTheme.dimens.size36)
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius18)),
         )
         Column(
-            modifier = Modifier
-                .padding(vertical = TangemTheme.dimens.spacing10)
-                .padding(start = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
             EllipsisText(
                 text = title,
@@ -102,6 +141,43 @@ fun ListItemWithIcon(
     }
 }
 
+@Composable
+private fun ListItemLoading(modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = TangemTheme.dimens.spacing12),
+    ) {
+        CircleShimmer(
+            modifier = Modifier
+                .padding(vertical = TangemTheme.dimens.spacing8)
+                .size(TangemTheme.dimens.size36),
+        )
+        Column(
+            modifier = Modifier
+                .height(TangemTheme.dimens.size32)
+                .padding(start = TangemTheme.dimens.spacing12),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            RectangleShimmer(
+                radius = TangemTheme.dimens.radius3,
+                modifier = Modifier.size(
+                    width = TangemTheme.dimens.spacing70,
+                    height = TangemTheme.dimens.spacing12,
+                ),
+            )
+            RectangleShimmer(
+                radius = TangemTheme.dimens.radius3,
+                modifier = Modifier.size(
+                    width = TangemTheme.dimens.spacing52,
+                    height = TangemTheme.dimens.spacing12,
+                ),
+            )
+        }
+    }
+}
+
 // region preview
 @Preview
 @Composable
@@ -115,6 +191,7 @@ private fun ListItemWithIconPreview_Light(
             subtitleEndOffset = config.subtitleEndOffset,
             subtitleIconRes = config.iconRes,
             onClick = {},
+            isLoading = config.isLoading,
         )
     }
 }
@@ -131,6 +208,7 @@ private fun ListItemWithIconPreview_Dark(
             subtitleEndOffset = config.subtitleEndOffset,
             subtitleIconRes = config.iconRes,
             onClick = {},
+            isLoading = config.isLoading,
         )
     }
 }
@@ -141,6 +219,7 @@ private data class ListItemWithIconPreviewConfig(
     val info: String? = null,
     val subtitleEndOffset: Int = 0,
     val iconRes: Int? = null,
+    val isLoading: Boolean = false,
 )
 
 private class ListItemWithIconPreviewProvider : CollectionPreviewParameterProvider<ListItemWithIconPreviewConfig>(
@@ -162,6 +241,14 @@ private class ListItemWithIconPreviewProvider : CollectionPreviewParameterProvid
         ListItemWithIconPreviewConfig(
             title = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
             subtitle = "Wallet",
+        ),
+        ListItemWithIconPreviewConfig(
+            title = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
+            subtitle = "0.000000000000000000000000000000 BTC",
+            info = "0.0.0000 at 00:00",
+            subtitleEndOffset = "BTC".length,
+            iconRes = R.drawable.ic_arrow_down_24,
+            isLoading = true,
         ),
     ),
 )
