@@ -26,4 +26,15 @@ object BlockchainUtils {
             null
         }
     }
+
+    /** If current [networkId] is Bitcoin */
+    fun isBitcoin(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
+    }
+
+    fun isDogecoin(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Dogecoin
+    }
 }
