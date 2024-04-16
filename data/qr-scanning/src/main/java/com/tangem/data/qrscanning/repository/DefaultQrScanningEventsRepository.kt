@@ -1,6 +1,7 @@
 package com.tangem.data.qrscanning.repository
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.qrscanning.models.QrResult
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
@@ -44,7 +45,7 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
                 when (it.key) {
                     Parameter.Amount -> {
                         // According to BIP-0021, the value is specified in decimals. No conversion needed
-                        result.amount = it.value.toBigDecimalOrNull()
+                        result.amount = it.value.parseBigDecimalOrNull()
                     }
                     Parameter.Message,
                     Parameter.Memo,
@@ -69,7 +70,7 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
                     -> {
                         // Extra convert parses scientific notation to decimal
                         // This is necessary to be able comparing BigDecimal values
-                        result.amount = it.value.toBigDecimalOrNull()
+                        result.amount = it.value.parseBigDecimalOrNull()
                             ?.toPlainString()?.toBigDecimalOrNull()
                             ?.divide(BigDecimal.TEN.pow(cryptoCurrency.decimals))
                     }
