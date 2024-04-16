@@ -30,7 +30,25 @@ internal class ResetCardViewModel(private val store: Store<AppState>) {
             acceptCondition2Checked = state?.condition2Checked ?: false,
             onAcceptCondition1ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition1(it)) },
             onAcceptCondition2ToggleClick = { store.dispatch(DetailsAction.ResetToFactory.AcceptCondition2(it)) },
-            onResetButtonClick = { store.dispatch(DetailsAction.ResetToFactory.Proceed) },
+            onResetButtonClick = { showLastWarningDialog() },
+            lastWarningDialog = ResetCardScreenState.ResetCardScreenContent.LastWarningDialog(
+                isShown = state?.isLastWarningDialogShown ?: false,
+                onResetButtonClick = ::onLastWarningDialogResetClicked,
+                onDismiss = ::onLastWarningDialogDismiss,
+            ),
         )
+    }
+
+    private fun showLastWarningDialog() {
+        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = true))
+    }
+
+    private fun onLastWarningDialogResetClicked() {
+        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = false))
+        store.dispatch(DetailsAction.ResetToFactory.Proceed)
+    }
+
+    private fun onLastWarningDialogDismiss() {
+        store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = false))
     }
 }

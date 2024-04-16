@@ -12,5 +12,8 @@ internal interface InnerTokenDetailsRouter : TokenDetailsRouter {
     /** Open website by [url] */
     fun openUrl(url: String)
 
+    /** Share [text] */
+    fun share(text: String)
+
     fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency)
 }

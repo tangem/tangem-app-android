@@ -524,10 +524,18 @@ class OnboardingWalletFragment :
 
             override fun importWallet(
                 mnemonicComponents: List<String>,
+                passphrase: String?,
                 seedPhraseSource: SeedPhraseSource,
                 callback: (CompletionResult<CreateWalletResponse>) -> Unit,
             ) {
-                store.dispatch(OnboardingWallet2Action.ImportWallet(mnemonicComponents, seedPhraseSource, callback))
+                store.dispatch(
+                    OnboardingWallet2Action.ImportWallet(
+                        mnemonicComponents,
+                        passphrase,
+                        seedPhraseSource,
+                        callback,
+                    ),
+                )
             }
 
             override fun allowScreenshots(allow: Boolean) {

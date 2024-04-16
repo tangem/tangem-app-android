@@ -73,6 +73,8 @@ object PreferencesKeys {
         stringPreferencesKey(name = "POLKADOT_HEALTH_CHECKED_IMMUTABLE_ACCOUNTS")
     }
 
+    val SEND_TAP_HELP_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "sendTapHelpPreview") }
+
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 }
 

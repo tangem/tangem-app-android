@@ -5,39 +5,56 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.BottomCenter
-import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import com.tangem.core.ui.components.fields.AmountTextField
+import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.defaultFormat
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.job
 
 @Composable
-internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) {
+internal fun AmountField(sendField: SendTextField.AmountField, isEnabled: Boolean, appCurrencyCode: String) {
     val decimalFormat = rememberDecimalFormat()
-    val (primaryValue, secondaryValue) = if (isFiat) {
-        sendField.fiatValue to sendField.value
+    val isFiatValue = sendField.isFiatValue
+    val currencyCode = if (isFiatValue) appCurrencyCode else null
+    val (primaryAmount, primaryValue) = if (isFiatValue) {
+        sendField.fiatAmount to sendField.fiatValue
     } else {
-        sendField.value to sendField.fiatValue
+        sendField.cryptoAmount to sendField.value
     }
+    val requester = remember { FocusRequester() }
+    var isEnabledProxy by remember { mutableStateOf(isEnabled) }
 
-    val (primaryAmount, secondaryAmount) = if (isFiat) {
-        sendField.fiatAmount to sendField.cryptoAmount
-    } else {
-        sendField.cryptoAmount to sendField.fiatAmount
+    // Fix animation from amount screen to summary screen (AND-6758)
+    LaunchedEffect(key1 = isEnabled) {
+        if (isEnabled) {
+            delay(timeMillis = 700)
+        }
+        isEnabledProxy = isEnabled
     }
 
     AmountTextField(
         value = primaryValue,
         decimals = primaryAmount.decimals,
-        symbol = primaryAmount.currencySymbol,
+        visualTransformation = AmountVisualTransformation(
+            decimals = primaryAmount.decimals,
+            symbol = primaryAmount.currencySymbol,
+            currencyCode = currencyCode,
+            decimalFormat = decimalFormat,
+        ),
         onValueChange = sendField.onValueChange,
         keyboardOptions = sendField.keyboardOptions,
         keyboardActions = sendField.keyboardActions,
@@ -45,15 +62,30 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) 
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
         ),
-        placeholderAlignment = TopCenter,
+        isEnabled = isEnabledProxy,
+        isAutoResize = true,
         modifier = Modifier
+            .focusRequester(requester)
             .padding(
                 top = TangemTheme.dimens.spacing24,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
-            ),
+            )
+            .requiredHeightIn(min = TangemTheme.dimens.size32),
     )
 
+    LaunchedEffect(key1 = Unit) {
+        this.coroutineContext.job.invokeOnCompletion {
+            requester.requestFocus()
+        }
+    }
+
+    AmountSecondary(sendField, appCurrencyCode)
+}
+
+@Composable
+private fun AmountSecondary(sendField: SendTextField.AmountField, appCurrencyCode: String) {
+    val secondaryAmount = if (sendField.isFiatValue) sendField.cryptoAmount else sendField.fiatAmount
     Box(
         modifier = Modifier
             .padding(
@@ -62,10 +94,22 @@ internal fun AmountField(sendField: SendTextField.AmountField, isFiat: Boolean) 
                 end = TangemTheme.dimens.spacing12,
             ),
     ) {
-        val text = "${secondaryValue.ifEmpty { decimalFormat.defaultFormat() }}  ${secondaryAmount.currencySymbol}"
+        val text = if (sendField.isFiatValue) {
+            BigDecimalFormatter.formatCryptoAmount(
+                cryptoAmount = secondaryAmount.value,
+                cryptoCurrency = secondaryAmount.currencySymbol,
+                decimals = secondaryAmount.decimals,
+            )
+        } else {
+            BigDecimalFormatter.formatFiatAmount(
+                fiatAmount = secondaryAmount.value,
+                fiatCurrencySymbol = secondaryAmount.currencySymbol,
+                fiatCurrencyCode = appCurrencyCode,
+            )
+        }
         Text(
             text = text,
-            style = TangemTheme.typography.caption2,
+            style = TangemTheme.typography.caption2.copy(textDirection = TextDirection.ContentOrLtr),
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
             modifier = Modifier

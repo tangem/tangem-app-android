@@ -5,10 +5,10 @@ import androidx.fragment.app.Fragment
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.feature.qrscanning.SourceType
 import com.tangem.features.send.impl.presentation.SendFragment
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 

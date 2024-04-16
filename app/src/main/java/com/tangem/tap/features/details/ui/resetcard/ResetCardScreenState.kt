@@ -15,9 +15,16 @@ internal sealed class ResetCardScreenState {
         val onAcceptCondition1ToggleClick: (Boolean) -> Unit,
         val onAcceptCondition2ToggleClick: (Boolean) -> Unit,
         val onResetButtonClick: () -> Unit,
+        val lastWarningDialog: LastWarningDialog,
     ) : ResetCardScreenState() {
         val resetButtonEnabled: Boolean
             get() = accepted
+
+        data class LastWarningDialog(
+            val isShown: Boolean,
+            val onResetButtonClick: () -> Unit,
+            val onDismiss: () -> Unit,
+        )
     }
 
     internal enum class WarningsToReset {

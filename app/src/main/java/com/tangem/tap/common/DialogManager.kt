@@ -112,6 +112,11 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     context = context,
                 )
             }
+            is WalletConnectDialog.UnsupportedDapp -> SimpleAlertDialog.create(
+                titleRes = R.string.wallet_connect_title,
+                messageRes = R.string.wallet_connect_error_unsupported_dapp,
+                context = context,
+            )
             is WalletConnectDialog.SessionProposalDialog -> {
                 SessionProposalDialog.create(
                     sessionProposal = state.dialog.sessionProposal,
@@ -121,6 +126,10 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     onReject = state.dialog.onReject,
                 )
             }
+            is WalletConnectDialog.SignTransactionDialog -> SignTransactionDialog.create(
+                preparedData = state.dialog.data,
+                context = context,
+            )
             is BackupDialog.AttestationFailed -> AttestationFailedDialog.create(context)
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)

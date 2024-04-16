@@ -11,10 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.onboarding.presentation.wallet2.model.DescriptionResource
-import kotlinx.collections.immutable.ImmutableList
 
 /**
  * UI component witch provides single and carousel description for the onboarding process
@@ -24,7 +22,7 @@ fun OnboardingDescriptionBlock(modifier: Modifier = Modifier, content: @Composab
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.size24),
+            .padding(horizontal = TangemTheme.dimens.size36),
     ) {
         content()
     }
@@ -34,19 +32,8 @@ fun OnboardingDescriptionBlock(modifier: Modifier = Modifier, content: @Composab
 fun Description(@StringRes titleRes: Int, @StringRes subTitleRes: Int) {
     Column {
         DescriptionTitleText(text = stringResource(id = titleRes))
-        SpacerH12()
+        SpacerH16()
         DescriptionSubTitleText(text = stringResource(id = subTitleRes))
-    }
-}
-
-@Suppress("UnusedPrivateMember")
-@Composable
-fun OnboardingCarouselDescriptionBlock(
-    descriptionsList: ImmutableList<DescriptionResource>,
-    modifier: Modifier = Modifier,
-) {
-    OnboardingDescriptionBlock(modifier) {
-// [REDACTED_TODO_COMMENT]
     }
 }
 
