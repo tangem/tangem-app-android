@@ -15,6 +15,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,7 +26,7 @@ class MockTangemSdkManager(
 ) : TangemSdkManager {
 
     override val canUseBiometry: Boolean
-        get() = TODO()
+        get() = false
 
     override val needEnrollBiometrics: Boolean
         get() = TODO()
@@ -44,7 +45,7 @@ class MockTangemSdkManager(
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<ScanResponse> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getScanResponse())
     }
 
     override suspend fun createProductWallet(
@@ -135,7 +136,6 @@ class MockTangemSdkManager(
 
     @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
-        TODO()
     }
 
     @Deprecated("TangemSdkManager shouldn't returns a string from resources")
