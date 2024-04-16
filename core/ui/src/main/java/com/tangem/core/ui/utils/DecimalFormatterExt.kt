@@ -11,6 +11,8 @@ import java.util.Locale
 
 private const val TEXT_CHUNK_THOUSAND = 3
 private const val POINT_SEPARATOR = '.'
+private const val COMMA_SEPARATOR = ','
+const val DECIMAL_SEPARATOR_LIMIT = 1
 
 @Composable
 fun rememberDecimalFormat(): DecimalFormat {
@@ -151,6 +153,37 @@ fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = Round
         ""
     }
 }
+
+/**
+ * Universal amount string parser to [BigDecimal]
+ * Able to parse values with only ONE separator, assuming separator is COMMA.
+ * Otherwise returns null.
+ */
+fun String.parseBigDecimalOrNull() = runCatching {
+    // Filtering value containing more than one either grouping or decimal separator.
+    // We assume there will be only decimal separator, otherwise parsing will fail.
+    if (count { !it.isDigit() } > DECIMAL_SEPARATOR_LIMIT) return null
+
+    // An attempt to parse value with POINT decimal separator
+    val parsed = this.toBigDecimalOrNull()
+
+    if (parsed == null) {
+        // If parsing with POINT separator fails trying to parse with COMMA separator
+        val decimalFormatSymbol = DecimalFormatSymbols().apply {
+            decimalSeparator = COMMA_SEPARATOR
+        }
+        val decimalFormat = DecimalFormat().apply {
+            decimalFormatSymbols = decimalFormatSymbol
+            isParseBigDecimal = true
+        }
+
+        // Return either number or null if fails
+        decimalFormat.parse(this) as? BigDecimal
+    } else {
+        // If parsing with POINT separator succeeds return number
+        parsed
+    }
+}.getOrNull()
 
 private fun Int.getWithIntegerDecimals(before: String, separator: Char, after: String): String = if (this == 0) {
     before
