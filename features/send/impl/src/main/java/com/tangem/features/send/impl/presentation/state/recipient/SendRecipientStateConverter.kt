@@ -2,15 +2,15 @@ package com.tangem.features.send.impl.presentation.state.recipient
 
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendStates
+import com.tangem.features.send.impl.presentation.state.recipient.utils.*
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.persistentListOf
 
 internal class SendRecipientStateConverter(
     private val clickIntents: SendClickIntents,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Converter<String, SendStates.RecipientState> {
+) : Converter<SendRecipientStateConverter.Data, SendStates.RecipientState> {
 
     private val addressFieldConverter by lazy { SendRecipientAddressFieldConverter(clickIntents) }
     private val memoFieldConverter by lazy {
@@ -20,14 +20,16 @@ internal class SendRecipientStateConverter(
         )
     }
 
-    override fun convert(value: String): SendStates.RecipientState {
+    override fun convert(value: Data): SendStates.RecipientState {
         return SendStates.RecipientState(
-            addressTextField = addressFieldConverter.convert(value),
-            memoTextField = memoFieldConverter.convertOrNull(),
+            addressTextField = addressFieldConverter.convert(value.address),
+            memoTextField = memoFieldConverter.convertOrNull(value.memo),
             network = cryptoCurrencyStatusProvider().currency.network.name,
             isPrimaryButtonEnabled = false,
-            wallets = persistentListOf(),
-            recent = persistentListOf(),
+            wallets = loadingListState(WALLET_KEY_TAG, WALLET_DEFAULT_COUNT),
+            recent = loadingListState(RECENT_KEY_TAG, RECENT_DEFAULT_COUNT),
         )
     }
+
+    data class Data(val address: String, val memo: String? = null)
 }
