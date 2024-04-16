@@ -37,6 +37,7 @@ class BackupValidator @Inject constructor() {
 
     private fun validateBackupStatus(cardDTO: CardDTO): Boolean {
         val backupStatus = cardDTO.backupStatus
-        return backupStatus != null && backupStatus !is CardDTO.BackupStatus.CardLinked
+        backupStatus ?: return true // for card with null backup status, validation should always returns true
+        return backupStatus !is CardDTO.BackupStatus.CardLinked
     }
 }
