@@ -50,6 +50,8 @@ interface TangemExpressApi {
         @Query("rateType") rateType: String,
         @Query("toAddress") toAddress: String,
         @Query("requestId") requestId: String,
+        @Query("refundAddress") refundAddress: String?, // for cex only
+        @Query("refundExtraId") refundExtraId: String?, // for cex only
     ): ApiResponse<ExchangeDataResponse>
 
     @GET("exchange-status")
