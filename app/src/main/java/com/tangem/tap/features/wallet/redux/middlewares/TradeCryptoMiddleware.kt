@@ -87,8 +87,7 @@ object TradeCryptoMiddleware {
         val exchangeManager = store.state.globalState.exchangeManager
         val topUrl = exchangeManager.getUrl(
             action = CurrencyExchangeManager.Action.Buy,
-            blockchain = blockchain,
-            cryptoCurrencyName = currency.symbol,
+            cryptoCurrency = currency,
             fiatCurrencyName = action.appCurrencyCode,
             walletAddress = networkAddress,
             isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
@@ -140,8 +139,7 @@ object TradeCryptoMiddleware {
 
         store.state.globalState.exchangeManager.getUrl(
             action = CurrencyExchangeManager.Action.Sell,
-            blockchain = Blockchain.fromId(currency.network.id.value),
-            cryptoCurrencyName = currency.symbol,
+            cryptoCurrency = currency,
             fiatCurrencyName = action.appCurrencyCode,
             walletAddress = networkAddress,
             isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
@@ -318,6 +316,7 @@ object TradeCryptoMiddleware {
             SendRouter.TRANSACTION_ID_KEY to txInfo?.transactionId,
             SendRouter.DESTINATION_ADDRESS_KEY to txInfo?.destinationAddress,
             SendRouter.AMOUNT_KEY to txInfo?.amount,
+            SendRouter.TAG_KEY to txInfo?.tag,
         )
         store.dispatchOnMain(NavigationAction.NavigateTo(screen = AppScreen.Send, bundle = bundle))
     }
