@@ -6,7 +6,6 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.extensions.TextReference
@@ -493,7 +492,7 @@ class DetailsMiddleware {
         cardSdkConfigRepository.setAccessCodeRequestPolicy(isBiometricsRequestPolicy = shouldSaveAccessCodes)
 
         store.inject(DaggerGraphState::scanCardProcessor).scan(
-            analyticsEvent = Basic.CardWasScanned(CoreAnalyticsParam.ScannedFrom.MyWallets),
+            analyticsSource = CoreAnalyticsParam.ScreensSources.Settings,
             onWalletNotCreated = {
                 // No need to rollback policy, continue with the policy set before the card scan
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
