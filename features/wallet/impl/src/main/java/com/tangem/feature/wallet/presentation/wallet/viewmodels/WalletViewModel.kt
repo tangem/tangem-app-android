@@ -7,11 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsWalletsScrollPreviewEnabled
 import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
-import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
@@ -37,7 +35,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -56,7 +53,6 @@ internal class WalletViewModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val reduxStateHolder: ReduxStateHolder,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
@@ -141,16 +137,6 @@ internal class WalletViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
                     if (selectedWallet.isMultiCurrency) {
-                        Timber.d("WalletConnect: initialize and setup networks for ${selectedWallet.walletId}")
-
-                        reduxStateHolder.dispatch(
-                            action = WalletConnectActions.New.Initialize(userWallet = selectedWallet),
-                        )
-
-                        reduxStateHolder.dispatch(
-                            action = WalletConnectActions.New.SetupUserChains(userWallet = selectedWallet),
-                        )
-
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
 
