@@ -146,8 +146,8 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                     blockBookRest = accessTokens.bitcoin?.blockBookRest,
                 ),
                 algorand = GetBlockAccessToken(rest = accessTokens.algorand?.rest),
-                zkSync = GetBlockAccessToken(rest = accessTokens.zksync?.jsonRPC),
-                polygonZkevm = GetBlockAccessToken(rest = accessTokens.polygonZkevm?.jsonRPC),
+                zkSyncEra = GetBlockAccessToken(rest = accessTokens.zksync?.jsonRPC),
+                polygonZkEvm = GetBlockAccessToken(rest = accessTokens.polygonZkevm?.jsonRPC),
                 base = GetBlockAccessToken(rest = accessTokens.base?.jsonRPC),
             )
         }

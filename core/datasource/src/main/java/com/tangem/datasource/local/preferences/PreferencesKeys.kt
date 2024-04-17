@@ -5,9 +5,13 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.APP_LAUNCH_COUNT_
 import com.tangem.datasource.local.preferences.PreferencesKeys.FUNDS_FOUND_DATE_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.IS_TANGEM_TOS_ACCEPTED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SAVE_USER_WALLETS_KEY
+import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_OPEN_WELCOME_ON_RESUME_KEY
+import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY
+import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SHOW_SAVE_USER_WALLET_SCREEN_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY
+import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_APPLICATION_STOPPED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN
 
 /**
@@ -18,6 +22,8 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_TWINS_ONBOARD
 object PreferencesKeys {
 
     val SAVE_USER_WALLETS_KEY by lazy { booleanPreferencesKey(name = "saveUserWallets") }
+
+    val SHOULD_SHOW_SAVE_USER_WALLET_SCREEN_KEY by lazy { booleanPreferencesKey("saveUserWalletShown") }
 
     val APP_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "launchCount") }
 
@@ -75,6 +81,12 @@ object PreferencesKeys {
 
     val SEND_TAP_HELP_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "sendTapHelpPreview") }
 
+    val WAS_APPLICATION_STOPPED_KEY by lazy { booleanPreferencesKey(name = "applicationStopped") }
+
+    val SHOULD_OPEN_WELCOME_ON_RESUME_KEY by lazy { booleanPreferencesKey(name = "openWelcomeOnResume") }
+
+    val SHOULD_SAVE_ACCESS_CODES_KEY by lazy { booleanPreferencesKey(name = "saveAccessCodes") }
+
     fun getStart2CoinTOSAcceptedKey(region: String?) = booleanPreferencesKey(name = "start2Coin_tos_accepted_$region")
 }
 
@@ -82,6 +94,7 @@ object PreferencesKeys {
 internal fun getTapPrefKeysToMigrate(): Set<String> {
     return setOf(
         SAVE_USER_WALLETS_KEY,
+        SHOULD_SHOW_SAVE_USER_WALLET_SCREEN_KEY,
         APP_LAUNCH_COUNT_KEY,
         SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY,
         FUNDS_FOUND_DATE_KEY,
@@ -89,6 +102,9 @@ internal fun getTapPrefKeysToMigrate(): Set<String> {
         USED_CARDS_INFO_KEY,
         WAS_TWINS_ONBOARDING_SHOWN,
         IS_TANGEM_TOS_ACCEPTED_KEY,
+        WAS_APPLICATION_STOPPED_KEY,
+        SHOULD_OPEN_WELCOME_ON_RESUME_KEY,
+        SHOULD_SAVE_ACCESS_CODES_KEY,
     )
         .map(Preferences.Key<*>::name)
         .toSet()
