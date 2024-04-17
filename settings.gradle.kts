@@ -72,11 +72,13 @@ include(":core:ui")
 include(":core:utils")
 include(":core:deep-links")
 include(":core:deep-links:global")
+include(":core:decompose")
 // endregion Core modules
 
 // region Libs modules
-include(":libs:crypto")
 include(":libs:auth")
+include(":libs:blockchain-sdk")
+include(":libs:crypto")
 include(":libs:visa")
 // endregion Libs modules
 
@@ -150,7 +152,6 @@ include(":data:balance-hiding")
 include(":data:common")
 include(":data:card")
 include(":data:tokens")
-include(":data:source:preferences")
 include(":data:settings")
 include(":data:txhistory")
 include(":data:wallets")
