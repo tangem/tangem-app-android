@@ -68,7 +68,7 @@ xmlShimmer = "1.1.3"
 zxingQrCode = "3.5.1"
 mviCore = "1.3.1"
 kotlinSerialization = "1.4.1"
-arrow = "1.2.0"
+arrow = "1.2.3"
 reactiveNetwork = "3.0.8"
 walletConnectCore = "1.18.0"
 walletConnectWeb3 = "1.11.0"
@@ -82,12 +82,13 @@ swipeRefreshLayout = "1.1.0"
 spr-client = "3.6.2"
 web3j = "4.10.1"
 leakcanary = "2.13"
+decompose = "2.2.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.9-600"
+tangemBlockchainSdk = "develop-601"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.9-343"
+tangemCardSdk = "develop-345"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
@@ -197,6 +198,8 @@ test-kaspresso = { module = "com.kaspersky.android-components:kaspresso", versio
 test-kaspresso-compose = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspresso-compose"}
 test-compose-junit = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-junit" }
 test-hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
+test-hilt = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
+test-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 # endregion Test
 
 # region Other
@@ -221,6 +224,7 @@ lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 material = { module = "com.google.android.material:material", version.ref = "googleMaterialComponent" }
 moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
+moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okHttp-prettyLogging = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "okHttp-prettyLogging" }
 spongecastle-core = { module = "com.madgag.spongycastle:core", version.ref = "spongycastleCryptoCore" }
@@ -249,4 +253,6 @@ camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = 
 camera-view = { module = "androidx.camera:camera-view", version.ref = "androidXCamera" }
 web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
 leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
+decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
+decompose-ext-compose = { module = "com.arkivanov.decompose:extensions-compose-jetpack", version.ref = "decompose" }
 # endregion Other

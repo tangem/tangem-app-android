@@ -12,10 +12,6 @@
         "version": "5.9.0"
     },
     {
-        "name": "GENERAL_USER_WALLETS_LIST_MANAGER_ENABLED",
-        "version": "5.8.0"
-    },
-    {
         "name": "LOCAL_USER_LOGS_ENABLED",
         "version": "5.8.0"
     },
@@ -26,5 +22,9 @@
     {
         "name": "WC_SOLANA_TX_SIGN_ENABLED",
         "version": "5.11.0"
+    },
+    {
+        "name": "TOKEN_LIST_LCE_ENABLED",
+        "version": "5.10.0"
     }
 ]
