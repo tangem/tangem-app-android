@@ -569,12 +569,14 @@ internal class SendViewModel @Inject constructor(
     // endregion
 
     // region recipient state clicks
-    fun onRecipientAddressScanned(address: String) {
+    fun onQrCodeScanned(address: String) {
         viewModelScope.launch(dispatchers.main) {
             parseQrCodeUseCase(address, cryptoCurrency).fold(
                 ifRight = { parsedCode ->
                     onRecipientAddressValueChange(parsedCode.address, EnterAddressSource.QRCode)
-                    parsedCode.amount?.let { onAmountValueChange(it.toPlainString()) }
+                    parsedCode.amount?.let {
+                        onAmountValueChange(it.parseBigDecimal(decimals = cryptoCurrency.decimals))
+                    }
                     parsedCode.memo?.let { onRecipientMemoValueChange(it) }
                 },
                 ifLeft = {
