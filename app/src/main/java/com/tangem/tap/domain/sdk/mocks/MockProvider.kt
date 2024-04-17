@@ -10,6 +10,10 @@ object MockProvider {
 
     fun getScanResponse() = getMocks(productType).scanResponse
 
+    fun getDerivationTaskResponse() = getMocks(productType).derivationTaskResponse
+
+    fun getCardDto() = getMocks(productType).cardDto
+
     private fun getMocks(productType: ProductType): Mocks {
         return when (productType) {
             ProductType.Wallet -> WalletMocks

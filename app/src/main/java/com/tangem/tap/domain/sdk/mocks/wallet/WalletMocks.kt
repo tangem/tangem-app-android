@@ -4,18 +4,21 @@ import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.EncryptionMode
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.Attestation
+import com.tangem.operations.derivation.DerivationTaskResponse
+import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.domain.sdk.mocks.Mocks
 import java.util.Date
 
 object WalletMocks : Mocks {
 
-    private val cardDto = CardDTO(
+    override val cardDto = CardDTO(
         cardId = "AC05000000086747",
         batchId = "AC05",
         cardPublicKey = byteArrayOf(2, -120, -3, -32, -122, -127, -120, -104, 59, 72, 76, 114, 94, 75, -37, -55, 55, 99, 66, 123, 85, -87, 80, 106, 105, -116, 87, -83, -12, 70, 108, -68, -39),
@@ -123,5 +126,32 @@ object WalletMocks : Mocks {
         secondTwinPublicKey = null,
         derivedKeys = emptyMap(),
         primaryCard = null,
+    )
+
+    override val derivationTaskResponse = DerivationTaskResponse(
+        entries = mapOf(
+            ByteArrayKey(
+                byteArrayOf(2, -109, 28, -27, -124, -58, -97, -61, 43, -84, 90, -9, -5, 4, 90, 17, 112, -125, -108, 44, 19, -79, -60, -23, 34, -20, -20, 61, 84, 113, 120, -90, -5),
+            )
+                to
+                    ExtendedPublicKeysMap(
+                        mapOf(
+                            DerivationPath("m/44'/145'/0'/0/0") to ExtendedPublicKey(
+                                publicKey = byteArrayOf(2, 38, -6, 92, -37, -91, -59, -108, -18, -119, -55, 41, 38, -33, 44, 59, 24, -79, -14, -38, -10, -123, 106, 56, 39, 8, 112, 29, -41, 99, 70, -104, -121),
+                                chainCode = byteArrayOf(105, -21, -61, -50, 68, -89, 119, 53, -96, -40, 119, 77, -122, 121, 16, 40, -50, -48, -105, -101, -74, -7, -94, -59, -90, 96, 59, 99, 43, -91, 115, -29),
+                                depth = 0,
+                                parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                                childNumber = 0,
+                            ),
+                            DerivationPath("m/44'/3'/0'/0/0") to ExtendedPublicKey(
+                                publicKey = byteArrayOf(3, -25, -24, -97, -124, 24, -89, 44, 75, 123, 92, -86, -73, -93, 25, -90, -89, -95, 88, 3, 107, 37, -1, -85, -32, -57, -123, -41, 108, -9, -96, 77, -124),
+                                chainCode = byteArrayOf(119, 3, 41, 112, 71, 54, 72, 30, 39, 25, 25, -104, 92, 46, -109, 63, 93, 67, 43, -102, -87, 39, -95, 106, 45, 67, 109, -29, -35, 10, -107, 104),
+                                depth = 0,
+                                parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                                childNumber = 0,
+                            ),
+                        ),
+                    ),
+        ),
     )
 }

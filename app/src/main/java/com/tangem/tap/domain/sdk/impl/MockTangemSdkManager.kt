@@ -5,9 +5,11 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.common.*
+import com.tangem.common.authentication.keystore.DummyKeystoreManager
 import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.services.InMemoryStorage
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.scan.CardDTO
@@ -25,20 +27,15 @@ class MockTangemSdkManager(
     private val resources: Resources,
 ) : TangemSdkManager {
 
-    override val canUseBiometry: Boolean
-        get() = false
+    override val canUseBiometry = false
 
-    override val needEnrollBiometrics: Boolean
-        get() = TODO()
+    override val needEnrollBiometrics = false
 
-    override val keystoreManager: KeystoreManager
-        get() = TODO()
+    override val keystoreManager = DummyKeystoreManager()
 
-    override val secureStorage: SecureStorage
-        get() = TODO()
+    override val secureStorage = InMemoryStorage()
 
-    override val userCodeRequestPolicy: UserCodeRequestPolicy
-        get() = TODO()
+    override var userCodeRequestPolicy: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
 
     override suspend fun scanProduct(
         cardId: String?,
@@ -68,7 +65,7 @@ class MockTangemSdkManager(
         cardId: String?,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): CompletionResult<DerivationTaskResponse> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getDerivationTaskResponse())
     }
 
     override suspend fun deriveExtendedPublicKey(
@@ -87,15 +84,15 @@ class MockTangemSdkManager(
     }
 
     override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
-        TODO()
+        return CompletionResult.Success(Unit)
     }
 
     override suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit> {
-        TODO()
+        return CompletionResult.Success(Unit)
     }
 
     override suspend fun clearSavedUserCodes(): CompletionResult<Unit> {
-        TODO()
+        return CompletionResult.Success(Unit)
     }
 
     override suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
@@ -121,7 +118,7 @@ class MockTangemSdkManager(
         cardId: String?,
         allowRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getCardDto())
     }
 
     override suspend fun <T> runTaskAsync(
@@ -144,6 +141,6 @@ class MockTangemSdkManager(
     }
 
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
-        TODO()
+        userCodeRequestPolicy = policy
     }
 }

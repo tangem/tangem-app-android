@@ -25,7 +25,7 @@ interface TangemSdkManager {
 
     val secureStorage: SecureStorage
 
-    val userCodeRequestPolicy: UserCodeRequestPolicy
+    var userCodeRequestPolicy: UserCodeRequestPolicy
 
     suspend fun scanProduct(
         cardId: String? = null,
