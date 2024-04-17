@@ -18,8 +18,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
-import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import kotlinx.collections.immutable.ImmutableCollection
