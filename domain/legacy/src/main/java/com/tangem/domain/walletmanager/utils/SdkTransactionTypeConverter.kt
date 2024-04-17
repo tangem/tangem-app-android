@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
@@ -40,6 +40,7 @@ class SdkTransactionTypeConverter(
         }
     }
 
+    @Deprecated(message = "Use AssetReader instead")
     private fun readSmartContractMethods(): Map<String, SmartContractMethod> {
         val json = assetReader.readJson("contract_methods")
         return adapter.fromJson(json) ?: emptyMap()

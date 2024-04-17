@@ -36,14 +36,6 @@ internal object CardDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetAccessCodeSavingStatusUseCase(
-        cardSdkConfigRepository: CardSdkConfigRepository,
-    ): GetAccessCodeSavingStatusUseCase {
-        return GetAccessCodeSavingStatusUseCase(cardSdkConfigRepository = cardSdkConfigRepository)
-    }
-
-    @Provides
-    @ViewModelScoped
     fun provideWasWalletAlreadySignedHashesConfirmedUseCase(cardRepository: CardRepository): WasCardScannedUseCase {
         return WasCardScannedUseCase(cardRepository = cardRepository)
     }
