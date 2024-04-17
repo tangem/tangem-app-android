@@ -1,6 +1,7 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.card.EllipticCurve
 import com.tangem.data.tokens.utils.getNetwork
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -63,7 +64,7 @@ internal class DefaultNetworksCompatibilityRepository(
     @Throws(IllegalArgumentException::class)
     override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> {
         val scanResponse = getWalletOrThrow(userWalletId).scanResponse
-        return Blockchain.values()
+        return Blockchain.entries
             .filter { blockchain ->
                 scanResponse.card.supportedBlockchains(scanResponse.cardTypesResolver).contains(blockchain)
             }
