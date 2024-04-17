@@ -42,8 +42,8 @@ configurations.all {
 
 
 dependencies {
-    implementation(files("libs/walletconnect-1.5.6.aar"))
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.card)
@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.core.deepLinks)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
+    implementation(projects.libs.blockchainSdk)
 
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
@@ -87,7 +88,6 @@ dependencies {
     implementation(projects.data.card)
     implementation(projects.data.common)
     implementation(projects.data.settings)
-    implementation(projects.data.source.preferences)
     implementation(projects.data.tokens)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
@@ -216,9 +216,12 @@ dependencies {
     androidTestImplementation(deps.test.kaspresso.compose)
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
+    androidTestImplementation(deps.test.hilt)
+    kaptAndroidTest(deps.test.hilt.compiler)
 
     /** Chucker */
     debugImplementation(deps.chucker)
+    mockedImplementation(deps.chuckerStub)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
