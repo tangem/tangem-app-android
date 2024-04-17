@@ -15,14 +15,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.rows.SelectorRowItem
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.previewdata.FeeStatePreviewData
+import com.tangem.features.send.impl.presentation.utils.getCryptoReference
+import com.tangem.features.send.impl.presentation.utils.getFiatReference
 
 @Composable
 internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick: () -> Unit) {
@@ -34,16 +34,6 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick
         FeeType.Fast -> R.string.common_fee_selector_option_fast to R.drawable.ic_hare_24
         FeeType.Custom -> R.string.common_fee_selector_option_custom to R.drawable.ic_edit_24
     }
-    val feeCryptoValue = BigDecimalFormatter.formatCryptoAmount(
-        cryptoAmount = fee.amount.value,
-        cryptoCurrency = fee.amount.currencySymbol,
-        decimals = fee.amount.decimals,
-    )
-    val feeFiatValue = BigDecimalFormatter.formatFiatAmount(
-        fiatAmount = feeState.rate?.let { fee.amount.value?.multiply(it) },
-        fiatCurrencyCode = feeState.appCurrency.code,
-        fiatCurrencySymbol = feeState.appCurrency.symbol,
-    )
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,8 +50,8 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick
         SelectorRowItem(
             titleRes = title,
             iconRes = icon,
-            preDot = stringReference(feeCryptoValue),
-            postDot = stringReference(feeFiatValue),
+            preDot = getCryptoReference(fee.amount, feeState.isFeeApproximate),
+            postDot = getFiatReference(fee.amount, feeState.rate, feeState.appCurrency),
             ellipsizeOffset = fee.amount.currencySymbol.length,
             isSelected = true,
             showDivider = false,

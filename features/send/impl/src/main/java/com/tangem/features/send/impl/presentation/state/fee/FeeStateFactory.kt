@@ -21,7 +21,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal class FeeStateFactory(
     private val clickIntents: SendClickIntents,
     private val currentStateProvider: Provider<SendUiState>,
-    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
 ) {
@@ -56,18 +56,26 @@ internal class FeeStateFactory(
     fun onFeeOnLoadedState(fees: TransactionFee): SendUiState {
         val state = currentStateProvider()
         val feeState = state.feeState ?: return state
-        val feeSelectorState = (feeState.feeSelectorState as? FeeSelectorState.Content)?.copy(
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content
+
+        val isCustomWasSelected = if (feeState.isCustomSelected) {
+            feeSelectorState?.customValues ?: persistentListOf()
+        } else {
+            customFeeFieldConverter.convert(fees.normal)
+        }
+        val updatedFeeSelectorState = feeSelectorState?.copy(
             fees = fees,
+            customValues = isCustomWasSelected,
         ) ?: FeeSelectorState.Content(
             fees = fees,
             customValues = customFeeFieldConverter.convert(fees.normal),
         )
 
-        val fee = feeConverter.convert(feeSelectorState)
+        val fee = feeConverter.convert(updatedFeeSelectorState)
         return state.copy(
             amountState = state.amountState?.copy(isFeeLoading = false),
             feeState = feeState.copy(
-                feeSelectorState = feeSelectorState,
+                feeSelectorState = updatedFeeSelectorState,
                 fee = fee,
                 isFeeApproximate = isFeeApproximate(fee),
             ),
@@ -91,9 +99,11 @@ internal class FeeStateFactory(
 
         val updatedFeeSelectorState = feeSelectorState.copy(selectedFee = feeType)
         val fee = feeConverter.convert(updatedFeeSelectorState)
+        val isCustomFeeWasSelected = feeState.isCustomSelected || updatedFeeSelectorState.selectedFee == FeeType.Custom
         return state.copy(
             feeState = feeState.copy(
                 fee = fee,
+                isCustomSelected = isCustomFeeWasSelected,
                 feeSelectorState = updatedFeeSelectorState,
             ),
         )
@@ -143,7 +153,7 @@ internal class FeeStateFactory(
     }
 
     private fun isFeeApproximate(fee: Fee): Boolean {
-        val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider()
+        val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider() ?: return false
         return isFeeApproximateUseCase(
             networkId = cryptoCurrencyStatus.currency.network.id,
             amountType = fee.amount.type,

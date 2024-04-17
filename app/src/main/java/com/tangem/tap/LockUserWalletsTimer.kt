@@ -8,6 +8,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchWithMain
 import kotlinx.coroutines.*
 import timber.log.Timber
 import kotlin.time.Duration
@@ -125,7 +126,7 @@ internal class LockUserWalletsTimer(
                 if (wasApplicationStopped) {
                     settingsRepository.setShouldOpenWelcomeScreenOnResume(value = true)
                 } else {
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
+                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                 }
             }
         }

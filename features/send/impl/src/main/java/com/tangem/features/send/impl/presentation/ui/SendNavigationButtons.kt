@@ -140,7 +140,7 @@ private fun SendingText(uiState: SendUiState, isVisible: Boolean, modifier: Modi
         val feeState = uiState.feeState
         val fiatRate = feeState?.rate
         val fiatAmount = amountState?.amountTextField?.fiatAmount
-        val feeFiat = feeState?.fee?.amount?.value?.multiply(fiatRate)
+        val feeFiat = fiatRate?.let { feeState.fee?.amount?.value?.multiply(it) }
         val sendingFiat = feeFiat?.let { fiatAmount?.value?.plus(it) }
 
         if (feeFiat != null && sendingFiat != null) {
@@ -185,7 +185,7 @@ private fun SendDoneButtons(
         exit = slideOutVertically().plus(fadeOut()),
         label = "Animate show sent state buttons",
     ) {
-        Row(modifier = Modifier.padding(TangemTheme.dimens.spacing12)) {
+        Row(modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12)) {
             SecondaryButtonIconStart(
                 text = stringResource(id = R.string.common_explore),
                 iconResId = R.drawable.ic_web_24,

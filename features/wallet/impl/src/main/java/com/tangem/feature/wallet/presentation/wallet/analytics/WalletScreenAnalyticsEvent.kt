@@ -25,7 +25,7 @@ sealed class WalletScreenAnalyticsEvent {
 
         data object WalletOpened : Basic(event = "Wallet Opened")
 
-        class CardWasScanned(source: AnalyticsParam.ScannedFrom) : Basic(
+        class CardWasScanned(source: AnalyticsParam.ScreensSources) : Basic(
             event = "Card Was Scanned",
             params = mapOf(
                 AnalyticsParam.SOURCE to source.value,
@@ -44,6 +44,26 @@ sealed class WalletScreenAnalyticsEvent {
             params = mapOf(
                 AnalyticsParam.STATE to balance.value,
                 AnalyticsParam.TOKEN to token,
+            ),
+        )
+    }
+
+    sealed class Token(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : AnalyticsEvent(category = "Token", event = event, params = params) {
+
+        class PolkadotAccountReset(hasReset: Boolean) : Token(
+            event = "Polkadot Account Reset",
+            params = mapOf(
+                AnalyticsParam.STATE to if (hasReset) "Yes" else "No",
+            ),
+        )
+
+        class PolkadotImmortalTransactions(hasImmortalTransaction: Boolean) : Token(
+            event = "Polkadot Immortal Transactions",
+            params = mapOf(
+                AnalyticsParam.STATE to if (hasImmortalTransaction) "Yes" else "No",
             ),
         )
     }

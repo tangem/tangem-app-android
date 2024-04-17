@@ -2,8 +2,8 @@ package com.tangem.features.send.impl.presentation.ui.recipient
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -25,6 +26,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.SendStates
+import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -33,7 +35,11 @@ private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
 private const val MEMO_FIELD_KEY = "MEMO_FIELD_KEY"
 
 @Composable
-internal fun SendRecipientContent(uiState: SendStates.RecipientState?, clickIntents: SendClickIntents) {
+internal fun SendRecipientContent(
+    uiState: SendStates.RecipientState?,
+    clickIntents: SendClickIntents,
+    isBalanceHidden: Boolean,
+) {
     if (uiState == null) return
     val recipients = uiState.recent
     val wallets = uiState.wallets
@@ -45,75 +51,101 @@ internal fun SendRecipientContent(uiState: SendStates.RecipientState?, clickInte
         modifier = Modifier
             .fillMaxSize()
             .background(TangemTheme.colors.background.tertiary)
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
+            ),
     ) {
-        item(key = ADDRESS_FIELD_KEY) {
-            FooterContainer(
-                footer = stringResource(R.string.send_recipient_address_footer, uiState.network),
-            ) {
-                InputRowRecipient(
-                    value = address.value,
-                    title = address.label,
-                    placeholder = address.placeholder,
-                    onValueChange = address.onValueChange,
-                    onPasteClick = { clickIntents.onRecipientAddressValueChange(it, EnterAddressSource.PasteButton) },
-                    isError = isError,
-                    isLoading = isValidating,
-                    error = address.error,
-                    modifier = Modifier
-                        .background(
-                            color = TangemTheme.colors.background.action,
-                            shape = TangemTheme.shapes.roundedCornersXMedium,
-                        ),
-                )
-            }
-        }
-        if (memoField != null) {
-            item(key = MEMO_FIELD_KEY) {
-                val placeholder = if (memoField.isEnabled) memoField.placeholder else memoField.disabledText
-                TextFieldWithPaste(
-                    value = memoField.value,
-                    label = memoField.label,
-                    placeholder = placeholder,
-                    footer = stringResource(R.string.send_recipient_memo_footer),
-                    onValueChange = memoField.onValueChange,
-                    onPasteClick = clickIntents::onRecipientMemoValueChange,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
-                    isError = memoField.isError,
-                    error = memoField.error,
-                    isReadOnly = !memoField.isEnabled,
-                )
-            }
-        }
+        addressItem(
+            address = address,
+            network = uiState.network,
+            isError = isError,
+            isValidating = isValidating,
+            onAddressChange = clickIntents::onRecipientAddressValueChange,
+        )
+        memoField(
+            memoField = memoField,
+            onMemoChange = clickIntents::onRecipientMemoValueChange,
+        )
         listHeaderItem(
             titleRes = R.string.send_recipient_wallets_title,
             isVisible = wallets.isNotEmpty() && wallets.first().isVisible,
             isFirst = true,
         )
-        listItem(wallets, clickIntents, isLast = recipients.isEmpty())
+        listItem(
+            list = wallets,
+            clickIntents = clickIntents,
+            isLast = recipients.any { !it.isVisible },
+            isBalanceHidden = isBalanceHidden,
+        )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
             isVisible = recipients.isNotEmpty() && recipients.first().isVisible,
-            isFirst = wallets.isEmpty(),
+            isFirst = wallets.any { !it.isVisible },
         )
-        listItem(recipients, clickIntents, isLast = true)
+        listItem(
+            list = recipients,
+            clickIntents = clickIntents,
+            isLast = true,
+            isBalanceHidden = isBalanceHidden,
+        )
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Boolean, isFirst: Boolean) {
-    item(
-        key = titleRes,
-    ) {
-        AnimatedVisibility(
-            visible = isVisible,
-            label = "Header Appearance Animation",
-            enter = slideInVertically() + fadeIn(),
-            exit = slideOutVertically() + fadeOut(),
-            modifier = Modifier
-                .animateItemPlacement()
-                .animateContentSize(),
+private fun LazyListScope.addressItem(
+    address: SendTextField.RecipientAddress,
+    network: String,
+    isError: Boolean,
+    isValidating: Boolean,
+    onAddressChange: (String, EnterAddressSource?) -> Unit,
+) {
+    item(key = ADDRESS_FIELD_KEY) {
+        FooterContainer(
+            footer = stringResource(R.string.send_recipient_address_footer, network),
         ) {
+            InputRowRecipient(
+                value = address.value,
+                title = address.label,
+                placeholder = address.placeholder,
+                onValueChange = address.onValueChange,
+                onPasteClick = { onAddressChange(it, EnterAddressSource.PasteButton) },
+                isError = isError,
+                isLoading = isValidating,
+                error = address.error,
+                modifier = Modifier
+                    .background(
+                        color = TangemTheme.colors.background.action,
+                        shape = TangemTheme.shapes.roundedCornersXMedium,
+                    ),
+            )
+        }
+    }
+}
+
+private fun LazyListScope.memoField(memoField: SendTextField.RecipientMemo?, onMemoChange: (String) -> Unit) {
+    if (memoField != null) {
+        item(key = MEMO_FIELD_KEY) {
+            val placeholder = if (memoField.isEnabled) memoField.placeholder else memoField.disabledText
+            TextFieldWithPaste(
+                value = memoField.value,
+                label = memoField.label,
+                placeholder = placeholder,
+                footer = stringResource(R.string.send_recipient_memo_footer),
+                onValueChange = memoField.onValueChange,
+                onPasteClick = onMemoChange,
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
+                isError = memoField.isError,
+                error = memoField.error,
+                isReadOnly = !memoField.isEnabled,
+            )
+        }
+    }
+}
+
+private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Boolean, isFirst: Boolean) {
+    item(key = titleRes) {
+        AnimateRecentAppearance(isVisible) {
             val (topPadding, paddingFromTop) = if (isFirst) {
                 TangemTheme.dimens.spacing20 to TangemTheme.dimens.spacing12
             } else {
@@ -149,11 +181,11 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.listItem(
     list: ImmutableList<SendRecipientListContent>,
     clickIntents: SendClickIntents,
     isLast: Boolean,
+    isBalanceHidden: Boolean,
 ) {
     items(
         count = list.size,
@@ -162,27 +194,24 @@ private fun LazyListScope.listItem(
     ) { index ->
         val item = list[index]
         val title = item.title.resolveReference()
-        AnimatedVisibility(
-            visible = item.isVisible,
-            label = "Header Appearance Animation",
-            enter = slideInVertically() + fadeIn(),
-            exit = slideOutVertically() + fadeOut(),
-            modifier = Modifier
-                .animateItemPlacement()
-                .animateContentSize(),
-        ) {
+        AnimateRecentAppearance(item.isVisible) {
             ListItemWithIcon(
                 title = title,
-                subtitle = item.subtitle.resolveReference(),
+                subtitle = if (isBalanceHidden) STARS else item.subtitle.resolveReference(),
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,
-                onClick = { clickIntents.onRecipientAddressValueChange(title, EnterAddressSource.RecentAddress) },
+                onClick = {
+                    clickIntents.onRecipientAddressValueChange(
+                        title,
+                        EnterAddressSource.RecentAddress,
+                    )
+                },
+                isLoading = item.isLoading,
                 modifier = Modifier
                     .then(
                         if (isLast && index == list.lastIndex) {
                             Modifier
-                                .padding(bottom = TangemTheme.dimens.spacing72)
                                 .clip(
                                     shape = RoundedCornerShape(
                                         bottomStart = TangemTheme.dimens.radius16,
@@ -195,6 +224,24 @@ private fun LazyListScope.listItem(
                     )
                     .background(TangemTheme.colors.background.action),
             )
+        }
+    }
+}
+
+@Composable
+private fun AnimateRecentAppearance(isVisible: Boolean, content: @Composable () -> Unit) {
+    AnimatedContent(
+        targetState = isVisible,
+        label = "Item Appearance Animation",
+        transitionSpec = {
+            (slideInHorizontally() + fadeIn())
+                .togetherWith(slideOutVertically() + fadeOut())
+        },
+    ) {
+        if (it) {
+            content()
+        } else {
+            Box(modifier = Modifier.fillMaxWidth())
         }
     }
 }

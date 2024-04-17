@@ -305,7 +305,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Mantle, Blockchain.MantleTestnet -> "mantle"
         Blockchain.Flare, Blockchain.FlareTestnet -> "flare-networks"
         Blockchain.Taraxa, Blockchain.TaraxaTestnet -> "taraxa"
-        Blockchain.Base, Blockchain.BaseTestnet -> "base"
+        Blockchain.Base, Blockchain.BaseTestnet -> "base-ethereum"
         Blockchain.Koinos, Blockchain.KoinosTestnet -> "koinos"
     }
 }
@@ -333,7 +333,6 @@ private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
 
 private val excludedBlockchains = listOf(
     Blockchain.Unknown,
-    Blockchain.Playa3ull,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
     Blockchain.Radiant,

@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -20,6 +21,7 @@ import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.lib.crypto.BlockchainUtils.isDogecoin
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
@@ -29,11 +31,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
+import java.math.BigInteger
 
 @Suppress("LongParameterList")
 internal class SendNotificationFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feePaidCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val currencyChecksRepository: CurrencyChecksRepository,
@@ -51,18 +55,17 @@ internal class SendNotificationFactory(
             val feeState = state.feeState ?: return@map persistentListOf()
             val feeAmount = feeState.fee?.amount?.value ?: BigDecimal.ZERO
             val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
-            val sendAmount = if (sendState.isSubtract) amountValue.minus(feeAmount) else amountValue
             buildList {
                 // errors
-                addExceedBalanceNotification(feeAmount, sendAmount)
+                addExceedBalanceNotification(feeAmount, amountValue)
                 addExceedsBalanceNotification(feeState.fee)
-                addInvalidAmountNotification(sendState.isSubtract, sendAmount)
-                addMinimumAmountErrorNotification(feeAmount, sendAmount)
-                addDustWarningNotification(feeAmount, sendAmount)
-                addTransactionLimitErrorNotification(feeAmount, sendAmount)
+                addMinimumAmountErrorNotification(feeAmount, amountValue)
+                addDustWarningNotification(feeAmount, amountValue)
+                addTransactionLimitErrorNotification(feeAmount, amountValue)
                 // warnings
-                addExistentialWarningNotification(feeAmount, sendAmount)
-                addHighFeeWarningNotification(sendAmount, sendState.ignoreAmountReduce)
+                addExistentialWarningNotification(feeAmount, amountValue)
+                addHighFeeWarningNotification(feeAmount, amountValue, sendState.ignoreAmountReduce)
+                addTooHighNotification(feeState.feeSelectorState)
                 addTooLowNotification(feeState)
             }.toImmutableList()
         }
@@ -87,10 +90,11 @@ internal class SendNotificationFactory(
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val coinCryptoCurrencyStatus = coinCryptoCurrencyStatusProvider()
+        val feePaidCryptoCurrencyStatus = feePaidCryptoCurrencyStatusProvider()
         val cryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val coinCryptoAmount = coinCryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
 
-        val showNotification = if (cryptoCurrencyStatus.currency is CryptoCurrency.Token) {
+        val showNotification = if (cryptoCurrencyStatus.currency.id == feePaidCryptoCurrencyStatus?.currency?.id) {
             receivedAmount > cryptoAmount || feeAmount > coinCryptoAmount
         } else {
             receivedAmount + feeAmount > cryptoAmount
@@ -98,15 +102,6 @@ internal class SendNotificationFactory(
 
         if (showNotification) {
             add(SendNotification.Error.TotalExceedsBalance)
-        }
-    }
-
-    private fun MutableList<SendNotification>.addInvalidAmountNotification(
-        isSubtractAmount: Boolean,
-        receivedAmount: BigDecimal,
-    ) {
-        if (isSubtractAmount && receivedAmount <= BigDecimal.ZERO) {
-            add(SendNotification.Error.InvalidAmount)
         }
     }
 
@@ -118,20 +113,12 @@ internal class SendNotificationFactory(
 
         val totalAmount = feeAmount + receivedAmount
         val balance = coinCryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-// [REDACTED_TODO_COMMENT]
-        when (coinCryptoCurrencyStatus.currency.network.id.value) {
-            Blockchain.Cardano.id -> {
-                if (receivedAmount > BigDecimal.ONE || balance - totalAmount < BigDecimal.ONE) {
-                    add(SendNotification.Error.MinimumAmountError(CARDANO_MINIMUM))
-                }
+
+        if (isDogecoin(coinCryptoCurrencyStatus.currency.network.id.value)) {
+            val minimum = BigDecimal(DOGECOIN_MINIMUM)
+            if (receivedAmount < minimum || balance - totalAmount < minimum) {
+                add(SendNotification.Error.MinimumAmountError(DOGECOIN_MINIMUM))
             }
-            Blockchain.Dogecoin.id -> {
-                val minimum = BigDecimal(DOGECOIN_MINIMUM)
-                if (receivedAmount > minimum || balance - totalAmount < minimum) {
-                    add(SendNotification.Error.MinimumAmountError(DOGECOIN_MINIMUM))
-                }
-            }
-            else -> Unit
         }
     }
 // [REDACTED_TODO_COMMENT]
@@ -179,9 +166,8 @@ internal class SendNotificationFactory(
                         cryptoCurrency = cryptoCurrency,
                     ),
                     onConfirmClick = {
-                        val reduceTo = utxoLimit.maxAmount.toPlainString()
                         clickIntents.onAmountReduceClick(
-                            reduceTo,
+                            utxoLimit.maxAmount,
                             SendNotification.Error.TransactionLimitError::class.java,
                         )
                     },
@@ -195,7 +181,9 @@ internal class SendNotificationFactory(
         receivedAmount: BigDecimal,
     ) {
         val userWalletId = userWalletProvider().walletId
-        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val balance = cryptoCurrencyStatus.value.amount ?: return
         val spendingAmount = if (cryptoCurrency is CryptoCurrency.Token) {
             feeAmount
         } else {
@@ -205,7 +193,8 @@ internal class SendNotificationFactory(
             userWalletId,
             cryptoCurrency.network,
         )
-        if (currencyDeposit != null && currencyDeposit > spendingAmount) {
+        val diff = balance.minus(spendingAmount)
+        if (currencyDeposit != null && currencyDeposit > diff) {
             add(
                 SendNotification.Error.ExistentialDeposit(
                     BigDecimalFormatter.formatCryptoAmount(
@@ -218,18 +207,21 @@ internal class SendNotificationFactory(
     }
 
     private fun MutableList<SendNotification>.addHighFeeWarningNotification(
+        feeAmount: BigDecimal,
         sendAmount: BigDecimal,
         ignoreAmountReduce: Boolean,
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val isTezos = cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
-        if (!ignoreAmountReduce && sendAmount == balance && isTezos) {
+        val threshold = Blockchain.Tezos.minimalAmount()
+        val isTotalBalance = feeAmount.plus(sendAmount) >= balance && balance > threshold
+        if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
                 SendNotification.Warning.HighFeeError(
-                    amount = TEZOS_FEE_THRESHOLD.toPlainString(),
+                    amount = threshold.toPlainString(),
                     onConfirmClick = {
-                        val reduceTo = sendAmount.minus(TEZOS_FEE_THRESHOLD).toPlainString()
+                        val reduceTo = sendAmount.minus(threshold)
                         clickIntents.onAmountReduceClick(reduceTo, SendNotification.Warning.HighFeeError::class.java)
                     },
                     onCloseClick = {
@@ -276,6 +268,18 @@ internal class SendNotificationFactory(
                     cryptoCurrencyStatusProvider().currency.symbol,
                 ),
             )
+        }
+    }
+
+    private fun MutableList<SendNotification>.addTooHighNotification(feeSelectorState: FeeSelectorState) {
+        if (feeSelectorState !is FeeSelectorState.Content) return
+        val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return
+        val highValue = multipleFees.priority.amount.value ?: return
+        val customAmount = feeSelectorState.customValues.firstOrNull() ?: return
+        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
+        val diff = (customValue / highValue).toBigInteger()
+        if (feeSelectorState.selectedFee == FeeType.Custom && diff > FEE_MAX_DIFF) {
+            add(SendNotification.Warning.TooHigh(diff.toString()))
         }
     }
 
@@ -357,8 +361,7 @@ internal class SendNotificationFactory(
     }
 
     companion object {
-        private const val CARDANO_MINIMUM = "1"
         private const val DOGECOIN_MINIMUM = "0.01"
-        private val TEZOS_FEE_THRESHOLD = BigDecimal("0.01")
+        internal val FEE_MAX_DIFF = BigInteger("5")
     }
 }
