@@ -105,13 +105,22 @@ private const val SEPARATOR = " %image% "
 
 @Composable
 private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): ExtractedTokenNetworkText {
-    val splitString = stringResource(
-        id = R.string.token_details_token_type_subtitle,
-        formatArgs = arrayOf(
-            tokenCurrency.standardName,
-            tokenCurrency.networkName,
-        ),
-    ).split(SEPARATOR)
+    val splitString = if (tokenCurrency.standardName != null) {
+        stringResource(
+            id = R.string.token_details_token_type_subtitle,
+            formatArgs = arrayOf(
+                tokenCurrency.standardName,
+                tokenCurrency.networkName,
+            ),
+        ).split(SEPARATOR)
+    } else {
+        stringResource(
+            id = R.string.token_details_token_type_subtitle_no_standard,
+            formatArgs = arrayOf(
+                tokenCurrency.networkName,
+            ),
+        ).split(SEPARATOR)
+    }
 
     return remember(splitString) {
         ExtractedTokenNetworkText(
@@ -153,5 +162,6 @@ private class TokenInfoStateProvider : CollectionPreviewParameterProvider<TokenI
         TokenDetailsPreviewData.tokenInfoBlockState,
         TokenDetailsPreviewData.tokenInfoBlockStateWithLongName,
         TokenDetailsPreviewData.tokenInfoBlockStateWithLongNameInMainCurrency,
+        TokenDetailsPreviewData.tokenInfoBlockStateWithLongNameNoStandard,
     ),
 )
