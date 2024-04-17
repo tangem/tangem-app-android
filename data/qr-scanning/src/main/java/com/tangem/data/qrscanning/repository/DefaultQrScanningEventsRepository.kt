@@ -1,6 +1,7 @@
 package com.tangem.data.qrscanning.repository
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.qrscanning.models.QrResult
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
@@ -44,7 +45,7 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
                 when (it.key) {
                     Parameter.Amount -> {
                         // According to BIP-0021, the value is specified in decimals. No conversion needed
-                        result.amount = it.value.toBigDecimalOrNull()
+                        result.amount = it.value.parseBigDecimalOrNull()
                     }
                     Parameter.Message,
                     Parameter.Memo,
@@ -52,16 +53,17 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
                         result.memo = URLDecoder.decode(it.value, "UTF-8")
                     }
                     Parameter.Address -> {
+                        // If 'address' parameter is exists, then currency must be TOKEN.
+                        val tokenCurrency = cryptoCurrency as? CryptoCurrency.Token ?: return QrResult()
+
                         // Overrides destination address for token transfers (ERC-681)
-                        if (cryptoCurrency is CryptoCurrency.Token) {
-                            // `address` parameter is used only if the contract address, encoded in the QR,
-                            // matches the contract address of the token.
-                            // Otherwise, the scanned string is likely malformed, and we stop the entire parsing routine
-                            if (cryptoCurrency.contractAddress.equals(address, ignoreCase = true)) {
-                                result.address = it.value
-                            } else {
-                                return QrResult()
-                            }
+                        // `address` parameter is used only if the contract address, encoded in the QR,
+                        // matches the contract address of the token.
+                        // Otherwise, the scanned string is likely malformed, and we stop the entire parsing routin
+                        if (tokenCurrency.contractAddress.equals(address, ignoreCase = true)) {
+                            result.address = it.value
+                        } else {
+                            return QrResult()
                         }
                     }
                     Parameter.Value,
@@ -69,7 +71,7 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
                     -> {
                         // Extra convert parses scientific notation to decimal
                         // This is necessary to be able comparing BigDecimal values
-                        result.amount = it.value.toBigDecimalOrNull()
+                        result.amount = it.value.parseBigDecimalOrNull()
                             ?.toPlainString()?.toBigDecimalOrNull()
                             ?.divide(BigDecimal.TEN.pow(cryptoCurrency.decimals))
                     }
