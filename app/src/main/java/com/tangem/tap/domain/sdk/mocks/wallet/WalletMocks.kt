@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.sdk.mocks.wallet
 
+import com.tangem.common.SuccessResponse
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.EncryptionMode
@@ -154,4 +155,21 @@ object WalletMocks : Mocks {
                     ),
         ),
     )
+
+    override val extendedPublicKey = ExtendedPublicKey(
+        publicKey = byteArrayOf(
+            3, 2, 95, 53, 40, -87, -60, 11, -8, -47, 41, 37, 100, 15, -69, 1, -122, 127, -20,
+            -81, -32, -20, -24, 5, -28, 113, 106, -90, -59, -30, -27, -110, -110,
+        ),
+        chainCode = byteArrayOf(
+            -95, -87, -95, -25, 27, 96, -57, -92, -69, -106, -45, 10, 85, 4, -92, -68, 49, -24,
+            -28, -50, -49, -77, -20, 118, -50, -27, 104, -93, 115, -50, -46, -34,
+        ),
+        depth = 0,
+        parentFingerprint = byteArrayOf(0, 0, 0, 0),
+        childNumber = 0,
+    )
+
+    override val successResponse = SuccessResponse(cardId = "AC05000000086747")
+
 }

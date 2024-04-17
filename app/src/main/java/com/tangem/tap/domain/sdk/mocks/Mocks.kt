@@ -1,14 +1,20 @@
 package com.tangem.tap.domain.sdk.mocks
 
+import com.tangem.common.SuccessResponse
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 
 interface Mocks {
 
+    val successResponse: SuccessResponse
+
     val scanResponse: ScanResponse
 
     val derivationTaskResponse: DerivationTaskResponse
 
     val cardDto: CardDTO
+
+    val extendedPublicKey: ExtendedPublicKey
 }

@@ -6,13 +6,21 @@ import com.tangem.tap.domain.sdk.mocks.wallet2.Wallet2Mocks
 
 object MockProvider {
 
-    var productType: ProductType = ProductType.Wallet
+    private var mocks: Mocks = getMocks(ProductType.Wallet)
 
-    fun getScanResponse() = getMocks(productType).scanResponse
+    fun setMocks(productType: ProductType) {
+        mocks = getMocks(productType)
+    }
 
-    fun getDerivationTaskResponse() = getMocks(productType).derivationTaskResponse
+    fun getSuccessResponse() = mocks.successResponse
 
-    fun getCardDto() = getMocks(productType).cardDto
+    fun getScanResponse() = mocks.scanResponse
+
+    fun getDerivationTaskResponse() = mocks.derivationTaskResponse
+
+    fun getCardDto() = mocks.cardDto
+
+    fun getExtendedPublicKey() = mocks.extendedPublicKey
 
     private fun getMocks(productType: ProductType): Mocks {
         return when (productType) {

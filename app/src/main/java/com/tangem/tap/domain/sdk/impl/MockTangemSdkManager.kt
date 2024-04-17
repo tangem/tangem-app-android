@@ -6,11 +6,9 @@ import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.common.*
 import com.tangem.common.authentication.keystore.DummyKeystoreManager
-import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.InMemoryStorage
-import com.tangem.common.services.secure.SecureStorage
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -76,14 +74,14 @@ class MockTangemSdkManager(
         walletPublicKey: ByteArray,
         derivation: DerivationPath,
     ): CompletionResult<ExtendedPublicKey> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getExtendedPublicKey())
     }
 
     override suspend fun resetToFactorySettings(
         cardId: String,
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getCardDto())
     }
 
     override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
@@ -99,22 +97,22 @@ class MockTangemSdkManager(
     }
 
     override suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getSuccessResponse())
     }
 
     override suspend fun setAccessCode(cardId: String?): CompletionResult<SuccessResponse> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getSuccessResponse())
     }
 
     override suspend fun setLongTap(cardId: String?): CompletionResult<SuccessResponse> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getSuccessResponse())
     }
 
     override suspend fun setAccessCodeRecoveryEnabled(
         cardId: String?,
         enabled: Boolean,
     ): CompletionResult<SuccessResponse> {
-        TODO()
+        return CompletionResult.Success(MockProvider.getSuccessResponse())
     }
 
     override suspend fun scanCard(
