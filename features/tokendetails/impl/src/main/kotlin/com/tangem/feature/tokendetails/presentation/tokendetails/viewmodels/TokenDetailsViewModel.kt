@@ -10,7 +10,6 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
-import com.tangem.core.deeplink.global.SellCurrencyDeepLink
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.resourceReference
@@ -165,7 +164,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             viewModel = this,
             deepLinks = listOf(
                 BuyCurrencyDeepLink(::onBuyCurrencyDeepLink),
-                SellCurrencyDeepLink(::onSellCurrencyDeepLink),
             ),
         )
     }
@@ -173,20 +171,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun onBuyCurrencyDeepLink() {
         val currency = cryptoCurrencyStatus?.currency ?: return
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
-    }
-
-    private fun onSellCurrencyDeepLink(data: SellCurrencyDeepLink.Data) {
-        sendCurrency(
-            status = cryptoCurrencyStatus ?: return,
-            transactionInfo = data.let {
-                TransactionInfo(
-                    transactionId = it.transactionId,
-                    destinationAddress = it.depositWalletAddress,
-                    amount = it.baseCurrencyAmount,
-                    tag = it.depositWalletAddressTag,
-                )
-            },
-        )
     }
 
     override fun onCreate(owner: LifecycleOwner) {
