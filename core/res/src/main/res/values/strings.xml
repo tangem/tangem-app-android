@@ -534,9 +534,9 @@
   <string name="toast_balances_hidden">Balances hidden</string>
   <string name="toast_balances_shown">Balances shown</string>
   <string name="toast_undo">Undo</string>
+  <string name="token_button_unavailability_generic_description">This operation is currently unavailable. Please try again later.</string>
   <string name="token_button_unavailability_reason_buy_unavailable">The purchase of the %s is currently unavailable. But we are working on adding it.</string>
   <string name="token_button_unavailability_reason_empty_balance">You do not have funds to send. Top up your account to be able to send funds from it.</string>
-  <string name="token_button_unavailability_reason_no_quotes">This operation is currently unavailable. Please try again later.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">%s swap is not available. But we are working on adding it.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Sell of the %s coin is currently unavailable. But we are working on adding it.</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
@@ -545,6 +545,7 @@
   <string name="token_details_hide_alert_title">Hide %s</string>
   <string name="token_details_hide_token">Hide token</string>
   <string name="token_details_token_type_subtitle">%1$s token in %%image%% %2$s network</string>
+  <string name="token_details_token_type_subtitle_no_standard">Token in %%image%% %1$s network</string>
   <string name="token_details_unable_hide_alert_message">The %1$s token is the main currency on the %2$s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
   <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
