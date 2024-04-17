@@ -7,7 +7,7 @@ sealed class Basic(
 ) : AnalyticsEvent("Basic", event, params, error) {
 
     class CardWasScanned(
-        source: AnalyticsParam.ScannedFrom,
+        source: AnalyticsParam.ScreensSources,
     ) : Basic(
         event = "Card Was Scanned",
         params = mapOf(
@@ -76,5 +76,10 @@ sealed class Basic(
 
     class WalletOpened : Basic(event = "Wallet Opened")
 
-    class ButtonSupport : Basic("Request Support")
+    class ButtonSupport(source: AnalyticsParam.ScreensSources) : Basic(
+        event = "Request Support",
+        params = mapOf(
+            AnalyticsParam.SOURCE to source.value,
+        ),
+    )
 }
