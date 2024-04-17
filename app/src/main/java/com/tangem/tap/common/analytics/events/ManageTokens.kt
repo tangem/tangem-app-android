@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.extensions.filterNotNull
 
