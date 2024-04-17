@@ -23,7 +23,7 @@ import java.math.BigDecimal
 internal data class SendUiState(
     val clickIntents: SendClickIntents,
     val isEditingDisabled: Boolean,
-    val cryptoCurrencySymbol: String,
+    val cryptoCurrencyName: String,
     val amountState: SendStates.AmountState? = null,
     val recipientState: SendStates.RecipientState? = null,
     val feeState: SendStates.FeeState? = null,
@@ -52,6 +52,7 @@ internal sealed class SendStates {
         val notifications: ImmutableList<SendNotification>,
         val appCurrencyCode: String,
         val isFeeLoading: Boolean,
+        val subtractedFee: BigDecimal?,
     ) : SendStates()
 
     /** Recipient state */
@@ -77,6 +78,7 @@ internal sealed class SendStates {
         val rate: BigDecimal?,
         val appCurrency: AppCurrency,
         val isFeeApproximate: Boolean,
+        val isCustomSelected: Boolean,
         val notifications: ImmutableList<SendNotification>,
     ) : SendStates()
 
