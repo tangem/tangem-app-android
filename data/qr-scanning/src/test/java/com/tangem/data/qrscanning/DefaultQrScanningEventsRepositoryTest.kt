@@ -232,10 +232,20 @@ internal class DefaultQrScanningEventsRepositoryTest {
             QrResult(address = address2, amount = BigDecimal("2300")),
             tokenCryptoCurrency,
         )
+        positiveCase(
+            "$address4?$addressParam=$addressParamValue",
+            QrResult(address = addressParamValue),
+            tokenCryptoCurrency,
+        )
         negativeCase(
             "$address2?$someParam=$someParamValue&$amountParam=$amountParamValue",
             QrResult(address = address2, amount = BigDecimal("123.123"), memo = memoParamValueUtf8),
             tokenCryptoCurrency,
+        )
+        negativeCase(
+            "$address4?$addressParam=$addressParamValue",
+            QrResult(address = addressParamValue),
+            cryptoCurrency,
         )
     }
 
