@@ -9,7 +9,7 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.repositories.SwapPromoRepository
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
 import dagger.Provides
@@ -139,5 +139,21 @@ internal object SettingsDomainModule {
     @ViewModelScoped
     fun provideNeverShowTapHelpUseCase(settingsRepository: SettingsRepository): NeverShowTapHelpUseCase {
         return NeverShowTapHelpUseCase(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideSetSaveWalletScreenShownUseCase(
+        settingsRepository: SettingsRepository,
+    ): SetSaveWalletScreenShownUseCase {
+        return SetSaveWalletScreenShownUseCase(settingsRepository = settingsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideIncrementAppLaunchCounterUseCase(
+        settingsRepository: SettingsRepository,
+    ): IncrementAppLaunchCounterUseCase {
+        return IncrementAppLaunchCounterUseCase(settingsRepository = settingsRepository)
     }
 }
