@@ -6,6 +6,7 @@ import com.tangem.domain.core.utils.toLce
 import com.tangem.domain.tokens.GetCardTokensListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
@@ -22,6 +23,7 @@ internal class SingleWalletWithTokenListSubscriber(
     tokenListAnalyticsSender: TokenListAnalyticsSender,
     walletWithFundsChecker: WalletWithFundsChecker,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
 ) : BasicTokenListSubscriber(
     userWallet = userWallet,
     stateHolder = stateHolder,
@@ -29,6 +31,7 @@ internal class SingleWalletWithTokenListSubscriber(
     tokenListAnalyticsSender = tokenListAnalyticsSender,
     walletWithFundsChecker = walletWithFundsChecker,
     getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+    runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
 ) {
 
     override fun tokenListFlow(): LceFlow<TokenListError, TokenList> = getCardTokensListUseCase(userWallet.walletId)

@@ -15,14 +15,16 @@ internal class SendAmountSubtractConverter(
         val state = currentStateProvider()
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val amountState = state.amountState ?: return state
-        val feeValue = state.feeState?.fee?.amount?.value ?: return state
+        val feeState = state.feeState ?: return state
+        val feeValue = feeState.fee?.amount?.value ?: return state
         val amountTextField = amountState.amountTextField
         val amountValue = amountTextField.cryptoAmount.value ?: return state
         val fiatRate = cryptoCurrencyStatus.value.fiatRate
         val cryptoDecimals = amountTextField.cryptoAmount.decimals
         val fiatDecimals = amountTextField.fiatAmount.decimals
 
-        val decimalCryptoValue = amountValue.minus(feeValue)
+        val feeDiff = amountState.subtractedFee?.let { feeValue.minus(it) } ?: feeValue
+        val decimalCryptoValue = amountValue.minus(feeDiff)
 
         if (decimalCryptoValue < BigDecimal.ZERO) return state
 
@@ -33,6 +35,7 @@ internal class SendAmountSubtractConverter(
         return state.copy(
             sendState = state.sendState?.copy(isSubtract = true),
             amountState = amountState.copy(
+                subtractedFee = feeValue,
                 amountTextField = amountTextField.copy(
                     value = cryptoValue,
                     fiatValue = fiatValue,
