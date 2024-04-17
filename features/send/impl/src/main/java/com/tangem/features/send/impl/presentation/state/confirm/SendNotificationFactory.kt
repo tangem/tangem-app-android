@@ -3,12 +3,12 @@ package com.tangem.features.send.impl.presentation.state.confirm
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
