@@ -6,7 +6,9 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.getOrElse
+import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -33,6 +35,7 @@ internal abstract class BasicTokenListSubscriber(
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
 ) : WalletSubscriber() {
 
     private val sendAnalyticsJobHolder = JobHolder()
@@ -53,6 +56,8 @@ internal abstract class BasicTokenListSubscriber(
                     coroutineScope.launch {
                         onTokenListReceived(maybeTokenList)
                     }.saveIn(onTokenListReceivedJobHolder)
+
+                    coroutineScope.launch { startCheck(maybeTokenList) }
                 },
             flow2 = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
             transform = { maybeTokenList, maybeAppCurrency ->
@@ -76,6 +81,21 @@ internal abstract class BasicTokenListSubscriber(
                 walletWithFundsChecker.check(tokenList)
             },
         )
+    }
+
+    private suspend fun startCheck(maybeTokenList: Lce<TokenListError, TokenList>) {
+        // Run Polkadot account health check
+        maybeTokenList.getOrNull()?.let { tokenList ->
+            val cryptoCurrencies = when (tokenList) {
+                is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies)
+                is TokenList.Ungrouped -> tokenList.currencies
+                is TokenList.Empty -> emptyList()
+            }
+
+            cryptoCurrencies.forEach {
+                runPolkadotAccountHealthCheckUseCase(userWallet.walletId, it.currency.network)
+            }
+        }
     }
 
     protected open suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
