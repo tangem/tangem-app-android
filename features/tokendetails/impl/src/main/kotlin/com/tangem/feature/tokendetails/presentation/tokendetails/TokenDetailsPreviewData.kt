@@ -57,6 +57,21 @@ internal object TokenDetailsPreviewData {
         ),
     )
 
+    val tokenInfoBlockStateWithLongNameNoStandard = TokenInfoBlockState(
+        name = "Tether (USDT) with long name test",
+        iconState = TokenInfoBlockState.IconState.TokenIcon(
+            url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
+            fallbackTint = Color.Cyan,
+            fallbackBackground = Color.Blue,
+            isGrayscale = false,
+        ),
+        currency = TokenInfoBlockState.Currency.Token(
+            standardName = null,
+            networkIcon = R.drawable.img_shibarium_22,
+            networkName = "Shibarium",
+        ),
+    )
+
     val tokenInfoBlockState = TokenInfoBlockState(
         name = "Tether USDT",
         iconState = TokenInfoBlockState.IconState.CustomTokenIcon(
