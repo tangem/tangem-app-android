@@ -184,8 +184,9 @@ sealed class CryptoCurrency : Parcelable {
         }
 
         private companion object {
+            // should use delimiters that could be used in URL not like path or query delimiters
             const val PREFIX_DELIMITER = '_'
-            const val SUFFIX_DELIMITER = '#'
+            const val SUFFIX_DELIMITER = ';'
             const val DERIVATION_PATH_DELIMITER = 'd'
         }
     }
