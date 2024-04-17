@@ -72,6 +72,7 @@ include(":core:ui")
 include(":core:utils")
 include(":core:deep-links")
 include(":core:deep-links:global")
+include(":core:decompose")
 // endregion Core modules
 
 // region Libs modules
