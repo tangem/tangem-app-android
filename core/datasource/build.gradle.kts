@@ -39,6 +39,7 @@ dependencies {
     /** Network */
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
+    implementation(deps.moshi.adapters)
     implementation(deps.okHttp)
     implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
@@ -53,6 +54,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
+    mockedImplementation(deps.chuckerStub)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
