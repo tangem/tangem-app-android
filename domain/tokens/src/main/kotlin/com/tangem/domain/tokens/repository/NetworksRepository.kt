@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
@@ -19,6 +20,20 @@ interface NetworksRepository {
      * @return A [Flow] emitting a set of [NetworkStatus] objects corresponding to the specified networks.
      */
     fun getNetworkStatusesUpdates(userWalletId: UserWalletId, networks: Set<Network>): Flow<Set<NetworkStatus>>
+
+    /**
+     * Retrieves updates of network statuses of specified blockchain networks for a specific user wallet.
+     *
+     * Loads remote network statuses if they have expired.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param networks A set of network which statuses are to be retrieved.
+     * @return A [LceFlow] emitting a set of [NetworkStatus] objects corresponding to the specified networks.
+     */
+    fun getNetworkStatusesUpdatesLce(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+    ): LceFlow<Throwable, Set<NetworkStatus>>
 
     /**
      * Fetches pending transactions for given network
