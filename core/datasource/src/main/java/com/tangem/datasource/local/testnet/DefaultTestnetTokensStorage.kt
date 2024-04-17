@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.testnet
 
 import com.squareup.moshi.JsonAdapter
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.local.testnet.models.TestnetTokensConfig
 
 /**
@@ -17,6 +17,7 @@ internal class DefaultTestnetTokensStorage(
     private val adapter: JsonAdapter<TestnetTokensConfig>,
 ) : TestnetTokensStorage {
 
+    @Deprecated(message = "Use AssetReader instead")
     override fun getConfig(): TestnetTokensConfig {
         return requireNotNull(
             value = adapter.fromJson(

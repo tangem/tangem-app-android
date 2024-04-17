@@ -26,6 +26,7 @@ import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -388,8 +389,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         router.popBackStack()
     }
 
-    override fun onBuyClick() {
+    override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrency.symbol))
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         showErrorIfDemoModeOrElse {
             val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
@@ -417,8 +420,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         updateTxHistory(refresh = true, showItemsLoading = true)
     }
 
-    override fun onSendClick() {
+    override fun onSendClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrency.symbol))
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         sendCurrency(status = cryptoCurrencyStatus ?: return)
     }
@@ -485,8 +490,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         }
     }
 
-    override fun onReceiveClick() {
+    override fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         viewModelScope.launch(dispatchers.io) {
             analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrency.symbol))
@@ -523,8 +530,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         }
     }
 
-    override fun onSellClick() {
+    override fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrency.symbol))
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         showErrorIfDemoModeOrElse {
             val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
@@ -538,8 +547,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         }
     }
 
-    override fun onSwapClick() {
+    override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrency.symbol))
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         reduxStateHolder.dispatch(TradeCryptoAction.Swap(cryptoCurrency))
     }
@@ -697,7 +708,15 @@ internal class TokenDetailsViewModel @Inject constructor(
             shouldShowSwapPromoTokenUseCase.neverToShow()
             analyticsEventsHandler.send(TokenSwapPromoAnalyticsEvent.Exchange(cryptoCurrency.symbol))
         }
-        onSwapClick()
+        onSwapClick(ScenarioUnavailabilityReason.None)
+    }
+
+    private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
+        if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
+
+        uiState = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
+
+        return true
     }
 
     private companion object {
