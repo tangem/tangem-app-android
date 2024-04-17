@@ -43,7 +43,7 @@ class MockTangemSdkManager(
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<ScanResponse> {
-        return CompletionResult.Success(MockProvider.getScanResponse())
+        return MockProvider.getScanResponse()
     }
 
     override suspend fun createProductWallet(
@@ -66,7 +66,7 @@ class MockTangemSdkManager(
         cardId: String?,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): CompletionResult<DerivationTaskResponse> {
-        return CompletionResult.Success(MockProvider.getDerivationTaskResponse())
+        return MockProvider.getDerivationTaskResponse()
     }
 
     override suspend fun deriveExtendedPublicKey(
@@ -74,14 +74,14 @@ class MockTangemSdkManager(
         walletPublicKey: ByteArray,
         derivation: DerivationPath,
     ): CompletionResult<ExtendedPublicKey> {
-        return CompletionResult.Success(MockProvider.getExtendedPublicKey())
+        return MockProvider.getExtendedPublicKey()
     }
 
     override suspend fun resetToFactorySettings(
         cardId: String,
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
-        return CompletionResult.Success(MockProvider.getCardDto())
+        return MockProvider.getCardDto()
     }
 
     override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
@@ -97,29 +97,29 @@ class MockTangemSdkManager(
     }
 
     override suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
-        return CompletionResult.Success(MockProvider.getSuccessResponse())
+        return MockProvider.getSuccessResponse()
     }
 
     override suspend fun setAccessCode(cardId: String?): CompletionResult<SuccessResponse> {
-        return CompletionResult.Success(MockProvider.getSuccessResponse())
+        return MockProvider.getSuccessResponse()
     }
 
     override suspend fun setLongTap(cardId: String?): CompletionResult<SuccessResponse> {
-        return CompletionResult.Success(MockProvider.getSuccessResponse())
+        return MockProvider.getSuccessResponse()
     }
 
     override suspend fun setAccessCodeRecoveryEnabled(
         cardId: String?,
         enabled: Boolean,
     ): CompletionResult<SuccessResponse> {
-        return CompletionResult.Success(MockProvider.getSuccessResponse())
+        return MockProvider.getSuccessResponse()
     }
 
     override suspend fun scanCard(
         cardId: String?,
         allowRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
-        return CompletionResult.Success(MockProvider.getCardDto())
+        return MockProvider.getCardDto()
     }
 
     override suspend fun <T> runTaskAsync(
