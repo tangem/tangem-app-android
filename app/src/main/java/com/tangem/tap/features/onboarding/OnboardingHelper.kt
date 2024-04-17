@@ -17,6 +17,7 @@ import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import kotlinx.coroutines.delay
@@ -42,7 +43,8 @@ object OnboardingHelper {
             response.cardTypesResolver.isWallet2() || response.cardTypesResolver.isShibaWallet() -> {
                 val emptyWallets = response.card.wallets.isEmpty()
                 val activationInProgress = onboardingManager?.isActivationInProgress(cardId)
-                val isNoBackup = response.card.backupStatus == CardDTO.BackupStatus.NoBackup
+                val isNoBackup = response.card.backupStatus == CardDTO.BackupStatus.NoBackup &&
+                    !DemoHelper.isDemoCard(response)
                 emptyWallets || activationInProgress == true || isNoBackup
             }
 
