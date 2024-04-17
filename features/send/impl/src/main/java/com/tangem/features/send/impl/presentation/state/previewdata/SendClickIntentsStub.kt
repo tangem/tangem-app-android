@@ -6,6 +6,7 @@ import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
 internal object SendClickIntentsStub : SendClickIntents {
@@ -33,7 +34,7 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onRecipientMemoValueChange(value: String) {}
 
-    override fun feeReload() {}
+    override fun feeReload(isToNextState: Boolean) {}
 
     override fun onFeeSelectorClick(feeType: FeeType) {}
 
@@ -57,7 +58,7 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onShareClick() {}
 
-    override fun onAmountReduceClick(reducedAmount: String, clazz: Class<out SendNotification>) {}
+    override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {}
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {}
 }
