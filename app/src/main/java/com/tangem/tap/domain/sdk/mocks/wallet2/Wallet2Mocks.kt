@@ -27,4 +27,7 @@ object Wallet2Mocks : Mocks {
 
     override val createProductWalletTaskResponse: CreateProductWalletTaskResponse
         get() = TODO("Not yet implemented")
+
+    override val importWalletResponse: CreateProductWalletTaskResponse
+        get() = TODO("Not yet implemented")
 }

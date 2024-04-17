@@ -50,7 +50,7 @@ class MockTangemSdkManager(
         scanResponse: ScanResponse,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        return MockProvider.createProductWalletResponse()
+        return MockProvider.getCreateProductWalletResponse()
     }
 
     override suspend fun importWallet(
@@ -59,7 +59,7 @@ class MockTangemSdkManager(
         passphrase: String?,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        TODO()
+        return MockProvider.getImportWalletResponse()
     }
 
     override suspend fun derivePublicKeys(

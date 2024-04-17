@@ -20,4 +20,6 @@ interface Mocks {
     val extendedPublicKey: ExtendedPublicKey
 
     val createProductWalletTaskResponse: CreateProductWalletTaskResponse
+
+    val importWalletResponse: CreateProductWalletTaskResponse
 }

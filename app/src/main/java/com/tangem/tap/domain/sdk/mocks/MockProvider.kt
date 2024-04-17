@@ -31,8 +31,12 @@ object MockProvider {
 
     fun getExtendedPublicKey() = CompletionResult.Success(mocks.extendedPublicKey)
 
-    fun createProductWalletResponse(): CompletionResult<CreateProductWalletTaskResponse> {
+    fun getCreateProductWalletResponse(): CompletionResult<CreateProductWalletTaskResponse> {
         return CompletionResult.Success(mocks.createProductWalletTaskResponse)
+    }
+
+    fun getImportWalletResponse(): CompletionResult<CreateProductWalletTaskResponse> {
+        return CompletionResult.Success(mocks.importWalletResponse)
     }
 
     private fun getMocks(productType: ProductType): Mocks {

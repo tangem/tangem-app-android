@@ -231,4 +231,7 @@ object WalletMocks : Mocks {
         ),
         primaryCard = primaryCard,
     )
+
+    override val importWalletResponse : CreateProductWalletTaskResponse
+        get() = throw IllegalStateException("Available only for Wallet 2")
 }
