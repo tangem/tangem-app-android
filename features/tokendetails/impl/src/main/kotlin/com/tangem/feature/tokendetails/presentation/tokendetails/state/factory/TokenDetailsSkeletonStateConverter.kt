@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsPullToRefreshConfig
@@ -40,7 +41,7 @@ internal class TokenDetailsSkeletonStateConverter(
                 currency = when (value) {
                     is CryptoCurrency.Coin -> TokenInfoBlockState.Currency.Native
                     is CryptoCurrency.Token -> TokenInfoBlockState.Currency.Token(
-                        standardName = value.network.standardType.name,
+                        standardName = value.network.standardType.getSpecifiedNameOrNull(),
                         networkName = value.network.name,
                         networkIcon = value.networkIconResId,
                     )
@@ -64,6 +65,9 @@ internal class TokenDetailsSkeletonStateConverter(
             event = consumedEvent(),
         )
     }
+
+    private fun Network.StandardType.getSpecifiedNameOrNull(): String? =
+        name.takeIf { this !is Network.StandardType.Unspecified }
 
     private fun createMenu(cryptoCurrency: CryptoCurrency): TokenDetailsAppBarMenuConfig = TokenDetailsAppBarMenuConfig(
         items = buildList {
