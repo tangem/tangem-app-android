@@ -3,6 +3,9 @@ package com.tangem.tap.di
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
+import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
+import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
@@ -45,5 +48,21 @@ internal object ActivityModule {
     @DelayedWork
     fun provideActivityDelayedWorkCoroutineScope(): CoroutineScope {
         return CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPolkadotCheckHasResetUseCase(
+        polkadotAccountHealthCheckRepository: PolkadotAccountHealthCheckRepository,
+    ): GetPolkadotCheckHasResetUseCase {
+        return GetPolkadotCheckHasResetUseCase(polkadotAccountHealthCheckRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetPolkadotCheckHasImmortalUseCase(
+        polkadotAccountHealthCheckRepository: PolkadotAccountHealthCheckRepository,
+    ): GetPolkadotCheckHasImmortalUseCase {
+        return GetPolkadotCheckHasImmortalUseCase(polkadotAccountHealthCheckRepository)
     }
 }
