@@ -9,7 +9,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 internal class SendFeeStateConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
 ) : Converter<Unit, SendStates.FeeState> {
 
     override fun convert(value: Unit): SendStates.FeeState {
@@ -17,9 +17,10 @@ internal class SendFeeStateConverter(
             feeSelectorState = FeeSelectorState.Error,
             fee = null,
             notifications = persistentListOf(),
-            rate = feeCryptoCurrencyStatusProvider().value.fiatRate,
+            rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate,
             appCurrency = appCurrencyProvider(),
             isFeeApproximate = false,
+            isCustomSelected = false,
         )
     }
 }
