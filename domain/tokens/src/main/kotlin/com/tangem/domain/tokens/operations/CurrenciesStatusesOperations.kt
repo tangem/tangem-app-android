@@ -2,7 +2,7 @@ package com.tangem.domain.tokens.operations
 
 import arrow.core.*
 import arrow.core.raise.*
-import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -19,18 +19,8 @@ internal class CurrenciesStatusesOperations(
     private val userWalletId: UserWalletId,
 ) {
 
-    constructor(
-        userWalletId: UserWalletId,
-        useCase: GetTokenListUseCase,
-    ) : this(
-        currenciesRepository = useCase.currenciesRepository,
-        quotesRepository = useCase.quotesRepository,
-        networksRepository = useCase.networksRepository,
-        userWalletId = userWalletId,
-    )
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun getCurrenciesStatusesFlow(): Flow<Either<Error, List<CryptoCurrencyStatus>>> {
+    fun getCurrenciesStatusesFlow(): EitherFlow<Error, List<CryptoCurrencyStatus>> {
         return getMultiCurrencyWalletCurrencies().transformLatest { maybeCurrencies ->
             val nonEmptyCurrencies = maybeCurrencies.fold(
                 ifLeft = { error ->

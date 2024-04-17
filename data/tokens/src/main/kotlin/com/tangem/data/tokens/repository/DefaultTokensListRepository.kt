@@ -4,11 +4,11 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.tokens.paging.CoinsPagingSource
 import com.tangem.data.tokens.utils.FoundTokenConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.FoundToken
 import com.tangem.domain.tokens.model.Token
 import com.tangem.domain.tokens.repository.QuotesRepository

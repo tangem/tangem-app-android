@@ -79,6 +79,8 @@ object OnboardingHelper {
     ) {
         Analytics.setContext(scanResponse)
         scope.launch {
+            val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
+
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
                 store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
@@ -90,16 +92,11 @@ object OnboardingHelper {
                         ),
                     )
 
-                    val toggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
-                    if (toggles.isGeneralManagerEnabled) {
-                        store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
-                    } else {
-                        store.dispatchWithMain(SaveWalletAction.Save)
-                    }
+                    store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
-                tangemSdkManager.canUseBiometry && preferencesStorage.shouldShowSaveUserWalletScreen -> {
+                tangemSdkManager.canUseBiometry && settingsRepository.shouldShowSaveUserWalletScreen() -> {
                     proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
 
                     delay(timeMillis = 1_200)

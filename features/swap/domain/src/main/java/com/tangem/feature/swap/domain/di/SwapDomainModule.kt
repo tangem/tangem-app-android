@@ -106,13 +106,11 @@ class SwapDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
-        dispatchers: CoroutineDispatcherProvider,
     ): GetCardTokensListUseCase {
         return GetCardTokensListUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
-            dispatchers = dispatchers,
         )
     }
 

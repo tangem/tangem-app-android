@@ -4,7 +4,6 @@ import arrow.core.*
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.withError
-import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -17,16 +16,6 @@ internal class TokenListOperations(
     private val userWalletId: UserWalletId,
     private val tokens: List<CryptoCurrencyStatus>,
 ) {
-
-    constructor(
-        userWalletId: UserWalletId,
-        tokens: List<CryptoCurrencyStatus>,
-        useCase: GetTokenListUseCase,
-    ) : this(
-        currenciesRepository = useCase.currenciesRepository,
-        userWalletId = userWalletId,
-        tokens = tokens,
-    )
 
     fun getTokenListFlow(): Flow<Either<Error, TokenList>> {
         return combine(

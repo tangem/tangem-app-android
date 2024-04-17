@@ -13,7 +13,7 @@ import com.tangem.domain.userwallets.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import timber.log.Timber

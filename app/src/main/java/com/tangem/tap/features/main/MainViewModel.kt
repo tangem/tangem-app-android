@@ -2,6 +2,7 @@ package com.tangem.tap.features.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
@@ -11,6 +12,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
+import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +28,8 @@ internal class MainViewModel @Inject constructor(
     private val reduxNavController: ReduxNavController,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
     private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
+    private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
+    private val blockchainSDKFactory: BlockchainSDKFactory,
     private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -39,7 +43,17 @@ internal class MainViewModel @Inject constructor(
 
     val state: StateFlow<MainScreenState> = stateHolder.stateFlow
 
+    var isSplashScreenShown: Boolean = true
+        private set
+
     init {
+        viewModelScope.launch(dispatchers.main) {
+            blockchainSDKFactory.init()
+            isSplashScreenShown = false
+        }
+
+        viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
+
         updateAppCurrencies()
         observeFlips()
         displayBalancesHidingStatusToast()

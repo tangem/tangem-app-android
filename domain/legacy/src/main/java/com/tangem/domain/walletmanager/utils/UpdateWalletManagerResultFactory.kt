@@ -1,7 +1,7 @@
 package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
-import com.tangem.domain.common.extensions.amountToCreateAccount
+import com.tangem.blockchainsdk.utils.amountToCreateAccount
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction

@@ -3,7 +3,7 @@ package com.tangem.tap.features.onboarding.products.twins.redux
 import com.tangem.Message
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.VoidCallback
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.twins.TwinCardsManager

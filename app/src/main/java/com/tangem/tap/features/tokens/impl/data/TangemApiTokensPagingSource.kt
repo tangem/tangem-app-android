@@ -3,10 +3,10 @@ package com.tangem.tap.features.tokens.impl.data
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.extensions.supportedBlockchains
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.tap.features.tokens.impl.data.converters.CoinsResponseConverter

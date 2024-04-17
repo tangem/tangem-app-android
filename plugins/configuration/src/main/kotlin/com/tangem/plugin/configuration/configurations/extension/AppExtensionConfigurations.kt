@@ -37,7 +37,7 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
 
         buildFeatures.buildConfig = true
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.tangem.common.HiltTestRunner"
     }
 }
 // [REDACTED_TODO_COMMENT]
@@ -75,6 +75,7 @@ private fun AndroidBuildType.configureBuildVariant(extension: AppExtension, buil
         }
         BuildType.Internal,
         BuildType.External,
+        BuildType.Mocked
         -> {
             initWith(extension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)

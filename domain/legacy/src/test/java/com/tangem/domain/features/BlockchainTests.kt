@@ -2,14 +2,14 @@ package com.tangem.domain.features
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toNetworkId
 import org.junit.Test
 
 class BlockchainTests {
     @Test
     fun allNetworkIdsAreImplemented() {
-        val unimplementedIds = Blockchain.values()
+        val unimplementedIds = Blockchain.entries
             .toMutableList()
             .apply {
                 remove(Blockchain.Unknown)
