@@ -31,7 +31,9 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
             .fillMaxSize()
             .background(TangemTheme.colors.background.tertiary)
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
         feeSelector(state, clickIntents)
@@ -64,7 +66,7 @@ internal fun LazyListScope.customFee(
     item(
         key = FEE_CUSTOM_KEY,
     ) {
-        SendCustomFeeEthereum(
+        SendCustomFee(
             customValues = feeSendState.customValues,
             selectedFee = feeSendState.selectedFee,
             hasNotifications = hasNotifications,

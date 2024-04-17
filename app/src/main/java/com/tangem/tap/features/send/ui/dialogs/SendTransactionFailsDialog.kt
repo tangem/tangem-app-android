@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.module.ModuleMessageConverter
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.sdk.extensions.localizedDescription
 import com.tangem.tap.common.extensions.stripZeroPlainString
@@ -33,7 +34,7 @@ object SendTransactionFailsDialog {
             setTitle(R.string.alert_failed_to_send_transaction_title)
             setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
             setNeutralButton(R.string.details_row_title_contact_to_support) { _, _ ->
-                Analytics.send(Basic.ButtonSupport())
+                Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Send))
                 store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
             }
             setPositiveButton(R.string.common_cancel) { _, _ -> }
