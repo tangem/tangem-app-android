@@ -247,7 +247,7 @@ internal class SendNotificationFactory(
             val totalAmount = feeAmount + receivedAmount
             val change = balance - totalAmount
             val isChangeLowerThanDust = change < dustValue && change != BigDecimal.ZERO
-            val isShowWarning = totalAmount < dustValue || isChangeLowerThanDust
+            val isShowWarning = receivedAmount < dustValue || isChangeLowerThanDust
             if (isShowWarning) {
                 add(
                     SendNotification.Error.MinimumAmountError(dustValue.toPlainString()),
