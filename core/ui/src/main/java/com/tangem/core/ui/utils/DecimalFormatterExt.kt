@@ -12,6 +12,7 @@ import java.util.Locale
 private const val TEXT_CHUNK_THOUSAND = 3
 private const val POINT_SEPARATOR = '.'
 private const val COMMA_SEPARATOR = ','
+private const val SCIENTIFIC_NOTATION = 'e'
 const val DECIMAL_SEPARATOR_LIMIT = 1
 
 @Composable
@@ -162,7 +163,17 @@ fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = Round
 fun String.parseBigDecimalOrNull() = runCatching {
     // Filtering value containing more than one either grouping or decimal separator.
     // We assume there will be only decimal separator, otherwise parsing will fail.
-    if (count { !it.isDigit() } > DECIMAL_SEPARATOR_LIMIT) return null
+
+    // Step 1. Exclude formatted (100,000.0) except scientific notation (100.000e10)
+    val excludeFormatted = this.count {
+        !it.isDigit() && !it.equals(SCIENTIFIC_NOTATION, ignoreCase = true)
+    } > DECIMAL_SEPARATOR_LIMIT
+
+    // Step 2. Exclude wrong scientific notation (100e100e100)
+    val excludeWrongScientific = this.count {
+        it.equals(SCIENTIFIC_NOTATION, ignoreCase = true)
+    } > DECIMAL_SEPARATOR_LIMIT
+    if (excludeFormatted || excludeWrongScientific) return null
 
     // An attempt to parse value with POINT decimal separator
     val parsed = this.toBigDecimalOrNull()
