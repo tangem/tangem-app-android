@@ -153,11 +153,6 @@ internal class DefaultQrScanningEventsRepositoryTest {
             cryptoCurrency,
         )
         positiveCase(
-            "$garbage$schema2:$address2$function?$addressParam=$addressParamValue",
-            QrResult(address = address2),
-            cryptoCurrency,
-        )
-        positiveCase(
             "$garbage$schema2:$address2?$someParam=$someParamValue&$valueParam=$someAmountParamValue",
             QrResult(address = address2),
             cryptoCurrency,
@@ -175,6 +170,11 @@ internal class DefaultQrScanningEventsRepositoryTest {
         positiveCase(
             "$garbage$schema2:$address2?$someParam=$someParamValue&$valueParam=$valueParamValue4",
             QrResult(address = address2, amount = BigDecimal("0.000000023")),
+            cryptoCurrency,
+        )
+        negativeCase(
+            "$garbage$schema2:$address2$function?$addressParam=$addressParamValue",
+            QrResult(address = address2),
             cryptoCurrency,
         )
     }
@@ -232,10 +232,20 @@ internal class DefaultQrScanningEventsRepositoryTest {
             QrResult(address = address2, amount = BigDecimal("2300")),
             tokenCryptoCurrency,
         )
+        positiveCase(
+            "$address4?$addressParam=$addressParamValue",
+            QrResult(address = addressParamValue),
+            tokenCryptoCurrency,
+        )
         negativeCase(
             "$address2?$someParam=$someParamValue&$amountParam=$amountParamValue",
             QrResult(address = address2, amount = BigDecimal("123.123"), memo = memoParamValueUtf8),
             tokenCryptoCurrency,
+        )
+        negativeCase(
+            "$address4?$addressParam=$addressParamValue",
+            QrResult(address = addressParamValue),
+            cryptoCurrency,
         )
     }
 

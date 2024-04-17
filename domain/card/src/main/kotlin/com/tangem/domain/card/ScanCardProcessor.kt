@@ -2,7 +2,7 @@ package com.tangem.domain.card
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
-import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.scan.ScanResponse
 
 interface ScanCardProcessor {
@@ -13,7 +13,7 @@ interface ScanCardProcessor {
     ): CompletionResult<ScanResponse>
 
     suspend fun scan(
-        analyticsEvent: AnalyticsEvent? = null,
+        analyticsSource: AnalyticsParam.ScreensSources,
         cardId: String? = null,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
         onWalletNotCreated: suspend () -> Unit = {},
