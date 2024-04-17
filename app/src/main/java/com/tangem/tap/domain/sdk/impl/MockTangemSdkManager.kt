@@ -35,7 +35,10 @@ class MockTangemSdkManager(
 
     override val secureStorage = InMemoryStorage()
 
-    override var userCodeRequestPolicy: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
+    override val userCodeRequestPolicy: UserCodeRequestPolicy
+        get() = userCodeRequestPolicyInternal
+
+    private var userCodeRequestPolicyInternal: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
 
     override suspend fun scanProduct(
         cardId: String?,
@@ -141,6 +144,6 @@ class MockTangemSdkManager(
     }
 
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
-        userCodeRequestPolicy = policy
+        userCodeRequestPolicyInternal = policy
     }
 }
