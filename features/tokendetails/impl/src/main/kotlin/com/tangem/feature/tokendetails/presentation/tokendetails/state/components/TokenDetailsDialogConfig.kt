@@ -19,7 +19,7 @@ internal data class TokenDetailsDialogConfig(
 
     sealed class DialogContentConfig {
 
-        abstract val title: TextReference
+        abstract val title: TextReference?
         abstract val message: TextReference
         abstract val confirmButtonConfig: ButtonConfig
         abstract val cancelButtonConfig: ButtonConfig?
@@ -71,6 +71,23 @@ internal data class TokenDetailsDialogConfig(
 
             override val cancelButtonConfig: ButtonConfig?
                 get() = null
+
+            override val confirmButtonConfig: ButtonConfig = ButtonConfig(
+                text = TextReference.Res(R.string.common_ok),
+                onClick = onConfirmClick,
+            )
+        }
+
+        data class DisabledButtonReasonDialogConfig(
+            val text: TextReference,
+            val onConfirmClick: () -> Unit,
+        ) : DialogContentConfig() {
+
+            override val title = null
+
+            override val message: TextReference = text
+
+            override val cancelButtonConfig = null
 
             override val confirmButtonConfig: ButtonConfig = ButtonConfig(
                 text = TextReference.Res(R.string.common_ok),
