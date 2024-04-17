@@ -16,7 +16,7 @@ import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module
 @InstallIn(ViewModelComponent::class)
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal object TokensDomainModule {
 
     @Provides
@@ -340,5 +340,13 @@ internal object TokensDomainModule {
         dispatchers: CoroutineDispatcherProvider,
     ): IsAmountSubtractAvailableUseCase {
         return IsAmountSubtractAvailableUseCase(currenciesRepository, dispatchers)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideRunPolkadotAccountHealthCheckUseCase(
+        repository: PolkadotAccountHealthCheckRepository,
+    ): RunPolkadotAccountHealthCheckUseCase {
+        return RunPolkadotAccountHealthCheckUseCase(repository)
     }
 }
