@@ -85,10 +85,10 @@ internal class InitializeWalletsTransformer(
 
     private fun createDisabledButtons(): PersistentList<WalletManageButton> {
         return persistentListOf(
-            WalletManageButton.Buy(enabled = false, onClick = {}),
-            WalletManageButton.Send(enabled = false, onClick = {}),
-            WalletManageButton.Receive(enabled = false, onClick = {}),
-            WalletManageButton.Sell(enabled = false, onClick = {}),
+            WalletManageButton.Receive(enabled = false, dimContent = false, onClick = {}),
+            WalletManageButton.Send(enabled = false, dimContent = false, onClick = {}),
+            WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {}),
+            WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {}),
         )
     }
 }
