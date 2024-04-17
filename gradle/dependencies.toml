@@ -82,6 +82,7 @@ swipeRefreshLayout = "1.1.0"
 spr-client = "3.6.2"
 web3j = "4.10.1"
 leakcanary = "2.13"
+decompose = "2.2.2"
 # endregion Other libraries
 
 # region Tangem
@@ -252,4 +253,6 @@ camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = 
 camera-view = { module = "androidx.camera:camera-view", version.ref = "androidXCamera" }
 web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
 leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
+decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
+decompose-ext-compose = { module = "com.arkivanov.decompose:extensions-compose-jetpack", version.ref = "decompose" }
 # endregion Other
