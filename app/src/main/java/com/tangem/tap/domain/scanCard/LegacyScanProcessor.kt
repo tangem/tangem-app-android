@@ -7,6 +7,8 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.canSkipBackup
@@ -45,7 +47,7 @@ internal object LegacyScanProcessor {
 
     @Suppress("LongParameterList")
     suspend fun scan(
-        analyticsEvent: AnalyticsEvent?,
+        analyticsSource: AnalyticsParam.ScreensSources,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
@@ -59,7 +61,8 @@ internal object LegacyScanProcessor {
 
         val result = tangemSdkManager.scanProduct(cardId)
 
-        store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
+        val analyticsEvent = Basic.CardWasScanned(analyticsSource)
+        store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result, analyticsSource))
 
         result
             .doOnFailure { error ->
