@@ -4,20 +4,20 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.tokens.impl.presentation.states.NetworkItemState
 import kotlinx.collections.immutable.ImmutableCollection
@@ -41,10 +41,7 @@ internal fun BriefNetworksList(
         exit = fadeOut(),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4)) {
-            val iterator = networks.iterator()
-            var index = 0
-            while (iterator.hasNext()) {
-                val network = iterator.next()
+            for ((index, network) in networks.withIndex()) {
                 if (index < MAX_VISIBLE_BRIEF_ICONS) {
                     key(network.name + network.protocolName) {
                         BriefNetworkItem(model = network)
@@ -59,7 +56,6 @@ internal fun BriefNetworksList(
                         break
                     }
                 }
-                index++
             }
         }
     }
@@ -109,8 +105,16 @@ internal fun BriefNetworkItem(model: NetworkItemState, modifier: Modifier = Modi
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 internal fun HasMoreItem(moreCount: Int) {
+    val count = if (moreCount > 99) 99 else moreCount
+    val themeTextStyle = TangemTheme.typography.overline.copy(
+        letterSpacing = TextUnit(value = 0f, type = TextUnitType.Sp),
+    )
+    var textStyle by remember(themeTextStyle) { mutableStateOf(themeTextStyle) }
+    var readyToDraw by remember(themeTextStyle) { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .size(size = TangemTheme.dimens.size20)
@@ -118,10 +122,20 @@ internal fun HasMoreItem(moreCount: Int) {
             .background(TangemTheme.colors.control.unchecked),
     ) {
         Text(
-            modifier = Modifier.align(Alignment.Center),
-            text = "+$moreCount",
-            style = TangemTheme.typography.overline,
-            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier
+                .padding(TangemTheme.dimens.spacing4)
+                .align(Alignment.Center)
+                .drawWithContent { if (readyToDraw) drawContent() },
+            text = "+$count",
+            style = textStyle,
+            overflow = TextOverflow.Clip,
+            onTextLayout = { textLayoutResult ->
+                if (textLayoutResult.didOverflowHeight) {
+                    textStyle = textStyle.copy(fontSize = textStyle.fontSize * 0.9)
+                } else {
+                    readyToDraw = true
+                }
+            },
         )
     }
 }
