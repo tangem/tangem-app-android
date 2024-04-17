@@ -3,7 +3,7 @@ package com.tangem.features.send.impl.presentation.state
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
@@ -21,11 +21,15 @@ import java.math.BigDecimal
  */
 internal class SendEventStateFactory(
     private val currentStateProvider: Provider<SendUiState>,
+    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val clickIntents: SendClickIntents,
     private val feeStateFactory: FeeStateFactory,
 ) {
     private val sendTransactionErrorConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SendTransactionAlertConverter(clickIntents)
+        SendTransactionAlertConverter(
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            clickIntents = clickIntents,
+        )
     }
 
     fun onConsumeEventState(): SendUiState {
@@ -45,18 +49,10 @@ internal class SendEventStateFactory(
     }
 
     fun getFeeCoverageAlert(onConsume: () -> Unit): SendUiState {
-        val state = currentStateProvider()
-        val amount = state.feeState?.fee?.amount ?: return state
-        val feeAmount = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = amount.value,
-            cryptoCurrency = state.cryptoCurrencySymbol,
-            decimals = amount.decimals,
-        )
-        return state.copy(
+        return currentStateProvider().copy(
             event = triggeredEvent(
                 data = SendEvent.ShowAlert(
                     SendAlertState.FeeCoverage(
-                        amount = feeAmount,
                         onConfirmClick = clickIntents::onSubtractSelect,
                     ),
                 ),
@@ -110,6 +106,20 @@ internal class SendEventStateFactory(
         )
     }
 
+    fun getFeeTooHighAlert(diff: String, onConsume: () -> Unit): SendUiState {
+        return currentStateProvider().copy(
+            event = triggeredEvent(
+                data = SendEvent.ShowAlert(
+                    SendAlertState.FeeTooHigh(
+                        onConfirmClick = clickIntents::showSend,
+                        times = diff,
+                    ),
+                ),
+                onConsume = onConsume,
+            ),
+        )
+    }
+
     fun getGenericErrorState(error: Throwable? = null, onConsume: () -> Unit): SendUiState {
         val state = currentStateProvider()
         return state.copy(
@@ -117,6 +127,20 @@ internal class SendEventStateFactory(
                 data = SendEvent.ShowAlert(
                     SendAlertState.GenericError(
                         onConfirmClick = { clickIntents.onFailedTxEmailClick(error?.localizedMessage.orEmpty()) },
+                    ),
+                ),
+                onConsume = onConsume,
+            ),
+        )
+    }
+
+    fun getFeeUnreachableErrorState(onConsume: () -> Unit): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            event = triggeredEvent(
+                data = SendEvent.ShowAlert(
+                    SendAlertState.FeeUnreachableError(
+                        onConfirmClick = { clickIntents.feeReload(true) },
                     ),
                 ),
                 onConsume = onConsume,

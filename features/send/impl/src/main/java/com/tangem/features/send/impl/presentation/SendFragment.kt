@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -73,7 +74,8 @@ internal class SendFragment : ComposeFragment() {
         SystemBarsEffect {
             setSystemBarsColor(systemBarsColor)
         }
-        SendScreen(viewModel.uiState, viewModel.stateRouter.currentState)
+        val currentState = viewModel.stateRouter.currentState.collectAsStateWithLifecycle()
+        SendScreen(viewModel.uiState, currentState.value)
     }
 
     override fun onDestroy() {
@@ -90,9 +92,9 @@ internal class SendFragment : ComposeFragment() {
                     delay(QR_SCAN_DELAY)
 
                     // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
-                    // If do not use the delay, then etAmount error field is not displayed when
+                    // If do not use the delay, then error field is not displayed when
                     // inserting an incorrect amount by shareUri
-                    viewModel.onRecipientAddressScanned(it)
+                    viewModel.onQrCodeScanned(it)
                 }
         }
     }
