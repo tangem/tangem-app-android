@@ -1,4 +1,4 @@
-package com.tangem.blockchainsdk.storage
+package com.tangem.blockchainsdk.store
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
