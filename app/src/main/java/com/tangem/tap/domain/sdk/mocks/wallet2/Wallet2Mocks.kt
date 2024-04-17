@@ -6,6 +6,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.tap.domain.sdk.mocks.Mocks
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
 object Wallet2Mocks : Mocks {
 
@@ -22,5 +23,8 @@ object Wallet2Mocks : Mocks {
         get() = TODO("Not yet implemented")
 
     override val successResponse: SuccessResponse
+        get() = TODO("Not yet implemented")
+
+    override val createProductWalletTaskResponse: CreateProductWalletTaskResponse
         get() = TODO("Not yet implemented")
 }

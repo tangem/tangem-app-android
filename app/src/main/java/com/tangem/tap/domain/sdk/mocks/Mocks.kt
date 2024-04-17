@@ -5,6 +5,7 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
 interface Mocks {
 
@@ -17,4 +18,6 @@ interface Mocks {
     val cardDto: CardDTO
 
     val extendedPublicKey: ExtendedPublicKey
+
+    val createProductWalletTaskResponse: CreateProductWalletTaskResponse
 }

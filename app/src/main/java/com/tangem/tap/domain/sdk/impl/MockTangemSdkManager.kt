@@ -50,7 +50,7 @@ class MockTangemSdkManager(
         scanResponse: ScanResponse,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        TODO()
+        return MockProvider.createProductWalletResponse()
     }
 
     override suspend fun importWallet(
