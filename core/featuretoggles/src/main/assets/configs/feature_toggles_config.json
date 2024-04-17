@@ -9,7 +9,7 @@
     },
     {
         "name": "REDESIGNED_SEND_SCREEN_ENABLED",
-        "version": "undefined"
+        "version": "5.9.0"
     },
     {
         "name": "LOCAL_USER_LOGS_ENABLED",
@@ -21,7 +21,7 @@
     },
     {
         "name": "WC_SOLANA_TX_SIGN_ENABLED",
-        "version": "5.9.0"
+        "version": "5.11.0"
     },
     {
         "name": "TOKEN_LIST_LCE_ENABLED",
