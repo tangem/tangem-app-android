@@ -17,7 +17,7 @@ import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun SendCustomFeeEthereum(
+internal fun SendCustomFee(
     customValues: ImmutableList<SendTextField.CustomFee>,
     selectedFee: FeeType,
     hasNotifications: Boolean,
@@ -29,20 +29,19 @@ internal fun SendCustomFeeEthereum(
         enter = expandVertically().plus(fadeIn()),
         exit = shrinkVertically().plus(fadeOut()),
     ) {
+        val bottomPadding = if (hasNotifications) {
+            TangemTheme.dimens.spacing12
+        } else {
+            TangemTheme.dimens.spacing0
+        }
         Column(
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-            modifier = modifier,
+            modifier = modifier.padding(bottom = bottomPadding),
         ) {
             repeat(customValues.size) { index ->
                 val value = customValues[index]
-                val bottomPadding = if (index == customValues.lastIndex && !hasNotifications) {
-                    TangemTheme.dimens.spacing72
-                } else {
-                    TangemTheme.dimens.spacing0
-                }
                 FooterContainer(
                     footer = value.footer.resolveReference(),
-                    modifier = Modifier.padding(bottom = bottomPadding),
                 ) {
                     if (value.label != null) {
                         InputRowEnterInfoAmount(
@@ -55,6 +54,7 @@ internal fun SendCustomFeeEthereum(
                             keyboardActions = value.keyboardActions,
                             onValueChange = value.onValueChange,
                             showDivider = false,
+                            isReadOnly = value.isReadonly,
                             modifier = Modifier
                                 .background(
                                     color = TangemTheme.colors.background.action,
