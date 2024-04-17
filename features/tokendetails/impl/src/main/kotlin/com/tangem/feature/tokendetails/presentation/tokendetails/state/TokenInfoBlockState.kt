@@ -19,7 +19,7 @@ internal data class TokenInfoBlockState(
          * @param networkIcon - token's network icon.
          */
         data class Token(
-            val standardName: String,
+            val standardName: String?,
             val networkName: String,
             @DrawableRes val networkIcon: Int,
         ) : Currency()
