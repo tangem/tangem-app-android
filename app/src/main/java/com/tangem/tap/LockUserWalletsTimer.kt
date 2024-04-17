@@ -5,6 +5,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
@@ -14,6 +15,7 @@ import kotlin.time.Duration
 
 internal class LockUserWalletsTimer(
     owner: LifecycleOwner,
+    private val settingsRepository: SettingsRepository,
     private val duration: Duration = with(Duration) { 10.minutes },
 ) : LifecycleOwner by owner,
     DefaultLifecycleObserver {
@@ -29,24 +31,35 @@ internal class LockUserWalletsTimer(
     }
 
     override fun onResume(owner: LifecycleOwner) {
-        Timber.d(
-            """
+        owner.lifecycleScope.launch {
+            val wasApplicationStopped = settingsRepository.wasApplicationStopped()
+            val shouldOpenWelcomeScreenOnResume = settingsRepository.shouldOpenWelcomeScreenOnResume()
+
+            Timber.d(
+                """
                 Owner resumed
-                |- Was stopped: ${preferencesStorage.wasApplicationStopped}
-                |- Need to open welcome screen: ${preferencesStorage.shouldOpenWelcomeScreenOnResume}
-            """.trimIndent(),
-        )
-        preferencesStorage.wasApplicationStopped = false
-        start()
-        if (preferencesStorage.shouldOpenWelcomeScreenOnResume) {
-            store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
-            preferencesStorage.shouldOpenWelcomeScreenOnResume = false
+                |- Was stopped: $wasApplicationStopped
+                |- Need to open welcome screen: $shouldOpenWelcomeScreenOnResume
+                """.trimIndent(),
+            )
+
+            settingsRepository.setWasApplicationStopped(value = false)
+
+            start()
+
+            if (shouldOpenWelcomeScreenOnResume) {
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
+                settingsRepository.setShouldOpenWelcomeScreenOnResume(value = false)
+            }
         }
     }
 
     override fun onStop(owner: LifecycleOwner) {
         Timber.d("Owner stopped")
-        preferencesStorage.wasApplicationStopped = true
+
+        owner.lifecycleScope.launch {
+            settingsRepository.setWasApplicationStopped(value = true)
+        }
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
@@ -91,27 +104,30 @@ internal class LockUserWalletsTimer(
 
     private fun createDelayJob(): Job = lifecycleScope.launch(Dispatchers.Default) {
         val startTime = System.currentTimeMillis()
+
         delay(duration)
+
         if (isActive) {
-            val userWalletsListManager = userWalletsListManagerSafe?.asLockable()
-                ?: return@launch
+            val userWalletsListManager = userWalletsListManagerSafe?.asLockable() ?: return@launch
+
             if (userWalletsListManager.hasUserWallets) {
                 val currentTime = System.currentTimeMillis()
+                val wasApplicationStopped = settingsRepository.wasApplicationStopped()
+
                 Timber.d(
                     """
                         Finished
-                        |- App is stopped: ${preferencesStorage.wasApplicationStopped}
+                        |- App is stopped: $wasApplicationStopped
                         |- Millis passed: ${currentTime - startTime}
                     """.trimIndent(),
                 )
 
-                if (preferencesStorage.wasApplicationStopped) {
-                    preferencesStorage.shouldOpenWelcomeScreenOnResume = true
+                userWalletsListManager.lock()
+                if (wasApplicationStopped) {
+                    settingsRepository.setShouldOpenWelcomeScreenOnResume(value = true)
                 } else {
                     store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                 }
-
-                userWalletsListManager.lock()
             }
         }
     }
