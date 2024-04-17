@@ -52,16 +52,17 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
                         result.memo = URLDecoder.decode(it.value, "UTF-8")
                     }
                     Parameter.Address -> {
+                        // If 'address' parameter is exists, then currency must be TOKEN.
+                        val tokenCurrency = cryptoCurrency as? CryptoCurrency.Token ?: return QrResult()
+
                         // Overrides destination address for token transfers (ERC-681)
-                        if (cryptoCurrency is CryptoCurrency.Token) {
-                            // `address` parameter is used only if the contract address, encoded in the QR,
-                            // matches the contract address of the token.
-                            // Otherwise, the scanned string is likely malformed, and we stop the entire parsing routine
-                            if (cryptoCurrency.contractAddress.equals(address, ignoreCase = true)) {
-                                result.address = it.value
-                            } else {
-                                return QrResult()
-                            }
+                        // `address` parameter is used only if the contract address, encoded in the QR,
+                        // matches the contract address of the token.
+                        // Otherwise, the scanned string is likely malformed, and we stop the entire parsing routin
+                        if (tokenCurrency.contractAddress.equals(address, ignoreCase = true)) {
+                            result.address = it.value
+                        } else {
+                            return QrResult()
                         }
                     }
                     Parameter.Value,
