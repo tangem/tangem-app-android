@@ -4,11 +4,11 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
@@ -18,12 +18,14 @@ import com.tangem.features.send.impl.presentation.state.amount.SendAmountSubtrac
 import com.tangem.features.send.impl.presentation.state.confirm.SendConfirmStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
-import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientListConverter
+import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientHistoryListConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientStateConverter
+import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientWalletListConverter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
 
 @Suppress("LongParameterList")
@@ -33,10 +35,9 @@ internal class SendStateFactory(
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val isTapHelpPreviewEnabledProvider: Provider<Boolean>,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
-    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
 ) {
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -79,9 +80,11 @@ internal class SendStateFactory(
             isTapHelpPreviewEnabledProvider = isTapHelpPreviewEnabledProvider,
         )
     }
-    private val recipientListStateConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SendRecipientListConverter(
-            currentStateProvider = currentStateProvider,
+    private val recipientWalletListStateConverter by lazy(LazyThreadSafetyMode.NONE) {
+        SendRecipientWalletListConverter()
+    }
+    private val recipientHistoryListStateConverter by lazy(LazyThreadSafetyMode.NONE) {
+        SendRecipientHistoryListConverter(
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
@@ -92,7 +95,7 @@ internal class SendStateFactory(
         event = consumedEvent(),
         isEditingDisabled = false,
         isBalanceHidden = false,
-        cryptoCurrencySymbol = "",
+        cryptoCurrencyName = "",
     )
 
     fun getReadyState(): SendUiState {
@@ -103,7 +106,7 @@ internal class SendStateFactory(
                 ?: recipientStateConverter.convert(SendRecipientStateConverter.Data("", null)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
             sendState = confirmStateConverter.convert(Unit),
-            cryptoCurrencySymbol = cryptoCurrencyStatusProvider().currency.symbol,
+            cryptoCurrencyName = cryptoCurrencyStatusProvider().currency.name,
         )
     }
 
@@ -115,7 +118,7 @@ internal class SendStateFactory(
                 ?: recipientStateConverter.convert(SendRecipientStateConverter.Data(destinationAddress, memo)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
             isEditingDisabled = true,
-            cryptoCurrencySymbol = cryptoCurrencyStatusProvider().currency.symbol,
+            cryptoCurrencyName = cryptoCurrencyStatusProvider().currency.name,
         )
     }
 
@@ -125,11 +128,23 @@ internal class SendStateFactory(
     //endregion
 
     //region recipient
-    fun onLoadedRecipientList(wallets: List<AvailableWallet?>, txHistory: List<TxHistoryItem>): SendUiState =
-        recipientListStateConverter.convert(
-            wallets = wallets,
-            txHistory = txHistory,
+    fun onLoadedWalletsList(wallets: List<AvailableWallet?>): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            recipientState = state.recipientState?.copy(
+                wallets = recipientWalletListStateConverter.convert(wallets),
+            ),
         )
+    }
+
+    fun onLoadedHistoryList(txHistory: List<TxHistoryItem>): SendUiState {
+        val state = currentStateProvider()
+        return state.copy(
+            recipientState = state.recipientState?.copy(
+                recent = recipientHistoryListStateConverter.convert(txHistory),
+            ),
+        )
+    }
 
     fun onRecipientAddressValueChange(value: String, isXAddress: Boolean = false): SendUiState {
         val state = currentStateProvider()
@@ -230,6 +245,22 @@ internal class SendStateFactory(
             ),
         )
     }
+
+    fun getHiddenRecentListState(isAddressInWallet: Boolean, isValidAddress: Boolean): SendUiState {
+        val state = currentStateProvider()
+        val recipientState = state.recipientState ?: return state
+        val isNotValid = isAddressInWallet || !isValidAddress
+        return state.copy(
+            recipientState = recipientState.copy(
+                recent = recipientState.recent.map { recent ->
+                    recent.copy(isVisible = isNotValid && (recent.isLoading || recent.title != TextReference.EMPTY))
+                }.toPersistentList(),
+                wallets = recipientState.wallets.map { wallet ->
+                    wallet.copy(isVisible = isNotValid && (wallet.isLoading || wallet.title != TextReference.EMPTY))
+                }.toPersistentList(),
+            ),
+        )
+    }
     //endregion
 
     //region send
@@ -251,14 +282,9 @@ internal class SendStateFactory(
         )
     }
 
-    fun getTransactionSendState(txData: TransactionData): SendUiState {
+    fun getTransactionSendState(txData: TransactionData, txUrl: String): SendUiState {
         val state = currentStateProvider()
-        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
         val sendState = state.sendState ?: return state
-        val txUrl = getExplorerTransactionUrlUseCase(
-            txHash = txData.hash.orEmpty(),
-            networkId = cryptoCurrency.network.id,
-        ).getOrElse { "" }
         return state.copy(
             sendState = sendState.copy(
                 transactionDate = txData.date?.timeInMillis ?: System.currentTimeMillis(),
