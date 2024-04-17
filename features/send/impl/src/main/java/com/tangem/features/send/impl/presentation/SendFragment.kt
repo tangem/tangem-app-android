@@ -92,9 +92,9 @@ internal class SendFragment : ComposeFragment() {
                     delay(QR_SCAN_DELAY)
 
                     // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
-                    // If do not use the delay, then etAmount error field is not displayed when
+                    // If do not use the delay, then error field is not displayed when
                     // inserting an incorrect amount by shareUri
-                    viewModel.onRecipientAddressScanned(it)
+                    viewModel.onQrCodeScanned(it)
                 }
         }
     }
