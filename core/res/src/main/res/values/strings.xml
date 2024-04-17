@@ -537,6 +537,7 @@
   <string name="token_button_unavailability_generic_description">This operation is currently unavailable. Please try again later.</string>
   <string name="token_button_unavailability_reason_buy_unavailable">The purchase of the %s is currently unavailable. But we are working on adding it.</string>
   <string name="token_button_unavailability_reason_empty_balance">You do not have funds to send. Top up your account to be able to send funds from it.</string>
+  <string name="token_button_unavailability_reason_no_quotes">This operation is currently unavailable. Please try again later.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">%s swap is not available. But we are working on adding it.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Sell of the %s coin is currently unavailable. But we are working on adding it.</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>

@@ -540,6 +540,7 @@
   <string name="token_button_unavailability_generic_description">Выбранная операция в данный момент недоступна. Попробуйте позже.</string>
   <string name="token_button_unavailability_reason_buy_unavailable">В данный момент покупка монеты %s недоступна. Но мы работаем над её добавлением.</string>
   <string name="token_button_unavailability_reason_empty_balance">У вас нет средств для отправки. Пополните счет, чтобы иметь возможность отправить с него средства.</string>
+  <string name="token_button_unavailability_reason_no_quotes">Выбранная операция в данный момент недоступна. Попробуйте позже.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Обмен %s не доступен. Но мы работаем над его добавлением.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа монеты %s недоступна. Но мы работаем над её добавлением.</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
