@@ -5,7 +5,7 @@ import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -59,7 +59,7 @@ private fun handleHomeAction(action: Action) {
         }
         is HomeAction.ReadCard -> {
             action.scope.launch {
-                readCard(action.analyticsEvent)
+                readCard()
             }
         }
         is HomeAction.GoToShop -> {
@@ -75,7 +75,7 @@ private fun handleHomeAction(action: Action) {
     }
 }
 
-private suspend fun readCard(analyticsEvent: AnalyticsEvent?) {
+private suspend fun readCard() {
     val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
 
     store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
@@ -83,7 +83,7 @@ private suspend fun readCard(analyticsEvent: AnalyticsEvent?) {
     )
 
     store.inject(DaggerGraphState::scanCardProcessor).scan(
-        analyticsEvent = analyticsEvent,
+        analyticsSource = AnalyticsParam.ScreensSources.Intro,
         onProgressStateChange = { showProgress ->
             if (showProgress) {
                 store.dispatch(HomeAction.ScanInProgress(scanInProgress = true))
