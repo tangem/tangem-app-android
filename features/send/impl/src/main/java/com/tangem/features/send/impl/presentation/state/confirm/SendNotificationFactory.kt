@@ -57,6 +57,7 @@ internal class SendNotificationFactory(
             val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
             buildList {
                 // errors
+                addFeeUnreachableNotification(feeState.feeSelectorState)
                 addExceedBalanceNotification(feeAmount, amountValue)
                 addExceedsBalanceNotification(feeState.fee)
                 addMinimumAmountErrorNotification(feeAmount, amountValue)
@@ -82,6 +83,12 @@ internal class SendNotificationFactory(
                 notifications = updatedNotifications.toImmutableList(),
             ),
         )
+    }
+
+    private fun MutableList<SendNotification>.addFeeUnreachableNotification(feeSelectorState: FeeSelectorState) {
+        if (feeSelectorState is FeeSelectorState.Error) {
+            add(SendNotification.Warning.NetworkFeeUnreachable(clickIntents::feeReload))
+        }
     }
 
     private fun MutableList<SendNotification>.addExceedBalanceNotification(
