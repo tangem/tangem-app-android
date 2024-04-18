@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.tap.common.extensions.filterNotNull
@@ -31,12 +31,12 @@ class WalletConnectInteractor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
-    private val walletsStateHolder: WalletsStateHolder,
+    private val userWalletsListManager: UserWalletsListManager,
     val blockchainHelper: WcBlockchainHelper,
 ) {
 
     private val getSelectedWalletUseCase by lazy(LazyThreadSafetyMode.NONE) {
-        GetSelectedWalletUseCase(walletsStateHolder)
+        GetSelectedWalletUseCase(userWalletsListManager)
     }
 
     private val wcScope = CoroutineScope(
