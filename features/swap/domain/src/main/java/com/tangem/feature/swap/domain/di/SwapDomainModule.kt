@@ -13,7 +13,7 @@ import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -79,8 +79,8 @@ class SwapDomainModule {
     @SwapScope
     @Provides
     @Singleton
-    fun providesGetSelectedWalletUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletSyncUseCase {
-        return GetSelectedWalletSyncUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesGetSelectedWalletUseCase(userWalletsListManager: UserWalletsListManager): GetSelectedWalletSyncUseCase {
+        return GetSelectedWalletSyncUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
