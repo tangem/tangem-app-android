@@ -97,7 +97,6 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
         is GlobalAction.UpdateUserWalletsListManager -> {
             val generalUserWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
-            appStateHolder.userWalletsListManager = generalUserWalletsListManager
             globalState.copy(userWalletsListManager = generalUserWalletsListManager)
         }
         is GlobalAction.ChangeAppThemeMode -> globalState.copy(
