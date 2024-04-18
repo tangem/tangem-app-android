@@ -15,6 +15,8 @@ internal sealed class FeeSelectorState {
         val customValues: ImmutableList<SendTextField.CustomFee> = persistentListOf(),
     ) : FeeSelectorState()
 
+    data object Loading : FeeSelectorState()
+
     data object Error : FeeSelectorState()
 }
 
