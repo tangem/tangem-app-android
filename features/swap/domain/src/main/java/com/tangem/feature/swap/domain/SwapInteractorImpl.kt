@@ -583,13 +583,14 @@ internal class SwapInteractorImpl @Inject constructor(
             fromContractAddress = currencyToSend.currency.getContractAddress(),
             fromNetwork = currencyToSend.currency.network.backendId,
             toContractAddress = currencyToGet.currency.getContractAddress(),
+            fromAddress = currencyToSend.value.networkAddress?.defaultAddress?.value.orEmpty(),
             toNetwork = currencyToGet.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
             toDecimals = currencyToGet.currency.decimals,
             providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
-            toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value ?: "",
+            toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value.orEmpty(),
             refundAddress = currencyToSend.value.networkAddress?.defaultAddress?.value,
             refundExtraId = null, // currently always null
         ).getOrElse { return SwapTransactionState.ExpressError(it) }
@@ -1048,13 +1049,14 @@ internal class SwapInteractorImpl @Inject constructor(
             fromContractAddress = fromToken.currency.getContractAddress(),
             fromNetwork = fromToken.currency.network.backendId,
             toContractAddress = toToken.currency.getContractAddress(),
+            fromAddress = fromToken.value.networkAddress?.defaultAddress?.value.orEmpty(),
             toNetwork = toToken.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
             toDecimals = toToken.currency.decimals,
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
-            toAddress = toToken.value.networkAddress?.defaultAddress?.value ?: "",
+            toAddress = toToken.value.networkAddress?.defaultAddress?.value.orEmpty(),
         ).fold(
             ifRight = { swapData ->
                 val feeData = transactionManager.getFee(
