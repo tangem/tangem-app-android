@@ -51,6 +51,10 @@
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
   <string name="card_settings_title">Настройки карты</string>
+  <string name="cardano_coin_will_be_send_with_token_description">Ввиду особенностей сети Cardano при транзакции токена %1$s помимо комиссии сети будет списано %2$s</string>
+  <string name="cardano_insufficient_balance_to_send_token_description">Для совершения транзакции %1$s, вам необходимо внести немного %2$s (%3$s), чтобы покрыть комиссию сети и минимальное значение ADA для отправки.</string>
+  <string name="cardano_insufficient_balance_to_send_token_title">Недостаточно ADA для отправки токена</string>
+  <string name="cardano_max_amount_has_token_description">Вывод всего баланса ADA невозможен при наличии средств на токенах сети Cardano. Сначала выведите средства на ваших токенах.</string>
   <string name="common_accept">Принять</string>
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_apply">Применить</string>
@@ -97,6 +101,7 @@
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
   <string name="common_passphrase">Кодовая фраза</string>
+  <string name="common_paste">Вставить</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
