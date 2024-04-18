@@ -24,6 +24,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
@@ -406,7 +407,8 @@ internal class SendViewModel @Inject constructor(
         return if (!isMultiCurrency) {
             val status = getCryptoCurrencyStatusSyncUseCase(walletId).getOrNull()
             val address = status?.value?.networkAddress.takeIf {
-                status?.currency?.network?.id == cryptoCurrency.network.id
+                status?.currency?.network?.id == cryptoCurrency.network.id &&
+                    status.currency.network.derivationPath !is Network.DerivationPath.Custom
             }
             address?.let {
                 AvailableWallet(
@@ -417,7 +419,8 @@ internal class SendViewModel @Inject constructor(
         } else {
             val statuses = getCryptoCurrencyStatusesSyncUseCase(walletId).getOrNull()
             val walletCurrency = statuses?.firstOrNull {
-                it.currency.network.id == cryptoCurrency.network.id
+                it.currency.network.id == cryptoCurrency.network.id &&
+                    it.currency.network.derivationPath !is Network.DerivationPath.Custom
             }
             val address = walletCurrency?.value?.networkAddress
             address?.let {
