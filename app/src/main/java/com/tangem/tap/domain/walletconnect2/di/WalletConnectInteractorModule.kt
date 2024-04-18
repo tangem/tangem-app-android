@@ -8,7 +8,7 @@ import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.files.FileReader
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl
@@ -40,7 +40,7 @@ internal object WalletConnectInteractorModule {
         walletConnectFeatureToggles: WalletConnectFeatureToggles,
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
-        walletsStateHolder: WalletsStateHolder,
+        userWalletsListManager: UserWalletsListManager,
     ): WalletConnectInteractor {
         return WalletConnectInteractor(
             handler = WalletConnectEventsHandlerImpl(),
@@ -50,7 +50,7 @@ internal object WalletConnectInteractorModule {
             blockchainHelper = TangemWcBlockchainHelper(walletConnectFeatureToggles),
             currenciesRepository = currenciesRepository,
             walletManagersFacade = walletManagersFacade,
-            walletsStateHolder = walletsStateHolder,
+            userWalletsListManager = userWalletsListManager,
             dispatchers = AppCoroutineDispatcherProvider(),
         )
     }
