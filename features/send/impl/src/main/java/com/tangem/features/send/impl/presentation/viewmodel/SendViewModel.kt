@@ -365,8 +365,8 @@ internal class SendViewModel @Inject constructor(
                 updateNotifications()
             }
             else -> {
-                getWalletsAndRecent()
                 uiState = stateFactory.getReadyState()
+                getWalletsAndRecent()
                 stateRouter.showRecipient()
                 updateNotifications()
             }
