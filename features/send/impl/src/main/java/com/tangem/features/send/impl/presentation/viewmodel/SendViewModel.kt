@@ -797,6 +797,7 @@ internal class SendViewModel @Inject constructor(
     override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {
         uiState = amountStateFactory.getOnAmountValueChange(reducedAmount.parseBigDecimal(cryptoCurrency.decimals))
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
+        updateNotifications()
     }
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {
