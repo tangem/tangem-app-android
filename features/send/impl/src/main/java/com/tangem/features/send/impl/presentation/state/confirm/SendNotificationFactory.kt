@@ -96,17 +96,13 @@ internal class SendNotificationFactory(
         receivedAmount: BigDecimal,
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val coinCryptoCurrencyStatus = coinCryptoCurrencyStatusProvider()
         val feePaidCryptoCurrencyStatus = feePaidCryptoCurrencyStatusProvider()
         val cryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        val coinCryptoAmount = coinCryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
 
-        val showNotification = if (cryptoCurrencyStatus.currency.id == feePaidCryptoCurrencyStatus?.currency?.id) {
-            receivedAmount > cryptoAmount || feeAmount > coinCryptoAmount
-        } else {
-            receivedAmount + feeAmount > cryptoAmount
-        }
+        val isCurrentNotFeePaidCurrency = cryptoCurrencyStatus.currency.id != feePaidCryptoCurrencyStatus?.currency?.id
+        if (isCurrentNotFeePaidCurrency) return
 
+        val showNotification = receivedAmount + feeAmount > cryptoAmount
         if (showNotification) {
             add(SendNotification.Error.TotalExceedsBalance)
         }
