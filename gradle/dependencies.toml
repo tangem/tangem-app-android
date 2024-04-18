@@ -88,7 +88,7 @@ decompose = "2.2.2"
 # region Tangem
 tangemBlockchainSdk = "develop-601"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-345"
+tangemCardSdk = "develop-346"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
