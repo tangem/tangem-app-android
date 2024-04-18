@@ -40,6 +40,29 @@ object BigDecimalFormatter {
         }
     }
 
+    fun formatCryptoAmountUncapped(
+        cryptoAmount: BigDecimal?,
+        cryptoCurrency: CryptoCurrency,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (cryptoAmount == null) return EMPTY_BALANCE_SIGN
+
+        val formatter = NumberFormat.getNumberInstance(locale).apply {
+            maximumFractionDigits = cryptoCurrency.decimals
+            minimumFractionDigits = 2
+            isGroupingUsed = true
+            roundingMode = RoundingMode.DOWN
+        }
+
+        return formatter.format(cryptoAmount).let {
+            if (cryptoCurrency.symbol.isEmpty()) {
+                it
+            } else {
+                it + "\u2009${cryptoCurrency.symbol}"
+            }
+        }
+    }
+
     fun formatCryptoAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: CryptoCurrency,
