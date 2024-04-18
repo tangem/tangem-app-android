@@ -358,8 +358,9 @@ internal class SendViewModel @Inject constructor(
                 stateRouter.showSend()
             }
             transactionId != null && amount != null && destinationAddress != null -> {
+                loadFee()
                 uiState = stateFactory.getReadyState(amount, destinationAddress, memo)
-                stateRouter.showFee()
+                stateRouter.showSend()
                 updateNotifications()
             }
             else -> {
@@ -701,6 +702,7 @@ internal class SendViewModel @Inject constructor(
             if (result == null) {
                 onFeeLoadFailed(isShowStatus, isToNextState)
             }
+            updateNotifications()
             updateFeeNotifications()
         }.saveIn(feeJobHolder)
             .invokeOnCompletion {
