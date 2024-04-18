@@ -12,6 +12,7 @@ import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
+import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.sdk.mocks.Mocks
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import java.util.Date
@@ -232,6 +233,15 @@ object WalletMocks : Mocks {
         primaryCard = primaryCard,
     )
 
-    override val importWalletResponse : CreateProductWalletTaskResponse
-        get() = throw IllegalStateException("Available only for Wallet 2")
+    override val importWalletResponse: CreateProductWalletTaskResponse
+        get() = error("Available only for Wallet 2")
+
+    override val createFirstTwinResponse: CreateWalletResponse
+        get() = error("Available only for Twin")
+
+    override val createSecondTwinResponse: CreateWalletResponse
+        get() = error("Available only for Twin")
+
+    override val finalizeTwinResponse: ScanResponse
+        get() = error("Available only for Twin")
 }

@@ -46,4 +46,10 @@ object MockProvider {
             else -> TODO()
         }
     }
+
+    fun finalizeTwin() = CompletionResult.Success(mocks.finalizeTwinResponse)
+
+    fun createFirstTwinWallet() = CompletionResult.Success(mocks.createFirstTwinResponse)
+
+    fun createSecondTwinWallet() = CompletionResult.Success(mocks.createSecondTwinResponse)
 }

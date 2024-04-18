@@ -14,11 +14,10 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @Suppress("TooManyFunctions")
 class MockTangemSdkManager(
@@ -128,12 +127,10 @@ class MockTangemSdkManager(
         initialMessage: Message?,
         accessCode: String?,
         @DrawableRes iconScanRes: Int?,
-    ): CompletionResult<T> = withContext(Dispatchers.Main) {
-        TODO()
-    }
+    ): CompletionResult<T> = error("This method is deprecated")
 
-    @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
+        // intentionally do nothing
     }
 
     @Deprecated("TangemSdkManager shouldn't returns a string from resources")
@@ -144,4 +141,35 @@ class MockTangemSdkManager(
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
         userCodeRequestPolicyInternal = policy
     }
+
+    // region Twin-specific
+
+    override suspend fun createFirstTwinWallet(
+        cardId: String,
+        initialMessage: Message,
+    ): CompletionResult<CreateWalletResponse> {
+        return MockProvider.createFirstTwinWallet()
+    }
+
+    override suspend fun createSecondTwinWallet(
+        firstPublicKey: String,
+        firstCardId: String,
+        issuerKeys: KeyPair,
+        preparingMessage: Message,
+        creatingWalletMessage: Message,
+        initialMessage: Message,
+    ): CompletionResult<CreateWalletResponse> {
+        return MockProvider.createSecondTwinWallet()
+    }
+
+    override suspend fun finalizeTwin(
+        secondCardPublicKey: ByteArray,
+        issuerKeyPair: KeyPair,
+        cardId: String,
+        initialMessage: Message,
+    ): CompletionResult<ScanResponse> {
+        return MockProvider.finalizeTwin()
+    }
+
+    // endregion
 }
