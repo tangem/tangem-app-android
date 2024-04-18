@@ -47,9 +47,13 @@ object MockProvider {
         }
     }
 
+    // region Twin-specific
+
     fun finalizeTwin() = CompletionResult.Success(mocks.finalizeTwinResponse)
 
     fun createFirstTwinWallet() = CompletionResult.Success(mocks.createFirstTwinResponse)
 
     fun createSecondTwinWallet() = CompletionResult.Success(mocks.createSecondTwinResponse)
+
+    // endregion
 }
