@@ -24,7 +24,7 @@ import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -48,7 +48,7 @@ internal class DefaultSwapRepository @Inject constructor(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
-    private val walletsStateHolder: WalletsStateHolder,
+    private val userWalletsListManager: UserWalletsListManager,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     moshi: Moshi,
@@ -389,8 +389,8 @@ internal class DefaultSwapRepository @Inject constructor(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 derivationStyleProvider = requireNotNull(
-                    walletsStateHolder.userWalletsListManager
-                        ?.selectedUserWalletSync
+                    userWalletsListManager
+                        .selectedUserWalletSync
                         ?.scanResponse
                         ?.derivationStyleProvider,
                 ),
