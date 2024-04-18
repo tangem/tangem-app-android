@@ -6,27 +6,21 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
-import com.tangem.domain.wallets.legacy.ensureUserWalletListManagerNotNull
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.DeleteWalletError
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
  * Use case for updating user wallet
  *
- * @property walletsStateHolder state holder for getting static initialized 'userWalletsListManager'
+ * @property userWalletsListManager user wallets list manager
  *
 * [REDACTED_AUTHOR]
  */
-class DeleteWalletUseCase(private val walletsStateHolder: WalletsStateHolder) {
+class DeleteWalletUseCase(private val userWalletsListManager: UserWalletsListManager) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<DeleteWalletError, Unit> {
         return either {
-            val userWalletsListManager = ensureUserWalletListManagerNotNull(
-                walletsStateHolder = walletsStateHolder,
-                raise = { DeleteWalletError.DataError },
-            )
-
             userWalletsListManager.delete(userWalletIds = listOf(userWalletId))
                 .doOnSuccess { return Unit.right() }
                 .doOnFailure { return DeleteWalletError.UnableToDelete.left() }

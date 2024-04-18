@@ -1,20 +1,18 @@
 package com.tangem.domain.wallets.usecase
 
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Use case for getting list of user wallets
  *
- * @property walletsStateHolder state holder for getting static initialized 'userWalletsListManager'
+ * @property userWalletsListManager user wallets list manager
  *
 * [REDACTED_AUTHOR]
  */
-class GetWalletsUseCase(private val walletsStateHolder: WalletsStateHolder) {
+class GetWalletsUseCase(private val userWalletsListManager: UserWalletsListManager) {
 
     @Throws(IllegalArgumentException::class)
-    operator fun invoke(): Flow<List<UserWallet>> {
-        return requireNotNull(walletsStateHolder.userWalletsListManager).userWallets
-    }
+    operator fun invoke(): Flow<List<UserWallet>> = userWalletsListManager.userWallets
 }
