@@ -11,7 +11,6 @@ import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
@@ -418,15 +417,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
                         when (val error = result.error) {
                             is TangemSdkError.BackupFailedNotEmptyWallets -> {
-                                if (card?.canSkipBackup == false) {
-                                    store.dispatchOnMain(
-                                        GlobalAction.ShowDialog(
-                                            BackupDialog.ResetBackupCard(error.cardId),
-                                        ),
-                                    )
-                                } else {
-                                    crashlytics.recordException(error)
-                                }
+                                store.dispatchOnMain(
+                                    GlobalAction.ShowDialog(
+                                        BackupDialog.ResetBackupCard(error.cardId),
+                                    ),
+                                )
                             }
                             is TangemSdkError.IssuerSignatureLoadingFailed -> {
                                 store.dispatchOnMain(
@@ -497,7 +492,17 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                             store.dispatchOnMain(BackupAction.PrepareToWriteBackupCard(action.cardNumber + 1))
                         }
                     }
-                    is CompletionResult.Failure -> Unit
+                    is CompletionResult.Failure -> {
+                        when (val error = result.error) {
+                            is TangemSdkError.BackupFailedNotEmptyWallets -> {
+                                store.dispatchOnMain(
+                                    GlobalAction.ShowDialog(
+                                        BackupDialog.ResetBackupCard(error.cardId),
+                                    ),
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
