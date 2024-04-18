@@ -6,7 +6,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import dagger.Module
 import dagger.Provides
@@ -58,8 +58,8 @@ internal object CardDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideIsNeedToBackupUseCase(walletStateHolder: WalletsStateHolder): IsNeedToBackupUseCase {
-        return IsNeedToBackupUseCase(walletStateHolder)
+    fun provideIsNeedToBackupUseCase(userWalletsListManager: UserWalletsListManager): IsNeedToBackupUseCase {
+        return IsNeedToBackupUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
