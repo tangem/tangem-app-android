@@ -794,7 +794,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {
-        uiState = sendNotificationFactory.dismissNotificationState(clazz)
+        uiState = sendNotificationFactory.dismissNotificationState(clazz = clazz, isIgnored = true)
     }
 
     private fun verifyAndSendTransaction() {
