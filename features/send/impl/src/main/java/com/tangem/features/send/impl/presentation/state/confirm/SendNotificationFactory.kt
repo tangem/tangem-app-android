@@ -70,7 +70,7 @@ internal class SendNotificationFactory(
             }.toImmutableList()
         }
 
-    fun dismissNotificationState(clazz: Class<out SendNotification>): SendUiState {
+    fun dismissNotificationState(clazz: Class<out SendNotification>, isIgnored: Boolean = false): SendUiState {
         val state = currentStateProvider()
         val sendState = state.sendState ?: return state
         val notificationsToRemove = sendState.notifications.filterIsInstance(clazz)
@@ -78,7 +78,7 @@ internal class SendNotificationFactory(
         updatedNotifications.removeAll(notificationsToRemove)
         return state.copy(
             sendState = sendState.copy(
-                ignoreAmountReduce = true,
+                ignoreAmountReduce = isIgnored,
                 notifications = updatedNotifications.toImmutableList(),
             ),
         )
