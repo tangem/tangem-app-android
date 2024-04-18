@@ -183,6 +183,8 @@ include(":domain:onboarding")
 include(":domain:feedback")
 include(":domain:qr-scanning")
 include(":domain:qr-scanning:models")
+include(":domain:accounts")
+include(":domain:accounts:models")
 // endregion Domain modules
 
 // region Data modules
@@ -202,4 +204,5 @@ include(":data:promo")
 include(":data:onboarding")
 include(":data:feedback")
 include(":data:qr-scanning")
+include(":data:accounts")
 // endregion Data modules

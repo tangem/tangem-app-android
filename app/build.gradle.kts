@@ -67,6 +67,7 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
+    implementation(projects.domain.accounts)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
@@ -98,6 +99,7 @@ dependencies {
     implementation(projects.data.onboarding)
     implementation(projects.data.feedback)
     implementation(projects.data.qrScanning)
+    implementation(projects.data.accounts)
 
     /** Features */
     implementation(projects.features.onboarding)
