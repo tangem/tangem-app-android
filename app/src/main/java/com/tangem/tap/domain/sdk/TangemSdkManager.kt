@@ -104,6 +104,7 @@ interface TangemSdkManager {
     fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy)
 
     // region Twin-specific
+    
     suspend fun finalizeTwin(
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
