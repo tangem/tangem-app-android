@@ -14,7 +14,7 @@ internal class SendFeeStateConverter(
 
     override fun convert(value: Unit): SendStates.FeeState {
         return SendStates.FeeState(
-            feeSelectorState = FeeSelectorState.Error,
+            feeSelectorState = FeeSelectorState.Loading,
             fee = null,
             notifications = persistentListOf(),
             rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate,
