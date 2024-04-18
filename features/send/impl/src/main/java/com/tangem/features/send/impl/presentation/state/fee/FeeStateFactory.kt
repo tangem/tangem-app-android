@@ -47,6 +47,11 @@ internal class FeeStateFactory(
         return state.copy(
             amountState = state.amountState?.copy(isFeeLoading = true),
             feeState = feeState.copy(
+                feeSelectorState = if (feeState.feeSelectorState is FeeSelectorState.Content) {
+                    feeState.feeSelectorState
+                } else {
+                    FeeSelectorState.Loading
+                },
                 notifications = persistentListOf(),
                 isPrimaryButtonEnabled = false,
             ),
