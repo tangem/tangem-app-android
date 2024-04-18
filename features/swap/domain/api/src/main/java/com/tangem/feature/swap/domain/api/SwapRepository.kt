@@ -58,6 +58,7 @@ interface SwapRepository {
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
+        fromAddress: String,
         toNetwork: String,
         fromAmount: String,
         fromDecimals: Int,
