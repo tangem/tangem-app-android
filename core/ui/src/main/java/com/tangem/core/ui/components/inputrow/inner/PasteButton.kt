@@ -50,7 +50,7 @@ fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifi
         modifier = modifier,
     ) {
         Text(
-            text = "Paste",
+            text = stringResource(R.string.common_paste),
             style = TangemTheme.typography.button,
             color = TangemTheme.colors.text.primary2,
             modifier = Modifier
