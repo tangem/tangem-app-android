@@ -81,6 +81,10 @@ internal class BiometricUserWalletsListManager(
         state.update { State() }
     }
 
+    override fun isLockable(): Boolean {
+        return true
+    }
+
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
         if (state.value.selectedUserWalletId == userWalletId) {
             return@catching findSelectedUserWallet()!!

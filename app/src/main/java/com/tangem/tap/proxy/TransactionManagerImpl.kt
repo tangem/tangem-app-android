@@ -9,7 +9,7 @@ import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.hedera.HederaTransactionBuilder
-import com.tangem.blockchain.blockchains.optimism.OptimismWalletManager
+import com.tangem.blockchain.blockchains.optimism.EthereumOptimisticRollupWalletManager
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
@@ -170,7 +170,7 @@ class TransactionManagerImpl(
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
         if (walletManager is EthereumWalletManager) {
-            if (walletManager is OptimismWalletManager) {
+            if (walletManager is EthereumOptimisticRollupWalletManager) {
                 return getFeeForOptimismBlockchain(
                     walletManager = walletManager,
                     amount = createAmount(amountToSend, currencyToSend, blockchain),
@@ -285,7 +285,7 @@ class TransactionManagerImpl(
     }
 
     private suspend fun getFeeForOptimismBlockchain(
-        walletManager: OptimismWalletManager,
+        walletManager: EthereumOptimisticRollupWalletManager,
         amount: Amount,
         destinationAddress: String,
         data: String?,

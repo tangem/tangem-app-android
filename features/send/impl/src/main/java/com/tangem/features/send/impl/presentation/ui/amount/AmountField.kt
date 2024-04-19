@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -24,6 +22,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.job
 
 @Composable
@@ -37,6 +36,16 @@ internal fun AmountField(sendField: SendTextField.AmountField, isEnabled: Boolea
         sendField.cryptoAmount to sendField.value
     }
     val requester = remember { FocusRequester() }
+    var isEnabledProxy by remember { mutableStateOf(isEnabled) }
+
+    // Fix animation from amount screen to summary screen (AND-6758)
+    LaunchedEffect(key1 = isEnabled) {
+        if (isEnabled) {
+            delay(timeMillis = 700)
+        }
+        isEnabledProxy = isEnabled
+    }
+
     AmountTextField(
         value = primaryValue,
         decimals = primaryAmount.decimals,
@@ -53,7 +62,7 @@ internal fun AmountField(sendField: SendTextField.AmountField, isEnabled: Boolea
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
         ),
-        isEnabled = isEnabled,
+        isEnabled = isEnabledProxy,
         isAutoResize = true,
         modifier = Modifier
             .focusRequester(requester)
@@ -64,6 +73,7 @@ internal fun AmountField(sendField: SendTextField.AmountField, isEnabled: Boolea
             )
             .requiredHeightIn(min = TangemTheme.dimens.size32),
     )
+
     LaunchedEffect(key1 = Unit) {
         this.coroutineContext.job.invokeOnCompletion {
             requester.requestFocus()

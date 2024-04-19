@@ -4,7 +4,7 @@ import arrow.fx.coroutines.resourceScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -44,7 +44,7 @@ internal object UseCaseScanProcessor {
 
     @Suppress("LongParameterList")
     suspend fun scan(
-        analyticsEvent: AnalyticsEvent?,
+        analyticsSource: AnalyticsParam.ScreensSources,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
@@ -54,10 +54,12 @@ internal object UseCaseScanProcessor {
     ) = progressScope(onProgressStateChange) {
         val scanCardUseCase = store.inject(DaggerGraphState::scanCardUseCase)
         val chains = buildList {
-            add(FailedScansCounterChain(UseCaseScanProcessor::showMaxUnsuccessfulScansReachedDialog))
-            if (analyticsEvent != null) {
-                add(AnalyticsChain(analyticsEvent))
-            }
+            add(
+                FailedScansCounterChain(
+                    { showMaxUnsuccessfulScansReachedDialog(analyticsSource) },
+                ),
+            )
+            add(AnalyticsChain(Basic.CardWasScanned(analyticsSource)))
             add(DisclaimerChain(store, disclaimerWillShow))
             add(CheckForOnboardingChain(store, store.state.globalState.tapWalletManager))
         }
@@ -68,8 +70,14 @@ internal object UseCaseScanProcessor {
         )
     }
 
-    private fun showMaxUnsuccessfulScansReachedDialog() {
-        store.dispatchDialogShow(StateDialog.ScanFailsDialog)
+    private fun showMaxUnsuccessfulScansReachedDialog(source: AnalyticsParam.ScreensSources) {
+        val scanFailsSource = when (source) {
+            is AnalyticsParam.ScreensSources.SignIn -> StateDialog.ScanFailsSource.SIGN_IN
+            is AnalyticsParam.ScreensSources.Settings -> StateDialog.ScanFailsSource.SETTINGS
+            is AnalyticsParam.ScreensSources.Intro -> StateDialog.ScanFailsSource.INTRO
+            else -> StateDialog.ScanFailsSource.MAIN
+        }
+        store.dispatchDialogShow(StateDialog.ScanFailsDialog(scanFailsSource))
     }
 
     private suspend fun proceedWithException(
