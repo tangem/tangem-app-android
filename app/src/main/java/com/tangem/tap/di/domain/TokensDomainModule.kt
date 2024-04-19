@@ -190,7 +190,6 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
-        sendFeatureToggles: SendFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
@@ -199,7 +198,6 @@ internal object TokensDomainModule {
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
-            sendFeatureToggles = sendFeatureToggles,
             dispatchers = dispatchers,
         )
     }

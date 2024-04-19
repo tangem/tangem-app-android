@@ -9,7 +9,6 @@ import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
@@ -29,7 +28,6 @@ class GetCryptoCurrencyActionsUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -112,7 +110,6 @@ class GetCryptoCurrencyActionsUseCase(
 
         // send
         val sendUnavailabilityReason = getSendUnavailabilityReason(
-            userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             coinStatus = coinStatus,
         )
@@ -191,28 +188,13 @@ class GetCryptoCurrencyActionsUseCase(
         return actionsList
     }
 
-    private suspend fun getSendUnavailabilityReason(
-        userWalletId: UserWalletId,
+    private fun getSendUnavailabilityReason(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): ScenarioUnavailabilityReason {
-        val insufficientFundsForFee = insufficientFundsForFee(
-            userWalletId = userWalletId,
-            tokenStatus = cryptoCurrencyStatus,
-            coinStatus = coinStatus,
-        )
-
         return when {
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
                 ScenarioUnavailabilityReason.EmptyBalance
-            }
-            insufficientFundsForFee != null -> {
-                ScenarioUnavailabilityReason.InsufficientFundsForFee(
-                    currencyName = insufficientFundsForFee.currencyName,
-                    networkName = insufficientFundsForFee.networkName,
-                    feeCurrencyName = insufficientFundsForFee.feeCurrencyName,
-                    feeCurrencySymbol = insufficientFundsForFee.feeCurrencySymbol,
-                )
             }
             currenciesRepository.hasPendingTransactions(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -226,81 +208,6 @@ class GetCryptoCurrencyActionsUseCase(
         }
     }
 
-    private suspend fun insufficientFundsForFee(
-        userWalletId: UserWalletId,
-        tokenStatus: CryptoCurrencyStatus,
-        coinStatus: CryptoCurrencyStatus?,
-    ): FeeInfo? {
-        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency)
-        coinStatus ?: return null
-        return when {
-            sendFeatureToggles.isRedesignedSendEnabled && !tokenStatus.value.amount.isZero() -> {
-                null
-            }
-            feePaidCurrency is FeePaidCurrency.Coin &&
-                !tokenStatus.value.amount.isZero() &&
-                coinStatus.value.amount.isZero() -> {
-                FeeInfo(
-                    currencyName = tokenStatus.currency.name,
-                    networkName = coinStatus.currency.network.name,
-                    feeCurrencyName = coinStatus.currency.name,
-                    feeCurrencySymbol = coinStatus.currency.symbol,
-                )
-            }
-            feePaidCurrency is FeePaidCurrency.SameCurrency && !tokenStatus.value.amount.isZero() -> {
-                FeeInfo(
-                    currencyName = tokenStatus.currency.name,
-                    networkName = coinStatus.currency.network.name,
-                    feeCurrencyName = coinStatus.currency.name,
-                    feeCurrencySymbol = coinStatus.currency.symbol,
-                )
-            }
-            feePaidCurrency is FeePaidCurrency.Token -> {
-                val feePaidTokenBalance = feePaidCurrency.balance
-                val amount = tokenStatus.value.amount ?: return null
-                if (!amount.isZero() && feePaidTokenBalance.isZero()) {
-                    constructTokenBalanceNotEnoughWarning(
-                        userWalletId = userWalletId,
-                        tokenStatus = tokenStatus,
-                        feePaidToken = feePaidCurrency,
-                    )
-                } else {
-                    null
-                }
-            }
-            else -> null
-        }
-    }
-
-    private suspend fun constructTokenBalanceNotEnoughWarning(
-        userWalletId: UserWalletId,
-        tokenStatus: CryptoCurrencyStatus,
-        feePaidToken: FeePaidCurrency.Token,
-    ): FeeInfo {
-        val token = currenciesRepository
-            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
-            .find {
-                it is CryptoCurrency.Token &&
-                    it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
-                    it.network.derivationPath == tokenStatus.currency.network.derivationPath
-            }
-        return if (token != null) {
-            FeeInfo(
-                currencyName = tokenStatus.currency.name,
-                networkName = token.network.name,
-                feeCurrencyName = feePaidToken.name,
-                feeCurrencySymbol = feePaidToken.symbol,
-            )
-        } else {
-            FeeInfo(
-                currencyName = tokenStatus.currency.name,
-                networkName = tokenStatus.currency.network.name,
-                feeCurrencyName = feePaidToken.name,
-                feeCurrencySymbol = feePaidToken.symbol,
-            )
-        }
-    }
-
     private fun isAddressAvailable(networkAddress: NetworkAddress?): Boolean {
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
     }
@@ -309,10 +216,4 @@ class GetCryptoCurrencyActionsUseCase(
         return this?.signum() == 0
     }
 
-    data class FeeInfo(
-        val currencyName: String,
-        val networkName: String,
-        val feeCurrencyName: String,
-        val feeCurrencySymbol: String,
-    )
 }
