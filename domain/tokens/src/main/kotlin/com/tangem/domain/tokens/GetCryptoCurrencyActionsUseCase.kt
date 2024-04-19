@@ -142,7 +142,8 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // sell
-        if (rampManager.availableForSell(cryptoCurrency)) {
+        if (rampManager.availableForSell(cryptoCurrency) &&
+            sendUnavailabilityReason is ScenarioUnavailabilityReason.None) {
             activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
         } else {
             disabledList.add(
