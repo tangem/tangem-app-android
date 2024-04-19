@@ -49,6 +49,7 @@ internal object AmountStatePreviewData {
             isError = false,
             error = TextReference.EMPTY,
         ),
+        isSegmentedButtonsEnabled = true,
     )
 
     val fiatAmountState = amountState.copy(
