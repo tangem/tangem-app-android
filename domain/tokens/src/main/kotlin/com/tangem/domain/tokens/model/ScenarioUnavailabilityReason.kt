@@ -16,5 +16,5 @@ sealed class ScenarioUnavailabilityReason {
     // sell-specific
     data class SellUnavailable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
 
-    data object NoQuotes : ScenarioUnavailabilityReason()
+    data object Unreachable : ScenarioUnavailabilityReason()
 }

@@ -364,7 +364,7 @@ internal class TokenDetailsStateFactory(
                     formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
                 )
             }
-            ScenarioUnavailabilityReason.NoQuotes -> {
+            ScenarioUnavailabilityReason.Unreachable -> {
                 resourceReference(
                     id = R.string.token_button_unavailability_reason_no_quotes,
                 )

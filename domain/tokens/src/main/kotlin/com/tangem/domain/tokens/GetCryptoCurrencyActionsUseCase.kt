@@ -9,7 +9,6 @@ import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -121,7 +120,10 @@ class GetCryptoCurrencyActionsUseCase(
 
         // swap
         if (userWallet.isMultiCurrency) {
-            if (marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency)) {
+            if (
+                marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency) &&
+                cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote
+            ) {
                 activeList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None))
             } else {
                 disabledList.add(
@@ -143,7 +145,8 @@ class GetCryptoCurrencyActionsUseCase(
 
         // sell
         if (rampManager.availableForSell(cryptoCurrency) &&
-            sendUnavailabilityReason is ScenarioUnavailabilityReason.None) {
+            sendUnavailabilityReason is ScenarioUnavailabilityReason.None
+        ) {
             activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
         } else {
             disabledList.add(
@@ -178,9 +181,9 @@ class GetCryptoCurrencyActionsUseCase(
                 ),
             )
         }
-        actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.NoQuotes))
-        actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.NoQuotes))
-        actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.NoQuotes))
+        actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.Unreachable))
+        actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.Unreachable))
+        actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.Unreachable))
 
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             actionsList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None))
@@ -216,5 +219,4 @@ class GetCryptoCurrencyActionsUseCase(
     private fun BigDecimal?.isZero(): Boolean {
         return this?.signum() == 0
     }
-
 }
