@@ -61,4 +61,7 @@ dependencies {
 
     /** Local storages */
     implementation(deps.androidx.datastore)
+    implementation(deps.room.runtime)
+    implementation(deps.room.ktx)
+    kapt(deps.room.compiler)
 }
