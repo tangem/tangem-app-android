@@ -13,8 +13,10 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
+@Suppress("TooManyFunctions")
 interface TangemSdkManager {
 
     val canUseBiometry: Boolean
@@ -38,6 +40,7 @@ interface TangemSdkManager {
         shouldReset: Boolean = false,
     ): CompletionResult<CreateProductWalletTaskResponse>
 
+    // Wallet2 specific
     suspend fun importWallet(
         scanResponse: ScanResponse,
         mnemonic: String,
@@ -80,6 +83,10 @@ interface TangemSdkManager {
         allowRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<CardDTO>
 
+    @Deprecated(
+        "TangemSdkManager shouldn't run custom tasks. " +
+            "All of them should be specified in TangemSdkManager certain methods.",
+    )
     suspend fun <T> runTaskAsync(
         runnable: CardSessionRunnable<T>,
         cardId: String? = null,
@@ -95,4 +102,27 @@ interface TangemSdkManager {
     fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String
 
     fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy)
+
+    // region Twin-specific
+
+    suspend fun finalizeTwin(
+        secondCardPublicKey: ByteArray,
+        issuerKeyPair: KeyPair,
+        cardId: String,
+        initialMessage: Message,
+    ): CompletionResult<ScanResponse>
+
+    suspend fun createFirstTwinWallet(cardId: String, initialMessage: Message): CompletionResult<CreateWalletResponse>
+
+    @Suppress("LongParameterList")
+    suspend fun createSecondTwinWallet(
+        firstPublicKey: String,
+        firstCardId: String,
+        issuerKeys: KeyPair,
+        preparingMessage: Message,
+        creatingWalletMessage: Message,
+        initialMessage: Message,
+    ): CompletionResult<CreateWalletResponse>
+
+    // endregion
 }
