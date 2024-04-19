@@ -526,8 +526,9 @@ internal class SendViewModel @Inject constructor(
             )
             return true
         }
+        val feeSelectorState = uiState.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
         return checkIfFeeTooHigh(
-            state = uiState,
+            feeSelectorState = feeSelectorState,
             onShow = { diff ->
                 uiState = eventStateFactory.getFeeTooHighAlert(
                     diff = diff,
