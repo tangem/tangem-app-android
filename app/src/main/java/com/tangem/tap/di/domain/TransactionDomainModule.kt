@@ -21,8 +21,14 @@ internal object TransactionDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetFeeUseCase {
-        return GetFeeUseCase(walletManagersFacade)
+    fun provideGetFeeUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        isDemoCardUseCase: IsDemoCardUseCase,
+    ): GetFeeUseCase {
+        return GetFeeUseCase(
+            walletManagersFacade = walletManagersFacade,
+            isDemoCardUseCase = isDemoCardUseCase,
+        )
     }
 
     @Provides
@@ -31,11 +37,13 @@ internal object TransactionDomainModule {
         isDemoCardUseCase: IsDemoCardUseCase,
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
+        walletManagersFacade: WalletManagersFacade,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
             transactionRepository = transactionRepository,
+            walletManagersFacade = walletManagersFacade,
         )
     }
 

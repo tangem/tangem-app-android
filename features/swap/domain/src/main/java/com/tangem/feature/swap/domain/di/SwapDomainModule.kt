@@ -129,11 +129,13 @@ class SwapDomainModule {
         @SwapScope isDemoCardUseCase: IsDemoCardUseCase,
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
+        walletManagersFacade: WalletManagersFacade,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             isDemoCardUseCase = isDemoCardUseCase,
             cardSdkConfigRepository = cardSdkConfigRepository,
             transactionRepository = transactionRepository,
+            walletManagersFacade = walletManagersFacade,
         )
     }
 
