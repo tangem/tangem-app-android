@@ -20,6 +20,7 @@ import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.fee.checkIfFeeTooHigh
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isDogecoin
 import com.tangem.utils.Provider
@@ -31,7 +32,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
-import java.math.BigInteger
 
 @Suppress("LongParameterList")
 internal class SendNotificationFactory(
@@ -276,13 +276,9 @@ internal class SendNotificationFactory(
 
     private fun MutableList<SendNotification>.addTooHighNotification(feeSelectorState: FeeSelectorState) {
         if (feeSelectorState !is FeeSelectorState.Content) return
-        val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return
-        val highValue = multipleFees.priority.amount.value ?: return
-        val customAmount = feeSelectorState.customValues.firstOrNull() ?: return
-        val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
-        val diff = (customValue / highValue).toBigInteger()
-        if (feeSelectorState.selectedFee == FeeType.Custom && diff > FEE_MAX_DIFF) {
-            add(SendNotification.Warning.TooHigh(diff.toString()))
+
+        checkIfFeeTooHigh(feeSelectorState) { diff ->
+            add(SendNotification.Warning.TooHigh(diff))
         }
     }
 
@@ -365,6 +361,5 @@ internal class SendNotificationFactory(
 
     companion object {
         private const val DOGECOIN_MINIMUM = "0.01"
-        internal val FEE_MAX_DIFF = BigInteger("5")
     }
 }
