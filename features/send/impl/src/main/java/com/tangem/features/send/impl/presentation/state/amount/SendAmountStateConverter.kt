@@ -42,22 +42,19 @@ internal class SendAmountStateConverter(
             isFeeLoading = false,
             appCurrencyCode = appCurrency.code,
             subtractedFee = null,
-            segmentedButtonConfig = if (status.value.fiatRate.isNullOrZero()) {
-                persistentListOf()
-            } else {
-                persistentListOf(
-                    SendAmountSegmentedButtonsConfig(
-                        title = stringReference(status.currency.symbol),
-                        iconState = iconStateConverter.convert(status),
-                        isFiat = false,
-                    ),
-                    SendAmountSegmentedButtonsConfig(
-                        title = stringReference(appCurrency.code),
-                        iconUrl = appCurrency.iconSmallUrl,
-                        isFiat = true,
-                    ),
-                )
-            },
+            segmentedButtonConfig = persistentListOf(
+                SendAmountSegmentedButtonsConfig(
+                    title = stringReference(status.currency.symbol),
+                    iconState = iconStateConverter.convert(status),
+                    isFiat = false,
+                ),
+                SendAmountSegmentedButtonsConfig(
+                    title = stringReference(appCurrency.code),
+                    iconUrl = appCurrency.iconSmallUrl,
+                    isFiat = true,
+                ),
+            ),
+            isSegmentedButtonsEnabled = !status.value.fiatRate.isNullOrZero(),
         )
     }
 }
