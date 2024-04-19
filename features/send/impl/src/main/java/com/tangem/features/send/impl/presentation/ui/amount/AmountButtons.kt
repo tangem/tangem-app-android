@@ -29,6 +29,7 @@ internal fun LazyListScope.buttons(
     segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
     clickIntents: SendClickIntents,
     isMaxButtonEnabled: Boolean,
+    isSegmentedButtonsEnabled: Boolean,
 ) {
     item(
         key = AMOUNT_BUTTONS_KEY,
@@ -48,6 +49,7 @@ internal fun LazyListScope.buttons(
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         clickIntents.onCurrencyChangeClick(it.isFiat)
                     },
+                    isEnabled = isSegmentedButtonsEnabled,
                 ) {
                     SendAmountCurrencyButton(it)
                 }
