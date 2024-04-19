@@ -22,11 +22,15 @@ interface MockContent {
 
     val createProductWalletTaskResponse: CreateProductWalletTaskResponse
 
+    // Wallet2-specific
     val importWalletResponse: CreateProductWalletTaskResponse
 
+    // Twin-specific
     val finalizeTwinResponse: ScanResponse
 
+    // Twin-specific
     val createFirstTwinResponse: CreateWalletResponse
 
+    // Twin-specific
     val createSecondTwinResponse: CreateWalletResponse
 }
