@@ -35,31 +35,31 @@ object MockProvider {
         content = mockContent
     }
 
-    fun getSuccessResponse() = CompletionResult.Success(content.successResponse).orFail()
+    fun getSuccessResponse() = CompletionResult.Success(content.successResponse).orFailure()
 
-    fun getScanResponse() = CompletionResult.Success(content.scanResponse).orFail()
+    fun getScanResponse() = CompletionResult.Success(content.scanResponse).orFailure()
 
-    fun getDerivationTaskResponse() = CompletionResult.Success(content.derivationTaskResponse).orFail()
+    fun getDerivationTaskResponse() = CompletionResult.Success(content.derivationTaskResponse).orFailure()
 
-    fun getCardDto() = CompletionResult.Success(content.cardDto).orFail()
+    fun getCardDto() = CompletionResult.Success(content.cardDto).orFailure()
 
-    fun getExtendedPublicKey() = CompletionResult.Success(content.extendedPublicKey).orFail()
+    fun getExtendedPublicKey() = CompletionResult.Success(content.extendedPublicKey).orFailure()
 
     fun getCreateProductWalletResponse(): CompletionResult<CreateProductWalletTaskResponse> {
-        return CompletionResult.Success(content.createProductWalletTaskResponse).orFail()
+        return CompletionResult.Success(content.createProductWalletTaskResponse).orFailure()
     }
 
     fun getImportWalletResponse(): CompletionResult<CreateProductWalletTaskResponse> {
-        return CompletionResult.Success(content.importWalletResponse).orFail()
+        return CompletionResult.Success(content.importWalletResponse).orFailure()
     }
 
     // region Twin-specific
 
-    fun finalizeTwin() = CompletionResult.Success(content.finalizeTwinResponse).orFail()
+    fun finalizeTwin() = CompletionResult.Success(content.finalizeTwinResponse).orFailure()
 
-    fun createFirstTwinWallet() = CompletionResult.Success(content.createFirstTwinResponse).orFail()
+    fun createFirstTwinWallet() = CompletionResult.Success(content.createFirstTwinResponse).orFailure()
 
-    fun createSecondTwinWallet() = CompletionResult.Success(content.createSecondTwinResponse).orFail()
+    fun createSecondTwinWallet() = CompletionResult.Success(content.createSecondTwinResponse).orFailure()
 
     // endregion
 
@@ -71,7 +71,7 @@ object MockProvider {
         }
     }
 
-    private fun <T> CompletionResult.Success<T>.orFail(): CompletionResult<T> {
+    private fun <T> CompletionResult.Success<T>.orFailure(): CompletionResult<T> {
         return if (emulateError) {
             CompletionResult.Failure(emulatedError)
         } else {
