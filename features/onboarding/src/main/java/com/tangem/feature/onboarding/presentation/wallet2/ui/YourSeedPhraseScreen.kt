@@ -93,7 +93,7 @@ private fun SegmentSeedBlock(state: SegmentSeedState, modifier: Modifier = Modif
     SegmentedButtons(
         modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing76),
         config = state.seedSegments,
-        selectedItem = state.selectedSeedType,
+        initialSelectedItem = state.selectedSeedType,
         onClick = {
             state.onSelectType(it)
         },
