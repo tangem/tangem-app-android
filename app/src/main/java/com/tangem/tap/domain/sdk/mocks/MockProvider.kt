@@ -1,59 +1,81 @@
 package com.tangem.tap.domain.sdk.mocks
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.models.scan.ProductType
-import com.tangem.tap.domain.sdk.mocks.wallet.WalletMocks
-import com.tangem.tap.domain.sdk.mocks.wallet2.Wallet2Mocks
+import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
+import com.tangem.tap.domain.sdk.mocks.content.Wallet2MockContent
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
 object MockProvider {
 
-    private var mocks: Mocks = getMocks(ProductType.Wallet)
+    private var content: MockContent = getMockContent(ProductType.Wallet)
 
-    fun setMockConfig(mockConfig: MockConfig) {
-        mockConfig.content.fold(
-            ifLeft = {
-                mocks = getMocks(it)
-            },
-            ifRight = {
-                mocks = it
-            },
-        )
+    private var emulateError: Boolean = false
+
+    private var emulatedError: TangemError = TangemSdkError.TagLost()
+
+    fun setEmulateError(error: TangemError? = null) {
+        emulateError = true
+        error?.let {
+            emulatedError = it
+        }
     }
 
-    fun getSuccessResponse() = CompletionResult.Success(mocks.successResponse)
+    fun resetEmulateError() {
+        emulateError = false
+    }
 
-    fun getScanResponse() = CompletionResult.Success(mocks.scanResponse)
+    fun setMocks(productType: ProductType) {
+        content = getMockContent(productType)
+    }
 
-    fun getDerivationTaskResponse() = CompletionResult.Success(mocks.derivationTaskResponse)
+    fun setMocks(mockContent: MockContent) {
+        content = mockContent
+    }
 
-    fun getCardDto() = CompletionResult.Success(mocks.cardDto)
+    fun getSuccessResponse() = CompletionResult.Success(content.successResponse).orFail()
 
-    fun getExtendedPublicKey() = CompletionResult.Success(mocks.extendedPublicKey)
+    fun getScanResponse() = CompletionResult.Success(content.scanResponse).orFail()
+
+    fun getDerivationTaskResponse() = CompletionResult.Success(content.derivationTaskResponse).orFail()
+
+    fun getCardDto() = CompletionResult.Success(content.cardDto).orFail()
+
+    fun getExtendedPublicKey() = CompletionResult.Success(content.extendedPublicKey).orFail()
 
     fun getCreateProductWalletResponse(): CompletionResult<CreateProductWalletTaskResponse> {
-        return CompletionResult.Success(mocks.createProductWalletTaskResponse)
+        return CompletionResult.Success(content.createProductWalletTaskResponse).orFail()
     }
 
     fun getImportWalletResponse(): CompletionResult<CreateProductWalletTaskResponse> {
-        return CompletionResult.Success(mocks.importWalletResponse)
-    }
-
-    private fun getMocks(productType: ProductType): Mocks {
-        return when (productType) {
-            ProductType.Wallet -> WalletMocks
-            ProductType.Wallet2 -> Wallet2Mocks
-            else -> TODO()
-        }
+        return CompletionResult.Success(content.importWalletResponse).orFail()
     }
 
     // region Twin-specific
 
-    fun finalizeTwin() = CompletionResult.Success(mocks.finalizeTwinResponse)
+    fun finalizeTwin() = CompletionResult.Success(content.finalizeTwinResponse).orFail()
 
-    fun createFirstTwinWallet() = CompletionResult.Success(mocks.createFirstTwinResponse)
+    fun createFirstTwinWallet() = CompletionResult.Success(content.createFirstTwinResponse).orFail()
 
-    fun createSecondTwinWallet() = CompletionResult.Success(mocks.createSecondTwinResponse)
+    fun createSecondTwinWallet() = CompletionResult.Success(content.createSecondTwinResponse).orFail()
 
     // endregion
+
+    private fun getMockContent(productType: ProductType): MockContent {
+        return when (productType) {
+            ProductType.Wallet -> WalletMockContent
+            ProductType.Wallet2 -> Wallet2MockContent
+            else -> TODO()
+        }
+    }
+
+    private fun <T> CompletionResult.Success<T>.orFail(): CompletionResult<T> {
+        return if (emulateError) {
+            CompletionResult.Failure(emulatedError)
+        } else {
+            this
+        }
+    }
 }
