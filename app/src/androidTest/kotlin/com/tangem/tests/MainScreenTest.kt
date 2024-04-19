@@ -1,6 +1,5 @@
 package com.tangem.tests
 
-import arrow.core.left
 import com.tangem.common.BaseTestCase
 import com.tangem.screens.DisclaimerScreen
 import com.tangem.screens.StoriesScreen
