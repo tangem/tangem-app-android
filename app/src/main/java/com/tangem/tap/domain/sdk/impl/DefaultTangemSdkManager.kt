@@ -28,12 +28,16 @@ import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
+import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
+import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
+import com.tangem.tap.domain.twins.FinalizeTwinTask
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -273,6 +277,52 @@ class DefaultTangemSdkManager(
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
         tangemSdk.config.userCodeRequestPolicy = policy
     }
+
+    // region Twin-specific
+
+    override suspend fun createFirstTwinWallet(
+        cardId: String,
+        initialMessage: Message,
+    ): CompletionResult<CreateWalletResponse> {
+        return runTaskAsync(
+            runnable = CreateFirstTwinWalletTask(cardId),
+            cardId = cardId,
+            initialMessage = initialMessage,
+        )
+    }
+
+    override suspend fun createSecondTwinWallet(
+        firstPublicKey: String,
+        firstCardId: String,
+        issuerKeys: KeyPair,
+        preparingMessage: Message,
+        creatingWalletMessage: Message,
+        initialMessage: Message,
+    ): CompletionResult<CreateWalletResponse> {
+        val task = CreateSecondTwinWalletTask(
+            firstPublicKey = firstPublicKey,
+            firstCardId = firstCardId,
+            issuerKeys = issuerKeys,
+            preparingMessage = preparingMessage,
+            creatingWalletMessage = creatingWalletMessage,
+        )
+        return runTaskAsync(task, null, initialMessage)
+    }
+
+    override suspend fun finalizeTwin(
+        secondCardPublicKey: ByteArray,
+        issuerKeyPair: KeyPair,
+        cardId: String,
+        initialMessage: Message,
+    ): CompletionResult<ScanResponse> {
+        return runTaskAsync(
+            runnable = FinalizeTwinTask(secondCardPublicKey, issuerKeyPair),
+            cardId = cardId,
+            initialMessage = initialMessage,
+        )
+    }
+
+    // endregion
 
     companion object {
         @Deprecated("Use [DefaultCardSdkProvider] instead")
