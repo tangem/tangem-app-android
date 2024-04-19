@@ -5,54 +5,51 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.common.*
-import com.tangem.common.authentication.keystore.KeystoreManager
+import com.tangem.common.authentication.keystore.DummyKeystoreManager
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
-import com.tangem.common.services.secure.SecureStorage
+import com.tangem.common.services.InMemoryStorage
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @Suppress("TooManyFunctions")
 class MockTangemSdkManager(
     private val resources: Resources,
 ) : TangemSdkManager {
 
-    override val canUseBiometry: Boolean
-        get() = false
+    override val canUseBiometry = false
 
-    override val needEnrollBiometrics: Boolean
-        get() = TODO()
+    override val needEnrollBiometrics = false
 
-    override val keystoreManager: KeystoreManager
-        get() = TODO()
+    override val keystoreManager = DummyKeystoreManager()
 
-    override val secureStorage: SecureStorage
-        get() = TODO()
+    override val secureStorage = InMemoryStorage()
 
     override val userCodeRequestPolicy: UserCodeRequestPolicy
-        get() = TODO()
+        get() = userCodeRequestPolicyInternal
+
+    private var userCodeRequestPolicyInternal: UserCodeRequestPolicy = UserCodeRequestPolicy.Default
 
     override suspend fun scanProduct(
         cardId: String?,
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<ScanResponse> {
-        return CompletionResult.Success(MockProvider.getScanResponse())
+        return MockProvider.getScanResponse()
     }
 
     override suspend fun createProductWallet(
         scanResponse: ScanResponse,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        TODO()
+        return MockProvider.getCreateProductWalletResponse()
     }
 
     override suspend fun importWallet(
@@ -61,14 +58,14 @@ class MockTangemSdkManager(
         passphrase: String?,
         shouldReset: Boolean,
     ): CompletionResult<CreateProductWalletTaskResponse> {
-        TODO()
+        return MockProvider.getImportWalletResponse()
     }
 
     override suspend fun derivePublicKeys(
         cardId: String?,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): CompletionResult<DerivationTaskResponse> {
-        TODO()
+        return MockProvider.getDerivationTaskResponse()
     }
 
     override suspend fun deriveExtendedPublicKey(
@@ -76,52 +73,52 @@ class MockTangemSdkManager(
         walletPublicKey: ByteArray,
         derivation: DerivationPath,
     ): CompletionResult<ExtendedPublicKey> {
-        TODO()
+        return MockProvider.getExtendedPublicKey()
     }
 
     override suspend fun resetToFactorySettings(
         cardId: String,
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
-        TODO()
+        return MockProvider.getCardDto()
     }
 
     override suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
-        TODO()
+        return CompletionResult.Success(Unit)
     }
 
     override suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit> {
-        TODO()
+        return CompletionResult.Success(Unit)
     }
 
     override suspend fun clearSavedUserCodes(): CompletionResult<Unit> {
-        TODO()
+        return CompletionResult.Success(Unit)
     }
 
     override suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
-        TODO()
+        return MockProvider.getSuccessResponse()
     }
 
     override suspend fun setAccessCode(cardId: String?): CompletionResult<SuccessResponse> {
-        TODO()
+        return MockProvider.getSuccessResponse()
     }
 
     override suspend fun setLongTap(cardId: String?): CompletionResult<SuccessResponse> {
-        TODO()
+        return MockProvider.getSuccessResponse()
     }
 
     override suspend fun setAccessCodeRecoveryEnabled(
         cardId: String?,
         enabled: Boolean,
     ): CompletionResult<SuccessResponse> {
-        TODO()
+        return MockProvider.getSuccessResponse()
     }
 
     override suspend fun scanCard(
         cardId: String?,
         allowRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<CardDTO> {
-        TODO()
+        return MockProvider.getCardDto()
     }
 
     override suspend fun <T> runTaskAsync(
@@ -130,12 +127,10 @@ class MockTangemSdkManager(
         initialMessage: Message?,
         accessCode: String?,
         @DrawableRes iconScanRes: Int?,
-    ): CompletionResult<T> = withContext(Dispatchers.Main) {
-        TODO()
-    }
+    ): CompletionResult<T> = error("This method is deprecated")
 
-    @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
+        // intentionally do nothing
     }
 
     @Deprecated("TangemSdkManager shouldn't returns a string from resources")
@@ -144,6 +139,37 @@ class MockTangemSdkManager(
     }
 
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
-        TODO()
+        userCodeRequestPolicyInternal = policy
     }
+
+    // region Twin-specific
+
+    override suspend fun createFirstTwinWallet(
+        cardId: String,
+        initialMessage: Message,
+    ): CompletionResult<CreateWalletResponse> {
+        return MockProvider.createFirstTwinWallet()
+    }
+
+    override suspend fun createSecondTwinWallet(
+        firstPublicKey: String,
+        firstCardId: String,
+        issuerKeys: KeyPair,
+        preparingMessage: Message,
+        creatingWalletMessage: Message,
+        initialMessage: Message,
+    ): CompletionResult<CreateWalletResponse> {
+        return MockProvider.createSecondTwinWallet()
+    }
+
+    override suspend fun finalizeTwin(
+        secondCardPublicKey: ByteArray,
+        issuerKeyPair: KeyPair,
+        cardId: String,
+        initialMessage: Message,
+    ): CompletionResult<ScanResponse> {
+        return MockProvider.finalizeTwin()
+    }
+
+    // endregion
 }
