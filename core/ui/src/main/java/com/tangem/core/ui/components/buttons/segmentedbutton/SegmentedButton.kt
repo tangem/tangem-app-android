@@ -47,14 +47,15 @@ inline fun <reified T> SegmentedButtons(
     selectedColor: Color = TangemTheme.colors.background.action,
     dividerColor: Color = TangemTheme.colors.stroke.primary,
     showIndication: Boolean = true,
-    selectedItem: T? = null,
+    initialSelectedItem: T? = null,
+    isEnabled: Boolean = true,
     crossinline buttonContent: @Composable (T) -> Unit,
 ) {
     if (config.isEmpty() || config.size == 1) return
 
-    var selected by remember {
-        val selectedIndex = if (selectedItem == null) 0 else config.indexOf(selectedItem)
-        mutableIntStateOf(selectedIndex)
+    var selectedIndex by remember {
+        val index = if (initialSelectedItem == null) 0 else config.indexOf(initialSelectedItem)
+        mutableIntStateOf(index)
     }
 
     Row(
@@ -69,7 +70,7 @@ inline fun <reified T> SegmentedButtons(
             val rightRadius = if (index == config.lastIndex) TangemTheme.dimens.radius26 else TangemTheme.dimens.radius0
 
             val animateColor by animateColorAsState(
-                targetValue = if (index == selected) selectedColor else color,
+                targetValue = if (index == selectedIndex) selectedColor else color,
                 label = "Segmented Button Selected Color Animation",
                 animationSpec = spring(stiffness = Spring.StiffnessMedium),
             )
@@ -86,11 +87,12 @@ inline fun <reified T> SegmentedButtons(
                         ),
                     )
                     .clickable(
+                        enabled = isEnabled,
                         interactionSource = remember { MutableInteractionSource() },
                         indication = if (showIndication) LocalIndication.current else null,
                     ) {
+                        selectedIndex = index
                         onClick(config[index])
-                        selected = index
                     },
             ) {
                 buttonContent.invoke(config[index])
