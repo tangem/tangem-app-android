@@ -157,10 +157,10 @@ internal class SendViewModel @Inject constructor(
     private val sendNotificationFactory = SendNotificationFactory(
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         coinCryptoCurrencyStatusProvider = Provider { coinCryptoCurrencyStatus },
-        feePaidCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
         stateRouterProvider = Provider { stateRouter },
+        isSubtractAvailableProvider = Provider { isAmountSubtractAvailable },
         currencyChecksRepository = currencyChecksRepository,
         clickIntents = this,
         analyticsEventHandler = analyticsEventHandler,
@@ -756,7 +756,7 @@ internal class SendViewModel @Inject constructor(
     override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {
         uiState = amountStateFactory.getOnAmountValueChange(reducedAmount.parseBigDecimal(cryptoCurrency.decimals))
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
-        updateNotifications()
+        feeReload()
     }
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {
@@ -769,10 +769,18 @@ internal class SendViewModel @Inject constructor(
         val fee = feeState.fee ?: return
         val memo = uiState.recipientState?.memoTextField?.value
         val amountValue = uiState.amountState?.amountTextField?.cryptoAmount?.value ?: return
+        val feeValue = fee.amount.value ?: return
+
+        val receivingAmount = checkAndCalculateSubtractedAmount(
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            amountValue = amountValue,
+            feeValue = feeValue,
+        )
 
         viewModelScope.launch(dispatchers.main) {
             createTransactionUseCase(
-                amount = amountValue.convertToAmount(cryptoCurrency),
+                amount = receivingAmount.convertToAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
                 destination = recipient,
