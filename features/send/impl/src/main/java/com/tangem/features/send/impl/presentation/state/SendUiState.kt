@@ -50,7 +50,6 @@ internal sealed class SendStates {
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
         val isSegmentedButtonsEnabled: Boolean,
         val amountTextField: SendTextField.AmountField,
-        val notifications: ImmutableList<SendNotification>,
         val appCurrencyCode: String,
         val isFeeLoading: Boolean,
         val subtractedFee: BigDecimal?,
