@@ -704,7 +704,7 @@ internal class SendViewModel @Inject constructor(
             updateFeeNotifications()
         }.saveIn(feeJobHolder)
             .invokeOnCompletion {
-                uiState = amountStateFactory.getOnAmountFeeLoadingCancel()
+// [REDACTED_TODO_COMMENT]
             }
     }
 

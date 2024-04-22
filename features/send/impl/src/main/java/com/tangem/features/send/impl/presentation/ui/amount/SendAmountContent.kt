@@ -34,7 +34,6 @@ internal fun SendAmountContent(
         buttons(
             segmentedButtonConfig = amountState.segmentedButtonConfig,
             clickIntents = clickIntents,
-            isMaxButtonEnabled = !amountState.isFeeLoading,
             isSegmentedButtonsEnabled = amountState.isSegmentedButtonsEnabled,
         )
     }
