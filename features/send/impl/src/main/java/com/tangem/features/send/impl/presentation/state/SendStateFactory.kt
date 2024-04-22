@@ -117,6 +117,7 @@ internal class SendStateFactory(
             recipientState = state.recipientState
                 ?: recipientStateConverter.convert(SendRecipientStateConverter.Data(destinationAddress, memo)),
             feeState = state.feeState ?: feeStateConverter.convert(Unit),
+            sendState = confirmStateConverter.convert(Unit),
             isEditingDisabled = true,
             cryptoCurrencyName = cryptoCurrencyStatusProvider().currency.name,
         )
