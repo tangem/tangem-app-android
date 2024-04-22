@@ -126,14 +126,15 @@ class SwapDomainModule {
     @Provides
     @Singleton
     fun provideSendTransactionUseCase(
-        @SwapScope isDemoCardUseCase: IsDemoCardUseCase,
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
+        walletManagersFacade: WalletManagersFacade,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
-            isDemoCardUseCase = isDemoCardUseCase,
+            demoConfig = DemoConfig(),
             cardSdkConfigRepository = cardSdkConfigRepository,
             transactionRepository = transactionRepository,
+            walletManagersFacade = walletManagersFacade,
         )
     }
 
