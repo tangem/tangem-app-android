@@ -12,7 +12,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.previewdata.AmountStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
-import com.tangem.features.send.impl.presentation.ui.common.notifications
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 
 @Composable
