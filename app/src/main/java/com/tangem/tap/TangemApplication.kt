@@ -45,7 +45,6 @@ import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
@@ -281,7 +280,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private fun initAnalytics(application: Application, config: Config) {
         val factory = AnalyticsFactory()
         factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
-        factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
 
         factory.addFilter(oneTimeEventFilter)
