@@ -24,7 +24,6 @@ import com.tangem.features.send.impl.presentation.state.fee.checkIfFeeTooHigh
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isDogecoin
 import com.tangem.utils.Provider
-import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -105,23 +104,6 @@ internal class SendNotificationFactory(
         val showNotification = receivedAmount + feeAmount > cryptoAmount
         if (showNotification) {
             add(SendNotification.Error.TotalExceedsBalance)
-        }
-    }
-
-    private fun MutableList<SendNotification>.addMinimumAmountErrorNotification(
-        feeAmount: BigDecimal,
-        receivedAmount: BigDecimal,
-    ) {
-        val coinCryptoCurrencyStatus = coinCryptoCurrencyStatusProvider()
-
-        val totalAmount = feeAmount + receivedAmount
-        val balance = coinCryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-
-        if (isDogecoin(coinCryptoCurrencyStatus.currency.network.id.value)) {
-            val minimum = BigDecimal(DOGECOIN_MINIMUM)
-            if (receivedAmount < minimum || balance - totalAmount < minimum) {
-                add(SendNotification.Error.MinimumAmountError(DOGECOIN_MINIMUM))
-            }
         }
     }
 // [REDACTED_TODO_COMMENT]
@@ -235,6 +217,20 @@ internal class SendNotificationFactory(
         }
     }
 
+    private fun MutableList<SendNotification>.addMinimumAmountErrorNotification(
+        feeAmount: BigDecimal,
+        receivedAmount: BigDecimal,
+    ) {
+        val coinCryptoCurrencyStatus = coinCryptoCurrencyStatusProvider()
+        val minimum = BigDecimal(DOGECOIN_MINIMUM)
+
+        val isDogecoin = isDogecoin(coinCryptoCurrencyStatus.currency.network.id.value)
+        val isExceedDustLimit = checkDustLimits(feeAmount, receivedAmount, minimum)
+        if (isDogecoin && isExceedDustLimit) {
+            add(SendNotification.Error.MinimumAmountError(DOGECOIN_MINIMUM))
+        }
+    }
+
     private suspend fun MutableList<SendNotification>.addDustWarningNotification(
         feeAmount: BigDecimal,
         receivedAmount: BigDecimal,
@@ -243,18 +239,12 @@ internal class SendNotificationFactory(
         val dustValue = currencyChecksRepository.getDustValue(
             userWalletProvider().walletId,
             cryptoCurrencyStatus.currency.network,
-        )
-        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        if (dustValue != null && !balance.isNullOrZero() && receivedAmount < balance) {
-            val totalAmount = feeAmount + receivedAmount
-            val change = balance - totalAmount
-            val isChangeLowerThanDust = change < dustValue && change != BigDecimal.ZERO
-            val isShowWarning = receivedAmount < dustValue || isChangeLowerThanDust
-            if (isShowWarning) {
-                add(
-                    SendNotification.Error.MinimumAmountError(dustValue.toPlainString()),
-                )
-            }
+        ) ?: return
+
+        if (checkDustLimits(feeAmount, receivedAmount, dustValue)) {
+            add(
+                SendNotification.Error.MinimumAmountError(dustValue.toPlainString()),
+            )
         }
     }
 
@@ -357,6 +347,16 @@ internal class SendNotificationFactory(
     // workaround for networks that users have misunderstanding
     private fun CryptoCurrencyStatus.shouldMergeFeeNetworkName(): Boolean {
         return Blockchain.fromNetworkId(this.currency.network.backendId) == Blockchain.Arbitrum
+    }
+
+    private fun checkDustLimits(feeAmount: BigDecimal, receivedAmount: BigDecimal, dustValue: BigDecimal): Boolean {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+
+        val totalAmount = feeAmount + receivedAmount
+        val change = balance - totalAmount
+        val isChangeLowerThanDust = change < dustValue && change > BigDecimal.ZERO
+        return receivedAmount < dustValue || isChangeLowerThanDust
     }
 
     companion object {
