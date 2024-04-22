@@ -4,7 +4,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.core.ui.utils.toDateFormat
+import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -81,7 +81,7 @@ internal class SendRecipientHistoryListConverter(
     }
 
     private fun TxHistoryItem.extractTimestamp(): TextReference {
-        val date = timestampInMillis.toDateFormat(
+        val date = timestampInMillis.toDateFormatWithTodayYesterday(
             formatter = DateTimeFormatters.dateDDMMYYYY,
         )
         val time = timestampInMillis.toTimeFormat()

@@ -29,6 +29,7 @@ internal fun LazyListScope.buttons(
     segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
     clickIntents: SendClickIntents,
     isMaxButtonEnabled: Boolean,
+    isSegmentedButtonsEnabled: Boolean,
 ) {
     item(
         key = AMOUNT_BUTTONS_KEY,
@@ -48,8 +49,12 @@ internal fun LazyListScope.buttons(
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         clickIntents.onCurrencyChangeClick(it.isFiat)
                     },
+                    isEnabled = isSegmentedButtonsEnabled,
                 ) {
-                    SendAmountCurrencyButton(it)
+                    SendAmountCurrencyButton(
+                        button = it,
+                        isSegmentedButtonsEnabled = isSegmentedButtonsEnabled,
+                    )
                 }
             } else {
                 SpacerWMax()
@@ -72,7 +77,7 @@ internal fun LazyListScope.buttons(
 }
 
 @Composable
-private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig) {
+private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig, isSegmentedButtonsEnabled: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -86,17 +91,16 @@ private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig) {
             FiatIcon(
                 url = button.iconUrl,
                 size = TangemTheme.dimens.size18,
+                isGrayscale = !isSegmentedButtonsEnabled,
                 modifier = Modifier.size(TangemTheme.dimens.size18),
             )
-        } else {
-            button.iconState?.let {
-                TokenIcon(
-                    state = it,
-                    shouldDisplayNetwork = false,
-                    modifier = Modifier
-                        .size(TangemTheme.dimens.size18),
-                )
-            }
+        } else if (button.iconState != null) {
+            TokenIcon(
+                state = button.iconState,
+                shouldDisplayNetwork = false,
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size18),
+            )
         }
         Text(
             text = button.title.resolveReference(),
