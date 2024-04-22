@@ -24,6 +24,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
@@ -359,13 +360,14 @@ internal class SendViewModel @Inject constructor(
                 stateRouter.showSend()
             }
             transactionId != null && amount != null && destinationAddress != null -> {
+                loadFee()
                 uiState = stateFactory.getReadyState(amount, destinationAddress, memo)
-                stateRouter.showFee()
+                stateRouter.showSend()
                 updateNotifications()
             }
             else -> {
-                getWalletsAndRecent()
                 uiState = stateFactory.getReadyState()
+                getWalletsAndRecent()
                 stateRouter.showRecipient()
                 updateNotifications()
             }
@@ -406,7 +408,8 @@ internal class SendViewModel @Inject constructor(
         return if (!isMultiCurrency) {
             val status = getCryptoCurrencyStatusSyncUseCase(walletId).getOrNull()
             val address = status?.value?.networkAddress.takeIf {
-                status?.currency?.network?.id == cryptoCurrency.network.id
+                status?.currency?.network?.id == cryptoCurrency.network.id &&
+                    status.currency.network.derivationPath !is Network.DerivationPath.Custom
             }
             address?.let {
                 AvailableWallet(
@@ -417,7 +420,8 @@ internal class SendViewModel @Inject constructor(
         } else {
             val statuses = getCryptoCurrencyStatusesSyncUseCase(walletId).getOrNull()
             val walletCurrency = statuses?.firstOrNull {
-                it.currency.network.id == cryptoCurrency.network.id
+                it.currency.network.id == cryptoCurrency.network.id &&
+                    it.currency.network.derivationPath !is Network.DerivationPath.Custom
             }
             val address = walletCurrency?.value?.networkAddress
             address?.let {
@@ -522,8 +526,9 @@ internal class SendViewModel @Inject constructor(
             )
             return true
         }
+        val feeSelectorState = uiState.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
         return checkIfFeeTooHigh(
-            state = uiState,
+            feeSelectorState = feeSelectorState,
             onShow = { diff ->
                 uiState = eventStateFactory.getFeeTooHighAlert(
                     diff = diff,
@@ -702,6 +707,7 @@ internal class SendViewModel @Inject constructor(
             if (result == null) {
                 onFeeLoadFailed(isShowStatus, isToNextState)
             }
+            updateNotifications()
             updateFeeNotifications()
         }.saveIn(feeJobHolder)
             .invokeOnCompletion {
@@ -735,7 +741,7 @@ internal class SendViewModel @Inject constructor(
         return getFeeUseCase.invoke(
             amount = amount,
             destination = recipientState.addressTextField.value,
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
         )
     }
@@ -792,10 +798,11 @@ internal class SendViewModel @Inject constructor(
     override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {
         uiState = amountStateFactory.getOnAmountValueChange(reducedAmount.parseBigDecimal(cryptoCurrency.decimals))
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
+        updateNotifications()
     }
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {
-        uiState = sendNotificationFactory.dismissNotificationState(clazz)
+        uiState = sendNotificationFactory.dismissNotificationState(clazz = clazz, isIgnored = true)
     }
 
     private fun verifyAndSendTransaction() {
