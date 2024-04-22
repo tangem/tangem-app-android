@@ -51,8 +51,6 @@ internal sealed class SendStates {
         val isSegmentedButtonsEnabled: Boolean,
         val amountTextField: SendTextField.AmountField,
         val appCurrencyCode: String,
-        val isFeeLoading: Boolean,
-        val subtractedFee: BigDecimal?,
     ) : SendStates()
 
     /** Recipient state */
