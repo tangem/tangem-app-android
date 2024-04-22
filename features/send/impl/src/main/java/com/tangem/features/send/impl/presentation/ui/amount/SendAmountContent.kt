@@ -38,7 +38,6 @@ internal fun SendAmountContent(
             isMaxButtonEnabled = !amountState.isFeeLoading,
             isSegmentedButtonsEnabled = amountState.isSegmentedButtonsEnabled,
         )
-        notifications(amountState.notifications)
     }
 }
 
