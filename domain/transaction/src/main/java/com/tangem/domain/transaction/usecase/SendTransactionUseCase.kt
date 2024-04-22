@@ -13,8 +13,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
-import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.R
 import com.tangem.domain.transaction.TransactionRepository
@@ -26,7 +26,7 @@ import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.toFormattedString
 
 class SendTransactionUseCase(
-    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val demoConfig: DemoConfig,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
@@ -43,7 +43,7 @@ class SendTransactionUseCase(
             cardSdkConfigRepository.setLinkedTerminal(false)
         }
         val sendResult = try {
-            if (isDemoCardUseCase(cardId = userWallet.cardId)) {
+            if (demoConfig.isDemoCardId(cardId = userWallet.cardId)) {
                 sendDemo(
                     userWallet = userWallet,
                     network = network,

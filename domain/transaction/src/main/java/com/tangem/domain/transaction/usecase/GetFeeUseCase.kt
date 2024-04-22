@@ -6,8 +6,8 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
-import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -19,7 +19,7 @@ import java.math.BigDecimal
  */
 class GetFeeUseCase(
     private val walletManagersFacade: WalletManagersFacade,
-    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val demoConfig: DemoConfig,
 ) {
     suspend operator fun invoke(
         amount: BigDecimal,
@@ -31,7 +31,7 @@ class GetFeeUseCase(
             block = {
                 val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
 
-                val result = if (isDemoCardUseCase(userWallet.scanResponse.card.cardId)) {
+                val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
                     demoTransactionSender(userWallet, cryptoCurrency).getFee(
                         amount = amountData,
                         destination = destination,
