@@ -57,11 +57,13 @@ sealed class AnalyticsParam {
         object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
-    sealed class ScannedFrom(val value: String) {
-        object Introduction : ScannedFrom("Introduction")
-        object Main : ScannedFrom("Main")
-        object SignIn : ScannedFrom("Sign In")
-        object MyWallets : ScannedFrom("My Wallets")
+    sealed class ScreensSources(val value: String) {
+        data object Settings : ScreensSources("Settings")
+        data object Main : ScreensSources("Main")
+        data object SignIn : ScreensSources("Sign In")
+        data object Send : ScreensSources("Send")
+        data object Intro : ScreensSources("Introduction")
+        data object MyWallets : ScreensSources("My Wallets")
     }
 
     sealed class TxSentFrom(val value: String) {

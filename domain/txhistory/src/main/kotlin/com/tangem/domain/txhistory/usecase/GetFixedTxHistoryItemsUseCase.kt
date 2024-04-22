@@ -33,4 +33,15 @@ class GetFixedTxHistoryItemsUseCase(
             }
         }.mapLeft { TxHistoryListError.DataError(it) }
     }
+
+    suspend fun getSync(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        pageSize: Int = DEFAULT_PAGE_SIZE,
+        refresh: Boolean = false,
+    ): Either<TxHistoryListError, List<TxHistoryItem>> {
+        return Either.catch {
+            repository.getFixedSizeTxHistoryItems(userWalletId, currency, pageSize, refresh)
+        }.mapLeft { TxHistoryListError.DataError(it) }
+    }
 }

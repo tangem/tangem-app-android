@@ -3,6 +3,7 @@ package com.tangem.features.send.impl.presentation.ui
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButton
@@ -17,6 +18,11 @@ import com.tangem.features.send.impl.presentation.state.SendEvent
 internal fun SendEventEffect(event: StateEvent<SendEvent>, snackbarHostState: SnackbarHostState) {
     val resources = LocalContext.current.resources
     var alertConfig by remember { mutableStateOf<SendAlertState?>(value = null) }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    LaunchedEffect(key1 = alertConfig) {
+        keyboardController?.hide()
+    }
 
     alertConfig?.let {
         SendAlert(state = it, onDismiss = { alertConfig = null })

@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.Context
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.feedback.SupportInfo
@@ -21,7 +22,7 @@ object WalletActivationErrorDialog {
             setPositiveButton(R.string.common_ok) { _, _ -> dialog.onConfirm() }
             setNegativeButton(R.string.common_support) { _, _ ->
                 // changed on email support AND-6202
-                Analytics.send(Basic.ButtonSupport())
+                Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
                 store.dispatch(GlobalAction.SendEmail(SupportInfo()))
             }
             setOnDismissListener { store.dispatchDialogHide() }

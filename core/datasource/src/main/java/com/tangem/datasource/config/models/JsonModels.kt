@@ -31,7 +31,6 @@ class ConfigValueModel(
     @Json(name = "tonCenterApiKey") val tonCenterKeys: TonCenterKeys,
     val blockcypherTokens: Set<String>?,
     val infuraProjectId: String?,
-    val appsFlyer: AppsFlyer,
     val sprinklr: SprinklrConfig?,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
@@ -70,6 +69,7 @@ data class GetBlockAccessTokens(
     @Json(name = "algorand") val algorand: GetBlockToken?,
     @Json(name = "polygon-zkevm") val polygonZkevm: GetBlockToken?,
     @Json(name = "zksync") val zksync: GetBlockToken?,
+    @Json(name = "base") val base: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)
@@ -78,11 +78,6 @@ data class GetBlockToken(
     @Json(name = "blockBookRest") val blockBookRest: String?,
     @Json(name = "rest") val rest: String?,
     @Json(name = "rosetta") val rosetta: String?,
-)
-
-data class AppsFlyer(
-    val appsFlyerDevKey: String,
-    val appsFlyerAppID: String,
 )
 
 class ConfigModel(

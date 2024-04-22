@@ -11,6 +11,9 @@ import java.util.Locale
 
 private const val TEXT_CHUNK_THOUSAND = 3
 private const val POINT_SEPARATOR = '.'
+private const val COMMA_SEPARATOR = ','
+private const val SCIENTIFIC_NOTATION = 'e'
+const val DECIMAL_SEPARATOR_LIMIT = 1
 
 @Composable
 fun rememberDecimalFormat(): DecimalFormat {
@@ -59,7 +62,7 @@ fun DecimalFormat.getValidatedNumberWithFixedDecimals(text: String, decimals: In
     return if (filteredChars.count { it == decimalSeparator } == 1) {
         val beforeDecimal = filteredChars.substringBefore(decimalSeparator)
         val afterDecimal = filteredChars.substringAfter(decimalSeparator)
-        beforeDecimal + decimalSeparator + afterDecimal.take(decimals)
+        decimals.getWithIntegerDecimals(beforeDecimal, decimalSeparator, afterDecimal)
     }
     // If there is no dot, just take all digits
     else {
@@ -82,7 +85,7 @@ fun DecimalFormat.formatWithThousands(text: String, decimals: Int): String {
             .joinToString(thousandsSeparator.toString())
             .reversed()
         val afterDecimal = localizedText.substringAfter(decimalSeparator)
-        beforeDecimal + decimalSeparator + afterDecimal.take(decimals)
+        decimals.getWithIntegerDecimals(beforeDecimal, decimalSeparator, afterDecimal)
     }
     // If there is no dot, just take all digits
     else {
@@ -150,4 +153,51 @@ fun BigDecimal.parseBigDecimal(decimals: Int, roundingMode: RoundingMode = Round
     } catch (e: Exception) {
         ""
     }
+}
+
+/**
+ * Universal amount string parser to [BigDecimal]
+ * Able to parse values with only ONE separator, assuming separator is COMMA.
+ * Otherwise returns null.
+ */
+fun String.parseBigDecimalOrNull() = runCatching {
+    // Filtering value containing more than one either grouping or decimal separator.
+    // We assume there will be only decimal separator, otherwise parsing will fail.
+
+    // Step 1. Exclude formatted (100,000.0) except scientific notation (100.000e10)
+    val excludeFormatted = this.count {
+        !it.isDigit() && !it.equals(SCIENTIFIC_NOTATION, ignoreCase = true)
+    } > DECIMAL_SEPARATOR_LIMIT
+
+    // Step 2. Exclude wrong scientific notation (100e100e100)
+    val excludeWrongScientific = this.count {
+        it.equals(SCIENTIFIC_NOTATION, ignoreCase = true)
+    } > DECIMAL_SEPARATOR_LIMIT
+    if (excludeFormatted || excludeWrongScientific) return null
+
+    // An attempt to parse value with POINT decimal separator
+    val parsed = this.toBigDecimalOrNull()
+
+    if (parsed == null) {
+        // If parsing with POINT separator fails trying to parse with COMMA separator
+        val decimalFormatSymbol = DecimalFormatSymbols().apply {
+            decimalSeparator = COMMA_SEPARATOR
+        }
+        val decimalFormat = DecimalFormat().apply {
+            decimalFormatSymbols = decimalFormatSymbol
+            isParseBigDecimal = true
+        }
+
+        // Return either number or null if fails
+        decimalFormat.parse(this) as? BigDecimal
+    } else {
+        // If parsing with POINT separator succeeds return number
+        parsed
+    }
+}.getOrNull()
+
+private fun Int.getWithIntegerDecimals(before: String, separator: Char, after: String): String = if (this == 0) {
+    before
+} else {
+    before + separator + after.take(this)
 }
