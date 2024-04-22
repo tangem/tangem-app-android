@@ -51,7 +51,10 @@ internal fun LazyListScope.buttons(
                     },
                     isEnabled = isSegmentedButtonsEnabled,
                 ) {
-                    SendAmountCurrencyButton(it)
+                    SendAmountCurrencyButton(
+                        button = it,
+                        isSegmentedButtonsEnabled = isSegmentedButtonsEnabled,
+                    )
                 }
             } else {
                 SpacerWMax()
@@ -74,7 +77,7 @@ internal fun LazyListScope.buttons(
 }
 
 @Composable
-private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig) {
+private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig, isSegmentedButtonsEnabled: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -88,17 +91,16 @@ private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig) {
             FiatIcon(
                 url = button.iconUrl,
                 size = TangemTheme.dimens.size18,
+                isGrayscale = !isSegmentedButtonsEnabled,
                 modifier = Modifier.size(TangemTheme.dimens.size18),
             )
-        } else {
-            button.iconState?.let {
-                TokenIcon(
-                    state = it,
-                    shouldDisplayNetwork = false,
-                    modifier = Modifier
-                        .size(TangemTheme.dimens.size18),
-                )
-            }
+        } else if (button.iconState != null) {
+            TokenIcon(
+                state = button.iconState,
+                shouldDisplayNetwork = false,
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size18),
+            )
         }
         Text(
             text = button.title.resolveReference(),
