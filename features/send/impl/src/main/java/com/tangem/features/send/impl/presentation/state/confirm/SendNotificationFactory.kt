@@ -18,11 +18,10 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.*
-import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
-import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.state.fee.checkIfFeeTooHigh
+import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isDogecoin
+import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -36,11 +35,11 @@ import java.math.BigDecimal
 internal class SendNotificationFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val feePaidCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val stateRouterProvider: Provider<StateRouter>,
+    private val isSubtractAvailableProvider: Provider<Boolean>,
     private val clickIntents: SendClickIntents,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
@@ -52,19 +51,33 @@ internal class SendNotificationFactory(
             val state = currentStateProvider()
             val sendState = state.sendState ?: return@map persistentListOf()
             val feeState = state.feeState ?: return@map persistentListOf()
-            val feeAmount = feeState.fee?.amount?.value ?: BigDecimal.ZERO
+            val balance = cryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
             val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
+            val feeValue = feeState.fee?.amount?.value ?: BigDecimal.ZERO
+            val isFeeCoverage = checkFeeCoverage(
+                isSubtractAvailable = isSubtractAvailableProvider(),
+                balance = balance,
+                amountValue = amountValue,
+                feeValue = feeValue,
+            )
+            val sendingAmount = calculateSubtractedAmount(
+                isFeeCoverage = isFeeCoverage,
+                cryptoCurrencyStatus = cryptoCurrencyStatusProvider(),
+                amountValue = amountValue,
+                feeValue = feeValue,
+            )
             buildList {
                 // errors
                 addFeeUnreachableNotification(feeState.feeSelectorState)
-                addExceedBalanceNotification(feeAmount, amountValue)
+                addExceedBalanceNotification(feeValue, sendingAmount)
                 addExceedsBalanceNotification(feeState.fee)
-                addMinimumAmountErrorNotification(feeAmount, amountValue)
-                addDustWarningNotification(feeAmount, amountValue)
-                addTransactionLimitErrorNotification(feeAmount, amountValue)
+                addMinimumAmountErrorNotification(feeValue, sendingAmount)
+                addDustWarningNotification(feeValue, sendingAmount)
+                addTransactionLimitErrorNotification(feeValue, sendingAmount)
                 // warnings
-                addExistentialWarningNotification(feeAmount, amountValue)
-                addHighFeeWarningNotification(feeAmount, amountValue, sendState.ignoreAmountReduce)
+                addExistentialWarningNotification(feeValue, amountValue)
+                addFeeCoverageNotification(isFeeCoverage)
+                addHighFeeWarningNotification(amountValue, sendState.ignoreAmountReduce)
                 addTooHighNotification(feeState.feeSelectorState)
                 addTooLowNotification(feeState)
             }.toImmutableList()
@@ -95,13 +108,11 @@ internal class SendNotificationFactory(
         receivedAmount: BigDecimal,
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val feePaidCryptoCurrencyStatus = feePaidCryptoCurrencyStatusProvider()
-        val cryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
 
-        val isCurrentNotFeePaidCurrency = cryptoCurrencyStatus.currency.id != feePaidCryptoCurrencyStatus?.currency?.id
-        if (isCurrentNotFeePaidCurrency) return
+        if (!isSubtractAvailableProvider()) return
 
-        val showNotification = receivedAmount + feeAmount > cryptoAmount
+        val showNotification = receivedAmount + feeAmount > balance
         if (showNotification) {
             add(SendNotification.Error.TotalExceedsBalance)
         }
@@ -192,16 +203,22 @@ internal class SendNotificationFactory(
         }
     }
 
+    private fun MutableList<SendNotification>.addFeeCoverageNotification(sendingAmount: Boolean) {
+        if (sendingAmount) {
+            analyticsEventHandler.send(SendAnalyticEvents.NoticeFeeCoverage)
+            add(SendNotification.Warning.FeeCoverageNotification)
+        }
+    }
+
     private fun MutableList<SendNotification>.addHighFeeWarningNotification(
-        feeAmount: BigDecimal,
         sendAmount: BigDecimal,
         ignoreAmountReduce: Boolean,
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        val isTezos = cryptoCurrencyStatus.currency.network.id.value == Blockchain.Tezos.id
+        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
         val threshold = Blockchain.Tezos.minimalAmount()
-        val isTotalBalance = feeAmount.plus(sendAmount) >= balance && balance > threshold
+        val isTotalBalance = sendAmount >= balance && balance > threshold
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
                 SendNotification.Warning.HighFeeError(
@@ -218,6 +235,7 @@ internal class SendNotificationFactory(
         }
     }
 
+    // todo remove in [REDACTED_TASK_KEY]
     private fun MutableList<SendNotification>.addMinimumAmountErrorNotification(
         feeAmount: BigDecimal,
         receivedAmount: BigDecimal,
