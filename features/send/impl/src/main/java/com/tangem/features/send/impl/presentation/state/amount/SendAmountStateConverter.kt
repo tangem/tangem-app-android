@@ -39,8 +39,6 @@ internal class SendAmountStateConverter(
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = sendAmountFieldConverter.convert(value),
             isPrimaryButtonEnabled = false,
-            notifications = persistentListOf(),
-            isFeeLoading = false,
             appCurrencyCode = appCurrency.code,
             subtractedFee = null,
             segmentedButtonConfig = persistentListOf(
