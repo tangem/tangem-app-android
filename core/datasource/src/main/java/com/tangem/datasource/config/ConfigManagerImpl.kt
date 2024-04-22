@@ -100,7 +100,6 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
                 chiaFireAcademyApiKey = configValues.chiaFireAcademyApiKey,
                 chiaTangemApiKey = configValues.chiaTangemApiKey,
             ),
-            appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
             amplitudeApiKey = configValues.amplitudeApiKey,
             sprinklr = configValues.sprinklr,
             walletConnectProjectId = configValues.walletConnectProjectId,
