@@ -51,6 +51,10 @@
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
   <string name="card_settings_title">Настройки карты</string>
+  <string name="cardano_coin_will_be_send_with_token_description">Ввиду особенностей сети Cardano при транзакции токена %1$s помимо комиссии сети будет списано %2$s</string>
+  <string name="cardano_insufficient_balance_to_send_token_description">Для совершения транзакции %1$s, вам необходимо внести немного %2$s (%3$s), чтобы покрыть комиссию сети и минимальное значение ADA для отправки.</string>
+  <string name="cardano_insufficient_balance_to_send_token_title">Недостаточно ADA для отправки токена</string>
+  <string name="cardano_max_amount_has_token_description">Вывод всего баланса ADA невозможен при наличии средств на токенах сети Cardano. Сначала выведите средства на ваших токенах.</string>
   <string name="common_accept">Принять</string>
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_apply">Применить</string>
@@ -96,7 +100,8 @@
   <string name="common_no_address">Нет адреса</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
-  <string name="common_passphrase">Кодовая фраза</string>
+  <string name="common_passphrase">Парольная фраза</string>
+  <string name="common_paste">Вставить</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
@@ -183,9 +188,9 @@
   <string name="express_choose_providers_subtitle">Tangem предоставляет доступ к обмену через сторонних поставщиков в соответствии с их правилами</string>
   <string name="express_choose_providers_title">Выберите провайдера</string>
   <string name="express_error_code">Произошла ошибка. Код: %s</string>
-  <string name="express_error_provider_unavailable">К сожалению обмен указанной пары через выбранного провайдера на данный момент не возможен. Попробуйте совершить обмен позже. (Код: %s)</string>
+  <string name="express_error_provider_unavailable">К сожалению, обмен указанной пары через выбранного провайдера на данный момент невозможен. Попробуйте совершить обмен позже. (Код: %s)</string>
   <string name="express_error_swap_pair_unavailable">Выбранный провайдер не доступен для обмена. Попробуйте позже. (Код: %s)</string>
-  <string name="express_error_swap_unavailable">В данный момент обмен не возможен. Попробуйте позже. (Код: %s)</string>
+  <string name="express_error_swap_unavailable">В данный момент обмен невозможен. Попробуйте позже. (Код: %s)</string>
   <string name="express_estimated_amount">Курс обмена</string>
   <string name="express_exchange_by">Обмен через %s</string>
   <string name="express_exchange_notification_failed_text">Чтобы вернуть ваши деньги, посетите сайт провайдера</string>
@@ -288,7 +293,7 @@
   <string name="onboarding_activation_error_title">Ошибка активации</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту. После того, как процесс будет завершен, Вы больше не сможете добавить карт. Если у Вас есть еще одна карта, добавьте ее в резервную копию. Хотите продолжить?</string>
   <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
-  <string name="onboarding_bottom_sheet_passphrase_description">Кодовая фраза — это расширенная функция безопасности, которую используют криптокошельки. Она добавляет дополнительное слово или фразу по вашему выбору к уже существующей seed - фразе, чтобы разблокировать совершенно новый набор адресов.</string>
+  <string name="onboarding_bottom_sheet_passphrase_description">Парольная фраза — это расширенная функция безопасности, которую используют криптокошельки. Она добавляет дополнительное слово или фразу по вашему выбору к уже существующей seed - фразе, чтобы разблокировать совершенно новый набор адресов.</string>
   <string name="onboarding_button_add_backup_card">Добавить резервную карту</string>
   <string name="onboarding_button_backup_card_format">Сканировать карту #%d</string>
   <string name="onboarding_button_backup_now">Создать резервную копию</string>
@@ -478,7 +483,7 @@
   <string name="send_notification_transaction_delay_title">Возможны задержки по транзакции</string>
   <string name="send_notification_transaction_limit_text">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$s UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
   <string name="send_notification_transaction_limit_title">Лимит транзакции</string>
-  <string name="send_optional_field">Необязательное</string>
+  <string name="send_optional_field">Опционально</string>
   <string name="send_qrcode_scan_info">Пожалуйста, совместите свой QR-код с квадратом, чтобы отсканировать его. Убедитесь, что вы сканируете адрес в сети %s.</string>
   <string name="send_recent_transactions">Последние</string>
   <string name="send_recipient">Получатель</string>
