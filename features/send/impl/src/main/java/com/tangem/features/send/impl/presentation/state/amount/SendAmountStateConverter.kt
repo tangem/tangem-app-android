@@ -46,11 +46,11 @@ internal class SendAmountStateConverter(
             segmentedButtonConfig = persistentListOf(
                 SendAmountSegmentedButtonsConfig(
                     title = stringReference(status.currency.symbol),
-                    iconState = if (noFeeRate) {
-                        iconStateConverter.convertWithGrayscale(status)
-                    } else {
-                        iconStateConverter.convert(status)
-                    },
+                    iconState = iconStateConverter.convertCustom(
+                        value = status,
+                        forceGrayscale = noFeeRate,
+                        showCustomTokenBadge = false,
+                    ),
                     isFiat = false,
                 ),
                 SendAmountSegmentedButtonsConfig(
