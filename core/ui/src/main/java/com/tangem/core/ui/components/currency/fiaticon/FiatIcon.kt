@@ -4,10 +4,15 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
+
+private const val GRAY_SCALE_SATURATION = 0f
+private const val GRAY_SCALE_ALPHA = 0.4f
 
 /**
  * Simple icon from network
@@ -20,16 +25,19 @@ import com.tangem.core.ui.components.currency.DefaultCurrencyIcon
 fun FiatIcon(
     url: String?,
     size: Dp,
+    isGrayscale: Boolean,
     modifier: Modifier = Modifier,
     @DrawableRes fallbackResId: Int = R.drawable.ic_shape_circle,
 ) {
     val iconData: Any = if (url.isNullOrBlank()) fallbackResId else url
+    val alpha = if (isGrayscale) GRAY_SCALE_ALPHA else 1f
+    val colorFilter = if (isGrayscale) GrayscaleColorFilter else null
 
     DefaultCurrencyIcon(
         iconData = iconData,
         size = size,
-        alpha = 1f,
-        colorFilter = null,
+        alpha = alpha,
+        colorFilter = colorFilter,
         errorIcon = {
             Image(
                 painter = painterResource(id = fallbackResId),
@@ -39,3 +47,6 @@ fun FiatIcon(
         modifier = modifier,
     )
 }
+
+private val GrayscaleColorFilter: ColorFilter
+    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
