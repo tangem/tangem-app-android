@@ -78,7 +78,6 @@ private fun SendNavigationButton(
     val isFromConfirmation = currentState.isFromConfirmation
     val isCorrectScreen = currentState.type == SendUiStateType.Amount || currentState.type == SendUiStateType.Fee
     val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess && !isSending
-    val showProgress = uiState.amountState?.isFeeLoading == true
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = currentState,
@@ -120,7 +119,7 @@ private fun SendNavigationButton(
                 if (isSendingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 buttonClick()
             },
-            showProgress = showProgress,
+            showProgress = false,
             modifier = Modifier.fillMaxWidth(),
             colors = TangemButtonsDefaults.primaryButtonColors,
         )
