@@ -103,6 +103,10 @@ internal sealed class SendAnalyticEvents(
         params = mapOf(TOKEN to token),
     )
 
+    data object NoticeFeeCoverage : SendAnalyticEvents(
+        event = "Notice - Network Fee Coverage",
+    )
+
     /** If error occurs during send transactions */
     data class TransactionError(val token: String) : SendAnalyticEvents(
         event = "Error - Transaction Rejected",
