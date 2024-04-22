@@ -38,7 +38,6 @@ internal class SendAmountFieldChangeConverter(
         return state.copy(
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = !isExceedBalance && !isZero,
-                subtractedFee = null,
                 amountTextField = amountTextField.copy(
                     value = cryptoValue,
                     fiatValue = fiatValue,
