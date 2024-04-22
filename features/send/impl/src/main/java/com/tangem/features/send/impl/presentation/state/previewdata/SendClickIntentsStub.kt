@@ -40,8 +40,6 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onCustomFeeValueChange(index: Int, value: String) {}
 
-    override fun onSubtractSelect() {}
-
     override fun onReadMoreClick() {}
 
     override fun onSendClick() {}

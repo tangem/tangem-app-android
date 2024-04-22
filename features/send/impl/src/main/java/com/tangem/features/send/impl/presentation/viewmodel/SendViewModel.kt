@@ -666,12 +666,6 @@ internal class SendViewModel @Inject constructor(
         updateFeeNotifications()
     }
 
-    override fun onSubtractSelect() {
-        uiState = stateFactory.onSubtractSelect(isAmountSubtractAvailable)
-        stateRouter.showSend()
-        analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(true))
-    }
-
     override fun onReadMoreClick() {
         val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
         val url = buildString {
