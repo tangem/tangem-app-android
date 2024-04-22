@@ -18,22 +18,25 @@ internal class SendRecipientWalletListConverter :
         }
     }
 
-    private fun List<AvailableWallet?>.filterWallets() = this.filterNotNull()
-        .groupBy { item -> item.name }
-        .values.map {
-            it.mapIndexed { index, item ->
-                val name = if (it.size > 1) {
-                    "${item.name} ${index.inc()}"
-                } else {
-                    item.name
+    private fun List<AvailableWallet?>.filterWallets(): PersistentList<SendRecipientListContent> {
+        var walletsCounter = 0
+        return this.filterNotNull()
+            .groupBy { item -> item.name }
+            .values.map {
+                it.mapIndexed { index, item ->
+                    val name = if (it.size > 1) {
+                        "${item.name} ${index.inc()}"
+                    } else {
+                        item.name
+                    }
+                    SendRecipientListContent(
+                        id = "${WALLET_KEY_TAG}${walletsCounter++}",
+                        title = TextReference.Str(item.address),
+                        subtitle = TextReference.Str(name),
+                    )
                 }
-                SendRecipientListContent(
-                    id = "${WALLET_KEY_TAG}$index",
-                    title = TextReference.Str(item.address),
-                    subtitle = TextReference.Str(name),
-                )
             }
-        }
-        .flatten()
-        .toPersistentList()
+            .flatten()
+            .toPersistentList()
+    }
 }
