@@ -89,7 +89,6 @@ internal sealed class SendStates {
         override val isPrimaryButtonEnabled: Boolean = true,
         val isSending: Boolean,
         val isSuccess: Boolean,
-        val isSubtract: Boolean,
         val transactionDate: Long,
         val txUrl: String,
         val ignoreAmountReduce: Boolean,
