@@ -192,7 +192,6 @@ internal class SendViewModel @Inject constructor(
     private var qrScannerJobHolder = JobHolder()
 
     private var sendIdleTimer = 0L
-    private var feeIdleTimer = 0L
 
     init {
         subscribeOnCurrencyStatusUpdates()
@@ -488,12 +487,7 @@ internal class SendViewModel @Inject constructor(
                 if (onFeeNext()) return
             }
             SendUiStateType.Amount -> {
-                if (uiState.feeState?.feeSelectorState is FeeSelectorState.Content) {
-                    if (onFeeCoverageAlert()) return
-                } else {
-                    loadFee(isToNextState = true)
-                    return
-                }
+                loadFee()
             }
             else -> Unit
         }
@@ -519,7 +513,6 @@ internal class SendViewModel @Inject constructor(
         innerRouter.openTokenDetails(userWalletId, currency)
 
     private fun onFeeNext(): Boolean {
-        if (onFeeCoverageAlert()) return true
         if (checkIfFeeTooLow(uiState)) {
             uiState = eventStateFactory.getFeeTooLowAlert(
                 onConsume = { uiState = eventStateFactory.onConsumeEventState() },
@@ -536,19 +529,6 @@ internal class SendViewModel @Inject constructor(
                 )
             },
         )
-    }
-
-    private fun onFeeCoverageAlert(): Boolean {
-        val isFeeCoverage = checkFeeCoverage(uiState, cryptoCurrencyStatus)
-        return if (isAmountSubtractAvailable && isFeeCoverage) {
-            uiState = eventStateFactory.getFeeCoverageAlert(
-                onConsume = { uiState = eventStateFactory.onConsumeEventState() },
-            )
-            true
-        } else {
-            analyticsEventHandler.send(SendAnalyticEvents.SubtractFromAmount(false))
-            false
-        }
     }
 
     private fun cancelFeeRequest() {
@@ -652,7 +632,7 @@ internal class SendViewModel @Inject constructor(
     // endregion
 
     // region fee
-    override fun feeReload(isToNextState: Boolean) = loadFee(isToNextState = isToNextState)
+    override fun feeReload() = loadFee()
 
     override fun onFeeSelectorClick(feeType: FeeType) {
         uiState = feeStateFactory.onFeeSelectedState(feeType)
@@ -677,10 +657,7 @@ internal class SendViewModel @Inject constructor(
         innerRouter.openUrl(url)
     }
 
-    private fun loadFee(isToNextState: Boolean = false) {
-        // debouncing fee request
-        if (SystemClock.elapsedRealtime() - feeIdleTimer < FEE_UPDATE_DELAY) return
-
+    private fun loadFee() {
         viewModelScope.launch(dispatchers.main) {
             val isShowStatus = uiState.feeState?.fee == null
             if (isShowStatus) {
@@ -688,18 +665,14 @@ internal class SendViewModel @Inject constructor(
             }
             val result = callFeeUseCase()?.fold(
                 ifRight = {
-                    feeIdleTimer = SystemClock.elapsedRealtime()
                     uiState = feeStateFactory.onFeeOnLoadedState(it)
-                    if (isToNextState && !onFeeCoverageAlert()) {
-                        stateRouter.showSend()
-                    }
                 },
                 ifLeft = {
-                    onFeeLoadFailed(isShowStatus, isToNextState)
+                    onFeeLoadFailed(isShowStatus)
                 },
             )
             if (result == null) {
-                onFeeLoadFailed(isShowStatus, isToNextState)
+                onFeeLoadFailed(isShowStatus)
             }
             updateNotifications()
             updateFeeNotifications()
@@ -709,15 +682,8 @@ internal class SendViewModel @Inject constructor(
             }
     }
 
-    private fun onFeeLoadFailed(isShowStatus: Boolean, isToNextState: Boolean) {
-        when {
-            isToNextState -> {
-                uiState = eventStateFactory.getFeeUnreachableErrorState {
-                    uiState = eventStateFactory.onConsumeEventState()
-                }
-            }
-            isShowStatus -> uiState = feeStateFactory.onFeeOnErrorState()
-        }
+    private fun onFeeLoadFailed(isShowStatus: Boolean) {
+        if (isShowStatus) uiState = feeStateFactory.onFeeOnErrorState()
     }
 
     private suspend fun checkIfSubtractAvailable() {
@@ -751,7 +717,6 @@ internal class SendViewModel @Inject constructor(
             verifyAndSendTransaction()
         } else {
             onCheckFeeUpdate()
-            feeIdleTimer = SystemClock.elapsedRealtime()
             sendIdleTimer = SystemClock.elapsedRealtime()
         }
     }
@@ -921,7 +886,6 @@ internal class SendViewModel @Inject constructor(
 
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 60_000L
-        const val FEE_UPDATE_DELAY = 10_000L
         const val BALANCE_UPDATE_DELAY = 10_000L
 
         const val RU_LOCALE = "ru"
