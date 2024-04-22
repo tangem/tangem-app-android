@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.toDateFormat
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
 
 /**
@@ -47,7 +47,11 @@ fun TransactionDoneTitle(@StringRes titleRes: Int, date: Long, modifier: Modifie
                 .padding(top = TangemTheme.dimens.spacing16),
         )
         Text(
-            text = stringResource(id = R.string.send_date_format, date.toDateFormat(), date.toTimeFormat()),
+            text = stringResource(
+                id = R.string.send_date_format,
+                date.toTimeFormat(DateTimeFormatters.dateFormatter),
+                date.toTimeFormat(),
+            ),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
