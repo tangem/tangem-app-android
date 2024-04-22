@@ -183,7 +183,6 @@ dependencies {
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
-    implementation(deps.appsflyer)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
