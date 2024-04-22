@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.common.core.TangemSdkError
@@ -12,20 +13,23 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.R
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.SendTransactionError.Companion.USER_CANCELLED_ERROR_CODE
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.toFormattedString
 
 class SendTransactionUseCase(
-    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val demoConfig: DemoConfig,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val transactionRepository: TransactionRepository,
+    private val walletManagersFacade: WalletManagersFacade,
 ) {
     suspend operator fun invoke(
         txData: TransactionData,
@@ -39,8 +43,13 @@ class SendTransactionUseCase(
             cardSdkConfigRepository.setLinkedTerminal(false)
         }
         val sendResult = try {
-            if (isDemoCardUseCase(cardId = userWallet.cardId)) {
-                SendTransactionError.DemoCardError.left()
+            if (demoConfig.isDemoCardId(cardId = userWallet.cardId)) {
+                sendDemo(
+                    userWallet = userWallet,
+                    network = network,
+                    transactionData = txData,
+                    signer = signer,
+                )
             } else {
                 transactionRepository.sendTransaction(
                     txData = txData,
@@ -64,6 +73,27 @@ class SendTransactionUseCase(
             },
             ifLeft = { it.left() },
         )
+    }
+
+    private suspend fun sendDemo(
+        userWallet: UserWallet,
+        network: Network,
+        transactionData: TransactionData,
+        signer: TransactionSigner,
+    ): Either<SendTransactionError, SimpleResult> {
+        val demoTransactionSender = DemoTransactionSender(
+            walletManagersFacade
+                .getOrCreateWalletManager(userWallet.walletId, network)
+                ?: error("WalletManager is null"),
+        )
+
+        val result = demoTransactionSender.send(transactionData = transactionData, signer = signer)
+
+        return if (result is SimpleResult.Failure && result.error.customMessage.contains(DemoTransactionSender.ID)) {
+            SendTransactionError.DemoCardError.left()
+        } else {
+            result.right()
+        }
     }
 
     private fun handleError(result: SimpleResult.Failure): SendTransactionError {
