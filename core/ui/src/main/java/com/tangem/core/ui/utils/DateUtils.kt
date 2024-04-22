@@ -11,7 +11,7 @@ import org.joda.time.format.DateTimeFormatter
  * If [this] timestamp is today or yesterday, returns relative date,
  * otherwise returns formatting date.
  */
-fun Long.toDateFormat(formatter: DateTimeFormatter = DateTimeFormatters.dateFormatter): String {
+fun Long.toDateFormatWithTodayYesterday(formatter: DateTimeFormatter = DateTimeFormatters.dateFormatter): String {
     val localDate = DateTime(this, DateTimeZone.getDefault())
     return if (localDate.isToday() || localDate.isYesterday()) {
         DateUtils.getRelativeTimeSpanString(
