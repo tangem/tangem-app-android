@@ -741,7 +741,7 @@ internal class SendViewModel @Inject constructor(
         return getFeeUseCase.invoke(
             amount = amount,
             destination = recipientState.addressTextField.value,
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
         )
     }
