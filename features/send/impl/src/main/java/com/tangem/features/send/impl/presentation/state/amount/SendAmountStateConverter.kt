@@ -31,6 +31,7 @@ internal class SendAmountStateConverter(
         val status = cryptoCurrencyStatusProvider()
         val fiat = formatFiatAmount(status.value.fiatAmount, appCurrency.code, appCurrency.symbol)
         val crypto = formatCryptoAmount(status.value.amount, status.currency.symbol, status.currency.decimals)
+        val noFeeRate = status.value.fiatRate.isNullOrZero()
 
         return SendStates.AmountState(
             walletName = userWallet.name,
@@ -45,7 +46,11 @@ internal class SendAmountStateConverter(
             segmentedButtonConfig = persistentListOf(
                 SendAmountSegmentedButtonsConfig(
                     title = stringReference(status.currency.symbol),
-                    iconState = iconStateConverter.convert(status),
+                    iconState = if (noFeeRate) {
+                        iconStateConverter.convertWithGrayscale(status)
+                    } else {
+                        iconStateConverter.convert(status)
+                    },
                     isFiat = false,
                 ),
                 SendAmountSegmentedButtonsConfig(
@@ -54,7 +59,7 @@ internal class SendAmountStateConverter(
                     isFiat = true,
                 ),
             ),
-            isSegmentedButtonsEnabled = !status.value.fiatRate.isNullOrZero(),
+            isSegmentedButtonsEnabled = !noFeeRate,
         )
     }
 }
