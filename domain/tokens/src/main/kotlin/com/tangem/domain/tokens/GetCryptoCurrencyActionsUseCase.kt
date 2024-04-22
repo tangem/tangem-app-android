@@ -144,16 +144,27 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // sell
-        if (rampManager.availableForSell(cryptoCurrency) &&
-            sendUnavailabilityReason is ScenarioUnavailabilityReason.None
-        ) {
-            activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
-        } else {
-            disabledList.add(
-                TokenActionsState.ActionState.Sell(
-                    unavailabilityReason = ScenarioUnavailabilityReason.SellUnavailable(cryptoCurrency.name),
-                ),
-            )
+        val sellSupportedByService = rampManager.availableForSell(cryptoCurrency)
+        val sendAvailable = sendUnavailabilityReason is ScenarioUnavailabilityReason.None
+
+        when {
+            sellSupportedByService && sendAvailable -> {
+                activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
+            }
+            sellSupportedByService && !sendAvailable -> {
+                disabledList.add(
+                    TokenActionsState.ActionState.Sell(
+                        unavailabilityReason = ScenarioUnavailabilityReason.SendUnavailable(cryptoCurrency.name),
+                    ),
+                )
+            }
+            else -> {
+                disabledList.add(
+                    TokenActionsState.ActionState.Sell(
+                        unavailabilityReason = ScenarioUnavailabilityReason.NotSupportedBySellService(cryptoCurrency.name),
+                    ),
+                )
+            }
         }
 
         // hide

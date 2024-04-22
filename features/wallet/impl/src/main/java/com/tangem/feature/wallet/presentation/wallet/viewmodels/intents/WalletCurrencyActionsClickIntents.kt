@@ -470,7 +470,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
                 )
             }
-            is ScenarioUnavailabilityReason.SellUnavailable -> {
+            is ScenarioUnavailabilityReason.NotSupportedBySellService -> {
                 resourceReference(
                     id = R.string.token_button_unavailability_reason_sell_unavailable,
                     formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),

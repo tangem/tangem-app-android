@@ -14,7 +14,8 @@ sealed class ScenarioUnavailabilityReason {
     data class NotExchangeable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
 
     // sell-specific
-    data class SellUnavailable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
+    data class NotSupportedBySellService(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
+    data class SendUnavailable(val cryptoCurrencyName: String) : ScenarioUnavailabilityReason()
 
     data object Unreachable : ScenarioUnavailabilityReason()
 }
