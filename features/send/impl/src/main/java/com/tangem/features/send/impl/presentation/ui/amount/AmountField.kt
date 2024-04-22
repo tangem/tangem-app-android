@@ -22,7 +22,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.job
 
 @Composable
