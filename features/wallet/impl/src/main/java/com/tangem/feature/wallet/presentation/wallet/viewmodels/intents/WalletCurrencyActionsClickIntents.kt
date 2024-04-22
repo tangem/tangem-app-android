@@ -476,6 +476,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
                 )
             }
+            is ScenarioUnavailabilityReason.SendUnavailable -> {
+                resourceReference(
+                    TODO()
+                )
+            }
             ScenarioUnavailabilityReason.Unreachable -> {
                 resourceReference(
                     id = R.string.token_button_unavailability_reason_no_quotes,
