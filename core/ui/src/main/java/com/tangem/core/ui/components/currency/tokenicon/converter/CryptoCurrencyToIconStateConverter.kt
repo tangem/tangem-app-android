@@ -20,17 +20,22 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
         }
     }
 
-    fun convertWithGrayscale(value: CryptoCurrencyStatus): TokenIconState {
+    fun convertCustom(
+        value: CryptoCurrencyStatus,
+        forceGrayscale: Boolean,
+        showCustomTokenBadge: Boolean,
+    ): TokenIconState {
         return when (val currency = value.currency) {
             is CryptoCurrency.Coin -> getIconStateForCoin(
                 coin = currency,
                 isUnreachable = value.value.isError,
-                forceGrayscale = true,
+                forceGrayscale = forceGrayscale,
             )
             is CryptoCurrency.Token -> getIconStateForToken(
                 token = currency,
                 isErrorStatus = value.value.isError,
-                forceGrayscale = true,
+                forceGrayscale = forceGrayscale,
+                showCustomBadge = showCustomTokenBadge,
             )
         }
     }
@@ -58,6 +63,7 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
     private fun getIconStateForToken(
         token: CryptoCurrency.Token,
         isErrorStatus: Boolean,
+        showCustomBadge: Boolean = true,
         forceGrayscale: Boolean = false,
     ): TokenIconState {
         val grayScale = forceGrayscale || token.network.isTestnet || isErrorStatus
@@ -78,7 +84,7 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
                 isGrayscale = grayScale,
                 fallbackTint = tint,
                 fallbackBackground = background,
-                showCustomBadge = token.isCustom, // `true` for tokens with custom derivation
+                showCustomBadge = token.isCustom && showCustomBadge, // `true` for tokens with custom derivation
             )
         }
     }
