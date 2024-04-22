@@ -4,7 +4,7 @@ import com.tangem.core.ui.extensions.TextReference
 
 sealed class SendTransactionError {
 
-    object DemoCardError : SendTransactionError()
+    data object DemoCardError : SendTransactionError()
 
     data class DataError(val message: String?) : SendTransactionError()
 
@@ -12,7 +12,7 @@ sealed class SendTransactionError {
 
     data class BlockchainSdkError(val code: Int, val message: String?) : SendTransactionError()
 
-    object UserCancelledError : SendTransactionError()
+    data object UserCancelledError : SendTransactionError()
 
     data class CreateAccountUnderfunded(val amount: String) : SendTransactionError()
 
