@@ -40,7 +40,6 @@ internal class SendAmountStateConverter(
             amountTextField = sendAmountFieldConverter.convert(value),
             isPrimaryButtonEnabled = false,
             appCurrencyCode = appCurrency.code,
-            subtractedFee = null,
             segmentedButtonConfig = persistentListOf(
                 SendAmountSegmentedButtonsConfig(
                     title = stringReference(status.currency.symbol),
