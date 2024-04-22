@@ -154,7 +154,7 @@ internal class WalletViewModel @Inject constructor(
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
 
-                    walletDeepLinksHandler.registerForSingleCurrencyWallets(
+                    walletDeepLinksHandler.registerForWallet(
                         viewModel = this,
                         userWallet = selectedWallet,
                     )
