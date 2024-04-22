@@ -20,6 +20,21 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
         }
     }
 
+    fun convertWithGrayscale(value: CryptoCurrencyStatus): TokenIconState {
+        return when (val currency = value.currency) {
+            is CryptoCurrency.Coin -> getIconStateForCoin(
+                coin = currency,
+                isUnreachable = value.value.isError,
+                forceGrayscale = true,
+            )
+            is CryptoCurrency.Token -> getIconStateForToken(
+                token = currency,
+                isErrorStatus = value.value.isError,
+                forceGrayscale = true,
+            )
+        }
+    }
+
     fun convert(currency: CryptoCurrency): TokenIconState {
         return when (currency) {
             is CryptoCurrency.Coin -> getIconStateForCoin(currency, isUnreachable = false)
@@ -27,18 +42,26 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
         }
     }
 
-    private fun getIconStateForCoin(coin: CryptoCurrency.Coin, isUnreachable: Boolean): TokenIconState.CoinIcon {
+    private fun getIconStateForCoin(
+        coin: CryptoCurrency.Coin,
+        isUnreachable: Boolean,
+        forceGrayscale: Boolean = false,
+    ): TokenIconState.CoinIcon {
         return TokenIconState.CoinIcon(
             url = coin.iconUrl,
             fallbackResId = coin.networkIconResId,
-            isGrayscale = coin.network.isTestnet || isUnreachable,
+            isGrayscale = forceGrayscale || coin.network.isTestnet || isUnreachable,
             showCustomBadge = coin.isCustom,
         )
     }
 
-    private fun getIconStateForToken(token: CryptoCurrency.Token, isErrorStatus: Boolean): TokenIconState {
-        val isGrayscale = token.network.isTestnet || isErrorStatus
-        val background = token.tryGetBackgroundForTokenIcon(isGrayscale)
+    private fun getIconStateForToken(
+        token: CryptoCurrency.Token,
+        isErrorStatus: Boolean,
+        forceGrayscale: Boolean = false,
+    ): TokenIconState {
+        val grayScale = forceGrayscale || token.network.isTestnet || isErrorStatus
+        val background = token.tryGetBackgroundForTokenIcon(grayScale)
         val tint = getTintForTokenIcon(background)
 
         return if (token.isCustom && token.iconUrl == null) {
@@ -46,13 +69,13 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
                 tint = tint,
                 background = background,
                 networkBadgeIconResId = token.networkIconResId,
-                isGrayscale = isGrayscale,
+                isGrayscale = grayScale,
             )
         } else {
             TokenIconState.TokenIcon(
                 url = token.iconUrl,
                 networkBadgeIconResId = token.networkIconResId,
-                isGrayscale = isGrayscale,
+                isGrayscale = grayScale,
                 fallbackTint = tint,
                 fallbackBackground = background,
                 showCustomBadge = token.isCustom, // `true` for tokens with custom derivation
