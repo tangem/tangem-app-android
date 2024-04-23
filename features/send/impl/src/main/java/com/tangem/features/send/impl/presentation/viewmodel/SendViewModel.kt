@@ -551,6 +551,10 @@ internal class SendViewModel @Inject constructor(
         uiState = amountStateFactory.getOnMaxAmountClick()
         analyticsEventHandler.send(SendAnalyticEvents.MaxAmountButtonClicked)
     }
+
+    override fun onAmountPasteTriggerDismiss() {
+        uiState = amountStateFactory.getOnAmountPastedTriggerDismiss()
+    }
     // endregion
 
     // region recipient state clicks
