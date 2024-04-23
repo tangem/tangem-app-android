@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -15,6 +16,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.mlkit.vision.common.InputImage
 import com.tangem.core.ui.res.TangemTheme
@@ -25,6 +28,8 @@ import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
 import com.tangem.feature.qrscanning.presentation.QrScanningContent
 import com.tangem.feature.qrscanning.viewmodel.QrScanningViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -69,9 +74,22 @@ internal class QrScanningFragment : ComposeFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.setRouter(innerRouter, galleryLauncher)
+        viewModel.setRouter(innerRouter)
         cameraExecutor = Executors.newSingleThreadExecutor()
         requestCameraPermission()
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.launchGalleryEvent
+                    .collect {
+                        galleryLauncher.launch(it.imageFilter)
+                        delay(timeMillis = 2000)
+                    }
+            }
+        }
     }
 
     override fun onResume() {
