@@ -53,7 +53,7 @@ internal class SendAmountFieldConverter(
             cryptoAmount = cryptoAmount,
             fiatAmount = getAppCurrencyAmount(fiatDecimal, appCurrencyProvider()),
             isError = false,
-            error = TextReference.Res(R.string.swapping_insufficient_funds),
+            error = TextReference.Res(R.string.send_validation_amount_exceeds_balance),
             isFiatUnavailable = fiatRate == null,
             isValuePasted = false,
             onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
