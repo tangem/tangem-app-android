@@ -31,7 +31,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.features.demo.DemoTransactionSender
+import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee

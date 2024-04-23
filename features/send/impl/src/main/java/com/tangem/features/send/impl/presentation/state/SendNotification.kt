@@ -42,11 +42,6 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             ),
         )
 
-        data class ReserveAmountError(val amount: String) : Error(
-            title = resourceReference(R.string.send_notification_invalid_reserve_amount_title, wrappedList(amount)),
-            subtitle = resourceReference(R.string.send_notification_invalid_reserve_amount_text),
-        )
-
         data class TransactionLimitError(
             val cryptoCurrency: String,
             val utxoLimit: String,
@@ -152,6 +147,11 @@ internal sealed class SendNotification(val config: NotificationConfig) {
                 text = resourceReference(R.string.warning_button_refresh),
                 onClick = onRefresh,
             ),
+        )
+
+        data object FeeCoverageNotification : Warning(
+            title = resourceReference(R.string.send_network_fee_warning_title),
+            subtitle = resourceReference(R.string.swapping_network_fee_warning_content),
         )
     }
 }

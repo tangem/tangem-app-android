@@ -1,4 +1,4 @@
-package com.tangem.tap.features.demo
+package com.tangem.domain.demo
 
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee

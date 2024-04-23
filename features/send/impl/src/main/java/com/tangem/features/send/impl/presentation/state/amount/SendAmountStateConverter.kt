@@ -31,6 +31,7 @@ internal class SendAmountStateConverter(
         val status = cryptoCurrencyStatusProvider()
         val fiat = formatFiatAmount(status.value.fiatAmount, appCurrency.code, appCurrency.symbol)
         val crypto = formatCryptoAmount(status.value.amount, status.currency.symbol, status.currency.decimals)
+        val noFeeRate = status.value.fiatRate.isNullOrZero()
 
         return SendStates.AmountState(
             walletName = userWallet.name,
@@ -38,26 +39,24 @@ internal class SendAmountStateConverter(
             tokenIconState = iconStateConverter.convert(status),
             amountTextField = sendAmountFieldConverter.convert(value),
             isPrimaryButtonEnabled = false,
-            notifications = persistentListOf(),
-            isFeeLoading = false,
             appCurrencyCode = appCurrency.code,
-            subtractedFee = null,
-            segmentedButtonConfig = if (status.value.fiatRate.isNullOrZero()) {
-                persistentListOf()
-            } else {
-                persistentListOf(
-                    SendAmountSegmentedButtonsConfig(
-                        title = stringReference(status.currency.symbol),
-                        iconState = iconStateConverter.convert(status),
-                        isFiat = false,
+            segmentedButtonConfig = persistentListOf(
+                SendAmountSegmentedButtonsConfig(
+                    title = stringReference(status.currency.symbol),
+                    iconState = iconStateConverter.convertCustom(
+                        value = status,
+                        forceGrayscale = noFeeRate,
+                        showCustomTokenBadge = false,
                     ),
-                    SendAmountSegmentedButtonsConfig(
-                        title = stringReference(appCurrency.code),
-                        iconUrl = appCurrency.iconSmallUrl,
-                        isFiat = true,
-                    ),
-                )
-            },
+                    isFiat = false,
+                ),
+                SendAmountSegmentedButtonsConfig(
+                    title = stringReference(appCurrency.code),
+                    iconUrl = appCurrency.iconSmallUrl,
+                    isFiat = true,
+                ),
+            ),
+            isSegmentedButtonsEnabled = !noFeeRate,
         )
     }
 }

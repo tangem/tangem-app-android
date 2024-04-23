@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.demo.DemoTransactionSender
+import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.FeeAction

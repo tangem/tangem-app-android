@@ -4,7 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.tokenicon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
-import com.tangem.core.ui.utils.toDateFormat
+import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -71,7 +71,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             txUrl = transaction.status?.txExternalUrl,
                             txExternalId = transaction.status?.txExternalId,
                             timestamp = TextReference.Str(
-                                "${timestamp.toDateFormat()}, ${timestamp.toTimeFormat()}",
+                                "${timestamp.toDateFormatWithTodayYesterday()}, ${timestamp.toTimeFormat()}",
                             ),
                             fiatSymbol = appCurrency.symbol,
                             statuses = getStatuses(transaction.status?.status),

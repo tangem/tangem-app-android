@@ -2,8 +2,8 @@ package com.tangem.tap.common.analytics.converters
 
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.features.demo.DemoTransactionSender
 import com.tangem.utils.converter.Converter
 
 /**
