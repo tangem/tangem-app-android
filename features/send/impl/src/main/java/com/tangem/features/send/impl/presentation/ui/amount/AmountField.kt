@@ -22,11 +22,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.job
 
 @Composable
-internal fun AmountField(sendField: SendTextField.AmountField, isEnabled: Boolean, appCurrencyCode: String) {
+internal fun AmountField(sendField: SendTextField.AmountField, appCurrencyCode: String) {
     val decimalFormat = rememberDecimalFormat()
     val isFiatValue = sendField.isFiatValue
     val currencyCode = if (isFiatValue) appCurrencyCode else null
@@ -36,15 +35,6 @@ internal fun AmountField(sendField: SendTextField.AmountField, isEnabled: Boolea
         sendField.cryptoAmount to sendField.value
     }
     val requester = remember { FocusRequester() }
-    var isEnabledProxy by remember { mutableStateOf(isEnabled) }
-
-    // Fix animation from amount screen to summary screen ([REDACTED_TASK_KEY])
-    LaunchedEffect(key1 = isEnabled) {
-        if (isEnabled) {
-            delay(timeMillis = 700)
-        }
-        isEnabledProxy = isEnabled
-    }
 
     AmountTextField(
         value = primaryValue,
@@ -62,7 +52,6 @@ internal fun AmountField(sendField: SendTextField.AmountField, isEnabled: Boolea
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
         ),
-        isEnabled = isEnabledProxy,
         isAutoResize = true,
         modifier = Modifier
             .focusRequester(requester)
