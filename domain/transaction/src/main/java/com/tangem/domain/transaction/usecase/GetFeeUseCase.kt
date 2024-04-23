@@ -6,10 +6,12 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
+import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 import java.math.BigDecimal
 
 /**
@@ -17,23 +19,31 @@ import java.math.BigDecimal
  */
 class GetFeeUseCase(
     private val walletManagersFacade: WalletManagersFacade,
+    private val demoConfig: DemoConfig,
 ) {
     suspend operator fun invoke(
         amount: BigDecimal,
         destination: String,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
     ) = either {
         catch(
             block = {
-                val result = requireNotNull(
-                    walletManagersFacade.getFee(
-                        amount = convertCryptoCurrencyToAmount(cryptoCurrency, amount),
+                val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
+
+                val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+                    demoTransactionSender(userWallet, cryptoCurrency).getFee(
+                        amount = amountData,
                         destination = destination,
-                        userWalletId = userWalletId,
+                    )
+                } else {
+                    walletManagersFacade.getFee(
+                        amount = amountData,
+                        destination = destination,
+                        userWalletId = userWallet.walletId,
                         network = cryptoCurrency.network,
-                    ),
-                ) { "Fee is null" }
+                    ) ?: error("Fee is null")
+                }
 
                 val maybeFee = when (result) {
                     is Result.Success -> result.data
@@ -44,6 +54,17 @@ class GetFeeUseCase(
             catch = {
                 raise(GetFeeError.DataError(it))
             },
+        )
+    }
+
+    private suspend fun demoTransactionSender(
+        userWallet: UserWallet,
+        cryptoCurrency: CryptoCurrency,
+    ): DemoTransactionSender {
+        return DemoTransactionSender(
+            walletManagersFacade
+                .getOrCreateWalletManager(userWallet.walletId, cryptoCurrency.network)
+                ?: error("WalletManager is null"),
         )
     }
 
