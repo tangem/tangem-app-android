@@ -53,6 +53,8 @@ internal fun AmountField(sendField: SendTextField.AmountField, appCurrencyCode: 
             textAlign = TextAlign.Center,
         ),
         isAutoResize = true,
+        isValuePasted = sendField.isValuePasted,
+        onValuePastedTriggerDismiss = sendField.onValuePastedTriggerDismiss,
         modifier = Modifier
             .focusRequester(requester)
             .padding(
