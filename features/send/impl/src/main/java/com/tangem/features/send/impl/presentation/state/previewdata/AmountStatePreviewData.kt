@@ -22,10 +22,7 @@ internal object AmountStatePreviewData {
         walletBalance = stringReference("123.123"),
         tokenIconState = TokenIconState.Loading,
         segmentedButtonConfig = persistentListOf(),
-        notifications = persistentListOf(),
-        isFeeLoading = false,
         appCurrencyCode = "usd",
-        subtractedFee = null,
         amountTextField = SendTextField.AmountField(
             value = "123.123123123123123123",
             onValueChange = {},
