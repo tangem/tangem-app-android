@@ -33,6 +33,11 @@ internal class AmountStateFactory(
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
+    private val amountPasteConverter by lazy(LazyThreadSafetyMode.NONE) {
+        SendAmountPastedTriggerDismissConverter(
+            currentStateProvider = currentStateProvider,
+        )
+    }
 
     fun getOnAmountValueChange(value: String) = amountFieldChangeConverter.convert(value)
 
@@ -41,4 +46,6 @@ internal class AmountStateFactory(
     }
 
     fun getOnCurrencyChangedState(isFiat: Boolean) = amountCurrencyConverter.convert(isFiat)
+
+    fun getOnAmountPastedTriggerDismiss() = amountPasteConverter.convert(false)
 }
