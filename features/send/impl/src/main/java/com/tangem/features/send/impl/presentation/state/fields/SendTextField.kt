@@ -28,6 +28,8 @@ internal sealed class SendTextField {
         val isFiatValue: Boolean,
         val fiatValue: String,
         val isFiatUnavailable: Boolean,
+        val isValuePasted: Boolean,
+        val onValuePastedTriggerDismiss: () -> Unit,
         val isError: Boolean,
         val error: TextReference,
     ) : SendTextField()

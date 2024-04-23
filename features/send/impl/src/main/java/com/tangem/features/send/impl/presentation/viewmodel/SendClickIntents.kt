@@ -30,6 +30,8 @@ internal interface SendClickIntents {
     fun onCurrencyChangeClick(isFiat: Boolean)
 
     fun onMaxValueClick()
+
+    fun onAmountPasteTriggerDismiss()
     // endregion
 
     // region Recipient
