@@ -55,6 +55,8 @@ internal class SendAmountFieldConverter(
             isError = false,
             error = TextReference.Res(R.string.swapping_insufficient_funds),
             isFiatUnavailable = fiatRate == null,
+            isValuePasted = false,
+            onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
         )
     }
 
