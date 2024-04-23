@@ -352,10 +352,7 @@ internal class StateBuilder(
         }
     }
 
-    private fun maybeAddDomainWarnings(
-        quoteModel: SwapState.QuotesLoadedState,
-        warnings: MutableList<SwapWarning>,
-    ) {
+    private fun maybeAddDomainWarnings(quoteModel: SwapState.QuotesLoadedState, warnings: MutableList<SwapWarning>) {
         quoteModel.warnings.forEach {
             when (it) {
                 is Warning.ExistentialDepositWarning -> {
@@ -1346,10 +1343,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun createReduceAmountNotificationConfig(
-        amount: String,
-        onConfirmClick: () -> Unit,
-    ): NotificationConfig {
+    private fun createReduceAmountNotificationConfig(amount: String, onConfirmClick: () -> Unit): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.send_notification_high_fee_title),
             subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(amount)),
