@@ -13,7 +13,6 @@ internal class SendConfirmStateConverter(
             isPrimaryButtonEnabled = true,
             isSending = false,
             isSuccess = false,
-            isSubtract = false,
             transactionDate = 0L,
             txUrl = "",
             ignoreAmountReduce = false,
