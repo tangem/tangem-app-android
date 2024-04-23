@@ -10,7 +10,7 @@ import com.tangem.core.featuretoggle.manager.ProdFeatureTogglesManager
 import com.tangem.core.featuretoggle.storage.LocalFeatureTogglesStorage
 import com.tangem.core.featuretoggle.version.DefaultVersionProvider
 import com.tangem.core.featuretoggles.BuildConfig
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import dagger.Module
 import dagger.Provides

@@ -6,6 +6,7 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
@@ -19,6 +20,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -94,6 +96,33 @@ class NetworkModule {
             )
             .build()
             .create(TangemTechApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemTechServiceApi(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        appVersionProvider: AppVersionProvider,
+    ): TangemTechServiceApi {
+        return Retrofit.Builder()
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
+            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
+            .client(
+                OkHttpClient.Builder()
+                    .callTimeout(timeout = 5, unit = TimeUnit.SECONDS)
+                    .addHeaders(
+                        CacheControlHeader,
+                        AppVersionPlatformHeaders(appVersionProvider),
+                        // TODO("refactor header init") get auth data after biometric auth to avoid race condition
+                        // AuthenticationHeader(authProvider),
+                    )
+                    .addLoggers(context)
+                    .build(),
+            )
+            .build()
+            .create(TangemTechServiceApi::class.java)
     }
 
     private companion object {

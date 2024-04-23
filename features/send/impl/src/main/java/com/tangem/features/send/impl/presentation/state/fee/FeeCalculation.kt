@@ -2,9 +2,9 @@ package com.tangem.features.send.impl.presentation.state.fee
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.lib.crypto.BlockchainUtils

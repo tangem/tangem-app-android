@@ -95,17 +95,9 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             )
         }
         is GlobalAction.UpdateUserWalletsListManager -> {
-            val featureToggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
+            val generalUserWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
-            if (featureToggles.isGeneralManagerEnabled) {
-                val generalUserWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-
-                appStateHolder.userWalletsListManager = generalUserWalletsListManager
-                globalState.copy(userWalletsListManager = generalUserWalletsListManager)
-            } else {
-                appStateHolder.userWalletsListManager = action.manager
-                globalState.copy(userWalletsListManager = action.manager)
-            }
+            globalState.copy(userWalletsListManager = generalUserWalletsListManager)
         }
         is GlobalAction.ChangeAppThemeMode -> globalState.copy(
             appThemeMode = action.appThemeMode,
