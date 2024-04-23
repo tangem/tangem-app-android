@@ -4,12 +4,16 @@
   <string name="add_tokens_title">Валюты</string>
   <string name="address_qr_code_message_format">Отправляйте только %1$s (%2$s) в сети %3$s на этот адрес. Использование другой сети может привести к утрате средств.</string>
   <string name="alert_button_request_support">Обратиться в поддержку</string>
+  <string name="alert_button_try_again">Попробовать снова</string>
   <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
   <string name="alert_failed_to_send_transaction_message">Причина: %s</string>
   <string name="alert_failed_to_send_transaction_title">Не могу отправить транзакцию</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Выбранный кошелёк не поддерживает сеть %1$s</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Для активации криптографии сети %1$s необходимо сбросить кошелек до заводских настроек. Пожалуйста, выведите свои средства, чтобы не потерять их, после сброса доступ к текущему кошельку будет невозможен.</string>
   <string name="alert_manage_tokens_unsupported_message">Токены в сети %1$s не поддерживаются этой картой из-за ограничений прошивки.</string>
+  <string name="alert_negative_app_rate_sent_message">Спасибо за ваш отзыв. Мы ответим в кратчайшие сроки.</string>
+  <string name="alert_negative_app_rate_sent_title">Ваши предложения отправлены</string>
+  <string name="alert_troubleshooting_scan_card_message">Пожалуйста, попробуйте приложить карту в точности, как показано на анимации, или запросите поддержку.</string>
   <string name="alert_troubleshooting_scan_card_title">У вас возникли трудности со сканированием карты?</string>
   <string name="alert_unsupported_card">Эта карта не предназначена для работы с этим приложением</string>
   <string name="app_settings_default_fee_footer">Подключите функцию комиссии по умолчанию и при формировании транзакции на отправку средств комиссия будет выставлена автоматически, а экран комиссии пропущен. Вы всегда сможете на него вернуться.</string>
@@ -24,6 +28,8 @@
   <string name="app_settings_theme_mode_dark">Тёмная</string>
   <string name="app_settings_theme_mode_light">Светлая</string>
   <string name="app_settings_theme_mode_system">Как в системе</string>
+  <string name="app_settings_theme_selection_footer">При выборе настройки как в системе приложение будет использовать тему в соответствии с настройками вашего устройства</string>
+  <string name="app_settings_theme_selection_system_short">Системная</string>
   <string name="app_settings_theme_selector_title">Тема</string>
   <string name="app_settings_title">Настройки приложения</string>
   <string name="balance_hidden_description">Чтобы скрыть или показать баланс, просто поверните ваше устройство вниз или отключите опцию его в разделе \"Настройки\"</string>
@@ -51,6 +57,10 @@
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
   <string name="card_settings_title">Настройки карты</string>
+  <string name="cardano_coin_will_be_send_with_token_description">Ввиду особенностей сети Cardano при транзакции токена %1$s помимо комиссии сети будет списано %2$s</string>
+  <string name="cardano_insufficient_balance_to_send_token_description">Для совершения транзакции %1$s, вам необходимо внести немного %2$s (%3$s), чтобы покрыть комиссию сети и минимальное значение ADA для отправки.</string>
+  <string name="cardano_insufficient_balance_to_send_token_title">Недостаточно ADA для отправки токена</string>
+  <string name="cardano_max_amount_has_token_description">Вывод всего баланса ADA невозможен при наличии средств на токенах сети Cardano. Сначала выведите средства на ваших токенах.</string>
   <string name="common_accept">Принять</string>
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_apply">Применить</string>
@@ -71,6 +81,7 @@
   <string name="common_create">Создать</string>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
+  <string name="common_disconnect">Отключить</string>
   <string name="common_done">Готово</string>
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
@@ -96,12 +107,14 @@
   <string name="common_no_address">Нет адреса</string>
   <string name="common_ok">OK</string>
   <string name="common_origin_card">Основная карта</string>
-  <string name="common_passphrase">Кодовая фраза</string>
+  <string name="common_passphrase">Парольная фраза</string>
+  <string name="common_paste">Вставить</string>
   <string name="common_read_more">Подробнее</string>
   <string name="common_receive">Получить</string>
   <string name="common_reject">Отклонить</string>
   <string name="common_reload">Перезагрузить</string>
   <string name="common_rename">Переименовать</string>
+  <string name="common_retry">Повторить</string>
   <string name="common_save_changes">Сохранить изменения</string>
   <string name="common_search">Искать</string>
   <string name="common_search_tokens">Поиск токенов</string>
@@ -125,6 +138,7 @@
   <string name="common_understand">Я понял</string>
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
+  <string name="common_warning">Предупреждение</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -171,6 +185,7 @@
   <string name="details_row_title_flip_to_hide">Скрывать балансы жестом переворота</string>
   <string name="details_row_title_issuer">Эмитент</string>
   <string name="details_row_title_signed_hashes">Подписано</string>
+  <string name="details_security_management_warning">Если вы забудете код, то потеряете доступ к своим средствам. Восстановление кода невозможно.</string>
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
@@ -183,9 +198,9 @@
   <string name="express_choose_providers_subtitle">Tangem предоставляет доступ к обмену через сторонних поставщиков в соответствии с их правилами</string>
   <string name="express_choose_providers_title">Выберите провайдера</string>
   <string name="express_error_code">Произошла ошибка. Код: %s</string>
-  <string name="express_error_provider_unavailable">К сожалению обмен указанной пары через выбранного провайдера на данный момент не возможен. Попробуйте совершить обмен позже. (Код: %s)</string>
+  <string name="express_error_provider_unavailable">К сожалению, обмен указанной пары через выбранного провайдера на данный момент невозможен. Попробуйте совершить обмен позже. (Код: %s)</string>
   <string name="express_error_swap_pair_unavailable">Выбранный провайдер не доступен для обмена. Попробуйте позже. (Код: %s)</string>
-  <string name="express_error_swap_unavailable">В данный момент обмен не возможен. Попробуйте позже. (Код: %s)</string>
+  <string name="express_error_swap_unavailable">В данный момент обмен невозможен. Попробуйте позже. (Код: %s)</string>
   <string name="express_estimated_amount">Курс обмена</string>
   <string name="express_exchange_by">Обмен через %s</string>
   <string name="express_exchange_notification_failed_text">Чтобы вернуть ваши деньги, посетите сайт провайдера</string>
@@ -288,7 +303,7 @@
   <string name="onboarding_activation_error_title">Ошибка активации</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту. После того, как процесс будет завершен, Вы больше не сможете добавить карт. Если у Вас есть еще одна карта, добавьте ее в резервную копию. Хотите продолжить?</string>
   <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
-  <string name="onboarding_bottom_sheet_passphrase_description">Кодовая фраза — это расширенная функция безопасности, которую используют криптокошельки. Она добавляет дополнительное слово или фразу по вашему выбору к уже существующей seed - фразе, чтобы разблокировать совершенно новый набор адресов.</string>
+  <string name="onboarding_bottom_sheet_passphrase_description">Парольная фраза — это расширенная функция безопасности, которую используют криптокошельки. Она добавляет дополнительное слово или фразу по вашему выбору к уже существующей seed - фразе, чтобы разблокировать совершенно новый набор адресов.</string>
   <string name="onboarding_button_add_backup_card">Добавить резервную карту</string>
   <string name="onboarding_button_backup_card_format">Сканировать карту #%d</string>
   <string name="onboarding_button_backup_now">Создать резервную копию</string>
@@ -425,8 +440,6 @@
   <string name="scan_card_settings_message">Отсканируйте карту, чтобы изменить ее настройки. Изменения затронут только ту карту, которую вы отсканировали, и не повлияют на другие карты, привязанные к вашему кошельку.</string>
   <string name="scan_card_settings_title">Приготовьте свою карту</string>
   <string name="send_additional_field_already_included">Уже содержится в введенном адресе</string>
-  <string name="send_alert_fee_coverage_subract_text">Вычесть</string>
-  <string name="send_alert_fee_coverage_title">Недостаточно средств для покрытия комиссии сети. Вычесть недостающую сумму для покрытия комиссии из отправляемой суммы?</string>
   <string name="send_alert_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_alert_fee_too_low_text">Вы указали комиссию ниже рекомендуемой, это может привести к задержке исполнения вашей транзакции. Продолжить?</string>
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
@@ -478,7 +491,7 @@
   <string name="send_notification_transaction_delay_title">Возможны задержки по транзакции</string>
   <string name="send_notification_transaction_limit_text">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$s UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
   <string name="send_notification_transaction_limit_title">Лимит транзакции</string>
-  <string name="send_optional_field">Необязательное</string>
+  <string name="send_optional_field">Опционально</string>
   <string name="send_qrcode_scan_info">Пожалуйста, совместите свой QR-код с квадратом, чтобы отсканировать его. Убедитесь, что вы сканируете адрес в сети %s.</string>
   <string name="send_recent_transactions">Последние</string>
   <string name="send_recipient">Получатель</string>
@@ -543,6 +556,7 @@
   <string name="token_button_unavailability_reason_no_quotes">Выбранная операция в данный момент недоступна. Попробуйте позже.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Обмен %s не доступен. Но мы работаем над его добавлением.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа монеты %s недоступна. Но мы работаем над её добавлением.</string>
+  <string name="token_details_choose_address">Выберите адрес</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
@@ -652,6 +666,10 @@
   <string name="warning_express_wrong_amount_description">Пожалуйста, измените сумму для обмена</string>
   <string name="warning_failed_to_verify_card_message">Возможно, данная карта - образец или подделка</string>
   <string name="warning_failed_to_verify_card_title">Ошибка проверки подлинности</string>
+  <string name="warning_hedera_missing_token_association_button_title">Ассоциировать</string>
+  <string name="warning_hedera_missing_token_association_message">Этот токен должен быть ассоциирован с вашей учетной записью Hedera, прежде чем вы сможете его принять. Стоимость ассоциации ~%.4f %s</string>
+  <string name="warning_hedera_missing_token_association_message_brief">Этот токен должен быть ассоциирован с вашей учетной записью Hedera, прежде чем вы сможете его принять</string>
+  <string name="warning_hedera_missing_token_association_title">Ассоциируете свой токен</string>
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>

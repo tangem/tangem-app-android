@@ -8,16 +8,14 @@ import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.deeplink.global.SellCurrencyDeepLink
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
-import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -29,23 +27,20 @@ internal class WalletDeepLinksHandler @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
+    private val getCryptoCurrencyStatusesSyncUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val reduxStateHolder: ReduxStateHolder,
 ) {
 
-    private var deepLinks: List<DeepLink> = emptyList()
+    private var deepLinksMap = mutableMapOf<UserWalletId, List<DeepLink>>()
 
-    fun registerForSingleCurrencyWallets(viewModel: ViewModel, userWallet: UserWallet) {
-        if (userWallet.isMultiCurrency) {
-            deepLinksRegistry.unregister(deepLinks)
-        } else {
-            if (deepLinks.isEmpty()) {
-                deepLinks = getDeepLinks(userWallet, viewModel.viewModelScope)
-            }
-
-            deepLinksRegistry.register(deepLinks)
+    fun registerForWallet(viewModel: ViewModel, userWallet: UserWallet) {
+        val deepLinks = deepLinksMap.getOrPut(userWallet.walletId) {
+            getDeepLinks(userWallet, viewModel.viewModelScope)
         }
+        deepLinksRegistry.unregisterByIds(deepLinks.map { it.id })
+        deepLinksRegistry.register(deepLinks)
 
         viewModel.addCloseable {
             deepLinksRegistry.unregister(deepLinks)
@@ -60,20 +55,23 @@ internal class WalletDeepLinksHandler @Inject constructor(
                 }
             },
         )
-        val buyCurrencyDeepLink = BuyCurrencyDeepLink(
-            onReceive = {
-                scope.launch {
-                    onBuyCurrencyDeepLink(userWallet)
-                }
-            },
-        )
 
-        return listOf(sellCurrencyDeepLink, buyCurrencyDeepLink)
+        return buildList {
+            add(sellCurrencyDeepLink)
+            if (!userWallet.isMultiCurrency) {
+                add(
+                    BuyCurrencyDeepLink(
+                        onReceive = {
+                            scope.launch { onBuyCurrencyDeepLink(userWallet) }
+                        },
+                    ),
+                )
+            }
+        }
     }
 
     private suspend fun onSellCurrencyDeepLink(userWallet: UserWallet, data: SellCurrencyDeepLink.Data) {
-        val cryptoCurrencyStatus = getCryptoCurrencyStatusSyncUseCase(userWallet.walletId)
-            .getOrNull() ?: return
+        val cryptoCurrencyStatus = findCryptoCurrencyStatus(userWallet, data.currencyId) ?: return
         val feeCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
             userWallet.walletId,
             cryptoCurrencyStatus,
@@ -108,6 +106,19 @@ internal class WalletDeepLinksHandler @Inject constructor(
         val cryptoCurrency = getCryptoCurrencyUseCase(userWallet.walletId).getOrNull() ?: return
 
         analyticsEventHandler.send(TokenScreenAnalyticsEvent.Bought(cryptoCurrency.symbol))
+    }
+
+    private suspend fun findCryptoCurrencyStatus(
+        userWallet: UserWallet,
+        currencyIdValue: String,
+    ): CryptoCurrencyStatus? {
+        return if (userWallet.isMultiCurrency) {
+            getCryptoCurrencyStatusesSyncUseCase(userWallet.walletId).getOrNull()?.let { currencies ->
+                currencies.find { currencyIdValue == it.currency.id.value }
+            }
+        } else {
+            getCryptoCurrencyStatusSyncUseCase(userWallet.walletId).getOrNull()
+        }
     }
 
     private fun sendCoin(
