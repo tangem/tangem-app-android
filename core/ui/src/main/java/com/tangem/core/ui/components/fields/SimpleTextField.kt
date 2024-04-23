@@ -104,13 +104,6 @@ fun SimpleTextField(
     }
 }
 
-// private fun TextRange.getValueRange(oldValue: String, newValue: String) = when {
-//     newValue.isEmpty() -> TextRange.Zero
-//     newValue.length - oldValue.length > 1 -> TextRange(newValue.length, newValue.length)
-//     newValue.length - oldValue.length > 0 -> TextRange(this.start.inc(), this.end.inc())
-//     else -> this
-// }
-
 @Composable
 private fun SimpleTextPlaceholder(
     placeholder: TextReference?,
