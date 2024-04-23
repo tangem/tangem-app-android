@@ -34,13 +34,11 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onRecipientMemoValueChange(value: String) {}
 
-    override fun feeReload(isToNextState: Boolean) {}
+    override fun feeReload() {}
 
     override fun onFeeSelectorClick(feeType: FeeType) {}
 
     override fun onCustomFeeValueChange(index: Int, value: String) {}
-
-    override fun onSubtractSelect() {}
 
     override fun onReadMoreClick() {}
 
