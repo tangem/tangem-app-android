@@ -5,10 +5,15 @@ import com.tangem.feature.qrscanning.presentation.QrScanningStateController
 import com.tangem.feature.qrscanning.presentation.transformers.DismissBottomSheetTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 interface QrScanningClickIntents {
+
+    val launchGallery: SharedFlow<GalleryRequest>
 
     fun onBackClick()
 
@@ -16,6 +21,11 @@ interface QrScanningClickIntents {
 
     fun onGalleryClicked()
 }
+
+@JvmInline
+value class GalleryRequest(
+    val imageFilter: String,
+)
 
 @ViewModelScoped
 internal class QrScanningClickIntentsImplementor @Inject constructor(
@@ -25,6 +35,11 @@ internal class QrScanningClickIntentsImplementor @Inject constructor(
 ) : BaseQrScanningClickIntents(), QrScanningClickIntents {
 
     private var isScanned = false
+
+    override val launchGallery = MutableSharedFlow<GalleryRequest>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_LATEST,
+    )
 
     override fun onBackClick() = router.popBackStack()
 
@@ -41,7 +56,7 @@ internal class QrScanningClickIntentsImplementor @Inject constructor(
     }
 
     override fun onGalleryClicked() {
-        galleryLauncher.launch(GALLERY_IMAGE_FILTER)
+        launchGallery.tryEmit(GalleryRequest(imageFilter = GALLERY_IMAGE_FILTER))
         if (stateHolder.value.bottomSheetConfig != null) {
             stateHolder.update(DismissBottomSheetTransformer())
         }
