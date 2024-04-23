@@ -1,12 +1,10 @@
 package com.tangem.features.send.impl.presentation.state.amount
 
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldMaxAmountConverter
 import com.tangem.utils.Provider
-import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Factory to produce amount state for [SendUiState]
@@ -43,18 +41,4 @@ internal class AmountStateFactory(
     }
 
     fun getOnCurrencyChangedState(isFiat: Boolean) = amountCurrencyConverter.convert(isFiat)
-
-    fun getAmountNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
-        val state = currentStateProvider()
-        return state.copy(
-            amountState = state.amountState?.copy(notifications = notifications),
-        )
-    }
-
-    fun getOnAmountFeeLoadingCancel(): SendUiState {
-        val state = currentStateProvider()
-        return state.copy(
-            amountState = state.amountState?.copy(isFeeLoading = false),
-        )
-    }
 }
