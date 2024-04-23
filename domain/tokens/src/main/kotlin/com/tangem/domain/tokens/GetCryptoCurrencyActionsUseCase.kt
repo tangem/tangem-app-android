@@ -13,7 +13,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.math.BigDecimal
 
 /**
  * Use case to determine which TokenActions are available for a [CryptoCurrency]
@@ -79,8 +78,9 @@ class GetCryptoCurrencyActionsUseCase(
 
     /**
      * Creates list of action for expected order
-     * Actions priority: [Buy Send Receive Sell Swap]
+     * Actions priority: [Receive Send Swap Buy Sell]
      */
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private suspend fun createListOfActions(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
@@ -155,14 +155,18 @@ class GetCryptoCurrencyActionsUseCase(
                 (sendUnavailabilityReason as? ScenarioUnavailabilityReason.EmptyBalance)?.let {
                     disabledList.add(
                         TokenActionsState.ActionState.Sell(
-                            unavailabilityReason = it.copy(withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL)
+                            unavailabilityReason = it.copy(
+                                withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL,
+                            ),
                         ),
                     )
                 }
                 (sendUnavailabilityReason as? ScenarioUnavailabilityReason.PendingTransaction)?.let {
                     disabledList.add(
                         TokenActionsState.ActionState.Sell(
-                            unavailabilityReason = it.copy(withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL)
+                            unavailabilityReason = it.copy(
+                                withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL,
+                            ),
                         ),
                     )
                 }
@@ -170,7 +174,9 @@ class GetCryptoCurrencyActionsUseCase(
             else -> {
                 disabledList.add(
                     TokenActionsState.ActionState.Sell(
-                        unavailabilityReason = ScenarioUnavailabilityReason.NotSupportedBySellService(cryptoCurrency.name),
+                        unavailabilityReason = ScenarioUnavailabilityReason.NotSupportedBySellService(
+                            cryptoCurrency.name,
+                        ),
                     ),
                 )
             }
@@ -226,7 +232,7 @@ class GetCryptoCurrencyActionsUseCase(
             ) -> {
                 ScenarioUnavailabilityReason.PendingTransaction(
                     withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
-                    cryptoCurrencySymbol = coinStatus?.currency?.symbol.orEmpty()
+                    cryptoCurrencySymbol = coinStatus?.currency?.symbol.orEmpty(),
                 )
             }
             else -> {
@@ -237,9 +243,5 @@ class GetCryptoCurrencyActionsUseCase(
 
     private fun isAddressAvailable(networkAddress: NetworkAddress?): Boolean {
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
-    }
-
-    private fun BigDecimal?.isZero(): Boolean {
-        return this?.signum() == 0
     }
 }

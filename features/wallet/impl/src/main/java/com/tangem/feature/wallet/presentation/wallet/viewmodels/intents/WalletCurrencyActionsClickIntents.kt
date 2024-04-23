@@ -467,7 +467,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                         id = R.string.token_button_unavailability_reason_empty_balance_sell,
                     )
                 }
-
             }
             is ScenarioUnavailabilityReason.BuyUnavailable -> {
                 resourceReference(
