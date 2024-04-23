@@ -33,8 +33,15 @@ object BlockchainUtils {
         return blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
     }
 
+    /** If current [networkId] is Dogecoin */
     fun isDogecoin(networkId: String): Boolean {
         val blockchain = Blockchain.fromId(networkId)
         return blockchain == Blockchain.Dogecoin
+    }
+
+    /** If current [networkId] is Tezos */
+    fun isTezos(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Tezos
     }
 }
