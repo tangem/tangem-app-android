@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
@@ -22,20 +22,24 @@ internal object TransactionDomainModule {
     @Provides
     @ViewModelScoped
     fun provideGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetFeeUseCase {
-        return GetFeeUseCase(walletManagersFacade)
+        return GetFeeUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig(),
+        )
     }
 
     @Provides
     @ViewModelScoped
     fun provideSendTransactionUseCase(
-        isDemoCardUseCase: IsDemoCardUseCase,
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
+        walletManagersFacade: WalletManagersFacade,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
-            isDemoCardUseCase = isDemoCardUseCase,
+            demoConfig = DemoConfig(),
             cardSdkConfigRepository = cardSdkConfigRepository,
             transactionRepository = transactionRepository,
+            walletManagersFacade = walletManagersFacade,
         )
     }
 

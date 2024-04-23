@@ -11,6 +11,7 @@ class SellCurrencyDeepLink(val onReceive: (data: Data) -> Unit) : DeepLink {
             transactionId = params["transactionId"] ?: return,
             baseCurrencyAmount = params["baseCurrencyAmount"] ?: return,
             depositWalletAddress = params["depositWalletAddress"] ?: return,
+            currencyId = params["currency_id"] ?: return,
             depositWalletAddressTag = params["depositWalletAddressTag"],
         )
 
@@ -21,6 +22,7 @@ class SellCurrencyDeepLink(val onReceive: (data: Data) -> Unit) : DeepLink {
         val transactionId: String,
         val baseCurrencyAmount: String,
         val depositWalletAddress: String,
+        val currencyId: String,
         val depositWalletAddressTag: String?,
     )
 }
