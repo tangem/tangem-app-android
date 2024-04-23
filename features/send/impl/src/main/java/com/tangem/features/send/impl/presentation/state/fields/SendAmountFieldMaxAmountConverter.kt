@@ -35,6 +35,7 @@ internal class SendAmountFieldMaxAmountConverter(
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = true,
                 amountTextField = amountTextField.copy(
+                    isValuePasted = true,
                     value = cryptoValue,
                     fiatValue = fiatValue,
                     isError = false,
