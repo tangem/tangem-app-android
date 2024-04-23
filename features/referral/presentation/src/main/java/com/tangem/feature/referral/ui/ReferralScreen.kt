@@ -27,7 +27,6 @@ import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
@@ -350,7 +349,7 @@ private fun BoxScope.ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
                     modifier = Modifier.fillMaxWidth(),
                     actionOnNewLine = true,
                     shape = RoundedCornerShape(size = TangemTheme.dimens.radius8),
-                    containerColor = TangemColorPalette.Black,
+                    containerColor = TangemTheme.colors.button.primary,
                     contentColor = TangemTheme.colors.text.primary2,
                     actionColor = TangemTheme.colors.text.primary2,
                 )
@@ -464,7 +463,7 @@ private fun Preview_ReferralScreen_Participant_InLightTheme() {
                     url = "",
                     expectedAwards = null,
                 ),
-                errorSnackbar = null,
+                errorSnackbar = ErrorSnackbar(DemoModeException()) {},
                 analytics = Analytics(
                     onAgreementClicked = {},
                     onCopyClicked = {},
@@ -493,7 +492,7 @@ private fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     url = "",
                     expectedAwards = null,
                 ),
-                errorSnackbar = null,
+                errorSnackbar = ErrorSnackbar(DemoModeException()) {},
                 analytics = Analytics(
                     onAgreementClicked = {},
                     onCopyClicked = {},
