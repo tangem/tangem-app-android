@@ -4,7 +4,7 @@ import androidx.paging.*
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
-import com.tangem.core.ui.utils.toDateFormat
+import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
@@ -68,7 +68,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
             // Use raw timestamp to get date
 
             // If [afterDate] is the first transaction in the flow, add the group title
-            val afterDate = after.getTimestamp()?.toDateFormat() ?: return@insertSeparators null
+            val afterDate = after.getTimestamp()?.toDateFormatWithTodayYesterday() ?: return@insertSeparators null
             if (before is TxHistoryItemState.Title) {
                 return@insertSeparators TxHistoryItemState.GroupTitle(
                     title = afterDate,
@@ -80,7 +80,7 @@ internal class TokenDetailsTxHistoryItemFlowConverter(
              * If [beforeDate] is not equals to [afterDate], then [afterDate] is first transaction in
              * the new group
              */
-            val beforeDate = before.getTimestamp()?.toDateFormat() ?: return@insertSeparators null
+            val beforeDate = before.getTimestamp()?.toDateFormatWithTodayYesterday() ?: return@insertSeparators null
             return@insertSeparators if (beforeDate != afterDate) {
                 TxHistoryItemState.GroupTitle(
                     title = afterDate,
