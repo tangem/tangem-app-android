@@ -30,6 +30,8 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onMaxValueClick() {}
 
+    override fun onAmountPasteTriggerDismiss() {}
+
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {}
 
     override fun onRecipientMemoValueChange(value: String) {}
