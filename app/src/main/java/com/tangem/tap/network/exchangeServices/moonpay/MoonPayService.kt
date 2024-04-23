@@ -135,7 +135,7 @@ class MoonPayService(
             .appendQueryParameter("apiKey", apiKey)
             .appendQueryParameter("baseCurrencyCode", moonpayCurrency.currencyCode.uppercase())
             .appendQueryParameter("refundWalletAddress", walletAddress)
-            .appendQueryParameter("redirectURL", "tangem://redirect_sell")
+            .appendQueryParameter("redirectURL", "tangem://redirect_sell?currency_id=${cryptoCurrency.id.value}")
 
         if (isDarkTheme) uri.appendQueryParameter("theme", "dark")
 
