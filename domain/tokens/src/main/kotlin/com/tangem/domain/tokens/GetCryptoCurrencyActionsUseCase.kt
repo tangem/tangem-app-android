@@ -152,11 +152,20 @@ class GetCryptoCurrencyActionsUseCase(
                 activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
             }
             sellSupportedByService && !sendAvailable -> {
-                disabledList.add(
-                    TokenActionsState.ActionState.Sell(
-                        unavailabilityReason = ScenarioUnavailabilityReason.SendUnavailable(cryptoCurrency.name),
-                    ),
-                )
+                (sendUnavailabilityReason as? ScenarioUnavailabilityReason.EmptyBalance)?.let {
+                    disabledList.add(
+                        TokenActionsState.ActionState.Sell(
+                            unavailabilityReason = it.copy(withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL)
+                        ),
+                    )
+                }
+                (sendUnavailabilityReason as? ScenarioUnavailabilityReason.PendingTransaction)?.let {
+                    disabledList.add(
+                        TokenActionsState.ActionState.Sell(
+                            unavailabilityReason = it.copy(withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL)
+                        ),
+                    )
+                }
             }
             else -> {
                 disabledList.add(
@@ -209,13 +218,16 @@ class GetCryptoCurrencyActionsUseCase(
     ): ScenarioUnavailabilityReason {
         return when {
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
-                ScenarioUnavailabilityReason.EmptyBalance
+                ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
             }
             currenciesRepository.hasPendingTransactions(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 coinStatus = coinStatus,
             ) -> {
-                ScenarioUnavailabilityReason.PendingTransaction(coinStatus?.currency?.symbol.orEmpty())
+                ScenarioUnavailabilityReason.PendingTransaction(
+                    withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
+                    cryptoCurrencySymbol = coinStatus?.currency?.symbol.orEmpty()
+                )
             }
             else -> {
                 ScenarioUnavailabilityReason.None

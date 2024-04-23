@@ -187,6 +187,11 @@ class GetCurrencyWarningsUseCase(
         coinStatus: CryptoCurrencyStatus,
         tokenStatus: CryptoCurrencyStatus,
     ): CryptoCurrencyWarning? {
+        // remove
+        return CryptoCurrencyWarning.BalanceNotEnoughForFee(
+            tokenCurrency = tokenStatus.currency,
+            coinCurrency = coinStatus.currency,
+        )
         val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency)
         return when {
             feePaidCurrency is FeePaidCurrency.Coin &&
