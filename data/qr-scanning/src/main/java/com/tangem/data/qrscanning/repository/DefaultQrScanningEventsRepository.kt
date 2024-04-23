@@ -6,9 +6,9 @@ import com.tangem.domain.qrscanning.models.QrResult
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.yield
 import java.math.BigDecimal
 import java.net.URLDecoder
 
@@ -16,15 +16,20 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
 
     private data class QrScanningEvent(val type: SourceType, val qrCode: String)
 
-    private val scannedEvents = MutableSharedFlow<QrScanningEvent>()
+    private val scannedEvents = MutableSharedFlow<QrScanningEvent>(replay = 1)
 
     override suspend fun emitResult(type: SourceType, qrCode: String) {
         scannedEvents.emit(QrScanningEvent(type, qrCode))
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun subscribeToScanningResults(type: SourceType) = scannedEvents
         .filter { it.type == type }
         .map { it.qrCode }
+        .onEach {
+            yield() // if we have more than one sub, we must allow them to collect emitted value
+            scannedEvents.resetReplayCache()
+        }
 
     override fun parseQrCode(qrCode: String, cryptoCurrency: CryptoCurrency): QrResult {
         val withoutSchema = stripSchema(qrCode, cryptoCurrency)
