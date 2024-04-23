@@ -646,6 +646,7 @@ internal class StateBuilder(
     }
 
     private fun getWarningForError(dataError: DataError, fromToken: CryptoCurrency): SwapWarning {
+        val providerErrorMessage = getProviderErrorMessage(dataError)
         return when (dataError) {
             is DataError.ExchangeTooSmallAmountError -> SwapWarning.GeneralError(
                 notificationConfig = NotificationConfig(
@@ -674,10 +675,16 @@ internal class StateBuilder(
                     } else {
                         resourceReference(R.string.warning_express_refresh_required_title)
                     },
-                    subtitle = if (dataError is DataError.UnknownError) {
-                        resourceReference(R.string.common_unknown_error)
-                    } else {
-                        resourceReference(R.string.express_error_code, wrappedList(dataError.code.toString()))
+                    subtitle = when {
+                        dataError is DataError.UnknownError -> {
+                            resourceReference(R.string.common_unknown_error)
+                        }
+                        providerErrorMessage != null -> {
+                            providerErrorMessage
+                        }
+                        else -> {
+                            resourceReference(R.string.express_error_code, wrappedList(dataError.code.toString()))
+                        }
                     },
                     iconResId = R.drawable.img_attention_20,
                     buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
@@ -972,7 +979,7 @@ internal class StateBuilder(
         return uiState.copy(
             alert = SwapWarning.GenericWarning(
                 message = if (swapTransactionState is SwapTransactionState.ExpressError) {
-                    getAlertErrorMessage(swapTransactionState.dataError)
+                    getProviderErrorMessage(swapTransactionState.dataError)
                 } else {
                     null
                 },
@@ -987,7 +994,7 @@ internal class StateBuilder(
         )
     }
 
-    private fun getAlertErrorMessage(dataError: DataError): TextReference? {
+    private fun getProviderErrorMessage(dataError: DataError): TextReference? {
         return when (dataError) {
             is DataError.SwapsAreUnavailableNowError -> resourceReference(
                 id = R.string.express_error_swap_unavailable,
@@ -998,6 +1005,7 @@ internal class StateBuilder(
                 formatArgs = wrappedList(dataError.code),
             )
             is DataError.ExchangeProviderNotActiveError,
+            is DataError.ExchangeProviderNotFoundError,
             is DataError.ExchangeProviderNotAvailableError,
             is DataError.ExchangeProviderProviderInternalError,
             -> resourceReference(
