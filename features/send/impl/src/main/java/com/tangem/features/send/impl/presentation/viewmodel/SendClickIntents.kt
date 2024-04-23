@@ -39,13 +39,11 @@ internal interface SendClickIntents {
     // endregion
 
     // region Fee
-    fun feeReload(isToNextState: Boolean = false)
+    fun feeReload()
 
     fun onFeeSelectorClick(feeType: FeeType)
 
     fun onCustomFeeValueChange(index: Int, value: String)
-
-    fun onSubtractSelect()
 
     fun onReadMoreClick()
     // endregion
