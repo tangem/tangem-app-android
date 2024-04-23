@@ -48,19 +48,6 @@ internal class SendEventStateFactory(
         )
     }
 
-    fun getFeeCoverageAlert(onConsume: () -> Unit): SendUiState {
-        return currentStateProvider().copy(
-            event = triggeredEvent(
-                data = SendEvent.ShowAlert(
-                    SendAlertState.FeeCoverage(
-                        onConfirmClick = clickIntents::onSubtractSelect,
-                    ),
-                ),
-                onConsume = onConsume,
-            ),
-        )
-    }
-
     fun getFeeUpdatedAlert(fee: TransactionFee, onConsume: () -> Unit, onFeeNotIncreased: () -> Unit): SendUiState {
         val state = currentStateProvider()
         val feeSelector = state.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return state
@@ -139,9 +126,7 @@ internal class SendEventStateFactory(
         return state.copy(
             event = triggeredEvent(
                 data = SendEvent.ShowAlert(
-                    SendAlertState.FeeUnreachableError(
-                        onConfirmClick = { clickIntents.feeReload(true) },
-                    ),
+                    SendAlertState.FeeUnreachableError(onConfirmClick = clickIntents::feeReload),
                 ),
                 onConsume = onConsume,
             ),
