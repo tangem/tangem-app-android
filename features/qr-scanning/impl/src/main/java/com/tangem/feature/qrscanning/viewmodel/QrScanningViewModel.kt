@@ -1,6 +1,5 @@
 package com.tangem.feature.qrscanning.viewmodel
 
-import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,6 +13,7 @@ import com.tangem.feature.qrscanning.presentation.transformers.DismissBottomShee
 import com.tangem.feature.qrscanning.presentation.transformers.InitializeQrScanningStateTransformer
 import com.tangem.feature.qrscanning.presentation.transformers.ShowCameraDeniedBottomSheetTransformer
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
@@ -28,12 +28,12 @@ internal class QrScanningViewModel @Inject constructor(
     private val network: String? = savedStateHandle[NETWORK_KEY]
 
     val uiState: StateFlow<QrScanningState> = stateHolder.uiState
+    val launchGalleryEvent: SharedFlow<GalleryRequest> = clickIntents.launchGallery
 
-    fun setRouter(router: QrScanningInnerRouter, galleryLauncher: ActivityResultLauncher<String>) {
+    fun setRouter(router: QrScanningInnerRouter) {
         clickIntents.initialize(
             router = router,
             source = source,
-            galleryLauncher = galleryLauncher,
             coroutineScope = viewModelScope,
         )
         stateHolder.update(InitializeQrScanningStateTransformer(clickIntents, source, network))
