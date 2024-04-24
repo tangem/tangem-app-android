@@ -14,8 +14,8 @@ import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
-import com.tangem.features.send.impl.presentation.state.amount.SendAmountSubtractConverter
 import com.tangem.features.send.impl.presentation.state.confirm.SendConfirmStateConverter
+import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientHistoryListConverter
@@ -46,12 +46,6 @@ internal class SendStateFactory(
             clickIntents = clickIntents,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
             appCurrencyProvider = appCurrencyProvider,
-        )
-    }
-    private val amountSubtractConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SendAmountSubtractConverter(
-            currentStateProvider = currentStateProvider,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
     private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -265,20 +259,12 @@ internal class SendStateFactory(
     //endregion
 
     //region send
-    fun onSubtractSelect(isAmountSubtractAvailable: Boolean): SendUiState {
-        val state = currentStateProvider()
-
-        if (!isAmountSubtractAvailable) return state
-
-        return amountSubtractConverter.convert(Unit)
-    }
-
     fun getSendingStateUpdate(isSending: Boolean): SendUiState {
         val state = currentStateProvider()
         return state.copy(
             sendState = state.sendState?.copy(
                 isSending = isSending,
-                isPrimaryButtonEnabled = !isSending,
+                isPrimaryButtonEnabled = isPrimaryButtonEnabled(state, state.sendState.notifications),
             ),
         )
     }
@@ -300,10 +286,9 @@ internal class SendStateFactory(
     fun getSendNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
         val state = currentStateProvider()
         val sendState = state.sendState ?: return state
-        val hasErrorNotifications = notifications.any { it is SendNotification.Error }
         return state.copy(
             sendState = sendState.copy(
-                isPrimaryButtonEnabled = !hasErrorNotifications,
+                isPrimaryButtonEnabled = isPrimaryButtonEnabled(state, notifications),
                 notifications = notifications,
                 showTapHelp = sendState.showTapHelp && notifications.isEmpty(),
             ),
@@ -316,6 +301,13 @@ internal class SendStateFactory(
         return state.copy(
             sendState = sendState.copy(showTapHelp = false),
         )
+    }
+
+    private fun isPrimaryButtonEnabled(state: SendUiState, notifications: ImmutableList<SendNotification>): Boolean {
+        val sendState = state.sendState ?: return false
+        val feeState = state.feeState ?: return false
+        val hasErrorNotifications = notifications.any { it is SendNotification.Error }
+        return !hasErrorNotifications && !sendState.isSending && feeState.feeSelectorState is FeeSelectorState.Content
     }
     //endregion
 }
