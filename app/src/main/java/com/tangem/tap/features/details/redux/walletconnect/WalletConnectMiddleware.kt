@@ -20,7 +20,6 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -174,6 +173,7 @@ class WalletConnectMiddleware {
 
     private suspend fun getWalletManagers(): List<WalletManager> {
         val walletManagerFacade = store.inject(DaggerGraphState::walletManagersFacade)
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
         val userWallet = userWalletsListManager.selectedUserWalletSync ?: return emptyList()
 
         return walletManagerFacade.getStoredWalletManagers(userWallet.walletId)
