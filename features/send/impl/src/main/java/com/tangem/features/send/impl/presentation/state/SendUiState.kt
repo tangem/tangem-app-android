@@ -50,10 +50,7 @@ internal sealed class SendStates {
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
         val isSegmentedButtonsEnabled: Boolean,
         val amountTextField: SendTextField.AmountField,
-        val notifications: ImmutableList<SendNotification>,
         val appCurrencyCode: String,
-        val isFeeLoading: Boolean,
-        val subtractedFee: BigDecimal?,
     ) : SendStates()
 
     /** Recipient state */
@@ -87,10 +84,9 @@ internal sealed class SendStates {
     @Stable
     data class SendState(
         override val type: SendUiStateType = SendUiStateType.Send,
-        override val isPrimaryButtonEnabled: Boolean = true,
+        override val isPrimaryButtonEnabled: Boolean = false,
         val isSending: Boolean,
         val isSuccess: Boolean,
-        val isSubtract: Boolean,
         val transactionDate: Long,
         val txUrl: String,
         val ignoreAmountReduce: Boolean,
