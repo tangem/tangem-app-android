@@ -3,12 +3,10 @@ package com.tangem.tap.common.redux.global
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.extensions.replaceBy
 import org.rekotlin.Action
@@ -93,11 +91,6 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             globalState.copy(
                 userCountryCode = action.countryCode,
             )
-        }
-        is GlobalAction.UpdateUserWalletsListManager -> {
-            val generalUserWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-
-            globalState.copy(userWalletsListManager = generalUserWalletsListManager)
         }
         is GlobalAction.ChangeAppThemeMode -> globalState.copy(
             appThemeMode = action.appThemeMode,
