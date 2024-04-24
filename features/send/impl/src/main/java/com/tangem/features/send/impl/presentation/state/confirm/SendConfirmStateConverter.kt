@@ -10,7 +10,7 @@ internal class SendConfirmStateConverter(
 ) : Converter<Unit, SendStates.SendState> {
     override fun convert(value: Unit): SendStates.SendState {
         return SendStates.SendState(
-            isPrimaryButtonEnabled = true,
+            isPrimaryButtonEnabled = false,
             isSending = false,
             isSuccess = false,
             transactionDate = 0L,
