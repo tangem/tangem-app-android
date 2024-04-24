@@ -15,6 +15,8 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
@@ -92,6 +94,7 @@ internal class SendViewModel @Inject constructor(
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
@@ -188,11 +191,11 @@ internal class SendViewModel @Inject constructor(
     private var memoValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
     private var feeNotificationsJobHolder = JobHolder()
-    private var qrScannerJobHolder = JobHolder()
 
     private var sendIdleTimer = 0L
 
     init {
+        subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
         subscribeOnBalanceHidden()
         getTapHelpPreviewAvailability()
@@ -212,6 +215,13 @@ internal class SendViewModel @Inject constructor(
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
         innerRouter = router
         this.stateRouter = stateRouter
+    }
+
+    private fun subscribeOnQRScannerResult() {
+        listenToQrScanningUseCase(SourceType.SEND)
+            .getOrElse { emptyFlow() }
+            .onEach(::onQrCodeScanned)
+            .launchIn(viewModelScope)
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -535,6 +545,23 @@ internal class SendViewModel @Inject constructor(
             feeJobHolder.cancel()
         }
     }
+
+    private fun onQrCodeScanned(address: String) {
+        parseQrCodeUseCase(address, cryptoCurrency).fold(
+            ifRight = { parsedCode ->
+                onRecipientAddressValueChange(parsedCode.address, EnterAddressSource.QRCode)
+                parsedCode.amount?.let {
+                    onAmountValueChange(it.parseBigDecimal(decimals = cryptoCurrency.decimals))
+                }
+                parsedCode.memo?.let { onRecipientMemoValueChange(it) }
+            },
+            ifLeft = {
+                onRecipientAddressValueChange(address, EnterAddressSource.QRCode)
+                Timber.w(it)
+            },
+        )
+    }
+
     // endregion
 
     // region amount state clicks
@@ -554,26 +581,9 @@ internal class SendViewModel @Inject constructor(
     override fun onAmountPasteTriggerDismiss() {
         uiState = amountStateFactory.getOnAmountPastedTriggerDismiss()
     }
-    // endregion
+// endregion
 
-    // region recipient state clicks
-    fun onQrCodeScanned(address: String) {
-        viewModelScope.launch(dispatchers.main) {
-            parseQrCodeUseCase(address, cryptoCurrency).fold(
-                ifRight = { parsedCode ->
-                    onRecipientAddressValueChange(parsedCode.address, EnterAddressSource.QRCode)
-                    parsedCode.amount?.let {
-                        onAmountValueChange(it.parseBigDecimal(decimals = cryptoCurrency.decimals))
-                    }
-                    parsedCode.memo?.let { onRecipientMemoValueChange(it) }
-                },
-                ifLeft = {
-                    onRecipientAddressValueChange(address, EnterAddressSource.QRCode)
-                    Timber.w(it)
-                },
-            )
-        }.saveIn(qrScannerJobHolder)
-    }
+// region recipient state clicks
 
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {
         viewModelScope.launch {
@@ -632,7 +642,7 @@ internal class SendViewModel @Inject constructor(
         val isRecent = type == EnterAddressSource.RecentAddress
         if (isRecent && isValidAddress) onNextClick()
     }
-    // endregion
+// endregion
 
     // region fee
     override fun feeReload() = loadFee()
@@ -708,7 +718,7 @@ internal class SendViewModel @Inject constructor(
             cryptoCurrency = cryptoCurrency,
         )
     }
-    // endregion
+// endregion
 
     // region send state clicks
     override fun onSendClick() {
@@ -893,7 +903,7 @@ internal class SendViewModel @Inject constructor(
         }
         uiState = stateFactory.getHiddenTapHelpState()
     }
-    // endregion
+// endregion
 
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 60_000L
