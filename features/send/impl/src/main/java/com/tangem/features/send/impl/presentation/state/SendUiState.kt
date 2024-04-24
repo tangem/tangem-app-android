@@ -84,7 +84,7 @@ internal sealed class SendStates {
     @Stable
     data class SendState(
         override val type: SendUiStateType = SendUiStateType.Send,
-        override val isPrimaryButtonEnabled: Boolean = true,
+        override val isPrimaryButtonEnabled: Boolean = false,
         val isSending: Boolean,
         val isSuccess: Boolean,
         val transactionDate: Long,
