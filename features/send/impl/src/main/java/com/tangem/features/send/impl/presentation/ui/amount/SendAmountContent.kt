@@ -12,7 +12,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.previewdata.AmountStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
-import com.tangem.features.send.impl.presentation.ui.common.notifications
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 
 @Composable
@@ -22,6 +21,7 @@ internal fun SendAmountContent(
     clickIntents: SendClickIntents,
 ) {
     if (amountState == null) return
+    // Do not put fillMaxSize() in here
     LazyColumn(
         modifier = Modifier
             .padding(
@@ -35,10 +35,8 @@ internal fun SendAmountContent(
         buttons(
             segmentedButtonConfig = amountState.segmentedButtonConfig,
             clickIntents = clickIntents,
-            isMaxButtonEnabled = !amountState.isFeeLoading,
             isSegmentedButtonsEnabled = amountState.isSegmentedButtonsEnabled,
         )
-        notifications(amountState.notifications)
     }
 }
 
