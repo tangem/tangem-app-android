@@ -692,9 +692,6 @@ internal class SendViewModel @Inject constructor(
             updateNotifications()
             updateFeeNotifications()
         }.saveIn(feeJobHolder)
-            .invokeOnCompletion {
-                // todo
-            }
     }
 
     private fun onFeeLoadFailed(isShowStatus: Boolean) {
@@ -713,12 +710,14 @@ internal class SendViewModel @Inject constructor(
         val recipientState = uiState.recipientState ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
 
-        return getFeeUseCase.invoke(
-            amount = amount,
-            destination = recipientState.addressTextField.value,
-            userWallet = userWallet,
-            cryptoCurrency = cryptoCurrency,
-        )
+        return feeCryptoCurrencyStatus?.let { feeCurrencyStatus ->
+            getFeeUseCase.invoke(
+                amount = amount,
+                destination = recipientState.addressTextField.value,
+                userWallet = userWallet,
+                cryptoCurrency = feeCurrencyStatus.currency,
+            )
+        }
     }
 // endregion
 
