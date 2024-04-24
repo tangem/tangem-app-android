@@ -6,9 +6,7 @@ import com.tangem.domain.qrscanning.models.QrResult
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 import java.net.URLDecoder
 
