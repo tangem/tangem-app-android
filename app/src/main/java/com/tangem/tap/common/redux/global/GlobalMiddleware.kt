@@ -26,7 +26,6 @@ import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -107,6 +106,7 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
 
             scope.launch {
                 val scanResponseProvider: () -> ScanResponse? = {
+                    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
                     userWalletsListManager.selectedUserWalletSync?.scanResponse
                 }
                 val cardProvider: () -> CardDTO? = { scanResponseProvider.invoke()?.card }
