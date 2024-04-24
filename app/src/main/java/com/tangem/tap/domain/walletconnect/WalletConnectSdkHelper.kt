@@ -36,13 +36,16 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionReque
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
 import timber.log.Timber
 import java.math.BigDecimal
 import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
 
 @Suppress("LargeClass")
 class WalletConnectSdkHelper {
+
+    private val userWalletsListManager by lazy {
+        store.inject(DaggerGraphState::generalUserWalletsListManager)
+    }
 
     @Suppress("MagicNumber")
     suspend fun prepareTransactionData(data: EthTransactionData): WcTransactionData? {
