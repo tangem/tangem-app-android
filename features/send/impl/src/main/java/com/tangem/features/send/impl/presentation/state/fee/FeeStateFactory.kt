@@ -45,6 +45,9 @@ internal class FeeStateFactory(
         val state = currentStateProvider()
         val feeState = state.feeState ?: return state
         return state.copy(
+            sendState = state.sendState?.copy(
+                isPrimaryButtonEnabled = false,
+            ),
             feeState = feeState.copy(
                 feeSelectorState = if (feeState.feeSelectorState is FeeSelectorState.Content) {
                     feeState.feeSelectorState
@@ -77,6 +80,9 @@ internal class FeeStateFactory(
 
         val fee = feeConverter.convert(updatedFeeSelectorState)
         return state.copy(
+            sendState = state.sendState?.copy(
+                isPrimaryButtonEnabled = true,
+            ),
             feeState = feeState.copy(
                 feeSelectorState = updatedFeeSelectorState,
                 fee = fee,
@@ -90,6 +96,9 @@ internal class FeeStateFactory(
         return state.copy(
             feeState = state.feeState?.copy(
                 feeSelectorState = FeeSelectorState.Error,
+            ),
+            sendState = state.sendState?.copy(
+                isPrimaryButtonEnabled = false,
             ),
         )
     }
