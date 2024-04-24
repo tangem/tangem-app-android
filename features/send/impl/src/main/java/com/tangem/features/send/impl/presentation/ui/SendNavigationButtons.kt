@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +29,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun SendNavigationButtons(
@@ -40,6 +41,7 @@ internal fun SendNavigationButtons(
     val isSuccess = sendState.isSuccess
     val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
     val isSentState = currentState.type == SendUiStateType.Send && isSuccess
+
     Column(
         modifier = modifier
             .padding(
@@ -78,7 +80,6 @@ private fun SendNavigationButton(
     val isFromConfirmation = currentState.isFromConfirmation
     val isCorrectScreen = currentState.type == SendUiStateType.Amount || currentState.type == SendUiStateType.Fee
     val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess && !isSending
-    val showProgress = uiState.amountState?.isFeeLoading == true
 
     val (buttonTextId, buttonClick) = getButtonData(
         currentState = currentState,
@@ -92,25 +93,26 @@ private fun SendNavigationButton(
     } else {
         TangemButtonIconPosition.None
     }
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-        modifier = modifier,
-    ) {
+
+    Row(modifier = modifier) {
         AnimatedVisibility(
             visible = !isEditingDisabled && isCorrectScreen && !isFromConfirmation,
             enter = expandHorizontally(expandFrom = Alignment.End),
             exit = shrinkHorizontally(shrinkTowards = Alignment.End),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back_24),
-                tint = TangemTheme.colors.icon.primary1,
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
-                    .background(TangemTheme.colors.button.secondary)
-                    .clickable { uiState.clickIntents.onPrevClick() }
-                    .padding(TangemTheme.dimens.spacing12),
-            )
+            Row {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back_24),
+                    tint = TangemTheme.colors.icon.primary1,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                        .background(TangemTheme.colors.button.secondary)
+                        .clickable { uiState.clickIntents.onPrevClick() }
+                        .padding(TangemTheme.dimens.spacing12),
+                )
+                SpacerW12()
+            }
         }
         TangemButton(
             text = stringResource(buttonTextId),
@@ -120,7 +122,7 @@ private fun SendNavigationButton(
                 if (isSendingState) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 buttonClick()
             },
-            showProgress = showProgress,
+            showProgress = false,
             modifier = Modifier.fillMaxWidth(),
             colors = TangemButtonsDefaults.primaryButtonColors,
         )
@@ -129,8 +131,18 @@ private fun SendNavigationButton(
 
 @Composable
 private fun SendingText(uiState: SendUiState, isVisible: Boolean, modifier: Modifier = Modifier) {
+    var isVisibleProxy by remember { mutableStateOf(isVisible) }
+
+    // text appearance delay for smooth screen transitions
+    LaunchedEffect(key1 = isVisible) {
+        if (isVisible) {
+            delay(timeMillis = 400)
+        }
+        isVisibleProxy = isVisible
+    }
+
     AnimatedVisibility(
-        visible = isVisible,
+        visible = isVisibleProxy,
         modifier = modifier,
         enter = slideInVertically().plus(fadeIn()),
         exit = slideOutVertically().plus(fadeOut()),
