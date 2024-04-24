@@ -11,7 +11,7 @@ import retrofit2.http.Header
  */
 interface TangemTechServiceApi {
 
-    @GET("v1/networks")
+    @GET("networks/providers")
     suspend fun getBlockchainProviders(
         @Header("card_public_key") cardPublicKey: String,
         @Header("card_id") cardId: String,
