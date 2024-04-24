@@ -1,7 +1,11 @@
 package com.tangem.tap.features.send.ui
 
 import androidx.lifecycle.*
+import arrow.core.getOrElse
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -9,12 +13,16 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.send.api.navigation.SendRouter
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.di.DelayedWork
+import com.tangem.tap.features.send.redux.AddressActionUi
 import com.tangem.tap.features.send.redux.AmountAction
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -31,9 +39,18 @@ internal class SendViewModel @Inject constructor(
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    private val parseQrCodeUseCase: ParseQrCodeUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
+
+    init {
+        listenToQrScanningUseCase(SourceType.SEND)
+            .getOrElse { emptyFlow() }
+            .onEach(::onQRCodeScanned)
+            .launchIn(viewModelScope)
+    }
 
     private val cryptoCurrency: CryptoCurrency? = savedStateHandle[SendRouter.CRYPTO_CURRENCY_KEY]
 
@@ -77,6 +94,43 @@ internal class SendViewModel @Inject constructor(
             delayMillis = UPDATE_BALANCE_DELAY_MILLIS,
             refresh = true,
         )
+    }
+
+    private fun onQRCodeScanned(qrScanResult: String) {
+        if (cryptoCurrency != null) {
+            parseQrCodeUseCase(qrScanResult, cryptoCurrency).fold(
+                ifRight = { parsedCode ->
+                    store.dispatch(
+                        AddressActionUi.PasteAddress(
+                            data = parsedCode.address,
+                            sourceType = Token.Send.AddressEntered.SourceType.QRCode,
+                        ),
+                    )
+                    parsedCode.amount?.let { amount ->
+                        store.dispatch(AmountAction.SetAmount(amount, isUserInput = false))
+                    }
+                    // parsedCode.memo?.let { }
+                },
+                ifLeft = {
+                    store.dispatch(
+                        AddressActionUi.PasteAddress(
+                            data = qrScanResult,
+                            sourceType = Token.Send.AddressEntered.SourceType.QRCode,
+                        ),
+                    )
+                    Timber.w(it)
+                },
+            )
+        } else {
+            store.dispatch(
+                AddressActionUi.PasteAddress(
+                    data = qrScanResult,
+                    sourceType = Token.Send.AddressEntered.SourceType.QRCode,
+                ),
+            )
+        }
+
+        store.dispatch(AddressActionUi.TruncateOrRestore(truncate = true))
     }
 
     companion object {
