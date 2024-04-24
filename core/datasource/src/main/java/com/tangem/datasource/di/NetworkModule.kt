@@ -21,6 +21,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -62,7 +63,7 @@ class NetworkModule {
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
     ): TangemTechApi {
-        return provideTangemTechApiInternal(moshi, context, appVersionProvider, PROD_TANGEM_TECH_BASE_URL)
+        return provideTangemTechApiInternal(moshi, context, appVersionProvider, PROD_V1_TANGEM_TECH_BASE_URL)
     }
 
     @Provides
@@ -83,7 +84,7 @@ class NetworkModule {
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
     ): TangemTechApi {
-        return provideTangemTechApiInternal(moshi, context, appVersionProvider, DEV_TANGEM_TECH_BASE_URL)
+        return provideTangemTechApiInternal(moshi, context, appVersionProvider, DEV_V1_TANGEM_TECH_BASE_URL)
     }
 
     @Provides
@@ -93,7 +94,13 @@ class NetworkModule {
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
     ): TangemTechServiceApi {
-        return provideTangemTechApiInternal(moshi, context, appVersionProvider, PROD_TANGEM_TECH_BASE_URL)
+        return provideTangemTechApiInternal(
+            moshi,
+            context,
+            appVersionProvider,
+            PROD_V1_TANGEM_TECH_BASE_URL,
+            timeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
+        )
     }
 
     private inline fun <reified T> provideTangemTechApiInternal(
@@ -101,8 +108,16 @@ class NetworkModule {
         context: Context,
         appVersionProvider: AppVersionProvider,
         baseUrl: String,
+        timeoutSeconds: Long? = null,
     ): T {
         val client = OkHttpClient.Builder()
+            .let { builder ->
+                if (timeoutSeconds != null) {
+                    builder.callTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                } else {
+                    builder
+                }
+            }
             .addHeaders(
                 CacheControlHeader,
                 AppVersionPlatformHeaders(appVersionProvider),
@@ -125,10 +140,12 @@ class NetworkModule {
         const val PROD_EXPRESS_BASE_URL = "https://express.tangem.com/v1/"
         const val DEV_EXPRESS_BASE_URL = "https://express.tangem.org/v1/"
 
-        const val PROD_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
-        const val DEV_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
+        const val DEV_V1_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
 
+        const val PROD_V1_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
         const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
+
+        const val TANGEM_TECH_SERVICE_TIMEOUT_SECONDS = 5L
 
         const val PAYMENTOLOGY_BASE_URL: String = "https://paymentologygate.oa.r.appspot.com/"
         const val API_ONE_INCH_TIMEOUT_MS = 5000L
