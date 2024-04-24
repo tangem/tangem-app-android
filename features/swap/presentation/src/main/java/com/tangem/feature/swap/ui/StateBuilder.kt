@@ -433,7 +433,7 @@ internal class StateBuilder(
                     SwapWarning.NeedReserveToCreateAccount(
                         notificationConfig = createActivateAccountNotificationConfig(
                             status.amountToCreateAccount,
-                            quoteModel.toTokenInfo.cryptoCurrencyStatus.currency.name,
+                            quoteModel.toTokenInfo.cryptoCurrencyStatus.currency.symbol,
                         ),
                     ),
                 )
