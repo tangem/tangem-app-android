@@ -24,6 +24,7 @@ internal class SendAmountCurrencyConverter(
                 amountState = amountState.copy(
                     amountTextField = amountTextField.copy(
                         isFiatValue = value,
+                        isValuePasted = true,
                     ),
                 ),
             )
