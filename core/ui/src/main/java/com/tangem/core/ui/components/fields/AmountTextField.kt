@@ -64,6 +64,8 @@ fun AmountTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     isEnabled: Boolean = true,
     isAutoResize: Boolean = false,
+    isValuePasted: Boolean = false,
+    onValuePastedTriggerDismiss: () -> Unit = {},
     @FloatRange(from = 0.0, to = 1.0, fromInclusive = false, toInclusive = false)
     reduceFactor: Double = 0.9,
 ) {
@@ -101,6 +103,8 @@ fun AmountTextField(
                 fontSize = fontSize,
                 textDirection = TextDirection.ContentOrLtr,
             ),
+            isValuePasted = isValuePasted,
+            onValuePastedTriggerDismiss = onValuePastedTriggerDismiss,
             color = textColor,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
