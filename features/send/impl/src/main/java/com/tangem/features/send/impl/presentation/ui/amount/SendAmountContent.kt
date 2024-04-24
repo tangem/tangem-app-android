@@ -21,6 +21,7 @@ internal fun SendAmountContent(
     clickIntents: SendClickIntents,
 ) {
     if (amountState == null) return
+    // Do not put fillMaxSize() in here
     LazyColumn(
         modifier = Modifier
             .padding(
