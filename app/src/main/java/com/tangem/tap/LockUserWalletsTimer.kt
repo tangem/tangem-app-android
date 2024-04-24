@@ -6,6 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
@@ -17,6 +18,7 @@ internal class LockUserWalletsTimer(
     owner: LifecycleOwner,
     private val settingsRepository: SettingsRepository,
     private val duration: Duration = with(Duration) { 10.minutes },
+    private val userWalletsListManager: UserWalletsListManager,
 ) : LifecycleOwner by owner,
     DefaultLifecycleObserver {
 
@@ -108,7 +110,7 @@ internal class LockUserWalletsTimer(
         delay(duration)
 
         if (isActive) {
-            val userWalletsListManager = userWalletsListManagerSafe?.asLockable() ?: return@launch
+            val userWalletsListManager = userWalletsListManager.asLockable() ?: return@launch
 
             if (userWalletsListManager.hasUserWallets) {
                 val currentTime = System.currentTimeMillis()
