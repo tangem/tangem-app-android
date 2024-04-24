@@ -4,7 +4,6 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,8 +47,7 @@ internal fun SendRecipientContent(
     val isValidating by remember(uiState.isValidating) { derivedStateOf { uiState.isValidating } }
     val isError by remember(address.isError) { derivedStateOf { address.isError } }
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier // Do not put fillMaxSize() in here
             .background(TangemTheme.colors.background.tertiary)
             .padding(
                 start = TangemTheme.dimens.spacing16,
