@@ -79,6 +79,8 @@ class DetailsMiddleware {
     class EraseWalletMiddleware {
         @Suppress("CyclomaticComplexMethod")
         fun handle(action: DetailsAction.ResetToFactory) {
+            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
             when (action) {
                 is DetailsAction.ResetToFactory.Start -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
@@ -523,6 +525,7 @@ class DetailsMiddleware {
         val userWallet = UserWalletBuilder(scanResponse).build()
             ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
 
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
         return userWalletsListManager.save(userWallet)
             .doOnSuccess {
                 store.onUserWalletSelected(userWallet)

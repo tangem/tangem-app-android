@@ -22,7 +22,6 @@ import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -109,6 +108,7 @@ private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
         return@launch
     }
 
+    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
     userWalletsListManager.save(userWallet)
         .doOnFailure { error ->
             Timber.e(error, "Unable to save user wallet")
@@ -128,6 +128,8 @@ private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
     )
 
     if (currency != null) {
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
         Analytics.send(
             event = Basic.SignedIn(
                 currency = currency,

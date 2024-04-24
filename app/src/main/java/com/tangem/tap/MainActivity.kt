@@ -37,9 +37,9 @@ import com.tangem.data.card.sdk.CardSdkLifecycleObserver
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
-import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.feature.qrscanning.QrScanningRouter
@@ -92,12 +92,6 @@ val scope = CoroutineScope(coroutineContext)
 private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
-// [REDACTED_TODO_COMMENT]
-@Deprecated(message = "Provide UserWalletsListManager using DI")
-val userWalletsListManagerSafe: UserWalletsListManager? get() = store.state.globalState.userWalletsListManager
-// [REDACTED_TODO_COMMENT]
-@Deprecated(message = "Provide UserWalletsListManager using DI")
-val userWalletsListManager: UserWalletsListManager get() = userWalletsListManagerSafe!!
 
 @Suppress("LargeClass")
 @AndroidEntryPoint
@@ -154,6 +148,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var analyticsEventsHandler: AnalyticsEventHandler
+
+    @Inject
+    lateinit var userWalletsListManager: UserWalletsListManager
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -218,7 +215,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
-        lockUserWalletsTimer = LockUserWalletsTimer(owner = this, settingsRepository = settingsRepository)
+        lockUserWalletsTimer = LockUserWalletsTimer(
+            owner = this,
+            settingsRepository = settingsRepository,
+            userWalletsListManager = userWalletsListManager,
+        )
 
         initIntentHandlers()
 
@@ -304,7 +305,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun initIntentHandlers() {
-        val hasSavedWalletsProvider = { store.state.globalState.userWalletsListManager?.hasUserWallets == true }
+        val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
     }
