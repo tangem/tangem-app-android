@@ -195,8 +195,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         //  [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
-
-            store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
