@@ -679,6 +679,7 @@ internal class SendViewModel @Inject constructor(
             val result = callFeeUseCase()?.fold(
                 ifRight = {
                     uiState = feeStateFactory.onFeeOnLoadedState(it)
+                    sendIdleTimer = SystemClock.elapsedRealtime()
                 },
                 ifLeft = {
                     onFeeLoadFailed(isShowStatus)
