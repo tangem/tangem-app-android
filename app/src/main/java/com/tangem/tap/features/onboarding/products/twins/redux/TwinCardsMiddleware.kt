@@ -32,7 +32,6 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -61,6 +60,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
     val globalState = store.state.globalState
     val onboardingManager = globalState.onboardingState.onboardingManager
     val twinCardsState = store.state.twinCardsState
+    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
     fun getScanResponse(): ScanResponse {
         return when (twinCardsState.mode) {
@@ -366,6 +366,8 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 }
 
 private fun getPopBackScreen(): AppScreen {
+    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
     return if (userWalletsListManager.hasUserWallets) {
         val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
             .fold(onSuccess = { true }, onFailure = { false })
