@@ -35,7 +35,7 @@ internal class TxHistoryItemStateConverter(
             title = item.extractTitle(),
             subtitle = item.extractSubtitle(),
             timestamp = item.timestampInMillis,
-            onClick = { clickIntents.onVisaTransactionClick(item.txHash) },
+            onClick = { clickIntents.onTransactionClick(item.txHash) },
         )
     }
 
