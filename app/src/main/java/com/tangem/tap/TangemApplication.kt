@@ -195,8 +195,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         //  https://tangem.atlassian.net/browse/AND-3859
         runBlocking {
             featureTogglesManager.init()
-
-            store.dispatch(GlobalAction.UpdateUserWalletsListManager(generalUserWalletsListManager))
         }
 
         val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)

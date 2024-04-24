@@ -9,7 +9,6 @@ import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.redux.DebugErrorAction
@@ -101,6 +100,5 @@ sealed class GlobalAction : Action {
         data class Success(val countryCode: String) : GlobalAction()
     }
 
-    data class UpdateUserWalletsListManager(val manager: UserWalletsListManager) : GlobalAction()
     data class ChangeAppThemeMode(val appThemeMode: AppThemeMode) : GlobalAction()
 }

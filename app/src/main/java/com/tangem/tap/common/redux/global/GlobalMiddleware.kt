@@ -3,9 +3,7 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.StateDialog
 import com.tangem.datasource.config.models.Config
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -15,7 +13,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.mainScope
 import com.tangem.tap.network.exchangeServices.BuyExchangeService
 import com.tangem.tap.network.exchangeServices.CardExchangeRules
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -26,12 +23,10 @@ import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
-import timber.log.Timber
 import java.util.Locale
 
 object GlobalMiddleware {
@@ -147,33 +142,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                         )
                     }
             }
-        }
-        is GlobalAction.UpdateUserWalletsListManager -> {
-            val walletManagersFacade = store.inject(DaggerGraphState::walletManagersFacade)
-
-            /*
-             * If implementation of the UserWalletsListManager is changed,
-             * then all observers of selectedUserWallet become irrelevant.
-             */
-            action.manager.selectedUserWallet
-                .distinctUntilChanged()
-                .onEach { userWallet ->
-                    Analytics.setContext(userWallet.scanResponse)
-                    Analytics.send(Basic.WalletOpened())
-
-                    store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
-                        infoHolder.setCardInfo(userWallet.scanResponse)
-
-                        walletManagersFacade
-                            .getAll(userWallet.walletId)
-                            .distinctUntilChanged()
-                            .onEach(infoHolder::setWalletsInfo)
-                            .catch { Timber.e(it) }
-                            .launchIn(mainScope)
-                    }
-                }
-                .flowOn(Dispatchers.IO)
-                .launchIn(scope)
         }
     }
 }
