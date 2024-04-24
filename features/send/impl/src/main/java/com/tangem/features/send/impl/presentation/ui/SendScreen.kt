@@ -1,10 +1,8 @@
 package com.tangem.features.send.impl.presentation.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.SnackbarHostState
@@ -24,6 +22,8 @@ import com.tangem.features.send.impl.presentation.ui.amount.SendAmountContent
 import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
 import com.tangem.features.send.impl.presentation.ui.send.SendContent
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 
 @Composable
 internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen) {
@@ -88,27 +88,46 @@ internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen)
     )
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentScreen, modifier: Modifier = Modifier) {
-    var lastState by remember { mutableIntStateOf(currentState.type.ordinal) }
-    val direction = remember(currentState.type.ordinal) {
-        if (lastState < currentState.type.ordinal) {
-            AnimatedContentTransitionScope.SlideDirection.Start
-        } else {
-            AnimatedContentTransitionScope.SlideDirection.End
-        }
+    var currentStateProxy by remember { mutableStateOf(currentState) }
+    var isTransitionAnimationRunning by remember { mutableStateOf(false) }
+
+    // Prevent quick screen changes to avoid some of the transition animation distortions
+    LaunchedEffect(currentState) {
+        snapshotFlow { isTransitionAnimationRunning }
+            .withIndex()
+            .map { (index, running) ->
+                if (running && index != 0) {
+                    delay(timeMillis = 200)
+                }
+                running
+            }
+            .first { !it }
+
+        currentStateProxy = currentState
     }
+    // Restrict pressing the back button while screen transition is running to avoid most of the animation distortions
+    BackHandler(enabled = isTransitionAnimationRunning) {}
+
     // Box is needed to fix animation with resizing of AnimatedContent
-    Box(modifier = modifier) {
+    Box(modifier = modifier.fillMaxSize()) {
         AnimatedContent(
-            targetState = currentState,
+            targetState = currentStateProxy,
             label = "Send Scree Navigation",
             transitionSpec = {
-                lastState = currentState.type.ordinal
+                val direction = if (initialState.type.ordinal < targetState.type.ordinal) {
+                    AnimatedContentTransitionScope.SlideDirection.Start
+                } else {
+                    AnimatedContentTransitionScope.SlideDirection.End
+                }
+
                 slideIntoContainer(towards = direction, animationSpec = tween())
                     .togetherWith(slideOutOfContainer(towards = direction, animationSpec = tween()))
             },
         ) { state ->
+            isTransitionAnimationRunning = transition.targetState != transition.currentState
 
             when (state.type) {
                 SendUiStateType.Amount -> SendAmountContent(
