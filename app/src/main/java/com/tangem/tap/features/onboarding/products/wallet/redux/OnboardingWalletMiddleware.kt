@@ -556,6 +556,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                             return@launch
                         }
 
+                    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
                     userWalletsListManager.update(
                         userWalletId = userWallet.walletId,
                         update = { wallet ->
