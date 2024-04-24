@@ -14,12 +14,15 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.userwallets.UserWalletIdBuilder
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
+import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -148,6 +151,7 @@ object OnboardingHelper {
                 return
             }
 
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
         userWalletsListManager.save(userWallet, canOverride = true)
             .doOnFailure { error ->
                 Timber.e(error, "Unable to save user wallet")
