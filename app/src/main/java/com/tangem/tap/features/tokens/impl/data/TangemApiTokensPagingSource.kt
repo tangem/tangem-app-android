@@ -5,6 +5,7 @@ import androidx.paging.PagingState
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.domain.common.extensions.isSupportedInApp
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.cardTypesResolver
@@ -21,16 +22,25 @@ import com.tangem.utils.coroutines.runCatching
  * @property dispatchers                  coroutine dispatchers provider
  * @property getSelectedWalletSyncUseCase use case that returns selected wallet
  * @property searchText                   search text
+ * @property needFilterExcluded           filter networks that are not supported in the app
  */
 internal class TangemApiTokensPagingSource(
     private val api: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val searchText: String?,
-    needFilterExcluded: Boolean = false,
+    private val needFilterExcluded: Boolean = false,
 ) : PagingSource<Int, Token>() {
 
     private val coinsResponseConverter = CoinsResponseConverter(needFilterExcluded)
+
+    private val allAvailableBlockchains by lazy {
+        Blockchain.entries
+            .filter {
+                it.isTestnet().not() && (needFilterExcluded.not() || it.isSupportedInApp())
+            }
+    }
+
     override fun getRefreshKey(state: PagingState<Int, Token>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             state.closestPageToPosition(anchorPosition)?.prevKey?.plus(other = 1)
@@ -43,7 +53,7 @@ internal class TangemApiTokensPagingSource(
 
         return runCatching(dispatchers.io) {
             val supportedBlockchains = getSelectedWalletSyncUseCase().fold(
-                ifLeft = { Blockchain.entries },
+                ifLeft = { allAvailableBlockchains },
                 ifRight = { it.scanResponse.card.supportedBlockchains(it.scanResponse.cardTypesResolver) },
             )
 
