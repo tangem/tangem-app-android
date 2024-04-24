@@ -8,7 +8,6 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.userwallets.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -17,7 +16,11 @@ import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.launch
@@ -70,6 +73,7 @@ internal class SaveWalletMiddleware {
                     return@launch
                 }
 
+            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
             userWalletsListManager.save(userWallet, canOverride = true)
                 .flatMap {
                     saveAccessCodeIfNeeded(accessCode = backupInfo.accessCode, cardsInWallet = userWallet.cardsInWallet)
@@ -104,6 +108,7 @@ internal class SaveWalletMiddleware {
 
              * because it will be automatically saved on UserWalletsListManager switch
              */
+            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
             val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
                 val error = IllegalStateException("No selected user wallet")
                 Timber.e(error, "Unable to save user wallet")
