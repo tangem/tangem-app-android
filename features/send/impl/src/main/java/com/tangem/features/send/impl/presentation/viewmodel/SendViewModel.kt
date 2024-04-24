@@ -577,7 +577,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
                 uiState = stateFactory.onRecipientAddressValueChange(value)
                 uiState = stateFactory.getOnRecipientAddressValidationStarted()
@@ -590,7 +590,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onRecipientMemoValueChange(value: String) {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
                 uiState = stateFactory.getOnRecipientMemoValueChange(value)
                 uiState = stateFactory.getOnRecipientAddressValidationStarted()
