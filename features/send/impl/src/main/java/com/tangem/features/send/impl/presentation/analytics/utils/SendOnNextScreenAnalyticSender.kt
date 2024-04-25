@@ -5,18 +5,21 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.features.send.impl.presentation.analytics.SelectedCurrencyType
 import com.tangem.features.send.impl.presentation.analytics.SelectedFeeType
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
+import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.SendUiState
-import com.tangem.features.send.impl.presentation.state.SendUiStateType
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.utils.Provider
 
 internal class SendOnNextScreenAnalyticSender(
+    private val stateRouterProvider: Provider<StateRouter>,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
     fun send(prevScreen: SendUiStateType, state: SendUiState) {
         when (prevScreen) {
             SendUiStateType.Fee -> {
-                val feeState = state.feeState ?: return
+                val feeState = state.getFeeState(stateRouterProvider().isEditState) ?: return
                 val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content
                 feeSelectorState?.selectedFee?.let { selectedFee ->
                     val isCustomFeeEdited = feeState.fee?.amount?.value != feeSelectorState.fees.normal.amount.value
@@ -27,7 +30,8 @@ internal class SendOnNextScreenAnalyticSender(
                 }
             }
             SendUiStateType.Amount -> {
-                val isFiatSelected = state.amountState?.amountTextField?.isFiatValue ?: return
+                val amountState = state.getAmountState(stateRouterProvider().isEditState) ?: return
+                val isFiatSelected = amountState.amountTextField.isFiatValue
                 val selectedCurrency = if (!isFiatSelected) {
                     SelectedCurrencyType.Token
                 } else {
