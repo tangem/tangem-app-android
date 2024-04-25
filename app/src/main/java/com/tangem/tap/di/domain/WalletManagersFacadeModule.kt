@@ -8,7 +8,6 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.walletmanager.DefaultWalletManagersFacade
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.feature.onboarding.data.MnemonicRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
