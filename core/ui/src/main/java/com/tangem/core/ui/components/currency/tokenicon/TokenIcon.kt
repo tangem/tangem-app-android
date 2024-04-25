@@ -27,9 +27,15 @@ private const val NORMAL_ALPHA = 1f
  * @param state cryptocurrency icon config
  * @param modifier component modifier
  * @param shouldDisplayNetwork specifies whether to display network badge
+ * @param shouldDisplayCustom specifies whether to display custom badge
  */
 @Composable
-fun TokenIcon(state: TokenIconState, modifier: Modifier = Modifier, shouldDisplayNetwork: Boolean = true) {
+fun TokenIcon(
+    state: TokenIconState,
+    modifier: Modifier = Modifier,
+    shouldDisplayNetwork: Boolean = true,
+    shouldDisplayCustom: Boolean = true,
+) {
     BaseContainer(modifier = modifier) {
         val iconModifier = Modifier
             .align(Alignment.Center)
@@ -46,6 +52,7 @@ fun TokenIcon(state: TokenIconState, modifier: Modifier = Modifier, shouldDispla
                     icon = state,
                     modifier = iconModifier,
                     shouldDisplayNetwork = shouldDisplayNetwork,
+                    shouldDisplayCustom = shouldDisplayCustom,
                 )
             }
         }
@@ -76,6 +83,7 @@ private fun BoxScope.ContentIconContainer(
     icon: TokenIconState,
     modifier: Modifier = Modifier,
     shouldDisplayNetwork: Boolean = true,
+    shouldDisplayCustom: Boolean = true,
 ) {
     val networkBadgeOffset = TangemTheme.dimens.spacing4
     val (alpha, colorFilter) = remember(icon.isGrayscale) {
@@ -104,7 +112,7 @@ private fun BoxScope.ContentIconContainer(
         )
     }
 
-    if (icon.showCustomBadge) {
+    if (icon.showCustomBadge && shouldDisplayCustom) {
         CustomBadge(modifier = Modifier.align(Alignment.BottomEnd))
     }
 }
