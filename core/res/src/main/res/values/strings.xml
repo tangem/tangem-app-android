@@ -4,16 +4,12 @@
   <string name="add_tokens_title">Manage tokens</string>
   <string name="address_qr_code_message_format">Send only %1$s (%2$s) from %3$s network to this address. Using other tokens and networks may result in loss of funds.</string>
   <string name="alert_button_request_support">Request support</string>
-  <string name="alert_button_try_again">Try again</string>
   <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
   <string name="alert_failed_to_send_transaction_message">Reason: %s</string>
   <string name="alert_failed_to_send_transaction_title">Can\'t send a transaction</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">The selected does not support the %1$s network</string>
   <string name="alert_manage_tokens_unsupported_curve_message">To activate the %1$s blockchain\'s cryptographic encryption, you\'ll need to reset the wallet to factory settings. Please withdraw your funds before doing so to ensure that you don\'t lose them, and then complete the reset process. Access to the current wallet will not be possible after the reset.</string>
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card due to firmware limitation.</string>
-  <string name="alert_negative_app_rate_sent_message">Thank you for your feedback. We will respond as soon as possible</string>
-  <string name="alert_negative_app_rate_sent_title">Your suggestions were sent</string>
-  <string name="alert_troubleshooting_scan_card_message">Please try to tap the card exactly as shown in the animation or request support.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
   <string name="app_settings_default_fee">Default Fee</string>
@@ -29,8 +25,6 @@
   <string name="app_settings_theme_mode_dark">Dark</string>
   <string name="app_settings_theme_mode_light">Light</string>
   <string name="app_settings_theme_mode_system">System default</string>
-  <string name="app_settings_theme_selection_footer">If system is selected, the app will auto-adjust based on your device\'s system settings</string>
-  <string name="app_settings_theme_selection_system_short">System</string>
   <string name="app_settings_theme_selector_title">Theme</string>
   <string name="app_settings_title">App Settings</string>
   <string name="balance_hidden_description">To hide or show your balances, simply flip your device screen down, or switch it off in Settings</string>
@@ -80,7 +74,6 @@
   <string name="common_create">Create</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
-  <string name="common_disconnect">Disconnect</string>
   <string name="common_done">Done</string>
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
@@ -113,7 +106,6 @@
   <string name="common_reject">Reject</string>
   <string name="common_reload">Reload</string>
   <string name="common_rename">Rename</string>
-  <string name="common_retry">Retry</string>
   <string name="common_save_changes">Save changes</string>
   <string name="common_search">Search</string>
   <string name="common_search_tokens">Search tokens</string>
@@ -137,7 +129,6 @@
   <string name="common_understand">I understand</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
   <string name="common_unreachable">Unreachable</string>
-  <string name="common_warning">Warning</string>
   <string name="common_yes">Yes</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
   <string name="currency_subtitle_expanded">Available networks</string>
@@ -184,7 +175,6 @@
   <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
   <string name="details_row_title_issuer">Issuer</string>
   <string name="details_row_title_signed_hashes">Signed</string>
-  <string name="details_security_management_warning">If you forget the code you will lose access to your funds. Code recovery is not possible.</string>
   <string name="details_title">Details</string>
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of Service</string>
@@ -552,12 +542,12 @@
   <string name="toast_balances_shown">Balances shown</string>
   <string name="toast_undo">Undo</string>
   <string name="token_button_unavailability_generic_description">This operation is currently unavailable. Please try again later.</string>
-  <string name="token_button_unavailability_reason_buy_unavailable">The purchase of the %s is currently unavailable. But we are working on adding it.</string>
-  <string name="token_button_unavailability_reason_empty_balance">You do not have funds to send. Top up your account to be able to send funds from it.</string>
-  <string name="token_button_unavailability_reason_no_quotes">This operation is currently unavailable. Please try again later.</string>
-  <string name="token_button_unavailability_reason_not_exchangeable">%s swap is not available. But we are working on adding it.</string>
-  <string name="token_button_unavailability_reason_sell_unavailable">Sell of the %s coin is currently unavailable. But we are working on adding it.</string>
-  <string name="token_details_choose_address">Choose address</string>
+  <string name="token_button_unavailability_reason_buy_unavailable">Buying %s is not available at the moment. Please check our updates.</string>
+  <string name="token_button_unavailability_reason_empty_balance_sell">You do not have funds to sell. Top up your account to be able to sell funds from it.</string>
+  <string name="token_button_unavailability_reason_empty_balance_send">You do not have funds to send. Top up your account to be able to send funds from it.</string>
+  <string name="token_button_unavailability_reason_not_exchangeable">Swapping %s is not available at the moment. Please check our updates.</string>
+  <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the %s transaction is complete</string>
+  <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not available at the moment. Please check our updates.</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
@@ -668,9 +658,10 @@
   <string name="warning_failed_to_verify_card_message">This card might be a production sample or counterfeit</string>
   <string name="warning_failed_to_verify_card_title">Authenticity check failed</string>
   <string name="warning_hedera_missing_token_association_button_title">Associate</string>
-  <string name="warning_hedera_missing_token_association_message">This token must be associated with your Hedera account before you can receive it. Association fee ~%.4f %s</string>
+  <string name="warning_hedera_missing_token_association_message">This token must be associated with your Hedera account before you can receive it. Association fee ~%1$s %2$s</string>
   <string name="warning_hedera_missing_token_association_message_brief">This token must be associated with your Hedera account before you can receive it</string>
   <string name="warning_hedera_missing_token_association_title">Associate your token</string>
+  <string name="warning_hedera_token_association_not_enough_hbar_message">Hot enough %s. Top up your Hedera account to associate this token</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
@@ -688,6 +679,7 @@
   <string name="warning_number_of_signed_hashes_incorrect_title">Card has already signed transactions</string>
   <string name="warning_rate_app_message">Your review keeps us motivated to make Tangem Wallet even better</string>
   <string name="warning_rate_app_title">Enjoying Tangem?</string>
+  <string name="warning_receive_blocked_hedera_token_association_required_message">You must associate your token before receiving tokens</string>
   <string name="warning_rent_fee_title">Network rent fee required</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s is an asset in the %2$s network. To make a %3$s transaction, you must deposit some %4$s (%5$s) to cover the network fee.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Insufficient %1$s to cover network fee</string>
