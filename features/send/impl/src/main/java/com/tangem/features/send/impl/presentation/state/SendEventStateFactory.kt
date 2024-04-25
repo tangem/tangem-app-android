@@ -20,6 +20,7 @@ import java.math.BigDecimal
  * @param feeStateFactory [FeeStateFactory]
  */
 internal class SendEventStateFactory(
+    private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val clickIntents: SendClickIntents,
@@ -50,7 +51,8 @@ internal class SendEventStateFactory(
 
     fun getFeeUpdatedAlert(fee: TransactionFee, onConsume: () -> Unit, onFeeNotIncreased: () -> Unit): SendUiState {
         val state = currentStateProvider()
-        val feeSelector = state.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return state
+        val feeState = state.getFeeState(stateRouterProvider().isEditState)
+        val feeSelector = feeState?.feeSelectorState as? FeeSelectorState.Content ?: return state
         val newFee = when (fee) {
             is TransactionFee.Single -> fee.normal
             is TransactionFee.Choosable -> {
