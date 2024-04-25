@@ -14,7 +14,7 @@ internal interface SendClickIntents {
 
     fun onBackClick()
 
-    fun onNextClick()
+    fun onNextClick(isFromEdit: Boolean = false)
 
     fun onPrevClick()
 
