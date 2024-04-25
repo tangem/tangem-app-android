@@ -197,12 +197,6 @@ class GetCurrencyWarningsUseCase(
                     coinCurrency = coinStatus.currency,
                 )
             }
-            feePaidCurrency is FeePaidCurrency.SameCurrency && tokenStatus.value.amount.isZero() -> {
-                CryptoCurrencyWarning.BalanceNotEnoughForFee(
-                    tokenCurrency = tokenStatus.currency,
-                    coinCurrency = coinStatus.currency,
-                )
-            }
             feePaidCurrency is FeePaidCurrency.Token -> {
                 val feePaidTokenBalance = feePaidCurrency.balance
                 val amount = tokenStatus.value.amount ?: return null

@@ -122,6 +122,7 @@ internal class SendViewModel @Inject constructor(
 
     private val stateFactory = SendStateFactory(
         clickIntents = this,
+        stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
@@ -132,12 +133,14 @@ internal class SendViewModel @Inject constructor(
     )
 
     private val amountStateFactory = AmountStateFactory(
+        stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
     )
 
     private val feeStateFactory = FeeStateFactory(
         clickIntents = this,
+        stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
@@ -146,6 +149,7 @@ internal class SendViewModel @Inject constructor(
 
     private val eventStateFactory = SendEventStateFactory(
         clickIntents = this,
+        stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeStateFactory = feeStateFactory,
@@ -171,7 +175,10 @@ internal class SendViewModel @Inject constructor(
     )
 
     private val sendOnNextScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
-        SendOnNextScreenAnalyticSender(analyticsEventHandler)
+        SendOnNextScreenAnalyticSender(
+            stateRouterProvider = Provider { stateRouter },
+            analyticsEventHandler = analyticsEventHandler,
+        )
     }
 // [REDACTED_TODO_COMMENT]
     var uiState: SendUiState by mutableStateOf(stateFactory.getInitialState())
@@ -453,7 +460,9 @@ internal class SendViewModel @Inject constructor(
         stateRouter.currentState
             .onEach {
                 when (it.type) {
-                    SendUiStateType.Fee -> loadFee()
+                    SendUiStateType.Fee,
+                    SendUiStateType.EditFee,
+                    -> loadFee()
                     SendUiStateType.Send -> sendIdleTimer = SystemClock.elapsedRealtime()
                     else -> Unit
                 }
@@ -488,16 +497,17 @@ internal class SendViewModel @Inject constructor(
         stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
     }
 
-    override fun onNextClick() {
+    override fun onNextClick(isFromEdit: Boolean) {
         val currentState = stateRouter.currentState.value
+        uiState = stateFactory.syncEditStates(isFromEdit = isFromEdit)
         sendOnNextScreenAnalyticSender.send(currentState.type, uiState)
         when (currentState.type) {
-            SendUiStateType.Fee -> {
-                if (onFeeNext()) return
-            }
-            SendUiStateType.Amount -> {
-                loadFee()
-            }
+            SendUiStateType.Fee,
+            SendUiStateType.EditFee,
+            -> if (onFeeNext()) return
+            SendUiStateType.Amount,
+            SendUiStateType.EditAmount,
+            -> loadFee()
             else -> Unit
         }
 
@@ -522,13 +532,14 @@ internal class SendViewModel @Inject constructor(
         innerRouter.openTokenDetails(userWalletId, currency)
 
     private fun onFeeNext(): Boolean {
-        if (checkIfFeeTooLow(uiState)) {
+        val feeState = uiState.getFeeState(stateRouter.isEditState)
+        val feeSelectorState = feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
+        if (checkIfFeeTooLow(feeSelectorState)) {
             uiState = eventStateFactory.getFeeTooLowAlert(
                 onConsume = { uiState = eventStateFactory.onConsumeEventState() },
             )
             return true
         }
-        val feeSelectorState = uiState.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
         return checkIfFeeTooHigh(
             feeSelectorState = feeSelectorState,
             onShow = { diff ->
@@ -705,8 +716,9 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun callFeeUseCase(): Either<GetFeeError, TransactionFee>? {
-        val amountState = uiState.amountState ?: return null
-        val recipientState = uiState.recipientState ?: return null
+        val isFromConfirmation = stateRouter.currentState.value.isFromConfirmation
+        val amountState = uiState.getAmountState(isFromConfirmation) ?: return null
+        val recipientState = uiState.getRecipientState(isFromConfirmation) ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
 
         return feeCryptoCurrencyStatus?.let { feeCurrencyStatus ->
@@ -735,12 +747,14 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun showAmount() {
+        uiState = stateFactory.syncEditStates(isFromEdit = false)
         stateRouter.showAmount(isFromConfirmation = true)
         setNeverToShowTapHelp()
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
     }
 
     override fun showRecipient() {
+        uiState = stateFactory.syncEditStates(isFromEdit = false)
         stateRouter.showRecipient(isFromConfirmation = true)
         uiState = stateFactory.getHiddenTapHelpState()
         setNeverToShowTapHelp()
@@ -748,6 +762,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun showFee() {
+        uiState = stateFactory.syncEditStates(isFromEdit = false)
         stateRouter.showFee(isFromConfirmation = true)
         setNeverToShowTapHelp()
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
