@@ -17,7 +17,6 @@ import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.local.userwallet.UserWalletsStore
