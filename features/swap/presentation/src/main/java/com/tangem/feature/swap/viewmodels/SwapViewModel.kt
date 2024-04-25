@@ -881,12 +881,6 @@ internal class SwapViewModel @Inject constructor(
             },
             onMaxAmountSelected = ::onMaxAmountClicked,
             onReduceAmount = ::onReduceAmountClicked,
-            onReduceAmountIgnoreClick = {
-                uiState = uiState.copy(
-                    reduceAmountIgnore = true,
-                    warnings = uiState.warnings.filter { it !is SwapWarning.ReduceAmount },
-                )
-            },
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
