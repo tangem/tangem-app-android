@@ -446,29 +446,27 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
         return when (unavailabilityReason) {
-            // send
             is ScenarioUnavailabilityReason.PendingTransaction -> {
-                resourceReference(
-                    id = R.string.warning_send_blocked_pending_transactions_message,
-                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol),
-                )
+                when (unavailabilityReason.withdrawalScenario) {
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
+                        id = R.string.warning_send_blocked_pending_transactions_message,
+                        formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol),
+                    )
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_pending_transaction_sell,
+                        formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol),
+                    )
+                }
             }
-            ScenarioUnavailabilityReason.EmptyBalance -> {
-                resourceReference(
-                    id = R.string.token_button_unavailability_reason_empty_balance,
-                )
-            }
-            is ScenarioUnavailabilityReason.InsufficientFundsForFee -> {
-                resourceReference(
-                    id = R.string.warning_send_blocked_funds_for_fee_message,
-                    formatArgs = wrappedList(
-                        unavailabilityReason.currencyName,
-                        unavailabilityReason.networkName,
-                        unavailabilityReason.currencyName,
-                        unavailabilityReason.feeCurrencyName,
-                        unavailabilityReason.feeCurrencySymbol,
-                    ),
-                )
+            is ScenarioUnavailabilityReason.EmptyBalance -> {
+                when (unavailabilityReason.withdrawalScenario) {
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_empty_balance_send,
+                    )
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_empty_balance_sell,
+                    )
+                }
             }
             is ScenarioUnavailabilityReason.BuyUnavailable -> {
                 resourceReference(
@@ -482,15 +480,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
                 )
             }
-            is ScenarioUnavailabilityReason.SellUnavailable -> {
+            is ScenarioUnavailabilityReason.NotSupportedBySellService -> {
                 resourceReference(
                     id = R.string.token_button_unavailability_reason_sell_unavailable,
                     formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
                 )
             }
-            ScenarioUnavailabilityReason.NoQuotes -> {
+            ScenarioUnavailabilityReason.Unreachable -> {
                 resourceReference(
-                    id = R.string.token_button_unavailability_reason_no_quotes,
+                    id = R.string.token_button_unavailability_generic_description,
                 )
             }
             ScenarioUnavailabilityReason.None -> {
