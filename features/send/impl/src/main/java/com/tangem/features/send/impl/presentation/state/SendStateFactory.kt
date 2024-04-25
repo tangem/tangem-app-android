@@ -14,6 +14,7 @@ import com.tangem.domain.wallets.usecase.ValidateWalletMemoUseCase
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.amount.SendAmountStateConverter
+import com.tangem.features.send.impl.presentation.state.common.SendSyncEditConverter
 import com.tangem.features.send.impl.presentation.state.confirm.SendConfirmStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
@@ -31,6 +32,7 @@ import timber.log.Timber
 @Suppress("LongParameterList")
 internal class SendStateFactory(
     private val clickIntents: SendClickIntents,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -82,7 +84,9 @@ internal class SendStateFactory(
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
-
+    private val sendSyncEditConverter by lazy(LazyThreadSafetyMode.NONE) {
+        SendSyncEditConverter(currentStateProvider = currentStateProvider)
+    }
     // region UI states
     fun getInitialState(): SendUiState = SendUiState(
         clickIntents = clickIntents,
@@ -117,6 +121,8 @@ internal class SendStateFactory(
         )
     }
 
+    fun syncEditStates(isFromEdit: Boolean) = sendSyncEditConverter.convert(isFromEdit)
+
     fun getOnHideBalanceState(isBalanceHidden: Boolean): SendUiState {
         return currentStateProvider().copy(isBalanceHidden = isBalanceHidden)
     }
@@ -143,8 +149,10 @@ internal class SendStateFactory(
 
     fun onRecipientAddressValueChange(value: String, isXAddress: Boolean = false): SendUiState {
         val state = currentStateProvider()
-        val recipientState = state.recipientState ?: return state
-        return state.copy(
+        val isEditState = stateRouterProvider().isEditState
+        val recipientState = state.getRecipientState(isEditState) ?: return state
+        return state.copyWrapped(
+            isEditState = isEditState,
             recipientState = recipientState.copy(
                 addressTextField = recipientState.addressTextField.copy(value = value),
                 memoTextField = recipientState.memoTextField?.copy(isEnabled = !isXAddress),
@@ -155,7 +163,8 @@ internal class SendStateFactory(
     fun getOnRecipientAddressValidState(value: String, isValidAddress: Boolean): SendUiState {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val state = currentStateProvider()
-        val recipientState = state.recipientState ?: return state
+        val isEditState = stateRouterProvider().isEditState
+        val recipientState = state.getRecipientState(isEditState) ?: return state
 
         val isValidMemo = validateWalletMemoUseCase(
             memo = recipientState.memoTextField?.value.orEmpty(),
@@ -167,7 +176,8 @@ internal class SendStateFactory(
         val isAddressInWallet = cryptoCurrencyStatus.value.networkAddress?.availableAddresses
             ?.any { it.value == value } ?: true
 
-        return state.copy(
+        return state.copyWrapped(
+            isEditState = isEditState,
             recipientState = recipientState.copy(
                 isPrimaryButtonEnabled = isValidMemo && isValidAddress && !isAddressInWallet,
                 isValidating = false,
@@ -185,16 +195,20 @@ internal class SendStateFactory(
 
     fun getOnRecipientAddressValidationStarted(): SendUiState {
         val state = currentStateProvider()
-        val recipientState = state.recipientState ?: return state
-        return state.copy(
+        val isEditState = stateRouterProvider().isEditState
+        val recipientState = state.getRecipientState(isEditState) ?: return state
+        return state.copyWrapped(
+            isEditState = isEditState,
             recipientState = recipientState.copy(isValidating = true),
         )
     }
 
     fun getOnRecipientMemoValueChange(value: String): SendUiState {
         val state = currentStateProvider()
-        val recipientState = state.recipientState ?: return state
-        return state.copy(
+        val isEditState = stateRouterProvider().isEditState
+        val recipientState = state.getRecipientState(isEditState) ?: return state
+        return state.copyWrapped(
+            isEditState = isEditState,
             recipientState = recipientState.copy(
                 memoTextField = recipientState.memoTextField?.copy(value = value),
             ),
@@ -204,7 +218,8 @@ internal class SendStateFactory(
     fun getOnRecipientMemoValidState(value: String, isValidAddress: Boolean): SendUiState {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val state = currentStateProvider()
-        val recipientState = state.recipientState ?: return state
+        val isEditState = stateRouterProvider().isEditState
+        val recipientState = state.getRecipientState(isEditState) ?: return state
 
         val isValidMemo = validateWalletMemoUseCase(
             memo = value,
@@ -216,7 +231,8 @@ internal class SendStateFactory(
         val isAddressInWallet = cryptoCurrencyStatus.value.networkAddress?.availableAddresses
             ?.any { it.value == value } ?: true
 
-        return state.copy(
+        return state.copyWrapped(
+            isEditState = isEditState,
             recipientState = recipientState.copy(
                 isPrimaryButtonEnabled = isValidMemo && isValidAddress && !isAddressInWallet,
                 isValidating = false,
@@ -230,8 +246,10 @@ internal class SendStateFactory(
 
     fun getOnXAddressMemoState(): SendUiState {
         val state = currentStateProvider()
-        val recipientState = state.recipientState ?: return state
-        return state.copy(
+        val isEditState = stateRouterProvider().isEditState
+        val recipientState = state.getRecipientState(isEditState) ?: return state
+        return state.copyWrapped(
+            isEditState = isEditState,
             recipientState = recipientState.copy(
                 memoTextField = recipientState.memoTextField?.copy(
                     value = "",
@@ -243,9 +261,11 @@ internal class SendStateFactory(
 
     fun getHiddenRecentListState(isAddressInWallet: Boolean, isValidAddress: Boolean): SendUiState {
         val state = currentStateProvider()
-        val recipientState = state.recipientState ?: return state
+        val isEditState = stateRouterProvider().isEditState
+        val recipientState = state.getRecipientState(isEditState) ?: return state
         val isNotValid = isAddressInWallet || !isValidAddress
-        return state.copy(
+        return state.copyWrapped(
+            isEditState = isEditState,
             recipientState = recipientState.copy(
                 recent = recipientState.recent.map { recent ->
                     recent.copy(isVisible = isNotValid && (recent.isLoading || recent.title != TextReference.EMPTY))
@@ -305,7 +325,7 @@ internal class SendStateFactory(
 
     private fun isPrimaryButtonEnabled(state: SendUiState, notifications: ImmutableList<SendNotification>): Boolean {
         val sendState = state.sendState ?: return false
-        val feeState = state.feeState ?: return false
+        val feeState = state.getFeeState(stateRouterProvider().isEditState) ?: return false
         val hasErrorNotifications = notifications.any { it is SendNotification.Error }
         return !hasErrorNotifications && !sendState.isSending && feeState.feeSelectorState is FeeSelectorState.Content
     }
