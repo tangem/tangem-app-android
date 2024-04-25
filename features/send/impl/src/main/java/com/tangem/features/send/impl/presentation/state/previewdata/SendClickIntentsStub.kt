@@ -14,7 +14,7 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onBackClick() {}
 
-    override fun onNextClick() {}
+    override fun onNextClick(isFromEdit: Boolean) {}
 
     override fun onPrevClick() {}
 
