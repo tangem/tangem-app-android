@@ -1,8 +1,11 @@
 package com.tangem.features.send.impl.presentation.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.SnackbarHostState
@@ -23,12 +26,13 @@ import com.tangem.features.send.impl.presentation.ui.fee.SendSpeedAndFeeContent
 import com.tangem.features.send.impl.presentation.ui.recipient.SendRecipientContent
 import com.tangem.features.send.impl.presentation.ui.send.SendContent
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.withIndex
 
 @Composable
 internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val sendState = uiState.sendState ?: return
     BackHandler { uiState.clickIntents.onBackClick() }
     Column(
         modifier = Modifier
@@ -38,38 +42,9 @@ internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen)
             .background(color = TangemTheme.colors.background.tertiary),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val titleRes = when (currentState.type) {
-            SendUiStateType.Amount -> resourceReference(R.string.send_amount_label)
-            SendUiStateType.Recipient -> resourceReference(R.string.send_recipient_label)
-            SendUiStateType.Fee -> resourceReference(R.string.common_fee_selector_title)
-            SendUiStateType.Send -> if (!sendState.isSuccess) {
-                resourceReference(R.string.send_summary_title, wrappedList(uiState.cryptoCurrencyName))
-            } else {
-                null
-            }
-            else -> null
-        }
-        val isSending = currentState.type == SendUiStateType.Send && !uiState.sendState.isSuccess
-        val subtitleRes = if (isSending) {
-            uiState.amountState?.walletName
-        } else {
-            null
-        }
-        val iconRes = if (currentState.type == SendUiStateType.Recipient) {
-            R.drawable.ic_qrcode_scan_24
-        } else {
-            null
-        }
-
-        AppBarWithBackButtonAndIcon(
-            text = titleRes?.resolveReference(),
-            subtitle = subtitleRes,
-            onBackClick = uiState.clickIntents::popBackStack,
-            onIconClick = uiState.clickIntents::onQrCodeScanClick,
-            backIconRes = R.drawable.ic_close_24,
-            iconRes = iconRes,
-            backgroundColor = TangemTheme.colors.background.tertiary,
-            modifier = Modifier.height(TangemTheme.dimens.size56),
+        SendAppBar(
+            uiState = uiState,
+            currentState = currentState,
         )
         SendScreenContent(
             uiState = uiState,
@@ -85,6 +60,50 @@ internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen)
     SendEventEffect(
         event = uiState.event,
         snackbarHostState = snackbarHostState,
+    )
+}
+
+@Composable
+private fun SendAppBar(uiState: SendUiState, currentState: SendUiCurrentScreen) {
+    val (titleRes, subtitleRes) = when (currentState.type) {
+        SendUiStateType.Amount,
+        SendUiStateType.EditAmount,
+        -> resourceReference(R.string.send_amount_label) to null
+        SendUiStateType.Recipient,
+        SendUiStateType.EditRecipient,
+        -> resourceReference(R.string.send_recipient_label) to null
+        SendUiStateType.Fee,
+        SendUiStateType.EditFee,
+        -> resourceReference(R.string.common_fee_selector_title) to null
+        SendUiStateType.Send -> if (uiState.sendState?.isSuccess == false) {
+            resourceReference(R.string.send_summary_title, wrappedList(uiState.cryptoCurrencyName)) to
+                uiState.amountState?.walletName
+        } else {
+            null to null
+        }
+        else -> null to null
+    }
+    val iconRes = if (currentState.type == SendUiStateType.Recipient) {
+        R.drawable.ic_qrcode_scan_24
+    } else {
+        null
+    }
+    val (backIcon, backClick) = when (currentState.type) {
+        SendUiStateType.EditAmount,
+        SendUiStateType.EditFee,
+        SendUiStateType.EditRecipient,
+        -> R.drawable.ic_back_24 to uiState.clickIntents::onBackClick
+        else -> R.drawable.ic_close_24 to uiState.clickIntents::popBackStack
+    }
+    AppBarWithBackButtonAndIcon(
+        text = titleRes?.resolveReference(),
+        subtitle = subtitleRes,
+        onBackClick = backClick,
+        onIconClick = uiState.clickIntents::onQrCodeScanClick,
+        backIconRes = backIcon,
+        iconRes = iconRes,
+        backgroundColor = TangemTheme.colors.background.tertiary,
+        modifier = Modifier.height(TangemTheme.dimens.size56),
     )
 }
 
@@ -135,13 +154,23 @@ private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentS
                     isBalanceHiding = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
                 )
+                SendUiStateType.EditAmount -> SendAmountContent(
+                    amountState = uiState.editAmountState,
+                    isBalanceHiding = uiState.isBalanceHidden,
+                    clickIntents = uiState.clickIntents,
+                )
                 SendUiStateType.Recipient -> SendRecipientContent(
                     uiState = uiState.recipientState,
                     clickIntents = uiState.clickIntents,
                     isBalanceHidden = uiState.isBalanceHidden,
                 )
-                SendUiStateType.Fee -> SendSpeedAndFeeContent(
-                    state = uiState.feeState,
+                SendUiStateType.EditRecipient -> SendRecipientContent(
+                    uiState = uiState.editRecipientState,
+                    clickIntents = uiState.clickIntents,
+                    isBalanceHidden = uiState.isBalanceHidden,
+                )
+                SendUiStateType.EditFee -> SendSpeedAndFeeContent(
+                    state = uiState.editFeeState,
                     clickIntents = uiState.clickIntents,
                 )
                 SendUiStateType.Send -> SendContent(uiState)
