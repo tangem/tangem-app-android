@@ -59,7 +59,7 @@ class DefaultWalletManagersFacade(
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
     private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
     private val sdkPageConverter by lazy { SdkPageConverter() }
-    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory(mnemonic) }
+    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
 
     override suspend fun update(
         userWalletId: UserWalletId,
