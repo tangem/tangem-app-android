@@ -2,6 +2,7 @@ package com.tangem.features.send.impl.presentation.state.amount
 
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldMaxAmountConverter
 import com.tangem.utils.Provider
@@ -10,18 +11,21 @@ import com.tangem.utils.Provider
  * Factory to produce amount state for [SendUiState]
  */
 internal class AmountStateFactory(
+    private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) {
 
     private val amountFieldChangeConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendAmountFieldChangeConverter(
+            stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
     private val amountFieldMaxAmountConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendAmountFieldMaxAmountConverter(
+            stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
@@ -29,12 +33,14 @@ internal class AmountStateFactory(
 
     private val amountCurrencyConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendAmountCurrencyConverter(
+            stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
     private val amountPasteConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendAmountPastedTriggerDismissConverter(
+            stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
         )
     }
