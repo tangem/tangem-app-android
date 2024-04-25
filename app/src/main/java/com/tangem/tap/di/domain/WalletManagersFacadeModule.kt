@@ -26,7 +26,6 @@ internal object WalletManagersFacadeModule {
         userWalletsStore: UserWalletsStore,
         assetReader: AssetReader,
         @SdkMoshi moshi: Moshi,
-        mnemonicRepository: MnemonicRepository,
         blockchainSDKFactory: BlockchainSDKFactory,
     ): WalletManagersFacade {
         return DefaultWalletManagersFacade(
@@ -34,7 +33,6 @@ internal object WalletManagersFacadeModule {
             userWalletsStore = userWalletsStore,
             assetReader = assetReader,
             moshi = moshi,
-            mnemonic = mnemonicRepository.generateDefaultMnemonic(),
             blockchainSDKFactory = blockchainSDKFactory,
         )
     }
