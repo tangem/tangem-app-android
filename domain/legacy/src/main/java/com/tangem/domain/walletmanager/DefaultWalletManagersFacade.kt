@@ -46,7 +46,6 @@ import java.util.EnumSet
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
-    mnemonic: Mnemonic,
     assetReader: AssetReader,
     moshi: Moshi,
     blockchainSDKFactory: BlockchainSDKFactory,
