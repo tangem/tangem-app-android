@@ -88,7 +88,6 @@ internal class StateBuilder(
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
             providerState = ProviderState.Empty(),
             shouldShowMaxAmount = false,
-            reduceAmountIgnore = false,
             priceImpact = PriceImpact.Empty(),
         )
     }
@@ -217,7 +216,6 @@ internal class StateBuilder(
         val warnings = getWarningsForSuccessState(
             quoteModel = quoteModel,
             fromToken = fromToken,
-            ignoreAmountReduce = uiStateHolder.reduceAmountIgnore,
         )
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
@@ -316,10 +314,9 @@ internal class StateBuilder(
     private fun getWarningsForSuccessState(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
-        ignoreAmountReduce: Boolean,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
-        maybeAddDomainWarnings(quoteModel, warnings, ignoreAmountReduce)
+        maybeAddDomainWarnings(quoteModel, warnings)
         maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
         maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
         maybeAddNetworkFeeCoverageWarning(quoteModel, warnings)
@@ -355,11 +352,7 @@ internal class StateBuilder(
         }
     }
 
-    private fun maybeAddDomainWarnings(
-        quoteModel: SwapState.QuotesLoadedState,
-        warnings: MutableList<SwapWarning>,
-        ignoreAmountReduce: Boolean,
-    ) {
+    private fun maybeAddDomainWarnings(quoteModel: SwapState.QuotesLoadedState, warnings: MutableList<SwapWarning>) {
         quoteModel.warnings.forEach {
             when (it) {
                 is Warning.ExistentialDepositWarning -> {
@@ -397,23 +390,20 @@ internal class StateBuilder(
                     )
                 }
                 is Warning.ReduceAmountWarning -> {
-                    if (!ignoreAmountReduce) {
-                        warnings.add(
-                            SwapWarning.ReduceAmount(
-                                notificationConfig = createReduceAmountNotificationConfig(
-                                    amount = it.tezosFeeThreshold.toPlainString(),
-                                    onConfirmClick = {
-                                        val fromAmount = quoteModel.fromTokenInfo.tokenAmount
-                                        val patchedAmount = fromAmount.copy(
-                                            value = fromAmount.value - it.tezosFeeThreshold,
-                                        )
-                                        actions.onReduceAmount(patchedAmount)
-                                    },
-                                    onDismissClick = actions.onReduceAmountIgnoreClick,
-                                ),
+                    warnings.add(
+                        SwapWarning.ReduceAmount(
+                            notificationConfig = createReduceAmountNotificationConfig(
+                                amount = it.tezosFeeThreshold.toPlainString(),
+                                onConfirmClick = {
+                                    val fromAmount = quoteModel.fromTokenInfo.tokenAmount
+                                    val patchedAmount = fromAmount.copy(
+                                        value = fromAmount.value - it.tezosFeeThreshold,
+                                    )
+                                    actions.onReduceAmount(patchedAmount)
+                                },
                             ),
-                        )
-                    }
+                        ),
+                    )
                 }
             }
         }
@@ -1353,20 +1343,14 @@ internal class StateBuilder(
         )
     }
 
-    private fun createReduceAmountNotificationConfig(
-        amount: String,
-        onConfirmClick: () -> Unit,
-        onDismissClick: () -> Unit,
-    ): NotificationConfig {
+    private fun createReduceAmountNotificationConfig(amount: String, onConfirmClick: () -> Unit): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.send_notification_high_fee_title),
             subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(amount)),
             iconResId = R.drawable.img_attention_20,
-            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
-                primaryText = resourceReference(R.string.xtz_withdrawal_message_reduce, wrappedList(amount)),
-                onPrimaryClick = onConfirmClick,
-                secondaryText = resourceReference(R.string.xtz_withdrawal_message_ignore),
-                onSecondaryClick = onDismissClick,
+            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(R.string.xtz_withdrawal_message_reduce, wrappedList(amount)),
+                onClick = onConfirmClick,
             ),
         )
     }
