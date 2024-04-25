@@ -8,7 +8,7 @@ import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
-interface Mocks {
+interface MockContent {
 
     val successResponse: SuccessResponse
 
@@ -22,11 +22,15 @@ interface Mocks {
 
     val createProductWalletTaskResponse: CreateProductWalletTaskResponse
 
+    // Wallet2-specific
     val importWalletResponse: CreateProductWalletTaskResponse
 
+    // Twin-specific
     val finalizeTwinResponse: ScanResponse
 
+    // Twin-specific
     val createFirstTwinResponse: CreateWalletResponse
 
+    // Twin-specific
     val createSecondTwinResponse: CreateWalletResponse
 }
