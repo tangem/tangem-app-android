@@ -3,7 +3,10 @@ package com.tangem.features.send.impl.presentation.ui
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -50,7 +53,11 @@ internal fun SendNavigationButtons(
                 bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
-        SendingText(uiState = uiState, isVisible = isSendingState)
+        SendingText(
+            uiState = uiState,
+            isEditState = currentState.isFromConfirmation,
+            isVisible = isSendingState,
+        )
         SendDoneButtons(
             txUrl = sendState.txUrl,
             onExploreClick = uiState.clickIntents::onExploreClick,
@@ -130,7 +137,12 @@ private fun SendNavigationButton(
 }
 
 @Composable
-private fun SendingText(uiState: SendUiState, isVisible: Boolean, modifier: Modifier = Modifier) {
+private fun SendingText(
+    uiState: SendUiState,
+    isEditState: Boolean,
+    isVisible: Boolean,
+    modifier: Modifier = Modifier,
+) {
     var isVisibleProxy by remember { mutableStateOf(isVisible) }
 
     // text appearance delay for smooth screen transitions
@@ -148,8 +160,8 @@ private fun SendingText(uiState: SendUiState, isVisible: Boolean, modifier: Modi
         exit = slideOutVertically().plus(fadeOut()),
         label = "Animate show sending state text",
     ) {
-        val amountState = uiState.amountState
-        val feeState = uiState.feeState
+        val amountState = uiState.getAmountState(isEditState)
+        val feeState = uiState.getFeeState(isEditState)
         val fiatRate = feeState?.rate
         val fiatAmount = amountState?.amountTextField?.fiatAmount
         val feeFiat = fiatRate?.let { feeState.fee?.amount?.value?.multiply(it) }
@@ -230,11 +242,11 @@ private fun getButtonData(
         SendUiStateType.Amount,
         SendUiStateType.Recipient,
         SendUiStateType.Fee,
-        -> if (currentState.isFromConfirmation) {
-            R.string.common_continue to uiState.clickIntents::onNextClick
-        } else {
-            R.string.common_next to uiState.clickIntents::onNextClick
-        }
+        -> R.string.common_next to { uiState.clickIntents.onNextClick() }
+        SendUiStateType.EditFee,
+        SendUiStateType.EditAmount,
+        SendUiStateType.EditRecipient,
+        -> R.string.common_continue to { uiState.clickIntents.onNextClick(isFromEdit = true) }
         SendUiStateType.Send -> when {
             isSuccess -> R.string.common_close
             isSending -> R.string.send_sending
@@ -245,10 +257,13 @@ private fun getButtonData(
 
 private fun isButtonEnabled(currentState: SendUiCurrentScreen, uiState: SendUiState): Boolean {
     return when (currentState.type) {
-        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Send -> uiState.sendState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled
+        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled
+        SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled
+        SendUiStateType.Send -> uiState.sendState?.isPrimaryButtonEnabled
+        SendUiStateType.EditAmount -> uiState.editAmountState?.isPrimaryButtonEnabled
+        SendUiStateType.EditRecipient -> uiState.editRecipientState?.isPrimaryButtonEnabled
+        SendUiStateType.EditFee -> uiState.editFeeState?.isPrimaryButtonEnabled
         else -> true
-    }
+    } ?: false
 }
