@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.sdk.mocks.wallet2
+package com.tangem.tap.domain.sdk.mocks.content
 
 import com.tangem.common.SuccessResponse
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -6,10 +6,10 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.tap.domain.sdk.mocks.Mocks
+import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 
-object Wallet2Mocks : Mocks {
+object Wallet2MockContent : MockContent {
 
     override val scanResponse: ScanResponse
         get() = TODO("Not yet implemented")
