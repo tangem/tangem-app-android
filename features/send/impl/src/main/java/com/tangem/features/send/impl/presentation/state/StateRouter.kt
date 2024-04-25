@@ -18,6 +18,9 @@ internal class StateRouter(
     val currentState: StateFlow<SendUiCurrentScreen>
         get() = mutableCurrentState
 
+    val isEditState: Boolean
+        get() = currentState.value.isFromConfirmation
+
     fun clear() {
         mutableCurrentState.update { getInitState() }
     }
@@ -35,21 +38,29 @@ internal class StateRouter(
                 else -> popBackStack()
             }
             else -> when (type) {
-                SendUiStateType.Amount -> continueToSend(::showRecipient)
+                SendUiStateType.Amount -> showRecipient()
                 SendUiStateType.Fee -> showSend()
-                SendUiStateType.Send -> continueToSend(::showAmount)
-                else -> continueToSend(::popBackStack)
+                SendUiStateType.Send -> showAmount()
+                SendUiStateType.Recipient -> popBackStack()
+                SendUiStateType.EditAmount -> showSend()
+                SendUiStateType.EditRecipient -> showSend()
+                SendUiStateType.EditFee -> showSend()
+                else -> popBackStack()
             }
         }
     }
 
     fun onNextClick() {
         when (currentState.value.type) {
-            SendUiStateType.Recipient -> continueToSend(::showAmount)
+            SendUiStateType.Recipient -> showAmount()
             SendUiStateType.Amount,
             SendUiStateType.Fee,
+            SendUiStateType.EditAmount,
+            SendUiStateType.EditRecipient,
+            SendUiStateType.EditFee,
             -> showSend()
             SendUiStateType.Send -> onBackClick()
+
             else -> popBackStack()
         }
     }
@@ -67,26 +78,40 @@ internal class StateRouter(
 
     fun showAmount(isFromConfirmation: Boolean = false) {
         analyticsEventsHandler.send(SendAnalyticEvents.AmountScreenOpened)
-        mutableCurrentState.update { SendUiCurrentScreen(SendUiStateType.Amount, isFromConfirmation) }
+        mutableCurrentState.update {
+            if (isFromConfirmation) {
+                SendUiCurrentScreen(SendUiStateType.EditAmount, true)
+            } else {
+                SendUiCurrentScreen(SendUiStateType.Amount, false)
+            }
+        }
     }
 
     fun showRecipient(isFromConfirmation: Boolean = false) {
         analyticsEventsHandler.send(SendAnalyticEvents.AddressScreenOpened)
-        mutableCurrentState.update { SendUiCurrentScreen(SendUiStateType.Recipient, isFromConfirmation) }
+        mutableCurrentState.update {
+            if (isFromConfirmation) {
+                SendUiCurrentScreen(SendUiStateType.EditRecipient, true)
+            } else {
+                SendUiCurrentScreen(SendUiStateType.Recipient, false)
+            }
+        }
     }
 
     fun showFee(isFromConfirmation: Boolean = false) {
         analyticsEventsHandler.send(SendAnalyticEvents.FeeScreenOpened)
-        mutableCurrentState.update { SendUiCurrentScreen(SendUiStateType.Fee, isFromConfirmation) }
+        mutableCurrentState.update {
+            if (isFromConfirmation) {
+                SendUiCurrentScreen(SendUiStateType.EditFee, true)
+            } else {
+                SendUiCurrentScreen(SendUiStateType.Fee, false)
+            }
+        }
     }
 
     fun showSend() {
         analyticsEventsHandler.send(SendAnalyticEvents.ConfirmationScreenOpened)
         mutableCurrentState.update { SendUiCurrentScreen(SendUiStateType.Send, isFromConfirmation = false) }
-    }
-
-    private fun continueToSend(show: () -> Unit) {
-        if (currentState.value.isFromConfirmation) showSend() else show()
     }
 
     private fun getInitState() = if (isEditingDisabled) {
