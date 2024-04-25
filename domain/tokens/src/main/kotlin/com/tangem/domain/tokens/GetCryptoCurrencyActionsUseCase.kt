@@ -9,13 +9,10 @@ import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.math.BigDecimal
 
 /**
  * Use case to determine which TokenActions are available for a [CryptoCurrency]
@@ -29,7 +26,6 @@ class GetCryptoCurrencyActionsUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -82,8 +78,9 @@ class GetCryptoCurrencyActionsUseCase(
 
     /**
      * Creates list of action for expected order
-     * Actions priority: [Buy Send Receive Sell Swap]
+     * Actions priority: [Receive Send Swap Buy Sell]
      */
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private suspend fun createListOfActions(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
@@ -112,7 +109,6 @@ class GetCryptoCurrencyActionsUseCase(
 
         // send
         val sendUnavailabilityReason = getSendUnavailabilityReason(
-            userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             coinStatus = coinStatus,
         )
@@ -124,7 +120,10 @@ class GetCryptoCurrencyActionsUseCase(
 
         // swap
         if (userWallet.isMultiCurrency) {
-            if (marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency)) {
+            if (
+                marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency) &&
+                cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote
+            ) {
                 activeList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None))
             } else {
                 disabledList.add(
@@ -145,14 +144,42 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // sell
-        if (rampManager.availableForSell(cryptoCurrency)) {
-            activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
-        } else {
-            disabledList.add(
-                TokenActionsState.ActionState.Sell(
-                    unavailabilityReason = ScenarioUnavailabilityReason.SellUnavailable(cryptoCurrency.name),
-                ),
-            )
+        val sellSupportedByService = rampManager.availableForSell(cryptoCurrency)
+        val sendAvailable = sendUnavailabilityReason is ScenarioUnavailabilityReason.None
+
+        when {
+            sellSupportedByService && sendAvailable -> {
+                activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
+            }
+            sellSupportedByService && !sendAvailable -> {
+                (sendUnavailabilityReason as? ScenarioUnavailabilityReason.EmptyBalance)?.let {
+                    disabledList.add(
+                        TokenActionsState.ActionState.Sell(
+                            unavailabilityReason = it.copy(
+                                withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL,
+                            ),
+                        ),
+                    )
+                }
+                (sendUnavailabilityReason as? ScenarioUnavailabilityReason.PendingTransaction)?.let {
+                    disabledList.add(
+                        TokenActionsState.ActionState.Sell(
+                            unavailabilityReason = it.copy(
+                                withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL,
+                            ),
+                        ),
+                    )
+                }
+            }
+            else -> {
+                disabledList.add(
+                    TokenActionsState.ActionState.Sell(
+                        unavailabilityReason = ScenarioUnavailabilityReason.NotSupportedBySellService(
+                            cryptoCurrency.name,
+                        ),
+                    ),
+                )
+            }
         }
 
         // hide
@@ -180,9 +207,9 @@ class GetCryptoCurrencyActionsUseCase(
                 ),
             )
         }
-        actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.NoQuotes))
-        actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.NoQuotes))
-        actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.NoQuotes))
+        actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.Unreachable))
+        actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.Unreachable))
+        actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.Unreachable))
 
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             actionsList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None))
@@ -191,34 +218,22 @@ class GetCryptoCurrencyActionsUseCase(
         return actionsList
     }
 
-    private suspend fun getSendUnavailabilityReason(
-        userWalletId: UserWalletId,
+    private fun getSendUnavailabilityReason(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
     ): ScenarioUnavailabilityReason {
-        val insufficientFundsForFee = insufficientFundsForFee(
-            userWalletId = userWalletId,
-            tokenStatus = cryptoCurrencyStatus,
-            coinStatus = coinStatus,
-        )
-
         return when {
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
-                ScenarioUnavailabilityReason.EmptyBalance
-            }
-            insufficientFundsForFee != null -> {
-                ScenarioUnavailabilityReason.InsufficientFundsForFee(
-                    currencyName = insufficientFundsForFee.currencyName,
-                    networkName = insufficientFundsForFee.networkName,
-                    feeCurrencyName = insufficientFundsForFee.feeCurrencyName,
-                    feeCurrencySymbol = insufficientFundsForFee.feeCurrencySymbol,
-                )
+                ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
             }
             currenciesRepository.hasPendingTransactions(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 coinStatus = coinStatus,
             ) -> {
-                ScenarioUnavailabilityReason.PendingTransaction(coinStatus?.currency?.symbol.orEmpty())
+                ScenarioUnavailabilityReason.PendingTransaction(
+                    withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
+                    cryptoCurrencySymbol = coinStatus?.currency?.symbol.orEmpty(),
+                )
             }
             else -> {
                 ScenarioUnavailabilityReason.None
@@ -226,93 +241,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
     }
 
-    private suspend fun insufficientFundsForFee(
-        userWalletId: UserWalletId,
-        tokenStatus: CryptoCurrencyStatus,
-        coinStatus: CryptoCurrencyStatus?,
-    ): FeeInfo? {
-        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency)
-        coinStatus ?: return null
-        return when {
-            sendFeatureToggles.isRedesignedSendEnabled && !tokenStatus.value.amount.isZero() -> {
-                null
-            }
-            feePaidCurrency is FeePaidCurrency.Coin &&
-                !tokenStatus.value.amount.isZero() &&
-                coinStatus.value.amount.isZero() -> {
-                FeeInfo(
-                    currencyName = tokenStatus.currency.name,
-                    networkName = coinStatus.currency.network.name,
-                    feeCurrencyName = coinStatus.currency.name,
-                    feeCurrencySymbol = coinStatus.currency.symbol,
-                )
-            }
-            feePaidCurrency is FeePaidCurrency.SameCurrency && !tokenStatus.value.amount.isZero() -> {
-                FeeInfo(
-                    currencyName = tokenStatus.currency.name,
-                    networkName = coinStatus.currency.network.name,
-                    feeCurrencyName = coinStatus.currency.name,
-                    feeCurrencySymbol = coinStatus.currency.symbol,
-                )
-            }
-            feePaidCurrency is FeePaidCurrency.Token -> {
-                val feePaidTokenBalance = feePaidCurrency.balance
-                val amount = tokenStatus.value.amount ?: return null
-                if (!amount.isZero() && feePaidTokenBalance.isZero()) {
-                    constructTokenBalanceNotEnoughWarning(
-                        userWalletId = userWalletId,
-                        tokenStatus = tokenStatus,
-                        feePaidToken = feePaidCurrency,
-                    )
-                } else {
-                    null
-                }
-            }
-            else -> null
-        }
-    }
-
-    private suspend fun constructTokenBalanceNotEnoughWarning(
-        userWalletId: UserWalletId,
-        tokenStatus: CryptoCurrencyStatus,
-        feePaidToken: FeePaidCurrency.Token,
-    ): FeeInfo {
-        val token = currenciesRepository
-            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
-            .find {
-                it is CryptoCurrency.Token &&
-                    it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
-                    it.network.derivationPath == tokenStatus.currency.network.derivationPath
-            }
-        return if (token != null) {
-            FeeInfo(
-                currencyName = tokenStatus.currency.name,
-                networkName = token.network.name,
-                feeCurrencyName = feePaidToken.name,
-                feeCurrencySymbol = feePaidToken.symbol,
-            )
-        } else {
-            FeeInfo(
-                currencyName = tokenStatus.currency.name,
-                networkName = tokenStatus.currency.network.name,
-                feeCurrencyName = feePaidToken.name,
-                feeCurrencySymbol = feePaidToken.symbol,
-            )
-        }
-    }
-
     private fun isAddressAvailable(networkAddress: NetworkAddress?): Boolean {
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
     }
-
-    private fun BigDecimal?.isZero(): Boolean {
-        return this?.signum() == 0
-    }
-
-    data class FeeInfo(
-        val currencyName: String,
-        val networkName: String,
-        val feeCurrencyName: String,
-        val feeCurrencySymbol: String,
-    )
 }
