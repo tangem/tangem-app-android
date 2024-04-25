@@ -45,7 +45,12 @@ fun SimpleTextField(
 ) {
     val proxyValue by remember(value) { derivedStateOf { value } }
     var textFieldValueState by remember {
-        mutableStateOf(TextFieldValue(text = value))
+        mutableStateOf(
+            TextFieldValue(
+                text = value,
+                selection = TextRange(value.length, value.length),
+            ),
+        )
     }
     val focusRequester = remember { FocusRequester.Default }
     val customTextSelectionColors = TextSelectionColors(
