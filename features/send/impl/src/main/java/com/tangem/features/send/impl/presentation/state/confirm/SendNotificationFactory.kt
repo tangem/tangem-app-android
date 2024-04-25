@@ -49,10 +49,13 @@ internal class SendNotificationFactory(
         .filter { it.type == SendUiStateType.Send }
         .map {
             val state = currentStateProvider()
-            val sendState = state.sendState ?: return@map persistentListOf()
-            val feeState = state.feeState ?: return@map persistentListOf()
+            val isEditState = stateRouterProvider().isEditState
             val balance = cryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
-            val amountValue = state.amountState?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO
+            val sendState = state.sendState ?: return@map persistentListOf()
+            val feeState = state.getFeeState(isEditState) ?: return@map persistentListOf()
+            val amountState = state.getAmountState(isEditState) ?: return@map persistentListOf()
+
+            val amountValue = amountState.amountTextField.cryptoAmount.value ?: BigDecimal.ZERO
             val feeValue = feeState.fee?.amount?.value ?: BigDecimal.ZERO
             val isFeeCoverage = checkFeeCoverage(
                 isSubtractAvailable = isSubtractAvailableProvider(),
