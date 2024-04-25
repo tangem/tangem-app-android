@@ -8,18 +8,21 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal class SendAmountFieldChangeConverter(
+    private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
 ) : Converter<String, SendUiState> {
     override fun convert(value: String): SendUiState {
         val state = currentStateProvider()
-        val amountState = state.amountState ?: return state
+        val isEditState = stateRouterProvider().isEditState
+        val amountState = state.getAmountState(isEditState) ?: return state
         val amountTextField = amountState.amountTextField
 
         if (value.isEmpty()) return state.emptyState()
@@ -35,7 +38,8 @@ internal class SendAmountFieldChangeConverter(
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
         val isExceedBalance = checkValue.checkExceedBalance(amountTextField)
         val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isZero() else decimalCryptoValue.isZero()
-        return state.copy(
+        return state.copyWrapped(
+            isEditState = isEditState,
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = !isExceedBalance && !isZero,
                 amountTextField = amountTextField.copy(
@@ -75,9 +79,11 @@ internal class SendAmountFieldChangeConverter(
     }
 
     private fun SendUiState.emptyState(): SendUiState {
-        if (amountState == null) return this
+        val isEditState = stateRouterProvider().isEditState
+        val amountState = getAmountState(isEditState) ?: return this
         val amountTextField = amountState.amountTextField
-        return copy(
+        return copyWrapped(
+            isEditState = isEditState,
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = false,
                 amountTextField = amountTextField.copy(
