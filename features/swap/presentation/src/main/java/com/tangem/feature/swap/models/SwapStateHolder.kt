@@ -20,7 +20,6 @@ data class SwapStateHolder(
     val alert: SwapWarning.GenericWarning? = null,
     val changeCardsButtonState: ChangeCardsButtonState = ChangeCardsButtonState.ENABLED,
     val providerState: ProviderState,
-    val reduceAmountIgnore: Boolean, // ignore warning about reducing XTZ amount by 0.01
 
     val fee: FeeItemState = FeeItemState.Empty,
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
