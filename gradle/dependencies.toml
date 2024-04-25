@@ -86,7 +86,7 @@ room = "2.6.1"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-603"
+tangemBlockchainSdk = "develop-609"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-346"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
