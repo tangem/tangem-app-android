@@ -6,6 +6,7 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.TangemTechApiV2
 import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
 import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
@@ -57,45 +58,33 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemTechApi(@NetworkMoshi moshi: Moshi, @ApplicationContext context: Context): TangemTechApi {
-        return Retrofit.Builder()
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
-            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
-            .client(
-                OkHttpClient.Builder()
-                    .addHeaders(
-                        CacheControlHeader,
-                        // TODO("refactor header init") get auth data after biometric auth to avoid race condition
-                        // AuthenticationHeader(authProvider),
-                    )
-                    .addLoggers(context)
-                    .build(),
-            )
-            .build()
-            .create(TangemTechApi::class.java)
+    fun provideTangemTechApi(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        appVersionProvider: AppVersionProvider,
+    ): TangemTechApi {
+        return provideTangemTechApiInternal(moshi, context, appVersionProvider, PROD_V1_TANGEM_TECH_BASE_URL)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemTechApiV2(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        appVersionProvider: AppVersionProvider,
+    ): TangemTechApiV2 {
+        return provideTangemTechApiInternal(moshi, context, appVersionProvider, PROD_V2_TANGEM_TECH_BASE_URL)
     }
 
     @Provides
     @DevTangemApi
     @Singleton
-    fun provideTangemTechDevApi(@NetworkMoshi moshi: Moshi, @ApplicationContext context: Context): TangemTechApi {
-        return Retrofit.Builder()
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
-            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
-            .client(
-                OkHttpClient.Builder()
-                    .addHeaders(
-                        CacheControlHeader,
-                        // TODO("refactor header init") get auth data after biometric auth to avoid race condition
-                        // AuthenticationHeader(authProvider),
-                    )
-                    .addLoggers(context)
-                    .build(),
-            )
-            .build()
-            .create(TangemTechApi::class.java)
+    fun provideTangemTechDevApi(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        appVersionProvider: AppVersionProvider,
+    ): TangemTechApi {
+        return provideTangemTechApiInternal(moshi, context, appVersionProvider, DEV_V1_TANGEM_TECH_BASE_URL)
     }
 
     @Provides
@@ -105,32 +94,58 @@ class NetworkModule {
         @ApplicationContext context: Context,
         appVersionProvider: AppVersionProvider,
     ): TangemTechServiceApi {
+        return provideTangemTechApiInternal(
+            moshi,
+            context,
+            appVersionProvider,
+            PROD_V1_TANGEM_TECH_BASE_URL,
+            timeoutSeconds = TANGEM_TECH_SERVICE_TIMEOUT_SECONDS,
+        )
+    }
+
+    private inline fun <reified T> provideTangemTechApiInternal(
+        moshi: Moshi,
+        context: Context,
+        appVersionProvider: AppVersionProvider,
+        baseUrl: String,
+        timeoutSeconds: Long? = null,
+    ): T {
+        val client = OkHttpClient.Builder()
+            .let { builder ->
+                if (timeoutSeconds != null) {
+                    builder.callTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                } else {
+                    builder
+                }
+            }
+            .addHeaders(
+                CacheControlHeader,
+                AppVersionPlatformHeaders(appVersionProvider),
+                // TODO("refactor header init") get auth data after biometric auth to avoid race condition
+                // AuthenticationHeader(authProvider),
+            )
+            .addLoggers(context)
+            .build()
+
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
-            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
-            .client(
-                OkHttpClient.Builder()
-                    .callTimeout(timeout = 5, unit = TimeUnit.SECONDS)
-                    .addHeaders(
-                        CacheControlHeader,
-                        AppVersionPlatformHeaders(appVersionProvider),
-                        // TODO("refactor header init") get auth data after biometric auth to avoid race condition
-                        // AuthenticationHeader(authProvider),
-                    )
-                    .addLoggers(context)
-                    .build(),
-            )
+            .baseUrl(baseUrl)
+            .client(client)
             .build()
-            .create(TangemTechServiceApi::class.java)
+            .create(T::class.java)
     }
 
     private companion object {
         const val PROD_EXPRESS_BASE_URL = "https://express.tangem.com/v1/"
         const val DEV_EXPRESS_BASE_URL = "[REDACTED_ENV_URL]"
 
-        const val PROD_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
-        const val DEV_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
+        const val DEV_V1_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
+
+        const val PROD_V1_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
+        const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
+
+        const val TANGEM_TECH_SERVICE_TIMEOUT_SECONDS = 5L
 
         const val PAYMENTOLOGY_BASE_URL: String = "https://paymentologygate.oa.r.appspot.com/"
         const val API_ONE_INCH_TIMEOUT_MS = 5000L
