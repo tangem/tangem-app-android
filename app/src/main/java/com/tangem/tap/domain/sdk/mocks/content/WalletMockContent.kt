@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.sdk.mocks.wallet
+package com.tangem.tap.domain.sdk.mocks.content
 
 import com.tangem.common.SuccessResponse
 import com.tangem.common.card.*
@@ -13,11 +13,11 @@ import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.tap.domain.sdk.mocks.Mocks
+import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import java.util.Date
 
-object WalletMocks : Mocks {
+object WalletMockContent : MockContent {
 
     private val primaryCard = PrimaryCard(
         cardId = "AC05000000086747",
