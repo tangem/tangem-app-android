@@ -96,6 +96,7 @@ private fun SendAmountCurrencyButton(button: SendAmountSegmentedButtonsConfig, i
             TokenIcon(
                 state = button.iconState,
                 shouldDisplayNetwork = false,
+                shouldDisplayCustom = false,
                 modifier = Modifier
                     .size(TangemTheme.dimens.size18),
             )
