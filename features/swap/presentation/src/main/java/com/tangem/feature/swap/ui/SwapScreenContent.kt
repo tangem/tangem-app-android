@@ -497,7 +497,6 @@ private val state = SwapStateHolder(
     providerState = ProviderState.Loading(),
     priceImpact = PriceImpact.Empty(),
     shouldShowMaxAmount = true,
-    reduceAmountIgnore = false,
     tosState = TosState(
         tosLink = LegalState(
             title = stringReference("Terms of Use"),
