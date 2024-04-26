@@ -15,6 +15,7 @@ import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
@@ -26,6 +27,7 @@ import java.math.RoundingMode
 
 internal class EthereumCustomFeeConverter(
     private val clickIntents: SendClickIntents,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
 ) : CustomFeeConverter<Fee.Ethereum> {
@@ -71,7 +73,9 @@ internal class EthereumCustomFeeConverter(
                     imeAction = if (checkExceedBalance(feeValue)) ImeAction.None else ImeAction.Done,
                     keyboardType = KeyboardType.Number,
                 ),
-                keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
+                keyboardActions = KeyboardActions(
+                    onDone = { clickIntents.onNextClick(stateRouterProvider().isEditState) },
+                ),
             ),
         )
     }
