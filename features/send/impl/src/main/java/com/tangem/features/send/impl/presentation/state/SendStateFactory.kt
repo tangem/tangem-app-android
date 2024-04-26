@@ -285,7 +285,11 @@ internal class SendStateFactory(
         return state.copy(
             sendState = state.sendState?.copy(
                 isSending = isSending,
-                isPrimaryButtonEnabled = isPrimaryButtonEnabled(state, state.sendState.notifications),
+                isPrimaryButtonEnabled = isPrimaryButtonEnabled(
+                    state = state,
+                    isSending = isSending,
+                    notifications = state.sendState.notifications,
+                ),
             ),
         )
     }
@@ -309,7 +313,11 @@ internal class SendStateFactory(
         val sendState = state.sendState ?: return state
         return state.copy(
             sendState = sendState.copy(
-                isPrimaryButtonEnabled = isPrimaryButtonEnabled(state, notifications),
+                isPrimaryButtonEnabled = isPrimaryButtonEnabled(
+                    state = state,
+                    isSending = sendState.isSending,
+                    notifications = notifications,
+                ),
                 notifications = notifications,
                 showTapHelp = sendState.showTapHelp && notifications.isEmpty(),
             ),
@@ -324,11 +332,14 @@ internal class SendStateFactory(
         )
     }
 
-    private fun isPrimaryButtonEnabled(state: SendUiState, notifications: ImmutableList<SendNotification>): Boolean {
-        val sendState = state.sendState ?: return false
+    private fun isPrimaryButtonEnabled(
+        state: SendUiState,
+        isSending: Boolean,
+        notifications: ImmutableList<SendNotification>,
+    ): Boolean {
         val feeState = state.getFeeState(stateRouterProvider().isEditState) ?: return false
         val hasErrorNotifications = notifications.any { it is SendNotification.Error }
-        return !hasErrorNotifications && !sendState.isSending && feeState.feeSelectorState is FeeSelectorState.Content
+        return !hasErrorNotifications && !isSending && feeState.feeSelectorState is FeeSelectorState.Content
     }
     //endregion
 }
