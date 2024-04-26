@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.convertToAmount
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -23,6 +24,7 @@ private const val FIAT_DECIMALS = 2
 
 internal class SendAmountFieldConverter(
     private val clickIntents: SendClickIntents,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
 ) : Converter<String, SendTextField.AmountField> {
@@ -48,7 +50,9 @@ internal class SendAmountFieldConverter(
                 imeAction = if (isDoneActionEnabled) ImeAction.Done else ImeAction.None,
                 keyboardType = KeyboardType.Number,
             ),
-            keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
+            keyboardActions = KeyboardActions(
+                onDone = { clickIntents.onNextClick(stateRouterProvider().isEditState) },
+            ),
             isFiatValue = false,
             cryptoAmount = cryptoAmount,
             fiatAmount = getAppCurrencyAmount(fiatDecimal, appCurrencyProvider()),
