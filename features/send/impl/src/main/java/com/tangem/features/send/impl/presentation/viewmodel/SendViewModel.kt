@@ -47,7 +47,7 @@ import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
-import com.tangem.features.send.impl.presentation.analytics.utils.SendOnNextScreenAnalyticSender
+import com.tangem.features.send.impl.presentation.analytics.utils.SendScreenAnalyticSender
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
@@ -174,9 +174,10 @@ internal class SendViewModel @Inject constructor(
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
     )
 
-    private val sendOnNextScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
-        SendOnNextScreenAnalyticSender(
+    private val sendScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
+        SendScreenAnalyticSender(
             stateRouterProvider = Provider { stateRouter },
+            currentStateProvider = Provider { uiState },
             analyticsEventHandler = analyticsEventHandler,
         )
     }
@@ -497,10 +498,21 @@ internal class SendViewModel @Inject constructor(
         stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
     }
 
+    override fun onCloseClick() {
+        sendScreenAnalyticSender.sendOnClose()
+        when (stateRouter.currentState.value.type) {
+            SendUiStateType.EditAmount,
+            SendUiStateType.EditFee,
+            SendUiStateType.EditRecipient,
+            -> onBackClick()
+            else -> popBackStack()
+        }
+    }
+
     override fun onNextClick(isFromEdit: Boolean) {
         val currentState = stateRouter.currentState.value
         uiState = stateFactory.syncEditStates(isFromEdit = isFromEdit)
-        sendOnNextScreenAnalyticSender.send(currentState.type, uiState)
+        sendScreenAnalyticSender.send(currentState.type, uiState)
         when (currentState.type) {
             SendUiStateType.Fee,
             SendUiStateType.EditFee,
