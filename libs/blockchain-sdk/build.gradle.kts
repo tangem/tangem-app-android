@@ -32,6 +32,12 @@ dependencies {
     implementation(deps.timber)
     // endregion
 
+    // region Firebase libraries
+    implementation(platform(deps.firebase.bom))
+    implementation(deps.firebase.analytics)
+    implementation(deps.firebase.crashlytics)
+    // endregion
+
     // region Tangem libraries
     implementation(deps.tangem.blockchain) { exclude(module = "joda-time") }
     implementation(deps.tangem.card.core)
