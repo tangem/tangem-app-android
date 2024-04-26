@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.reactive.asFlow
 
+private const val PING_SERVER = "https://clients3.google.com/generate_204"
 private const val PING_INTERVAL = 5_000
 
 internal class RealInternetConnectionManager : NetworkConnectionManager {
@@ -24,7 +25,12 @@ internal class RealInternetConnectionManager : NetworkConnectionManager {
 
     private val initialNetworkResult: Boolean by lazy {
         ReactiveNetwork
-            .checkInternetConnectivity()
+            .checkInternetConnectivity(
+                InternetObservingSettings.builder()
+                    .host(PING_SERVER)
+                    .port(443)
+                    .build(),
+            )
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
             .blockingGet()
@@ -33,6 +39,8 @@ internal class RealInternetConnectionManager : NetworkConnectionManager {
     override val isOnlineFlow: StateFlow<Boolean> = ReactiveNetwork
         .observeInternetConnectivity(
             InternetObservingSettings.builder()
+                .host(PING_SERVER)
+                .port(443)
                 .interval(PING_INTERVAL)
                 .build(),
         )
