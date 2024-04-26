@@ -46,6 +46,7 @@ internal class SendStateFactory(
     private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendAmountFieldConverter(
             clickIntents = clickIntents,
+            stateRouterProvider = stateRouterProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
             appCurrencyProvider = appCurrencyProvider,
         )
