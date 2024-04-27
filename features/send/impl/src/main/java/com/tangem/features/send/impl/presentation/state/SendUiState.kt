@@ -32,6 +32,7 @@ internal data class SendUiState(
     val editRecipientState: SendStates.RecipientState? = null,
     val editFeeState: SendStates.FeeState? = null,
     val isBalanceHidden: Boolean,
+    val isSubtracted: Boolean,
     val event: StateEvent<SendEvent>,
 ) {
 
