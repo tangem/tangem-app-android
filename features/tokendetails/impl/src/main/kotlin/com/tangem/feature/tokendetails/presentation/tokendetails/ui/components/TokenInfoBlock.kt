@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
 import com.tangem.features.tokendetails.impl.R
@@ -136,23 +138,13 @@ private val GrayscaleColorFilter: ColorFilter
     get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokenInfoBlock_LightTheme(
+private fun Preview_TokenInfoBlock(
     @PreviewParameter(TokenInfoStateProvider::class)
     state: TokenInfoBlockState,
 ) {
-    TangemTheme(isDark = false) {
-        TokenInfoBlock(state, Modifier.background(TangemTheme.colors.background.secondary))
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_TokenInfoBlock_DarkTheme(
-    @PreviewParameter(TokenInfoStateProvider::class)
-    state: TokenInfoBlockState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         TokenInfoBlock(state, Modifier.background(TangemTheme.colors.background.secondary))
     }
 }
