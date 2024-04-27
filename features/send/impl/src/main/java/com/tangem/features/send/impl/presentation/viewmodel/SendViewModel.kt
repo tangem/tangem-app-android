@@ -734,14 +734,12 @@ internal class SendViewModel @Inject constructor(
         val recipientState = uiState.getRecipientState(isFromConfirmation) ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
 
-        return feeCryptoCurrencyStatus?.let { feeCurrencyStatus ->
-            getFeeUseCase.invoke(
-                amount = amount,
-                destination = recipientState.addressTextField.value,
-                userWallet = userWallet,
-                cryptoCurrency = feeCurrencyStatus.currency,
-            )
-        }
+        return getFeeUseCase.invoke(
+            amount = amount,
+            destination = recipientState.addressTextField.value,
+            userWallet = userWallet,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+        )
     }
 // endregion
 
