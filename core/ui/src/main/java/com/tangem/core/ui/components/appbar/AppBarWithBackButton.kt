@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.appbar
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -67,17 +69,10 @@ fun AppBarWithBackButton(
 }
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
+@Preview(widthDp = 360, heightDp = 56, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewAppBarWithBackButtonInLightTheme() {
-    TangemTheme(isDark = false) {
-        AppBarWithBackButton(text = "Title", onBackClick = {})
-    }
-}
-
-@Preview(widthDp = 360, heightDp = 56, showBackground = true)
-@Composable
-private fun PreviewAppBarWithBackButtonInDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun PreviewAppBarWithBackButton() {
+    TangemThemePreview {
         AppBarWithBackButton(text = "Title", onBackClick = {})
     }
 }
