@@ -18,6 +18,7 @@ import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.isNullOrZero
 import java.math.BigDecimal
 
 private const val FIAT_DECIMALS = 2
@@ -34,12 +35,14 @@ internal class SendAmountFieldConverter(
         val cryptoDecimal = value.toBigDecimalOrDefault()
         val cryptoAmount = cryptoDecimal.convertToAmount(cryptoCurrencyStatus.currency)
         val fiatRate = cryptoCurrencyStatus.value.fiatRate
-        val (fiatValue, fiatDecimal) = if (value.isEmpty()) {
-            "" to BigDecimal.ZERO
-        } else {
-            val fiatDecimal = fiatRate?.multiply(cryptoDecimal) ?: BigDecimal.ZERO
-            val fiatValue = fiatDecimal.parseBigDecimal(FIAT_DECIMALS)
-            fiatValue to fiatDecimal
+        val (fiatValue, fiatDecimal) = when {
+            fiatRate.isNullOrZero() -> "" to null
+            value.isEmpty() -> "" to BigDecimal.ZERO
+            else -> {
+                val fiatDecimal = fiatRate?.multiply(cryptoDecimal)
+                val fiatValue = fiatDecimal?.parseBigDecimal(FIAT_DECIMALS).orEmpty()
+                fiatValue to fiatDecimal
+            }
         }
         val isDoneActionEnabled = !cryptoDecimal.isZero()
         return SendTextField.AmountField(
@@ -64,7 +67,7 @@ internal class SendAmountFieldConverter(
         )
     }
 
-    private fun getAppCurrencyAmount(fiatValue: BigDecimal, appCurrency: AppCurrency) = Amount(
+    private fun getAppCurrencyAmount(fiatValue: BigDecimal?, appCurrency: AppCurrency) = Amount(
         currencySymbol = appCurrency.symbol,
         value = fiatValue,
         decimals = FIAT_DECIMALS,
