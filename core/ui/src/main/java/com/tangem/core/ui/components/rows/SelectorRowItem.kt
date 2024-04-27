@@ -73,7 +73,7 @@ fun SelectorRowItem(
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
             )
-            if (preDot != null && postDot != null) {
+            if (preDot != null) {
                 SelectorValueContent(
                     preDot = preDot,
                     postDot = postDot,
@@ -97,7 +97,7 @@ fun SelectorRowItem(
 @Composable
 private fun RowScope.SelectorValueContent(
     preDot: TextReference,
-    postDot: TextReference,
+    postDot: TextReference?,
     ellipsizeOffset: Int? = null,
 ) {
     val ellipsis = if (ellipsizeOffset == null) {
@@ -115,18 +115,20 @@ private fun RowScope.SelectorValueContent(
             .weight(1f)
             .padding(start = TangemTheme.dimens.spacing4),
     )
-    Text(
-        text = "•",
-        style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.primary1,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
-    )
-    Text(
-        text = postDot.resolveReference(),
-        style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.tertiary,
-    )
+    if (postDot != null) {
+        Text(
+            text = "•",
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.primary1,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
+        )
+        Text(
+            text = postDot.resolveReference(),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+    }
 }
 
 @Preview
