@@ -168,11 +168,11 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         subtitle = resourceReference(id = R.string.no_account_send_to_create),
     )
 
-    class HasPendingTransactions(val coinSymbol: String) : Informational(
+    class HasPendingTransactions(val networkName: String) : Informational(
         title = resourceReference(R.string.warning_send_blocked_pending_transactions_title),
         subtitle = resourceReference(
-            id = R.string.warning_send_blocked_pending_transactions_message,
-            formatArgs = wrappedList(coinSymbol),
+            id = R.string.common_send_unavailable_due_pending_transaction,
+            formatArgs = wrappedList(networkName),
         ),
     )
 }

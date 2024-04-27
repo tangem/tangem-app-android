@@ -41,7 +41,7 @@ sealed class CryptoCurrencyWarning {
      */
     data class Rent(val rent: BigDecimal, val exemptionAmount: BigDecimal) : CryptoCurrencyWarning()
 
-    data class HasPendingTransactions(val blockchainSymbol: String) : CryptoCurrencyWarning()
+    data class HasPendingTransactions(val networkName: String) : CryptoCurrencyWarning()
 
     data class SwapPromo(
         val startDateTime: DateTime,
