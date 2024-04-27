@@ -57,6 +57,7 @@ internal class SendAmountStateConverter(
                 ),
             ),
             isSegmentedButtonsEnabled = !noFeeRate,
+            selectedButton = 0,
         )
     }
 }
