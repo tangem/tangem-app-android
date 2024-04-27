@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.transactions
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
@@ -62,23 +64,10 @@ fun TransactionDoneTitle(@StringRes titleRes: Int, date: Long, modifier: Modifie
 
 // region Previews
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TransactionDoneTitlePreview_Light() {
-    TangemTheme {
-        TransactionDoneTitle(
-            titleRes = R.string.sent_transaction_sent_title,
-            date = 0,
-            modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary)
-                .padding(TangemTheme.dimens.spacing16),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun TransactionDoneTitlePreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun TransactionDoneTitlePreview() {
+    TangemThemePreview {
         TransactionDoneTitle(
             titleRes = R.string.sent_transaction_sent_title,
             date = 0,
