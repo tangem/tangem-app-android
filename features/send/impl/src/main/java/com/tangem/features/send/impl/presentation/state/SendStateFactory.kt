@@ -18,6 +18,7 @@ import com.tangem.features.send.impl.presentation.state.common.SendSyncEditConve
 import com.tangem.features.send.impl.presentation.state.confirm.SendConfirmStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
+import com.tangem.features.send.impl.presentation.state.fee.checkFeeCoverage
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientHistoryListConverter
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientStateConverter
@@ -28,8 +29,9 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
+import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class SendStateFactory(
     private val clickIntents: SendClickIntents,
     private val stateRouterProvider: Provider<StateRouter>,
@@ -95,6 +97,7 @@ internal class SendStateFactory(
         isEditingDisabled = false,
         isBalanceHidden = false,
         cryptoCurrencyName = "",
+        isSubtracted = false,
     )
 
     fun getReadyState(): SendUiState {
@@ -280,6 +283,23 @@ internal class SendStateFactory(
     //endregion
 
     //region send
+    fun getIsAmountSubtractedState(isAmountSubtractAvailable: Boolean): SendUiState {
+        val state = currentStateProvider()
+        val balance = cryptoCurrencyStatusProvider().value.amount ?: return state
+        val amountState = state.getAmountState(stateRouterProvider().isEditState) ?: return state
+        val feeState = state.getFeeState(stateRouterProvider().isEditState) ?: return state
+        val amountValue = amountState.amountTextField.cryptoAmount.value ?: return state
+        val feeValue = feeState.fee?.amount?.value ?: BigDecimal.ZERO
+        return state.copy(
+            isSubtracted = checkFeeCoverage(
+                isSubtractAvailable = isAmountSubtractAvailable,
+                balance = balance,
+                amountValue = amountValue,
+                feeValue = feeValue,
+            ),
+        )
+    }
+
     fun getSendingStateUpdate(isSending: Boolean): SendUiState {
         val state = currentStateProvider()
         return state.copy(
