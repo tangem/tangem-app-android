@@ -45,7 +45,7 @@ internal fun checkFeeCoverage(
     feeValue: BigDecimal,
 ): Boolean {
     if (!isSubtractAvailable) return false
-    return balance < amountValue + feeValue && balance > feeValue
+    return balance < amountValue + feeValue && balance > feeValue && balance >= amountValue
 }
 
 /**
