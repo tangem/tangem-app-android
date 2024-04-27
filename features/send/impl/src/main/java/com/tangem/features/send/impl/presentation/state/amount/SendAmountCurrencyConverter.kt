@@ -38,6 +38,7 @@ internal class SendAmountCurrencyConverter(
                             keyboardType = KeyboardType.Number,
                         ),
                     ),
+                    selectedButton = amountState.segmentedButtonConfig.indexOfFirst { it.isFiat == value },
                 ),
             )
         }
