@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.models.ApprovePermissionButton
 import com.tangem.feature.swap.models.ApproveType
 import com.tangem.feature.swap.models.CancelPermissionButton
@@ -291,17 +293,10 @@ private fun getTitleForApproveType(approveType: ApproveType): String = when (app
 // region preview
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AgreementBottomSheet_InLightTheme() {
-    TangemTheme(isDark = false) {
-        SwapPermissionBottomSheetContent(content = previewData)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_AgreementBottomSheet_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_AgreementBottomSheet() {
+    TangemThemePreview {
         SwapPermissionBottomSheetContent(content = previewData)
     }
 }
