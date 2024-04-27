@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.resetcard
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
@@ -228,17 +230,10 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ResetCardScreenPreview_Light() {
-    TangemTheme {
-        ResetCardScreenSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun ResetCardScreenPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun ResetCardScreenPreview() {
+    TangemThemePreview {
         ResetCardScreenSample()
     }
 }

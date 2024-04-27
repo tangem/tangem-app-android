@@ -1,5 +1,6 @@
 package com.tangem.feature.tester.presentation.actions
 
+import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.feature.tester.impl.R
 
@@ -85,17 +87,10 @@ private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TesterActionsScreenPreview_Light() {
-    TangemTheme {
-        TesterActionsScreenSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun TesterActionsScreenPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun TesterActionsScreenPreview() {
+    TangemThemePreview {
         TesterActionsScreenSample()
     }
 }

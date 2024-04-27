@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.*
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 // region TextButton
@@ -319,17 +321,10 @@ private fun PrimaryButtonSample() {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PrimaryButtonPreview_Light() {
-    TangemTheme {
-        PrimaryButtonSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun PrimaryButtonPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun PrimaryButtonPreview() {
+    TangemThemePreview {
         PrimaryButtonSample()
     }
 }
@@ -383,17 +378,10 @@ private fun SecondaryButtonSample() {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SecondaryButtonPreview_Light() {
-    TangemTheme {
-        SecondaryButtonSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun SecondaryButtonPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun SecondaryButtonPreview() {
+    TangemThemePreview {
         SecondaryButtonSample()
     }
 }
@@ -414,19 +402,11 @@ private fun TextButtonSample() {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TextButtonPreview_LightTheme() {
-    TangemTheme {
+private fun TextButtonPreview() {
+    TangemThemePreview {
         TextButtonSample()
     }
 }
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun TextButtonPreview_DarkTheme() {
-    TangemTheme(isDark = true) {
-        TextButtonSample()
-    }
-}
-
 // endregion Preview

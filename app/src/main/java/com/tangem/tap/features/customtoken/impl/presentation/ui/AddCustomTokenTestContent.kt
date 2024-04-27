@@ -19,6 +19,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenChooseTokenBottomSheet.TestTokenItem
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenTestBlock
@@ -242,7 +243,7 @@ private fun TestBlock(
 @Preview
 @Composable
 private fun Preview_AddCustomTokenTestContent() {
-    TangemTheme {
+    TangemThemePreview {
         AddCustomTokenTestContent(state = AddCustomTokenPreviewData.createTestContent())
     }
 }

@@ -1,5 +1,6 @@
 package com.tangem.feature.tester.presentation.menu.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
 
@@ -64,23 +66,10 @@ internal fun TesterMenuScreen(state: TesterMenuContentState) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewTesterMenuScreen_InLightTheme() {
-    TangemTheme(isDark = false) {
-        TesterMenuScreen(
-            state = TesterMenuContentState(
-                onBackClick = {},
-                onFeatureTogglesClick = {},
-                onTesterActionsClick = {},
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewTesterMenuScreen_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun PreviewTesterMenuScreen() {
+    TangemThemePreview {
         TesterMenuScreen(
             state = TesterMenuContentState(
                 onBackClick = {},
