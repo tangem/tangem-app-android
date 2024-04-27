@@ -60,7 +60,7 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick
                 titleRes = title,
                 iconRes = icon,
                 preDot = getCryptoReference(feeAmount, feeState.isFeeApproximate),
-                postDot = feeAmount?.let { getFiatReference(it, feeState.rate, feeState.appCurrency) },
+                postDot = getFiatReference(feeAmount?.value, feeState.rate, feeState.appCurrency),
                 ellipsizeOffset = feeAmount?.currencySymbol?.length,
                 isSelected = true,
                 showDivider = false,
