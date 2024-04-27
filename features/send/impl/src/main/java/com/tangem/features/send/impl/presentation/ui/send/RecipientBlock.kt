@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.send
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
@@ -97,26 +99,12 @@ private fun MemoBlock(memo: SendTextField.RecipientMemo?) {
 
 // region Preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun RecipientBlockPreview_Light(
+private fun RecipientBlockPreview(
     @PreviewParameter(RecipientBlockPreviewProvider::class) value: SendStates.RecipientState,
 ) {
-    TangemTheme {
-        RecipientBlock(
-            recipientState = value,
-            isSuccess = true,
-            isEditingDisabled = false,
-            onClick = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun RecipientBlockPreview_Dark(
-    @PreviewParameter(RecipientBlockPreviewProvider::class) value: SendStates.RecipientState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         RecipientBlock(
             recipientState = value,
             isSuccess = true,

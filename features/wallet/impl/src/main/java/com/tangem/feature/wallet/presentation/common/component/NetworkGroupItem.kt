@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.common.component
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -13,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
@@ -92,17 +94,10 @@ private fun NetworkGroupItemSample(isDraggable: Boolean) {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun NetworkGroupItemPreview_Light(@PreviewParameter(NetworkGroupProvider::class) isDraggable: Boolean) {
-    TangemTheme {
-        NetworkGroupItemSample(isDraggable)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun NetworkGroupItemPreview_Dark(@PreviewParameter(NetworkGroupProvider::class) isDraggable: Boolean) {
-    TangemTheme(isDark = true) {
+private fun NetworkGroupItemPreview(@PreviewParameter(NetworkGroupProvider::class) isDraggable: Boolean) {
+    TangemThemePreview {
         NetworkGroupItemSample(isDraggable)
     }
 }
