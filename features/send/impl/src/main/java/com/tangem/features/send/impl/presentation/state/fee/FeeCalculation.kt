@@ -2,6 +2,7 @@ package com.tangem.features.send.impl.presentation.state.fee
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.common.extensions.minimalAmount
@@ -93,6 +94,13 @@ internal fun checkIfFeeTooHigh(feeSelectorState: FeeSelectorState.Content, onSho
     val isShow = feeSelectorState.selectedFee == FeeType.Custom && diff > FEE_MAX_DIFF
     if (isShow) onShow(diff.parseBigDecimal(ZERO_DECIMALS, RoundingMode.HALF_UP))
     return isShow
+}
+
+/**
+ * Checks if fee exceeds fee paid currency balance
+ */
+fun checkExceedBalance(feeBalance: BigDecimal?, feeAmount: BigDecimal?): Boolean {
+    return feeAmount == null || feeBalance == null || feeAmount.isZero() || feeAmount > feeBalance
 }
 
 private val FEE_MAX_DIFF = BigDecimal("5")
