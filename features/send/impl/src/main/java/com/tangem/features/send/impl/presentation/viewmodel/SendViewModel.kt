@@ -701,6 +701,7 @@ internal class SendViewModel @Inject constructor(
             val isShowStatus = uiState.feeState?.fee == null
             if (isShowStatus) {
                 uiState = feeStateFactory.onFeeOnLoadingState()
+                updateNotifications()
             }
             val result = callFeeUseCase()?.fold(
                 ifRight = {
