@@ -11,6 +11,7 @@ import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.isNullOrZero
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -31,13 +32,15 @@ internal class SendAmountFieldChangeConverter(
 
         val trimmedValue = value.trim()
         val cryptoValue = trimmedValue.getCryptoValue(amountTextField.isFiatValue, cryptoDecimals)
-        val fiatValue = trimmedValue.getFiatValue(amountTextField.isFiatValue, fiatDecimals)
         val decimalCryptoValue = cryptoValue.parseToBigDecimal(cryptoDecimals)
-        val decimalFiatValue = fiatValue.parseToBigDecimal(fiatDecimals)
+        val (fiatValue, decimalFiatValue) = trimmedValue.getFiatValue(
+            isFiatValue = amountTextField.isFiatValue,
+            decimals = fiatDecimals,
+        )
 
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
         val isExceedBalance = checkValue.checkExceedBalance(amountTextField)
-        val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isZero() else decimalCryptoValue.isZero()
+        val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isNullOrZero() else decimalCryptoValue.isZero()
         return state.copyWrapped(
             isEditState = isEditState,
             amountState = amountState.copy(
@@ -68,13 +71,18 @@ internal class SendAmountFieldChangeConverter(
         }
     }
 
-    private fun String.getFiatValue(isFiatValue: Boolean, decimals: Int): String {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val fiatRate = cryptoCurrencyStatus.value.fiatRate
-        return if (!isFiatValue && fiatRate != null) {
-            parseToBigDecimal(decimals).multiply(fiatRate).parseBigDecimal(decimals)
+    private fun String.getFiatValue(isFiatValue: Boolean, decimals: Int): Pair<String, BigDecimal?> {
+        val fiatRate = cryptoCurrencyStatusProvider().value.fiatRate
+        return if (fiatRate != null) {
+            val fiatValue = if (!isFiatValue) {
+                parseToBigDecimal(decimals).multiply(fiatRate).parseBigDecimal(decimals)
+            } else {
+                this
+            }
+            val decimalFiatValue = fiatValue.parseToBigDecimal(decimals)
+            fiatValue to decimalFiatValue
         } else {
-            this
+            "" to null
         }
     }
 
