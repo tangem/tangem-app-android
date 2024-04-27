@@ -22,11 +22,11 @@ internal fun getCryptoReference(amount: Amount?, isFeeApproximate: Boolean): Tex
     )
 }
 
-internal fun getFiatReference(amount: Amount?, rate: BigDecimal?, appCurrency: AppCurrency): TextReference? {
-    if (amount == null) return null
+internal fun getFiatReference(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurrency): TextReference? {
+    if (value == null || rate == null) return null
     return stringReference(
         BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = rate?.let { amount.value?.multiply(it) },
+            fiatAmount = value.multiply(rate),
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
         ),
