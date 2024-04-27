@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.customtoken.impl.presentation.states.AddCustomTokenStateHolder
 import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenFloatingButton
 import com.tangem.tap.features.customtoken.impl.presentation.ui.components.AddCustomTokenForm
@@ -70,7 +71,7 @@ internal fun AddCustomTokenContent(state: AddCustomTokenStateHolder.Content, mod
 @Preview
 @Composable
 private fun Preview_AddCustomTokenContent() {
-    TangemTheme {
+    TangemThemePreview {
         AddCustomTokenContent(state = AddCustomTokenPreviewData.createContent())
     }
 }
