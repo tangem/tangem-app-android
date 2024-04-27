@@ -20,6 +20,7 @@ import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.common.component.token.*
 import com.tangem.feature.wallet.presentation.common.state.TokenItemState
@@ -392,7 +393,7 @@ private fun calculateLayoutHeight(
 @Preview(widthDp = 360)
 @Composable
 private fun Preview_TokenItem_InLight(@PreviewParameter(TokenItemStateProvider::class) state: TokenItemState) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TokenItem(state = state, isBalanceHidden = false)
     }
 }
