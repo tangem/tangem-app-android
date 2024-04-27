@@ -34,7 +34,7 @@ internal class StateRouter(
         when {
             isSuccess -> popBackStack()
             isEditingDisabled -> when (type) {
-                SendUiStateType.Send -> showFee()
+                SendUiStateType.EditFee -> showSend()
                 else -> popBackStack()
             }
             else -> when (type) {
