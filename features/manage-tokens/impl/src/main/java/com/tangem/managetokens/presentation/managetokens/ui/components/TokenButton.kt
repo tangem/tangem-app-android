@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import com.tangem.core.ui.components.buttons.PrimarySmallButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.managetokens.state.TokenButtonType
@@ -66,17 +68,10 @@ internal fun TokenButton(type: TokenButtonType, onClick: () -> Unit, modifier: M
 }
 
 @Preview(backgroundColor = 0xffffff, showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TokenButton_Light_Preview(@PreviewParameter(TokenButtonTypeProvider::class) type: TokenButtonType) {
-    TangemTheme(isDark = false) {
-        TokenButton(type = type, {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun TokenButton_Dark_Preview(@PreviewParameter(TokenButtonTypeProvider::class) type: TokenButtonType) {
-    TangemTheme(isDark = true) {
+private fun TokenButton_Preview(@PreviewParameter(TokenButtonTypeProvider::class) type: TokenButtonType) {
+    TangemThemePreview {
         TokenButton(type = type, {})
     }
 }
