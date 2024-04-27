@@ -71,7 +71,7 @@ internal class SendNotificationFactory(
             buildList {
                 // errors
                 addFeeUnreachableNotification(feeState.feeSelectorState)
-                addExceedBalanceNotification(feeValue, sendingAmount)
+                addExceedBalanceNotification(feeValue, sendingAmount, isFeeCoverage)
                 addExceedsBalanceNotification(feeState.fee)
                 addDustWarningNotification(feeValue, sendingAmount)
                 addTransactionLimitErrorNotification(feeValue, sendingAmount)
@@ -107,11 +107,12 @@ internal class SendNotificationFactory(
     private fun MutableList<SendNotification>.addExceedBalanceNotification(
         feeAmount: BigDecimal,
         receivedAmount: BigDecimal,
+        isFeeCoverage: Boolean,
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
 
-        if (!isSubtractAvailableProvider()) return
+        if (isFeeCoverage) return
 
         val showNotification = receivedAmount + feeAmount > balance
         if (showNotification) {
