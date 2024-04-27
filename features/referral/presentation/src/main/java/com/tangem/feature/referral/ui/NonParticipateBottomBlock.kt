@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -8,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryEndIconButton
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
@@ -28,19 +30,10 @@ internal fun NonParticipateBottomBlock(onAgreementClick: () -> Unit, onParticipa
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_NonParticipateBottomBlock_InLightTheme() {
-    TangemTheme(isDark = false) {
-        Column(Modifier.background(TangemTheme.colors.background.primary)) {
-            NonParticipateBottomBlock(onAgreementClick = {}, onParticipateClick = {})
-        }
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-private fun Preview_NonParticipateBottomBlock_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_NonParticipateBottomBlock() {
+    TangemThemePreview {
         Column(Modifier.background(TangemTheme.colors.background.primary)) {
             NonParticipateBottomBlock(onAgreementClick = {}, onParticipateClick = {})
         }
