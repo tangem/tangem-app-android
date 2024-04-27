@@ -465,7 +465,10 @@ internal class SendViewModel @Inject constructor(
                     SendUiStateType.Fee,
                     SendUiStateType.EditFee,
                     -> loadFee()
-                    SendUiStateType.Send -> sendIdleTimer = SystemClock.elapsedRealtime()
+                    SendUiStateType.Send -> {
+                        uiState = stateFactory.getIsAmountSubtractedState(isAmountSubtractAvailable)
+                        sendIdleTimer = SystemClock.elapsedRealtime()
+                    }
                     else -> Unit
                 }
             }
