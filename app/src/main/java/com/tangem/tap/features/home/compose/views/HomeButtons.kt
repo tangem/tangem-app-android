@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
 import com.tangem.wallet.R
 
@@ -73,7 +74,7 @@ private fun OrderCardButton(onClick: () -> Unit, modifier: Modifier = Modifier) 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun HomeButtonsPreview(@PreviewParameter(HomeButtonsParameterProvider::class) state: HomeButtonsState) {
-    TangemTheme {
+    TangemThemePreview {
         Box(
             modifier = Modifier.background(Color.Black),
         ) {
