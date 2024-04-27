@@ -19,6 +19,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
 
@@ -120,7 +121,7 @@ private fun WalletBottomSheetContent_Light(
     @PreviewParameter(WalletBottomSheetConfigProvider::class)
     config: WalletBottomSheetConfig,
 ) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         // Use preview of content because ModalBottomSheet isn't supported in Preview mode
         BottomSheetContent(config = config)
     }
@@ -132,7 +133,7 @@ private fun WalletBottomSheetContent_Dark(
     @PreviewParameter(WalletBottomSheetConfigProvider::class)
     config: WalletBottomSheetConfig,
 ) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         // Use preview of content because ModalBottomSheet isn't supported in Preview mode
         BottomSheetContent(config = config)
     }
