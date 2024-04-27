@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.WarningCardTitleOnly
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.common.state.ChooseWalletState
@@ -187,20 +189,10 @@ private fun NonNativeNetworksHeader(onNonNativeNetworkHintClick: () -> Unit) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ChooseNetworkScreen_Light() {
-    TangemTheme(isDark = false) {
-        ChooseNetworkScreen(
-            state = TokenItemStatePreviewData.loadedPriceDown as TokenItemState.Loaded,
-            walletState = ChooseWalletStatePreviewData.state,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_ChooseNetworkScreen_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_ChooseNetworkScreen() {
+    TangemThemePreview {
         ChooseNetworkScreen(
             state = TokenItemStatePreviewData.loadedPriceDown as TokenItemState.Loaded,
             walletState = ChooseWalletStatePreviewData.state,
