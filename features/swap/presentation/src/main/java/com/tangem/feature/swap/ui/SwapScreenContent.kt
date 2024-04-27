@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,6 +31,7 @@ import com.tangem.core.ui.extensions.getActiveIconResByCoinId
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
@@ -512,9 +514,10 @@ private val state = SwapStateHolder(
 )
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SwapScreenContentPreview() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         SwapScreenContent(state = state, modifier = Modifier)
     }
 }
