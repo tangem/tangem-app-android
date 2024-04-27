@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
 import com.tangem.tap.features.home.compose.content.*
 import com.tangem.tap.features.home.compose.views.HomeButtons
@@ -213,7 +214,7 @@ private data class StoriesScreenContentConfig(
 private fun StoriesScreenContentPreview(
     @PreviewParameter(StoriesScreenContentConfigProvider::class) config: StoriesScreenContentConfig,
 ) {
-    TangemTheme {
+    TangemThemePreview {
         StoriesScreenContent(config = config)
     }
 }

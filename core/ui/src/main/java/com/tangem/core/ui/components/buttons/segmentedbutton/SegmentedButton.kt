@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.buttons.segmentedbutton
 
+import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -102,29 +104,12 @@ inline fun <reified T> SegmentedButtons(
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SegmentedButtonsPreview_Light(
+private fun SegmentedButtonsPreview(
     @PreviewParameter(SegmentedButtonsPreviewProvider::class) config: PersistentList<SegmentedButtonsConfigPreview>,
 ) {
-    TangemTheme {
-        SegmentedButtons(
-            config = config,
-            onClick = {},
-        ) {
-            Text(
-                text = it.text,
-                modifier = Modifier.padding(TangemTheme.dimens.spacing16),
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun SegmentedButtonsPreview_Dark(
-    @PreviewParameter(SegmentedButtonsPreviewProvider::class) config: PersistentList<SegmentedButtonsConfigPreview>,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         SegmentedButtons(
             config = config,
             onClick = {},
