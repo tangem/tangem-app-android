@@ -97,6 +97,7 @@ internal sealed class SendStates {
         val walletBalance: TextReference,
         val tokenIconState: TokenIconState,
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
+        val selectedButton: Int,
         val isSegmentedButtonsEnabled: Boolean,
         val amountTextField: SendTextField.AmountField,
         val appCurrencyCode: String,
