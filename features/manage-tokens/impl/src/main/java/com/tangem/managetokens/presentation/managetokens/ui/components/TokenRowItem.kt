@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.managetokens.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
@@ -14,6 +15,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.managetokens.presentation.managetokens.state.QuotesState
 import com.tangem.managetokens.presentation.managetokens.state.TokenItemState
@@ -182,17 +184,10 @@ private fun BaseSurface(modifier: Modifier = Modifier, content: @Composable () -
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_Tokens_LightTheme(@PreviewParameter(TokenConfigProvider::class) state: TokenItemState) {
-    TangemTheme(isDark = false) {
-        TokenRowItem(state)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun Preview_Tokens_DarkTheme(@PreviewParameter(TokenConfigProvider::class) state: TokenItemState) {
-    TangemTheme(isDark = true) {
+private fun Preview_Tokens(@PreviewParameter(TokenConfigProvider::class) state: TokenItemState) {
+    TangemThemePreview {
         TokenRowItem(state)
     }
 }
