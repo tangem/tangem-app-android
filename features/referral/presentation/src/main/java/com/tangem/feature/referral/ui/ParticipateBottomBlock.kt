@@ -2,6 +2,7 @@ package com.tangem.feature.referral.ui
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.core.content.ContextCompat.startActivity
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
@@ -318,11 +320,12 @@ private fun Context.shareText(text: String) {
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ParticipateBottomBlockPreview_Light(
+private fun ParticipateBottomBlockPreview(
     @PreviewParameter(ParticipateBottomBlockDataProvider::class) data: ParticipateBottomBlockData,
 ) {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         Column(Modifier.background(TangemTheme.colors.background.secondary)) {
             ParticipateBottomBlock(
                 purchasedWalletCount = data.purchasedWalletCount,
@@ -339,42 +342,10 @@ private fun ParticipateBottomBlockPreview_Light(
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ParticipateBottomBlockPreview_Dark(
-    @PreviewParameter(ParticipateBottomBlockDataProvider::class) state: ParticipateBottomBlockData,
-) {
-    TangemTheme(isDark = true) {
-        Column(Modifier.background(TangemTheme.colors.background.secondary)) {
-            ParticipateBottomBlock(
-                purchasedWalletCount = state.purchasedWalletCount,
-                code = state.code,
-                shareLink = state.shareLink,
-                expectedAwards = state.expectedAwards,
-                onAgreementClick = state.onAgreementClick,
-                onShowCopySnackbar = state.onShowCopySnackbar,
-                onCopyClick = state.onCopyClick,
-                onShareClick = state.onShareClick,
-            )
-        }
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-private fun LessMoreButton_Light() {
-    TangemTheme(isDark = false) {
-        LessMoreButton(
-            isExpanded = remember {
-                mutableStateOf(false)
-            },
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-private fun LessMoreButton_Dark() {
-    TangemTheme(isDark = true) {
+private fun LessMoreButtonPreview() {
+    TangemThemePreview {
         LessMoreButton(
             isExpanded = remember {
                 mutableStateOf(false)
