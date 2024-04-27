@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.buttons.actions
 
+import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Rounded action button
@@ -133,33 +135,19 @@ private fun Button(
 }
 
 @Preview(group = "RoundedActionButton", showBackground = true)
+@Preview(group = "RoundedActionButton", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_RoundedActionButton_Light(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
-    TangemTheme(isDark = false) {
-        RoundedActionButton(state)
-    }
-}
-
-@Preview(group = "RoundedActionButton", showBackground = true)
-@Composable
-private fun Preview_RoundedActionButton_Dark(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
-    TangemTheme(isDark = true) {
+private fun Preview_RoundedActionButton(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
+    TangemThemePreview {
         RoundedActionButton(state)
     }
 }
 
 @Preview(group = "ActionButton", showBackground = true)
+@Preview(group = "ActionButton", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ActionButton_Light(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
-    TangemTheme(isDark = false) {
-        ActionButton(state)
-    }
-}
-
-@Preview(group = "ActionButton", showBackground = true)
-@Composable
-private fun Preview_ActionButton_Dark(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
-    TangemTheme(isDark = true) {
+private fun Preview_ActionButton(@PreviewParameter(ActionStateProvider::class) state: ActionButtonConfig) {
+    TangemThemePreview {
         ActionButton(state)
     }
 }
