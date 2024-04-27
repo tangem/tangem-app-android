@@ -5,18 +5,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.extensions.isZero
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.StateRouter
+import com.tangem.features.send.impl.presentation.state.fee.checkExceedBalance
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
+import com.tangem.features.send.impl.presentation.utils.getFiatReference
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.Provider
@@ -35,6 +33,7 @@ internal class BitcoinCustomFeeConverter(
 
     override fun convert(value: Fee.Bitcoin): ImmutableList<SendTextField.CustomFee> {
         val feeValue = value.amount.value
+        val feeCurrency = feeCryptoCurrencyStatusProvider()?.value
         val network = feeCryptoCurrencyStatusProvider()?.currency?.network?.id?.value
         return if (network != null && isBitcoin(network)) {
             persistentListOf(
@@ -49,7 +48,11 @@ internal class BitcoinCustomFeeConverter(
                     ),
                     title = resourceReference(R.string.send_max_fee),
                     footer = resourceReference(R.string.send_max_fee_footer),
-                    label = getFeeFormatted(feeValue),
+                    label = getFiatReference(
+                        rate = feeCurrency?.fiatRate,
+                        value = feeValue,
+                        appCurrency = appCurrencyProvider(),
+                    ),
                     keyboardActions = KeyboardActions(),
                     isReadonly = true,
                 ),
@@ -65,7 +68,15 @@ internal class BitcoinCustomFeeConverter(
                     footer = resourceReference(R.string.send_satoshi_per_byte_text),
                     onValueChange = { clickIntents.onCustomFeeValueChange(FEE_SATOSHI_INDEX, it) },
                     keyboardOptions = KeyboardOptions(
-                        imeAction = if (checkExceedBalance(feeValue)) ImeAction.None else ImeAction.Done,
+                        imeAction = if (checkExceedBalance(
+                                feeBalance = feeCurrency?.amount,
+                                feeAmount = feeValue,
+                            )
+                        ) {
+                            ImeAction.None
+                        } else {
+                            ImeAction.Done
+                        },
                         keyboardType = KeyboardType.Number,
                     ),
                     keyboardActions = KeyboardActions(
@@ -104,32 +115,16 @@ internal class BitcoinCustomFeeConverter(
                     FEE_AMOUNT_INDEX,
                     this[FEE_AMOUNT_INDEX].copy(
                         value = newFeeAmount.parseBigDecimal(this[FEE_AMOUNT_INDEX].decimals),
-                        label = getFeeFormatted(newFeeAmount),
+                        label = getFiatReference(
+                            rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate,
+                            value = newFeeAmount,
+                            appCurrency = appCurrencyProvider(),
+                        ),
                     ),
                 )
                 set(index, this[index].copy(value = value))
             }
         }.toImmutableList()
-    }
-
-    private fun getFeeFormatted(fee: BigDecimal?): TextReference {
-        val appCurrency = appCurrencyProvider()
-        val rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate
-        val fiatFee = rate?.let { fee?.multiply(it) }
-        return stringReference(
-            BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = fiatFee,
-                fiatCurrencyCode = appCurrency.code,
-                fiatCurrencySymbol = appCurrency.symbol,
-            ),
-        )
-    }
-
-    private fun checkExceedBalance(feeAmount: BigDecimal?): Boolean {
-        val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider()
-        val currencyCryptoAmount = cryptoCurrencyStatus?.value?.amount ?: BigDecimal.ZERO
-
-        return feeAmount == null || feeAmount.isZero() || feeAmount > currencyCryptoAmount
     }
 
     private fun toSatoshiPerByte(amount: BigDecimal?, decimals: Int, txSize: BigDecimal): BigDecimal? {
