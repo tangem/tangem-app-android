@@ -199,7 +199,7 @@
   <string name="express_choose_providers_title">Выберите провайдера</string>
   <string name="express_error_code">Произошла ошибка. Код: %s</string>
   <string name="express_error_provider_unavailable">К сожалению, обмен указанной пары через выбранного провайдера на данный момент невозможен. Попробуйте совершить обмен позже. (Код: %s)</string>
-  <string name="express_error_swap_pair_unavailable">Выбранный провайдер не доступен для обмена. Попробуйте позже. (Код: %s)</string>
+  <string name="express_error_swap_pair_unavailable">Выбранный провайдер недоступен для обмена. Попробуйте позже. (Код: %s)</string>
   <string name="express_error_swap_unavailable">В данный момент обмен невозможен. Попробуйте позже. (Код: %s)</string>
   <string name="express_estimated_amount">Курс обмена</string>
   <string name="express_exchange_by">Обмен через %s</string>
