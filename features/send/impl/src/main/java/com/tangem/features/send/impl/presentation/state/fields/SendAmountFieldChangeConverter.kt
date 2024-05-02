@@ -1,18 +1,20 @@
 package com.tangem.features.send.impl.presentation.state.fields
 
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.common.extensions.isZero
-import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.StateRouter
+import com.tangem.features.send.impl.presentation.state.amount.checkExceedBalance
+import com.tangem.features.send.impl.presentation.state.amount.getCryptoValue
+import com.tangem.features.send.impl.presentation.state.amount.getFiatValue
+import com.tangem.features.send.impl.presentation.state.amount.getKeyboardAction
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.isNullOrZero
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 internal class SendAmountFieldChangeConverter(
     private val stateRouterProvider: Provider<StateRouter>,
@@ -21,6 +23,7 @@ internal class SendAmountFieldChangeConverter(
 ) : Converter<String, SendUiState> {
     override fun convert(value: String): SendUiState {
         val state = currentStateProvider()
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val isEditState = stateRouterProvider().isEditState
         val amountState = state.getAmountState(isEditState) ?: return state
         val amountTextField = amountState.amountTextField
@@ -30,14 +33,21 @@ internal class SendAmountFieldChangeConverter(
         val fiatDecimals = amountTextField.fiatAmount.decimals
 
         val trimmedValue = value.trim()
-        val cryptoValue = trimmedValue.getCryptoValue(amountTextField.isFiatValue, cryptoDecimals)
-        val fiatValue = trimmedValue.getFiatValue(amountTextField.isFiatValue, fiatDecimals)
+        val cryptoValue = trimmedValue.getCryptoValue(
+            fiatRate = cryptoCurrencyStatus.value.fiatRate,
+            isFiatValue = amountTextField.isFiatValue,
+            decimals = cryptoDecimals,
+        )
         val decimalCryptoValue = cryptoValue.parseToBigDecimal(cryptoDecimals)
-        val decimalFiatValue = fiatValue.parseToBigDecimal(fiatDecimals)
+        val (fiatValue, decimalFiatValue) = trimmedValue.getFiatValue(
+            fiatRate = cryptoCurrencyStatus.value.fiatRate,
+            isFiatValue = amountTextField.isFiatValue,
+            decimals = fiatDecimals,
+        )
 
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
-        val isExceedBalance = checkValue.checkExceedBalance(amountTextField)
-        val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isZero() else decimalCryptoValue.isZero()
+        val isExceedBalance = checkValue.checkExceedBalance(cryptoCurrencyStatus, amountTextField)
+        val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isNullOrZero() else decimalCryptoValue.isZero()
         return state.copyWrapped(
             isEditState = isEditState,
             amountState = amountState.copy(
@@ -55,27 +65,6 @@ internal class SendAmountFieldChangeConverter(
                 ),
             ),
         )
-    }
-
-    private fun String.getCryptoValue(isFiatValue: Boolean, decimals: Int): String {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val fiatRate = cryptoCurrencyStatus.value.fiatRate
-        return if (isFiatValue && fiatRate != null) {
-            parseToBigDecimal(decimals).divide(fiatRate, decimals, RoundingMode.DOWN)
-                .parseBigDecimal(decimals)
-        } else {
-            this
-        }
-    }
-
-    private fun String.getFiatValue(isFiatValue: Boolean, decimals: Int): String {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val fiatRate = cryptoCurrencyStatus.value.fiatRate
-        return if (!isFiatValue && fiatRate != null) {
-            parseToBigDecimal(decimals).multiply(fiatRate).parseBigDecimal(decimals)
-        } else {
-            this
-        }
     }
 
     private fun SendUiState.emptyState(): SendUiState {
@@ -96,24 +85,4 @@ internal class SendAmountFieldChangeConverter(
             ),
         )
     }
-
-    private fun String.checkExceedBalance(amountTextField: SendTextField.AmountField): Boolean {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val currencyCryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        val currencyFiatAmount = cryptoCurrencyStatus.value.fiatAmount ?: BigDecimal.ZERO
-        val fiatDecimal = parseToBigDecimal(amountTextField.fiatAmount.decimals)
-        val cryptoDecimal = parseToBigDecimal(amountTextField.cryptoAmount.decimals)
-        return if (amountTextField.isFiatValue) {
-            fiatDecimal > currencyFiatAmount
-        } else {
-            cryptoDecimal > currencyCryptoAmount
-        }
-    }
-
-    private fun getKeyboardAction(isExceedBalance: Boolean, decimalCryptoValue: BigDecimal) =
-        if (!isExceedBalance && !decimalCryptoValue.isZero()) {
-            ImeAction.Done
-        } else {
-            ImeAction.None
-        }
 }

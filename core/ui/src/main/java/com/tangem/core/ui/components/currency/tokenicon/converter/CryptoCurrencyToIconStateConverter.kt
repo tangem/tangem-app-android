@@ -30,6 +30,7 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
                 coin = currency,
                 isUnreachable = value.value.isError,
                 forceGrayscale = forceGrayscale,
+                showCustomBadge = showCustomTokenBadge,
             )
             is CryptoCurrency.Token -> getIconStateForToken(
                 token = currency,
@@ -50,13 +51,14 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
     private fun getIconStateForCoin(
         coin: CryptoCurrency.Coin,
         isUnreachable: Boolean,
+        showCustomBadge: Boolean = true,
         forceGrayscale: Boolean = false,
     ): TokenIconState.CoinIcon {
         return TokenIconState.CoinIcon(
             url = coin.iconUrl,
             fallbackResId = coin.networkIconResId,
             isGrayscale = forceGrayscale || coin.network.isTestnet || isUnreachable,
-            showCustomBadge = coin.isCustom,
+            showCustomBadge = coin.isCustom && showCustomBadge,
         )
     }
 
@@ -76,6 +78,7 @@ class CryptoCurrencyToIconStateConverter : Converter<CryptoCurrencyStatus, Token
                 background = background,
                 networkBadgeIconResId = token.networkIconResId,
                 isGrayscale = grayScale,
+                showCustomBadge = showCustomBadge,
             )
         } else {
             TokenIconState.TokenIcon(
