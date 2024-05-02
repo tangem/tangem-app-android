@@ -63,7 +63,8 @@ fun AppBarWithBackButtonAndIconContent(
         )
         Column(
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
+                .animateContentSize(),
         ) {
             AnimatedVisibility(
                 visible = !text.isNullOrBlank(),
@@ -89,7 +90,6 @@ fun AppBarWithBackButtonAndIconContent(
                     color = TangemTheme.colors.text.secondary,
                     maxLines = 1,
                     style = TangemTheme.typography.caption2,
-                    modifier = Modifier.animateContentSize(),
                 )
             }
         }
