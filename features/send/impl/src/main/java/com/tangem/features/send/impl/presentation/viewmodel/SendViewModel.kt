@@ -797,8 +797,8 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
     }
 
-    override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {
-        uiState = amountStateFactory.getOnAmountValueChange(reducedAmount.parseBigDecimal(cryptoCurrency.decimals))
+    override fun onAmountReduceClick(reduceAmountBy: BigDecimal, clazz: Class<out SendNotification>) {
+        uiState = amountStateFactory.getOnAmountReducedState(reduceAmountBy)
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
         feeReload()
     }
@@ -820,6 +820,7 @@ internal class SendViewModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
+            reduceAmountBy = uiState.sendState?.reduceAmountBy,
         )
 
         viewModelScope.launch(dispatchers.main) {
