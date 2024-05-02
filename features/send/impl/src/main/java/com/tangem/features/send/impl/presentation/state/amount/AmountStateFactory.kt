@@ -6,6 +6,7 @@ import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldChangeConverter
 import com.tangem.features.send.impl.presentation.state.fields.SendAmountFieldMaxAmountConverter
 import com.tangem.utils.Provider
+import java.math.BigDecimal
 
 /**
  * Factory to produce amount state for [SendUiState]
@@ -44,8 +45,17 @@ internal class AmountStateFactory(
             currentStateProvider = currentStateProvider,
         )
     }
+    private val amountReducedConverter by lazy {
+        SendAmountReducedConverter(
+            stateRouterProvider = stateRouterProvider,
+            currentStateProvider = currentStateProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
 
     fun getOnAmountValueChange(value: String) = amountFieldChangeConverter.convert(value)
+
+    fun getOnAmountReducedState(reduceAmountBy: BigDecimal) = amountReducedConverter.convert(reduceAmountBy)
 
     fun getOnMaxAmountClick(): SendUiState {
         return amountFieldMaxAmountConverter.convert(Unit)
