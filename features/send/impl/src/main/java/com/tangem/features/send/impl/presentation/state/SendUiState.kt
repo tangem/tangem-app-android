@@ -141,6 +141,7 @@ internal sealed class SendStates {
         val transactionDate: Long,
         val txUrl: String,
         val ignoreAmountReduce: Boolean,
+        val reduceAmountBy: BigDecimal?,
         val isFromConfirmation: Boolean,
         val showTapHelp: Boolean,
         val notifications: ImmutableList<SendNotification>,
