@@ -666,7 +666,7 @@ internal class SendViewModel @Inject constructor(
 
     private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean) {
         val isRecent = type == EnterAddressSource.RecentAddress
-        if (isRecent && isValidAddress) onNextClick()
+        if (isRecent && isValidAddress) onNextClick(stateRouter.isEditState)
     }
 // endregion
 
@@ -701,6 +701,7 @@ internal class SendViewModel @Inject constructor(
             val isShowStatus = uiState.feeState?.fee == null
             if (isShowStatus) {
                 uiState = feeStateFactory.onFeeOnLoadingState()
+                updateNotifications()
             }
             val result = callFeeUseCase()?.fold(
                 ifRight = {
