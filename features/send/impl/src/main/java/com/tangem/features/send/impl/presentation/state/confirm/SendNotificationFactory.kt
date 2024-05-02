@@ -93,6 +93,7 @@ internal class SendNotificationFactory(
         return state.copy(
             sendState = sendState.copy(
                 ignoreAmountReduce = isIgnored,
+                reduceAmountBy = if (isIgnored) null else sendState.reduceAmountBy,
                 notifications = updatedNotifications.toImmutableList(),
             ),
         )
@@ -224,8 +225,7 @@ internal class SendNotificationFactory(
                 SendNotification.Warning.HighFeeError(
                     amount = threshold.toPlainString(),
                     onConfirmClick = {
-                        val reduceTo = sendAmount.minus(threshold)
-                        clickIntents.onAmountReduceClick(reduceTo, SendNotification.Warning.HighFeeError::class.java)
+                        clickIntents.onAmountReduceClick(threshold, SendNotification.Warning.HighFeeError::class.java)
                     },
                     onCloseClick = {
                         clickIntents.onNotificationCancel(SendNotification.Warning.HighFeeError::class.java)
