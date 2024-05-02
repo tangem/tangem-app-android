@@ -14,6 +14,8 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onBackClick() {}
 
+    override fun onCloseClick() {}
+
     override fun onNextClick(isFromEdit: Boolean) {}
 
     override fun onPrevClick() {}
@@ -58,7 +60,7 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onShareClick() {}
 
-    override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {}
+    override fun onAmountReduceClick(reduceAmountBy: BigDecimal, clazz: Class<out SendNotification>) {}
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {}
 }
