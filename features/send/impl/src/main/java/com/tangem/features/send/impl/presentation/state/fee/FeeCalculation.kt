@@ -1,13 +1,10 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.lib.crypto.BlockchainUtils
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -19,6 +16,7 @@ internal fun checkAndCalculateSubtractedAmount(
     cryptoCurrencyStatus: CryptoCurrencyStatus,
     amountValue: BigDecimal,
     feeValue: BigDecimal,
+    reduceAmountBy: BigDecimal?,
 ): BigDecimal {
     val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
     val isFeeCoverage = checkFeeCoverage(
@@ -27,12 +25,17 @@ internal fun checkAndCalculateSubtractedAmount(
         amountValue = amountValue,
         feeValue = feeValue,
     )
-    return calculateSubtractedAmount(
+    val subtractedAmount = calculateSubtractedAmount(
         isFeeCoverage = isFeeCoverage,
         cryptoCurrencyStatus = cryptoCurrencyStatus,
         amountValue = amountValue,
         feeValue = feeValue,
     )
+    return if (reduceAmountBy != null) {
+        subtractedAmount.minus(reduceAmountBy)
+    } else {
+        subtractedAmount
+    }
 }
 
 /**
@@ -59,12 +62,7 @@ internal fun calculateSubtractedAmount(
 ): BigDecimal {
     val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
     return if (isFeeCoverage) {
-        var subtractedValue = minOf(amountValue, balance.minus(feeValue))
-        if (BlockchainUtils.isTezos(cryptoCurrencyStatus.currency.network.id.value)) {
-            val threshold = Blockchain.Tezos.minimalAmount()
-            subtractedValue = -threshold
-        }
-        subtractedValue
+        minOf(amountValue, balance.minus(feeValue))
     } else {
         amountValue
     }
