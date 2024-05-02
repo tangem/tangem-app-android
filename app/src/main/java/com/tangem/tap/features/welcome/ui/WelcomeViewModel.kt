@@ -31,7 +31,6 @@ internal class WelcomeViewModel @Inject constructor(
     private val stateInternal = MutableStateFlow(WelcomeScreenState())
     val state: StateFlow<WelcomeScreenState> = stateInternal
 
-
     override fun onCreate(owner: LifecycleOwner) {
         store.dispatch(WelcomeAction.SetCoroutineScope(viewModelScope))
 
