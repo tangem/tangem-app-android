@@ -31,11 +31,11 @@ class AssetLoader @Inject constructor(
         }
             .fold(
                 onSuccess = { parsedConfig ->
-                    if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config is null"))
+                    if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config [$fileName] is null"))
                     parsedConfig
                 },
                 onFailure = {
-                    Timber.e(it, "Failed to load config from assets")
+                    Timber.e(it, "Failed to load config [$fileName] from assets")
                     null
                 },
             )
@@ -53,11 +53,11 @@ class AssetLoader @Inject constructor(
         }
             .fold(
                 onSuccess = { parsedConfig ->
-                    if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config is null"))
+                    if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config [$fileName] is null"))
                     parsedConfig.orEmpty()
                 },
                 onFailure = {
-                    Timber.e(it, "Failed to load config from assets")
+                    Timber.e(it, "Failed to load config [$fileName] from assets")
                     emptyList()
                 },
             )
@@ -75,11 +75,11 @@ class AssetLoader @Inject constructor(
         }
             .fold(
                 onSuccess = { parsedConfig ->
-                    if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config is null"))
+                    if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config [$fileName] is null"))
                     parsedConfig.orEmpty()
                 },
                 onFailure = {
-                    Timber.e(it, "Failed to load config from assets")
+                    Timber.e(it, "Failed to load config [$fileName] from assets")
                     emptyMap()
                 },
             )
