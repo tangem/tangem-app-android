@@ -45,14 +45,19 @@ fun SimpleTextField(
 ) {
     val proxyValue by remember(value) { derivedStateOf { value } }
     var textFieldValueState by remember {
-        mutableStateOf(TextFieldValue(text = value))
+        mutableStateOf(
+            TextFieldValue(
+                text = value,
+                selection = TextRange(value.length, value.length),
+            ),
+        )
     }
     val focusRequester = remember { FocusRequester.Default }
     val customTextSelectionColors = TextSelectionColors(
         handleColor = TangemTheme.colors.text.accent,
         backgroundColor = TangemTheme.colors.text.accent.copy(alpha = 0.3f),
     )
-
+    val textFieldValue = textFieldValueState.copy(text = value)
     var lastTextValue by remember(proxyValue, isValuePasted) {
         textFieldValueState = textFieldValueState.copy(
             text = proxyValue,
@@ -65,6 +70,13 @@ fun SimpleTextField(
         mutableStateOf(proxyValue)
     }
 
+    val isSelectionChanged by rememberSelectionChanged(textFieldValue, textFieldValueState)
+    LaunchedEffect(key1 = isSelectionChanged) {
+        if (isSelectionChanged) {
+            textFieldValueState = textFieldValue
+        }
+    }
+
     // resets paste value cursor trigger
     LaunchedEffect(key1 = isValuePasted) {
         if (isValuePasted) {
@@ -74,7 +86,7 @@ fun SimpleTextField(
 
     CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
         BasicTextField(
-            value = textFieldValueState,
+            value = textFieldValue,
             onValueChange = { newTextFieldValueState ->
                 textFieldValueState = newTextFieldValueState
 
@@ -125,5 +137,15 @@ private fun SimpleTextPlaceholder(
             }
         }
         textValue()
+    }
+}
+
+@Composable
+private fun rememberSelectionChanged(textFieldValue: TextFieldValue, textFieldValueState: TextFieldValue) = remember {
+    derivedStateOf {
+        val isSelectionChanged = textFieldValue.selection != textFieldValueState.selection ||
+            textFieldValue.composition != textFieldValueState.composition
+        val isTextNotChanged = textFieldValue.text == textFieldValueState.text
+        isSelectionChanged && isTextNotChanged
     }
 }
