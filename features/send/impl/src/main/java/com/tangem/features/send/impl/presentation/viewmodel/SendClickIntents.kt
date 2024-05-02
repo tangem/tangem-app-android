@@ -14,6 +14,8 @@ internal interface SendClickIntents {
 
     fun onBackClick()
 
+    fun onCloseClick()
+
     fun onNextClick(isFromEdit: Boolean = false)
 
     fun onPrevClick()
@@ -65,7 +67,7 @@ internal interface SendClickIntents {
 
     fun onShareClick()
 
-    fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>)
+    fun onAmountReduceClick(reduceAmountBy: BigDecimal, clazz: Class<out SendNotification>)
 
     fun onNotificationCancel(clazz: Class<out SendNotification>)
     // endregion

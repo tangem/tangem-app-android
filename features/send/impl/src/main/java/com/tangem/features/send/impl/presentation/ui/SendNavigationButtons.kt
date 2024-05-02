@@ -165,7 +165,11 @@ private fun SendingText(
         val fiatRate = feeState?.rate
         val fiatAmount = amountState?.amountTextField?.fiatAmount
         val feeFiat = fiatRate?.let { feeState.fee?.amount?.value?.multiply(it) }
-        val sendingFiat = feeFiat?.let { fiatAmount?.value?.plus(it) }
+        val sendingFiat = if (uiState.isSubtracted) {
+            fiatAmount?.value
+        } else {
+            feeFiat?.let { fiatAmount?.value?.plus(it) }
+        }
 
         if (feeFiat != null && sendingFiat != null) {
             val sendingValue = BigDecimalFormatter.formatFiatAmount(
