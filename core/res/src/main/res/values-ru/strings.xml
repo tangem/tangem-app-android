@@ -114,7 +114,6 @@
   <string name="common_select_action">Выберите действие</string>
   <string name="common_sell">Продать</string>
   <string name="common_send">Отправить</string>
-  <string name="common_send_unavailable_due_pending_transaction">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
   <string name="common_share">Поделиться</string>
   <string name="common_sign">Подписать</string>
@@ -491,7 +490,8 @@
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
   <string name="send_recipient_wallets_title">Мои кошельки</string>
-  <string name="send_satoshi_per_byte_text">Это способ измерения комиссии за отправку биткоин-транзакции. Он указывает на количество самой маленькой единицы биткоина (сатоши) за каждый байт данных в транзакции. Чем выше это число, тем быстрее будет обработана транзакция сетью.</string>
+  <string name="send_satoshi_per_byte_text">Способ измерения комиссии за биткоин-транзакцию. Он указывает на количество самой маленькой единицы биткоина (сатоши) за каждый виртуальный байт в транзакции. Чем выше число, тем быстрее будет обработана транзакция майнерами.</string>
+  <string name="send_satoshi_per_byte_title">Сатоши / вбайт</string>
   <string name="send_sending">Отправка</string>
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
@@ -547,6 +547,7 @@
   <string name="token_button_unavailability_reason_empty_balance_send">У вас нет средств для отправки. Пополните счет, чтобы иметь возможность отправить с него средства.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">В данный момент обмен монеты %s недоступен. Следите за нашими обновлениями.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Продажа средств станет доступной после завершения транзакции(-ий) в сети  %s</string>
+  <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа %s недоступна. Следите за нашими обновлениями.</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>

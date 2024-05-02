@@ -337,7 +337,7 @@ internal class TokenDetailsStateFactory(
             is ScenarioUnavailabilityReason.PendingTransaction -> {
                 when (unavailabilityReason.withdrawalScenario) {
                     ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
-                        id = R.string.common_send_unavailable_due_pending_transaction,
+                        id = R.string.token_button_unavailability_reason_pending_transaction_send,
                         formatArgs = wrappedList(unavailabilityReason.networkName),
                     )
                     ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(

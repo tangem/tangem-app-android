@@ -69,9 +69,6 @@ internal class TokenDetailsNotificationConverter(
                 symbol = warning.amountCurrency.symbol,
             )
             is CryptoCurrencyWarning.TopUpWithoutReserve -> TopUpWithoutReserve
-            is CryptoCurrencyWarning.HasPendingTransactions -> HasPendingTransactions(
-                networkName = warning.networkName,
-            )
             is CryptoCurrencyWarning.SwapPromo -> SwapPromo(
                 startDateTime = warning.startDateTime,
                 endDateTime = warning.endDateTime,

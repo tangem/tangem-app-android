@@ -113,7 +113,6 @@
   <string name="common_select_action">Select action</string>
   <string name="common_sell">Sell</string>
   <string name="common_send">Send</string>
-  <string name="common_send_unavailable_due_pending_transaction">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="common_server_unavailable">The server is not available, please try again later</string>
   <string name="common_share">Share</string>
   <string name="common_sign">Sign</string>
@@ -490,8 +489,8 @@
   <string name="send_recipient_label">Send to</string>
   <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
   <string name="send_recipient_wallets_title">My wallets</string>
-  <string name="send_satoshi_per_byte_text">The fee for a Bitcoin transaction is measured by the number of the smallest Bitcoin unit (Satoshi) per byte of data. The higher this number, the faster the transaction will be processed.</string>
-  <string name="send_satoshi_per_byte_title">Satoshi per vbyte</string>
+  <string name="send_satoshi_per_byte_text">A way of measuring Bitcoin transaction fees. It indicates the number of the smallest Bitcoin unit (Satoshi) for each virtual byte in a transaction. The higher the number, the faster the transaction will be processed by miners.</string>
+  <string name="send_satoshi_per_byte_title">Satoshi / vByte</string>
   <string name="send_sending">Sending...</string>
   <string name="send_summary_tap_hint">Tap any field to change it</string>
   <string name="send_summary_title">Send %s</string>
@@ -548,6 +547,7 @@
   <string name="token_button_unavailability_reason_empty_balance_send">You do not have funds to send. Top up your account to be able to send funds from it.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Swapping %s is not available at the moment. Please check our updates.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the pending transaction(s) in network %s is complete</string>
+  <string name="token_button_unavailability_reason_pending_transaction_send">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not available at the moment. Please check our updates.</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
