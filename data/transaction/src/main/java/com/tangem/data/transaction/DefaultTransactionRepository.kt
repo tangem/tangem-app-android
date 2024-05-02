@@ -71,7 +71,10 @@ internal class DefaultTransactionRepository(
             }
             Blockchain.Binance -> BinanceTransactionExtras(memo)
             Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
-            Blockchain.Cosmos -> CosmosTransactionExtras(memo)
+            Blockchain.Cosmos,
+            Blockchain.TerraV1,
+            Blockchain.TerraV2,
+            -> CosmosTransactionExtras(memo)
             Blockchain.TON -> TonTransactionExtras(memo)
             Blockchain.Hedera -> HederaTransactionBuilder.HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
