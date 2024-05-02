@@ -264,10 +264,18 @@ internal class CurrenciesStatusesOperations(
         var quotesRetrievingFailed = false
 
         val networksStatuses = maybeNetworkStatuses?.bind()?.toNonEmptySetOrNull()
-        val quotes = recover({ maybeQuotes?.bind()?.toNonEmptySetOrNull() }) {
-            quotesRetrievingFailed = true
-            null
-        }
+        val quotes: Set<Quote>? = maybeQuotes?.fold(
+            ifLeft = {
+                quotesRetrievingFailed = true
+                null
+            },
+            ifRight = {
+                it.ifEmpty {
+                    quotesRetrievingFailed = true
+                    null
+                }
+            },
+        )
 
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
