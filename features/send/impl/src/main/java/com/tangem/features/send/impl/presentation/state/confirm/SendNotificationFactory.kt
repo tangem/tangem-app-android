@@ -71,7 +71,7 @@ internal class SendNotificationFactory(
             buildList {
                 // errors
                 addFeeUnreachableNotification(feeState.feeSelectorState)
-                addExceedBalanceNotification(feeValue, sendingAmount, isFeeCoverage)
+                addExceedBalanceNotification(feeValue, sendingAmount)
                 addExceedsBalanceNotification(feeState.fee)
                 addDustWarningNotification(feeValue, sendingAmount)
                 addTransactionLimitErrorNotification(feeValue, sendingAmount)
@@ -93,6 +93,7 @@ internal class SendNotificationFactory(
         return state.copy(
             sendState = sendState.copy(
                 ignoreAmountReduce = isIgnored,
+                reduceAmountBy = if (isIgnored) null else sendState.reduceAmountBy,
                 notifications = updatedNotifications.toImmutableList(),
             ),
         )
@@ -107,12 +108,11 @@ internal class SendNotificationFactory(
     private fun MutableList<SendNotification>.addExceedBalanceNotification(
         feeAmount: BigDecimal,
         receivedAmount: BigDecimal,
-        isFeeCoverage: Boolean,
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
 
-        if (isFeeCoverage) return
+        if (!isSubtractAvailableProvider()) return
 
         val showNotification = receivedAmount + feeAmount > balance
         if (showNotification) {
@@ -226,8 +226,7 @@ internal class SendNotificationFactory(
                 SendNotification.Warning.HighFeeError(
                     amount = threshold.toPlainString(),
                     onConfirmClick = {
-                        val reduceTo = sendAmount.minus(threshold)
-                        clickIntents.onAmountReduceClick(reduceTo, SendNotification.Warning.HighFeeError::class.java)
+                        clickIntents.onAmountReduceClick(threshold, SendNotification.Warning.HighFeeError::class.java)
                     },
                     onCloseClick = {
                         clickIntents.onNotificationCancel(SendNotification.Warning.HighFeeError::class.java)
