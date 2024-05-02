@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.withIndex
 @Composable
 internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen) {
     val snackbarHostState = remember { SnackbarHostState() }
-    BackHandler { uiState.clickIntents.onBackClick() }
+    BackHandler(onBack = uiState.clickIntents::onBackClick)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -88,17 +88,17 @@ private fun SendAppBar(uiState: SendUiState, currentState: SendUiCurrentScreen) 
     } else {
         null
     }
-    val (backIcon, backClick) = when (currentState.type) {
+    val backIcon = when (currentState.type) {
         SendUiStateType.EditAmount,
         SendUiStateType.EditFee,
         SendUiStateType.EditRecipient,
-        -> R.drawable.ic_back_24 to uiState.clickIntents::onBackClick
-        else -> R.drawable.ic_close_24 to uiState.clickIntents::popBackStack
+        -> R.drawable.ic_back_24
+        else -> R.drawable.ic_close_24
     }
     AppBarWithBackButtonAndIcon(
         text = titleRes?.resolveReference(),
         subtitle = subtitleRes,
-        onBackClick = backClick,
+        onBackClick = uiState.clickIntents::onCloseClick,
         onIconClick = uiState.clickIntents::onQrCodeScanClick,
         backIconRes = backIcon,
         iconRes = iconRes,
