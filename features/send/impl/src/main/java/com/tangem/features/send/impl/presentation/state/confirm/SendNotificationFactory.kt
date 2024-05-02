@@ -20,7 +20,6 @@ import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
-import com.tangem.lib.crypto.BlockchainUtils.isDogecoin
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
@@ -74,7 +73,6 @@ internal class SendNotificationFactory(
                 addFeeUnreachableNotification(feeState.feeSelectorState)
                 addExceedBalanceNotification(feeValue, sendingAmount)
                 addExceedsBalanceNotification(feeState.fee)
-                addMinimumAmountErrorNotification(feeValue, sendingAmount)
                 addDustWarningNotification(feeValue, sendingAmount)
                 addTransactionLimitErrorNotification(feeValue, sendingAmount)
                 // warnings
@@ -95,6 +93,7 @@ internal class SendNotificationFactory(
         return state.copy(
             sendState = sendState.copy(
                 ignoreAmountReduce = isIgnored,
+                reduceAmountBy = if (isIgnored) null else sendState.reduceAmountBy,
                 notifications = updatedNotifications.toImmutableList(),
             ),
         )
@@ -226,28 +225,13 @@ internal class SendNotificationFactory(
                 SendNotification.Warning.HighFeeError(
                     amount = threshold.toPlainString(),
                     onConfirmClick = {
-                        val reduceTo = sendAmount.minus(threshold)
-                        clickIntents.onAmountReduceClick(reduceTo, SendNotification.Warning.HighFeeError::class.java)
+                        clickIntents.onAmountReduceClick(threshold, SendNotification.Warning.HighFeeError::class.java)
                     },
                     onCloseClick = {
                         clickIntents.onNotificationCancel(SendNotification.Warning.HighFeeError::class.java)
                     },
                 ),
             )
-        }
-    }
-// [REDACTED_TODO_COMMENT]
-    private fun MutableList<SendNotification>.addMinimumAmountErrorNotification(
-        feeAmount: BigDecimal,
-        receivedAmount: BigDecimal,
-    ) {
-        val coinCryptoCurrencyStatus = coinCryptoCurrencyStatusProvider()
-        val minimum = BigDecimal(DOGECOIN_MINIMUM)
-
-        val isDogecoin = isDogecoin(coinCryptoCurrencyStatus.currency.network.id.value)
-        val isExceedDustLimit = checkDustLimits(feeAmount, receivedAmount, minimum)
-        if (isDogecoin && isExceedDustLimit) {
-            add(SendNotification.Error.MinimumAmountError(DOGECOIN_MINIMUM))
         }
     }
 
@@ -377,9 +361,5 @@ internal class SendNotificationFactory(
         val change = balance - totalAmount
         val isChangeLowerThanDust = change < dustValue && change > BigDecimal.ZERO
         return receivedAmount < dustValue || isChangeLowerThanDust
-    }
-
-    companion object {
-        private const val DOGECOIN_MINIMUM = "0.01"
     }
 }
