@@ -47,7 +47,7 @@ import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
-import com.tangem.features.send.impl.presentation.analytics.utils.SendOnNextScreenAnalyticSender
+import com.tangem.features.send.impl.presentation.analytics.utils.SendScreenAnalyticSender
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
@@ -174,9 +174,10 @@ internal class SendViewModel @Inject constructor(
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
     )
 
-    private val sendOnNextScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
-        SendOnNextScreenAnalyticSender(
+    private val sendScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
+        SendScreenAnalyticSender(
             stateRouterProvider = Provider { stateRouter },
+            currentStateProvider = Provider { uiState },
             analyticsEventHandler = analyticsEventHandler,
         )
     }
@@ -464,7 +465,10 @@ internal class SendViewModel @Inject constructor(
                     SendUiStateType.Fee,
                     SendUiStateType.EditFee,
                     -> loadFee()
-                    SendUiStateType.Send -> sendIdleTimer = SystemClock.elapsedRealtime()
+                    SendUiStateType.Send -> {
+                        uiState = stateFactory.getIsAmountSubtractedState(isAmountSubtractAvailable)
+                        sendIdleTimer = SystemClock.elapsedRealtime()
+                    }
                     else -> Unit
                 }
             }
@@ -498,10 +502,21 @@ internal class SendViewModel @Inject constructor(
         stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
     }
 
+    override fun onCloseClick() {
+        sendScreenAnalyticSender.sendOnClose()
+        when (stateRouter.currentState.value.type) {
+            SendUiStateType.EditAmount,
+            SendUiStateType.EditFee,
+            SendUiStateType.EditRecipient,
+            -> onBackClick()
+            else -> popBackStack()
+        }
+    }
+
     override fun onNextClick(isFromEdit: Boolean) {
         val currentState = stateRouter.currentState.value
         uiState = stateFactory.syncEditStates(isFromEdit = isFromEdit)
-        sendOnNextScreenAnalyticSender.send(currentState.type, uiState)
+        sendScreenAnalyticSender.send(currentState.type, uiState)
         when (currentState.type) {
             SendUiStateType.Fee,
             SendUiStateType.EditFee,
@@ -652,7 +667,7 @@ internal class SendViewModel @Inject constructor(
 
     private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean) {
         val isRecent = type == EnterAddressSource.RecentAddress
-        if (isRecent && isValidAddress) onNextClick()
+        if (isRecent && isValidAddress) onNextClick(stateRouter.isEditState)
     }
 // endregion
 
@@ -687,6 +702,7 @@ internal class SendViewModel @Inject constructor(
             val isShowStatus = uiState.feeState?.fee == null
             if (isShowStatus) {
                 uiState = feeStateFactory.onFeeOnLoadingState()
+                updateNotifications()
             }
             val result = callFeeUseCase()?.fold(
                 ifRight = {
@@ -722,14 +738,12 @@ internal class SendViewModel @Inject constructor(
         val recipientState = uiState.getRecipientState(isFromConfirmation) ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
 
-        return feeCryptoCurrencyStatus?.let { feeCurrencyStatus ->
-            getFeeUseCase.invoke(
-                amount = amount,
-                destination = recipientState.addressTextField.value,
-                userWallet = userWallet,
-                cryptoCurrency = feeCurrencyStatus.currency,
-            )
-        }
+        return getFeeUseCase.invoke(
+            amount = amount,
+            destination = recipientState.addressTextField.value,
+            userWallet = userWallet,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+        )
     }
 // endregion
 
@@ -783,8 +797,8 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
     }
 
-    override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {
-        uiState = amountStateFactory.getOnAmountValueChange(reducedAmount.parseBigDecimal(cryptoCurrency.decimals))
+    override fun onAmountReduceClick(reduceAmountBy: BigDecimal, clazz: Class<out SendNotification>) {
+        uiState = amountStateFactory.getOnAmountReducedState(reduceAmountBy)
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
         feeReload()
     }
@@ -806,6 +820,7 @@ internal class SendViewModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
+            reduceAmountBy = uiState.sendState?.reduceAmountBy,
         )
 
         viewModelScope.launch(dispatchers.main) {
