@@ -49,6 +49,7 @@ internal object AmountStatePreviewData {
             onValuePastedTriggerDismiss = {},
         ),
         isSegmentedButtonsEnabled = true,
+        selectedButton = 0,
     )
 
     val fiatAmountState = amountState.copy(
