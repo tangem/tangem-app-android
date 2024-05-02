@@ -36,6 +36,7 @@ internal fun SendAmountContent(
             segmentedButtonConfig = amountState.segmentedButtonConfig,
             clickIntents = clickIntents,
             isSegmentedButtonsEnabled = amountState.isSegmentedButtonsEnabled,
+            selectedButton = amountState.selectedButton,
         )
     }
 }
