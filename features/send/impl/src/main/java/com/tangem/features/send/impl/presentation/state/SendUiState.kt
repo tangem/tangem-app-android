@@ -32,6 +32,7 @@ internal data class SendUiState(
     val editRecipientState: SendStates.RecipientState? = null,
     val editFeeState: SendStates.FeeState? = null,
     val isBalanceHidden: Boolean,
+    val isSubtracted: Boolean,
     val event: StateEvent<SendEvent>,
 ) {
 
@@ -97,6 +98,7 @@ internal sealed class SendStates {
         val walletBalance: TextReference,
         val tokenIconState: TokenIconState,
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
+        val selectedButton: Int,
         val isSegmentedButtonsEnabled: Boolean,
         val amountTextField: SendTextField.AmountField,
         val appCurrencyCode: String,
@@ -139,6 +141,7 @@ internal sealed class SendStates {
         val transactionDate: Long,
         val txUrl: String,
         val ignoreAmountReduce: Boolean,
+        val reduceAmountBy: BigDecimal?,
         val isFromConfirmation: Boolean,
         val showTapHelp: Boolean,
         val notifications: ImmutableList<SendNotification>,
