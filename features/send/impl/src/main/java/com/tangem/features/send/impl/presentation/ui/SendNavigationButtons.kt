@@ -1,12 +1,10 @@
 package com.tangem.features.send.impl.presentation.ui
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -21,18 +19,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun SendNavigationButtons(
@@ -144,11 +143,12 @@ private fun SendingText(
     modifier: Modifier = Modifier,
 ) {
     var isVisibleProxy by remember { mutableStateOf(isVisible) }
+    val keyboard by keyboardAsState()
 
-    // text appearance delay for smooth screen transitions
-    LaunchedEffect(key1 = isVisible) {
-        if (isVisible) {
-            delay(timeMillis = 400)
+    // the text should appear when the keyboard is closed
+    LaunchedEffect(isVisible, keyboard) {
+        if (isVisible && keyboard is Keyboard.Opened) {
+            return@LaunchedEffect
         }
         isVisibleProxy = isVisible
     }
@@ -156,8 +156,8 @@ private fun SendingText(
     AnimatedVisibility(
         visible = isVisibleProxy,
         modifier = modifier,
-        enter = slideInVertically().plus(fadeIn()),
-        exit = slideOutVertically().plus(fadeOut()),
+        enter = slideInVertically() + fadeIn(),
+        exit = fadeOut(tween(durationMillis = 300)),
         label = "Animate show sending state text",
     ) {
         val amountState = uiState.getAmountState(isEditState)
