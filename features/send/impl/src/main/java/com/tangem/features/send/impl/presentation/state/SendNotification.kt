@@ -153,9 +153,12 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             ),
         )
 
-        data object FeeCoverageNotification : Warning(
+        data class FeeCoverageNotification(val cryptoAmount: String, val fiatAmount: String) : Warning(
             title = resourceReference(R.string.send_network_fee_warning_title),
-            subtitle = resourceReference(R.string.swapping_network_fee_warning_content),
+            subtitle = resourceReference(
+                R.string.send_network_fee_warning_content,
+                wrappedList(cryptoAmount, fiatAmount),
+            ),
         )
     }
 }
