@@ -134,6 +134,7 @@ private fun SendScreenContent(uiState: SendUiState, currentState: SendUiCurrentS
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedContent(
             targetState = currentStateProxy,
+            contentAlignment = Alignment.TopCenter,
             label = "Send Scree Navigation",
             transitionSpec = {
                 val direction = if (initialState.type.ordinal < targetState.type.ordinal) {
