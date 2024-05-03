@@ -17,6 +17,7 @@ internal class SendConfirmStateConverter(
             txUrl = "",
             ignoreAmountReduce = false,
             reduceAmountBy = null,
+            reduceAmountTo = null,
             isFromConfirmation = true,
             showTapHelp = isTapHelpPreviewEnabledProvider(),
             notifications = persistentListOf(),
