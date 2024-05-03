@@ -7,6 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseToBigDecimal
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
@@ -19,6 +20,8 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.fee.*
+import com.tangem.features.send.impl.presentation.state.fields.SendTextField
+import com.tangem.features.send.impl.presentation.utils.getFiatString
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider
@@ -30,7 +33,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class SendNotificationFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val coinCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
@@ -39,6 +42,7 @@ internal class SendNotificationFactory(
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val stateRouterProvider: Provider<StateRouter>,
     private val isSubtractAvailableProvider: Provider<Boolean>,
+    private val appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: SendClickIntents,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
@@ -77,7 +81,11 @@ internal class SendNotificationFactory(
                 addTransactionLimitErrorNotification(feeValue, sendingAmount)
                 // warnings
                 addExistentialWarningNotification(feeValue, amountValue)
-                addFeeCoverageNotification(isFeeCoverage)
+                addFeeCoverageNotification(
+                    isFeeCoverage = isFeeCoverage,
+                    amountField = amountState.amountTextField,
+                    sendingValue = sendingAmount,
+                )
                 addHighFeeWarningNotification(amountValue, sendState.ignoreAmountReduce)
                 addTooHighNotification(feeState.feeSelectorState)
                 addTooLowNotification(feeState)
@@ -192,22 +200,50 @@ internal class SendNotificationFactory(
             cryptoCurrency.network,
         )
         val diff = balance.minus(spendingAmount)
-        if (currencyDeposit != null && currencyDeposit > diff) {
+        if (currencyDeposit != null && diff >= BigDecimal.ZERO && currencyDeposit > diff) {
             add(
                 SendNotification.Error.ExistentialDeposit(
-                    BigDecimalFormatter.formatCryptoAmountUncapped(
+                    deposit = BigDecimalFormatter.formatCryptoAmountUncapped(
                         cryptoAmount = currencyDeposit,
                         cryptoCurrency = cryptoCurrency,
                     ),
+                    onConfirmClick = {
+                        clickIntents.onAmountReduceClick(
+                            reduceAmountBy = currencyDeposit,
+                            clazz = SendNotification.Error.ExistentialDeposit::class.java,
+                        )
+                    },
                 ),
             )
         }
     }
 
-    private fun MutableList<SendNotification>.addFeeCoverageNotification(sendingAmount: Boolean) {
-        if (sendingAmount) {
+    private fun MutableList<SendNotification>.addFeeCoverageNotification(
+        isFeeCoverage: Boolean,
+        amountField: SendTextField.AmountField,
+        sendingValue: BigDecimal,
+    ) {
+        if (isFeeCoverage) {
             analyticsEventHandler.send(SendAnalyticEvents.NoticeFeeCoverage)
-            add(SendNotification.Warning.FeeCoverageNotification)
+            val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+            val cryptoCurrency = cryptoCurrencyStatus.currency
+            val fiatRate = cryptoCurrencyStatus.value.fiatRate
+            val amountValue = amountField.cryptoAmount.value ?: return
+
+            val cryptoDiff = amountValue.minus(sendingValue)
+            add(
+                SendNotification.Warning.FeeCoverageNotification(
+                    cryptoAmount = BigDecimalFormatter.formatCryptoAmountUncapped(
+                        cryptoAmount = cryptoDiff,
+                        cryptoCurrency = cryptoCurrency,
+                    ),
+                    fiatAmount = getFiatString(
+                        value = cryptoDiff,
+                        rate = fiatRate,
+                        appCurrency = appCurrencyProvider(),
+                    ),
+                ),
+            )
         }
     }
 
