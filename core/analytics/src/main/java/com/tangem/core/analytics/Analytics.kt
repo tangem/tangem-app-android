@@ -4,6 +4,8 @@ import com.tangem.core.analytics.api.*
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.Executors
 
 /**
@@ -22,6 +24,7 @@ object Analytics : GlobalAnalyticsEventHandler {
     private val handlers = mutableMapOf<String, AnalyticsHandler>()
     private val paramsInterceptors = mutableMapOf<String, ParamsInterceptor>()
     private val analyticsFilters = mutableSetOf<AnalyticsEventFilter>()
+    private val analyticsMutex = Mutex()
 
     private val analyticsHandlers: List<AnalyticsHandler>
         get() = handlers.values.toList()
@@ -55,23 +58,26 @@ object Analytics : GlobalAnalyticsEventHandler {
             event.params = applyParamsInterceptors(event)
             val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(event) }
 
-            when {
-                eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(event) }
-                eventFilter.canBeSent(event) -> {
-                    analyticsHandlers
-                        .filter { handler -> eventFilter.canBeConsumedByHandler(handler, event) }
-                        .forEach { handler -> handler.send(event) }
+            analyticsMutex.withLock {
+                when {
+                    eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(event) }
+                    eventFilter.canBeSent(event) -> {
+                        analyticsHandlers
+                            .filter { handler -> eventFilter.canBeConsumedByHandler(handler, event) }
+                            .forEach { handler -> handler.send(event) }
+                    }
                 }
             }
         }
     }
 
-    private fun applyParamsInterceptors(event: AnalyticsEvent): MutableMap<String, String> {
+    private suspend fun applyParamsInterceptors(event: AnalyticsEvent): MutableMap<String, String> {
         val interceptedParams = event.params.toMutableMap()
-        paramsInterceptors.values
-            .filter { it.canBeAppliedTo(event) }
-            .forEach { it.intercept(interceptedParams) }
-
+        analyticsMutex.withLock {
+            paramsInterceptors.values
+                .filter { it.canBeAppliedTo(event) }
+                .forEach { it.intercept(interceptedParams) }
+        }
         return interceptedParams
     }
 
