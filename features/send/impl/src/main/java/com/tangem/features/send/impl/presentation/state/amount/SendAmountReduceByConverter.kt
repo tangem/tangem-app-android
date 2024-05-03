@@ -12,7 +12,7 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
 import java.math.BigDecimal
 
-internal class SendAmountReducedConverter(
+internal class SendAmountReduceByConverter(
     private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
