@@ -22,7 +22,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import kotlinx.coroutines.job
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun AmountField(sendField: SendTextField.AmountField, appCurrencyCode: String) {
@@ -66,9 +66,8 @@ internal fun AmountField(sendField: SendTextField.AmountField, appCurrencyCode: 
     )
 
     LaunchedEffect(key1 = Unit) {
-        this.coroutineContext.job.invokeOnCompletion {
-            requester.requestFocus()
-        }
+        delay(timeMillis = 200)
+        requester.requestFocus()
     }
 
     AmountSecondary(sendField, appCurrencyCode)
