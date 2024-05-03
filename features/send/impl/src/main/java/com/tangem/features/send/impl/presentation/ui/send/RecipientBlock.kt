@@ -35,6 +35,7 @@ internal fun RecipientBlock(
 
     Column(
         modifier = Modifier
+            .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(backgroundColor)
             .clickable(enabled = !isSuccess && !isEditingDisabled, onClick = onClick)
