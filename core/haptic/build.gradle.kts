@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.core.vibrator"
+    namespace = "com.tangem.core.haptic"
 }
 
 dependencies {
