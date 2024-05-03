@@ -166,8 +166,8 @@ internal class SendNotificationFactory(
                     ),
                     onConfirmClick = {
                         clickIntents.onAmountReduceClick(
-                            utxoLimit.maxAmount,
-                            SendNotification.Error.TransactionLimitError::class.java,
+                            reduceAmountTo = utxoLimit.maxAmount,
+                            clazz = SendNotification.Error.TransactionLimitError::class.java,
                         )
                     },
                 ),
@@ -226,7 +226,10 @@ internal class SendNotificationFactory(
                 SendNotification.Warning.HighFeeError(
                     amount = threshold.toPlainString(),
                     onConfirmClick = {
-                        clickIntents.onAmountReduceClick(threshold, SendNotification.Warning.HighFeeError::class.java)
+                        clickIntents.onAmountReduceClick(
+                            reduceAmountBy = threshold,
+                            clazz = SendNotification.Warning.HighFeeError::class.java,
+                        )
                     },
                     onCloseClick = {
                         clickIntents.onNotificationCancel(SendNotification.Warning.HighFeeError::class.java)
