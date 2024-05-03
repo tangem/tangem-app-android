@@ -32,7 +32,7 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .clickable(enabled = !isSuccess && feeState.fee != null) { onClick() }
+            .clickable(enabled = !isSuccess, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
