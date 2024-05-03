@@ -168,6 +168,7 @@ internal class SendViewModel @Inject constructor(
         userWalletProvider = Provider { userWallet },
         stateRouterProvider = Provider { stateRouter },
         isSubtractAvailableProvider = Provider { isAmountSubtractAvailable },
+        appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         currencyChecksRepository = currencyChecksRepository,
         clickIntents = this,
         analyticsEventHandler = analyticsEventHandler,
