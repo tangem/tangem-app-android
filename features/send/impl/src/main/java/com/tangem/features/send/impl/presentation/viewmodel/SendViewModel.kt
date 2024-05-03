@@ -797,8 +797,17 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
     }
 
-    override fun onAmountReduceClick(reduceAmountBy: BigDecimal, clazz: Class<out SendNotification>) {
-        uiState = amountStateFactory.getOnAmountReducedState(reduceAmountBy)
+    override fun onAmountReduceClick(
+        reduceAmountBy: BigDecimal?,
+        reduceAmountTo: BigDecimal?,
+        clazz: Class<out SendNotification>,
+    ) {
+        uiState = when {
+            reduceAmountBy != null -> amountStateFactory.getOnAmountReduceByState(reduceAmountBy)
+            reduceAmountTo != null -> amountStateFactory.getOnAmountReduceToState(reduceAmountTo)
+            else -> return
+        }
+
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
         feeReload()
     }
