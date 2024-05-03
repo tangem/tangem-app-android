@@ -45,8 +45,15 @@ internal class AmountStateFactory(
             currentStateProvider = currentStateProvider,
         )
     }
-    private val amountReducedConverter by lazy {
-        SendAmountReducedConverter(
+    private val amountReduceByConverter by lazy {
+        SendAmountReduceByConverter(
+            stateRouterProvider = stateRouterProvider,
+            currentStateProvider = currentStateProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+        )
+    }
+    private val amountReduceToConverter by lazy {
+        SendAmountReduceToConverter(
             stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
@@ -55,7 +62,8 @@ internal class AmountStateFactory(
 
     fun getOnAmountValueChange(value: String) = amountFieldChangeConverter.convert(value)
 
-    fun getOnAmountReducedState(reduceAmountBy: BigDecimal) = amountReducedConverter.convert(reduceAmountBy)
+    fun getOnAmountReduceByState(reduceAmountBy: BigDecimal) = amountReduceByConverter.convert(reduceAmountBy)
+    fun getOnAmountReduceToState(reduceAmountTo: BigDecimal) = amountReduceToConverter.convert(reduceAmountTo)
 
     fun getOnMaxAmountClick(): SendUiState {
         return amountFieldMaxAmountConverter.convert(Unit)
