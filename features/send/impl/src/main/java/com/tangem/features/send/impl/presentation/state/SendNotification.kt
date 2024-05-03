@@ -94,9 +94,13 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             },
         )
 
-        data class ExistentialDeposit(val deposit: String) : Error(
+        data class ExistentialDeposit(val deposit: String, val onConfirmClick: () -> Unit) : Error(
             title = resourceReference(R.string.send_notification_existential_deposit_title),
             subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
+            buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(R.string.send_notification_existential_deposit_button, wrappedList(deposit)),
+                onClick = onConfirmClick,
+            ),
         )
     }
 
