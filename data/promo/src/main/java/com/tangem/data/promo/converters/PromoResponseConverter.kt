@@ -13,6 +13,7 @@ class PromoResponseConverter : Converter<PromotionInfoResponse, PromoBanner?> {
             name = value.name,
             bannerState = PromoBanner.BannerState(
                 status = bannerState.status,
+                link = bannerState.link,
                 timeline = PromoBanner.Timeline(
                     start = DateTime.parse(bannerState.timeline.start),
                     end = DateTime.parse(bannerState.timeline.end),

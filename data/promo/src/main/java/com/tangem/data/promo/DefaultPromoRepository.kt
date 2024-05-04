@@ -23,7 +23,17 @@ internal class DefaultPromoRepository(
         }.getOrNull()
     }
 
+    override suspend fun getTravalaPromoBanner(): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            promoResponseConverter.convert(
+                tangemApi.getPromotionInfo(TRAVALA)
+                    .getOrThrow(),
+            )
+        }.getOrNull()
+    }
+
     private companion object {
         private const val CHANGELLY_NAME = "changelly"
+        private const val TRAVALA = "travala"
     }
 }

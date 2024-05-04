@@ -25,7 +25,8 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
         key = { it::class.java },
         contentType = { it::class.java },
         itemContent = {
-            if (it is WalletNotification.SwapPromo) {
+            // TODO develop promo banner general component
+            if (it is WalletNotification.SwapPromo || it is WalletNotification.TravalaPromo) {
                 NotificationWithBackground(
                     config = it.config,
                     modifier = modifier.animateItemPlacement(),

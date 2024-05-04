@@ -173,6 +173,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class TravalaPromo(
+        val startDateTime: DateTime,
+        val endDateTime: DateTime,
+        val bannerLink: String?,
+        val onBannerClick: (String?) -> Unit,
+        val onCloseClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.main_travala_promotion_title),
+            subtitle = resourceReference(id = R.string.main_travala_promotion_description),
+            iconResId = R.drawable.img_swap_promo,
+            backgroundResId = R.drawable.img_swap_promo_green_banner_background,
+            onClick = { onBannerClick.invoke(bannerLink) },
+            onCloseClick = onCloseClick,
+        ),
+    )
+
     data class SwapPromo(
         val startDateTime: DateTime,
         val endDateTime: DateTime,
