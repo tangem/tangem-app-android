@@ -1,8 +1,8 @@
 package com.tangem.feature.swap.converters
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.converter.Converter
 
