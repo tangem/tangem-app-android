@@ -13,10 +13,15 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.derivation.DerivationStyle
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.isSupportedInApp
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.*
+import com.tangem.domain.common.extensions.canHandleBlockchain
+import com.tangem.domain.common.extensions.canHandleToken
+import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.features.addCustomToken.CustomCurrency
@@ -232,7 +237,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                 ifRight = { it.scanResponse },
             )
             val derivationStyle = scanResponse?.derivationStyleProvider?.getDerivationStyle()
-            return listOf(defaultNetwork) + Blockchain.values()
+            return listOf(defaultNetwork) + Blockchain.entries
                 .filter { blockchain ->
                     scanResponse?.card?.supportedBlockchains(scanResponse.cardTypesResolver)
                         ?.contains(blockchain) == true && isDerivationPathNotEmpty(derivationStyle, blockchain)
@@ -316,7 +321,7 @@ internal class AddCustomTokenViewModel @Inject constructor(
                     type = DerivationPathSelectorType.CUSTOM,
                     derivationPath = "",
                 ),
-            ) + Blockchain.values()
+            ) + Blockchain.entries
                 .filter { blockchain ->
                     blockchain.isSupportedInApp() && !blockchain.isTestnet()
                 }
