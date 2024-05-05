@@ -15,6 +15,8 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
@@ -45,7 +47,7 @@ import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
-import com.tangem.features.send.impl.presentation.analytics.utils.SendOnNextScreenAnalyticSender
+import com.tangem.features.send.impl.presentation.analytics.utils.SendScreenAnalyticSender
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
@@ -92,6 +94,7 @@ internal class SendViewModel @Inject constructor(
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
@@ -119,6 +122,7 @@ internal class SendViewModel @Inject constructor(
 
     private val stateFactory = SendStateFactory(
         clickIntents = this,
+        stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         userWalletProvider = Provider { userWallet },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
@@ -129,12 +133,14 @@ internal class SendViewModel @Inject constructor(
     )
 
     private val amountStateFactory = AmountStateFactory(
+        stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
     )
 
     private val feeStateFactory = FeeStateFactory(
         clickIntents = this,
+        stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
@@ -143,6 +149,7 @@ internal class SendViewModel @Inject constructor(
 
     private val eventStateFactory = SendEventStateFactory(
         clickIntents = this,
+        stateRouterProvider = Provider { stateRouter },
         currentStateProvider = Provider { uiState },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeStateFactory = feeStateFactory,
@@ -161,14 +168,19 @@ internal class SendViewModel @Inject constructor(
         userWalletProvider = Provider { userWallet },
         stateRouterProvider = Provider { stateRouter },
         isSubtractAvailableProvider = Provider { isAmountSubtractAvailable },
+        appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         currencyChecksRepository = currencyChecksRepository,
         clickIntents = this,
         analyticsEventHandler = analyticsEventHandler,
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
     )
 
-    private val sendOnNextScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
-        SendOnNextScreenAnalyticSender(analyticsEventHandler)
+    private val sendScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
+        SendScreenAnalyticSender(
+            stateRouterProvider = Provider { stateRouter },
+            currentStateProvider = Provider { uiState },
+            analyticsEventHandler = analyticsEventHandler,
+        )
     }
 // [REDACTED_TODO_COMMENT]
     var uiState: SendUiState by mutableStateOf(stateFactory.getInitialState())
@@ -188,11 +200,11 @@ internal class SendViewModel @Inject constructor(
     private var memoValidationJobHolder = JobHolder()
     private var sendNotificationsJobHolder = JobHolder()
     private var feeNotificationsJobHolder = JobHolder()
-    private var qrScannerJobHolder = JobHolder()
 
     private var sendIdleTimer = 0L
 
     init {
+        subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
         subscribeOnBalanceHidden()
         getTapHelpPreviewAvailability()
@@ -212,6 +224,13 @@ internal class SendViewModel @Inject constructor(
     fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
         innerRouter = router
         this.stateRouter = stateRouter
+    }
+
+    private fun subscribeOnQRScannerResult() {
+        listenToQrScanningUseCase(SourceType.SEND)
+            .getOrElse { emptyFlow() }
+            .onEach(::onQrCodeScanned)
+            .launchIn(viewModelScope)
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -443,8 +462,13 @@ internal class SendViewModel @Inject constructor(
         stateRouter.currentState
             .onEach {
                 when (it.type) {
-                    SendUiStateType.Fee -> loadFee()
-                    SendUiStateType.Send -> sendIdleTimer = SystemClock.elapsedRealtime()
+                    SendUiStateType.Fee,
+                    SendUiStateType.EditFee,
+                    -> loadFee()
+                    SendUiStateType.Send -> {
+                        uiState = stateFactory.getIsAmountSubtractedState(isAmountSubtractAvailable)
+                        sendIdleTimer = SystemClock.elapsedRealtime()
+                    }
                     else -> Unit
                 }
             }
@@ -478,16 +502,28 @@ internal class SendViewModel @Inject constructor(
         stateRouter.onBackClick(isSuccess = uiState.sendState?.isSuccess == true)
     }
 
-    override fun onNextClick() {
+    override fun onCloseClick() {
+        sendScreenAnalyticSender.sendOnClose()
+        when (stateRouter.currentState.value.type) {
+            SendUiStateType.EditAmount,
+            SendUiStateType.EditFee,
+            SendUiStateType.EditRecipient,
+            -> onBackClick()
+            else -> popBackStack()
+        }
+    }
+
+    override fun onNextClick(isFromEdit: Boolean) {
         val currentState = stateRouter.currentState.value
-        sendOnNextScreenAnalyticSender.send(currentState.type, uiState)
+        uiState = stateFactory.syncEditStates(isFromEdit = isFromEdit)
+        sendScreenAnalyticSender.send(currentState.type, uiState)
         when (currentState.type) {
-            SendUiStateType.Fee -> {
-                if (onFeeNext()) return
-            }
-            SendUiStateType.Amount -> {
-                loadFee()
-            }
+            SendUiStateType.Fee,
+            SendUiStateType.EditFee,
+            -> if (onFeeNext()) return
+            SendUiStateType.Amount,
+            SendUiStateType.EditAmount,
+            -> loadFee()
             else -> Unit
         }
 
@@ -512,13 +548,14 @@ internal class SendViewModel @Inject constructor(
         innerRouter.openTokenDetails(userWalletId, currency)
 
     private fun onFeeNext(): Boolean {
-        if (checkIfFeeTooLow(uiState)) {
+        val feeState = uiState.getFeeState(stateRouter.isEditState)
+        val feeSelectorState = feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
+        if (checkIfFeeTooLow(feeSelectorState)) {
             uiState = eventStateFactory.getFeeTooLowAlert(
                 onConsume = { uiState = eventStateFactory.onConsumeEventState() },
             )
             return true
         }
-        val feeSelectorState = uiState.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
         return checkIfFeeTooHigh(
             feeSelectorState = feeSelectorState,
             onShow = { diff ->
@@ -535,6 +572,23 @@ internal class SendViewModel @Inject constructor(
             feeJobHolder.cancel()
         }
     }
+
+    private fun onQrCodeScanned(address: String) {
+        parseQrCodeUseCase(address, cryptoCurrency).fold(
+            ifRight = { parsedCode ->
+                onRecipientAddressValueChange(parsedCode.address, EnterAddressSource.QRCode)
+                parsedCode.amount?.let {
+                    onAmountValueChange(it.parseBigDecimal(decimals = cryptoCurrency.decimals))
+                }
+                parsedCode.memo?.let { onRecipientMemoValueChange(it) }
+            },
+            ifLeft = {
+                onRecipientAddressValueChange(address, EnterAddressSource.QRCode)
+                Timber.w(it)
+            },
+        )
+    }
+
     // endregion
 
     // region amount state clicks
@@ -550,29 +604,16 @@ internal class SendViewModel @Inject constructor(
         uiState = amountStateFactory.getOnMaxAmountClick()
         analyticsEventHandler.send(SendAnalyticEvents.MaxAmountButtonClicked)
     }
-    // endregion
 
-    // region recipient state clicks
-    fun onQrCodeScanned(address: String) {
-        viewModelScope.launch(dispatchers.main) {
-            parseQrCodeUseCase(address, cryptoCurrency).fold(
-                ifRight = { parsedCode ->
-                    onRecipientAddressValueChange(parsedCode.address, EnterAddressSource.QRCode)
-                    parsedCode.amount?.let {
-                        onAmountValueChange(it.parseBigDecimal(decimals = cryptoCurrency.decimals))
-                    }
-                    parsedCode.memo?.let { onRecipientMemoValueChange(it) }
-                },
-                ifLeft = {
-                    onRecipientAddressValueChange(address, EnterAddressSource.QRCode)
-                    Timber.w(it)
-                },
-            )
-        }.saveIn(qrScannerJobHolder)
+    override fun onAmountPasteTriggerDismiss() {
+        uiState = amountStateFactory.getOnAmountPastedTriggerDismiss()
     }
+// endregion
+
+// region recipient state clicks
 
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
                 uiState = stateFactory.onRecipientAddressValueChange(value)
                 uiState = stateFactory.getOnRecipientAddressValidationStarted()
@@ -585,7 +626,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onRecipientMemoValueChange(value: String) {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
                 uiState = stateFactory.getOnRecipientMemoValueChange(value)
                 uiState = stateFactory.getOnRecipientAddressValidationStarted()
@@ -626,9 +667,9 @@ internal class SendViewModel @Inject constructor(
 
     private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean) {
         val isRecent = type == EnterAddressSource.RecentAddress
-        if (isRecent && isValidAddress) onNextClick()
+        if (isRecent && isValidAddress) onNextClick(stateRouter.isEditState)
     }
-    // endregion
+// endregion
 
     // region fee
     override fun feeReload() = loadFee()
@@ -661,10 +702,12 @@ internal class SendViewModel @Inject constructor(
             val isShowStatus = uiState.feeState?.fee == null
             if (isShowStatus) {
                 uiState = feeStateFactory.onFeeOnLoadingState()
+                updateNotifications()
             }
             val result = callFeeUseCase()?.fold(
                 ifRight = {
                     uiState = feeStateFactory.onFeeOnLoadedState(it)
+                    sendIdleTimer = SystemClock.elapsedRealtime()
                 },
                 ifLeft = {
                     onFeeLoadFailed(isShowStatus)
@@ -676,9 +719,6 @@ internal class SendViewModel @Inject constructor(
             updateNotifications()
             updateFeeNotifications()
         }.saveIn(feeJobHolder)
-            .invokeOnCompletion {
-// [REDACTED_TODO_COMMENT]
-            }
     }
 
     private fun onFeeLoadFailed(isShowStatus: Boolean) {
@@ -693,18 +733,19 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun callFeeUseCase(): Either<GetFeeError, TransactionFee>? {
-        val amountState = uiState.amountState ?: return null
-        val recipientState = uiState.recipientState ?: return null
+        val isFromConfirmation = stateRouter.currentState.value.isFromConfirmation
+        val amountState = uiState.getAmountState(isFromConfirmation) ?: return null
+        val recipientState = uiState.getRecipientState(isFromConfirmation) ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
 
         return getFeeUseCase.invoke(
             amount = amount,
             destination = recipientState.addressTextField.value,
             userWallet = userWallet,
-            cryptoCurrency = cryptoCurrency,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
         )
     }
-    // endregion
+// endregion
 
     // region send state clicks
     override fun onSendClick() {
@@ -721,12 +762,14 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun showAmount() {
+        uiState = stateFactory.syncEditStates(isFromEdit = false)
         stateRouter.showAmount(isFromConfirmation = true)
         setNeverToShowTapHelp()
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
     }
 
     override fun showRecipient() {
+        uiState = stateFactory.syncEditStates(isFromEdit = false)
         stateRouter.showRecipient(isFromConfirmation = true)
         uiState = stateFactory.getHiddenTapHelpState()
         setNeverToShowTapHelp()
@@ -734,6 +777,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun showFee() {
+        uiState = stateFactory.syncEditStates(isFromEdit = false)
         stateRouter.showFee(isFromConfirmation = true)
         setNeverToShowTapHelp()
         analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
@@ -753,8 +797,17 @@ internal class SendViewModel @Inject constructor(
         analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
     }
 
-    override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {
-        uiState = amountStateFactory.getOnAmountValueChange(reducedAmount.parseBigDecimal(cryptoCurrency.decimals))
+    override fun onAmountReduceClick(
+        reduceAmountBy: BigDecimal?,
+        reduceAmountTo: BigDecimal?,
+        clazz: Class<out SendNotification>,
+    ) {
+        uiState = when {
+            reduceAmountBy != null -> amountStateFactory.getOnAmountReduceByState(reduceAmountBy)
+            reduceAmountTo != null -> amountStateFactory.getOnAmountReduceToState(reduceAmountTo)
+            else -> return
+        }
+
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
         feeReload()
     }
@@ -776,6 +829,7 @@ internal class SendViewModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
+            reduceAmountBy = uiState.sendState?.reduceAmountBy,
         )
 
         viewModelScope.launch(dispatchers.main) {
@@ -889,7 +943,7 @@ internal class SendViewModel @Inject constructor(
         }
         uiState = stateFactory.getHiddenTapHelpState()
     }
-    // endregion
+// endregion
 
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 60_000L
