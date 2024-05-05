@@ -1,13 +1,14 @@
 package com.tangem.features.send.impl.presentation.ui
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,11 +19,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -40,6 +43,7 @@ internal fun SendNavigationButtons(
     val isSuccess = sendState.isSuccess
     val isSendingState = currentState.type == SendUiStateType.Send && !isSuccess
     val isSentState = currentState.type == SendUiStateType.Send && isSuccess
+
     Column(
         modifier = modifier
             .padding(
@@ -48,7 +52,11 @@ internal fun SendNavigationButtons(
                 bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
-        SendingText(uiState = uiState, isVisible = isSendingState)
+        SendingText(
+            uiState = uiState,
+            isEditState = currentState.isFromConfirmation,
+            isVisible = isSendingState,
+        )
         SendDoneButtons(
             txUrl = sendState.txUrl,
             onExploreClick = uiState.clickIntents::onExploreClick,
@@ -91,25 +99,26 @@ private fun SendNavigationButton(
     } else {
         TangemButtonIconPosition.None
     }
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-        modifier = modifier,
-    ) {
+
+    Row(modifier = modifier) {
         AnimatedVisibility(
             visible = !isEditingDisabled && isCorrectScreen && !isFromConfirmation,
             enter = expandHorizontally(expandFrom = Alignment.End),
             exit = shrinkHorizontally(shrinkTowards = Alignment.End),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back_24),
-                tint = TangemTheme.colors.icon.primary1,
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
-                    .background(TangemTheme.colors.button.secondary)
-                    .clickable { uiState.clickIntents.onPrevClick() }
-                    .padding(TangemTheme.dimens.spacing12),
-            )
+            Row {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back_24),
+                    tint = TangemTheme.colors.icon.primary1,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                        .background(TangemTheme.colors.button.secondary)
+                        .clickable { uiState.clickIntents.onPrevClick() }
+                        .padding(TangemTheme.dimens.spacing12),
+                )
+                SpacerW12()
+            }
         }
         TangemButton(
             text = stringResource(buttonTextId),
@@ -127,20 +136,40 @@ private fun SendNavigationButton(
 }
 
 @Composable
-private fun SendingText(uiState: SendUiState, isVisible: Boolean, modifier: Modifier = Modifier) {
+private fun SendingText(
+    uiState: SendUiState,
+    isEditState: Boolean,
+    isVisible: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    var isVisibleProxy by remember { mutableStateOf(isVisible) }
+    val keyboard by keyboardAsState()
+
+    // the text should appear when the keyboard is closed
+    LaunchedEffect(isVisible, keyboard) {
+        if (isVisible && keyboard is Keyboard.Opened) {
+            return@LaunchedEffect
+        }
+        isVisibleProxy = isVisible
+    }
+
     AnimatedVisibility(
-        visible = isVisible,
+        visible = isVisibleProxy,
         modifier = modifier,
-        enter = slideInVertically().plus(fadeIn()),
-        exit = slideOutVertically().plus(fadeOut()),
+        enter = slideInVertically() + fadeIn(),
+        exit = fadeOut(tween(durationMillis = 300)),
         label = "Animate show sending state text",
     ) {
-        val amountState = uiState.amountState
-        val feeState = uiState.feeState
+        val amountState = uiState.getAmountState(isEditState)
+        val feeState = uiState.getFeeState(isEditState)
         val fiatRate = feeState?.rate
         val fiatAmount = amountState?.amountTextField?.fiatAmount
         val feeFiat = fiatRate?.let { feeState.fee?.amount?.value?.multiply(it) }
-        val sendingFiat = feeFiat?.let { fiatAmount?.value?.plus(it) }
+        val sendingFiat = if (uiState.isSubtracted) {
+            fiatAmount?.value
+        } else {
+            feeFiat?.let { fiatAmount?.value?.plus(it) }
+        }
 
         if (feeFiat != null && sendingFiat != null) {
             val sendingValue = BigDecimalFormatter.formatFiatAmount(
@@ -217,11 +246,11 @@ private fun getButtonData(
         SendUiStateType.Amount,
         SendUiStateType.Recipient,
         SendUiStateType.Fee,
-        -> if (currentState.isFromConfirmation) {
-            R.string.common_continue to uiState.clickIntents::onNextClick
-        } else {
-            R.string.common_next to uiState.clickIntents::onNextClick
-        }
+        -> R.string.common_next to { uiState.clickIntents.onNextClick() }
+        SendUiStateType.EditFee,
+        SendUiStateType.EditAmount,
+        SendUiStateType.EditRecipient,
+        -> R.string.common_continue to { uiState.clickIntents.onNextClick(isFromEdit = true) }
         SendUiStateType.Send -> when {
             isSuccess -> R.string.common_close
             isSending -> R.string.send_sending
@@ -232,10 +261,13 @@ private fun getButtonData(
 
 private fun isButtonEnabled(currentState: SendUiCurrentScreen, uiState: SendUiState): Boolean {
     return when (currentState.type) {
-        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled ?: false
-        SendUiStateType.Send -> uiState.sendState?.isPrimaryButtonEnabled ?: false
+        SendUiStateType.Amount -> uiState.amountState?.isPrimaryButtonEnabled
+        SendUiStateType.Recipient -> uiState.recipientState?.isPrimaryButtonEnabled
+        SendUiStateType.Fee -> uiState.feeState?.isPrimaryButtonEnabled
+        SendUiStateType.Send -> uiState.sendState?.isPrimaryButtonEnabled
+        SendUiStateType.EditAmount -> uiState.editAmountState?.isPrimaryButtonEnabled
+        SendUiStateType.EditRecipient -> uiState.editRecipientState?.isPrimaryButtonEnabled
+        SendUiStateType.EditFee -> uiState.editFeeState?.isPrimaryButtonEnabled
         else -> true
-    }
+    } ?: false
 }
