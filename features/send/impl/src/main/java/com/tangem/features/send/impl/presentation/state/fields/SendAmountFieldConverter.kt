@@ -14,15 +14,18 @@ import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.convertToAmount
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.isNullOrZero
 import java.math.BigDecimal
 
 private const val FIAT_DECIMALS = 2
 
 internal class SendAmountFieldConverter(
     private val clickIntents: SendClickIntents,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
 ) : Converter<String, SendTextField.AmountField> {
@@ -32,12 +35,14 @@ internal class SendAmountFieldConverter(
         val cryptoDecimal = value.toBigDecimalOrDefault()
         val cryptoAmount = cryptoDecimal.convertToAmount(cryptoCurrencyStatus.currency)
         val fiatRate = cryptoCurrencyStatus.value.fiatRate
-        val (fiatValue, fiatDecimal) = if (value.isEmpty()) {
-            "" to BigDecimal.ZERO
-        } else {
-            val fiatDecimal = fiatRate?.multiply(cryptoDecimal) ?: BigDecimal.ZERO
-            val fiatValue = fiatDecimal.parseBigDecimal(FIAT_DECIMALS)
-            fiatValue to fiatDecimal
+        val (fiatValue, fiatDecimal) = when {
+            fiatRate.isNullOrZero() -> "" to null
+            value.isEmpty() -> "" to BigDecimal.ZERO
+            else -> {
+                val fiatDecimal = fiatRate?.multiply(cryptoDecimal)
+                val fiatValue = fiatDecimal?.parseBigDecimal(FIAT_DECIMALS).orEmpty()
+                fiatValue to fiatDecimal
+            }
         }
         val isDoneActionEnabled = !cryptoDecimal.isZero()
         return SendTextField.AmountField(
@@ -48,17 +53,21 @@ internal class SendAmountFieldConverter(
                 imeAction = if (isDoneActionEnabled) ImeAction.Done else ImeAction.None,
                 keyboardType = KeyboardType.Number,
             ),
-            keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
+            keyboardActions = KeyboardActions(
+                onDone = { clickIntents.onNextClick(stateRouterProvider().isEditState) },
+            ),
             isFiatValue = false,
             cryptoAmount = cryptoAmount,
             fiatAmount = getAppCurrencyAmount(fiatDecimal, appCurrencyProvider()),
             isError = false,
-            error = TextReference.Res(R.string.swapping_insufficient_funds),
+            error = TextReference.Res(R.string.send_validation_amount_exceeds_balance),
             isFiatUnavailable = fiatRate == null,
+            isValuePasted = false,
+            onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
         )
     }
 
-    private fun getAppCurrencyAmount(fiatValue: BigDecimal, appCurrency: AppCurrency) = Amount(
+    private fun getAppCurrencyAmount(fiatValue: BigDecimal?, appCurrency: AppCurrency) = Amount(
         currencySymbol = appCurrency.symbol,
         value = fiatValue,
         decimals = FIAT_DECIMALS,
