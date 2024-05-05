@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.parseBigDecimal
