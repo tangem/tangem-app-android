@@ -11,7 +11,6 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.common.analytics.events.WalletConnect
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,13 +41,6 @@ internal class WalletConnectFragment : ComposeFragment(), StoreSubscriber<Wallet
             modifier = modifier,
             state = state,
             onBackClick = {
-                if (state.isLoading) {
-                    store.dispatch(
-                        WalletConnectAction.FailureEstablishingSession(
-                            store.state.walletConnectState.newSessionData?.session?.session,
-                        ),
-                    )
-                }
                 store.dispatch(NavigationAction.PopBackTo())
             },
         )
