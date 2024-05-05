@@ -28,9 +28,59 @@ internal data class SendUiState(
     val recipientState: SendStates.RecipientState? = null,
     val feeState: SendStates.FeeState? = null,
     val sendState: SendStates.SendState? = null,
+    val editAmountState: SendStates.AmountState? = null,
+    val editRecipientState: SendStates.RecipientState? = null,
+    val editFeeState: SendStates.FeeState? = null,
     val isBalanceHidden: Boolean,
+    val isSubtracted: Boolean,
     val event: StateEvent<SendEvent>,
-)
+) {
+
+    fun getAmountState(isEditState: Boolean): SendStates.AmountState? {
+        return if (isEditState) {
+            editAmountState
+        } else {
+            amountState
+        }
+    }
+
+    fun getRecipientState(isEditState: Boolean): SendStates.RecipientState? {
+        return if (isEditState) {
+            editRecipientState
+        } else {
+            recipientState
+        }
+    }
+
+    fun getFeeState(isEditState: Boolean): SendStates.FeeState? {
+        return if (isEditState) {
+            editFeeState
+        } else {
+            feeState
+        }
+    }
+
+    fun copyWrapped(
+        isEditState: Boolean,
+        amountState: SendStates.AmountState? = this.amountState,
+        feeState: SendStates.FeeState? = this.feeState,
+        recipientState: SendStates.RecipientState? = this.recipientState,
+        sendState: SendStates.SendState? = this.sendState,
+    ): SendUiState = if (isEditState) {
+        copy(
+            editAmountState = amountState,
+            editFeeState = feeState,
+            editRecipientState = recipientState,
+        )
+    } else {
+        copy(
+            amountState = amountState,
+            feeState = feeState,
+            recipientState = recipientState,
+            sendState = sendState,
+        )
+    }
+}
 
 @Stable
 internal sealed class SendStates {
@@ -48,6 +98,7 @@ internal sealed class SendStates {
         val walletBalance: TextReference,
         val tokenIconState: TokenIconState,
         val segmentedButtonConfig: PersistentList<SendAmountSegmentedButtonsConfig>,
+        val selectedButton: Int,
         val isSegmentedButtonsEnabled: Boolean,
         val amountTextField: SendTextField.AmountField,
         val appCurrencyCode: String,
@@ -84,12 +135,14 @@ internal sealed class SendStates {
     @Stable
     data class SendState(
         override val type: SendUiStateType = SendUiStateType.Send,
-        override val isPrimaryButtonEnabled: Boolean = true,
+        override val isPrimaryButtonEnabled: Boolean = false,
         val isSending: Boolean,
         val isSuccess: Boolean,
         val transactionDate: Long,
         val txUrl: String,
         val ignoreAmountReduce: Boolean,
+        val reduceAmountBy: BigDecimal?,
+        val reduceAmountTo: BigDecimal?,
         val isFromConfirmation: Boolean,
         val showTapHelp: Boolean,
         val notifications: ImmutableList<SendNotification>,
@@ -105,6 +158,9 @@ enum class SendUiStateType {
     None,
     Recipient,
     Amount,
-    Send,
     Fee,
+    Send,
+    EditAmount,
+    EditRecipient,
+    EditFee,
 }

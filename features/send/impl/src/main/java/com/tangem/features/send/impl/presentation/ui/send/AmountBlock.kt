@@ -31,8 +31,8 @@ internal fun AmountBlock(
     val amount = amountState.amountTextField
 
     val cryptoAmount = BigDecimalFormatter.formatWithSymbol(amount.value, amount.cryptoAmount.currencySymbol)
-    val fiatAmount = BigDecimalFormatter.formatFiatEditableAmount(
-        fiatAmount = amount.fiatValue,
+    val fiatAmount = BigDecimalFormatter.formatFiatAmount(
+        fiatAmount = amount.fiatAmount.value,
         fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
         fiatCurrencyCode = amountState.appCurrencyCode,
     )
