@@ -4,15 +4,14 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.res.TangemTheme
@@ -54,30 +53,55 @@ internal fun SendSpeedSelectorItem(
                 onSelect = onSelect,
                 modifier = modifier,
                 preDot = getCryptoReference(amount, state.isFeeApproximate),
-                postDot = getFiatReference(amount, state.rate, state.appCurrency),
+                postDot = getFiatReference(amount?.value, state.rate, state.appCurrency),
                 ellipsizeOffset = amount?.currencySymbol?.length,
                 isSelected = content?.selectedFee == feeType,
                 showDivider = showDivider,
             )
-            SendSpeedSelectorItemError(isError = feeSelectorState is FeeSelectorState.Error)
+            FeeLoading(feeSelectorState)
+            FeeError(feeSelectorState)
         }
     }
 }
 
 @Composable
-private fun SendSpeedSelectorItemError(isError: Boolean) {
+private fun FeeLoading(feeSelectorState: FeeSelectorState) {
     Row {
         SpacerWMax()
         AnimatedVisibility(
-            visible = isError,
-            label = "Error state indication animation",
-            enter = fadeIn(),
-            exit = fadeOut(),
+            visible = feeSelectorState == FeeSelectorState.Loading,
+            label = "Fee Loading State Change",
+            modifier = Modifier.align(Alignment.CenterVertically),
+        ) {
+            RectangleShimmer(
+                radius = TangemTheme.dimens.radius3,
+                modifier = Modifier
+                    .padding(
+                        vertical = TangemTheme.dimens.spacing18,
+                        horizontal = TangemTheme.dimens.spacing12,
+                    )
+                    .size(
+                        height = TangemTheme.dimens.size12,
+                        width = TangemTheme.dimens.size90,
+                    ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun FeeError(feeSelectorState: FeeSelectorState) {
+    Row {
+        SpacerWMax()
+        AnimatedVisibility(
+            visible = feeSelectorState == FeeSelectorState.Error,
+            label = "Fee Error State Change",
+            modifier = Modifier.align(Alignment.CenterVertically),
         ) {
             Text(
                 text = BigDecimalFormatter.EMPTY_BALANCE_SIGN,
-                style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography.body2,
                 modifier = Modifier
                     .padding(
                         vertical = TangemTheme.dimens.spacing14,
@@ -101,10 +125,9 @@ private fun FeeSelectorState.Content.getAmount(feeType: FeeType): Amount? {
 private fun FeeSelectorState.Content?.getDividerAndVisibility(feeType: FeeType): Pair<Boolean, Boolean> {
     val hasCustomValues = !this?.customValues.isNullOrEmpty()
     val isNotSingle = this?.fees !is TransactionFee.Single
-    val isLoaded = this?.fees != null
     return when (feeType) {
         FeeType.Slow -> true to isNotSingle
-        FeeType.Market -> isNotSingle to isLoaded
+        FeeType.Market -> isNotSingle to true
         FeeType.Fast -> hasCustomValues to isNotSingle
         FeeType.Custom -> false to hasCustomValues
     }
