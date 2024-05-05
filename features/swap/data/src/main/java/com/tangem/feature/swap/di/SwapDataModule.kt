@@ -8,7 +8,7 @@ import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.swap.DefaultSwapRepository
 import com.tangem.feature.swap.DefaultSwapTransactionRepository
 import com.tangem.feature.swap.converters.ErrorsDataConverter
@@ -33,7 +33,7 @@ internal class SwapDataModule {
         coroutineDispatcher: CoroutineDispatcherProvider,
         dataSignature: DataSignatureVerifier,
         walletManagerFacade: WalletManagersFacade,
-        walletsStateHolder: WalletsStateHolder,
+        userWalletsListManager: UserWalletsListManager,
         errorsDataConverter: ErrorsDataConverter,
         @NetworkMoshi moshi: Moshi,
     ): SwapRepository {
@@ -42,7 +42,7 @@ internal class SwapDataModule {
             tangemExpressApi = tangemExpressApi,
             coroutineDispatcher = coroutineDispatcher,
             walletManagersFacade = walletManagerFacade,
-            walletsStateHolder = walletsStateHolder,
+            userWalletsListManager = userWalletsListManager,
             errorsDataConverter = errorsDataConverter,
             dataSignatureVerifier = dataSignature,
             moshi = moshi,

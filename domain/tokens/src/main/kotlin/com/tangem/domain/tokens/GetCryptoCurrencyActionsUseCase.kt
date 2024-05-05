@@ -9,13 +9,10 @@ import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.math.BigDecimal
 
 /**
  * Use case to determine which TokenActions are available for a [CryptoCurrency]
@@ -29,7 +26,6 @@ class GetCryptoCurrencyActionsUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -73,17 +69,18 @@ class GetCryptoCurrencyActionsUseCase(
             walletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             states = createListOfActions(
-                userWallet,
-                coinStatus,
-                cryptoCurrencyStatus,
+                userWallet = userWallet,
+                coinStatus = coinStatus,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
         )
     }
 
     /**
      * Creates list of action for expected order
-     * Actions priority: [Buy Send Receive Sell Swap]
+     * Actions priority: [Receive Send Swap Buy Sell]
      */
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private suspend fun createListOfActions(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
@@ -91,7 +88,7 @@ class GetCryptoCurrencyActionsUseCase(
     ): List<TokenActionsState.ActionState> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
-            return listOf(TokenActionsState.ActionState.HideToken(true))
+            return listOf(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
         }
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Unreachable) {
             return getActionsForUnreachableCurrency(cryptoCurrencyStatus)
@@ -102,52 +99,91 @@ class GetCryptoCurrencyActionsUseCase(
 
         // copy address
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            activeList.add(TokenActionsState.ActionState.CopyAddress(true))
+            activeList.add(TokenActionsState.ActionState.CopyAddress(ScenarioUnavailabilityReason.None))
         }
 
         // receive
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            activeList.add(TokenActionsState.ActionState.Receive(true))
+            activeList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None))
         }
 
         // send
-        if (
-            isSendDisabled(
-                userWalletId = userWallet.walletId,
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                coinStatus = coinStatus,
-            )
-        ) {
-            disabledList.add(TokenActionsState.ActionState.Send(false))
+        val sendUnavailabilityReason = getSendUnavailabilityReason(
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            coinStatus = coinStatus,
+        )
+        if (sendUnavailabilityReason == ScenarioUnavailabilityReason.None) {
+            activeList.add(TokenActionsState.ActionState.Send(sendUnavailabilityReason))
         } else {
-            activeList.add(TokenActionsState.ActionState.Send(true))
+            disabledList.add(TokenActionsState.ActionState.Send(sendUnavailabilityReason))
         }
 
         // swap
         if (userWallet.isMultiCurrency) {
-            if (marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency)) {
-                activeList.add(TokenActionsState.ActionState.Swap(true))
+            if (
+                marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency) &&
+                cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote
+            ) {
+                activeList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None))
             } else {
-                disabledList.add(TokenActionsState.ActionState.Swap(false))
+                disabledList.add(
+                    TokenActionsState.ActionState.Swap(
+                        unavailabilityReason = ScenarioUnavailabilityReason.NotExchangeable(cryptoCurrency.name),
+                    ),
+                )
             }
         }
 
         // buy
         if (rampManager.availableForBuy(cryptoCurrency)) {
-            activeList.add(TokenActionsState.ActionState.Buy(true))
+            activeList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
-            disabledList.add(TokenActionsState.ActionState.Buy(false))
+            disabledList.add(
+                TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.BuyUnavailable(cryptoCurrency.symbol)),
+            )
         }
 
         // sell
-        if (rampManager.availableForSell(cryptoCurrency)) {
-            activeList.add(TokenActionsState.ActionState.Sell(true))
-        } else {
-            disabledList.add(TokenActionsState.ActionState.Sell(false))
+        val sellSupportedByService = rampManager.availableForSell(cryptoCurrency)
+        val sendAvailable = sendUnavailabilityReason is ScenarioUnavailabilityReason.None
+
+        when {
+            sellSupportedByService && sendAvailable -> {
+                activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
+            }
+            sellSupportedByService && !sendAvailable -> {
+                (sendUnavailabilityReason as? ScenarioUnavailabilityReason.EmptyBalance)?.let {
+                    disabledList.add(
+                        TokenActionsState.ActionState.Sell(
+                            unavailabilityReason = it.copy(
+                                withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL,
+                            ),
+                        ),
+                    )
+                }
+                (sendUnavailabilityReason as? ScenarioUnavailabilityReason.PendingTransaction)?.let {
+                    disabledList.add(
+                        TokenActionsState.ActionState.Sell(
+                            unavailabilityReason = it.copy(
+                                withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL,
+                            ),
+                        ),
+                    )
+                }
+            }
+            else -> {
+                disabledList.add(
+                    TokenActionsState.ActionState.Sell(
+                        unavailabilityReason = ScenarioUnavailabilityReason.NotSupportedBySellService(
+                            cryptoCurrency.name,
+                        ),
+                    ),
+                )
+            }
         }
 
         // hide
-        activeList.add(TokenActionsState.ActionState.HideToken(true))
+        activeList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
 
         return activeList + disabledList
     }
@@ -155,71 +191,57 @@ class GetCryptoCurrencyActionsUseCase(
     private fun getActionsForUnreachableCurrency(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): List<TokenActionsState.ActionState> {
-        val activeList = mutableListOf<TokenActionsState.ActionState>()
-        val disabledList = mutableListOf<TokenActionsState.ActionState>()
+        val actionsList = mutableListOf<TokenActionsState.ActionState>()
 
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            activeList.add(TokenActionsState.ActionState.CopyAddress(true))
+            actionsList.add(TokenActionsState.ActionState.CopyAddress(ScenarioUnavailabilityReason.None))
         }
         if (rampManager.availableForBuy(cryptoCurrencyStatus.currency)) {
-            activeList.add(TokenActionsState.ActionState.Buy(true))
+            actionsList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
-            disabledList.add(TokenActionsState.ActionState.Buy(false))
+            actionsList.add(
+                TokenActionsState.ActionState.Buy(
+                    ScenarioUnavailabilityReason.BuyUnavailable(
+                        cryptoCurrencyName = cryptoCurrencyStatus.currency.name,
+                    ),
+                ),
+            )
         }
-        disabledList.add(TokenActionsState.ActionState.Send(false))
-        disabledList.add(TokenActionsState.ActionState.Swap(false))
-        disabledList.add(TokenActionsState.ActionState.Sell(false))
+        actionsList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.Unreachable))
+        actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.Unreachable))
+        actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.Unreachable))
 
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            activeList.add(TokenActionsState.ActionState.Receive(true))
+            actionsList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None))
         }
-        activeList.add(TokenActionsState.ActionState.HideToken(true))
-        return activeList + disabledList
+        actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
+        return actionsList
     }
 
-    private suspend fun isSendDisabled(
-        userWalletId: UserWalletId,
+    private fun getSendUnavailabilityReason(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus?,
-    ): Boolean {
-        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, cryptoCurrencyStatus.currency)
-        val notEnoughBalanceForFee = isNotEnoughBalanceForFee(
-            feePaidCurrency = feePaidCurrency,
-            tokenStatus = cryptoCurrencyStatus,
-            coinStatus = coinStatus,
-        )
-        return cryptoCurrencyStatus.value.amount.isNullOrZero() ||
-            notEnoughBalanceForFee ||
+    ): ScenarioUnavailabilityReason {
+        return when {
+            cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
+                ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
+            }
             currenciesRepository.hasPendingTransactions(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 coinStatus = coinStatus,
-            )
-    }
-
-    private fun isNotEnoughBalanceForFee(
-        feePaidCurrency: FeePaidCurrency,
-        tokenStatus: CryptoCurrencyStatus,
-        coinStatus: CryptoCurrencyStatus?,
-    ): Boolean {
-        return if (sendFeatureToggles.isRedesignedSendEnabled) {
-            tokenStatus.value.amount.isZero()
-        } else {
-            when (feePaidCurrency) {
-                FeePaidCurrency.Coin -> !tokenStatus.value.amount.isZero() && coinStatus?.value?.amount.isZero()
-                FeePaidCurrency.SameCurrency -> tokenStatus.value.amount.isZero()
-                is FeePaidCurrency.Token -> {
-                    val feePaidTokenBalance = feePaidCurrency.balance
-                    !tokenStatus.value.amount.isZero() && feePaidTokenBalance.isZero()
-                }
+            ) -> {
+                ScenarioUnavailabilityReason.PendingTransaction(
+                    withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
+                    cryptoCurrencySymbol = coinStatus?.currency?.symbol.orEmpty(),
+                )
+            }
+            else -> {
+                ScenarioUnavailabilityReason.None
             }
         }
     }
 
     private fun isAddressAvailable(networkAddress: NetworkAddress?): Boolean {
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
-    }
-
-    private fun BigDecimal?.isZero(): Boolean {
-        return this?.signum() == 0
     }
 }
