@@ -60,24 +60,23 @@ sealed class TokenIconState {
      * @property background The background color to be used for the icon.
      * @property networkBadgeIconResId The drawable resource ID for the network badge.
      * @property isGrayscale Specifies whether to show the icon in grayscale.
+     * @property showCustomBadge Specifies whether to show the custom token badge.
      */
     data class CustomTokenIcon(
         val tint: Color,
         val background: Color,
         @DrawableRes override val networkBadgeIconResId: Int,
         override val isGrayscale: Boolean,
-    ) : TokenIconState() {
+        override val showCustomBadge: Boolean = true,
+    ) : TokenIconState()
 
-        override val showCustomBadge: Boolean = true
-    }
-
-    object Loading : TokenIconState() {
+    data object Loading : TokenIconState() {
         override val isGrayscale: Boolean = false
         override val showCustomBadge: Boolean = false
         override val networkBadgeIconResId: Int? = null
     }
 
-    object Locked : TokenIconState() {
+    data object Locked : TokenIconState() {
         override val isGrayscale: Boolean = false
         override val showCustomBadge: Boolean = false
         override val networkBadgeIconResId: Int? = null
