@@ -14,7 +14,9 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onBackClick() {}
 
-    override fun onNextClick() {}
+    override fun onCloseClick() {}
+
+    override fun onNextClick(isFromEdit: Boolean) {}
 
     override fun onPrevClick() {}
 
@@ -29,6 +31,8 @@ internal object SendClickIntentsStub : SendClickIntents {
     override fun onCurrencyChangeClick(isFiat: Boolean) {}
 
     override fun onMaxValueClick() {}
+
+    override fun onAmountPasteTriggerDismiss() {}
 
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {}
 
@@ -56,7 +60,11 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onShareClick() {}
 
-    override fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>) {}
+    override fun onAmountReduceClick(
+        reduceAmountBy: BigDecimal?,
+        reduceAmountTo: BigDecimal?,
+        clazz: Class<out SendNotification>,
+    ) {}
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {}
 }
