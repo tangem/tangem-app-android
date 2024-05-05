@@ -21,17 +21,17 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.blockchain.network.ResultChecker
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.userWalletsListManager
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -42,6 +42,7 @@ class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
+    private val userWalletsListManager: UserWalletsListManager,
 ) : TransactionManager {
 
     override suspend fun sendApproveTransaction(
