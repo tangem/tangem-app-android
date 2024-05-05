@@ -1,9 +1,9 @@
 package com.tangem.tap.features.tokens.impl.data.converters
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
-import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.isSupportedInApp
 import com.tangem.tap.features.tokens.impl.domain.models.Token
 import com.tangem.utils.converter.Converter
 
