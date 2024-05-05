@@ -37,10 +37,10 @@ import com.tangem.data.card.sdk.CardSdkLifecycleObserver
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.UserWalletsListManagerFeatureToggles
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -57,8 +57,7 @@ import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.redux.NotificationsHandler
-import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
@@ -93,11 +92,6 @@ val scope = CoroutineScope(coroutineContext)
 private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
-// [REDACTED_TODO_COMMENT]
-val userWalletsListManagerSafe: UserWalletsListManager?
-    get() = store.state.globalState.userWalletsListManager
-val userWalletsListManager: UserWalletsListManager
-    get() = userWalletsListManagerSafe!!
 
 @Suppress("LargeClass")
 @AndroidEntryPoint
@@ -144,7 +138,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var deepLinksRegistry: DeepLinksRegistry
 
     @Inject
-    lateinit var userWalletsListManagerFeatureToggles: UserWalletsListManagerFeatureToggles
+    lateinit var settingsRepository: SettingsRepository
 
     @Inject
     lateinit var getPolkadotCheckHasResetUseCase: GetPolkadotCheckHasResetUseCase
@@ -154,6 +148,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var analyticsEventsHandler: AnalyticsEventHandler
+
+    @Inject
+    lateinit var userWalletsListManager: UserWalletsListManager
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -168,10 +165,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+
         installAppTheme() // We need to call it before onCreate to prevent unnecessary activity recreation
 
         super.onCreate(savedInstanceState)
+
+        splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
         installActivityDependencies()
         observeAppThemeModeUpdates()
@@ -215,7 +215,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
-        lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
+        lockUserWalletsTimer = LockUserWalletsTimer(
+            owner = this,
+            settingsRepository = settingsRepository,
+            userWalletsListManager = userWalletsListManager,
+        )
 
         initIntentHandlers()
 
@@ -262,9 +266,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode?> {
-        val tapApplication = application as TapApplication
+        val tangemApplication = application as TangemApplication
 
-        return tapApplication.getAppThemeModeUseCase()
+        return tangemApplication.getAppThemeModeUseCase()
             .map { maybeMode ->
                 maybeMode.getOrElse { AppThemeMode.DEFAULT }
             }
@@ -301,7 +305,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun initIntentHandlers() {
-        val hasSavedWalletsProvider = { store.state.globalState.userWalletsListManager?.hasUserWallets == true }
+        val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
     }
@@ -435,15 +439,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
-        val canSaveWallets = if (userWalletsListManagerFeatureToggles.isGeneralManagerEnabled) {
-            runCatching { userWalletsListManager.asLockable()?.isLockedSync }
-                .fold(onSuccess = { true }, onFailure = { false })
-        } else {
-            userWalletsListManager is BiometricUserWalletsListManager
-        }
-        val hasSavedWallets = userWalletsListManager.hasUserWallets
+        val canSaveWallets = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
+            .fold(onSuccess = { true }, onFailure = { false })
 
-        if (canSaveWallets && hasSavedWallets) {
+        if (canSaveWallets && userWalletsListManager.hasUserWallets) {
             store.dispatch(
                 NavigationAction.NavigateTo(
                     screen = AppScreen.Welcome,

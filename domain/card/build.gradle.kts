@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.domain.demo)
     implementation(projects.domain.core)
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)

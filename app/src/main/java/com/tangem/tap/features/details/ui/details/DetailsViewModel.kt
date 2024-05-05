@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetSupportFeedbackEmailUseCase
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.addContext
@@ -31,7 +32,6 @@ import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.mainScope
 import com.tangem.tap.scope
-import com.tangem.tap.userWalletsListManager
 import com.tangem.wallet.BuildConfig
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -51,6 +51,7 @@ internal class DetailsViewModel(
     private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
     private val getSupportFeedbackEmailUseCase: GetSupportFeedbackEmailUseCase,
     private val emailSender: EmailSender,
+    private val userWalletsListManager: UserWalletsListManager,
 ) {
 
     var detailsScreenState: MutableState<DetailsScreenState> = mutableStateOf(updateState(store.state.detailsState))

@@ -11,7 +11,7 @@ import java.math.BigDecimal
  */
 data class NetworkStatus(
     val network: Network,
-    val value: Status,
+    val value: Value,
 ) {
 
     /**
@@ -19,19 +19,19 @@ data class NetworkStatus(
      *
      * This sealed class includes different states like unreachable, missed derivation, verified, and no account.
      */
-    sealed class Status
+    sealed class Value
 
     /**
      * Represents the state where the network is unreachable.
      *
      * @property address Network addresses.
      */
-    data class Unreachable(val address: NetworkAddress?) : Status()
+    data class Unreachable(val address: NetworkAddress?) : Value()
 
     /**
      * Represents the state where a derivation has been missed.
      */
-    object MissedDerivation : Status()
+    data object MissedDerivation : Value()
 
     /**
      * Represents the verified state of the network, including the amounts associated with different cryptocurrencies
@@ -46,7 +46,7 @@ data class NetworkStatus(
         val address: NetworkAddress,
         val amounts: Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus>,
         val pendingTransactions: Map<CryptoCurrency.ID, Set<TxHistoryItem>>,
-    ) : Status()
+    ) : Value()
 
     /**
      * Represents the state where there is no account, and an amount is required to create one.
@@ -59,5 +59,5 @@ data class NetworkStatus(
         val address: NetworkAddress,
         val amountToCreateAccount: BigDecimal,
         val errorMessage: String,
-    ) : Status()
+    ) : Value()
 }
