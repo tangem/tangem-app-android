@@ -15,7 +15,7 @@ import com.tangem.common.extensions.VoidCallback
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.ShareElement
 import com.tangem.core.ui.extensions.setStatusBarColor
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.userwallets.Artwork
