@@ -10,6 +10,7 @@ import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetSupportFeedbackEmailUseCase
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.redux.DetailsState
@@ -36,6 +37,9 @@ internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState
     @Inject
     lateinit var emailSender: EmailSender
 
+    @Inject
+    lateinit var userWalletsListManager: UserWalletsListManager
+
     private lateinit var detailsViewModel: DetailsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +50,7 @@ internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState
             feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
             getSupportFeedbackEmailUseCase = getSupportFeedbackEmailUseCase,
             emailSender = emailSender,
+            userWalletsListManager = userWalletsListManager,
         )
         Analytics.send(Settings.ScreenOpened())
     }
