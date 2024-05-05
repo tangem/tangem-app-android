@@ -27,9 +27,6 @@ interface CardSdkConfigRepository {
     /** Update the card ID display format according to the [productType] of the scanned card */
     fun updateCardIdDisplayFormat(productType: ProductType)
 
-    /** Check if access code saving is enabled */
-    fun isAccessCodeSavingEnabled(): Boolean
-
     /** Get common signer by [cardId] */
     fun getCommonSigner(cardId: String?): CommonSigner
 

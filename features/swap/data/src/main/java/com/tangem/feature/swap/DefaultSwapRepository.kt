@@ -8,6 +8,7 @@ import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.tokens.utils.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -20,11 +21,10 @@ import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.crypto.DataSignatureVerifier
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -48,7 +48,7 @@ internal class DefaultSwapRepository @Inject constructor(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
-    private val walletsStateHolder: WalletsStateHolder,
+    private val userWalletsListManager: UserWalletsListManager,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     moshi: Moshi,
@@ -249,6 +249,7 @@ internal class DefaultSwapRepository @Inject constructor(
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
+        fromAddress: String,
         toNetwork: String,
         fromAmount: String,
         fromDecimals: Int,
@@ -266,6 +267,7 @@ internal class DefaultSwapRepository @Inject constructor(
                     fromContractAddress = fromContractAddress,
                     fromNetwork = fromNetwork,
                     toContractAddress = toContractAddress,
+                    fromAddress = fromAddress,
                     toNetwork = toNetwork,
                     fromAmount = fromAmount,
                     fromDecimals = fromDecimals,
@@ -389,8 +391,8 @@ internal class DefaultSwapRepository @Inject constructor(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 derivationStyleProvider = requireNotNull(
-                    walletsStateHolder.userWalletsListManager
-                        ?.selectedUserWalletSync
+                    userWalletsListManager
+                        .selectedUserWalletSync
                         ?.scanResponse
                         ?.derivationStyleProvider,
                 ),

@@ -3,11 +3,16 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.room)
     id("configuration")
 }
 
 android {
     namespace = "com.tangem.datasource"
+
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
 }
 
 dependencies {
@@ -39,6 +44,7 @@ dependencies {
     /** Network */
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
+    implementation(deps.moshi.adapters)
     implementation(deps.okHttp)
     implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
@@ -53,10 +59,14 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
+    mockedImplementation(deps.chuckerStub)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
 
     /** Local storages */
     implementation(deps.androidx.datastore)
+    implementation(deps.room.runtime)
+    implementation(deps.room.ktx)
+    kapt(deps.room.compiler)
 }

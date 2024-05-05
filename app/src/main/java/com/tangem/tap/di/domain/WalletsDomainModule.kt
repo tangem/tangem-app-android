@@ -2,7 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletAddressServiceRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
@@ -19,32 +19,34 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun providesGetWalletsUseCase(walletsStateHolder: WalletsStateHolder): GetWalletsUseCase {
-        return GetWalletsUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesGetWalletsUseCase(userWalletsListManager: UserWalletsListManager): GetWalletsUseCase {
+        return GetWalletsUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
     @ViewModelScoped
-    fun providesGetUserWalletUseCase(walletsStateHolder: WalletsStateHolder): GetUserWalletUseCase {
-        return GetUserWalletUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesGetUserWalletUseCase(userWalletsListManager: UserWalletsListManager): GetUserWalletUseCase {
+        return GetUserWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
     @ViewModelScoped
-    fun providesGetSelectedWalletSyncUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletSyncUseCase {
-        return GetSelectedWalletSyncUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesGetSelectedWalletSyncUseCase(
+        userWalletsListManager: UserWalletsListManager,
+    ): GetSelectedWalletSyncUseCase {
+        return GetSelectedWalletSyncUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
     @ViewModelScoped
-    fun providesGetSelectedWalletUseCase(walletsStateHolder: WalletsStateHolder): GetSelectedWalletUseCase {
-        return GetSelectedWalletUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesGetSelectedWalletUseCase(userWalletsListManager: UserWalletsListManager): GetSelectedWalletUseCase {
+        return GetSelectedWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
     @ViewModelScoped
-    fun providesSaveWalletUseCase(walletsStateHolder: WalletsStateHolder): SaveWalletUseCase {
-        return SaveWalletUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesSaveWalletUseCase(userWalletsListManager: UserWalletsListManager): SaveWalletUseCase {
+        return SaveWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
@@ -55,29 +57,29 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun providesUnlockWalletUseCase(walletsStateHolder: WalletsStateHolder): UnlockWalletsUseCase {
-        return UnlockWalletsUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesUnlockWalletUseCase(userWalletsListManager: UserWalletsListManager): UnlockWalletsUseCase {
+        return UnlockWalletsUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
     @ViewModelScoped
     fun providesSelectWalletUseCase(
-        walletsStateHolder: WalletsStateHolder,
+        userWalletsListManager: UserWalletsListManager,
         reduxStateHolder: ReduxStateHolder,
     ): SelectWalletUseCase {
-        return SelectWalletUseCase(walletsStateHolder, reduxStateHolder)
+        return SelectWalletUseCase(userWalletsListManager = userWalletsListManager, reduxStateHolder = reduxStateHolder)
     }
 
     @Provides
     @ViewModelScoped
-    fun providesUpdateWalletUseCase(walletsStateHolder: WalletsStateHolder): UpdateWalletUseCase {
-        return UpdateWalletUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesUpdateWalletUseCase(userWalletsListManager: UserWalletsListManager): UpdateWalletUseCase {
+        return UpdateWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
     @ViewModelScoped
-    fun providesDeleteWalletUseCase(walletsStateHolder: WalletsStateHolder): DeleteWalletUseCase {
-        return DeleteWalletUseCase(walletsStateHolder = walletsStateHolder)
+    fun providesDeleteWalletUseCase(userWalletsListManager: UserWalletsListManager): DeleteWalletUseCase {
+        return DeleteWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
