@@ -32,7 +32,7 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .clickable(enabled = !isSuccess && feeState.fee != null) { onClick() }
+            .clickable(enabled = !isSuccess, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
@@ -60,7 +60,7 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick
                 titleRes = title,
                 iconRes = icon,
                 preDot = getCryptoReference(feeAmount, feeState.isFeeApproximate),
-                postDot = feeAmount?.let { getFiatReference(it, feeState.rate, feeState.appCurrency) },
+                postDot = getFiatReference(feeAmount?.value, feeState.rate, feeState.appCurrency),
                 ellipsizeOffset = feeAmount?.currencySymbol?.length,
                 isSelected = true,
                 showDivider = false,
