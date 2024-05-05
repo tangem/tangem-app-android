@@ -2,6 +2,9 @@ package com.tangem.tap.features.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.ReduxNavController
@@ -11,11 +14,17 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
+import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.features.main.model.MainScreenState
+import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -26,6 +35,10 @@ internal class MainViewModel @Inject constructor(
     private val reduxNavController: ReduxNavController,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
     private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
+    private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
+    private val blockchainSDKFactory: BlockchainSDKFactory,
+    private val userWalletsListManager: UserWalletsListManager,
+    private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -39,7 +52,14 @@ internal class MainViewModel @Inject constructor(
 
     val state: StateFlow<MainScreenState> = stateHolder.stateFlow
 
+    var isSplashScreenShown: Boolean = true
+        private set
+
     init {
+        loadApplicationResources()
+
+        viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
+
         updateAppCurrencies()
         observeFlips()
         displayBalancesHidingStatusToast()
@@ -48,6 +68,38 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             deleteDeprecatedLogsUseCase()
         }
+    }
+
+    /** Loading the resources needed to run the application */
+    private fun loadApplicationResources() {
+        viewModelScope.launch(dispatchers.main) {
+            blockchainSDKFactory.init()
+            prepareSelectedWalletFeedback()
+
+            isSplashScreenShown = false
+        }
+    }
+
+    private fun prepareSelectedWalletFeedback() {
+        userWalletsListManager.selectedUserWallet
+            .distinctUntilChanged()
+            .onEach { userWallet ->
+                Analytics.setContext(userWallet.scanResponse)
+                Analytics.send(Basic.WalletOpened())
+
+                store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
+                    infoHolder.setCardInfo(userWallet.scanResponse)
+
+                    walletManagersFacade
+                        .getAll(userWallet.walletId)
+                        .distinctUntilChanged()
+                        .onEach(infoHolder::setWalletsInfo)
+                        .catch { Timber.e(it) }
+                        .launchIn(viewModelScope)
+                }
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(viewModelScope)
     }
 
     private fun updateAppCurrencies() {
