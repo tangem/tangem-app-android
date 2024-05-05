@@ -9,7 +9,7 @@ import com.tangem.common.KeyPair
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.api.common.MoshiConverter
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.wallet.CreateWalletResponse
@@ -27,8 +27,7 @@ class TwinCardsManager(
     private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, card.issuer.publicKey.toHexString())
 
     suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
-        val response = tangemSdkManager.runTaskAsync(
-            runnable = CreateFirstTwinWalletTask(firstCardId),
+        val response = tangemSdkManager.createFirstTwinWallet(
             cardId = firstCardId,
             initialMessage = message,
         )
@@ -44,14 +43,15 @@ class TwinCardsManager(
         preparingMessage: Message,
         creatingWalletMessage: Message,
     ): CompletionResult<CreateWalletResponse> {
-        val task = CreateSecondTwinWalletTask(
+        val response = tangemSdkManager.createSecondTwinWallet(
             firstPublicKey = currentCardPublicKey!!,
             firstCardId = firstCardId,
             issuerKeys = issuerKeyPair,
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage,
+            initialMessage = initialMessage,
         )
-        val response = tangemSdkManager.runTaskAsync(task, null, initialMessage)
+
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
@@ -62,8 +62,9 @@ class TwinCardsManager(
     }
 
     suspend fun complete(message: Message): Result<ScanResponse> {
-        val response = tangemSdkManager.runTaskAsync(
-            runnable = FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
+        val response = tangemSdkManager.finalizeTwin(
+            secondCardPublicKey = secondCardPublicKey!!.hexToBytes(),
+            issuerKeyPair = issuerKeyPair,
             cardId = firstCardId,
             initialMessage = message,
         )
@@ -88,6 +89,7 @@ class TwinCardsManager(
             )
         }
 
+        @Deprecated(message = "Use AssetReader instead")
         private fun getIssuers(reader: AssetReader): List<Issuer> {
             val file = reader.readJson(fileName = "tangem-app-config/issuers")
             return getAdapter().fromJson(file)!!
