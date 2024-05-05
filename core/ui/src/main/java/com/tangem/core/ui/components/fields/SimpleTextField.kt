@@ -39,13 +39,16 @@ fun SimpleTextField(
     color: Color = TangemTheme.colors.text.primary1,
     textStyle: TextStyle = TangemTheme.typography.body2.copy(color = color),
     readOnly: Boolean = false,
+    isValuePasted: Boolean = false,
+    onValuePastedTriggerDismiss: () -> Unit = {},
     decorationBox: (@Composable (innerTextField: @Composable () -> Unit) -> Unit)? = null,
 ) {
+    val proxyValue by remember(value) { derivedStateOf { value } }
     var textFieldValueState by remember {
         mutableStateOf(
             TextFieldValue(
                 text = value,
-                selection = getValueRange(value),
+                selection = TextRange(value.length, value.length),
             ),
         )
     }
@@ -54,32 +57,31 @@ fun SimpleTextField(
         handleColor = TangemTheme.colors.text.accent,
         backgroundColor = TangemTheme.colors.text.accent.copy(alpha = 0.3f),
     )
-
     val textFieldValue = textFieldValueState.copy(text = value)
-
-    val isSelectionChanged by remember {
-        derivedStateOf {
-            textFieldValue.selection != textFieldValueState.selection ||
-                textFieldValue.composition != textFieldValueState.composition ||
-                textFieldValue.text != textFieldValueState.text
-        }
+    var lastTextValue by remember(proxyValue, isValuePasted) {
+        textFieldValueState = textFieldValueState.copy(
+            text = proxyValue,
+            selection = if (isValuePasted) {
+                TextRange(proxyValue.length, proxyValue.length)
+            } else {
+                textFieldValueState.selection
+            },
+        )
+        mutableStateOf(proxyValue)
     }
 
+    val isSelectionChanged by rememberSelectionChanged(textFieldValue, textFieldValueState)
     LaunchedEffect(key1 = isSelectionChanged) {
         if (isSelectionChanged) {
             textFieldValueState = textFieldValue
         }
     }
 
-    var lastTextValue by remember(value) {
-        val isSelectionLastIndex = textFieldValueState.selection.end == textFieldValueState.text.lastIndex
-        if (textFieldValueState.text.isBlank() || isSelectionLastIndex) {
-            textFieldValueState = textFieldValueState.copy(
-                text = value,
-                selection = getValueRange(value),
-            )
+    // resets paste value cursor trigger
+    LaunchedEffect(key1 = isValuePasted) {
+        if (isValuePasted) {
+            onValuePastedTriggerDismiss()
         }
-        mutableStateOf(value)
     }
 
     CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
@@ -114,11 +116,6 @@ fun SimpleTextField(
     }
 }
 
-private fun getValueRange(value: String) = when {
-    value.isEmpty() -> TextRange.Zero
-    else -> TextRange(value.length, value.length)
-}
-
 @Composable
 private fun SimpleTextPlaceholder(
     placeholder: TextReference?,
@@ -140,5 +137,15 @@ private fun SimpleTextPlaceholder(
             }
         }
         textValue()
+    }
+}
+
+@Composable
+private fun rememberSelectionChanged(textFieldValue: TextFieldValue, textFieldValueState: TextFieldValue) = remember {
+    derivedStateOf {
+        val isSelectionChanged = textFieldValue.selection != textFieldValueState.selection ||
+            textFieldValue.composition != textFieldValueState.composition
+        val isTextNotChanged = textFieldValue.text == textFieldValueState.text
+        isSelectionChanged && isTextNotChanged
     }
 }
