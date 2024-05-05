@@ -10,8 +10,6 @@ import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -249,13 +247,6 @@ internal class SendNotificationFactory(
         }
     }
 
-    private fun MutableList<SendNotification>.addFeeCoverageNotification(sendingAmount: Boolean) {
-        if (sendingAmount) {
-            analyticsEventHandler.send(SendAnalyticEvents.NoticeFeeCoverage)
-            add(SendNotification.Warning.FeeCoverageNotification)
-        }
-    }
-
     private fun MutableList<SendNotification>.addHighFeeWarningNotification(
         sendAmount: BigDecimal,
         ignoreAmountReduce: Boolean,
@@ -280,20 +271,6 @@ internal class SendNotificationFactory(
                     },
                 ),
             )
-        }
-    }
-// [REDACTED_TODO_COMMENT]
-    private fun MutableList<SendNotification>.addMinimumAmountErrorNotification(
-        feeAmount: BigDecimal,
-        receivedAmount: BigDecimal,
-    ) {
-        val coinCryptoCurrencyStatus = coinCryptoCurrencyStatusProvider()
-        val minimum = BigDecimal(DOGECOIN_MINIMUM)
-
-        val isDogecoin = isDogecoin(coinCryptoCurrencyStatus.currency.network.id.value)
-        val isExceedDustLimit = checkDustLimits(feeAmount, receivedAmount, minimum)
-        if (isDogecoin && isExceedDustLimit) {
-            add(SendNotification.Error.MinimumAmountError(DOGECOIN_MINIMUM))
         }
     }
 
