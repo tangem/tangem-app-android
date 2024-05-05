@@ -10,6 +10,7 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.send.impl.presentation.state.SendNotification
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
+import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
@@ -20,6 +21,7 @@ import kotlinx.collections.immutable.persistentListOf
  */
 internal class FeeStateFactory(
     private val clickIntents: SendClickIntents,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -28,6 +30,7 @@ internal class FeeStateFactory(
     private val customFeeFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
         SendFeeCustomFieldConverter(
             clickIntents = clickIntents,
+            stateRouterProvider = stateRouterProvider,
             appCurrencyProvider = appCurrencyProvider,
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
@@ -36,6 +39,7 @@ internal class FeeStateFactory(
     val feeConverter by lazy(LazyThreadSafetyMode.NONE) {
         FeeConverter(
             clickIntents = clickIntents,
+            stateRouterProvider = stateRouterProvider,
             appCurrencyProvider = appCurrencyProvider,
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
         )
@@ -43,8 +47,13 @@ internal class FeeStateFactory(
 
     fun onFeeOnLoadingState(): SendUiState {
         val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
-        return state.copy(
+        val isEditState = stateRouterProvider().isEditState
+        val feeState = state.getFeeState(isEditState) ?: return state
+        return state.copyWrapped(
+            isEditState = isEditState,
+            sendState = state.sendState?.copy(
+                isPrimaryButtonEnabled = false,
+            ),
             feeState = feeState.copy(
                 feeSelectorState = if (feeState.feeSelectorState is FeeSelectorState.Content) {
                     feeState.feeSelectorState
@@ -59,7 +68,8 @@ internal class FeeStateFactory(
 
     fun onFeeOnLoadedState(fees: TransactionFee): SendUiState {
         val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
+        val isEditState = stateRouterProvider().isEditState
+        val feeState = state.getFeeState(isEditState) ?: return state
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content
 
         val isCustomWasSelected = if (feeState.isCustomSelected) {
@@ -76,7 +86,11 @@ internal class FeeStateFactory(
         )
 
         val fee = feeConverter.convert(updatedFeeSelectorState)
-        return state.copy(
+        return state.copyWrapped(
+            isEditState = isEditState,
+            sendState = state.sendState?.copy(
+                isPrimaryButtonEnabled = true,
+            ),
             feeState = feeState.copy(
                 feeSelectorState = updatedFeeSelectorState,
                 fee = fee,
@@ -87,22 +101,29 @@ internal class FeeStateFactory(
 
     fun onFeeOnErrorState(): SendUiState {
         val state = currentStateProvider()
-        return state.copy(
-            feeState = state.feeState?.copy(
+        val isEditState = stateRouterProvider().isEditState
+        return state.copyWrapped(
+            isEditState = isEditState,
+            feeState = state.getFeeState(isEditState)?.copy(
                 feeSelectorState = FeeSelectorState.Error,
+            ),
+            sendState = state.sendState?.copy(
+                isPrimaryButtonEnabled = false,
             ),
         )
     }
 
     fun onFeeSelectedState(feeType: FeeType): SendUiState {
         val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
+        val isEditState = stateRouterProvider().isEditState
+        val feeState = state.getFeeState(isEditState) ?: return state
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
 
         val updatedFeeSelectorState = feeSelectorState.copy(selectedFee = feeType)
         val fee = feeConverter.convert(updatedFeeSelectorState)
         val isCustomFeeWasSelected = feeState.isCustomSelected || updatedFeeSelectorState.selectedFee == FeeType.Custom
-        return state.copy(
+        return state.copyWrapped(
+            isEditState = isEditState,
             feeState = feeState.copy(
                 fee = fee,
                 isCustomSelected = isCustomFeeWasSelected,
@@ -113,12 +134,14 @@ internal class FeeStateFactory(
 
     fun onCustomFeeValueChange(index: Int, value: String): SendUiState {
         val state = currentStateProvider()
-        val feeState = state.feeState ?: return state
+        val isEditState = stateRouterProvider().isEditState
+        val feeState = state.getFeeState(isEditState) ?: return state
         val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
         val updatedFeeSelectorState = customFeeFieldConverter.onValueChange(feeSelectorState, index, value)
 
         val fee = feeConverter.convert(updatedFeeSelectorState)
-        return state.copy(
+        return state.copyWrapped(
+            isEditState = isEditState,
             feeState = feeState.copy(
                 feeSelectorState = updatedFeeSelectorState,
                 fee = fee,
@@ -128,10 +151,13 @@ internal class FeeStateFactory(
 
     fun getFeeNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
         val state = currentStateProvider()
-        return state.copy(
-            feeState = state.feeState?.copy(
+        val isEditState = stateRouterProvider().isEditState
+        val feeState = state.getFeeState(isEditState) ?: return state
+        return state.copyWrapped(
+            isEditState = isEditState,
+            feeState = feeState.copy(
                 notifications = notifications,
-                isPrimaryButtonEnabled = isPrimaryButtonEnabled(state.feeState, notifications),
+                isPrimaryButtonEnabled = isPrimaryButtonEnabled(feeState, notifications),
             ),
         )
     }
