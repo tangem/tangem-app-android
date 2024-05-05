@@ -28,7 +28,7 @@ internal sealed interface WalletAlertState {
     }
 
     data class DefaultAlert(
-        override val title: TextReference,
+        override val title: TextReference?,
         override val message: TextReference,
         override val onConfirmClick: (() -> Unit)?,
     ) : Basic()
