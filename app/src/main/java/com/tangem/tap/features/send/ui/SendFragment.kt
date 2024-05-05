@@ -17,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
@@ -25,14 +24,11 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.qrscanning.models.QrResult
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.qrscanning.QrScanningRouter
-import com.tangem.features.send.api.navigation.SendRouter.Companion.CRYPTO_CURRENCY_KEY
 import com.tangem.sdk.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Token
@@ -63,7 +59,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.text.DecimalFormatSymbols
 import javax.inject.Inject
 
@@ -87,9 +82,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private val sendSubscriber = SendStateSubscriber(this)
     private lateinit var keyboardObserver: KeyboardObserver
 
-    private val cryptoCurrency: CryptoCurrency?
-        get() = arguments?.getParcelable(CRYPTO_CURRENCY_KEY)
-
     val binding: FragmentSendBinding by viewBinding(FragmentSendBinding::bind)
 
     @Inject
@@ -109,7 +101,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                subscribeToQrCodeScanner()
                 subscribeToTransactionExtrasFields()
                 subscribeToAddressField()
                 subscribeToAmountField()
@@ -200,22 +191,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             .launchIn(this)
     }
 
-    private fun CoroutineScope.subscribeToQrCodeScanner() {
-        listenToQrScanningUseCase(SourceType.SEND)
-            .getOrElse { emptyFlow() }
-            .onEach { rawQr ->
-                cryptoCurrency?.let { cryptoCurrency ->
-                    parseQrCodeUseCase(rawQr, cryptoCurrency = cryptoCurrency).fold(
-                        ifLeft = {
-                            onCodeScanned(QrResult(address = rawQr))
-                            Timber.w(it)
-                        },
-                        ifRight = { onCodeScanned(it) },
-                    )
-                } ?: onCodeScanned(QrResult(address = rawQr))
-            }.launchIn(this)
-    }
-
     private fun CoroutineScope.subscribeToTransactionExtrasFields() = with(binding.lSendAddress) {
         // TODO: [REDACTED_TASK_KEY]
         etXlmMemo.inputtedTextAsFlow()
@@ -280,21 +255,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             }
             .onEach { store.dispatch(TransactionExtrasAction.AlgorandMemo.HandleUserInput(it)) }
             .launchIn(this@subscribeToTransactionExtrasFields)
-    }
-
-    private fun onCodeScanned(parsedQr: QrResult) {
-        if (parsedQr.address.isEmpty()) return
-
-        store.dispatch(
-            PasteAddress(
-                data = parsedQr.address,
-                sourceType = Token.Send.AddressEntered.SourceType.QRCode,
-            ),
-        )
-        parsedQr.amount?.let { amount ->
-            store.dispatchOnMain(AmountAction.SetAmount(amount, isUserInput = false))
-        }
-        store.dispatch(TruncateOrRestore(!binding.lSendAddress.etAddress.isFocused))
     }
 
     private fun setupAmountLayout() {
