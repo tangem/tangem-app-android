@@ -1,13 +1,10 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchainsdk.utils.minimalAmount
+import com.tangem.common.extensions.isZero
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.features.send.impl.presentation.state.SendUiState
-import com.tangem.lib.crypto.BlockchainUtils
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -19,6 +16,7 @@ internal fun checkAndCalculateSubtractedAmount(
     cryptoCurrencyStatus: CryptoCurrencyStatus,
     amountValue: BigDecimal,
     feeValue: BigDecimal,
+    reduceAmountBy: BigDecimal?,
 ): BigDecimal {
     val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
     val isFeeCoverage = checkFeeCoverage(
@@ -27,12 +25,17 @@ internal fun checkAndCalculateSubtractedAmount(
         amountValue = amountValue,
         feeValue = feeValue,
     )
-    return calculateSubtractedAmount(
+    val subtractedAmount = calculateSubtractedAmount(
         isFeeCoverage = isFeeCoverage,
         cryptoCurrencyStatus = cryptoCurrencyStatus,
         amountValue = amountValue,
         feeValue = feeValue,
     )
+    return if (reduceAmountBy != null) {
+        subtractedAmount.minus(reduceAmountBy)
+    } else {
+        subtractedAmount
+    }
 }
 
 /**
@@ -45,7 +48,7 @@ internal fun checkFeeCoverage(
     feeValue: BigDecimal,
 ): Boolean {
     if (!isSubtractAvailable) return false
-    return balance < amountValue + feeValue && balance > feeValue
+    return balance < amountValue + feeValue && balance > feeValue && balance >= amountValue
 }
 
 /**
@@ -59,12 +62,7 @@ internal fun calculateSubtractedAmount(
 ): BigDecimal {
     val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
     return if (isFeeCoverage) {
-        var subtractedValue = minOf(amountValue, balance.minus(feeValue))
-        if (BlockchainUtils.isTezos(cryptoCurrencyStatus.currency.network.id.value)) {
-            val threshold = Blockchain.Tezos.minimalAmount()
-            subtractedValue = -threshold
-        }
-        subtractedValue
+        minOf(amountValue, balance.minus(feeValue))
     } else {
         amountValue
     }
@@ -73,8 +71,7 @@ internal fun calculateSubtractedAmount(
 /**
  * Check if custom fee is too low
  */
-internal fun checkIfFeeTooLow(state: SendUiState): Boolean {
-    val feeSelectorState = state.feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
+internal fun checkIfFeeTooLow(feeSelectorState: FeeSelectorState.Content): Boolean {
     val multipleFees = feeSelectorState.fees as? TransactionFee.Choosable ?: return false
     val minimumValue = multipleFees.minimum.amount.value ?: return false
     val customAmount = feeSelectorState.customValues.firstOrNull() ?: return false
@@ -95,6 +92,13 @@ internal fun checkIfFeeTooHigh(feeSelectorState: FeeSelectorState.Content, onSho
     val isShow = feeSelectorState.selectedFee == FeeType.Custom && diff > FEE_MAX_DIFF
     if (isShow) onShow(diff.parseBigDecimal(ZERO_DECIMALS, RoundingMode.HALF_UP))
     return isShow
+}
+
+/**
+ * Checks if fee exceeds fee paid currency balance
+ */
+fun checkExceedBalance(feeBalance: BigDecimal?, feeAmount: BigDecimal?): Boolean {
+    return feeAmount == null || feeBalance == null || feeAmount.isZero() || feeAmount > feeBalance
 }
 
 private val FEE_MAX_DIFF = BigDecimal("5")
