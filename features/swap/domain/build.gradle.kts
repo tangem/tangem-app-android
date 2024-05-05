@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.demo)
     implementation(projects.domain.card)
     implementation(projects.domain.appCurrency.models)
