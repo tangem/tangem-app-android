@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.ui
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,6 +28,7 @@ import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
@@ -446,9 +448,10 @@ private fun getMessageForErrorSnackbar(errorSnackbar: ErrorSnackbar): String {
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ReferralScreen_Participant_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_ReferralScreen_Participant() {
+    TangemThemePreview {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = HeaderState(onBackClicked = {}),
@@ -475,38 +478,10 @@ private fun Preview_ReferralScreen_Participant_InLightTheme() {
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ReferralScreen_Participant_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.ParticipantContent(
-                    award = "10 USDT",
-                    networkName = "Tron",
-                    address = "ma80...zk8q2",
-                    discount = "10%",
-                    purchasedWalletCount = 3,
-                    code = "x4JdK",
-                    shareLink = "",
-                    url = "",
-                    expectedAwards = null,
-                ),
-                errorSnackbar = ErrorSnackbar(DemoModeException()) {},
-                analytics = Analytics(
-                    onAgreementClicked = {},
-                    onCopyClicked = {},
-                    onShareClicked = {},
-                ),
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-private fun Preview_ReferralScreen_Participant_With_Referrals_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_ReferralScreen_Participant_With_Referrals() {
+    TangemThemePreview {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = HeaderState(onBackClicked = {}),
@@ -549,9 +524,10 @@ private fun Preview_ReferralScreen_Participant_With_Referrals_InLightTheme() {
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_ReferralScreen_NonParticipant() {
+    TangemThemePreview {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = HeaderState(onBackClicked = {}),
@@ -574,53 +550,10 @@ private fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.NonParticipantContent(
-                    award = "10 USDT",
-                    networkName = "Tron",
-                    discount = "10%",
-                    url = "",
-                    onParticipateClicked = {},
-                ),
-                errorSnackbar = null,
-                analytics = Analytics(
-                    onAgreementClicked = {},
-                    onCopyClicked = {},
-                    onShareClicked = {},
-                ),
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-private fun Preview_ReferralScreen_Loading_InLightTheme() {
-    TangemTheme(isDark = false) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.Loading,
-                errorSnackbar = null,
-                analytics = Analytics(
-                    onAgreementClicked = {},
-                    onCopyClicked = {},
-                    onShareClicked = {},
-                ),
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-private fun Preview_ReferralScreen_Loading_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_ReferralScreen_Loading() {
+    TangemThemePreview {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = HeaderState(onBackClicked = {}),

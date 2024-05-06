@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.*
 import java.text.DecimalFormat
 
@@ -64,6 +65,8 @@ fun AmountTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     isEnabled: Boolean = true,
     isAutoResize: Boolean = false,
+    isValuePasted: Boolean = false,
+    onValuePastedTriggerDismiss: () -> Unit = {},
     @FloatRange(from = 0.0, to = 1.0, fromInclusive = false, toInclusive = false)
     reduceFactor: Double = 0.9,
 ) {
@@ -101,6 +104,8 @@ fun AmountTextField(
                 fontSize = fontSize,
                 textDirection = TextDirection.ContentOrLtr,
             ),
+            isValuePasted = isValuePasted,
+            onValuePastedTriggerDismiss = onValuePastedTriggerDismiss,
             color = textColor,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
@@ -124,7 +129,7 @@ private fun AmountTextFieldPreview(
     @PreviewParameter(AmountTextFieldPreviewProvider::class) amount: AmountTextFieldPreviewData,
 ) {
     var text by remember { mutableStateOf(amount.value.orEmpty()) }
-    TangemTheme {
+    TangemThemePreview {
         AmountTextField(
             value = text,
             decimals = amount.decimals,

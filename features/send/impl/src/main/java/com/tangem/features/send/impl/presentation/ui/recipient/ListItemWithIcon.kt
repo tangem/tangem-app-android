@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.recipient
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -27,6 +28,7 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.rememberHapticFeedback
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.R
 
@@ -180,28 +182,12 @@ private fun ListItemLoading(modifier: Modifier = Modifier) {
 
 // region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ListItemWithIconPreview_Light(
+private fun ListItemWithIconPreview(
     @PreviewParameter(ListItemWithIconPreviewProvider::class) config: ListItemWithIconPreviewConfig,
 ) {
-    TangemTheme {
-        ListItemWithIcon(
-            title = config.title,
-            subtitle = config.subtitle,
-            subtitleEndOffset = config.subtitleEndOffset,
-            subtitleIconRes = config.iconRes,
-            onClick = {},
-            isLoading = config.isLoading,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun ListItemWithIconPreview_Dark(
-    @PreviewParameter(ListItemWithIconPreviewProvider::class) config: ListItemWithIconPreviewConfig,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         ListItemWithIcon(
             title = config.title,
             subtitle = config.subtitle,

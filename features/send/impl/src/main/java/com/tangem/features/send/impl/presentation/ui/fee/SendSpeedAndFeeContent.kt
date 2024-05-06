@@ -2,7 +2,6 @@ package com.tangem.features.send.impl.presentation.ui.fee
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,8 +26,7 @@ internal fun SendSpeedAndFeeContent(state: SendStates.FeeState?, clickIntents: S
     val isCustomSelected = feeSendState?.selectedFee == FeeType.Custom
     val hasNotifications = notifications.isNotEmpty()
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier // Do not put fillMaxSize() in here
             .background(TangemTheme.colors.background.tertiary)
             .padding(
                 start = TangemTheme.dimens.spacing16,
