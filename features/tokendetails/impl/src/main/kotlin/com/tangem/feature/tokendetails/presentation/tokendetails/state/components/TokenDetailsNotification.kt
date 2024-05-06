@@ -66,7 +66,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
-    object NetworksUnreachable : Warning(
+    data object NetworksUnreachable : Warning(
         title = resourceReference(R.string.warning_network_unreachable_title),
         subtitle = resourceReference(R.string.warning_network_unreachable_message),
     )
@@ -163,16 +163,8 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
-    object TopUpWithoutReserve : Informational(
+    data object TopUpWithoutReserve : Informational(
         title = resourceReference(id = R.string.warning_no_account_title),
         subtitle = resourceReference(id = R.string.no_account_send_to_create),
-    )
-
-    class HasPendingTransactions(val coinSymbol: String) : Informational(
-        title = resourceReference(R.string.warning_send_blocked_pending_transactions_title),
-        subtitle = resourceReference(
-            id = R.string.warning_send_blocked_pending_transactions_message,
-            formatArgs = wrappedList(coinSymbol),
-        ),
     )
 }
