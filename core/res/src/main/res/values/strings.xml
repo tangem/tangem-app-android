@@ -56,10 +56,10 @@
   <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
   <string name="card_settings_security_mode">Security Mode</string>
   <string name="card_settings_title">Card Settings</string>
-  <string name="cardano_coin_will_be_send_with_token_description">Due to the peculiarities of the Cardano network, when transacting the %1$s token, in addition to the network commission,  %2$s will be charged</string>
-  <string name="cardano_insufficient_balance_to_send_token_description">To make a %1$s transaction, you must deposit some %2$s (%3$s) to cover the network fee and minimum ADA value</string>
+  <string name="cardano_coin_will_be_send_with_token_description">Due to the peculiarities of the Cardano network, when transacting the %1$s token, in addition to the network commission, %2$s will be charged</string>
+  <string name="cardano_insufficient_balance_to_send_token_description">To make a %1$s transaction, you must deposit some ADA to cover the network fee and minimum ADA value. (5 ADA balance recommended)</string>
   <string name="cardano_insufficient_balance_to_send_token_title">Insufficient ADA to token transfer</string>
-  <string name="cardano_max_amount_has_token_description">Withdrawal of the entire ADA balance is not possible if funds are available in Cardano network tokens. First, withdraw funds on your tokens.</string>
+  <string name="cardano_max_amount_has_token_description">The Cardano network does not allow you to leave an amount on your balance below the minimum value %1$s if you have tokens. Please ensure that you have some ADA remaining.</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
   <string name="common_apply">Apply</string>
@@ -557,7 +557,8 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">You do not have funds to sell. Top up your account to be able to sell funds from it.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">You do not have funds to send. Top up your account to be able to send funds from it.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Swapping %s is not available at the moment. Please check our updates.</string>
-  <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the %s transaction is complete</string>
+  <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the pending transaction(s) in network %s is complete</string>
+  <string name="token_button_unavailability_reason_pending_transaction_send">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not available at the moment. Please check our updates.</string>
   <string name="token_details_choose_address">Choose address</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
@@ -695,8 +696,6 @@
   <string name="warning_rent_fee_title">Network rent fee required</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s is an asset in the %2$s network. To make a %3$s transaction, you must deposit some %4$s (%5$s) to cover the network fee.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Insufficient %1$s to cover network fee</string>
-  <string name="warning_send_blocked_pending_transactions_in_blockchain_message">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
-  <string name="warning_send_blocked_pending_transactions_message">Sending funds will be available once the %s transaction is complete</string>
   <string name="warning_send_blocked_pending_transactions_title">Transaction pending</string>
   <string name="warning_solana_fee_message">The Solana network is congested. If your transaction is not processed within 2 minutes, please repeat the transaction.</string>
   <string name="warning_solana_fee_title">Solana Network Alert</string>
