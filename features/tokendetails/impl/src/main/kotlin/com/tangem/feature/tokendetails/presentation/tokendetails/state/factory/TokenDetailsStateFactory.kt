@@ -337,12 +337,12 @@ internal class TokenDetailsStateFactory(
             is ScenarioUnavailabilityReason.PendingTransaction -> {
                 when (unavailabilityReason.withdrawalScenario) {
                     ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
-                        id = R.string.warning_send_blocked_pending_transactions_message,
-                        formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol),
+                        id = R.string.token_button_unavailability_reason_pending_transaction_send,
+                        formatArgs = wrappedList(unavailabilityReason.networkName),
                     )
                     ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
                         id = R.string.token_button_unavailability_reason_pending_transaction_sell,
-                        formatArgs = wrappedList(unavailabilityReason.cryptoCurrencySymbol),
+                        formatArgs = wrappedList(unavailabilityReason.networkName),
                     )
                 }
             }
