@@ -232,7 +232,7 @@ class GetCryptoCurrencyActionsUseCase(
             ) -> {
                 ScenarioUnavailabilityReason.PendingTransaction(
                     withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
-                    cryptoCurrencySymbol = coinStatus?.currency?.symbol.orEmpty(),
+                    networkName = coinStatus?.currency?.network?.name.orEmpty(),
                 )
             }
             else -> {
