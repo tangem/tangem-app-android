@@ -27,6 +27,7 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.ImmutableList
@@ -303,7 +304,7 @@ private val title = TokenToSelectState.Title(
 @Preview
 @Composable
 private fun TokenScreenPreview() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         SwapSelectTokenScreen(
             state = SwapSelectTokenStateHolder(
                 availableTokens = listOf(title, token, token, token).toImmutableList(),
@@ -320,7 +321,7 @@ private fun TokenScreenPreview() {
 @Preview
 @Composable
 private fun EmptyTokensListPreview() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview {
         EmptyTokensList()
     }
 }

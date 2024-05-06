@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
@@ -39,6 +40,7 @@ import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
@@ -184,21 +186,12 @@ internal fun TokenDetailsEventEffect(snackbarHostState: SnackbarHostState, event
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TokenDetailsScreenPreview_Light(
+private fun TokenDetailsScreenPreview(
     @PreviewParameter(TokenDetailsScreenParameterProvider::class) state: TokenDetailsState,
 ) {
-    TangemTheme {
-        TokenDetailsScreen(state)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun TokenDetailsScreenPreview_Dark(
-    @PreviewParameter(TokenDetailsScreenParameterProvider::class) state: TokenDetailsState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         TokenDetailsScreen(state)
     }
 }

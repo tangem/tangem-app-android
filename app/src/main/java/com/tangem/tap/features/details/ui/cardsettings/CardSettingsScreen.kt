@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.cardsettings
 
+import android.content.res.Configuration
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +13,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
@@ -182,17 +184,10 @@ private fun CardSettingsScreenStateSample() {
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun CardSettingsScreenStatePreview_Light() {
-    TangemTheme {
-        CardSettingsScreenStateSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun CardSettingsScreenStatePreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun CardSettingsScreenStatePreview() {
+    TangemThemePreview {
         CardSettingsScreenStateSample()
     }
 }
