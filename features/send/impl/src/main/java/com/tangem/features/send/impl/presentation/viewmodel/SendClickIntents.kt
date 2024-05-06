@@ -14,7 +14,9 @@ internal interface SendClickIntents {
 
     fun onBackClick()
 
-    fun onNextClick()
+    fun onCloseClick()
+
+    fun onNextClick(isFromEdit: Boolean = false)
 
     fun onPrevClick()
 
@@ -30,6 +32,8 @@ internal interface SendClickIntents {
     fun onCurrencyChangeClick(isFiat: Boolean)
 
     fun onMaxValueClick()
+
+    fun onAmountPasteTriggerDismiss()
     // endregion
 
     // region Recipient
@@ -63,7 +67,11 @@ internal interface SendClickIntents {
 
     fun onShareClick()
 
-    fun onAmountReduceClick(reducedAmount: BigDecimal, clazz: Class<out SendNotification>)
+    fun onAmountReduceClick(
+        reduceAmountBy: BigDecimal? = null,
+        reduceAmountTo: BigDecimal? = null,
+        clazz: Class<out SendNotification>,
+    )
 
     fun onNotificationCancel(clazz: Class<out SendNotification>)
     // endregion

@@ -1,12 +1,13 @@
 package com.tangem.core.ui.components.inputrow
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -22,7 +23,9 @@ import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.inputrow.inner.PasteButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import kotlinx.coroutines.delay
 
 /**
  * [Input Row Recipient](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-826&mode=design&t=IQ5lBJEkFGU4WSvi-4)
@@ -115,8 +118,18 @@ fun InputRowRecipient(
 
 @Composable
 private fun RowScope.InputIcon(isLoading: Boolean, value: String) {
+    var isLoadingProxy by remember { mutableStateOf(isLoading) }
+
+    // Do not show the progress indicator, which will disappear quickly
+    LaunchedEffect(key1 = isLoading) {
+        if (isLoading) {
+            delay(timeMillis = 500)
+        }
+        isLoadingProxy = isLoading
+    }
+
     AnimatedContent(
-        targetState = isLoading,
+        targetState = isLoadingProxy,
         label = "Indicator Show Change",
         modifier = Modifier
             .align(CenterVertically)
@@ -138,11 +151,12 @@ private fun RowScope.InputIcon(isLoading: Boolean, value: String) {
 
 //region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun InputRowRecipientPreview_Light(
+private fun InputRowRecipientPreview(
     @PreviewParameter(InputRowRecipientPreviewDataProvider::class) value: InputRowRecipientPreviewData,
 ) {
-    TangemTheme {
+    TangemThemePreview {
         InputRowRecipient(
             value = value.value,
             title = TextReference.Res(R.string.send_recipient),
@@ -150,27 +164,6 @@ private fun InputRowRecipientPreview_Light(
             error = TextReference.Str("Error"),
             isError = value.isError,
             isLoading = value.isLoading,
-            showDivider = true,
-            onValueChange = {},
-            onPasteClick = {},
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun InputRowRecipientPreview_Dark(
-    @PreviewParameter(InputRowRecipientPreviewDataProvider::class) value: InputRowRecipientPreviewData,
-) {
-    TangemTheme(isDark = true) {
-        InputRowRecipient(
-            value = value.value,
-            title = TextReference.Res(R.string.send_recipient),
-            placeholder = TextReference.Res(R.string.send_optional_field),
-            error = TextReference.Str("Error"),
-            isLoading = value.isLoading,
-            isError = value.isError,
             showDivider = true,
             onValueChange = {},
             onPasteClick = {},

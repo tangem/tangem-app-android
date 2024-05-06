@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,6 +15,7 @@ import com.google.accompanist.web.rememberWebViewState
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.models.states.WebViewBottomSheetConfig
 
 @Composable
@@ -55,21 +57,10 @@ private fun WebViewBottomSheetContent(content: WebViewBottomSheetConfig) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_WebViewBottomSheetContent_InLightTheme() {
-    TangemTheme(isDark = false) {
-        WebViewBottomSheetContent(
-            content = WebViewBottomSheetConfig(
-                url = "https://tangem.com/en/",
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_WebViewBottomSheetContent_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_WebViewBottomSheetContent() {
+    TangemThemePreview {
         WebViewBottomSheetContent(
             content = WebViewBottomSheetConfig(
                 url = "https://tangem.com/en/",
