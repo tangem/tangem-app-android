@@ -11,13 +11,15 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 class HapticModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideVibrationManager(@ApplicationContext context: Context): HapticManager {
         return HapticManager(
             vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
