@@ -6,7 +6,7 @@ sealed class ScenarioUnavailabilityReason {
     // send&sell-specific
     data class PendingTransaction(
         val withdrawalScenario: WithdrawalScenario,
-        val cryptoCurrencySymbol: String,
+        val networkName: String,
     ) : ScenarioUnavailabilityReason()
     data class EmptyBalance(val withdrawalScenario: WithdrawalScenario) : ScenarioUnavailabilityReason()
 
