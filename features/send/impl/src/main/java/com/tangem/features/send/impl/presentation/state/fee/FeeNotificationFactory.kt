@@ -1,9 +1,6 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
-import com.tangem.features.send.impl.presentation.state.SendNotification
-import com.tangem.features.send.impl.presentation.state.SendUiState
-import com.tangem.features.send.impl.presentation.state.SendUiStateType
-import com.tangem.features.send.impl.presentation.state.StateRouter
+import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.persistentListOf
@@ -19,10 +16,10 @@ internal class FeeNotificationFactory(
 ) {
 
     fun create() = stateRouterProvider().currentState
-        .filter { it.type == SendUiStateType.Fee }
+        .filter { it.type == SendUiStateType.Fee || it.type == SendUiStateType.EditFee }
         .map {
             val state = currentStateProvider()
-            val feeState = state.feeState ?: return@map persistentListOf()
+            val feeState = state.getFeeState(stateRouterProvider().isEditState) ?: return@map persistentListOf()
             buildList {
                 addFeeUnreachableNotification(feeState.feeSelectorState)
             }.toImmutableList()

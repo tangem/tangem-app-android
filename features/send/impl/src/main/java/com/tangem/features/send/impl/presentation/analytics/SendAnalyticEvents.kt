@@ -16,6 +16,20 @@ internal sealed class SendAnalyticEvents(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(category = "Token / Send", event = event, params = params) {
 
+    /** Close button clicked */
+    data class CloseButtonClicked(
+        val source: SendScreenSource,
+        val isFromSummary: Boolean,
+        val isValid: Boolean,
+    ) : SendAnalyticEvents(
+        event = "Button - Close",
+        params = mapOf(
+            SOURCE to source.name,
+            "FromSummary" to if (isFromSummary) "Yes" else "No",
+            "isValid" to if (isValid) "Yes" else "No",
+        ),
+    )
+
     // region Address
     /** Recipient address screen opened */
     data object AddressScreenOpened : SendAnalyticEvents(event = "Address Screen Opened")
@@ -119,6 +133,7 @@ internal enum class SendScreenSource {
     Address,
     Amount,
     Fee,
+    Confirm,
 }
 
 internal enum class EnterAddressSource {

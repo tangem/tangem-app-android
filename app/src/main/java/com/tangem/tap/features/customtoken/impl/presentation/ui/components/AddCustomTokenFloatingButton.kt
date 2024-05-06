@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.customtoken.impl.presentation.models.AddCustomTokenFloatingButton
 import com.tangem.wallet.R
 
@@ -42,7 +43,7 @@ internal fun AddCustomTokenFloatingButton(model: AddCustomTokenFloatingButton, m
 private fun Preview_AddCustomTokenFloatingButton(
     @PreviewParameter(AddCustomTokenFloatingButtonProvider::class) model: AddCustomTokenFloatingButton,
 ) {
-    TangemTheme {
+    TangemThemePreview {
         AddCustomTokenFloatingButton(model)
     }
 }

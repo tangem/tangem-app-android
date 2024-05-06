@@ -223,6 +223,10 @@ object TradeCryptoMiddleware {
     }
 
     private fun handleSendCoin(action: TradeCryptoAction.SendCoin) {
+        if (action.transactionInfo?.tag != null) {
+            // avoid open old send if memo exists
+            return
+        }
         val cryptoStatus = action.coinStatus
         val currency = cryptoStatus.currency
         val blockchain = Blockchain.fromId(currency.network.id.value)

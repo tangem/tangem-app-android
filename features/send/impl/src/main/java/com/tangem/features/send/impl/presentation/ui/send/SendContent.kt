@@ -4,7 +4,10 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Icon
@@ -33,9 +36,7 @@ private const val TAP_HELP_ANIMATION_DELAY = 500L
 internal fun SendContent(uiState: SendUiState) {
     val sendState = uiState.sendState ?: return
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         blocks(uiState)
         tapHelp(isDisplay = sendState.showTapHelp)
