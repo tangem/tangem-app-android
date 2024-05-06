@@ -8,6 +8,8 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
+import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.card.DefaultDeleteSavedAccessCodesUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -76,5 +78,11 @@ internal object CardDomainModule {
         derivationsRepository: DerivationsRepository,
     ): GetExtendedPublicKeyForCurrencyUseCase {
         return GetExtendedPublicKeyForCurrencyUseCase(derivationsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideDeleteSavedAccessCodesUseCase(tangemSdkManager: TangemSdkManager): DeleteSavedAccessCodesUseCase {
+        return DefaultDeleteSavedAccessCodesUseCase(tangemSdkManager)
     }
 }
