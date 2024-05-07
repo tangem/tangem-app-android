@@ -540,6 +540,12 @@ internal class SwapViewModel @Inject constructor(
                     is SwapTransactionState.UserCancelled -> {
                         startLoadingQuotesFromLastState()
                     }
+                    is SwapTransactionState.DemoMode -> {
+                        startLoadingQuotesFromLastState()
+                        uiState = stateBuilder.createDemoModeAlert(uiState) {
+                            uiState = stateBuilder.clearAlert(uiState)
+                        }
+                    }
                     else -> {
                         startLoadingQuotesFromLastState()
                         uiState = stateBuilder.createErrorTransaction(uiState, it) {
