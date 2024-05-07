@@ -5,33 +5,33 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.common.extensions.isZero
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.impl.presentation.state.StateRouter
+import com.tangem.features.send.impl.presentation.state.fee.checkExceedBalance
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
+import com.tangem.features.send.impl.presentation.utils.getFiatReference
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal class EthereumCustomFeeConverter(
     private val clickIntents: SendClickIntents,
+    private val stateRouterProvider: Provider<StateRouter>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val feeCryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
 ) : CustomFeeConverter<Fee.Ethereum> {
 
     override fun convert(value: Fee.Ethereum): ImmutableList<SendTextField.CustomFee> {
         val feeValue = value.amount.value
+        val feeCurrency = feeCryptoCurrencyStatusProvider()?.value
         return persistentListOf(
             SendTextField.CustomFee(
                 value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
@@ -44,7 +44,11 @@ internal class EthereumCustomFeeConverter(
                 ),
                 title = resourceReference(R.string.send_max_fee),
                 footer = resourceReference(R.string.send_max_fee_footer),
-                label = getFeeFormatted(feeValue),
+                label = getFiatReference(
+                    rate = feeCurrency?.fiatRate,
+                    value = feeValue,
+                    appCurrency = appCurrencyProvider(),
+                ),
                 keyboardActions = KeyboardActions(),
             ),
             SendTextField.CustomFee(
@@ -68,10 +72,21 @@ internal class EthereumCustomFeeConverter(
                 footer = resourceReference(R.string.send_gas_limit_footer),
                 onValueChange = { clickIntents.onCustomFeeValueChange(GAS_LIMIT, it) },
                 keyboardOptions = KeyboardOptions(
-                    imeAction = if (checkExceedBalance(feeValue)) ImeAction.None else ImeAction.Done,
+                    imeAction = if (
+                        checkExceedBalance(
+                            feeBalance = feeCurrency?.amount,
+                            feeAmount = feeValue,
+                        )
+                    ) {
+                        ImeAction.None
+                    } else {
+                        ImeAction.Done
+                    },
                     keyboardType = KeyboardType.Number,
                 ),
-                keyboardActions = KeyboardActions(onDone = { clickIntents.onNextClick() }),
+                keyboardActions = KeyboardActions(
+                    onDone = { clickIntents.onNextClick(stateRouterProvider().isEditState) },
+                ),
             ),
         )
     }
@@ -102,26 +117,6 @@ internal class EthereumCustomFeeConverter(
         }.toImmutableList()
     }
 
-    private fun getFeeFormatted(fee: BigDecimal?): TextReference {
-        val appCurrency = appCurrencyProvider()
-        val rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate
-        val fiatFee = rate?.let { fee?.multiply(it) }
-        return stringReference(
-            BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = fiatFee,
-                fiatCurrencyCode = appCurrency.code,
-                fiatCurrencySymbol = appCurrency.symbol,
-            ),
-        )
-    }
-
-    private fun checkExceedBalance(feeAmount: BigDecimal?): Boolean {
-        val cryptoCurrencyStatus = feeCryptoCurrencyStatusProvider()
-        val currencyCryptoAmount = cryptoCurrencyStatus?.value?.amount ?: BigDecimal.ZERO
-
-        return feeAmount == null || feeAmount.isZero() || feeAmount > currencyCryptoAmount
-    }
-
     private fun MutableList<SendTextField.CustomFee>.setEmpty(index: Int) {
         set(index, this[index].copy(value = ""))
     }
@@ -140,7 +135,11 @@ internal class EthereumCustomFeeConverter(
                 index,
                 this[index].copy(
                     value = value,
-                    label = getFeeFormatted(newFeeAmountDecimal),
+                    label = getFiatReference(
+                        rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate,
+                        value = newFeeAmountDecimal,
+                        appCurrency = appCurrencyProvider(),
+                    ),
                 ),
             )
         }
@@ -159,7 +158,11 @@ internal class EthereumCustomFeeConverter(
                 FEE_AMOUNT,
                 this[FEE_AMOUNT].copy(
                     value = newFeeAmount.parseBigDecimal(this[FEE_AMOUNT].decimals),
-                    label = getFeeFormatted(newFeeAmount),
+                    label = getFiatReference(
+                        rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate,
+                        value = newFeeAmount,
+                        appCurrency = appCurrencyProvider(),
+                    ),
                 ),
             )
             set(index, this[index].copy(value = value))
@@ -179,15 +182,23 @@ internal class EthereumCustomFeeConverter(
                 FEE_AMOUNT,
                 this[FEE_AMOUNT].copy(
                     value = newFeeAmount.parseBigDecimal(this[FEE_AMOUNT].decimals),
-                    label = getFeeFormatted(newFeeAmount),
+                    label = getFiatReference(
+                        rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate,
+                        value = newFeeAmount,
+                        appCurrency = appCurrencyProvider(),
+                    ),
                 ),
+            )
+            val isNotExceedBalance = checkExceedBalance(
+                feeBalance = feeCryptoCurrencyStatusProvider()?.value?.amount,
+                feeAmount = newFeeAmount,
             )
             set(
                 index,
                 this[index].copy(
                     value = value,
                     keyboardOptions = KeyboardOptions(
-                        imeAction = if (!checkExceedBalance(newFeeAmount)) ImeAction.None else ImeAction.Done,
+                        imeAction = if (!isNotExceedBalance) ImeAction.None else ImeAction.Done,
                         keyboardType = KeyboardType.Number,
                     ),
                 ),
