@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -22,6 +23,9 @@ internal class WalletFragment : ComposeFragment() {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    override lateinit var hapticManager: HapticManager
 
     @Inject
     internal lateinit var manageTokensUi: ManageTokensUi
