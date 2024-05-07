@@ -17,6 +17,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 
 internal class DefaultTransactionRepository(
     private val walletManagersFacade: WalletManagersFacade,
@@ -30,6 +31,8 @@ internal class DefaultTransactionRepository(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
+        isSwap: Boolean,
+        hash: String?,
     ): TransactionData? = withContext(coroutineDispatcherProvider.io) {
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
@@ -38,7 +41,13 @@ internal class DefaultTransactionRepository(
             derivationPath = network.derivationPath.value,
         )
 
-        return@withContext walletManager?.createTransaction(amount, fee, destination)?.copy(
+        val txAmount = if (isSwap) {
+            createAmountForSwap(amount)
+        } else {
+            amount
+        }
+        return@withContext walletManager?.createTransaction(txAmount, fee, destination)?.copy(
+            hash = hash,
             extras = getMemoExtras(network.id.value, memo),
         )
     }
@@ -79,6 +88,21 @@ internal class DefaultTransactionRepository(
             Blockchain.Hedera -> HederaTransactionBuilder.HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             else -> null
+        }
+    }
+
+    private fun createAmountForSwap(amount: Amount): Amount {
+        return when (amount.type) {
+            is AmountType.Coin -> amount
+            else -> {
+                // 1. when creates swap amount for NonNativeToken, amount should be ZERO
+                // 2. Amount has .Coin type, as workaround to use destinationAddress in bsdk, not contractAddress
+                Amount(
+                    currencySymbol = amount.currencySymbol,
+                    value = BigDecimal.ZERO,
+                    decimals = amount.decimals,
+                )
+            }
         }
     }
 }
