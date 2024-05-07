@@ -13,7 +13,6 @@ import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.haptic.HapticManager
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -97,7 +96,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val hapticManager: HapticManager,
     featureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
@@ -378,8 +376,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrency.symbol))
 
-        hapticManager.vibrateShort()
-
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
         showErrorIfDemoModeOrElse {
@@ -410,8 +406,6 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onSendClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrency.symbol))
-
-        hapticManager.vibrateShort()
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
@@ -483,8 +477,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
 
-        hapticManager.vibrateShort()
-
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
         viewModelScope.launch(dispatchers.io) {
@@ -525,8 +517,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrency.symbol))
 
-        hapticManager.vibrateShort()
-
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
         showErrorIfDemoModeOrElse {
@@ -543,8 +533,6 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrency.symbol))
-
-        hapticManager.vibrateShort()
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
