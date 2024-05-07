@@ -13,6 +13,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.tokens.TokensAction
@@ -31,6 +32,9 @@ class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    override lateinit var hapticManager: HapticManager
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
 
