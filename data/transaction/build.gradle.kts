@@ -16,6 +16,7 @@ dependencies {
     implementation(deps.tangem.blockchain)
 
     /** Core */
+    implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
     /** Domain */
@@ -28,4 +29,6 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    implementation(deps.timber)
 }
