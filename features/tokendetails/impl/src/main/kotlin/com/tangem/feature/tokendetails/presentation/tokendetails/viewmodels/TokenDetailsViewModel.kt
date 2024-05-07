@@ -13,7 +13,6 @@ import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency

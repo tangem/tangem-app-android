@@ -113,7 +113,6 @@ include(":core:utils")
 include(":core:deep-links")
 include(":core:deep-links:global")
 include(":core:decompose")
-include(":core:haptic")
 // endregion Core modules
 
 // region Libs modules

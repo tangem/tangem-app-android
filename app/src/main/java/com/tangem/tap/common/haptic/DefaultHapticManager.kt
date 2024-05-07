@@ -5,7 +5,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import com.tangem.core.ui.haptic.HapticManager
 
-class HapticManagerImpl(private val vibrator: Vibrator) : HapticManager {
+class DefaultHapticManager(private val vibrator: Vibrator) : HapticManager {
 
     override fun vibrateShort() {
         vibrate(VIBRATION_SHORT_DURATION)
@@ -24,8 +24,8 @@ class HapticManagerImpl(private val vibrator: Vibrator) : HapticManager {
     }
 
     companion object {
-        const val VIBRATION_SHORT_DURATION = 100L
-        const val VIBRATION_MEDIUM_DURATION = 400L
-        const val VIBRATION_LONG_DURATION = 700L
+        const val VIBRATION_SHORT_DURATION = 50L
+        const val VIBRATION_MEDIUM_DURATION = 100L
+        const val VIBRATION_LONG_DURATION = 200L
     }
 }

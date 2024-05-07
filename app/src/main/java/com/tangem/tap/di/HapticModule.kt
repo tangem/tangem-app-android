@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Vibrator
 import android.os.VibratorManager
-import com.tangem.tap.common.haptic.HapticManagerImpl
+import com.tangem.tap.common.haptic.DefaultHapticManager
 import com.tangem.core.ui.haptic.HapticManager
 import dagger.Module
 import dagger.Provides
@@ -20,7 +20,7 @@ class HapticModule {
     @Provides
     @Singleton
     fun provideHapticManager(@ApplicationContext context: Context): HapticManager {
-        return HapticManagerImpl(
+        return DefaultHapticManager(
             vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 vibratorManager.defaultVibrator

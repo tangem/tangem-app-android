@@ -54,7 +54,6 @@ dependencies {
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
     implementation(projects.core.featuretoggles)
-    implementation(projects.core.haptic)
 
     implementation(projects.libs.crypto)
 

@@ -75,7 +75,6 @@ dependencies {
     implementation(projects.core.featuretoggles)
     implementation(projects.core.res)
     implementation(projects.core.ui)
-    implementation(projects.core.haptic)
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.deepLinks)

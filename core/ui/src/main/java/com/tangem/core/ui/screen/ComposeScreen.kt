@@ -63,7 +63,7 @@ internal fun ComposeScreen.createComposeView(context: Context): ComposeView {
 
             TangemTheme(
                 isDark = shouldUseDarkTheme(appThemeMode),
-                hapticManager = hapticManager
+                hapticManager = hapticManager,
             ) {
                 ScreenContent(modifier = screenModifier)
             }
