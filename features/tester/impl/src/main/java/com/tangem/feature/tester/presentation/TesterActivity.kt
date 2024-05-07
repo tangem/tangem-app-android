@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -28,6 +29,9 @@ internal class TesterActivity : ComposeActivity() {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    override lateinit var hapticManager: HapticManager
 
     /** Router for inner feature navigation */
     @Inject
