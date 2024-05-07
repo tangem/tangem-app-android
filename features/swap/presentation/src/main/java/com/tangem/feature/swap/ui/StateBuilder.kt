@@ -984,6 +984,18 @@ internal class StateBuilder(
         )
     }
 
+    fun createDemoModeAlert(uiState: SwapStateHolder, onAlertClick: () -> Unit): SwapStateHolder {
+        return uiState.copy(
+            alert = SwapWarning.GenericWarning(
+                title = resourceReference(id = R.string.warning_demo_mode_title),
+                message = resourceReference(id = R.string.warning_demo_mode_message),
+                onClick = onAlertClick,
+                type = GenericWarningType.OTHER,
+            ),
+            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+        )
+    }
+
     private fun getProviderErrorMessage(dataError: DataError): TextReference? {
         return when (dataError) {
             is DataError.SwapsAreUnavailableNowError -> resourceReference(
