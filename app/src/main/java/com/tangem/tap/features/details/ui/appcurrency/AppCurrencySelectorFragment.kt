@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -17,6 +18,9 @@ internal class AppCurrencySelectorFragment : ComposeFragment() {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    override lateinit var hapticManager: HapticManager
 
     private val viewModel: AppCurrencySelectorViewModel by viewModels()
 
