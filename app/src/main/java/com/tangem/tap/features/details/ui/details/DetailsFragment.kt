@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.email.EmailSender
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
@@ -24,6 +25,9 @@ internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    override lateinit var hapticManager: HapticManager
 
     @Inject
     lateinit var walletsRepository: WalletsRepository
