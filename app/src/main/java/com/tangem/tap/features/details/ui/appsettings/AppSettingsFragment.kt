@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -20,6 +21,9 @@ internal class AppSettingsFragment : ComposeFragment() {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    override lateinit var hapticManager: HapticManager
 
     @Inject
     lateinit var appCurrencyRepository: AppCurrencyRepository

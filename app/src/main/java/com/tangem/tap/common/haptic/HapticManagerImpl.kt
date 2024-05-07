@@ -1,16 +1,17 @@
-package com.tangem.core.haptic
+package com.tangem.tap.common.haptic
 
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import com.tangem.core.ui.haptic.HapticManager
 
-class HapticManager(private val vibrator: Vibrator) {
+class HapticManagerImpl(private val vibrator: Vibrator) : HapticManager {
 
-    fun vibrateShort() {
+    override fun vibrateShort() {
         vibrate(VIBRATION_SHORT_DURATION)
     }
 
-    fun vibrateLong() {
+    override fun vibrateLong() {
         vibrate(VIBRATION_MEDIUM_DURATION)
     }
 
