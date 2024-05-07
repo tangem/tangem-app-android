@@ -18,6 +18,8 @@ interface TransactionRepository {
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
+        isSwap: Boolean,
+        hash: String?,
     ): TransactionData?
 
     suspend fun sendTransaction(
