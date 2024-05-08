@@ -36,24 +36,27 @@ internal fun getFiatReference(value: BigDecimal?, rate: BigDecimal?, appCurrency
 internal fun getFiatString(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurrency): String {
     if (value == null || rate == null) return EMPTY_BALANCE_SIGN
     val feeValue = value.multiply(rate)
-    val scaled = feeValue.setScale(FIAT_DECIMALS, RoundingMode.UP) ?: BigDecimal.ZERO
-    val formattedValue = if (scaled < BigDecimal(FEE_MINIMUM_VALUE)) {
+    return getFiatFormatted(feeValue, appCurrency.code, appCurrency.symbol)
+}
+
+internal fun getFiatFormatted(value: BigDecimal?, currencyCode: String, currencySymbol: String): String {
+    val scaled = value?.setScale(FIAT_DECIMALS, RoundingMode.UP) ?: BigDecimal.ZERO
+    return if (scaled < BigDecimal(FEE_MINIMUM_VALUE)) {
         buildString {
             append(BigDecimalFormatter.CAN_BE_LOWER_SIGN)
             append(
                 BigDecimalFormatter.formatFiatAmount(
                     fiatAmount = BigDecimal(FEE_MINIMUM_VALUE),
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
+                    fiatCurrencyCode = currencyCode,
+                    fiatCurrencySymbol = currencySymbol,
                 ),
             )
         }
     } else {
         BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = feeValue,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
+            fiatAmount = value,
+            fiatCurrencyCode = currencyCode,
+            fiatCurrencySymbol = currencySymbol,
         )
     }
-    return formattedValue
 }
