@@ -26,7 +26,7 @@ class WalletNameGenerateUseCase (
     }
 
     private fun suggestedWalletName(defaultName: String, existingNames: Set<String>): String {
-        val startIndex = 1
+        val startIndex = 2
         if (!existingNames.contains(defaultName)) {
             return defaultName
         }
