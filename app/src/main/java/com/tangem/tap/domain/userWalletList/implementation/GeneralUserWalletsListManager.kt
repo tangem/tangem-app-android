@@ -45,6 +45,9 @@ internal class GeneralUserWalletsListManager(
     override val selectedUserWallet: Flow<UserWallet>
         get() = implementation.flatMapLatest { it.selectedUserWallet }
 
+    override val userWalletsSync: List<UserWallet>
+        get() = implementation.value.userWalletsSync
+
     override val selectedUserWalletSync: UserWallet?
         get() = implementation.value.selectedUserWalletSync
 

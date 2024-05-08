@@ -40,6 +40,9 @@ internal class BiometricUserWalletsListManager(
             .filterNotNull()
             .distinctUntilChanged()
 
+    override val userWalletsSync: List<UserWallet>
+        get() = state.value.userWallets
+
     override val selectedUserWalletSync: UserWallet?
         get() = findSelectedUserWallet()
 

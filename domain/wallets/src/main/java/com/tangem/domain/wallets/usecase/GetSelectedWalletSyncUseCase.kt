@@ -21,7 +21,7 @@ class GetSelectedWalletSyncUseCase(private val userWalletsListManager: UserWalle
         return either {
             ensureNotNull(
                 value = userWalletsListManager.selectedUserWalletSync,
-                raise = { GetUserWalletError.UserWalletNotFound },
+                raise = { GetUserWalletError.NotFound },
             )
         }
     }
