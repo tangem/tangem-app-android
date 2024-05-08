@@ -5,7 +5,7 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.CompletionResult
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.manager.UserWalletsListManager
 import com.tangem.domain.wallets.models.SelectWalletError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId

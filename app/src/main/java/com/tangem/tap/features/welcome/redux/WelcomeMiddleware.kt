@@ -14,8 +14,8 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
-import com.tangem.domain.wallets.legacy.unlockIfLockable
+import com.tangem.domain.wallets.manager.UserWalletsListManager.Lockable.UnlockType
+import com.tangem.domain.wallets.manager.unlockIfLockable
 import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*

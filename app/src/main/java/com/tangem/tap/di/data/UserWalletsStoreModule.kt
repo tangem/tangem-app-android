@@ -1,7 +1,7 @@
 package com.tangem.tap.di.data
 
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.manager.UserWalletsListManager
 import com.tangem.tap.data.RuntimeUserWalletsStore
 import dagger.Module
 import dagger.Provides

@@ -1,4 +1,4 @@
-package com.tangem.domain.wallets.legacy
+package com.tangem.domain.wallets.manager
 
 import com.tangem.common.core.TangemError
 import com.tangem.domain.wallets.R

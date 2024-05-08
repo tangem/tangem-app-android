@@ -4,10 +4,10 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import com.tangem.common.doOnFailure
-import com.tangem.domain.wallets.legacy.UserWalletsListError
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
-import com.tangem.domain.wallets.legacy.asLockable
+import com.tangem.domain.wallets.manager.UserWalletsListError
+import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.manager.UserWalletsListManager.Lockable.UnlockType
+import com.tangem.domain.wallets.manager.asLockable
 import com.tangem.domain.wallets.models.UnlockWalletsError
 
 /**

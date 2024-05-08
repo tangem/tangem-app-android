@@ -40,8 +40,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.asLockable
+import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.manager.asLockable
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.managetokens.navigation.ManageTokensUi

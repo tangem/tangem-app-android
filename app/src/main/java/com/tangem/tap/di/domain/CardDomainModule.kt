@@ -6,7 +6,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.manager.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import dagger.Module
 import dagger.Provides

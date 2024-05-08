@@ -8,7 +8,7 @@ import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.files.FileReader
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.manager.UserWalletsListManager
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl

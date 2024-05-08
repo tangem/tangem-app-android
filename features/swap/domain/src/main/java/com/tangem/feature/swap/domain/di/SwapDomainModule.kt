@@ -14,7 +14,7 @@ import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.manager.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.*
 import com.tangem.feature.swap.domain.api.SwapRepository

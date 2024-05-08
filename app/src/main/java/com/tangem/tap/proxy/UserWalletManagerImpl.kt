@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.manager.UserWalletsListManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.ProxyAmount
 import timber.log.Timber
