@@ -18,7 +18,7 @@ import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.Artwork
+import com.tangem.domain.wallets.models.Artwork
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*

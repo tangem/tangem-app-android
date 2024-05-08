@@ -1,4 +1,4 @@
-package com.tangem.domain.userwallets
+package com.tangem.domain.wallets.models
 
 data class Artwork(val artworkId: String) {
 
