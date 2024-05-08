@@ -259,6 +259,7 @@ internal class SendNotificationFactory(
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
                 SendNotification.Warning.HighFeeError(
+                    currencyName = cryptoCurrencyStatus.currency.name,
                     amount = threshold.toPlainString(),
                     onConfirmClick = {
                         clickIntents.onAmountReduceClick(

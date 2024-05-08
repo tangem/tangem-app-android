@@ -4,7 +4,10 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -28,10 +31,10 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
+import com.tangem.features.send.impl.presentation.utils.getFiatFormatted
 
 @Composable
 internal fun SendNavigationButtons(
@@ -172,15 +175,15 @@ private fun SendingText(
         }
 
         if (feeFiat != null && sendingFiat != null) {
-            val sendingValue = BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = sendingFiat,
-                fiatCurrencyCode = feeState.appCurrency.code,
-                fiatCurrencySymbol = feeState.appCurrency.symbol,
+            val sendingValue = getFiatFormatted(
+                value = sendingFiat,
+                currencySymbol = feeState.appCurrency.symbol,
+                currencyCode = feeState.appCurrency.code,
             )
-            val feeValue = BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = feeFiat,
-                fiatCurrencyCode = feeState.appCurrency.code,
-                fiatCurrencySymbol = feeState.appCurrency.symbol,
+            val feeValue = getFiatFormatted(
+                value = feeState.fee?.amount?.value,
+                currencySymbol = feeState.appCurrency.symbol,
+                currencyCode = feeState.appCurrency.code,
             )
             Text(
                 text = stringResource(id = R.string.send_summary_transaction_description, sendingValue, feeValue),
