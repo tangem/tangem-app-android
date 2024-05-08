@@ -119,12 +119,13 @@ internal sealed class SendNotification(val config: NotificationConfig) {
         ),
     ) {
         data class HighFeeError(
+            val currencyName: String,
             val amount: String,
             val onConfirmClick: () -> Unit,
             val onCloseClick: () -> Unit,
         ) : Warning(
             title = resourceReference(R.string.send_notification_high_fee_title),
-            subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(amount)),
+            subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(currencyName, amount)),
             buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(R.string.send_notification_reduce_by, wrappedList(amount)),
                 onClick = onConfirmClick,
@@ -156,7 +157,7 @@ internal sealed class SendNotification(val config: NotificationConfig) {
         data class FeeCoverageNotification(val cryptoAmount: String, val fiatAmount: String) : Warning(
             title = resourceReference(R.string.send_network_fee_warning_title),
             subtitle = resourceReference(
-                R.string.send_network_fee_warning_content,
+                R.string.common_network_fee_warning_content,
                 wrappedList(cryptoAmount, fiatAmount),
             ),
         )
