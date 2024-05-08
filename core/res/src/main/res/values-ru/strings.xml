@@ -446,11 +446,13 @@
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
+  <string name="send_bitcoin_custom_fee_footer">Вы можете установить комиссию за транзакцию, изменив значение в поле Satoshi per vByte.</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
   <string name="send_enter_address_field">Введите адрес</string>
   <string name="send_error_address_same_as_wallet">Адрес совпадает с адресом кошелька</string>
+  <string name="send_evm_custom_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
   <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_error_invalid_memo">Недопустимый Memo. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_hint_destination_tag">Tag</string>
