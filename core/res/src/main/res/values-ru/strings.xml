@@ -102,6 +102,7 @@
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
   <string name="common_network_fee_title">Сетевая комиссия</string>
+  <string name="common_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s (%2$s) для покрытия выбранного уровня комиссии</string>
   <string name="common_next">Далее</string>
   <string name="common_no">Нет</string>
   <string name="common_no_address">Нет адреса</string>
@@ -479,7 +480,7 @@
   <string name="send_notification_existential_deposit_title">Экзистенциальный депозит</string>
   <string name="send_notification_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
-  <string name="send_notification_high_fee_text">Ввиду особенности сети Tezos комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить %s.</string>
+  <string name="send_notification_high_fee_text">Ввиду особенности сети %1$s комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить %2$s.</string>
   <string name="send_notification_high_fee_title">Комиссия повышена</string>
   <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
   <string name="send_notification_invalid_amount_title">Недопустимая сумма</string>
