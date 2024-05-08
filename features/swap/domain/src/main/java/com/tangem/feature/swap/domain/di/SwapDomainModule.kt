@@ -11,6 +11,7 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -40,6 +41,7 @@ class SwapDomainModule {
         @SwapScope getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
         getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
         @SwapScope sendTransactionUseCase: SendTransactionUseCase,
+        @SwapScope createTransactionUseCase: CreateTransactionUseCase,
         quotesRepository: QuotesRepository,
         swapTransactionRepository: SwapTransactionRepository,
         appCurrencyRepository: AppCurrencyRepository,
@@ -57,6 +59,7 @@ class SwapDomainModule {
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             getMultiCryptoCurrencyStatusUseCase = getCryptoCurrencyStatusUseCase,
             sendTransactionUseCase = sendTransactionUseCase,
+            createTransactionUseCase = createTransactionUseCase,
             quotesRepository = quotesRepository,
             walletManagersFacade = walletManagersFacade,
             dispatcher = coroutineDispatcherProvider,
@@ -65,6 +68,7 @@ class SwapDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             currenciesRepository = currenciesRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
+            demoConfig = DemoConfig(),
         )
     }
 
@@ -118,6 +122,15 @@ class SwapDomainModule {
     @Provides
     fun provideDemoCardUseCase(): IsDemoCardUseCase {
         return IsDemoCardUseCase(config = DemoConfig())
+    }
+
+    @SwapScope
+    @Provides
+    @Singleton
+    fun provideCreateTransactionUseCase(transactionRepository: TransactionRepository): CreateTransactionUseCase {
+        return CreateTransactionUseCase(
+            transactionRepository = transactionRepository,
+        )
     }
 
     @SwapScope

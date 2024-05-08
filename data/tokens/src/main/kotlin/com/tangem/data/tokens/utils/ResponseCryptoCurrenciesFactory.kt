@@ -92,6 +92,17 @@ class ResponseCryptoCurrenciesFactory {
             // https://tangem.atlassian.net/browse/AND-6158
             Blockchain.Dischain,
             Blockchain.Arbitrum,
+            Blockchain.ArbitrumTestnet,
+            Blockchain.Aurora,
+            Blockchain.AuroraTestnet,
+            Blockchain.Manta,
+            Blockchain.MantaTestnet,
+            Blockchain.ZkSyncEra,
+            Blockchain.ZkSyncEraTestnet,
+            Blockchain.PolygonZkEVM,
+            Blockchain.PolygonZkEVMTestnet,
+            Blockchain.Base,
+            Blockchain.BaseTestnet,
             -> this.fullName
             else -> responseToken.name
         }
