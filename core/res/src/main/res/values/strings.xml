@@ -101,6 +101,7 @@
   <string name="common_locked">Locked</string>
   <string name="common_main_network">Main network</string>
   <string name="common_network_fee_title">Network fee</string>
+  <string name="common_network_fee_warning_content">Amount sent will be reduced by %1$s (%2$s) to cover the selected fee level</string>
   <string name="common_next">Next</string>
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
@@ -476,7 +477,7 @@
   <string name="send_notification_existential_deposit_title">Existential deposit</string>
   <string name="send_notification_fee_too_high_text">The commission amount is %s times the recommended amount. Make sure that the custom settings are correct.</string>
   <string name="send_notification_fee_too_high_title">Custom fee is high</string>
-  <string name="send_notification_high_fee_text">Due to the peculiarities of the Tezos network, the fee for transferring the entire balance is higher. To reduce the commission, you can leave %s.</string>
+  <string name="send_notification_high_fee_text">Due to the peculiarities of the %1$s network, the fee for transferring the entire balance is higher. To reduce the commission, you can leave %2$s.</string>
   <string name="send_notification_high_fee_title">The fee is higher</string>
   <string name="send_notification_invalid_amount_text">The included commission exceeds the transfer amount, leading to a negative value</string>
   <string name="send_notification_invalid_amount_title">Invalid amount</string>
