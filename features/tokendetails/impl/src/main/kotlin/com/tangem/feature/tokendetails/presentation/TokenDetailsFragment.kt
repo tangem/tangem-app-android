@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.res.TangemTheme
@@ -20,10 +21,7 @@ import javax.inject.Inject
 internal class TokenDetailsFragment : ComposeFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
-
-    @Inject
-    override lateinit var hapticManager: HapticManager
+    override lateinit var uiDependencies: UiDependencies
 
     @Inject
     lateinit var tokenDetailsRouter: TokenDetailsRouter

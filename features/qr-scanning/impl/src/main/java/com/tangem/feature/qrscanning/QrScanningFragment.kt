@@ -20,10 +20,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.mlkit.vision.common.InputImage
-import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.feature.qrscanning.inner.MLKitBarcodeAnalyzer
 import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
 import com.tangem.feature.qrscanning.presentation.QrScanningContent
@@ -40,10 +39,7 @@ import kotlin.properties.Delegates
 internal class QrScanningFragment : ComposeFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
-
-    @Inject
-    override lateinit var hapticManager: HapticManager
+    override lateinit var uiDependencies: UiDependencies
 
     @Inject
     lateinit var router: QrScanningRouter
