@@ -3,46 +3,46 @@ package com.tangem.core.analytics.models
 sealed class AnalyticsParam {
 
     sealed class CardBalanceState(val value: String) {
-        object Empty : CardBalanceState("Empty")
-        object Full : CardBalanceState("Full")
-        object CustomToken : CardBalanceState("Custom Token")
-        object BlockchainError : CardBalanceState("Blockchain Error")
-        object NoRate : CardBalanceState("No Rate")
+        data object Empty : CardBalanceState("Empty")
+        data object Full : CardBalanceState("Full")
+        data object CustomToken : CardBalanceState("Custom Token")
+        data object BlockchainError : CardBalanceState("Blockchain Error")
+        data object NoRate : CardBalanceState("No Rate")
         companion object
     }
 
     sealed class TokenBalanceState(val value: String) {
-        object Empty : TokenBalanceState("Empty")
-        object Full : TokenBalanceState("Full")
+        data object Empty : TokenBalanceState("Empty")
+        data object Full : TokenBalanceState("Full")
     }
 
     sealed class RateApp(val value: String) {
-        object Liked : RateApp("Liked")
-        object Disliked : RateApp("Disliked")
-        object Closed : RateApp("Close")
+        data object Liked : RateApp("Liked")
+        data object Disliked : RateApp("Disliked")
+        data object Closed : RateApp("Close")
     }
 
     sealed class OnOffState(val value: String) {
-        object On : OnOffState("On")
-        object Off : OnOffState("Off")
+        data object On : OnOffState("On")
+        data object Off : OnOffState("Off")
     }
 
     sealed class OrganizeSortType(val value: String) {
-        object ByBalance : OrganizeSortType("By Balance")
-        object Manually : OrganizeSortType("Manually")
+        data object ByBalance : OrganizeSortType("By Balance")
+        data object Manually : OrganizeSortType("Manually")
     }
 
     sealed class UserCode(val value: String) {
-        object AccessCode : UserCode("Access Code")
-        object Passcode : UserCode("Passcode")
+        data object AccessCode : UserCode("Access Code")
+        data object Passcode : UserCode("Passcode")
     }
 
     sealed class AccessCodeRecoveryStatus(val value: String) {
 
         val key: String = "Status"
 
-        object Enabled : AccessCodeRecoveryStatus("Enabled")
-        object Disabled : AccessCodeRecoveryStatus("Disabled")
+        data object Enabled : AccessCodeRecoveryStatus("Enabled")
+        data object Disabled : AccessCodeRecoveryStatus("Disabled")
 
         companion object {
             fun from(enabled: Boolean): AccessCodeRecoveryStatus {
@@ -52,9 +52,9 @@ sealed class AnalyticsParam {
     }
 
     sealed class Error(val value: String) {
-        object App : Error("App Error")
-        object CardSdk : Error("Card Sdk Error")
-        object BlockchainSdk : Error("Blockchain Sdk Error")
+        data object App : Error("App Error")
+        data object CardSdk : Error("Card Sdk Error")
+        data object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
     sealed class ScreensSources(val value: String) {
@@ -86,8 +86,8 @@ sealed class AnalyticsParam {
             val permissionType: String,
         ) : TxSentFrom("Approve"), TxData
 
-        object WalletConnect : TxSentFrom("WalletConnect")
-        object Sell : TxSentFrom("Sell")
+        data object WalletConnect : TxSentFrom("WalletConnect")
+        data object Sell : TxSentFrom("Sell")
     }
 
     sealed interface TxData {
@@ -97,10 +97,10 @@ sealed class AnalyticsParam {
     }
 
     sealed class FeeType(val value: String) {
-        object Fixed : FeeType("Fixed")
-        object Min : FeeType("Min")
-        object Normal : FeeType("Normal")
-        object Max : FeeType("Max")
+        data object Fixed : FeeType("Fixed")
+        data object Min : FeeType("Min")
+        data object Normal : FeeType("Normal")
+        data object Max : FeeType("Max")
 
         companion object {
             fun fromString(feeType: String): FeeType {
@@ -116,13 +116,13 @@ sealed class AnalyticsParam {
     }
 
     sealed class WalletCreationType(val value: String) {
-        object PrivateKey : WalletCreationType("Private key")
-        object NewSeed : WalletCreationType("New seed")
-        object SeedImport : WalletCreationType("Seed import")
+        data object PrivateKey : WalletCreationType("Private key")
+        data object NewSeed : WalletCreationType("New seed")
+        data object SeedImport : WalletCreationType("Seed import")
     }
 
     sealed class WalletType(val value: String) {
-        object MultiCurrency : WalletType(value = "Multicurrency")
+        data object MultiCurrency : WalletType(value = "Multicurrency")
         class SingleCurrency(currencyName: String) : WalletType(currencyName)
     }
 
