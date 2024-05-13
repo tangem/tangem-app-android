@@ -72,7 +72,7 @@ internal class WalletLoadingStateFactory(private val clickIntents: WalletClickIn
     }
 
     private fun createPullToRefreshConfig(): WalletPullToRefreshConfig {
-        return WalletPullToRefreshConfig(onRefresh = clickIntents::onRefreshSwipe, isRefreshing = false)
+        return WalletPullToRefreshConfig(onRefresh = { clickIntents.onRefreshSwipe(it.value) }, isRefreshing = false)
     }
 
     private fun UserWallet.toLoadingWalletCardState(): WalletCardState {
