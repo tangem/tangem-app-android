@@ -15,7 +15,7 @@ internal object UiDependenciesModule {
 
     @Provides
     @Singleton
-    fun provideUiDependencies(hapticManager: HapticManager, appThemeModeHolder: AppThemeModeHolder,): UiDependencies {
+    fun provideUiDependencies(hapticManager: HapticManager, appThemeModeHolder: AppThemeModeHolder): UiDependencies {
         return object : UiDependencies {
             override val hapticManager = hapticManager
             override val appThemeModeHolder = appThemeModeHolder
