@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.wallets.models.UpdateWalletError
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletNamesUseCase
@@ -59,7 +58,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
                             if (walletNames.contains(enteredName) && enteredName != currentWalletName) {
                                 resourceReference(
                                     R.string.user_wallet_list_rename_popup_error_already_exists,
-                                    wrappedList(enteredName)
+                                    wrappedList(enteredName),
                                 )
                             } else {
                                 null
