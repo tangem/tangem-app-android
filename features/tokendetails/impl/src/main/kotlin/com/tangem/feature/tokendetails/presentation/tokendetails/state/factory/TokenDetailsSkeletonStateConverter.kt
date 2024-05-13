@@ -90,7 +90,7 @@ internal class TokenDetailsSkeletonStateConverter(
         return persistentListOf(
             TokenDetailsActionButton.Buy(dimContent = false, onClick = {}),
             TokenDetailsActionButton.Send(dimContent = false, onClick = {}),
-            TokenDetailsActionButton.Receive(onClick = {}),
+            TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
             TokenDetailsActionButton.Sell(dimContent = false, onClick = {}),
             TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
         )

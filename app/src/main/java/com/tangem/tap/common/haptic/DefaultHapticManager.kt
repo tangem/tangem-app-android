@@ -11,6 +11,10 @@ class DefaultHapticManager(private val vibrator: Vibrator) : HapticManager {
         vibrate(VIBRATION_SHORT_DURATION)
     }
 
+    override fun vibrateMeduim() {
+        vibrate(VIBRATION_MEDIUM_LOW_DURATION)
+    }
+
     override fun vibrateLong() {
         vibrate(VIBRATION_MEDIUM_DURATION)
     }
@@ -25,6 +29,7 @@ class DefaultHapticManager(private val vibrator: Vibrator) : HapticManager {
 
     companion object {
         const val VIBRATION_SHORT_DURATION = 50L
+        const val VIBRATION_MEDIUM_LOW_DURATION = 75L
         const val VIBRATION_MEDIUM_DURATION = 100L
         const val VIBRATION_LONG_DURATION = 200L
     }
