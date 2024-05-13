@@ -180,6 +180,7 @@ internal class SendViewModel @Inject constructor(
             stateRouterProvider = Provider { stateRouter },
             currentStateProvider = Provider { uiState },
             analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrencyProvider = Provider { cryptoCurrency },
         )
     }
 // [REDACTED_TODO_COMMENT]
@@ -874,7 +875,7 @@ internal class SendViewModel @Inject constructor(
                 uiState = stateFactory.getSendingStateUpdate(isSending = false)
                 updateTransactionStatus(txData)
                 scheduleBalanceUpdate()
-                analyticsEventHandler.send(SendAnalyticEvents.TransactionScreenOpened)
+                sendScreenAnalyticSender.sendTransaction()
             },
         )
     }
