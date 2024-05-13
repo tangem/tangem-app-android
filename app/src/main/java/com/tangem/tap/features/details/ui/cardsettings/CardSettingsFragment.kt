@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.fragment.app.viewModels
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -17,6 +18,9 @@ internal class CardSettingsFragment : ComposeFragment() {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    override lateinit var hapticManager: HapticManager
 
     private val viewModel: CardSettingsViewModel by viewModels()
 

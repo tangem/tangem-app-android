@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -24,6 +25,9 @@ internal class TokensListFragment : ComposeFragment() {
 
     @Inject
     override lateinit var appThemeModeHolder: AppThemeModeHolder
+
+    @Inject
+    override lateinit var hapticManager: HapticManager
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {

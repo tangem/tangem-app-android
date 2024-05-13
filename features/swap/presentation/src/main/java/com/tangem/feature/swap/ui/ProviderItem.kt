@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,6 +28,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
 
@@ -390,25 +392,12 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ProviderItemPreview_Light(
+private fun ProviderItemPreview(
     @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
 ) {
-    TangemTheme {
-        ProviderItem(
-            modifier = Modifier.background(TangemTheme.colors.background.action),
-            state = state.first,
-            isSelected = state.second,
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun ProviderItemPreview_Dark(
-    @PreviewParameter(ProviderItemParameterProvider::class) state: Pair<ProviderState, Boolean>,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         ProviderItem(
             modifier = Modifier.background(TangemTheme.colors.background.action),
             state = state.first,

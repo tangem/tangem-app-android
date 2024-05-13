@@ -167,9 +167,6 @@ class GetCurrencyWarningsUseCase(
             when {
                 tokenStatus != null && coinStatus != null -> {
                     buildList {
-                        if (currenciesRepository.hasPendingTransactions(tokenStatus, coinStatus)) {
-                            add(CryptoCurrencyWarning.HasPendingTransactions(coinStatus.currency.symbol))
-                        }
                         getFeeWarning(
                             userWalletId = userWalletId,
                             coinStatus = coinStatus,
@@ -192,12 +189,6 @@ class GetCurrencyWarningsUseCase(
             feePaidCurrency is FeePaidCurrency.Coin &&
                 !tokenStatus.value.amount.isZero() &&
                 coinStatus.value.amount.isZero() -> {
-                CryptoCurrencyWarning.BalanceNotEnoughForFee(
-                    tokenCurrency = tokenStatus.currency,
-                    coinCurrency = coinStatus.currency,
-                )
-            }
-            feePaidCurrency is FeePaidCurrency.SameCurrency && tokenStatus.value.amount.isZero() -> {
                 CryptoCurrencyWarning.BalanceNotEnoughForFee(
                     tokenCurrency = tokenStatus.currency,
                     coinCurrency = coinStatus.currency,

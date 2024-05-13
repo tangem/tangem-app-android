@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.rows
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
@@ -21,6 +22,7 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -73,7 +75,7 @@ fun SelectorRowItem(
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
             )
-            if (preDot != null && postDot != null) {
+            if (preDot != null) {
                 SelectorValueContent(
                     preDot = preDot,
                     postDot = postDot,
@@ -97,7 +99,7 @@ fun SelectorRowItem(
 @Composable
 private fun RowScope.SelectorValueContent(
     preDot: TextReference,
-    postDot: TextReference,
+    postDot: TextReference?,
     ellipsizeOffset: Int? = null,
 ) {
     val ellipsis = if (ellipsizeOffset == null) {
@@ -115,40 +117,27 @@ private fun RowScope.SelectorValueContent(
             .weight(1f)
             .padding(start = TangemTheme.dimens.spacing4),
     )
-    Text(
-        text = "•",
-        style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.primary1,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
-    )
-    Text(
-        text = postDot.resolveReference(),
-        style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.tertiary,
-    )
-}
-
-@Preview
-@Composable
-private fun SelectorRowItemPreview_Light() {
-    TangemTheme {
-        SelectorRowItem(
-            titleRes = R.string.common_fee_selector_option_slow,
-            iconRes = R.drawable.ic_tortoise_24,
-            preDot = TextReference.Str("1000 ETH"),
-            postDot = TextReference.Str("1000 $"),
-            ellipsizeOffset = 4,
-            isSelected = true,
-            onSelect = { },
+    if (postDot != null) {
+        Text(
+            text = "•",
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.primary1,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
+        )
+        Text(
+            text = postDot.resolveReference(),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
         )
     }
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SelectorRowItemPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun SelectorRowItemPreview() {
+    TangemThemePreview {
         SelectorRowItem(
             titleRes = R.string.common_fee_selector_option_slow,
             iconRes = R.drawable.ic_tortoise_24,
