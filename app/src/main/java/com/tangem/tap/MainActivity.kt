@@ -41,7 +41,6 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.managetokens.navigation.ManageTokensUi
@@ -440,10 +439,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
-        val canSaveWallets = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
-            .fold(onSuccess = { true }, onFailure = { false })
-
-        if (canSaveWallets && userWalletsListManager.hasUserWallets) {
+        if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
             store.dispatch(
                 NavigationAction.NavigateTo(
                     screen = AppScreen.Welcome,
