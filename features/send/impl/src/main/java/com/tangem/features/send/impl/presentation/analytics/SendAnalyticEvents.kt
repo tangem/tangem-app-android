@@ -1,7 +1,9 @@
 package com.tangem.features.send.impl.presentation.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
@@ -66,9 +68,9 @@ internal sealed class SendAnalyticEvents(
     data object FeeScreenOpened : SendAnalyticEvents(event = "Fee Screen Opened")
 
     /** Selected fee (send after next screen opened) */
-    data class SelectedFee(val feeType: SelectedFeeType) : SendAnalyticEvents(
+    data class SelectedFee(val feeType: AnalyticsParam.FeeType) : SendAnalyticEvents(
         event = "Fee Selected",
-        params = mapOf("Fee Type" to feeType.name),
+        params = mapOf("Fee Type" to feeType.value),
     )
 
     /** Custom fee selected */
@@ -97,7 +99,16 @@ internal sealed class SendAnalyticEvents(
 
     // region Transaction Result
     /** Transaction send screen opened */
-    data object TransactionScreenOpened : SendAnalyticEvents(event = "Transaction Sent Screen Opened")
+    data class TransactionScreenOpened(
+        val token: String,
+        val feeType: AnalyticsParam.FeeType,
+    ) : SendAnalyticEvents(
+        event = "Transaction Sent Screen Opened",
+        params = mapOf(
+            TOKEN to token,
+            FEE_TYPE to feeType.value,
+        ),
+    )
 
     /** Share button clicked */
     data object ShareButtonClicked : SendAnalyticEvents(event = "Button - Share")
@@ -145,12 +156,4 @@ internal enum class EnterAddressSource {
 internal enum class SelectedCurrencyType(val value: String) {
     Token("Token"),
     AppCurrency("App Currency"),
-}
-
-internal enum class SelectedFeeType {
-    Min,
-    Max,
-    Fixed,
-    Normal,
-    Custom,
 }
