@@ -26,7 +26,6 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
@@ -59,8 +58,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.Locale
@@ -79,8 +79,8 @@ internal class SendViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
-    private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
-    private val getCryptoCurrencyStatusesSyncUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
+    private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
@@ -400,56 +400,39 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun getUserWallets() {
-        getWalletsUseCase()
-            .conflate()
-            .distinctUntilChanged()
-            .onEach { userWallets ->
-                coroutineScope {
-                    runCatching {
-                        userWallets
-                            .filterNot { it.walletId == userWalletId || it.isLocked }
-                            .map { wallet ->
-                                async(dispatchers.io) { wallet.toAvailableWallet() }
-                            }.awaitAll()
-                    }.onSuccess { result ->
-                        uiState = stateFactory.onLoadedWalletsList(wallets = result)
-                    }.onFailure {
-                        uiState = stateFactory.onLoadedWalletsList(wallets = emptyList())
-                    }
-                }
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
-    }
-
-    private suspend fun UserWallet.toAvailableWallet(): AvailableWallet? {
-        return if (!isMultiCurrency) {
-            val status = getCryptoCurrencyStatusSyncUseCase(walletId).getOrNull()
-            val address = status?.value?.networkAddress.takeIf {
-                status?.currency?.network?.id == cryptoCurrency.network.id &&
-                    status.currency.network.derivationPath !is Network.DerivationPath.Custom
-            }
-            address?.let {
-                AvailableWallet(
-                    name = name,
-                    address = it.defaultAddress.value,
-                )
-            }
-        } else {
-            val statuses = getCryptoCurrencyStatusesSyncUseCase(walletId).getOrNull()
-            val walletCurrency = statuses?.firstOrNull {
-                it.currency.network.id == cryptoCurrency.network.id &&
-                    it.currency.network.derivationPath !is Network.DerivationPath.Custom
-            }
-            val address = walletCurrency?.value?.networkAddress
-            address?.let {
-                AvailableWallet(
-                    name = name,
-                    address = it.defaultAddress.value,
-                )
+        viewModelScope.launch(dispatchers.main) {
+            runCatching {
+                getWalletsUseCase.invokeSync()
+                    ?.toAvailableWallets()
+                    .orEmpty()
+            }.onSuccess { result ->
+                combine(*result.toTypedArray()) { it }
+                    .onEach { uiState = stateFactory.onLoadedWalletsList(wallets = it.toList()) }
+                    .flowOn(dispatchers.main)
+                    .launchIn(viewModelScope)
+            }.onFailure {
+                uiState = stateFactory.onLoadedWalletsList(wallets = emptyList())
             }
         }
     }
+
+    private suspend fun List<UserWallet>.toAvailableWallets(): List<Flow<AvailableWallet>> =
+        filterNot { it.walletId == userWalletId || it.isLocked }
+            .mapNotNull { wallet ->
+                val status = if (!wallet.isMultiCurrency) {
+                    getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
+                        getNetworkAddressesUseCase(wallet.walletId, it.network)
+                    }
+                } else {
+                    getNetworkAddressesUseCase(wallet.walletId, cryptoCurrency.network)
+                }
+                status?.map { address ->
+                    AvailableWallet(
+                        wallet.name,
+                        address = address,
+                    )
+                }
+            }
 
     private suspend fun getTxHistory() {
         val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
