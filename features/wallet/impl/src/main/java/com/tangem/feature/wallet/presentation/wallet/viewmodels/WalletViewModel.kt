@@ -16,6 +16,7 @@ import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
@@ -31,10 +32,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -56,6 +56,7 @@ internal class WalletViewModel @Inject constructor(
     private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
+    private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
@@ -66,11 +67,18 @@ internal class WalletViewModel @Inject constructor(
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
-        suggestToEnableBiometrics()
+        viewModelScope.launch {
+            suggestToEnableBiometrics()
 
-        subscribeToUserWalletsUpdates()
-        subscribeOnBalanceHiding()
-        subscribeOnSelectedWalletFlow()
+            maybeMigrateNames()
+            subscribeToUserWalletsUpdates()
+            subscribeOnBalanceHiding()
+            subscribeOnSelectedWalletFlow()
+        }
+    }
+
+    private suspend fun maybeMigrateNames(): Unit = coroutineScope {
+        async { walletNameMigrationUseCase() }.await()
     }
 
     fun setWalletRouter(router: InnerWalletRouter) {
@@ -111,6 +119,7 @@ internal class WalletViewModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .map {
+                Timber.tag("here").e("subscribeToUserWalletsUpdates")
                 walletsUpdateActionResolver.resolve(wallets = it, currentState = stateHolder.value)
             }
             .onEach(::updateWallets)

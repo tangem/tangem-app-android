@@ -92,6 +92,19 @@ internal object WalletsDomainModule {
 
     @Provides
     @ViewModelScoped
+    fun providesRenameWalletUseCase(userWalletsListManager: UserWalletsListManager): RenameWalletUseCase {
+        return RenameWalletUseCase(userWalletsListManager = userWalletsListManager)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesGetWalletsSyncUseCase(userWalletsListManager: UserWalletsListManager): GetWalletNamesUseCase {
+        return GetWalletNamesUseCase(userWalletsListManager = userWalletsListManager)
+    }
+
+
+    @Provides
+    @ViewModelScoped
     fun providesDeleteWalletUseCase(userWalletsListManager: UserWalletsListManager): DeleteWalletUseCase {
         return DeleteWalletUseCase(userWalletsListManager = userWalletsListManager)
     }

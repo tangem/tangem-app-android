@@ -1,9 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.wallets.models.UpdateWalletError
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
-import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
+import com.tangem.domain.wallets.usecase.GetWalletNamesUseCase
+import com.tangem.domain.wallets.usecase.RenameWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -32,8 +34,9 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
     private val walletScreenContentLoader: WalletScreenContentLoader,
-    private val updateWalletUseCase: UpdateWalletUseCase,
+    private val renameWalletUseCase: RenameWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
+    private val getWalletNamesUseCase: GetWalletNamesUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), WalletCardClickIntents {
@@ -41,19 +44,31 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     override fun onRenameBeforeConfirmationClick(userWalletId: UserWalletId) {
         analyticsEventHandler.send(MainScreen.EditWalletTapped)
 
-        walletEventSender.send(
-            event = WalletEvent.ShowAlert(
-                state = WalletAlertState.RenameWalletAlert(
-                    text = stateHolder.getSelectedWallet().walletCardState.title,
-                    onConfirmClick = { onRenameAfterConfirmationClick(userWalletId, it) },
+        viewModelScope.launch(dispatchers.main) {
+            val walletNames = getWalletNamesUseCase()
+            walletEventSender.send(
+                event = WalletEvent.ShowAlert(
+                    state = WalletAlertState.RenameWalletAlert(
+                        text = stateHolder.getSelectedWallet().walletCardState.title,
+                        onConfirmClick = { onRenameAfterConfirmationClick(userWalletId, it) },
+                        errorTextProvider = { if (walletNames.contains(it)) "errorText" else null }
+                    ),
                 ),
-            ),
-        )
+            )
+        }
     }
 
     override fun onRenameAfterConfirmationClick(userWalletId: UserWalletId, name: String) {
         viewModelScope.launch(dispatchers.main) {
-            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name = name) })
+            val result = renameWalletUseCase(userWalletId = userWalletId, name)
+            result.fold(
+                ifLeft = {
+                    if (it is UpdateWalletError.NameAlreadyExists) {
+                        walletEventSender.send(event = WalletEvent.HideAlert)
+                    }
+                },
+                ifRight = {},
+            )
         }
     }
 
