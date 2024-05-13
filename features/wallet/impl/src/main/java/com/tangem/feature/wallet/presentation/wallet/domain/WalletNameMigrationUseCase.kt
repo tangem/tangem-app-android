@@ -23,7 +23,7 @@ class WalletNameMigrationUseCase(
             if (defaultName != suggestedWalletName) {
                 userWalletsListManager.update(wallets[i].walletId) { it.copy(name = suggestedWalletName) }
             }
-            Timber.tag("here").e(i.toString() + " " + suggestedWalletName)
+            Timber.tag("Migrated names").e(i.toString() + " " + suggestedWalletName)
         }
 
         walletNamesMigrationRepository.setMigrationDone()
