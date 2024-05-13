@@ -31,7 +31,7 @@ class WalletNameMigrationUseCase(
 
     private fun suggestedWalletName(defaultName: String, existingNames: MutableSet<String>): String {
         val startIndex = 1
-        for (index in startIndex..10000) {
+        for (index in startIndex..MAX_WALLETS_LIMIT) {
             val name = if (index == startIndex) defaultName else "$defaultName $index"
 
             if (!existingNames.contains(name)) {
@@ -41,5 +41,9 @@ class WalletNameMigrationUseCase(
         }
 
         return defaultName
+    }
+
+    companion object {
+        const val MAX_WALLETS_LIMIT = 10000
     }
 }

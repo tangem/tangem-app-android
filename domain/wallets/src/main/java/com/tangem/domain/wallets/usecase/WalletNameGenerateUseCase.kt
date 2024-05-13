@@ -6,7 +6,7 @@ import com.tangem.domain.wallets.manager.UserWalletsListManager
 /**
  * Use case for user wallet name generation
  */
-class WalletNameGenerateUseCase (
+class WalletNameGenerateUseCase(
     private val userWalletsListManager: UserWalletsListManager,
 ) {
 
@@ -31,7 +31,7 @@ class WalletNameGenerateUseCase (
             return defaultName
         }
 
-        for (index in startIndex..10000) {
+        for (index in startIndex..MAX_WALLETS_LIMIT) {
             val potentialName = "$defaultName $index"
             if (!existingNames.contains(potentialName)) {
                 return potentialName
@@ -41,11 +41,7 @@ class WalletNameGenerateUseCase (
         return defaultName
     }
 
-    private fun getDefaultName(
-        productType: ProductType,
-        isBackupNotAllowed: Boolean,
-        isStartToCoin: Boolean,
-    ): String {
+    private fun getDefaultName(productType: ProductType, isBackupNotAllowed: Boolean, isStartToCoin: Boolean): String {
         return when (productType) {
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
@@ -60,5 +56,9 @@ class WalletNameGenerateUseCase (
                 else -> "Wallet"
             }
         }
+    }
+
+    companion object {
+        const val MAX_WALLETS_LIMIT = 10000
     }
 }

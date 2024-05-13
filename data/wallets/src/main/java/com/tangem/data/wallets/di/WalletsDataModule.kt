@@ -34,9 +34,7 @@ internal object WalletsDataModule {
 
     @Provides
     @Singleton
-    fun provideMigrateNamesRepository(
-        appPreferencesStore: AppPreferencesStore,
-    ): WalletNamesMigrationRepository {
+    fun provideMigrateNamesRepository(appPreferencesStore: AppPreferencesStore): WalletNamesMigrationRepository {
         return DefaultWalletNamesMigrationRepository(appPreferencesStore)
     }
 }

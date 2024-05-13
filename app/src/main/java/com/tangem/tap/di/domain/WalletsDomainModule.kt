@@ -102,7 +102,6 @@ internal object WalletsDomainModule {
         return GetWalletNamesUseCase(userWalletsListManager = userWalletsListManager)
     }
 
-
     @Provides
     @ViewModelScoped
     fun providesDeleteWalletUseCase(userWalletsListManager: UserWalletsListManager): DeleteWalletUseCase {
@@ -154,5 +153,4 @@ internal object WalletsDomainModule {
             dispatchers = dispatchers,
         )
     }
-    
 }

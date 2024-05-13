@@ -143,7 +143,7 @@ object OnboardingHelper {
         hasBackupError: Boolean,
     ) {
         val walletNameGenerateUseCase = store.inject(DaggerGraphState::walletNameGenerateUseCase)
-        val userWallet = UserWalletBuilder(scanResponse,walletNameGenerateUseCase)
+        val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
             .hasBackupError(hasBackupError)
             .backupCardsIds(backupCardsIds?.toSet())
             .build()

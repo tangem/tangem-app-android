@@ -20,9 +20,7 @@ internal object CardLegacyDomainModule {
 
     @Provides
     @Singleton
-    fun providesWalletNameGenerateUseCase(
-        userWalletsListManager: UserWalletsListManager
-    ): WalletNameGenerateUseCase {
+    fun providesWalletNameGenerateUseCase(userWalletsListManager: UserWalletsListManager): WalletNameGenerateUseCase {
         return WalletNameGenerateUseCase(userWalletsListManager)
     }
 }

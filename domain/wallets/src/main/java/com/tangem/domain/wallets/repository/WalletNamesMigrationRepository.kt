@@ -5,8 +5,7 @@ package com.tangem.domain.wallets.repository
  */
 interface WalletNamesMigrationRepository {
 
-    suspend fun isMigrationDone() : Boolean
+    suspend fun isMigrationDone(): Boolean
 
     suspend fun setMigrationDone()
-
 }

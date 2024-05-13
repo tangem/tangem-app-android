@@ -18,10 +18,7 @@ import com.tangem.domain.wallets.models.UserWalletId
  */
 class RenameWalletUseCase(private val userWalletsListManager: UserWalletsListManager) {
 
-    suspend operator fun invoke(
-        userWalletId: UserWalletId,
-        name: String,
-    ): Either<UpdateWalletError, UserWallet> {
+    suspend operator fun invoke(userWalletId: UserWalletId, name: String): Either<UpdateWalletError, UserWallet> {
         val existingNames = userWalletsListManager.userWalletsSync
 
         if (existingNames.any { it.name == name && it.walletId != userWalletId }) {
