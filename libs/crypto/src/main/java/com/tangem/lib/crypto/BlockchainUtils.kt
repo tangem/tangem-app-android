@@ -44,4 +44,9 @@ object BlockchainUtils {
         val blockchain = Blockchain.fromId(networkId)
         return blockchain == Blockchain.Tezos
     }
+
+    fun isCardano(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Cardano
+    }
 }
