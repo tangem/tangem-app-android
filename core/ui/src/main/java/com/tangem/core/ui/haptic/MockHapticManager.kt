@@ -6,6 +6,10 @@ object MockHapticManager : HapticManager {
         /** Intentionnaly do nothing */
     }
 
+    override fun vibrateMeduim() {
+        /** Intentionnaly do nothing */
+    }
+
     override fun vibrateLong() {
         /** Intentionnaly do nothing */
     }
