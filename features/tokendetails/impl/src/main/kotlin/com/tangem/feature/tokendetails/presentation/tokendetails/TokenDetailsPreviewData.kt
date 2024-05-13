@@ -89,7 +89,7 @@ internal object TokenDetailsPreviewData {
     private val actionButtons = persistentListOf(
         TokenDetailsActionButton.Buy(dimContent = false, onClick = {}),
         TokenDetailsActionButton.Send(dimContent = false, onClick = {}),
-        TokenDetailsActionButton.Receive(onClick = {}),
+        TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
         TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
     )
 
