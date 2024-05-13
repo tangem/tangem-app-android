@@ -41,6 +41,7 @@ class ConfigValueModel(
     val chiaTangemApiKey: String?,
     val devExpress: ExpressModel?,
     val express: ExpressModel?,
+    val polygonScanApiKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
