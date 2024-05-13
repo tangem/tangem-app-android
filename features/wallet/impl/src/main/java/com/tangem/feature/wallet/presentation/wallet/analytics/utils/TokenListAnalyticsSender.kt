@@ -33,7 +33,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
     private val mutex = Mutex()
 
     suspend fun send(displayedUiState: WalletState?, userWallet: UserWallet, tokenList: TokenList) {
-        if (screenLifecycleProvider.isBackground) return
+        if (screenLifecycleProvider.isBackgroundState.value) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
         if (tokenList.totalFiatBalance is TokenList.FiatBalance.Loading) return
 
