@@ -32,8 +32,10 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -66,18 +68,18 @@ internal class WalletViewModel @Inject constructor(
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
-        viewModelScope.launch {
-            suggestToEnableBiometrics()
+        suggestToEnableBiometrics()
 
-            maybeMigrateNames()
-            subscribeToUserWalletsUpdates()
-            subscribeOnBalanceHiding()
-            subscribeOnSelectedWalletFlow()
-        }
+        maybeMigrateNames()
+        subscribeToUserWalletsUpdates()
+        subscribeOnBalanceHiding()
+        subscribeOnSelectedWalletFlow()
     }
 
-    private suspend fun maybeMigrateNames(): Unit = coroutineScope {
-        async { walletNameMigrationUseCase() }.await()
+    private fun maybeMigrateNames() {
+        viewModelScope.launch {
+            walletNameMigrationUseCase()
+        }
     }
 
     fun setWalletRouter(router: InnerWalletRouter) {

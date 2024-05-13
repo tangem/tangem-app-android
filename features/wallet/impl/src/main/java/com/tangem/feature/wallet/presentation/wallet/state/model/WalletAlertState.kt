@@ -25,7 +25,7 @@ internal sealed interface WalletAlertState {
         open val text: String = ""
         open val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
         abstract val onConfirmClick: (String) -> Unit
-        abstract val errorTextProvider: (String) -> String?
+        abstract val errorTextProvider: (String) -> TextReference?
     }
 
     data class DefaultAlert(
@@ -37,7 +37,7 @@ internal sealed interface WalletAlertState {
     data class RenameWalletAlert(
         override val text: String,
         override val onConfirmClick: (String) -> Unit,
-        override val errorTextProvider: (String) -> String?,
+        override val errorTextProvider: (String) -> TextReference?,
     ) : TextInput() {
         override val title: TextReference = resourceReference(id = R.string.user_wallet_list_rename_popup_title)
         override val label: TextReference = resourceReference(id = R.string.user_wallet_list_rename_popup_placeholder)

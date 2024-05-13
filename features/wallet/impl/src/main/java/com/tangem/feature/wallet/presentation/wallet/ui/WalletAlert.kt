@@ -57,10 +57,7 @@ private fun BasicAlert(state: WalletAlertState.Basic, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun TextInputAlert(
-    state: WalletAlertState.TextInput,
-    onDismiss: () -> Unit,
-) {
+private fun TextInputAlert(state: WalletAlertState.TextInput, onDismiss: () -> Unit) {
     var value by remember { mutableStateOf(TextFieldValue(text = state.text)) }
 
     TextInputDialog(
@@ -72,7 +69,7 @@ private fun TextInputAlert(
                 state.errorTextProvider(value.text) == null,
             onClick = {
                 state.onConfirmClick(value.text)
-                // onDismiss()
+                onDismiss()
             },
         ),
         onDismissDialog = onDismiss,
@@ -82,7 +79,7 @@ private fun TextInputAlert(
         textFieldParams = AdditionalTextInputDialogParams(
             label = state.label.resolveReference(),
             isError = state.errorTextProvider(value.text) != null,
-            caption = state.errorTextProvider(value.text)
+            caption = state.errorTextProvider(value.text)?.resolveReference(),
         ),
     )
 }

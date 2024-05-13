@@ -25,7 +25,7 @@ internal fun WalletEventEffect(
     event: StateEvent<WalletEvent>,
     selectedWalletIndex: Int,
     onAutoScrollSet: () -> Unit,
-    onAlertConfigSet: (WalletAlertState?) -> Unit,
+    onAlertConfigSet: (WalletAlertState) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -50,7 +50,6 @@ internal fun WalletEventEffect(
                     Toast.makeText(context, value.toast.resolveReference(resources), Toast.LENGTH_SHORT).show()
                 }
                 is WalletEvent.ShowAlert -> onAlertConfigSet(value.state)
-                is WalletEvent.HideAlert -> onAlertConfigSet(null)
                 is WalletEvent.RateApp -> {
                     ReviewManagerRequester.request(context = context, onDismissClick = value.onDismissClick)
                 }

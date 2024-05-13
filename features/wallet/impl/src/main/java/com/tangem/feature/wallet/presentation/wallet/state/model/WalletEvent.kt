@@ -14,8 +14,6 @@ internal sealed class WalletEvent {
 
     data class ShowAlert(val state: WalletAlertState) : WalletEvent()
 
-    data object HideAlert : WalletEvent()
-
     data class CopyAddress(val address: String, val toast: TextReference) : WalletEvent()
 
     data class RateApp(val onDismissClick: () -> Unit) : WalletEvent()
