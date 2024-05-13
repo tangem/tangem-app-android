@@ -1,6 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.confirm
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -8,6 +9,7 @@ import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
@@ -15,6 +17,8 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.tokens.utils.convertToAmount
+import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
@@ -23,6 +27,7 @@ import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.utils.getFiatString
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
@@ -46,6 +51,7 @@ internal class SendNotificationFactory(
     private val clickIntents: SendClickIntents,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
+    private val validateTransactionUseCase: ValidateTransactionUseCase,
 ) {
 
     fun create(): Flow<ImmutableList<SendNotification>> = stateRouterProvider().currentState
@@ -77,8 +83,9 @@ internal class SendNotificationFactory(
                 addFeeUnreachableNotification(feeState.feeSelectorState)
                 addExceedBalanceNotification(feeValue, sendingAmount)
                 addExceedsBalanceNotification(feeState.fee)
-                addDustWarningNotification(feeValue, sendingAmount)
+                addDustWarningNotificationForSpecificBlockchains(feeValue, sendingAmount)
                 addTransactionLimitErrorNotification(feeValue, sendingAmount)
+
                 // warnings
                 addExistentialWarningNotification(feeValue, amountValue)
                 addFeeCoverageNotification(
@@ -89,6 +96,9 @@ internal class SendNotificationFactory(
                 addHighFeeWarningNotification(amountValue, sendState.ignoreAmountReduce)
                 addTooHighNotification(feeState.feeSelectorState)
                 addTooLowNotification(feeState)
+
+                // blockchain specific
+                addCardanoNotifications(sendingAmount, feeState.fee, state)
             }.toImmutableList()
         }
 
@@ -274,21 +284,33 @@ internal class SendNotificationFactory(
         }
     }
 
-    private suspend fun MutableList<SendNotification>.addDustWarningNotification(
-        feeAmount: BigDecimal,
-        receivedAmount: BigDecimal,
+    private suspend fun MutableList<SendNotification>.addDustWarningNotificationForSpecificBlockchains(
+        feeValue: BigDecimal,
+        sendingAmount: BigDecimal,
     ) {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val dustValue = currencyChecksRepository.getDustValue(
-            userWalletProvider().walletId,
-            cryptoCurrencyStatus.currency.network,
-        ) ?: return
+        val isCardano = BlockchainUtils.isCardano(cryptoCurrencyStatusProvider().currency.network.id.value)
 
-        if (checkDustLimits(feeAmount, receivedAmount, dustValue)) {
-            add(
-                SendNotification.Error.MinimumAmountError(dustValue.toPlainString()),
-            )
+        if (!isCardano) {
+            addDustWarningNotification(feeValue, sendingAmount)
         }
+    }
+
+    private fun checkDustLimits(feeAmount: BigDecimal, receivedAmount: BigDecimal, dustValue: BigDecimal): Boolean {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+
+        val change = when (cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> {
+                val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+                balance - (feeAmount + receivedAmount)
+            }
+            is CryptoCurrency.Token -> {
+                val balance = coinCryptoCurrencyStatusProvider().value.amount ?: BigDecimal.ZERO
+                balance - feeAmount
+            }
+        }
+
+        val isChangeLowerThanDust = change < dustValue && change > BigDecimal.ZERO
+        return receivedAmount < dustValue || isChangeLowerThanDust
     }
 
     private fun MutableList<SendNotification>.addTooLowNotification(feeState: SendStates.FeeState) {
@@ -392,13 +414,88 @@ internal class SendNotificationFactory(
         return Blockchain.fromNetworkId(this.currency.network.backendId) == Blockchain.Arbitrum
     }
 
-    private fun checkDustLimits(feeAmount: BigDecimal, receivedAmount: BigDecimal, dustValue: BigDecimal): Boolean {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+    private suspend fun MutableList<SendNotification>.addCardanoNotifications(
+        sendingAmount: BigDecimal,
+        fee: Fee?,
+        state: SendUiState,
+    ) {
+        val sendingCurrency = cryptoCurrencyStatusProvider().currency
+        if (!BlockchainUtils.isCardano(sendingCurrency.network.id.value)) return
 
-        val totalAmount = feeAmount + receivedAmount
-        val change = balance - totalAmount
-        val isChangeLowerThanDust = change < dustValue && change > BigDecimal.ZERO
-        return receivedAmount < dustValue || isChangeLowerThanDust
+        validateTransactionUseCase(
+            amount = sendingAmount.convertToAmount(sendingCurrency),
+            fee = fee ?: return,
+            memo = state.recipientState?.memoTextField?.value,
+            destination = requireNotNull(state.recipientState?.addressTextField?.value),
+            userWalletId = userWalletProvider().walletId,
+            network = sendingCurrency.network,
+        ).fold(
+            ifLeft = {
+                addCardanoTransactionValidationError(
+                    error = it as? BlockchainSdkError.Cardano ?: return@fold,
+                    sendingCurrency = sendingCurrency,
+                    sendingAmount = sendingAmount,
+                    fee = fee,
+                )
+            },
+            ifRight = {
+                (fee as? Fee.CardanoToken)?.let {
+                    add(
+                        SendNotification.Cardano.MinAdaValueCharged(
+                            tokenName = sendingCurrency.name,
+                            minAdaValue = it.minAdaValue.parseBigDecimal(sendingCurrency.decimals),
+                        ),
+                    )
+                }
+            },
+        )
+    }
+
+    private suspend fun MutableList<SendNotification>.addCardanoTransactionValidationError(
+        error: BlockchainSdkError.Cardano,
+        sendingCurrency: CryptoCurrency,
+        sendingAmount: BigDecimal,
+        fee: Fee,
+    ) {
+        when (error) {
+            BlockchainSdkError.Cardano.InsufficientMinAdaBalanceToSendToken -> {
+                add(SendNotification.Cardano.InsufficientBalanceToTransferToken(sendingCurrency.name))
+            }
+            BlockchainSdkError.Cardano.InsufficientRemainingBalanceToWithdrawTokens -> {
+                when (sendingCurrency) {
+                    is CryptoCurrency.Coin -> SendNotification.Cardano.InsufficientBalanceToTransferCoin
+                    is CryptoCurrency.Token -> {
+                        SendNotification.Cardano.InsufficientBalanceToTransferToken(sendingCurrency.name)
+                    }
+                }.let(::add)
+            }
+            BlockchainSdkError.Cardano.InsufficientRemainingBalance,
+            BlockchainSdkError.Cardano.InsufficientSendingAdaAmount,
+            -> {
+                addDustWarningNotification(
+                    feeValue = fee.amount.value ?: BigDecimal.ZERO,
+                    sendingAmount = sendingAmount,
+                )
+            }
+        }
+    }
+
+    private suspend fun MutableList<SendNotification>.addDustWarningNotification(
+        feeValue: BigDecimal,
+        sendingAmount: BigDecimal,
+    ) {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val dustValue = currencyChecksRepository.getDustValue(
+            userWalletProvider().walletId,
+            cryptoCurrencyStatus.currency.network,
+        ) ?: return
+
+        if (checkDustLimits(feeValue, sendingAmount, dustValue)) {
+            add(
+                SendNotification.Error.MinimumAmountError(
+                    amount = dustValue.parseBigDecimal(cryptoCurrencyStatus.currency.decimals),
+                ),
+            )
+        }
     }
 }
