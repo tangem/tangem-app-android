@@ -135,7 +135,9 @@ private fun WalletContent(
             .padding(horizontal = horizontalPadding)
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize().testTag(TestTags.WALLET_SCREEN),
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(TestTags.WALLET_SCREEN),
             contentPadding = PaddingValues(
                 top = TangemTheme.dimens.spacing8,
                 bottom = TangemTheme.dimens.spacing92,
@@ -317,7 +319,9 @@ private fun BaseScaffoldManageTokenRedesign(
         content = { paddingValues ->
             val pullRefreshState = rememberPullRefreshState(
                 refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                onRefresh = selectedWallet.pullToRefreshConfig.onRefresh,
+                onRefresh = {
+                    selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                },
             )
 
             Column(
@@ -503,7 +507,9 @@ private fun BaseScaffold(
         content = {
             val pullRefreshState = rememberPullRefreshState(
                 refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                onRefresh = selectedWallet.pullToRefreshConfig.onRefresh,
+                onRefresh = {
+                    selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                },
             )
 
             Box(
