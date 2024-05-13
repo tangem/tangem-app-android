@@ -391,7 +391,14 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         },
                     )
                 }
-                else -> {}
+                is SwapWarning.Cardano.InsufficientBalanceToTransferCoin -> {
+                    Notification(config = warning.notificationConfig)
+                }
+                is SwapWarning.Cardano.InsufficientBalanceToTransferToken -> {
+                    Notification(config = warning.notificationConfig)
+                }
+                is SwapWarning.Cardano.MinAdaValueCharged -> Notification(config = warning.notificationConfig)
+                SwapWarning.InsufficientFunds -> Unit
             }
             SpacerH8()
         }

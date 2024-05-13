@@ -110,6 +110,7 @@ sealed interface SwapWarning {
         val type: GenericWarningType = GenericWarningType.OTHER,
         val onClick: () -> Unit,
     ) : SwapWarning
+
     data class GeneralError(val notificationConfig: NotificationConfig) : SwapWarning
     data class UnableToCoverFeeWarning(val notificationConfig: NotificationConfig) : SwapWarning
     data class GeneralWarning(val notificationConfig: NotificationConfig) : SwapWarning
@@ -117,6 +118,15 @@ sealed interface SwapWarning {
     data class TransactionInProgressWarning(val title: TextReference, val description: TextReference) : SwapWarning
     data class NeedReserveToCreateAccount(val notificationConfig: NotificationConfig) : SwapWarning
     data class ReduceAmount(val notificationConfig: NotificationConfig) : SwapWarning
+
+    sealed interface Cardano : SwapWarning {
+
+        data class MinAdaValueCharged(val notificationConfig: NotificationConfig) : Cardano
+
+        data class InsufficientBalanceToTransferCoin(val notificationConfig: NotificationConfig) : Cardano
+
+        data class InsufficientBalanceToTransferToken(val notificationConfig: NotificationConfig) : Cardano
+    }
 }
 
 enum class GenericWarningType {
