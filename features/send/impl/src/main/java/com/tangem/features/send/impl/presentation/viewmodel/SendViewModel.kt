@@ -30,10 +30,7 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
-import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -95,6 +92,7 @@ internal class SendViewModel @Inject constructor(
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    validateTransactionUseCase: ValidateTransactionUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
@@ -173,6 +171,7 @@ internal class SendViewModel @Inject constructor(
         clickIntents = this,
         analyticsEventHandler = analyticsEventHandler,
         getBalanceNotEnoughForFeeWarningUseCase = getBalanceNotEnoughForFeeWarningUseCase,
+        validateTransactionUseCase = validateTransactionUseCase,
     )
 
     private val sendScreenAnalyticSender by lazy(LazyThreadSafetyMode.NONE) {
