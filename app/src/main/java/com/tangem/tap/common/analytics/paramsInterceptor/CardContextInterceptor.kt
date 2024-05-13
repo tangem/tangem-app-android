@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.IntroductionProcess
