@@ -7,5 +7,7 @@ interface HapticManager {
 
     fun vibrateShort()
 
+    fun vibrateMeduim()
+
     fun vibrateLong()
 }
