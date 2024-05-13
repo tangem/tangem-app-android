@@ -16,7 +16,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
 ) {
 
     fun send(displayedUiState: WalletState?, newWarnings: List<WalletNotification>) {
-        if (screenLifecycleProvider.isBackground) return
+        if (screenLifecycleProvider.isBackgroundState.value) return
         if (newWarnings.isEmpty()) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
 
