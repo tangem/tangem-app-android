@@ -88,13 +88,13 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
 
         binding.toolbar.title = getText(R.string.twins_recreate_toolbar)
 
-        mainBinding.onboardingTopContainer.imvTwinFrontCard.load(Artwork.TWIN_CARD_1) {
+        mainBinding.onboardingTopContainer.imvTwinFrontCard.load(Artwork.TWIN_CARD_1_URL) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
             fallback(R.drawable.card_placeholder_black)
         }
 
-        mainBinding.onboardingTopContainer.imvTwinBackCard.load(Artwork.TWIN_CARD_2) {
+        mainBinding.onboardingTopContainer.imvTwinBackCard.load(Artwork.TWIN_CARD_2_URL) {
             placeholder(R.drawable.card_placeholder_white)
             error(R.drawable.card_placeholder_white)
             fallback(R.drawable.card_placeholder_white)

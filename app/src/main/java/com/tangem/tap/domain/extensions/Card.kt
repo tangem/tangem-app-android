@@ -20,8 +20,8 @@ suspend fun CardDTO.getOrLoadCardArtworkUrl(cardInfo: Result<CardVerifyAndGetInf
             cardId.startsWith(Artwork.MARTA_CARD_ID) -> Artwork.MARTA_CARD_URL
             else -> {
                 when (getTwinCardNumber()) {
-                    TwinCardNumber.First -> Artwork.TWIN_CARD_1
-                    TwinCardNumber.Second -> Artwork.TWIN_CARD_2
+                    TwinCardNumber.First -> Artwork.TWIN_CARD_1_URL
+                    TwinCardNumber.Second -> Artwork.TWIN_CARD_2_URL
                     else -> Artwork.DEFAULT_IMG_URL
                 }
             }

@@ -4,13 +4,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.TwinsHelper
-import com.tangem.domain.wallets.models.Artwork.Companion.DEFAULT_IMG_URL
-import com.tangem.domain.wallets.models.Artwork.Companion.MARTA_CARD_ID
-import com.tangem.domain.wallets.models.Artwork.Companion.MARTA_CARD_URL
-import com.tangem.domain.wallets.models.Artwork.Companion.SERGIO_CARD_ID
-import com.tangem.domain.wallets.models.Artwork.Companion.SERGIO_CARD_URL
-import com.tangem.domain.wallets.models.Artwork.Companion.TWIN_CARD_1
-import com.tangem.domain.wallets.models.Artwork.Companion.TWIN_CARD_2
+import com.tangem.domain.wallets.models.Artwork
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.attestation.TangemApi
 
@@ -46,12 +40,12 @@ class GetCardImageUseCase(private val verifier: OnlineCardVerifier = OnlineCardV
 
     private fun getFallbackArtworkUrl(cardId: String): String {
         return when {
-            cardId.startsWith(SERGIO_CARD_ID) -> SERGIO_CARD_URL
-            cardId.startsWith(MARTA_CARD_ID) -> MARTA_CARD_URL
+            cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL
+            cardId.startsWith(Artwork.MARTA_CARD_ID) -> Artwork.MARTA_CARD_URL
             else -> when (TwinsHelper.getTwinCardNumber(cardId)) {
-                TwinCardNumber.First -> TWIN_CARD_1
-                TwinCardNumber.Second -> TWIN_CARD_2
-                else -> DEFAULT_IMG_URL
+                TwinCardNumber.First -> Artwork.TWIN_CARD_1_URL
+                TwinCardNumber.Second -> Artwork.TWIN_CARD_2_URL
+                else -> Artwork.DEFAULT_IMG_URL
             }
         }
     }

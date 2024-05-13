@@ -67,7 +67,9 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
                         walletEventSender.send(event = WalletEvent.HideAlert)
                     }
                 },
-                ifRight = {},
+                ifRight = {
+                    // intentionally do nothing
+                },
             )
         }
     }

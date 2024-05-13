@@ -34,7 +34,6 @@ import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -119,7 +118,6 @@ internal class WalletViewModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .map {
-                Timber.tag("here").e("subscribeToUserWalletsUpdates")
                 walletsUpdateActionResolver.resolve(wallets = it, currentState = stateHolder.value)
             }
             .onEach(::updateWallets)
