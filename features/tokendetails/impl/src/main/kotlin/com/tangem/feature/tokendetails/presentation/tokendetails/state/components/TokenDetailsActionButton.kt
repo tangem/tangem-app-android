@@ -11,6 +11,9 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
     /** Lambda be invoked when manage button is clicked */
     abstract val onClick: () -> Unit
 
+    /** Lambda be invoked when manage button is long clicked */
+    open val onLongClick: (() -> TextReference?)? = null
+
     /**
      * Buy
      *
@@ -44,12 +47,17 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
     /**
      * Receive
      * @property onClick lambda be invoked when Receive button is clicked
+     * @property onLongClick lambda be invoked when Receive button is long clicked
      */
-    data class Receive(override val onClick: () -> Unit) : TokenDetailsActionButton(
+    data class Receive(
+        override val onClick: () -> Unit,
+        override val onLongClick: (() -> TextReference?)?,
+    ) : TokenDetailsActionButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_receive),
             iconResId = R.drawable.ic_arrow_down_24,
             onClick = onClick,
+            onLongClick = onLongClick,
             enabled = true,
         ),
     )
