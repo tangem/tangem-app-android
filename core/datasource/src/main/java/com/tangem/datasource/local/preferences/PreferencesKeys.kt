@@ -55,7 +55,7 @@ object PreferencesKeys {
         booleanPreferencesKey(name = "isTokenSwapPromoChangellyShown")
     }
 
-    val IS_WALLET_TRAVALA_PROMO_SHOW_KEY by lazy {
+    val IS_WALLET_TRAVALA_PROMO_SHOWN_KEY by lazy {
         booleanPreferencesKey(name = "isWalletTravalaPromoShown")
     }
 

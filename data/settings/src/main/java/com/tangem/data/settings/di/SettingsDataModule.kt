@@ -2,7 +2,7 @@ package com.tangem.data.settings.di
 
 import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultSettingsRepository
-import com.tangem.data.settings.DefaultPromoSettingsSettingsRepository
+import com.tangem.data.settings.DefaultPromoSettingsRepository
 import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.settings.repositories.AppRatingRepository
@@ -41,7 +41,7 @@ internal object SettingsDataModule {
 
     @Provides
     @Singleton
-    fun provideSwapPromoRepository(appPreferencesStore: AppPreferencesStore): PromoSettingsRepository {
-        return DefaultPromoSettingsSettingsRepository(appPreferencesStore = appPreferencesStore)
+    fun providePromoSettingsSettingsRepository(appPreferencesStore: AppPreferencesStore): PromoSettingsRepository {
+        return DefaultPromoSettingsRepository(appPreferencesStore = appPreferencesStore)
     }
 }
