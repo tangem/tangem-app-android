@@ -11,6 +11,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 private const val FIAT_DECIMALS = 2
+private const val CRYPTO_FEE_DECIMALS = 6
 private const val FEE_MINIMUM_VALUE = 0.01
 
 internal fun getCryptoReference(amount: Amount?, isFeeApproximate: Boolean): TextReference? {
@@ -21,7 +22,7 @@ internal fun getCryptoReference(amount: Amount?, isFeeApproximate: Boolean): Tex
             BigDecimalFormatter.formatCryptoAmount(
                 cryptoAmount = amount.value,
                 cryptoCurrency = amount.currencySymbol,
-                decimals = amount.decimals,
+                decimals = amount.decimals.coerceAtMost(CRYPTO_FEE_DECIMALS),
             ),
         ),
     )
