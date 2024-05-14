@@ -23,7 +23,6 @@ dependencies {
     implementation(deps.lifecycle.compose)
     implementation(deps.jodatime)
     implementation(deps.timber)
-    implementation(deps.reKotlin)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
@@ -34,7 +33,6 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
-    implementation(deps.compose.paging)
     implementation(deps.compose.constraintLayout)
 
     /** Tangem SDKs */

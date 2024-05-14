@@ -1,6 +1,5 @@
 package com.tangem.features.staking.impl.di
 
-import com.tangem.core.navigation.ReduxNavController
 import com.tangem.features.staking.impl.navigation.DefaultStakingRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import dagger.Module
@@ -18,7 +17,7 @@ internal object StakingRouterModule {
 
     @Provides
     @ActivityScoped
-    fun provideStakingRouter(reduxNavController: ReduxNavController): StakingRouter {
-        return DefaultStakingRouter(reduxNavController)
+    fun provideStakingRouter(): StakingRouter {
+        return DefaultStakingRouter()
     }
 }
