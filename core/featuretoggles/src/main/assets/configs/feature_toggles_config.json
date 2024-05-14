@@ -26,5 +26,9 @@
     {
         "name": "TOKEN_LIST_LCE_ENABLED",
         "version": "5.10.0"
+    },
+    {
+        "name": "STAKING_ENABLED",
+        "version": "undefined"
     }
 ]
