@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.*
-import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.WalletNameGenerateUseCase
 import com.tangem.tap.domain.scanCard.DefaultScanCardProcessor
 import dagger.Module

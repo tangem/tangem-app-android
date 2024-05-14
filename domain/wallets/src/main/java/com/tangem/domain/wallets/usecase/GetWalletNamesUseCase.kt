@@ -1,6 +1,6 @@
 package com.tangem.domain.wallets.usecase
 
-import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 
 /**
  * Use case for getting list of user wallets names.

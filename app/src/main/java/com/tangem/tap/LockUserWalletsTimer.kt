@@ -6,8 +6,8 @@ import androidx.lifecycle.lifecycleScope
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.wallets.manager.UserWalletsListManager
-import com.tangem.domain.wallets.manager.asLockable
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import kotlinx.coroutines.*

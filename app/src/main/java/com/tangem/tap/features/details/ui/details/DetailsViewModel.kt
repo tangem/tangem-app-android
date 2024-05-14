@@ -16,7 +16,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetSupportFeedbackEmailUseCase
-import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.addContext

@@ -7,7 +7,7 @@ import com.tangem.common.*
 import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.domain.wallets.manager.UserWalletsListError
+import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository

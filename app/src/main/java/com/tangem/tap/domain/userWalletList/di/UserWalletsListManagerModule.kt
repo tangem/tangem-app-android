@@ -7,7 +7,7 @@ import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
 import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager

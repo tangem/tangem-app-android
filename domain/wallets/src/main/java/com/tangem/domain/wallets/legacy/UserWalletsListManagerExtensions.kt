@@ -1,7 +1,7 @@
-package com.tangem.domain.wallets.manager
+package com.tangem.domain.wallets.legacy
 
 import com.tangem.common.CompletionResult
-import com.tangem.domain.wallets.manager.UserWalletsListManager.Lockable.UnlockType
+import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf

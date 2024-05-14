@@ -1,4 +1,4 @@
-package com.tangem.domain.wallets.manager
+package com.tangem.domain.wallets.legacy
 
 import com.tangem.common.CompletionResult
 import com.tangem.domain.wallets.models.UserWallet

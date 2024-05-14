@@ -6,8 +6,8 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
-import com.tangem.domain.wallets.manager.UserWalletsListError
-import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListError
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.SaveWalletError
 import com.tangem.domain.wallets.models.UserWallet
 

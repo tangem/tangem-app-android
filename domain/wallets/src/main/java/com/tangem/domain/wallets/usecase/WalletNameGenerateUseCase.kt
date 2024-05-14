@@ -1,7 +1,7 @@
 package com.tangem.domain.wallets.usecase
 
 import com.tangem.domain.models.scan.ProductType
-import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 
 /**
  * Use case for user wallet name generation

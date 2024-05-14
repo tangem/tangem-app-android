@@ -2,7 +2,7 @@ package com.tangem.tap.proxy.di
 
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.*

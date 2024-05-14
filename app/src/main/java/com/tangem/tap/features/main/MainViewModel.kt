@@ -16,7 +16,7 @@ import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.manager.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.tap.store
