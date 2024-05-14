@@ -1,5 +1,6 @@
 package com.tangem.core.ui.utils
 
+import android.text.format.DateFormat
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
@@ -51,6 +52,16 @@ object DateTimeFormatters {
     val dateDDMMYYYY: DateTimeFormatter by lazy {
         DateTimeFormatterBuilder()
             .appendPattern(DDMMYYYY)
+            .toFormatter()
+            .withLocale(Locale.getDefault())
+    }
+
+    /**
+     * In API version < 24, there may be some problems with getting the best date and time format pattern.
+     */
+    val dateMMMMd: DateTimeFormatter by lazy {
+        DateTimeFormatterBuilder()
+            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), "MMMM d"))
             .toFormatter()
             .withLocale(Locale.getDefault())
     }
