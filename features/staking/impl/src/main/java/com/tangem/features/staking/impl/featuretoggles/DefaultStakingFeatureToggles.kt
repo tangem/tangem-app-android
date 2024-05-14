@@ -14,5 +14,4 @@ internal class DefaultStakingFeatureToggles(
 
     override val isStakingEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "STAKING_ENABLED")
-        
 }

@@ -5,7 +5,4 @@ import androidx.fragment.app.Fragment
 interface StakingRouter {
 
     fun getEntryFragment(): Fragment
-
-    companion object {
-    }
 }
