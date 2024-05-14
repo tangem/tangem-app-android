@@ -34,6 +34,9 @@ internal object WalletImageResolver {
             cardTypesResolver.isJrWallet() -> userWallet.resolveJrWallet()
             cardTypesResolver.isGrimWallet() -> userWallet.resolveGrimWallet()
             cardTypesResolver.isSatoshiFriendsWallet() -> userWallet.resolveSatoshiWallet()
+            cardTypesResolver.isBitcoinPizzaDayWallet() -> userWallet.resolveBitcoinPizzaDayWallet()
+            cardTypesResolver.isVeChainWallet() -> userWallet.resolveVeChainWallet()
+            cardTypesResolver.isNewWorldEliteWallet() -> userWallet.resolveNewWorldEliteWallet()
             cardTypesResolver.isWallet2() -> userWallet.resolveWallet2()
             cardTypesResolver.isShibaWallet() -> userWallet.resolveShibaWallet()
             cardTypesResolver.isTangemWallet() -> userWallet.resolveWallet1()
@@ -127,6 +130,27 @@ internal object WalletImageResolver {
         return resolveWallet2(
             oneBackupResId = R.drawable.ill_traillant_card2_120_106,
             twoBackupResId = R.drawable.ill_traillant_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveBitcoinPizzaDayWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_pizza_day_card2_120_106,
+            twoBackupResId = R.drawable.ill_pizza_day_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveVeChainWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_vechain_card2_120_106,
+            twoBackupResId = R.drawable.ill_vechain_card3_120_106,
+        )
+    }
+
+    private fun UserWallet.resolveNewWorldEliteWallet(): Int? {
+        return resolveWallet2(
+            oneBackupResId = R.drawable.ill_nwe_card2_120_106,
+            twoBackupResId = R.drawable.ill_nwe_card3_120_106,
         )
     }
 
