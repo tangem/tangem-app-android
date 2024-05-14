@@ -2,10 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.pluralReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.feature.wallet.impl.R
 import org.joda.time.DateTime
 
@@ -177,15 +175,26 @@ sealed class WalletNotification(val config: NotificationConfig) {
         val startDateTime: DateTime,
         val endDateTime: DateTime,
         val bannerLink: String?,
-        val onBannerClick: (String?) -> Unit,
+        val onBookNowButtonClick: (String?) -> Unit,
         val onCloseClick: () -> Unit,
     ) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(id = R.string.main_travala_promotion_title),
-            subtitle = resourceReference(id = R.string.main_travala_promotion_description),
-            iconResId = R.drawable.img_swap_promo,
-            backgroundResId = R.drawable.img_swap_promo_green_banner_background,
-            onClick = { onBannerClick.invoke(bannerLink) },
+            subtitle = resourceReference(
+                id = R.string.main_travala_promotion_description,
+                wrappedList(
+                    DateTimeFormatters.formatDate(startDateTime, DateTimeFormatters.dateMMMMd),
+                    DateTimeFormatters.formatDate(endDateTime, DateTimeFormatters.dateMMMMd),
+                ),
+            ),
+            // Stub. Travala has its own Composable implementation with correct img
+            iconResId = R.drawable.ic_star_24,
+            // Stub. Travala has its own Composable implementation with correct img
+            backgroundResId = R.drawable.ic_star_24,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                onClick = { onBookNowButtonClick(bannerLink) },
+                text = resourceReference(R.string.main_travala_promotion_button),
+            ),
             onCloseClick = onCloseClick,
         ),
     )

@@ -79,7 +79,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             startDateTime = promoBanner.bannerState.timeline.start,
             endDateTime = promoBanner.bannerState.timeline.end,
             bannerLink = promoBanner.bannerState.link,
-            onBannerClick = clickIntents::onTravalaPromoClick,
+            onBookNowButtonClick = clickIntents::onTravalaPromoClick,
             onCloseClick = clickIntents::onCloseTravalaPromoClick,
         )
         addIf(
