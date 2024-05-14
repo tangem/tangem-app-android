@@ -120,12 +120,13 @@ sealed interface SwapWarning {
     data class ReduceAmount(val notificationConfig: NotificationConfig) : SwapWarning
 
     sealed interface Cardano : SwapWarning {
+        val notificationConfig: NotificationConfig
 
-        data class MinAdaValueCharged(val notificationConfig: NotificationConfig) : Cardano
+        data class MinAdaValueCharged(override val notificationConfig: NotificationConfig) : Cardano
 
-        data class InsufficientBalanceToTransferCoin(val notificationConfig: NotificationConfig) : Cardano
+        data class InsufficientBalanceToTransferCoin(override val notificationConfig: NotificationConfig) : Cardano
 
-        data class InsufficientBalanceToTransferToken(val notificationConfig: NotificationConfig) : Cardano
+        data class InsufficientBalanceToTransferToken(override val notificationConfig: NotificationConfig) : Cardano
     }
 }
 
