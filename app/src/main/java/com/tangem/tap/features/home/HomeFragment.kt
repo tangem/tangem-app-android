@@ -12,10 +12,9 @@ import androidx.lifecycle.lifecycleScope
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
-import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.redux.AppState
@@ -31,10 +30,7 @@ import javax.inject.Inject
 class HomeFragment : ComposeFragment(), StoreSubscriber<HomeState> {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
-
-    @Inject
-    override lateinit var hapticManager: HapticManager
+    override lateinit var uiDependencies: UiDependencies
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
 
