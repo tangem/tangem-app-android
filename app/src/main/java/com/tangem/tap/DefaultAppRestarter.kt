@@ -20,7 +20,7 @@ class DefaultAppRestarter @Inject constructor(
 
         context.finish()
         context.startActivity(
-            Intent(context, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_CLEAR_TOP }
+            Intent(context, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_CLEAR_TOP },
         )
         Runtime.getRuntime().exit(0)
     }
