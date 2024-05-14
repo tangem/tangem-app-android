@@ -509,7 +509,7 @@
   <string name="send_sending">Отправка</string>
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
-  <string name="send_summary_transaction_description">Вы отправляете %1$s, включая комиссию сети %2$s</string>
+  <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
   <string name="send_title_currency_format">Отправка %s</string>
   <string name="send_total_label">Всего</string>
   <string name="send_total_subtitle_asset_format">%1$s и %2$s будет отправлено</string>
