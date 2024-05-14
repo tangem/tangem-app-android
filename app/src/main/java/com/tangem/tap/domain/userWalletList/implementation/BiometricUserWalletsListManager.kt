@@ -81,11 +81,13 @@ internal class BiometricUserWalletsListManager(
     }
 
     override fun lock() {
-        state.update { State() }
-    }
-
-    override fun isLockable(): Boolean {
-        return true
+        state.update { prevState ->
+            prevState.copy(
+                encryptionKeys = emptyList(),
+                userWallets = prevState.userWallets.lockAll(),
+                isLocked = true,
+            )
+        }
     }
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
