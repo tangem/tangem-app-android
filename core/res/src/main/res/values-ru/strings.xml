@@ -261,7 +261,7 @@
   <string name="main_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="main_tokens">Токены</string>
   <string name="main_travala_promotion_button">Забронировать</string>
-  <string name="main_travala_promotion_description" formatted="false">Оплатите его криптой и сэкономьте 50 долларов через нашего партнера Travala\n%1s - %2s</string>
+  <string name="main_travala_promotion_description" formatted="false">Оплатите его криптой и сэкономьте **50 долларов** через нашего партнера Travala: **%1s - %2s**</string>
   <string name="main_travala_promotion_title">Забронируйте отпуск с Tangem</string>
   <string name="manage_tokens_add">Добавить</string>
   <string name="manage_tokens_edit">Изменить</string>
@@ -495,7 +495,7 @@
   <string name="send_recent_transactions">Последние</string>
   <string name="send_recipient">Получатель</string>
   <string name="send_recipient_address_error">Неверный адрес</string>
-  <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов</string>
+  <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов.</string>
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
   <string name="send_recipient_wallets_title">Мои кошельки</string>
@@ -504,7 +504,7 @@
   <string name="send_sending">Отправка</string>
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
-  <string name="send_summary_transaction_description">Вы отправляете %1$s, включая комиссию сети %2$s</string>
+  <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
   <string name="send_title_currency_format">Отправка %s</string>
   <string name="send_total_label">Всего</string>
   <string name="send_total_subtitle_asset_format">%1$s и %2$s будет отправлено</string>
@@ -641,6 +641,8 @@
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту, чтобы разблокировать доступ к вашему кошельку</string>
   <string name="warning_backup_errors_message">Пожалуйста, выведите все средства из этого кошелька, сбросьте его к заводским настройкам и создайте новый. Доступ к текущему кошельку будет утерян.</string>
   <string name="warning_backup_errors_title">Ошибка активации</string>
+  <string name="warning_beacon_chain_retirement_content">По решению разработчиков сети BNB, стандарт BEP-2 перестанет поддерживаться в июне 2024 года. Чтобы не потерять свои активы, их необходимо преобразовать в стандарт BEP-20. Вы можете перенести их на платформу Binance или обменять через наше приложение.</string>
+  <string name="warning_beacon_chain_retirement_title">Отключение сети BNB Beacon Chain</string>
   <string name="warning_button_could_be_better">Можно лучше</string>
   <string name="warning_button_like_it">Нравится</string>
   <string name="warning_button_ok">Понятно!</string>
