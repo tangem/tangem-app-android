@@ -95,6 +95,7 @@ internal class SendViewModel @Inject constructor(
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
@@ -188,6 +189,7 @@ internal class SendViewModel @Inject constructor(
         private set
 
     private var userWallet: UserWallet by Delegates.notNull()
+    private var userWallets: List<AvailableWallet> = emptyList()
     private var isAmountSubtractAvailable: Boolean = false
     private var isTapHelpPreviewEnabled: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
@@ -407,7 +409,10 @@ internal class SendViewModel @Inject constructor(
                     .orEmpty()
             }.onSuccess { result ->
                 combine(*result.toTypedArray()) { it }
-                    .onEach { uiState = stateFactory.onLoadedWalletsList(wallets = it.toList()) }
+                    .onEach {
+                        userWallets = it.filterNotNull().toList()
+                        uiState = stateFactory.onLoadedWalletsList(wallets = userWallets)
+                    }
                     .flowOn(dispatchers.main)
                     .launchIn(viewModelScope)
             }.onFailure {
@@ -416,7 +421,7 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private suspend fun List<UserWallet>.toAvailableWallets(): List<Flow<AvailableWallet>> =
+    private suspend fun List<UserWallet>.toAvailableWallets(): List<Flow<AvailableWallet?>> =
         filterNot { it.walletId == userWalletId || it.isLocked }
             .mapNotNull { wallet ->
                 val status = if (!wallet.isMultiCurrency) {
@@ -434,6 +439,7 @@ internal class SendViewModel @Inject constructor(
                     AvailableWallet(
                         name = wallet.name,
                         address = address,
+                        userWalletId = wallet.walletId,
                     )
                 }
             }
@@ -862,9 +868,23 @@ internal class SendViewModel @Inject constructor(
                 uiState = stateFactory.getSendingStateUpdate(isSending = false)
                 updateTransactionStatus(txData)
                 scheduleBalanceUpdate()
+                addTokenToWalletIfNeeded()
                 sendScreenAnalyticSender.sendTransaction()
             },
         )
+    }
+
+    private fun addTokenToWalletIfNeeded() {
+        if (cryptoCurrency !is CryptoCurrency.Token) return
+
+        val recipientState = uiState.getRecipientState(stateRouter.isEditState) ?: return
+        val destinationAddress = recipientState.addressTextField.value
+
+        val maybeUserWallet = userWallets.firstOrNull { it.address == destinationAddress } ?: return
+
+        viewModelScope.launch(dispatchers.io) {
+            addCryptoCurrenciesUseCase(userWalletId = maybeUserWallet.userWalletId, currency = cryptoCurrency)
+        }
     }
 
     private suspend fun updateTransactionStatus(txData: TransactionData) {
