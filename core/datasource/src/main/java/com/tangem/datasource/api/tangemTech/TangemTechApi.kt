@@ -82,4 +82,7 @@ interface TangemTechApi {
         @Header("card_id") cardId: String,
         @Body body: CreateUserNetworkAccountBody,
     ): ApiResponse<CreateUserNetworkAccountResponse>
+
+    @GET("features")
+    suspend fun getFeatures(): ApiResponse<FeaturesResponse>
 }
