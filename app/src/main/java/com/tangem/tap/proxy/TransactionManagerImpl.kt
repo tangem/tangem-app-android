@@ -224,26 +224,33 @@ class TransactionManagerImpl(
                 when (fee.data) {
                     is TransactionFee.Single -> {
                         val normalFee = (fee.data as TransactionFee.Single).normal
-                        val singleFee = ProxyFee(
-                            gasLimit = BigInteger.ZERO,
-                            fee = convertToProxyAmount(amount = normalFee.amount),
-                        )
-                        ProxyFees.SingleFee(
-                            singleFee = singleFee,
-                        )
+                        val singleFee = if (normalFee as? Fee.CardanoToken != null) {
+                            ProxyFee.CardanoToken(
+                                gasLimit = BigInteger.ZERO,
+                                fee = convertToProxyAmount(amount = normalFee.amount),
+                                minAdaValue = normalFee.minAdaValue,
+                            )
+                        } else {
+                            ProxyFee.Common(
+                                gasLimit = BigInteger.ZERO,
+                                fee = convertToProxyAmount(amount = normalFee.amount),
+                            )
+                        }
+
+                        ProxyFees.SingleFee(singleFee = singleFee)
                     }
                     is TransactionFee.Choosable -> {
                         val choosableFee = fee.data as TransactionFee.Choosable
                         ProxyFees.MultipleFees(
-                            minFee = ProxyFee(
+                            minFee = ProxyFee.Common(
                                 gasLimit = BigInteger.ZERO,
                                 fee = convertToProxyAmount(amount = choosableFee.minimum.amount),
                             ),
-                            normalFee = ProxyFee(
+                            normalFee = ProxyFee.Common(
                                 gasLimit = BigInteger.ZERO,
                                 fee = convertToProxyAmount(amount = choosableFee.normal.amount),
                             ),
-                            priorityFee = ProxyFee(
+                            priorityFee = ProxyFee.Common(
                                 gasLimit = BigInteger.ZERO,
                                 fee = convertToProxyAmount(amount = choosableFee.priority.amount),
                             ),
@@ -300,15 +307,15 @@ class TransactionManagerImpl(
             is Result.Success -> {
                 val choosableFee = fee.data
 
-                val minProxyFee = ProxyFee(
+                val minProxyFee = ProxyFee.Common(
                     gasLimit = (choosableFee.minimum as Fee.Ethereum).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.minimum.amount),
                 )
-                val normalProxyFee = ProxyFee(
+                val normalProxyFee = ProxyFee.Common(
                     gasLimit = (choosableFee.normal as Fee.Ethereum).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.normal.amount),
                 )
-                val priorityProxyFee = ProxyFee(
+                val priorityProxyFee = ProxyFee.Common(
                     gasLimit = (choosableFee.priority as Fee.Ethereum).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.priority.amount),
                 )
@@ -463,7 +470,7 @@ class TransactionManagerImpl(
             scale = blockchain.decimals(),
             mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
         )
-        val minFee = ProxyFee(
+        val minFee = ProxyFee.Common(
             gasLimit = gasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
@@ -471,7 +478,7 @@ class TransactionManagerImpl(
                 decimals = blockchain.decimals(),
             ),
         )
-        val normalFee = ProxyFee(
+        val normalFee = ProxyFee.Common(
             gasLimit = gasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
@@ -479,7 +486,7 @@ class TransactionManagerImpl(
                 decimals = blockchain.decimals(),
             ),
         )
-        val priorityFee = ProxyFee(
+        val priorityFee = ProxyFee.Common(
             gasLimit = gasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
