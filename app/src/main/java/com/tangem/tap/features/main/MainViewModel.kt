@@ -11,6 +11,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
+import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +27,7 @@ internal class MainViewModel @Inject constructor(
     private val reduxNavController: ReduxNavController,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
     private val deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
+    private val sendFeatureToggles: SendFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -41,6 +43,7 @@ internal class MainViewModel @Inject constructor(
 
     init {
         updateAppCurrencies()
+        updateSendFeatureToggle()
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
@@ -53,6 +56,12 @@ internal class MainViewModel @Inject constructor(
     private fun updateAppCurrencies() {
         viewModelScope.launch(dispatchers.main) {
             fetchAppCurrenciesUseCase.invoke()
+        }
+    }
+
+    private fun updateSendFeatureToggle() {
+        viewModelScope.launch(dispatchers.main) {
+            sendFeatureToggles.fetchNewSendEnabled()
         }
     }
 
