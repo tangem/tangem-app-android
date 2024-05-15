@@ -405,6 +405,15 @@ internal class StateBuilder(
                         ),
                     )
                 }
+                Warning.Cardano.InsufficientBalanceToTransferCoin -> {
+                    warnings.add(createInsufficientBalanceToTransferCoin())
+                }
+                is Warning.Cardano.InsufficientBalanceToTransferToken -> {
+                    warnings.add(createInsufficientBalanceToTransferToken(tokenName = it.tokenName))
+                }
+                is Warning.Cardano.MinAdaValueCharged -> {
+                    warnings.add(createMinAdaValueCharged(minAdaValue = it.minAdaValue, tokenName = it.tokenName))
+                }
             }
         }
     }
@@ -1398,6 +1407,42 @@ internal class StateBuilder(
             title = resourceReference(R.string.send_network_fee_warning_title),
             subtitle = resourceReference(R.string.swapping_network_fee_warning_content),
             iconResId = R.drawable.img_attention_20,
+        )
+    }
+
+    private fun createMinAdaValueCharged(minAdaValue: String, tokenName: String): SwapWarning {
+        return SwapWarning.Cardano.MinAdaValueCharged(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_coin_will_be_send_with_token_title),
+                subtitle = resourceReference(
+                    id = R.string.cardano_coin_will_be_send_with_token_description,
+                    formatArgs = wrappedList(minAdaValue, tokenName),
+                ),
+                iconResId = R.drawable.img_attention_20,
+            ),
+        )
+    }
+
+    private fun createInsufficientBalanceToTransferCoin(): SwapWarning {
+        return SwapWarning.Cardano.InsufficientBalanceToTransferCoin(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_max_amount_has_token_title),
+                subtitle = resourceReference(id = R.string.cardano_max_amount_has_token_description),
+                iconResId = R.drawable.img_attention_20,
+            ),
+        )
+    }
+
+    private fun createInsufficientBalanceToTransferToken(tokenName: String): SwapWarning {
+        return SwapWarning.Cardano.InsufficientBalanceToTransferToken(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_insufficient_balance_to_send_token_title),
+                subtitle = resourceReference(
+                    id = R.string.cardano_insufficient_balance_to_send_token_description,
+                    formatArgs = wrappedList(tokenName),
+                ),
+                iconResId = R.drawable.img_attention_20,
+            ),
         )
     }
     // end region
