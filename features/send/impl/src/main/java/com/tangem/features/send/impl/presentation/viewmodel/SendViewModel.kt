@@ -422,14 +422,18 @@ internal class SendViewModel @Inject constructor(
             .mapNotNull { wallet ->
                 val status = if (!wallet.isMultiCurrency) {
                     getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
-                        getNetworkAddressesUseCase(wallet.walletId, it.network)
+                        if (it.network.id == cryptoCurrency.network.id) {
+                            getNetworkAddressesUseCase(wallet.walletId, it.network)
+                        } else {
+                            null
+                        }
                     }
                 } else {
                     getNetworkAddressesUseCase(wallet.walletId, cryptoCurrency.network)
                 }
                 status?.map { address ->
                     AvailableWallet(
-                        wallet.name,
+                        name = wallet.name,
                         address = address,
                     )
                 }
