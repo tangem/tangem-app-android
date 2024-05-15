@@ -500,7 +500,7 @@
   <string name="send_recent_transactions">Последние</string>
   <string name="send_recipient">Получатель</string>
   <string name="send_recipient_address_error">Неверный адрес</string>
-  <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов</string>
+  <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов.</string>
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
   <string name="send_recipient_wallets_title">Мои кошельки</string>
@@ -509,7 +509,7 @@
   <string name="send_sending">Отправка</string>
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
-  <string name="send_summary_transaction_description">Вы отправляете %1$s, включая комиссию сети %2$s</string>
+  <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
   <string name="send_title_currency_format">Отправка %s</string>
   <string name="send_total_label">Всего</string>
   <string name="send_total_subtitle_asset_format">%1$s и %2$s будет отправлено</string>
