@@ -10,6 +10,7 @@ import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
+import java.math.RoundingMode
 
 internal class SendAmountFieldMaxAmountConverter(
     private val stateRouterProvider: Provider<StateRouter>,
@@ -33,7 +34,7 @@ internal class SendAmountFieldMaxAmountConverter(
 
         val isDoneActionEnabled = !decimalCryptoValue.isNullOrZero()
         val cryptoValue = decimalCryptoValue?.parseBigDecimal(cryptoDecimals).orEmpty()
-        val fiatValue = decimalFiatValue?.parseBigDecimal(fiatDecimals).orEmpty()
+        val fiatValue = decimalFiatValue?.parseBigDecimal(fiatDecimals, roundingMode = RoundingMode.HALF_UP).orEmpty()
         return state.copyWrapped(
             isEditState = isEditState,
             amountState = amountState.copy(
