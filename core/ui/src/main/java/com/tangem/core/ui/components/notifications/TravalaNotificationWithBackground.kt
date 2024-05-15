@@ -49,9 +49,9 @@ fun TravalaNotificationWithBackground(config: NotificationConfig, modifier: Modi
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = TangemTheme.dimens.size62)
-            .background(Color.Black)
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(Color.Black)
             .clickable(
                 enabled = config.onClick != null,
                 onClick = config.onClick ?: {},
