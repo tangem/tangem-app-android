@@ -57,7 +57,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun validateTransaction(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,
@@ -65,9 +65,10 @@ internal class DefaultTransactionRepository(
         isSwap: Boolean,
         hash: String?,
     ): Result<Unit> {
+        val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersStore.getSyncOrNull(
             userWalletId = userWalletId,
-            blockchain = Blockchain.fromId(network.id.value),
+            blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
 
@@ -76,7 +77,7 @@ internal class DefaultTransactionRepository(
         return if (validator != null) {
             val transaction = walletManager.createTransactionInternal(
                 amount = amount,
-                fee = fee,
+                fee = fee ?: Fee.Common(amount = amount),
                 memo = memo,
                 destination = destination,
                 network = network,
