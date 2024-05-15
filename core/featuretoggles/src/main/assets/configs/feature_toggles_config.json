@@ -13,7 +13,7 @@
     },
     {
         "name": "LOCAL_USER_LOGS_ENABLED",
-        "version": "5.10.0"
+        "version": "5.11.0"
     },
     {
         "name": "GENERATE_XPUB_ENABLED",
@@ -26,5 +26,9 @@
     {
         "name": "TOKEN_LIST_LCE_ENABLED",
         "version": "5.10.0"
+    },
+    {
+        "name": "CARDANO_TOKENS_SUPPORT_ENABLED",
+        "version": "5.11.0"
     }
 ]
