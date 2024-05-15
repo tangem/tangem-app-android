@@ -155,7 +155,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
-    class NetworksNoAccount(val network: String, val symbol: String, val amount: String) : Informational(
+    class NetworksNoAccount(network: String, symbol: String, amount: String) : Informational(
         title = resourceReference(R.string.warning_no_account_title),
         subtitle = resourceReference(
             id = R.string.no_account_generic,
@@ -167,4 +167,6 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         title = resourceReference(id = R.string.warning_no_account_title),
         subtitle = resourceReference(id = R.string.no_account_send_to_create),
     )
+
+    class NetworkShutdown(title: TextReference, subtitle: TextReference) : Warning(title = title, subtitle = subtitle)
 }

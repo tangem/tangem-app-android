@@ -49,4 +49,9 @@ object BlockchainUtils {
         val blockchain = Blockchain.fromId(networkId)
         return blockchain == Blockchain.Cardano
     }
+
+    fun isBeaconChain(networkId: String): Boolean {
+        val blockchain = Blockchain.fromId(networkId)
+        return blockchain == Blockchain.Binance || blockchain == Blockchain.BinanceTestnet
+    }
 }
