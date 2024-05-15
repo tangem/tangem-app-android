@@ -54,7 +54,7 @@ internal sealed class SendNotification(val config: NotificationConfig) {
                 wrappedList(cryptoCurrency, utxoLimit, amountLimit),
             ),
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
-                text = resourceReference(R.string.send_notification_reduce_to, wrappedList(amountLimit)),
+                text = resourceReference(R.string.send_notification_leave_button, wrappedList(amountLimit)),
                 onClick = onConfirmClick,
             ),
         )
@@ -98,7 +98,7 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             title = resourceReference(R.string.send_notification_existential_deposit_title),
             subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
-                text = resourceReference(R.string.send_notification_existential_deposit_button, wrappedList(deposit)),
+                text = resourceReference(R.string.send_notification_leave_button, wrappedList(deposit)),
                 onClick = onConfirmClick,
             ),
         )
