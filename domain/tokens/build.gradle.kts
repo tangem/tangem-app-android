@@ -28,6 +28,9 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.libs.crypto)
 
+    /** Tangem SDKs */
+    implementation(deps.tangem.blockchain)
+
     /** Android - Other */
     implementation(deps.androidx.paging.runtime)
 

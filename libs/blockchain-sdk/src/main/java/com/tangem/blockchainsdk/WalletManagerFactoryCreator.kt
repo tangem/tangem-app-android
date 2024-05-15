@@ -38,6 +38,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
+            featureToggles = BlockchainFeatureToggles(isCardanoTokenSupport = false),
         )
     }
 }

@@ -13,6 +13,8 @@ import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
 import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.common.trustlines.AssetRequirementsCondition
+import com.tangem.blockchain.common.trustlines.AssetRequirementsManager
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -57,6 +59,7 @@ class DefaultWalletManagersFacade(
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
     private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
     private val sdkPageConverter by lazy { SdkPageConverter() }
+    private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
     private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
 
     override suspend fun update(
@@ -573,6 +576,31 @@ class DefaultWalletManagersFacade(
                 ),
             ),
         )
+    }
+
+    override suspend fun getAssetRequirements(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): AssetRequirementsCondition? {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+        val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+        if (walletManager !is AssetRequirementsManager || !walletManager.hasRequirements(currencyType)) return null
+
+        return walletManager.requirementsCondition(currencyType)
+    }
+
+    override suspend fun associateAsset(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        signer: CommonSigner,
+    ): SimpleResult {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+        val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+
+        if (walletManager !is AssetRequirementsManager) {
+            error("WalletManager is not implemented AssetRequirementsManager")
+        }
+        return walletManager.fulfillRequirements(currencyType, signer)
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {

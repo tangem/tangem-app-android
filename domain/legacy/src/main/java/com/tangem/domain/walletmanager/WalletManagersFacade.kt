@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.common.trustlines.AssetRequirementsCondition
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -240,4 +241,16 @@ interface WalletManagersFacade {
         decimals: Int,
         id: String? = null,
     ): BigDecimal
+
+    /**
+     * Get requirements for asset(currency)
+     * @return null if there's no requirement, otherwise [AssetRequirementsCondition].
+     */
+    suspend fun getAssetRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): AssetRequirementsCondition?
+
+    suspend fun associateAsset(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        signer: CommonSigner,
+    ): SimpleResult
 }
