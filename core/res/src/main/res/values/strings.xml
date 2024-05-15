@@ -268,7 +268,7 @@
   <string name="main_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
   <string name="main_tokens">Tokens</string>
   <string name="main_travala_promotion_button">Book now</string>
-  <string name="main_travala_promotion_description" formatted="false">Save **50 USDT** while booking via our partner Travala: **%1s - %2s**</string>
+  <string name="main_travala_promotion_description" formatted="false">Save **$50** while booking via our partner Travala: **%1s - %2s**</string>
   <string name="main_travala_promotion_title">Book your holidays with Tangem and pay in crypto</string>
   <string name="manage_tokens_add">Add</string>
   <string name="manage_tokens_edit">Edit</string>
