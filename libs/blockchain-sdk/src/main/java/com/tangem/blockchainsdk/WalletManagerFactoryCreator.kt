@@ -1,10 +1,12 @@
 package com.tangem.blockchainsdk
 
 import com.tangem.blockchain.common.AccountCreator
+import com.tangem.blockchain.common.BlockchainFeatureToggles
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
+import com.tangem.blockchainsdk.featuretoggles.BlockchainSDKFeatureToggles
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -21,6 +23,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
     private val accountCreator: AccountCreator,
     private val blockchainDataStorage: BlockchainDataStorage,
     private val blockchainSDKLogger: BlockchainSDKLogger,
+    private val blockchainSDKFeatureToggles: BlockchainSDKFeatureToggles,
 ) {
 
     fun create(config: BlockchainSdkConfig, blockchainProviderTypes: BlockchainProviderTypes): WalletManagerFactory {
@@ -30,6 +33,9 @@ internal class WalletManagerFactoryCreator @Inject constructor(
             config = config,
             blockchainProviderTypes = blockchainProviderTypes,
             accountCreator = accountCreator,
+            featureToggles = BlockchainFeatureToggles(
+                isCardanoTokenSupport = blockchainSDKFeatureToggles.isCardanoTokensSupportEnabled,
+            ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
         )
