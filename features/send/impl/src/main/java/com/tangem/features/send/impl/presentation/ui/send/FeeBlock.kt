@@ -26,13 +26,13 @@ import com.tangem.features.send.impl.presentation.utils.getCryptoReference
 import com.tangem.features.send.impl.presentation.utils.getFiatReference
 
 @Composable
-internal fun FeeBlock(feeState: SendStates.FeeState, isSuccess: Boolean, onClick: () -> Unit) {
+internal fun FeeBlock(feeState: SendStates.FeeState, isClickDisabled: Boolean, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .clickable(enabled = !isSuccess, onClick = onClick)
+            .clickable(enabled = !isClickDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
@@ -115,7 +115,7 @@ private fun FeeBlockPreview_Light(@PreviewParameter(FeeBlockPreviewProvider::cla
     TangemTheme {
         FeeBlock(
             feeState = value,
-            isSuccess = true,
+            isClickDisabled = true,
             onClick = {},
         )
     }
@@ -127,7 +127,7 @@ private fun FeeBlockPreview_Dark(@PreviewParameter(FeeBlockPreviewProvider::clas
     TangemTheme(isDark = true) {
         FeeBlock(
             feeState = value,
-            isSuccess = true,
+            isClickDisabled = true,
             onClick = {},
         )
     }
