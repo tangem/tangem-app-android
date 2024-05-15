@@ -25,13 +25,13 @@ interface TransactionRepository {
     @Suppress("LongParameterList")
     suspend fun validateTransaction(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-        isSwap: Boolean,
-        hash: String?,
+        isSwap: Boolean = false,
+        hash: String? = null,
     ): Result<Unit>
 
     suspend fun sendTransaction(
