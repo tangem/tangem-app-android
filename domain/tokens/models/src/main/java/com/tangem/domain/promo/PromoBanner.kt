@@ -12,6 +12,7 @@ data class PromoBanner(
     data class BannerState(
         val timeline: Timeline,
         val status: String,
+        val link: String?,
     )
 
     data class Timeline(
