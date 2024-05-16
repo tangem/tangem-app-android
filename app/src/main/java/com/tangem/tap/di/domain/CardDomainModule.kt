@@ -8,8 +8,8 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
-import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.card.DefaultDeleteSavedAccessCodesUseCase
+import com.tangem.tap.domain.sdk.TangemSdkManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
