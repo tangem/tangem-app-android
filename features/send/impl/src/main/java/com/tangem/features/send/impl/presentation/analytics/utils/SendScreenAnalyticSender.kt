@@ -2,8 +2,10 @@ package com.tangem.features.send.impl.presentation.analytics.utils
 
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.send.impl.presentation.analytics.SelectedCurrencyType
-import com.tangem.features.send.impl.presentation.analytics.SelectedFeeType
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
 import com.tangem.features.send.impl.presentation.analytics.SendScreenSource
 import com.tangem.features.send.impl.presentation.state.SendUiState
@@ -11,11 +13,13 @@ import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
+import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.utils.Provider
 
 internal class SendScreenAnalyticSender(
     private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
+    private val cryptoCurrencyProvider: Provider<CryptoCurrency>,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
     fun send(prevScreen: SendUiStateType, state: SendUiState) {
@@ -73,16 +77,57 @@ internal class SendScreenAnalyticSender(
         )
     }
 
+    fun sendTransaction() {
+        val state = currentStateProvider()
+        val isEditState = stateRouterProvider().isEditState
+        val cryptoCurrency = cryptoCurrencyProvider()
+        val feeState = state.getFeeState(isEditState) ?: return
+        val recipientState = state.getRecipientState(isEditState) ?: return
+
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return
+        val feeType = getSendTransactionFeeType(feeSelectorState)
+        analyticsEventHandler.send(
+            SendAnalyticEvents.TransactionScreenOpened(
+                token = cryptoCurrency.symbol,
+                feeType = feeType,
+            ),
+        )
+        analyticsEventHandler.send(
+            Basic.TransactionSent(
+                sentFrom = AnalyticsParam.TxSentFrom.Send(
+                    blockchain = cryptoCurrency.network.name,
+                    token = cryptoCurrency.symbol,
+                    feeType = feeType,
+                ),
+                memoType = getSendTransactionMemoType(recipientState.memoTextField),
+            ),
+        )
+    }
+
     private fun sendSelectedFeeAnalytics(feeSelectorState: FeeSelectorState.Content) {
-        val type = when (feeSelectorState.fees) {
-            is TransactionFee.Single -> SelectedFeeType.Fixed
+        val type = getSendTransactionFeeType(feeSelectorState)
+        analyticsEventHandler.send(SendAnalyticEvents.SelectedFee(type))
+    }
+
+    private fun getSendTransactionFeeType(feeSelectorState: FeeSelectorState.Content): AnalyticsParam.FeeType =
+        when (feeSelectorState.fees) {
+            is TransactionFee.Single -> AnalyticsParam.FeeType.Fixed
             is TransactionFee.Choosable -> when (feeSelectorState.selectedFee) {
-                FeeType.Slow -> SelectedFeeType.Min
-                FeeType.Market -> SelectedFeeType.Normal
-                FeeType.Fast -> SelectedFeeType.Max
-                FeeType.Custom -> SelectedFeeType.Custom
+                FeeType.Slow -> AnalyticsParam.FeeType.Min
+                FeeType.Market -> AnalyticsParam.FeeType.Normal
+                FeeType.Fast -> AnalyticsParam.FeeType.Max
+                FeeType.Custom -> AnalyticsParam.FeeType.Custom
             }
         }
-        analyticsEventHandler.send(SendAnalyticEvents.SelectedFee(type))
+
+    private fun getSendTransactionMemoType(
+        recipientMemo: SendTextField.RecipientMemo?,
+    ): Basic.TransactionSent.MemoType {
+        val memo = recipientMemo?.value
+        return when {
+            memo?.isBlank() == true -> Basic.TransactionSent.MemoType.Empty
+            memo?.isNotBlank() == true -> Basic.TransactionSent.MemoType.Full
+            else -> Basic.TransactionSent.MemoType.Null
+        }
     }
 }

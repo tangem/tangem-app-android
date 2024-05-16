@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationWithBackground
+import com.tangem.core.ui.components.notifications.TravalaNotificationWithBackground
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
@@ -25,23 +26,33 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
         key = { it::class.java },
         contentType = { it::class.java },
         itemContent = {
-            if (it is WalletNotification.SwapPromo) {
-                NotificationWithBackground(
-                    config = it.config,
-                    modifier = modifier.animateItemPlacement(),
-                )
-            } else {
-                Notification(
-                    config = it.config,
-                    modifier = modifier.animateItemPlacement(),
-                    iconTint = when (it) {
-                        is WalletNotification.Critical -> TangemTheme.colors.icon.warning
-                        is WalletNotification.Informational -> TangemTheme.colors.icon.accent
-                        is WalletNotification.RateApp -> TangemTheme.colors.icon.attention
-                        is WalletNotification.UnlockWallets -> TangemTheme.colors.icon.primary1
-                        else -> null
-                    },
-                )
+// [REDACTED_TODO_COMMENT]
+            when (it) {
+                is WalletNotification.SwapPromo -> {
+                    NotificationWithBackground(
+                        config = it.config,
+                        modifier = modifier.animateItemPlacement(),
+                    )
+                }
+                is WalletNotification.TravalaPromo -> {
+                    TravalaNotificationWithBackground(
+                        config = it.config,
+                        modifier = modifier.animateItemPlacement(),
+                    )
+                }
+                else -> {
+                    Notification(
+                        config = it.config,
+                        modifier = modifier.animateItemPlacement(),
+                        iconTint = when (it) {
+                            is WalletNotification.Critical -> TangemTheme.colors.icon.warning
+                            is WalletNotification.Informational -> TangemTheme.colors.icon.accent
+                            is WalletNotification.RateApp -> TangemTheme.colors.icon.attention
+                            is WalletNotification.UnlockWallets -> TangemTheme.colors.icon.primary1
+                            else -> null
+                        },
+                    )
+                }
             }
         },
     )
