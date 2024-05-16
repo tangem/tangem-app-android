@@ -351,4 +351,12 @@ internal object TokensDomainModule {
     ): RunPolkadotAccountHealthCheckUseCase {
         return RunPolkadotAccountHealthCheckUseCase(repository)
     }
+
+    @Provides
+    @ViewModelScoped
+    fun provideGetNetworkStatusesUseCase(networksRepository: NetworksRepository): GetNetworkAddressesUseCase {
+        return GetNetworkAddressesUseCase(
+            networksRepository = networksRepository,
+        )
+    }
 }
