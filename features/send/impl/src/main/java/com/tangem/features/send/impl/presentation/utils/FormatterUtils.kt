@@ -11,6 +11,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 private const val FIAT_DECIMALS = 2
+private const val CRYPTO_FEE_DECIMALS = 6
 private const val FEE_MINIMUM_VALUE = 0.01
 
 internal fun getCryptoReference(amount: Amount?, isFeeApproximate: Boolean): TextReference? {
@@ -21,7 +22,7 @@ internal fun getCryptoReference(amount: Amount?, isFeeApproximate: Boolean): Tex
             BigDecimalFormatter.formatCryptoAmount(
                 cryptoAmount = amount.value,
                 cryptoCurrency = amount.currencySymbol,
-                decimals = amount.decimals,
+                decimals = amount.decimals.coerceAtMost(CRYPTO_FEE_DECIMALS),
             ),
         ),
     )
@@ -36,24 +37,27 @@ internal fun getFiatReference(value: BigDecimal?, rate: BigDecimal?, appCurrency
 internal fun getFiatString(value: BigDecimal?, rate: BigDecimal?, appCurrency: AppCurrency): String {
     if (value == null || rate == null) return EMPTY_BALANCE_SIGN
     val feeValue = value.multiply(rate)
-    val scaled = feeValue.setScale(FIAT_DECIMALS, RoundingMode.UP) ?: BigDecimal.ZERO
-    val formattedValue = if (scaled < BigDecimal(FEE_MINIMUM_VALUE)) {
+    return getFiatFormatted(feeValue, appCurrency.code, appCurrency.symbol)
+}
+
+internal fun getFiatFormatted(value: BigDecimal?, currencyCode: String, currencySymbol: String): String {
+    val scaled = value?.setScale(FIAT_DECIMALS, RoundingMode.UP) ?: BigDecimal.ZERO
+    return if (scaled < BigDecimal(FEE_MINIMUM_VALUE)) {
         buildString {
             append(BigDecimalFormatter.CAN_BE_LOWER_SIGN)
             append(
                 BigDecimalFormatter.formatFiatAmount(
                     fiatAmount = BigDecimal(FEE_MINIMUM_VALUE),
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
+                    fiatCurrencyCode = currencyCode,
+                    fiatCurrencySymbol = currencySymbol,
                 ),
             )
         }
     } else {
         BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = feeValue,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
+            fiatAmount = value,
+            fiatCurrencyCode = currencyCode,
+            fiatCurrencySymbol = currencySymbol,
         )
     }
-    return formattedValue
 }
