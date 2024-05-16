@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
