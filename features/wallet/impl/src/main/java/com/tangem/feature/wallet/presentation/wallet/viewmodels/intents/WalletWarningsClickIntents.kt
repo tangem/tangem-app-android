@@ -11,6 +11,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.settings.ShouldShowSwapPromoWalletUseCase
+import com.tangem.domain.settings.ShouldShowTravalaPromoWalletUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
@@ -19,6 +20,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
@@ -56,6 +58,10 @@ internal interface WalletWarningsClickIntents {
     fun onCloseRateAppWarningClick()
 
     fun onCloseSwapPromoClick()
+
+    fun onTravalaPromoClick(link: String?)
+
+    fun onCloseTravalaPromoClick()
 }
 
 @Suppress("LongParameterList")
@@ -75,6 +81,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
+    private val shouldShowTravalaPromoWalletUseCase: ShouldShowTravalaPromoWalletUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -209,6 +216,34 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onCloseSwapPromoClick() {
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoWalletUseCase.neverToShow()
+        }
+    }
+
+    override fun onTravalaPromoClick(link: String?) {
+        analyticsEventHandler.send(
+            WalletScreenAnalyticsEvent.Promotion.PromotionBannerClicked(
+                source = AnalyticsParam.ScreensSources.Main,
+                programName = "Travala",
+                action = WalletScreenAnalyticsEvent.Promotion.PromotionBannerClicked.BannerAction.Clicked,
+            ),
+        )
+        link?.let {
+            viewModelScope.launch(dispatchers.main) {
+                router.openUrl(link)
+            }
+        }
+    }
+
+    override fun onCloseTravalaPromoClick() {
+        analyticsEventHandler.send(
+            WalletScreenAnalyticsEvent.Promotion.PromotionBannerClicked(
+                source = AnalyticsParam.ScreensSources.Main,
+                programName = "Travala",
+                action = WalletScreenAnalyticsEvent.Promotion.PromotionBannerClicked.BannerAction.Closed,
+            ),
+        )
+        viewModelScope.launch(dispatchers.main) {
+            shouldShowTravalaPromoWalletUseCase.neverToShow()
         }
     }
 
