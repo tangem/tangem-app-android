@@ -10,6 +10,7 @@ import retrofit2.http.*
  *
 * [REDACTED_AUTHOR]
  */
+@Suppress("TooManyFunctions")
 interface TangemTechApi {
 
     @GET("coins")
