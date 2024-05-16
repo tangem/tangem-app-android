@@ -126,4 +126,7 @@ interface TangemTechApi {
         @Header("card_id") cardId: String,
         @Path("account_id") accountId: Int,
     ): ApiResponse<UserTokensAccountResponse>
+
+    @GET("features")
+    suspend fun getFeatures(): ApiResponse<FeaturesResponse>
 }

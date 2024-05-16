@@ -8,6 +8,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
+import org.intellij.markdown.MarkdownElementTypes
 
 /**
  * Utility class for creating text as [String] or [StringRes].
@@ -160,6 +163,29 @@ fun TextReference.resolveReference(resources: Resources): String {
     }
 }
 
+/** Resolve [TextReference] as [AnnotatedString] */
+@Composable
+fun TextReference.resolveAnnotatedReference(): AnnotatedString {
+    return when (this) {
+        is TextReference.Res -> {
+            val args = formatArgs
+                .map { if (it is TextReference) it.resolveReference() else it }
+                .toTypedArray()
+
+            formatAnnotated(stringResource(id = id, *args))
+        }
+        is TextReference.PluralRes -> formatAnnotated(
+            pluralStringResource(id, count, *formatArgs.toTypedArray()),
+        )
+        is TextReference.Str -> formatAnnotated(value)
+        is TextReference.Combined -> buildAnnotatedString {
+            refs.forEach {
+                append(formatAnnotated(it.resolveReference()))
+            }
+        }
+    }
+}
+
 /** Concatenate [this] reference with [ref] */
 operator fun TextReference.plus(ref: TextReference): TextReference {
     return when (this) {
@@ -168,5 +194,15 @@ operator fun TextReference.plus(ref: TextReference): TextReference {
         is TextReference.Res,
         is TextReference.Str,
         -> TextReference.Combined(refs = wrappedList(this, ref))
+    }
+}
+
+@Composable
+private fun formatAnnotated(rawString: String): AnnotatedString {
+    val markdownDescriptor = rememberMarkdownParser()
+    val parsedTree = markdownDescriptor.parse(MarkdownElementTypes.MARKDOWN_FILE, rawString, true)
+
+    return buildAnnotatedString {
+        appendMarkdown(markdownText = rawString, node = parsedTree)
     }
 }
