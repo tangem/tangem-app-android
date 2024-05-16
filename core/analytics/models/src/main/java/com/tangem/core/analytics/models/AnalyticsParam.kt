@@ -97,10 +97,11 @@ sealed class AnalyticsParam {
     }
 
     sealed class FeeType(val value: String) {
-        object Fixed : FeeType("Fixed")
-        object Min : FeeType("Min")
-        object Normal : FeeType("Normal")
-        object Max : FeeType("Max")
+        data object Fixed : FeeType("Fixed")
+        data object Min : FeeType("Min")
+        data object Normal : FeeType("Normal")
+        data object Max : FeeType("Max")
+        data object Custom : FeeType("Custom")
 
         companion object {
             fun fromString(feeType: String): FeeType {
