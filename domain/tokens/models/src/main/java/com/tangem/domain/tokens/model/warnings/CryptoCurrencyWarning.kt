@@ -47,4 +47,6 @@ sealed class CryptoCurrencyWarning {
         val startDateTime: DateTime,
         val endDateTime: DateTime,
     ) : CryptoCurrencyWarning()
+
+    data object BeaconChainShutdown : CryptoCurrencyWarning()
 }
