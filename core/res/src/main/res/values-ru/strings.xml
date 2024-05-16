@@ -102,6 +102,7 @@
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
   <string name="common_network_fee_title">Сетевая комиссия</string>
+  <string name="common_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s (%2$s) для покрытия выбранного уровня комиссии</string>
   <string name="common_next">Далее</string>
   <string name="common_no">Нет</string>
   <string name="common_no_address">Нет адреса</string>
@@ -448,11 +449,13 @@
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
+  <string name="send_bitcoin_custom_fee_footer">Вы можете установить комиссию за транзакцию, изменив значение в поле Satoshi per vByte.</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
   <string name="send_enter_address_field">Введите адрес</string>
   <string name="send_error_address_same_as_wallet">Адрес совпадает с адресом кошелька</string>
+  <string name="send_evm_custom_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
   <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_error_invalid_memo">Недопустимый Memo. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_hint_destination_tag">Tag</string>
@@ -477,12 +480,12 @@
   <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
   <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
   <string name="send_notification_exceed_balance_title">Недостаточно средств</string>
-  <string name="send_notification_existential_deposit_button">Оставить %s</string>
+  <string name="send_notification_leave_button">Оставить %s</string>
   <string name="send_notification_existential_deposit_text">Аккаунт будет удален из блокчейна, если баланс упадет ниже экзистенциального депозита. Пожалуйста, оставьте %s на балансе.</string>
   <string name="send_notification_existential_deposit_title">Экзистенциальный депозит</string>
   <string name="send_notification_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
-  <string name="send_notification_high_fee_text">Ввиду особенности сети Tezos комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить %s.</string>
+  <string name="send_notification_high_fee_text">Ввиду особенности сети %1$s комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить %2$s.</string>
   <string name="send_notification_high_fee_title">Комиссия повышена</string>
   <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
   <string name="send_notification_invalid_amount_title">Недопустимая сумма</string>
@@ -490,7 +493,6 @@
   <string name="send_notification_invalid_reserve_amount_text">Адрес получателя не активирован. \nПожалуйста, измените сумму отправки, чтобы продолжить.</string>
   <string name="send_notification_invalid_reserve_amount_title">Сумма отправки не может быть менее %s</string>
   <string name="send_notification_reduce_by">Уменьшить на %s</string>
-  <string name="send_notification_reduce_to">Уменьшить до %s</string>
   <string name="send_notification_transaction_delay_text">Обратите внимание, что при определенных параметрах комиссии возможны задержки по вашей транзакции</string>
   <string name="send_notification_transaction_delay_title">Возможны задержки по транзакции</string>
   <string name="send_notification_transaction_limit_text">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$s UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
@@ -500,7 +502,7 @@
   <string name="send_recent_transactions">Последние</string>
   <string name="send_recipient">Получатель</string>
   <string name="send_recipient_address_error">Неверный адрес</string>
-  <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов</string>
+  <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов.</string>
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
   <string name="send_recipient_wallets_title">Мои кошельки</string>
@@ -509,7 +511,7 @@
   <string name="send_sending">Отправка</string>
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
-  <string name="send_summary_transaction_description">Вы отправляете %1$s, включая комиссию сети %2$s</string>
+  <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
   <string name="send_title_currency_format">Отправка %s</string>
   <string name="send_total_label">Всего</string>
   <string name="send_total_subtitle_asset_format">%1$s и %2$s будет отправлено</string>
@@ -643,6 +645,8 @@
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту, чтобы разблокировать доступ к вашему кошельку</string>
   <string name="warning_backup_errors_message">Пожалуйста, выведите все средства из этого кошелька, сбросьте его к заводским настройкам и создайте новый. Доступ к текущему кошельку будет утерян.</string>
   <string name="warning_backup_errors_title">Ошибка активации</string>
+  <string name="warning_beacon_chain_retirement_content">По решению разработчиков сети BNB, стандарт BEP-2 перестанет поддерживаться в июне 2024 года. Чтобы не потерять свои активы, их необходимо преобразовать в стандарт BEP-20. Используйте функцию обмена  в приложении чтобы перевести их в cеть BNB Smart Chain.</string>
+  <string name="warning_beacon_chain_retirement_title">Отключение сети BNB Beacon Chain</string>
   <string name="warning_button_could_be_better">Можно лучше</string>
   <string name="warning_button_like_it">Нравится</string>
   <string name="warning_button_ok">Понятно!</string>
