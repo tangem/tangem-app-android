@@ -13,6 +13,7 @@ data class PromotionInfoResponse(
     data class BannerState(
         @Json(name = "timeline") val timeline: Timeline,
         @Json(name = "status") val status: String,
+        @Json(name = "link") val link: String?,
     )
 
     @JsonClass(generateAdapter = true)
