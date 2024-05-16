@@ -82,12 +82,13 @@ swipeRefreshLayout = "1.1.0"
 spr-client = "3.6.2"
 web3j = "4.10.1"
 leakcanary = "2.13"
+markdown = "0.7.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.10-618"
+tangemBlockchainSdk = "release-app_5.10-630"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.9-343"
+tangemCardSdk = "release-app_5.10-353"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
@@ -249,4 +250,5 @@ camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = 
 camera-view = { module = "androidx.camera:camera-view", version.ref = "androidXCamera" }
 web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
 leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
+markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
 # endregion Other
