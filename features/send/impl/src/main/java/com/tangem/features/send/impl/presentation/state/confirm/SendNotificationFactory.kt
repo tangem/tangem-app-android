@@ -72,11 +72,12 @@ internal class SendNotificationFactory(
                 amountValue = amountValue,
                 feeValue = feeValue,
             )
-            val sendingAmount = calculateSubtractedAmount(
-                isFeeCoverage = isFeeCoverage,
+            val sendingAmount = checkAndCalculateSubtractedAmount(
+                isAmountSubtractAvailable = isFeeCoverage,
                 cryptoCurrencyStatus = cryptoCurrencyStatusProvider(),
                 amountValue = amountValue,
                 feeValue = feeValue,
+                reduceAmountBy = sendState.reduceAmountBy,
             )
             buildList {
                 // errors
@@ -204,7 +205,7 @@ internal class SendNotificationFactory(
         val spendingAmount = if (cryptoCurrency is CryptoCurrency.Token) {
             feeAmount
         } else {
-            feeAmount + receivedAmount
+            receivedAmount
         }
         val currencyDeposit = currencyChecksRepository.getExistentialDeposit(
             userWalletId,
@@ -270,6 +271,7 @@ internal class SendNotificationFactory(
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
                 SendNotification.Warning.HighFeeError(
+                    currencyName = cryptoCurrencyStatus.currency.name,
                     amount = threshold.toPlainString(),
                     onConfirmClick = {
                         clickIntents.onAmountReduceClick(
