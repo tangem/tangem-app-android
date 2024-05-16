@@ -35,12 +35,13 @@ private const val TAP_HELP_ANIMATION_DELAY = 500L
 @Composable
 internal fun SendContent(uiState: SendUiState) {
     val sendState = uiState.sendState ?: return
+    val isClickDisabled = sendState.isSending || sendState.isSuccess
     LazyColumn(
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         blocks(uiState)
         tapHelp(isDisplay = sendState.showTapHelp)
-        notifications(sendState.notifications)
+        notifications(notifications = sendState.notifications, isClickDisabled = isClickDisabled)
     }
 }
 
@@ -50,6 +51,7 @@ private fun LazyListScope.blocks(uiState: SendUiState) {
     val feeState = uiState.feeState ?: return
     val sendState = uiState.sendState ?: return
     val isSuccess = sendState.isSuccess
+    val isClickDisabled = sendState.isSending || isSuccess
     val timestamp = sendState.transactionDate
 
     item(key = BLOCKS_KEY) {
@@ -65,19 +67,19 @@ private fun LazyListScope.blocks(uiState: SendUiState) {
             }
             RecipientBlock(
                 recipientState = recipientState,
-                isSuccess = isSuccess,
+                isClickDisabled = isClickDisabled,
                 isEditingDisabled = uiState.isEditingDisabled,
                 onClick = uiState.clickIntents::showRecipient,
             )
             AmountBlock(
                 amountState = amountState,
-                isSuccess = isSuccess,
+                isClickDisabled = isClickDisabled,
                 isEditingDisabled = uiState.isEditingDisabled,
                 onClick = uiState.clickIntents::showAmount,
             )
             FeeBlock(
                 feeState = feeState,
-                isSuccess = isSuccess,
+                isClickDisabled = isClickDisabled,
                 onClick = uiState.clickIntents::showFee,
             )
         }
