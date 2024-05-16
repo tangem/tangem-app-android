@@ -155,7 +155,11 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
-    class NetworksNoAccount(val network: String, val symbol: String, val amount: String) : Informational(
+    data class NetworksNoAccount(
+        private val network: String,
+        private val symbol: String,
+        private val amount: String,
+    ) : Informational(
         title = resourceReference(R.string.warning_no_account_title),
         subtitle = resourceReference(
             id = R.string.no_account_generic,
@@ -174,5 +178,10 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             id = R.string.warning_send_blocked_pending_transactions_message,
             formatArgs = wrappedList(coinSymbol),
         ),
+    )
+
+    data class NetworkShutdown(private val title: TextReference, private val subtitle: TextReference) : Warning(
+        title = title,
+        subtitle = subtitle,
     )
 }
