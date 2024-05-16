@@ -315,7 +315,6 @@ internal class StateBuilder(
     private fun getWarningsForSuccessState(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
-        ignoreAmountReduce: Boolean,
         selectedFeeType: FeeType,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()

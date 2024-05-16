@@ -3,14 +3,10 @@ package com.tangem.data.settings.di
 import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultSettingsRepository
 import com.tangem.data.settings.DefaultPromoSettingsRepository
-import com.tangem.data.source.preferences.PreferencesDataSource
-import com.tangem.data.settings.DefaultSwapPromoRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.repositories.PromoSettingsRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.domain.settings.repositories.SwapPromoRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
