@@ -43,7 +43,7 @@ internal class EthereumCustomFeeConverter(
                     keyboardType = KeyboardType.Number,
                 ),
                 title = resourceReference(R.string.send_max_fee),
-                footer = resourceReference(R.string.send_max_fee_footer),
+                footer = resourceReference(R.string.send_evm_custom_fee_footer),
                 label = getFiatReference(
                     rate = feeCurrency?.fiatRate,
                     value = feeValue,
