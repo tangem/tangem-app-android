@@ -3,6 +3,7 @@ package com.tangem.domain.wallets.usecase
 import com.tangem.domain.wallets.legacy.WalletsStateHolder
 import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 /**
  * Use case for getting list of user wallets
@@ -14,7 +15,9 @@ import kotlinx.coroutines.flow.Flow
 class GetWalletsUseCase(private val walletsStateHolder: WalletsStateHolder) {
 
     @Throws(IllegalArgumentException::class)
-    operator fun invoke(): Flow<List<UserWallet>> {
-        return requireNotNull(walletsStateHolder.userWalletsListManager).userWallets
-    }
+    operator fun invoke(): Flow<List<UserWallet>> =
+        requireNotNull(walletsStateHolder.userWalletsListManager).userWallets
+
+    @Throws(IllegalArgumentException::class)
+    suspend fun invokeSync(): List<UserWallet>? = walletsStateHolder.userWalletsListManager?.userWallets?.firstOrNull()
 }
