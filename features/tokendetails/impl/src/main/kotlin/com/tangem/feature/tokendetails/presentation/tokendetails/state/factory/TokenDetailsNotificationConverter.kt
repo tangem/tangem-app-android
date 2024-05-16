@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -8,6 +9,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.removeBy
 import kotlinx.collections.immutable.ImmutableList
@@ -77,6 +79,10 @@ internal class TokenDetailsNotificationConverter(
                 endDateTime = warning.endDateTime,
                 onSwapClick = clickIntents::onSwapPromoClick,
                 onCloseClick = clickIntents::onSwapPromoDismiss,
+            )
+            is CryptoCurrencyWarning.BeaconChainShutdown -> NetworkShutdown(
+                title = resourceReference(R.string.warning_beacon_chain_retirement_title),
+                subtitle = resourceReference(R.string.warning_beacon_chain_retirement_content),
             )
         }
     }
