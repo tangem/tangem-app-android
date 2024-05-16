@@ -30,6 +30,12 @@ interface CardTypesResolver {
 
     fun isSatoshiFriendsWallet(): Boolean
 
+    fun isBitcoinPizzaDayWallet(): Boolean
+
+    fun isVeChainWallet(): Boolean
+
+    fun isNewWorldEliteWallet(): Boolean
+
     fun isWhiteWallet(): Boolean
 
     fun isWallet2(): Boolean
