@@ -121,4 +121,38 @@ sealed class WalletScreenAnalyticsEvent {
 
         data object DeleteWalletTapped : MainScreen(event = "Button - Delete Wallet Tapped")
     }
+
+    sealed class Promotion(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : AnalyticsEvent(category = "Promotion", event = event, params = params) {
+        class NoticePromotionBanner(
+            source: AnalyticsParam.ScreensSources,
+            programName: String,
+        ) : Promotion(
+            event = "Notice - Promotion Banner",
+            params = mapOf(
+                AnalyticsParam.SOURCE to source.value,
+                "Program Name" to programName,
+            ),
+        )
+
+        class PromotionBannerClicked(
+            source: AnalyticsParam.ScreensSources,
+            programName: String,
+            action: BannerAction,
+        ) : Promotion(
+            event = "Promo Banner Clicked",
+            params = mapOf(
+                AnalyticsParam.SOURCE to source.value,
+                "Program Name" to programName,
+                "Action" to action.action,
+            ),
+        ) {
+            sealed class BannerAction(val action: String) {
+                data object Clicked : BannerAction(action = "Clicked")
+                data object Closed : BannerAction(action = "Closed")
+            }
+        }
+    }
 }
