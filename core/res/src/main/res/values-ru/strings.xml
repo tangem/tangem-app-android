@@ -642,6 +642,8 @@
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту, чтобы разблокировать доступ к вашему кошельку</string>
   <string name="warning_backup_errors_message">Пожалуйста, выведите все средства из этого кошелька, сбросьте его к заводским настройкам и создайте новый. Доступ к текущему кошельку будет утерян.</string>
   <string name="warning_backup_errors_title">Ошибка активации</string>
+  <string name="warning_beacon_chain_retirement_content">По решению разработчиков сети BNB, стандарт BEP-2 перестанет поддерживаться в июне 2024 года. Чтобы не потерять свои активы, их необходимо преобразовать в стандарт BEP-20. Используйте функцию обмена  в приложении чтобы перевести их в cеть BNB Smart Chain.</string>
+  <string name="warning_beacon_chain_retirement_title">Отключение сети BNB Beacon Chain</string>
   <string name="warning_button_could_be_better">Можно лучше</string>
   <string name="warning_button_like_it">Нравится</string>
   <string name="warning_button_ok">Понятно!</string>
