@@ -9,6 +9,7 @@ import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -20,6 +21,7 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -132,6 +134,17 @@ class WalletConnectMiddleware {
                         store.dispatchOnMain(
                             GlobalAction.ShowDialog(
                                 WalletConnectDialog.UnsupportedDapp,
+                            ),
+                        )
+                    }
+                    is WalletConnectError.UnknownError -> {
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                AppDialog.SimpleOkDialogRes(
+                                    headerId = R.string.wallet_connect_title,
+                                    messageId = R.string.wallet_connect_error_with_framework_message,
+                                    args = listOf(action.error.message),
+                                ),
                             ),
                         )
                     }
