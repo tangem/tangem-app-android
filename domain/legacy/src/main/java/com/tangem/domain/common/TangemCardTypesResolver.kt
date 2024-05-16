@@ -48,6 +48,12 @@ internal class TangemCardTypesResolver(
 
     override fun isSatoshiFriendsWallet(): Boolean = card.batchId == SATOSHI_WALLET_BATCH_ID
 
+    override fun isBitcoinPizzaDayWallet(): Boolean = card.batchId == BITCOIN_PIZZA_DAY_WALLET_BATCH_ID
+
+    override fun isVeChainWallet(): Boolean = card.batchId == VECHAIN_WALLET_BATCH_ID
+
+    override fun isNewWorldEliteWallet(): Boolean = card.batchId == NEW_WORLD_ELITE_WALLET_BATCH_ID
+
     override fun isWhiteWallet(): Boolean {
         return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
     }
@@ -154,5 +160,8 @@ internal class TangemCardTypesResolver(
         const val WHITE_WALLET2_BATCH_ID = "AF15"
         const val TRILLIANT_WALLET_BATCH_ID = "AF16"
         const val AVRORA_WALLET_BATCH_ID = "AF18"
+        const val BITCOIN_PIZZA_DAY_WALLET_BATCH_ID = "AF33"
+        const val VECHAIN_WALLET_BATCH_ID = "AF29"
+        const val NEW_WORLD_ELITE_WALLET_BATCH_ID = "AF26"
     }
 }
