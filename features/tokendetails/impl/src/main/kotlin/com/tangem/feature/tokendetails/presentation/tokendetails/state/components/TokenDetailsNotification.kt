@@ -172,14 +172,6 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         subtitle = resourceReference(id = R.string.no_account_send_to_create),
     )
 
-    class HasPendingTransactions(val coinSymbol: String) : Informational(
-        title = resourceReference(R.string.warning_send_blocked_pending_transactions_title),
-        subtitle = resourceReference(
-            id = R.string.warning_send_blocked_pending_transactions_message,
-            formatArgs = wrappedList(coinSymbol),
-        ),
-    )
-
     data class NetworkShutdown(private val title: TextReference, private val subtitle: TextReference) : Warning(
         title = title,
         subtitle = subtitle,
