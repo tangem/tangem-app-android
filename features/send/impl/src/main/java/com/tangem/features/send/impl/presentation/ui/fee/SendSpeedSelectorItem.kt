@@ -16,6 +16,7 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
@@ -114,11 +115,14 @@ private fun FeeError(feeSelectorState: FeeSelectorState) {
 
 private fun FeeSelectorState.Content.getAmount(feeType: FeeType): Amount? {
     val choosableFees = fees as? TransactionFee.Choosable
+    val decimals = fees.normal.amount.decimals
+    val customValue = this.customValues.firstOrNull()?.value?.parseToBigDecimal(decimals)
+    val customAmount = fees.normal.amount.copy(value = customValue)
     return when (feeType) {
         FeeType.Slow -> choosableFees?.minimum?.amount
         FeeType.Market -> fees.normal.amount
         FeeType.Fast -> choosableFees?.priority?.amount
-        FeeType.Custom -> null
+        FeeType.Custom -> customAmount
     }
 }
 

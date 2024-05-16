@@ -38,6 +38,7 @@ fun SimpleTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     color: Color = TangemTheme.colors.text.primary1,
     textStyle: TextStyle = TangemTheme.typography.body2.copy(color = color),
+    placeholderColor: Color = TangemTheme.colors.text.disabled,
     readOnly: Boolean = false,
     isValuePasted: Boolean = false,
     onValuePastedTriggerDismiss: () -> Unit = {},
@@ -108,6 +109,7 @@ fun SimpleTextField(
                     value = value,
                     textStyle = textStyle,
                     textValue = textValue,
+                    color = placeholderColor,
                 )
             },
             modifier = modifier
@@ -122,6 +124,7 @@ private fun SimpleTextPlaceholder(
     value: String,
     textStyle: TextStyle,
     textValue: @Composable () -> Unit,
+    color: Color = TangemTheme.colors.text.disabled,
 ) {
     Box {
         if (value.isBlank() && placeholder != null) {
@@ -132,7 +135,7 @@ private fun SimpleTextPlaceholder(
                 Text(
                     text = it.resolveReference(),
                     style = textStyle,
-                    color = TangemTheme.colors.text.disabled,
+                    color = color,
                 )
             }
         }
