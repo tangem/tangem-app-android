@@ -7,8 +7,8 @@ import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
+import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.settings.repositories.SwapPromoRepository
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.settings.DefaultLegacySettingsRepository
 import dagger.Module
@@ -108,17 +108,25 @@ internal object SettingsDomainModule {
     @Provides
     @ViewModelScoped
     fun provideShouldShowSwapPromoWalletUseCase(
-        swapPromoRepository: SwapPromoRepository,
+        promoSettingsRepository: PromoSettingsRepository,
     ): ShouldShowSwapPromoWalletUseCase {
-        return ShouldShowSwapPromoWalletUseCase(swapPromoRepository)
+        return ShouldShowSwapPromoWalletUseCase(promoSettingsRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideShouldShowTravalaPromoWalletUseCase(
+        promoSettingsRepository: PromoSettingsRepository,
+    ): ShouldShowTravalaPromoWalletUseCase {
+        return ShouldShowTravalaPromoWalletUseCase(promoSettingsRepository)
     }
 
     @Provides
     @ViewModelScoped
     fun provideShouldShowSwapPromoTokenUseCase(
-        swapPromoRepository: SwapPromoRepository,
+        promoSettingsRepository: PromoSettingsRepository,
     ): ShouldShowSwapPromoTokenUseCase {
-        return ShouldShowSwapPromoTokenUseCase(swapPromoRepository)
+        return ShouldShowSwapPromoTokenUseCase(promoSettingsRepository)
     }
 
     @Provides
