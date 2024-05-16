@@ -27,5 +27,5 @@ interface WalletConnectRepository {
 
     fun rejectRequest(requestData: RequestData, error: WalletConnectError)
 
-    fun cancelRequest(topic: String, id: Long)
+    fun cancelRequest(topic: String, id: Long, message: String = "")
 }
