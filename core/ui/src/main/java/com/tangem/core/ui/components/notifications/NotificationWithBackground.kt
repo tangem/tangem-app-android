@@ -47,7 +47,11 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
         modifier = modifier
             .defaultMinSize(minHeight = TangemTheme.dimens.size62)
             .fillMaxWidth()
-            .clip(TangemTheme.shapes.roundedCornersXMedium),
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .clickable(
+                enabled = config.onClick != null,
+                onClick = config.onClick ?: {},
+            ),
     ) {
         val (iconRef, titleRef, subtitleRef, closeIconRef, buttonRef, backgroundRef) = createRefs()
 
