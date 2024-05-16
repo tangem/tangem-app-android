@@ -208,7 +208,6 @@ internal class SendViewModel @Inject constructor(
     private var sendIdleTimer = 0L
 
     init {
-        subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
         subscribeOnBalanceHidden()
         getTapHelpPreviewAvailability()
@@ -375,7 +374,7 @@ internal class SendViewModel @Inject constructor(
         cryptoCurrencyStatus = currencyStatus
         coinCryptoCurrencyStatus = coinCurrencyStatus
         feeCryptoCurrencyStatus = feeCurrencyStatus
-
+        subscribeOnQRScannerResult()
         when {
             uiState.sendState?.isSuccess == true -> {
                 stateRouter.showSend()
@@ -631,7 +630,7 @@ internal class SendViewModel @Inject constructor(
         }.saveIn(memoValidationJobHolder)
     }
 
-    private suspend fun validateAddress(value: String): Boolean {
+    private suspend fun validateAddress(value: String): Boolean = runCatching {
         val isValidAddress = validateWalletAddressUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
@@ -641,7 +640,7 @@ internal class SendViewModel @Inject constructor(
             ?.any { it.value == value } ?: true
         onEnteredValidAddress(isValidAddress, isAddressInWallet)
         return isValidAddress
-    }
+    }.getOrElse { false }
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
         return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
