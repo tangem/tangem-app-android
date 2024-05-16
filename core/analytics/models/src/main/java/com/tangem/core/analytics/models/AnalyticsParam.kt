@@ -101,6 +101,7 @@ sealed class AnalyticsParam {
         data object Min : FeeType("Min")
         data object Normal : FeeType("Normal")
         data object Max : FeeType("Max")
+        data object Custom : FeeType("Custom")
 
         companion object {
             fun fromString(feeType: String): FeeType {
