@@ -642,6 +642,8 @@
   <string name="warning_access_denied_message">Use %s or scan a card to unlock access to your wallet</string>
   <string name="warning_backup_errors_message">Please withdraw all funds from this wallet, reset it to factory settings, and create a new one. Access to the current wallet will be lost.</string>
   <string name="warning_backup_errors_title">Activation error</string>
+  <string name="warning_beacon_chain_retirement_content">According to BNB network developers, support for the BEP-2 standard will end in June 2024. To avoid losing assets with this standard, please convert them to the BEP-20 standard. Use our swap service to transfer them to the BNB Smart Chain network.</string>
+  <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain will shut down</string>
   <string name="warning_button_could_be_better">Could be better</string>
   <string name="warning_button_like_it">Like it</string>
   <string name="warning_button_ok">Ok, Got it!</string>
