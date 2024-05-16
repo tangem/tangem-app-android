@@ -268,6 +268,9 @@
   <string name="main_swap_changelly_promotion_message">Обменивайте свои токены с %1$s комиссии провайдера через Changelly с %2$s по %3$s февраля.</string>
   <string name="main_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="main_tokens">Токены</string>
+  <string name="main_travala_promotion_button">Забронировать</string>
+  <string name="main_travala_promotion_description" formatted="false">Оплатите его криптой и сэкономьте **50 долларов** через нашего партнера Travala: **%1s - %2s**</string>
+  <string name="main_travala_promotion_title">Забронируйте отпуск с Tangem</string>
   <string name="manage_tokens_add">Добавить</string>
   <string name="manage_tokens_edit">Изменить</string>
   <string name="manage_tokens_list_header_title">Рыночная капитализация</string>
