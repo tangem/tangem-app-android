@@ -23,7 +23,7 @@ import com.tangem.features.send.impl.presentation.state.previewdata.RecipientSta
 @Composable
 internal fun RecipientBlock(
     recipientState: SendStates.RecipientState,
-    isSuccess: Boolean,
+    isClickDisabled: Boolean,
     isEditingDisabled: Boolean,
     onClick: () -> Unit,
 ) {
@@ -38,7 +38,7 @@ internal fun RecipientBlock(
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(backgroundColor)
-            .clickable(enabled = !isSuccess && !isEditingDisabled, onClick = onClick)
+            .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         AddressBlock(recipientState.addressTextField)
@@ -104,7 +104,7 @@ private fun RecipientBlockPreview_Light(
     TangemTheme {
         RecipientBlock(
             recipientState = value,
-            isSuccess = true,
+            isClickDisabled = true,
             isEditingDisabled = false,
             onClick = {},
         )
@@ -119,7 +119,7 @@ private fun RecipientBlockPreview_Dark(
     TangemTheme(isDark = true) {
         RecipientBlock(
             recipientState = value,
-            isSuccess = true,
+            isClickDisabled = true,
             isEditingDisabled = false,
             onClick = {},
         )
