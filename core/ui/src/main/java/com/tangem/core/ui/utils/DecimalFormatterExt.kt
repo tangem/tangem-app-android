@@ -10,9 +10,9 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 private const val TEXT_CHUNK_THOUSAND = 3
-private const val POINT_SEPARATOR = '.'
-private const val COMMA_SEPARATOR = ','
 private const val SCIENTIFIC_NOTATION = 'e'
+const val POINT_SEPARATOR = '.'
+const val COMMA_SEPARATOR = ','
 const val DECIMAL_SEPARATOR_LIMIT = 1
 
 @Composable

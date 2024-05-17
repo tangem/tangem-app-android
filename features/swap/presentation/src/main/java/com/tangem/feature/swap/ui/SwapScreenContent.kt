@@ -391,7 +391,8 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         },
                     )
                 }
-                else -> {}
+                is SwapWarning.Cardano -> Notification(config = warning.notificationConfig)
+                SwapWarning.InsufficientFunds -> Unit
             }
             SpacerH8()
         }
