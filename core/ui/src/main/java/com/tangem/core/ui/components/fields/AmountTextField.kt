@@ -95,10 +95,14 @@ fun AmountTextField(
         SimpleTextField(
             value = value,
             onValueChange = { newText ->
-                if (decimalFormat.isValidSymbols(newText)) {
-                    val trimmed = decimalFormat.getValidatedNumberWithFixedDecimals(newText, decimals)
-                    onValueChange(trimmed)
-                }
+                onValueChange(
+                    prepareEnter(
+                        oldValue = value,
+                        newValue = newText,
+                        decimalFormat = decimalFormat,
+                        decimals = decimals,
+                    ),
+                )
             },
             textStyle = textStyle.copy(
                 fontSize = fontSize,
@@ -117,8 +121,37 @@ fun AmountTextField(
     }
 }
 
+private fun prepareEnter(oldValue: String, newValue: String, decimalFormat: DecimalFormat, decimals: Int): String {
+    val decimalSymbol = decimalFormat.decimalFormatSymbols.decimalSeparator
+    return if (decimalFormat.isValidSymbols(newValue)) {
+        val parsedValue = newValue.parseBigDecimalOrNull()?.toPlainString()
+            ?: if (newValue.isBlank()) "" else oldValue
+        val replacedWithSymbol = if (parsedValue.findLast { it != decimalSymbol } != null) {
+            when {
+                parsedValue.findLast { it == COMMA_SEPARATOR } != null -> {
+                    parsedValue.replace(COMMA_SEPARATOR, decimalSymbol)
+                }
+                parsedValue.findLast { it == POINT_SEPARATOR } != null -> {
+                    parsedValue.replace(POINT_SEPARATOR, decimalSymbol)
+                }
+                else -> parsedValue
+            }
+        } else {
+            parsedValue
+        }
+        val joinedSymbol = if (newValue.endsWith(COMMA_SEPARATOR) || newValue.endsWith(POINT_SEPARATOR)) {
+            replacedWithSymbol.plus(decimalSymbol)
+        } else {
+            replacedWithSymbol
+        }
+        decimalFormat.getValidatedNumberWithFixedDecimals(joinedSymbol, decimals)
+    } else {
+        oldValue
+    }
+}
+
 private fun DecimalFormat.isValidSymbols(text: String): Boolean {
-    return checkDecimalSeparatorDuplicate(text) && checkGroupingSeparator(text)
+    return checkDecimalSeparatorDuplicate(text)
 }
 
 // region preview
