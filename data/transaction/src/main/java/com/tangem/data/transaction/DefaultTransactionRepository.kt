@@ -4,23 +4,26 @@ import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.algorand.AlgorandTransactionExtras
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
-import com.tangem.blockchain.blockchains.hedera.HederaTransactionBuilder
+import com.tangem.blockchain.blockchains.hedera.HederaTransactionExtras
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.math.BigDecimal
 
 internal class DefaultTransactionRepository(
     private val walletManagersFacade: WalletManagersFacade,
+    private val walletManagersStore: WalletManagersStore,
     private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
 ) : TransactionRepository {
 
@@ -41,15 +44,52 @@ internal class DefaultTransactionRepository(
             derivationPath = network.derivationPath.value,
         )
 
-        val txAmount = if (isSwap) {
-            createAmountForSwap(amount)
-        } else {
-            amount
-        }
-        return@withContext walletManager?.createTransaction(txAmount, fee, destination)?.copy(
+        return@withContext walletManager?.createTransactionInternal(
+            amount = amount,
+            fee = fee,
+            memo = memo,
+            destination = destination,
+            network = network,
+            isSwap = isSwap,
             hash = hash,
-            extras = getMemoExtras(network.id.value, memo),
         )
+    }
+
+    override suspend fun validateTransaction(
+        amount: Amount,
+        fee: Fee?,
+        memo: String?,
+        destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
+        isSwap: Boolean,
+        hash: String?,
+    ): Result<Unit> {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = walletManagersStore.getSyncOrNull(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        )
+
+        val validator = walletManager as? TransactionValidator
+
+        return if (validator != null) {
+            val transaction = walletManager.createTransactionInternal(
+                amount = amount,
+                fee = fee ?: Fee.Common(amount = amount),
+                memo = memo,
+                destination = destination,
+                network = network,
+                isSwap = isSwap,
+                hash = hash,
+            )
+
+            validator.validate(transaction = transaction)
+        } else {
+            Timber.e("${walletManager?.wallet?.blockchain} does not support transaction validation")
+            Result.success(Unit)
+        }
     }
 
     override suspend fun sendTransaction(
@@ -65,6 +105,28 @@ internal class DefaultTransactionRepository(
             derivationPath = network.derivationPath.value,
         )
         (walletManager as TransactionSender).send(txData, signer)
+    }
+
+    @Suppress("LongParameterList")
+    private fun WalletManager.createTransactionInternal(
+        amount: Amount,
+        fee: Fee,
+        memo: String?,
+        destination: String,
+        network: Network,
+        isSwap: Boolean,
+        hash: String?,
+    ): TransactionData {
+        val txAmount = if (isSwap) {
+            createAmountForSwap(amount)
+        } else {
+            amount
+        }
+
+        return createTransaction(txAmount, fee, destination).copy(
+            hash = hash,
+            extras = getMemoExtras(network.id.value, memo),
+        )
     }
 
     private fun getMemoExtras(networkId: String, memo: String?): TransactionExtras? {
@@ -85,7 +147,7 @@ internal class DefaultTransactionRepository(
             Blockchain.TerraV2,
             -> CosmosTransactionExtras(memo)
             Blockchain.TON -> TonTransactionExtras(memo)
-            Blockchain.Hedera -> HederaTransactionBuilder.HederaTransactionExtras(memo)
+            Blockchain.Hedera -> HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             else -> null
         }

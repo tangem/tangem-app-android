@@ -47,7 +47,7 @@ internal class BitcoinCustomFeeConverter(
                         keyboardType = KeyboardType.Number,
                     ),
                     title = resourceReference(R.string.send_max_fee),
-                    footer = resourceReference(R.string.send_max_fee_footer),
+                    footer = resourceReference(R.string.send_bitcoin_custom_fee_footer),
                     label = getFiatReference(
                         rate = feeCurrency?.fiatRate,
                         value = feeValue,
