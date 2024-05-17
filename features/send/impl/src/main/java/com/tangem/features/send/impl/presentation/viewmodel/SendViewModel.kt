@@ -26,7 +26,6 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.utils.convertToAmount
 import com.tangem.domain.transaction.error.GetFeeError
@@ -56,8 +55,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.Locale
@@ -76,8 +76,8 @@ internal class SendViewModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
-    private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
-    private val getCryptoCurrencyStatusesSyncUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
+    private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
@@ -92,6 +92,7 @@ internal class SendViewModel @Inject constructor(
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     validateTransactionUseCase: ValidateTransactionUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
@@ -179,6 +180,7 @@ internal class SendViewModel @Inject constructor(
             stateRouterProvider = Provider { stateRouter },
             currentStateProvider = Provider { uiState },
             analyticsEventHandler = analyticsEventHandler,
+            cryptoCurrencyProvider = Provider { cryptoCurrency },
         )
     }
 
@@ -187,6 +189,7 @@ internal class SendViewModel @Inject constructor(
         private set
 
     private var userWallet: UserWallet by Delegates.notNull()
+    private var userWallets: List<AvailableWallet> = emptyList()
     private var isAmountSubtractAvailable: Boolean = false
     private var isTapHelpPreviewEnabled: Boolean = false
     private var coinCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
@@ -204,7 +207,6 @@ internal class SendViewModel @Inject constructor(
     private var sendIdleTimer = 0L
 
     init {
-        subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
         subscribeOnBalanceHidden()
         getTapHelpPreviewAvailability()
@@ -371,7 +373,7 @@ internal class SendViewModel @Inject constructor(
         cryptoCurrencyStatus = currencyStatus
         coinCryptoCurrencyStatus = coinCurrencyStatus
         feeCryptoCurrencyStatus = feeCurrencyStatus
-
+        subscribeOnQRScannerResult()
         when {
             uiState.sendState?.isSuccess == true -> {
                 stateRouter.showSend()
@@ -399,56 +401,47 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun getUserWallets() {
-        getWalletsUseCase()
-            .conflate()
-            .distinctUntilChanged()
-            .onEach { userWallets ->
-                coroutineScope {
-                    runCatching {
-                        userWallets
-                            .filterNot { it.walletId == userWalletId || it.isLocked }
-                            .map { wallet ->
-                                async(dispatchers.io) { wallet.toAvailableWallet() }
-                            }.awaitAll()
-                    }.onSuccess { result ->
-                        uiState = stateFactory.onLoadedWalletsList(wallets = result)
-                    }.onFailure {
-                        uiState = stateFactory.onLoadedWalletsList(wallets = emptyList())
+        viewModelScope.launch(dispatchers.main) {
+            runCatching {
+                getWalletsUseCase.invokeSync()
+                    ?.toAvailableWallets()
+                    .orEmpty()
+            }.onSuccess { result ->
+                combine(*result.toTypedArray()) { it }
+                    .onEach {
+                        userWallets = it.filterNotNull().toList()
+                        uiState = stateFactory.onLoadedWalletsList(wallets = userWallets)
                     }
-                }
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
-    }
-
-    private suspend fun UserWallet.toAvailableWallet(): AvailableWallet? {
-        return if (!isMultiCurrency) {
-            val status = getCryptoCurrencyStatusSyncUseCase(walletId).getOrNull()
-            val address = status?.value?.networkAddress.takeIf {
-                status?.currency?.network?.id == cryptoCurrency.network.id &&
-                    status.currency.network.derivationPath !is Network.DerivationPath.Custom
-            }
-            address?.let {
-                AvailableWallet(
-                    name = name,
-                    address = it.defaultAddress.value,
-                )
-            }
-        } else {
-            val statuses = getCryptoCurrencyStatusesSyncUseCase(walletId).getOrNull()
-            val walletCurrency = statuses?.firstOrNull {
-                it.currency.network.id == cryptoCurrency.network.id &&
-                    it.currency.network.derivationPath !is Network.DerivationPath.Custom
-            }
-            val address = walletCurrency?.value?.networkAddress
-            address?.let {
-                AvailableWallet(
-                    name = name,
-                    address = it.defaultAddress.value,
-                )
+                    .flowOn(dispatchers.main)
+                    .launchIn(viewModelScope)
+            }.onFailure {
+                uiState = stateFactory.onLoadedWalletsList(wallets = emptyList())
             }
         }
     }
+
+    private suspend fun List<UserWallet>.toAvailableWallets(): List<Flow<AvailableWallet?>> =
+        filterNot { it.walletId == userWalletId || it.isLocked }
+            .mapNotNull { wallet ->
+                val status = if (!wallet.isMultiCurrency) {
+                    getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
+                        if (it.network.id == cryptoCurrency.network.id) {
+                            getNetworkAddressesUseCase(wallet.walletId, it.network)
+                        } else {
+                            null
+                        }
+                    }
+                } else {
+                    getNetworkAddressesUseCase(wallet.walletId, cryptoCurrency.network)
+                }
+                status?.map { address ->
+                    AvailableWallet(
+                        name = wallet.name,
+                        address = address,
+                        userWalletId = wallet.walletId,
+                    )
+                }
+            }
 
     private suspend fun getTxHistory() {
         val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
@@ -636,7 +629,7 @@ internal class SendViewModel @Inject constructor(
         }.saveIn(memoValidationJobHolder)
     }
 
-    private suspend fun validateAddress(value: String): Boolean {
+    private suspend fun validateAddress(value: String): Boolean = runCatching {
         val isValidAddress = validateWalletAddressUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
@@ -646,7 +639,7 @@ internal class SendViewModel @Inject constructor(
             ?.any { it.value == value } ?: true
         onEnteredValidAddress(isValidAddress, isAddressInWallet)
         return isValidAddress
-    }
+    }.getOrElse { false }
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
         return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
@@ -874,9 +867,23 @@ internal class SendViewModel @Inject constructor(
                 uiState = stateFactory.getSendingStateUpdate(isSending = false)
                 updateTransactionStatus(txData)
                 scheduleBalanceUpdate()
-                analyticsEventHandler.send(SendAnalyticEvents.TransactionScreenOpened)
+                addTokenToWalletIfNeeded()
+                sendScreenAnalyticSender.sendTransaction()
             },
         )
+    }
+
+    private fun addTokenToWalletIfNeeded() {
+        if (cryptoCurrency !is CryptoCurrency.Token) return
+
+        val recipientState = uiState.getRecipientState(stateRouter.isEditState) ?: return
+        val destinationAddress = recipientState.addressTextField.value
+
+        val maybeUserWallet = userWallets.firstOrNull { it.address == destinationAddress } ?: return
+
+        viewModelScope.launch(dispatchers.io) {
+            addCryptoCurrenciesUseCase(userWalletId = maybeUserWallet.userWalletId, currency = cryptoCurrency)
+        }
     }
 
     private suspend fun updateTransactionStatus(txData: TransactionData) {
