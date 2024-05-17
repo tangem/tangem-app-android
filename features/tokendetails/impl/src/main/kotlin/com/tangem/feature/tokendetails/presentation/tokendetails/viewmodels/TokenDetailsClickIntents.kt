@@ -1,8 +1,9 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 
 @Suppress("TooManyFunctions")
 interface TokenDetailsClickIntents {
@@ -50,4 +51,6 @@ interface TokenDetailsClickIntents {
     fun onSwapPromoClick()
 
     fun onGenerateExtendedKey()
+
+    fun onCopyAddress(): TextReference?
 }
