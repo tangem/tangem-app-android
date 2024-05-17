@@ -54,7 +54,7 @@ internal fun checkFeeCoverage(
 /**
  * Calculates subtracted amount
  */
-internal fun calculateSubtractedAmount(
+private fun calculateSubtractedAmount(
     isFeeCoverage: Boolean,
     cryptoCurrencyStatus: CryptoCurrencyStatus,
     amountValue: BigDecimal,
