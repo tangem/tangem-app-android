@@ -4,16 +4,12 @@
   <string name="add_tokens_title">Валюты</string>
   <string name="address_qr_code_message_format">Отправляйте только %1$s (%2$s) в сети %3$s на этот адрес. Использование другой сети может привести к утрате средств.</string>
   <string name="alert_button_request_support">Обратиться в поддержку</string>
-  <string name="alert_button_try_again">Попробовать снова</string>
   <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
   <string name="alert_failed_to_send_transaction_message">Причина: %s</string>
   <string name="alert_failed_to_send_transaction_title">Не могу отправить транзакцию</string>
   <string name="alert_manage_tokens_unsupported_blockchain_by_card_message">Выбранный кошелёк не поддерживает сеть %1$s</string>
   <string name="alert_manage_tokens_unsupported_curve_message">Для активации криптографии сети %1$s необходимо сбросить кошелек до заводских настроек. Пожалуйста, выведите свои средства, чтобы не потерять их, после сброса доступ к текущему кошельку будет невозможен.</string>
   <string name="alert_manage_tokens_unsupported_message">Токены в сети %1$s не поддерживаются этой картой из-за ограничений прошивки.</string>
-  <string name="alert_negative_app_rate_sent_message">Спасибо за ваш отзыв. Мы ответим в кратчайшие сроки.</string>
-  <string name="alert_negative_app_rate_sent_title">Ваши предложения отправлены</string>
-  <string name="alert_troubleshooting_scan_card_message">Пожалуйста, попробуйте приложить карту в точности, как показано на анимации, или запросите поддержку.</string>
   <string name="alert_troubleshooting_scan_card_title">У вас возникли трудности со сканированием карты?</string>
   <string name="alert_unsupported_card">Эта карта не предназначена для работы с этим приложением</string>
   <string name="app_settings_default_fee_footer">Подключите функцию комиссии по умолчанию и при формировании транзакции на отправку средств комиссия будет выставлена автоматически, а экран комиссии пропущен. Вы всегда сможете на него вернуться.</string>
@@ -28,8 +24,6 @@
   <string name="app_settings_theme_mode_dark">Тёмная</string>
   <string name="app_settings_theme_mode_light">Светлая</string>
   <string name="app_settings_theme_mode_system">Как в системе</string>
-  <string name="app_settings_theme_selection_footer">При выборе настройки как в системе приложение будет использовать тему в соответствии с настройками вашего устройства</string>
-  <string name="app_settings_theme_selection_system_short">Системная</string>
   <string name="app_settings_theme_selector_title">Тема</string>
   <string name="app_settings_title">Настройки приложения</string>
   <string name="balance_hidden_description">Чтобы скрыть или показать баланс, просто поверните ваше устройство вниз или отключите опцию его в разделе \"Настройки\"</string>
@@ -57,10 +51,12 @@
   <string name="card_settings_reset_card_to_factory">Заводские настройки</string>
   <string name="card_settings_security_mode">Тип безопасности</string>
   <string name="card_settings_title">Настройки карты</string>
-  <string name="cardano_coin_will_be_send_with_token_description">Ввиду особенностей сети Cardano при транзакции токена %1$s помимо комиссии сети будет списано %2$s</string>
-  <string name="cardano_insufficient_balance_to_send_token_description">Чтобы совершить транзакцию %1$s, вы должны внести некоторую сумму ADA для покрытия сетевой комиссии и минимального значения ADA. (рекомендуется баланс в размере 5 ADA)</string>
-  <string name="cardano_insufficient_balance_to_send_token_title">Недостаточно ADA для отправки токена</string>
-  <string name="cardano_max_amount_has_token_description">Сеть Cardano не позволяет вам оставлять на своем балансе сумму ниже минимального значения %1$s, если у вас есть токены. Пожалуйста, убедитесь, что у вас осталось немного ADA.</string>
+  <string name="cardano_coin_will_be_send_with_token_description">Помимо сетевой комиссий, сеть Cardano взимает %1$s ADA при транзакции с токеном %2$s</string>
+  <string name="cardano_coin_will_be_send_with_token_title">Требования к транзакции Cardano</string>
+  <string name="cardano_insufficient_balance_to_send_token_description">Чтобы совершить транзакцию %1$s, внесите некоторую сумму ADA для покрытия сетевой комиссии и минимального значения ADA (рекомендуется 5 ADA)</string>
+  <string name="cardano_insufficient_balance_to_send_token_title">Недостаточно ADA для транзакции</string>
+  <string name="cardano_max_amount_has_token_description">Вы должны поддерживать некоторое количество ADA, поскольку у вас на балансе есть токены в сети Cardano</string>
+  <string name="cardano_max_amount_has_token_title">Недостаточно ADA</string>
   <string name="common_accept">Принять</string>
   <string name="common_access_denied">Доступ запрещен</string>
   <string name="common_apply">Применить</string>
@@ -81,7 +77,6 @@
   <string name="common_create">Создать</string>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
-  <string name="common_disconnect">Отключить</string>
   <string name="common_done">Готово</string>
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
@@ -102,6 +97,7 @@
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
   <string name="common_network_fee_title">Сетевая комиссия</string>
+  <string name="common_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s (%2$s) для покрытия выбранного уровня комиссии</string>
   <string name="common_next">Далее</string>
   <string name="common_no">Нет</string>
   <string name="common_no_address">Нет адреса</string>
@@ -114,7 +110,6 @@
   <string name="common_reject">Отклонить</string>
   <string name="common_reload">Перезагрузить</string>
   <string name="common_rename">Переименовать</string>
-  <string name="common_retry">Повторить</string>
   <string name="common_save_changes">Сохранить изменения</string>
   <string name="common_search">Искать</string>
   <string name="common_search_tokens">Поиск токенов</string>
@@ -138,7 +133,6 @@
   <string name="common_understand">Я понял</string>
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
-  <string name="common_warning">Предупреждение</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -185,7 +179,6 @@
   <string name="details_row_title_flip_to_hide">Скрывать балансы жестом переворота</string>
   <string name="details_row_title_issuer">Эмитент</string>
   <string name="details_row_title_signed_hashes">Подписано</string>
-  <string name="details_security_management_warning">Если вы забудете код, то потеряете доступ к своим средствам. Восстановление кода невозможно.</string>
   <string name="details_title">Подробности</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
@@ -267,6 +260,9 @@
   <string name="main_swap_changelly_promotion_message">Обменивайте свои токены с %1$s комиссии провайдера через Changelly с %2$s по %3$s февраля.</string>
   <string name="main_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="main_tokens">Токены</string>
+  <string name="main_travala_promotion_button">Забронировать</string>
+  <string name="main_travala_promotion_description" formatted="false">Оплатите его криптой и сэкономьте **50 долларов** через нашего партнера Travala: **%1s - %2s**</string>
+  <string name="main_travala_promotion_title">Забронируйте отпуск с Tangem</string>
   <string name="manage_tokens_add">Добавить</string>
   <string name="manage_tokens_edit">Изменить</string>
   <string name="manage_tokens_list_header_title">Рыночная капитализация</string>
@@ -445,11 +441,13 @@
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
+  <string name="send_bitcoin_custom_fee_footer">Вы можете установить комиссию за транзакцию, изменив значение в поле Satoshi per vByte.</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
   <string name="send_enter_address_field">Введите адрес</string>
   <string name="send_error_address_same_as_wallet">Адрес совпадает с адресом кошелька</string>
+  <string name="send_evm_custom_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
   <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_error_invalid_memo">Недопустимый Memo. Он не будет добавлен в транзакцию.</string>
   <string name="send_extras_hint_destination_tag">Tag</string>
@@ -468,26 +466,23 @@
   <string name="send_max_amount">Всё</string>
   <string name="send_max_amount_label">Максимальная сумма</string>
   <string name="send_max_fee">Комиссия не превысит </string>
-  <string name="send_max_fee_footer">Комиссия, которая будет взята за вашу транзакцию. Вы можете выставить своё собственное значение.</string>
   <string name="send_memo_destination_tag_error">Допустим ввод только цифр</string>
-  <string name="send_network_fee_warning_content">Сумма отправки будет уменьшена на %1$s (%2$s) для покрытия выбранного уровня комиссии</string>
   <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
   <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
   <string name="send_notification_exceed_balance_title">Недостаточно средств</string>
-  <string name="send_notification_existential_deposit_button">Оставить %s</string>
   <string name="send_notification_existential_deposit_text">Аккаунт будет удален из блокчейна, если баланс упадет ниже экзистенциального депозита. Пожалуйста, оставьте %s на балансе.</string>
   <string name="send_notification_existential_deposit_title">Экзистенциальный депозит</string>
   <string name="send_notification_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_notification_fee_too_high_title">Установлена высокая комиссия</string>
-  <string name="send_notification_high_fee_text">Ввиду особенности сети Tezos комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить %s.</string>
+  <string name="send_notification_high_fee_text">Ввиду особенности сети %1$s комиссия при переводе всего баланса выше. Для того, чтобы снизить комиссию Вы можете оставить %2$s.</string>
   <string name="send_notification_high_fee_title">Комиссия повышена</string>
   <string name="send_notification_invalid_amount_text">Включенная комиссия превышает сумму перевода, что приводит к отрицательному значению</string>
   <string name="send_notification_invalid_amount_title">Недопустимая сумма</string>
   <string name="send_notification_invalid_minimum_amount_text">Минимальная сумма отправки - %1$s. Пожалуйста, убедитесь, что остаток после отправки также не будет меньше %2$s.</string>
   <string name="send_notification_invalid_reserve_amount_text">Адрес получателя не активирован. \nПожалуйста, измените сумму отправки, чтобы продолжить.</string>
   <string name="send_notification_invalid_reserve_amount_title">Сумма отправки не может быть менее %s</string>
+  <string name="send_notification_leave_button">Оставить %s</string>
   <string name="send_notification_reduce_by">Уменьшить на %s</string>
-  <string name="send_notification_reduce_to">Уменьшить до %s</string>
   <string name="send_notification_transaction_delay_text">Обратите внимание, что при определенных параметрах комиссии возможны задержки по вашей транзакции</string>
   <string name="send_notification_transaction_delay_title">Возможны задержки по транзакции</string>
   <string name="send_notification_transaction_limit_text">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$s UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
@@ -497,7 +492,7 @@
   <string name="send_recent_transactions">Последние</string>
   <string name="send_recipient">Получатель</string>
   <string name="send_recipient_address_error">Неверный адрес</string>
-  <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов</string>
+  <string name="send_recipient_address_footer">Убедитесь, что вы отправляете средства на адрес кошелька %s. Ошибки могут привести к потере ваших токенов.</string>
   <string name="send_recipient_label">Отправить</string>
   <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
   <string name="send_recipient_wallets_title">Мои кошельки</string>
@@ -506,7 +501,7 @@
   <string name="send_sending">Отправка</string>
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
-  <string name="send_summary_transaction_description">Вы отправляете %1$s, включая комиссию сети %2$s</string>
+  <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
   <string name="send_title_currency_format">Отправка %s</string>
   <string name="send_total_label">Всего</string>
   <string name="send_total_subtitle_asset_format">%1$s и %2$s будет отправлено</string>
@@ -535,7 +530,6 @@
   <string name="swapping_give_permission">Дать разрешение</string>
   <string name="swapping_high_price_impact_description">Обмен этой суммы выбранных токенов может вызвать значительные колебания цены и уменьшить получаемую сумму.</string>
   <string name="swapping_insufficient_funds">Недостаточно средств</string>
-  <string name="swapping_network_fee_warning_content">Сумма отправки будет уменьшена для покрытия выбранного уровня комиссии</string>
   <string name="swapping_permission_buttons_approve">Подтвердить</string>
   <string name="swapping_permission_current_transaction">Текущая транзакция</string>
   <string name="swapping_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
@@ -560,7 +554,6 @@
   <string name="token_button_unavailability_reason_pending_transaction_sell">Продажа средств станет доступной после завершения транзакции(-ий) в сети  %s</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа %s недоступна. Следите за нашими обновлениями.</string>
-  <string name="token_details_choose_address">Выберите адрес</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
@@ -568,7 +561,7 @@
   <string name="token_details_hide_token">Скрыть токен</string>
   <string name="token_details_token_type_subtitle">%1$s токен в сети %%image%% %2$s</string>
   <string name="token_details_token_type_subtitle_no_standard">Токен в сети %%image%% %1$s</string>
-  <string name="token_details_unable_hide_alert_message">Токен %1$s является основной валютой в сети %2$s и не может быть скрыт до тех пор, пока у вас в списке есть другие токены этой сети.</string>
+  <string name="token_details_unable_hide_alert_message">Токен %1$s (%2$s) является основной валютой в сети %3$s и не может быть скрыт до тех пор, пока у вас в списке есть другие токены этой сети</string>
   <string name="token_details_unable_hide_alert_title">Невозможно скрыть %s</string>
   <string name="token_swap_changelly_promotion_message">Обменивайте этот токен на другие с %1$s комиссии за обслуживание с %2$s по %3$s февраля.</string>
   <string name="token_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
@@ -597,6 +590,7 @@
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту для входа</string>
   <string name="user_wallet_list_error_wallet_already_saved">Этот кошелек уже был сохранен, вы можете добавить другой</string>
+  <string name="user_wallet_list_rename_popup_error_already_exists">Кошелек с именем %s уже существует</string>
   <string name="user_wallet_list_rename_popup_placeholder">Имя кошелька</string>
   <string name="user_wallet_list_rename_popup_title">Переименование кошелька</string>
   <string name="user_wallet_list_unlock_all">Разблокировать все</string>
@@ -643,6 +637,8 @@
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту, чтобы разблокировать доступ к вашему кошельку</string>
   <string name="warning_backup_errors_message">Пожалуйста, выведите все средства из этого кошелька, сбросьте его к заводским настройкам и создайте новый. Доступ к текущему кошельку будет утерян.</string>
   <string name="warning_backup_errors_title">Ошибка активации</string>
+  <string name="warning_beacon_chain_retirement_content">По решению разработчиков сети BNB, стандарт BEP-2 перестанет поддерживаться в июне 2024 года. Чтобы не потерять свои активы, их необходимо преобразовать в стандарт BEP-20. Используйте функцию обмена  в приложении чтобы перевести их в cеть BNB Smart Chain.</string>
+  <string name="warning_beacon_chain_retirement_title">Отключение сети BNB Beacon Chain</string>
   <string name="warning_button_could_be_better">Можно лучше</string>
   <string name="warning_button_like_it">Нравится</string>
   <string name="warning_button_ok">Понятно!</string>
@@ -698,7 +694,6 @@
   <string name="warning_rent_fee_title">Необходима плата за аренду сети</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s - это монета в сети %2$s. Для совершения транзакции %3$s, вам необходимо внести немного %4$s (%5$s), чтобы покрыть комиссию сети.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Недостаточно %1$s для оплаты комиссии сети</string>
-  <string name="warning_send_blocked_pending_transactions_title">Транзакция в обработке</string>
   <string name="warning_solana_fee_message">Сеть Солана испытывает высокую нагрузку. Если Ваша транзакция не прошла в течение 2 минут, повторите её отправку.</string>
   <string name="warning_solana_fee_title">Оповещение сети Солана</string>
   <string name="warning_solana_rent_fee_message">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
