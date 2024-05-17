@@ -1,11 +1,11 @@
 package com.tangem.domain.settings
 
-import com.tangem.domain.settings.repositories.SwapPromoRepository
+import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import kotlinx.coroutines.flow.Flow
 
-class ShouldShowSwapPromoWalletUseCase(private val swapPromoRepository: SwapPromoRepository) {
+class ShouldShowSwapPromoWalletUseCase(private val promoSettingsRepository: PromoSettingsRepository) {
 
-    operator fun invoke(): Flow<Boolean> = swapPromoRepository.isReadyToShowWalletPromo()
+    operator fun invoke(): Flow<Boolean> = promoSettingsRepository.isReadyToShowWalletSwapPromo()
 
-    suspend fun neverToShow() = swapPromoRepository.setNeverToShowWalletPromo()
+    suspend fun neverToShow() = promoSettingsRepository.setNeverToShowWalletSwapPromo()
 }
