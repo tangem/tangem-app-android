@@ -11,10 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeBottomSheetFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.saveWallet.ui.components.EnrollBiometricsDialogContent
 import com.tangem.tap.features.saveWallet.ui.components.SaveWalletScreenContent
@@ -26,10 +25,7 @@ import javax.inject.Inject
 internal class SaveWalletBottomSheetFragment : ComposeBottomSheetFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
-
-    @Inject
-    override lateinit var hapticManager: HapticManager
+    override lateinit var uiDependencies: UiDependencies
 
     override val expandedHeightFraction: Float = .98f
 
