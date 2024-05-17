@@ -26,7 +26,7 @@ import com.tangem.features.send.impl.presentation.state.previewdata.AmountStateP
 @Composable
 internal fun AmountBlock(
     amountState: SendStates.AmountState,
-    isSuccess: Boolean,
+    isClickDisabled: Boolean,
     isEditingDisabled: Boolean,
     onClick: () -> Unit,
 ) {
@@ -55,7 +55,7 @@ internal fun AmountBlock(
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(backgroundColor)
-            .clickable(enabled = !isSuccess && !isEditingDisabled, onClick = onClick)
+            .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(
                 vertical = TangemTheme.dimens.spacing14,
                 horizontal = TangemTheme.dimens.spacing16,
@@ -92,7 +92,7 @@ private fun AmountBlockPreview(@PreviewParameter(AmountBlockPreviewProvider::cla
     TangemThemePreview {
         AmountBlock(
             amountState = value,
-            isSuccess = false,
+            isClickDisabled = false,
             isEditingDisabled = false,
             onClick = {},
         )
