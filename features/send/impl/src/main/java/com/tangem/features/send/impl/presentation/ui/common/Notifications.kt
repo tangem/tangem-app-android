@@ -15,6 +15,7 @@ internal fun LazyListScope.notifications(
     notifications: ImmutableList<SendNotification>,
     modifier: Modifier = Modifier,
     hasPaddingAbove: Boolean = false,
+    isClickDisabled: Boolean = false,
 ) {
     itemsIndexed(
         items = notifications,
@@ -44,6 +45,7 @@ internal fun LazyListScope.notifications(
                     -> null
                     is SendNotification.Error -> TangemTheme.colors.icon.warning
                 },
+                isEnabled = !isClickDisabled,
             )
         },
     )
