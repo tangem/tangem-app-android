@@ -12,6 +12,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.isNullOrZero
@@ -74,6 +75,7 @@ class GetCurrencyWarningsUseCase(
                 *coinRelatedWarnings.toTypedArray(),
                 getNetworkUnavailableWarning(currencyStatus),
                 getNetworkNoAccountWarning(currencyStatus),
+                getBeaconChainShutdownWarning(currency.network.id),
             )
         }.flowOn(dispatchers.io)
     }
@@ -259,6 +261,10 @@ class GetCurrencyWarningsUseCase(
                 )
             }
         }
+    }
+
+    private fun getBeaconChainShutdownWarning(networkId: Network.ID): CryptoCurrencyWarning.BeaconChainShutdown? {
+        return if (BlockchainUtils.isBeaconChain(networkId.value)) CryptoCurrencyWarning.BeaconChainShutdown else null
     }
 
     private fun BigDecimal?.isZero(): Boolean {
