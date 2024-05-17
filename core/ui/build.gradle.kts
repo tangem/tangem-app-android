@@ -46,4 +46,5 @@ dependencies {
     implementation(deps.zxing.qrCore)
     implementation(deps.jodatime)
     implementation(deps.timber)
+    implementation(deps.markdown)
 }

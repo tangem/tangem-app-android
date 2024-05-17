@@ -33,7 +33,10 @@ import kotlinx.coroutines.flow.withIndex
 @Composable
 internal fun SendScreen(uiState: SendUiState, currentState: SendUiCurrentScreen) {
     val snackbarHostState = remember { SnackbarHostState() }
-    BackHandler(onBack = uiState.clickIntents::onBackClick)
+    val onBackClick = uiState.clickIntents::onBackClick.takeIf {
+        uiState.sendState?.isSending != true
+    } ?: {}
+    BackHandler(onBack = onBackClick)
     Column(
         modifier = Modifier
             .fillMaxSize()

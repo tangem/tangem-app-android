@@ -10,6 +10,7 @@ import retrofit2.http.*
  *
  * @author Anton Zhilenkov on 02/04/2022
  */
+@Suppress("TooManyFunctions")
 interface TangemTechApi {
 
     @GET("coins")
@@ -126,4 +127,7 @@ interface TangemTechApi {
         @Header("card_id") cardId: String,
         @Path("account_id") accountId: Int,
     ): ApiResponse<UserTokensAccountResponse>
+
+    @GET("features")
+    suspend fun getFeatures(): ApiResponse<FeaturesResponse>
 }
