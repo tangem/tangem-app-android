@@ -51,12 +51,14 @@ fun Notification(
     modifier: Modifier = Modifier,
     containerColor: Color? = null,
     iconTint: Color? = null,
+    isEnabled: Boolean = true,
 ) {
     BaseContainer(
         buttonsState = config.buttonsState,
         onClick = config.onClick,
         modifier = modifier,
         containerColor = containerColor,
+        isEnabled = isEnabled,
     ) {
         Column(
             modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
@@ -67,15 +69,16 @@ fun Notification(
                 iconTint = iconTint,
                 title = config.title,
                 subtitle = config.subtitle,
-                isClickableComponent = config.onClick != null,
+                isClickableComponent = isEnabled && config.onClick != null,
             )
 
-            Buttons(state = config.buttonsState)
+            Buttons(state = config.buttonsState, isEnabled = isEnabled)
         }
 
         CloseableIconButton(
             onClick = config.onCloseClick,
             modifier = Modifier.align(alignment = Alignment.TopEnd),
+            isEnabled = isEnabled,
         )
     }
 }
@@ -85,6 +88,7 @@ private fun BaseContainer(
     buttonsState: NotificationConfig.ButtonsState?,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
     containerColor: Color? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -101,7 +105,7 @@ private fun BaseContainer(
         modifier = modifier
             .defaultMinSize(minHeight = TangemTheme.dimens.size62)
             .fillMaxWidth(),
-        enabled = onClick != null,
+        enabled = onClick != null && isEnabled,
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = containerColor ?: tempContainerColor,
     ) {
@@ -179,27 +183,31 @@ private fun TextsBlock(title: TextReference, subtitle: TextReference) {
 }
 
 @Composable
-private fun Buttons(state: NotificationButtonsState?) {
+private fun Buttons(state: NotificationButtonsState?, isEnabled: Boolean = true) {
     when (state) {
-        is NotificationButtonsState.SecondaryButtonConfig -> SingleSecondaryButton(config = state)
-        is NotificationButtonsState.PrimaryButtonConfig -> SinglePrimaryButton(config = state)
-        is NotificationButtonsState.PairButtonsConfig -> PairButtons(config = state)
+        is NotificationButtonsState.SecondaryButtonConfig -> SingleSecondaryButton(
+            config = state,
+            isEnabled = isEnabled,
+        )
+        is NotificationButtonsState.PrimaryButtonConfig -> SinglePrimaryButton(config = state, isEnabled = isEnabled)
+        is NotificationButtonsState.PairButtonsConfig -> PairButtons(config = state, isEnabled = isEnabled)
         null -> Unit
     }
 }
 
 @Composable
-private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButtonConfig) {
+private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButtonConfig, isEnabled: Boolean = true) {
     SecondaryButton(
         text = config.text.resolveReference(),
         onClick = config.onClick,
         modifier = Modifier.fillMaxWidth(),
         size = TangemButtonSize.WideAction,
+        enabled = isEnabled,
     )
 }
 
 @Composable
-private fun SinglePrimaryButton(config: NotificationButtonsState.PrimaryButtonConfig) {
+private fun SinglePrimaryButton(config: NotificationButtonsState.PrimaryButtonConfig, isEnabled: Boolean = true) {
     if (config.iconResId != null) {
         PrimaryButtonIconEnd(
             text = config.text.resolveReference(),
@@ -207,6 +215,7 @@ private fun SinglePrimaryButton(config: NotificationButtonsState.PrimaryButtonCo
             onClick = config.onClick,
             modifier = Modifier.fillMaxWidth(),
             size = TangemButtonSize.WideAction,
+            enabled = isEnabled,
         )
     } else {
         PrimaryButton(
@@ -214,18 +223,20 @@ private fun SinglePrimaryButton(config: NotificationButtonsState.PrimaryButtonCo
             onClick = config.onClick,
             modifier = Modifier.fillMaxWidth(),
             size = TangemButtonSize.WideAction,
+            enabled = isEnabled,
         )
     }
 }
 
 @Composable
-private fun PairButtons(config: NotificationButtonsState.PairButtonsConfig) {
+private fun PairButtons(config: NotificationButtonsState.PairButtonsConfig, isEnabled: Boolean = true) {
     Row(horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8)) {
         SecondaryButton(
             text = config.secondaryText.resolveReference(),
             onClick = config.onSecondaryClick,
             modifier = Modifier.weight(weight = 1f),
             size = TangemButtonSize.WideAction,
+            enabled = isEnabled,
         )
 
         PrimaryButton(
@@ -233,12 +244,13 @@ private fun PairButtons(config: NotificationButtonsState.PairButtonsConfig) {
             onClick = config.onPrimaryClick,
             modifier = Modifier.weight(weight = 1f),
             size = TangemButtonSize.WideAction,
+            enabled = isEnabled,
         )
     }
 }
 
 @Composable
-private fun CloseableIconButton(onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
+private fun CloseableIconButton(onClick: (() -> Unit)?, modifier: Modifier = Modifier, isEnabled: Boolean = true) {
     AnimatedVisibility(visible = onClick != null, modifier = modifier) {
         onClick ?: return@AnimatedVisibility
 
@@ -255,6 +267,7 @@ private fun CloseableIconButton(onClick: (() -> Unit)?, modifier: Modifier = Mod
                     interactionSource = remember { MutableInteractionSource() },
                     indication = LocalIndication.current,
                     role = Role.Button,
+                    enabled = isEnabled,
                     onClick = onClick,
                 ),
         ) {
