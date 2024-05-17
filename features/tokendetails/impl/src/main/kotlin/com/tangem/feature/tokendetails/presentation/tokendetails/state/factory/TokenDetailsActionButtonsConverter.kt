@@ -35,6 +35,7 @@ internal class TokenDetailsActionButtonsConverter(
                     is TokenActionsState.ActionState.Receive -> {
                         TokenDetailsActionButton.Receive(
                             onClick = { clickIntents.onReceiveClick(action.unavailabilityReason) },
+                            onLongClick = clickIntents::onCopyAddress,
                         )
                     }
                     is TokenActionsState.ActionState.Sell -> {
