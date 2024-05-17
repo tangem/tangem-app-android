@@ -20,6 +20,7 @@ import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletPullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
@@ -31,7 +32,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,7 +62,9 @@ internal class WalletViewModel @Inject constructor(
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
 
     private lateinit var router: InnerWalletRouter
-    private var walletsUpdateJobHolder: JobHolder = JobHolder()
+    private val walletsUpdateJobHolder = JobHolder()
+    private val refreshWalletJobHolder = JobHolder()
+    private var needToRefreshWallet = false
 
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
@@ -71,6 +74,7 @@ internal class WalletViewModel @Inject constructor(
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
+        subscribeToScreenBackgroundState()
     }
 
     fun setWalletRouter(router: InnerWalletRouter) {
@@ -148,6 +152,36 @@ internal class WalletViewModel @Inject constructor(
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
         }
+    }
+
+    // We need to update the current wallet if the application was in the background for more than 10 seconds
+    // and then returned to the foreground
+    private fun subscribeToScreenBackgroundState() {
+        screenLifecycleProvider.isBackgroundState
+            .onEach { isBackground ->
+                refreshWalletJobHolder.cancel()
+                when {
+                    isBackground -> needToRefreshTimer()
+                    needToRefreshWallet && !isBackground -> triggerRefreshWallet()
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun needToRefreshTimer() {
+        viewModelScope.launch {
+            delay(REFRESH_WALLET_BACKGROUND_TIMER_MILLIS)
+            needToRefreshWallet = true
+        }.saveIn(refreshWalletJobHolder)
+    }
+
+    private fun triggerRefreshWallet() {
+        needToRefreshWallet = false
+        val state = stateHolder.uiState.value
+        val wallet = state.wallets.getOrNull(state.selectedWalletIndex) ?: return
+        wallet.pullToRefreshConfig.onRefresh.invoke(
+            WalletPullToRefreshConfig.ShowRefreshState(false),
+        )
     }
 
     private suspend fun updateWallets(action: WalletsUpdateActionResolver.Action) {
@@ -280,7 +314,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun closeScreen(screen: AppScreen) {
-        if (!screenLifecycleProvider.isBackground) {
+        if (!screenLifecycleProvider.isBackgroundState.value) {
             stateHolder.clear()
             router.popBackStack(screen = screen)
         }
@@ -295,5 +329,9 @@ internal class WalletViewModel @Inject constructor(
                 onConsume = onConsume,
             ),
         )
+    }
+
+    private companion object {
+        const val REFRESH_WALLET_BACKGROUND_TIMER_MILLIS = 10000L
     }
 }
