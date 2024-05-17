@@ -2,11 +2,11 @@ package com.tangem.data.settings.di
 
 import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultSettingsRepository
-import com.tangem.data.settings.DefaultSwapPromoRepository
+import com.tangem.data.settings.DefaultPromoSettingsRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.settings.repositories.SwapPromoRepository
+import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,7 +31,7 @@ internal object SettingsDataModule {
 
     @Provides
     @Singleton
-    fun provideSwapPromoRepository(appPreferencesStore: AppPreferencesStore): SwapPromoRepository {
-        return DefaultSwapPromoRepository(appPreferencesStore = appPreferencesStore)
+    fun providePromoSettingsSettingsRepository(appPreferencesStore: AppPreferencesStore): PromoSettingsRepository {
+        return DefaultPromoSettingsRepository(appPreferencesStore = appPreferencesStore)
     }
 }
