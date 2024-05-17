@@ -2,10 +2,8 @@ package com.tangem.data.wallets
 
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
-import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 
 class DefaultWalletNamesMigrationRepository(
