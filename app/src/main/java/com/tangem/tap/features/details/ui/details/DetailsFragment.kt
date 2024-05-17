@@ -6,9 +6,8 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.navigation.email.EmailSender
-import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.feedback.GetSupportFeedbackEmailUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -24,10 +23,7 @@ import javax.inject.Inject
 internal class DetailsFragment : ComposeFragment(), StoreSubscriber<DetailsState> {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
-
-    @Inject
-    override lateinit var hapticManager: HapticManager
+    override lateinit var uiDependencies: UiDependencies
 
     @Inject
     lateinit var walletsRepository: WalletsRepository
