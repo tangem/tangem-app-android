@@ -9,10 +9,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeBottomSheetFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.ModalNotification
 import com.tangem.tap.features.main.ui.components.ModalNotificationContent
@@ -23,10 +22,7 @@ import javax.inject.Inject
 internal class ModalNotificationBottomSheetFragment : ComposeBottomSheetFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
-
-    @Inject
-    override lateinit var hapticManager: HapticManager
+    override lateinit var uiDependencies: UiDependencies
 
     private val viewModel: MainViewModel by activityViewModels()
 

@@ -8,9 +8,8 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.domain.apptheme.model.AppThemeMode
 
 /**
@@ -23,14 +22,9 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 internal interface ComposeScreen {
 
     /**
-     * The holder for managing the current application theme mode.
+     * The holder for ui dependencies.
      */
-    val appThemeModeHolder: AppThemeModeHolder
-
-    /**
-     * Haptic manager.
-     */
-    val hapticManager: HapticManager
+    val uiDependencies: UiDependencies
 
     /**
      * The screen modifier.
@@ -59,11 +53,11 @@ internal interface ComposeScreen {
 internal fun ComposeScreen.createComposeView(context: Context): ComposeView {
     return ComposeView(context).apply {
         setContent {
-            val appThemeMode by appThemeModeHolder.appThemeMode
+            val appThemeMode by uiDependencies.appThemeModeHolder.appThemeMode
 
             TangemTheme(
                 isDark = shouldUseDarkTheme(appThemeMode),
-                hapticManager = hapticManager,
+                hapticManager = uiDependencies.hapticManager,
             ) {
                 ScreenContent(modifier = screenModifier)
             }
