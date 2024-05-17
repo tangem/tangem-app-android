@@ -8,14 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -31,12 +25,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.core.content.ContextCompat.startActivity
-import com.tangem.core.ui.components.*
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.components.PrimaryStartIconButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
 import com.tangem.feature.referral.presentation.R
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 @Composable
@@ -45,8 +40,8 @@ internal fun ParticipateBottomBlock(
     code: String,
     shareLink: String,
     expectedAwards: ExpectedAwards?,
+    snackbarHostState: SnackbarHostState,
     onAgreementClick: () -> Unit,
-    onShowCopySnackbar: () -> Unit,
     onCopyClick: () -> Unit,
     onShareClick: () -> Unit,
 ) {
@@ -63,7 +58,7 @@ internal fun ParticipateBottomBlock(
         AdditionalButtons(
             code = code,
             shareLink = shareLink,
-            onShowCopySnackbar = onShowCopySnackbar,
+            snackbarHostState = snackbarHostState,
             onCopyClick = onCopyClick,
             onShareClick = onShareClick,
         )
@@ -112,9 +107,9 @@ private fun Awards(expectedAwards: ExpectedAwards) {
     val elementsCountToShowInLessMode = 3
     val isExpanded = remember { mutableStateOf(false) }
 
-    Divider(
-        color = TangemTheme.colors.stroke.primary,
+    HorizontalDivider(
         thickness = TangemTheme.dimens.size0_5,
+        color = TangemTheme.colors.stroke.primary,
     )
     AwardText(
         startText = if (expectedAwards.expectedAwards.isNotEmpty()) {
@@ -272,12 +267,15 @@ private fun PersonalCodeCard(code: String) {
 private fun AdditionalButtons(
     code: String,
     shareLink: String,
-    onShowCopySnackbar: () -> Unit,
+    snackbarHostState: SnackbarHostState,
     onCopyClick: () -> Unit,
     onShareClick: () -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
+
+    val coroutineScope = rememberCoroutineScope()
+    val resources = LocalContext.current.resources
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -291,7 +289,13 @@ private fun AdditionalButtons(
                 onCopyClick.invoke()
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 clipboardManager.setText(AnnotatedString(code))
-                onShowCopySnackbar()
+
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = resources.getString(R.string.referral_promo_code_copied),
+                        duration = SnackbarDuration.Short,
+                    )
+                }
             },
         )
 
@@ -333,7 +337,7 @@ private fun ParticipateBottomBlockPreview(
                 shareLink = data.shareLink,
                 expectedAwards = data.expectedAwards,
                 onAgreementClick = data.onAgreementClick,
-                onShowCopySnackbar = data.onShowCopySnackbar,
+                snackbarHostState = SnackbarHostState(),
                 onCopyClick = data.onCopyClick,
                 onShareClick = data.onShareClick,
             )
@@ -391,7 +395,6 @@ private class ParticipateBottomBlockDataProvider : CollectionPreviewParameterPro
             purchasedWalletCount = 0,
             expectedAwards = null,
         ),
-
     ),
 )
 

@@ -131,6 +131,7 @@ data class TangemDimens internal constructor(
     val spacing92: Dp = 92.dp,
     val spacing94: Dp = 94.dp,
     val spacing96: Dp = 96.dp,
+    val spacing108: Dp = 108.dp,
     val spacing154: Dp = 154.dp,
     // endregion Spacing
 )
