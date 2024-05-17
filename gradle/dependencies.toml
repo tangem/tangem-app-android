@@ -83,12 +83,13 @@ web3j = "4.10.1"
 leakcanary = "2.13"
 decompose = "2.2.2"
 room = "2.6.1"
+markdown = "0.7.2"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-621"
+tangemBlockchainSdk = "develop-633"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-351"
+tangemCardSdk = "develop-354"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 # endregion Tangem
 
@@ -258,4 +259,5 @@ decompose-ext-compose = { module = "com.arkivanov.decompose:extensions-compose-j
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+markdown = { module = "org.jetbrains:markdown", version.ref = "markdown" }
 # endregion Other

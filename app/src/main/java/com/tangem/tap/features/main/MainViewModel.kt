@@ -14,6 +14,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
+import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -39,6 +40,7 @@ internal class MainViewModel @Inject constructor(
     private val blockchainSDKFactory: BlockchainSDKFactory,
     private val userWalletsListManager: UserWalletsListManager,
     private val walletManagersFacade: WalletManagersFacade,
+    private val sendFeatureToggles: SendFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -61,6 +63,7 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
 
         updateAppCurrencies()
+        updateSendFeatureToggle()
         observeFlips()
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
@@ -105,6 +108,12 @@ internal class MainViewModel @Inject constructor(
     private fun updateAppCurrencies() {
         viewModelScope.launch(dispatchers.main) {
             fetchAppCurrenciesUseCase.invoke()
+        }
+    }
+
+    private fun updateSendFeatureToggle() {
+        viewModelScope.launch(dispatchers.main) {
+            sendFeatureToggles.fetchNewSendEnabled()
         }
     }
 
