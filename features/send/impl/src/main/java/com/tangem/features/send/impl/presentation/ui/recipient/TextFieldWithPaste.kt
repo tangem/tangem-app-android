@@ -33,9 +33,10 @@ internal fun TextFieldWithPaste(
 ) {
     val (title, color) = when {
         isError && error != null -> error to TangemTheme.colors.text.warning
-        isReadOnly -> label to TangemTheme.colors.text.disabled
+        isReadOnly -> label to TangemTheme.colors.text.tertiary
         else -> label to TangemTheme.colors.text.secondary
     }
+    val placeholderColor = if (isReadOnly) TangemTheme.colors.text.tertiary else TangemTheme.colors.text.disabled
     FooterContainer(modifier, footer) {
         Box(
             modifier = Modifier
@@ -59,6 +60,7 @@ internal fun TextFieldWithPaste(
                     SimpleTextField(
                         value = value,
                         placeholder = placeholder,
+                        placeholderColor = placeholderColor,
                         onValueChange = onValueChange,
                         readOnly = isReadOnly,
                         modifier = Modifier
