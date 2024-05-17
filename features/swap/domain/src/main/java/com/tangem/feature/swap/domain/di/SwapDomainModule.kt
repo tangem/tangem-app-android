@@ -50,6 +50,7 @@ class SwapDomainModule {
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
         initialToCurrencyResolver: InitialToCurrencyResolver,
         currenciesRepository: CurrenciesRepository,
+        transactionRepository: TransactionRepository,
     ): SwapInteractor {
         return SwapInteractorImpl(
             transactionManager = transactionManager,
@@ -69,6 +70,7 @@ class SwapDomainModule {
             currenciesRepository = currenciesRepository,
             initialToCurrencyResolver = initialToCurrencyResolver,
             demoConfig = DemoConfig(),
+            transactionRepository = transactionRepository,
         )
     }
 
