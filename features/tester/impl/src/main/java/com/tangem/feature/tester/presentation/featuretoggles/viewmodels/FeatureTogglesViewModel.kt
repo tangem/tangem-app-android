@@ -10,7 +10,7 @@ import com.tangem.core.featuretoggle.manager.MutableFeatureTogglesManager
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
-import com.tangem.utils.AppRestarter
+import com.tangem.features.tester.api.AppRestarter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

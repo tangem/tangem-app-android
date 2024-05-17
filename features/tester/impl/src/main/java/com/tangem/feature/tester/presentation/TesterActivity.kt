@@ -18,8 +18,8 @@ import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
 import com.tangem.feature.tester.presentation.menu.ui.TesterMenuScreen
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
+import com.tangem.features.tester.api.AppRestarter
 import com.tangem.features.tester.api.TesterRouter
-import com.tangem.utils.AppRestarter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
