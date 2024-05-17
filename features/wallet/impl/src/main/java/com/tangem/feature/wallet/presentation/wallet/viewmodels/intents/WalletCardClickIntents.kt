@@ -3,11 +3,15 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletNamesUseCase
 import com.tangem.domain.wallets.usecase.RenameWalletUseCase
 import com.tangem.feature.wallet.impl.R
+import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
+import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -37,9 +41,13 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val walletEventSender: WalletEventSender,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val renameWalletUseCase: RenameWalletUseCase,
-    private val deleteWalletUseCase: DeleteWalletUseCase,
     private val getWalletNamesUseCase: GetWalletNamesUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
+    private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), WalletCardClickIntents {
 
@@ -91,7 +99,18 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     override fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId) {
         viewModelScope.launch(dispatchers.main) {
             walletScreenContentLoader.cancel(userWalletId)
+
+            val deletedUserWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return@launch
+
+            deleteSavedAccessCodesUseCase(cardId = deletedUserWallet.cardId)
+                .onLeft { Timber.e(it.toString()) }
+
             deleteWalletUseCase(userWalletId)
+                .onRight {
+                    getSelectedWalletSyncUseCase().getOrNull()?.let {
+                        reduxStateHolder.onUserWalletSelected(it)
+                    }
+                }
                 .onLeft { Timber.e(it.toString()) }
         }
     }

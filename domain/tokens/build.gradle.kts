@@ -26,6 +26,7 @@ dependencies {
 
     /** Project - Other */
     implementation(projects.core.utils)
+    implementation(projects.libs.crypto)
 
     /** Android - Other */
     implementation(deps.androidx.paging.runtime)

@@ -216,6 +216,7 @@ internal class StateBuilder(
         val warnings = getWarningsForSuccessState(
             quoteModel = quoteModel,
             fromToken = fromToken,
+            selectedFeeType = selectedFeeType,
         )
         val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
@@ -314,12 +315,13 @@ internal class StateBuilder(
     private fun getWarningsForSuccessState(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
+        selectedFeeType: FeeType,
     ): List<SwapWarning> {
         val warnings = mutableListOf<SwapWarning>()
         maybeAddDomainWarnings(quoteModel, warnings)
         maybeAddNeedReserveToCreateAccountWarning(quoteModel, warnings)
         maybeAddPermissionNeededWarning(quoteModel, warnings, fromToken)
-        maybeAddNetworkFeeCoverageWarning(quoteModel, warnings)
+        maybeAddNetworkFeeCoverageWarning(quoteModel, warnings, selectedFeeType)
         maybeAddUnableCoverFeeWarning(quoteModel, fromToken, warnings)
         maybeAddInsufficientFundsWarning(quoteModel, warnings)
         maybeAddTransactionInProgressWarning(quoteModel, warnings)
@@ -405,6 +407,15 @@ internal class StateBuilder(
                         ),
                     )
                 }
+                Warning.Cardano.InsufficientBalanceToTransferCoin -> {
+                    warnings.add(createInsufficientBalanceToTransferCoin())
+                }
+                is Warning.Cardano.InsufficientBalanceToTransferToken -> {
+                    warnings.add(createInsufficientBalanceToTransferToken(tokenName = it.tokenName))
+                }
+                is Warning.Cardano.MinAdaValueCharged -> {
+                    warnings.add(createMinAdaValueCharged(minAdaValue = it.minAdaValue, tokenName = it.tokenName))
+                }
             }
         }
     }
@@ -451,15 +462,34 @@ internal class StateBuilder(
     private fun maybeAddNetworkFeeCoverageWarning(
         quoteModel: SwapState.QuotesLoadedState,
         warnings: MutableList<SwapWarning>,
+        selectedFeeType: FeeType,
     ) {
         when (quoteModel.preparedSwapConfigState.includeFeeInAmount) {
-            is IncludeFeeInAmount.Included ->
+            is IncludeFeeInAmount.Included -> {
+                val fee = selectFeeByType(selectedFeeType, quoteModel.txFee) ?: return
                 warnings.add(
                     SwapWarning.GeneralWarning(
-                        createNetworkFeeCoverageNotificationConfig(),
+                        createNetworkFeeCoverageNotificationConfig(
+                            quoteModel.fromTokenInfo.tokenAmount.getFormattedCryptoAmount(
+                                quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency,
+                            ),
+                            fee.feeFiatFormatted,
+                        ),
                     ),
                 )
+            }
             else -> Unit
+        }
+    }
+
+    private fun selectFeeByType(feeType: FeeType, txFeeState: TxFeeState): TxFee? {
+        return when (txFeeState) {
+            TxFeeState.Empty -> null
+            is TxFeeState.SingleFeeState -> txFeeState.fee
+            is TxFeeState.MultipleFeeState -> when (feeType) {
+                FeeType.NORMAL -> txFeeState.normalFee
+                FeeType.PRIORITY -> txFeeState.priorityFee
+            }
         }
     }
 
@@ -538,12 +568,12 @@ internal class StateBuilder(
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         val warnings = mutableListOf<SwapWarning>()
         warnings.add(getWarningForError(dataError, fromToken.cryptoCurrencyStatus.currency))
-        if (includeFeeInAmount is IncludeFeeInAmount.Included) {
-            warnings.add(
-                SwapWarning.GeneralWarning(
-                    createNetworkFeeCoverageNotificationConfig(),
-                ),
+        if (includeFeeInAmount is IncludeFeeInAmount.Included && uiStateHolder.fee is FeeItemState.Content) {
+            val feeCoverageNotification = createNetworkFeeCoverageNotificationConfig(
+                fromToken.tokenAmount.getFormattedCryptoAmount(fromToken.cryptoCurrencyStatus.currency),
+                uiStateHolder.fee.amountFiatFormatted,
             )
+            warnings.add(SwapWarning.GeneralWarning(feeCoverageNotification))
         }
         val providerState = getProviderStateForError(
             swapProvider = swapProvider,
@@ -1393,11 +1423,53 @@ internal class StateBuilder(
         )
     }
 
-    private fun createNetworkFeeCoverageNotificationConfig(): NotificationConfig {
+    private fun createNetworkFeeCoverageNotificationConfig(
+        cryptoAmount: String,
+        fiatAmount: String,
+    ): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.send_network_fee_warning_title),
-            subtitle = resourceReference(R.string.swapping_network_fee_warning_content),
+            subtitle = resourceReference(
+                R.string.common_network_fee_warning_content,
+                wrappedList(cryptoAmount, fiatAmount),
+            ),
             iconResId = R.drawable.img_attention_20,
+        )
+    }
+
+    private fun createMinAdaValueCharged(minAdaValue: String, tokenName: String): SwapWarning {
+        return SwapWarning.Cardano.MinAdaValueCharged(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_coin_will_be_send_with_token_title),
+                subtitle = resourceReference(
+                    id = R.string.cardano_coin_will_be_send_with_token_description,
+                    formatArgs = wrappedList(minAdaValue, tokenName),
+                ),
+                iconResId = R.drawable.img_attention_20,
+            ),
+        )
+    }
+
+    private fun createInsufficientBalanceToTransferCoin(): SwapWarning {
+        return SwapWarning.Cardano.InsufficientBalanceToTransferCoin(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_max_amount_has_token_title),
+                subtitle = resourceReference(id = R.string.cardano_max_amount_has_token_description),
+                iconResId = R.drawable.img_attention_20,
+            ),
+        )
+    }
+
+    private fun createInsufficientBalanceToTransferToken(tokenName: String): SwapWarning {
+        return SwapWarning.Cardano.InsufficientBalanceToTransferToken(
+            NotificationConfig(
+                title = resourceReference(id = R.string.cardano_insufficient_balance_to_send_token_title),
+                subtitle = resourceReference(
+                    id = R.string.cardano_insufficient_balance_to_send_token_description,
+                    formatArgs = wrappedList(tokenName),
+                ),
+                iconResId = R.drawable.img_attention_20,
+            ),
         )
     }
     // end region

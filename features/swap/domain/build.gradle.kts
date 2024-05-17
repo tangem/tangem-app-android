@@ -47,5 +47,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.timber)
     implementation(deps.tangem.blockchain)
+    implementation(deps.tangem.card.core)
     implementation(deps.moshi)
 }

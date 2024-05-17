@@ -72,11 +72,12 @@ internal class SendNotificationFactory(
                 amountValue = amountValue,
                 feeValue = feeValue,
             )
-            val sendingAmount = calculateSubtractedAmount(
-                isFeeCoverage = isFeeCoverage,
+            val sendingAmount = checkAndCalculateSubtractedAmount(
+                isAmountSubtractAvailable = isFeeCoverage,
                 cryptoCurrencyStatus = cryptoCurrencyStatusProvider(),
                 amountValue = amountValue,
                 feeValue = feeValue,
+                reduceAmountBy = sendState.reduceAmountBy,
             )
             buildList {
                 // errors
@@ -204,7 +205,7 @@ internal class SendNotificationFactory(
         val spendingAmount = if (cryptoCurrency is CryptoCurrency.Token) {
             feeAmount
         } else {
-            feeAmount + receivedAmount
+            receivedAmount
         }
         val currencyDeposit = currencyChecksRepository.getExistentialDeposit(
             userWalletId,
@@ -270,6 +271,7 @@ internal class SendNotificationFactory(
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
                 SendNotification.Warning.HighFeeError(
+                    currencyName = cryptoCurrencyStatus.currency.name,
                     amount = threshold.toPlainString(),
                     onConfirmClick = {
                         clickIntents.onAmountReduceClick(
@@ -435,8 +437,6 @@ internal class SendNotificationFactory(
                 addCardanoTransactionValidationError(
                     error = it as? BlockchainSdkError.Cardano ?: return@fold,
                     sendingCurrency = sendingCurrency,
-                    sendingAmount = sendingAmount,
-                    fee = fee,
                 )
             },
             ifRight = {
@@ -455,8 +455,6 @@ internal class SendNotificationFactory(
     private suspend fun MutableList<SendNotification>.addCardanoTransactionValidationError(
         error: BlockchainSdkError.Cardano,
         sendingCurrency: CryptoCurrency,
-        sendingAmount: BigDecimal,
-        fee: Fee,
     ) {
         when (error) {
             BlockchainSdkError.Cardano.InsufficientMinAdaBalanceToSendToken -> {
@@ -473,9 +471,15 @@ internal class SendNotificationFactory(
             BlockchainSdkError.Cardano.InsufficientRemainingBalance,
             BlockchainSdkError.Cardano.InsufficientSendingAdaAmount,
             -> {
-                addDustWarningNotification(
-                    feeValue = fee.amount.value ?: BigDecimal.ZERO,
-                    sendingAmount = sendingAmount,
+                val dustValue = currencyChecksRepository.getDustValue(
+                    userWalletId = userWalletProvider().walletId,
+                    network = sendingCurrency.network,
+                ) ?: return
+
+                add(
+                    SendNotification.Error.MinimumAmountError(
+                        amount = dustValue.parseBigDecimal(sendingCurrency.decimals),
+                    ),
                 )
             }
         }

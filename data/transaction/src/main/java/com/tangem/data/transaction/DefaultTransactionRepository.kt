@@ -4,7 +4,7 @@ import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.algorand.AlgorandTransactionExtras
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
-import com.tangem.blockchain.blockchains.hedera.HederaTransactionBuilder
+import com.tangem.blockchain.blockchains.hedera.HederaTransactionExtras
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
@@ -57,7 +57,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun validateTransaction(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,
@@ -65,9 +65,10 @@ internal class DefaultTransactionRepository(
         isSwap: Boolean,
         hash: String?,
     ): Result<Unit> {
+        val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersStore.getSyncOrNull(
             userWalletId = userWalletId,
-            blockchain = Blockchain.fromId(network.id.value),
+            blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
 
@@ -76,7 +77,7 @@ internal class DefaultTransactionRepository(
         return if (validator != null) {
             val transaction = walletManager.createTransactionInternal(
                 amount = amount,
-                fee = fee,
+                fee = fee ?: Fee.Common(amount = amount),
                 memo = memo,
                 destination = destination,
                 network = network,
@@ -146,7 +147,7 @@ internal class DefaultTransactionRepository(
             Blockchain.TerraV2,
             -> CosmosTransactionExtras(memo)
             Blockchain.TON -> TonTransactionExtras(memo)
-            Blockchain.Hedera -> HederaTransactionBuilder.HederaTransactionExtras(memo)
+            Blockchain.Hedera -> HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             else -> null
         }
