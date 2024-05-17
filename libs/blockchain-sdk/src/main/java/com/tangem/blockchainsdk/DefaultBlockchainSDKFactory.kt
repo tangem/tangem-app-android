@@ -13,8 +13,10 @@ import com.tangem.datasource.config.models.ConfigValueModel
 import com.tangem.datasource.config.models.ProviderModel
 import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal typealias BlockchainProvidersResponse = Map<String, List<ProviderModel>>
@@ -57,6 +59,7 @@ internal class DefaultBlockchainSDKFactory(
         return combine(
             flow = configStore.get(),
             flow2 = blockchainProviderTypesStore.get(),
+            // flow3 = subscribe on feature toggles changes, TODO: [REDACTED_JIRA]
             transform = walletManagerFactoryCreator::create,
         )
             .stateIn(scope = mainScope, started = SharingStarted.Eagerly, initialValue = null)
