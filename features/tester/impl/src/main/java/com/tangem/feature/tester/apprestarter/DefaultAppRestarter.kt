@@ -10,7 +10,7 @@ import com.tangem.features.tester.api.AppRestarter
  * Entity that kills the process and restarts the main activity
  * @property context Activity context
  */
-class DefaultAppRestarter(
+internal class DefaultAppRestarter(
     private val context: Context,
     private val activityClassWrapper: ActivityClassWrapper,
 ) : AppRestarter {
