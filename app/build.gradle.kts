@@ -121,6 +121,8 @@ dependencies {
     implementation(projects.features.send.impl)
     implementation(projects.features.qrScanning.api)
     implementation(projects.features.qrScanning.impl)
+    implementation(projects.features.staking.api)
+    implementation(projects.features.staking.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
