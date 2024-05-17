@@ -5,7 +5,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsWalletsScrollPreviewEnabled
@@ -32,10 +31,11 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -197,9 +197,9 @@ internal class WalletViewModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
-            is WalletsUpdateActionResolver.Action.NoAccessibleWallets -> closeScreen(screen = AppScreen.Welcome)
-            is WalletsUpdateActionResolver.Action.NoWallets -> closeScreen(screen = AppScreen.Home)
-            is WalletsUpdateActionResolver.Action.Unknown -> Unit
+            is WalletsUpdateActionResolver.Action.Unknown -> {
+                Timber.w("Unable to perfom action: $action")
+            }
         }
     }
 
@@ -311,13 +311,6 @@ internal class WalletViewModel @Inject constructor(
             clickIntents = clickIntents,
             coroutineScope = viewModelScope,
         )
-    }
-
-    private fun closeScreen(screen: AppScreen) {
-        if (!screenLifecycleProvider.isBackgroundState.value) {
-            stateHolder.clear()
-            router.popBackStack(screen = screen)
-        }
     }
 
     private fun scrollToWallet(index: Int, onConsume: () -> Unit = {}) {
