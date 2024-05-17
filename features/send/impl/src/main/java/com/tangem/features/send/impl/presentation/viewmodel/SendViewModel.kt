@@ -408,8 +408,8 @@ internal class SendViewModel @Inject constructor(
                     .orEmpty()
             }.onSuccess { result ->
                 combine(*result.toTypedArray()) { it }
-                    .onEach {
-                        userWallets = it.filterNotNull().toList()
+                    .onEach { wallets ->
+                        userWallets = wallets.filter { it.address.isNotBlank() }.toList()
                         uiState = stateFactory.onLoadedWalletsList(wallets = userWallets)
                     }
                     .flowOn(dispatchers.main)
@@ -420,7 +420,7 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private suspend fun List<UserWallet>.toAvailableWallets(): List<Flow<AvailableWallet?>> =
+    private suspend fun List<UserWallet>.toAvailableWallets(): List<Flow<AvailableWallet>> =
         filterNot { it.walletId == userWalletId || it.isLocked }
             .mapNotNull { wallet ->
                 val status = if (!wallet.isMultiCurrency) {
