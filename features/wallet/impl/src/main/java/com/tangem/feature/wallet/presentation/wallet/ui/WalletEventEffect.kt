@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
-import android.widget.Toast
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -11,6 +11,7 @@ import androidx.compose.ui.text.AnnotatedString
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.ReviewManagerRequester
@@ -42,12 +43,12 @@ internal fun WalletEventEffect(
                 is WalletEvent.ShowError -> {
                     snackbarHostState.showSnackbar(message = value.text.resolveReference(resources))
                 }
-                is WalletEvent.ShowToast -> {
-                    Toast.makeText(context, value.text.resolveReference(resources), Toast.LENGTH_SHORT).show()
-                }
                 is WalletEvent.CopyAddress -> {
                     clipboardManager.setText(AnnotatedString(value.address))
-                    Toast.makeText(context, value.toast.resolveReference(resources), Toast.LENGTH_SHORT).show()
+                    snackbarHostState.showSnackbar(
+                        message = resources.getString(R.string.wallet_notification_address_copied),
+                        duration = SnackbarDuration.Short,
+                    )
                 }
                 is WalletEvent.ShowAlert -> onAlertConfigSet(value.state)
                 is WalletEvent.RateApp -> {
