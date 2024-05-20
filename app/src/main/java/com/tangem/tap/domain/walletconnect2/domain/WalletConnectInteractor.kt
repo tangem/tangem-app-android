@@ -260,10 +260,18 @@ class WalletConnectInteractor(
             )
             else -> {
                 currentRequest = sessionRequest
-                val data = prepareRequestData(sessionRequest)
-                if (data != null) {
-                    handler.onSessionRequest(data)
+
+                val data = prepareRequestData(sessionRequest).getOrElse { e ->
+                    val wrappedError = e as? WalletConnectError ?: WalletConnectError.UnknownError(
+                        message = e.localizedMessage ?: "Unknown error",
+                    )
+
+                    walletConnectRepository.rejectRequest(requestData, wrappedError)
+                    handler.onSessionRejected(wrappedError)
+                    return
                 }
+
+                handler.onSessionRequest(data)
             }
         }
     }
@@ -353,7 +361,9 @@ class WalletConnectInteractor(
         }
     }
 
-    private suspend fun prepareRequestData(sessionRequest: WalletConnectEvents.SessionRequest): WcPreparedRequest? {
+    private suspend fun prepareRequestData(
+        sessionRequest: WalletConnectEvents.SessionRequest,
+    ): Result<WcPreparedRequest> {
         return sessionRequestConverter.prepareRequest(sessionRequest, userWalletId)
     }
 
