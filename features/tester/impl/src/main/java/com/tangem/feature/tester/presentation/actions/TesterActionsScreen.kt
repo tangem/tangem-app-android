@@ -78,9 +78,10 @@ private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
     ) {
         TesterActionsScreen(
             state = TesterActionsContentState(
-                onBackClick = {},
                 hideAllCurrenciesConfig = HideAllCurrenciesConfig.Clickable {},
                 toggleAppThemeConfig = ToggleAppThemeConfig(AppThemeMode.DEFAULT) {},
+                onBackClick = {},
+                onApplyChangesClick = {},
             ),
         )
     }

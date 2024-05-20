@@ -10,6 +10,7 @@ import com.tangem.core.featuretoggle.manager.MutableFeatureTogglesManager
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
+import com.tangem.features.tester.api.AppRestarter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -38,16 +39,20 @@ internal class FeatureTogglesViewModel @Inject constructor(
             "Feature toggle manager must be mutable (debug build type)"
         }
 
-    /** Setup navigation state property by router [router] */
-    fun setupNavigation(router: InnerTesterRouter) {
-        uiState = uiState.copy(onBackClick = router::back)
+    /** Setup navigation state property by router [router] and provides app restart method by [appRestarter] */
+    fun setupInteractions(router: InnerTesterRouter, appRestarter: AppRestarter) {
+        uiState = uiState.copy(
+            onBackClick = router::back,
+            onApplyChangesClick = appRestarter::restart,
+        )
     }
 
     private fun initState(): FeatureTogglesContentState {
         return FeatureTogglesContentState(
             featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles(),
-            onBackClick = {},
             onToggleValueChange = ::onToggleValueChange,
+            onBackClick = {},
+            onApplyChangesClick = {},
         )
     }
 
