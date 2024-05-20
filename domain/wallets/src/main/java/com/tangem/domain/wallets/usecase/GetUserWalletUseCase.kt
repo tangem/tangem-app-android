@@ -7,12 +7,11 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.flow.firstOrNull
 
 class GetUserWalletUseCase(private val userWalletsListManager: UserWalletsListManager) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<GetUserWalletError, UserWallet> = either {
-        val userWallets = userWalletsListManager.userWallets.firstOrNull().orEmpty()
+    operator fun invoke(userWalletId: UserWalletId): Either<GetUserWalletError, UserWallet> = either {
+        val userWallets = userWalletsListManager.userWalletsSync
 
         ensureNotNull(userWallets.firstOrNull { it.walletId == userWalletId }) {
             raise(GetUserWalletError.UserWalletNotFound)

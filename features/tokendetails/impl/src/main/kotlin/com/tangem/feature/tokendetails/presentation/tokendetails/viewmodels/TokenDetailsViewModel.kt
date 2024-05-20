@@ -41,6 +41,7 @@ import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -76,7 +77,6 @@ import javax.inject.Inject
 @HiltViewModel
 internal class TokenDetailsViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
@@ -103,6 +103,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val hapticManager: HapticManager,
     private val clipboardManager: ClipboardManager,
+    getUserWalletUseCase: GetUserWalletUseCase,
     featureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
@@ -114,6 +115,8 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private val cryptoCurrency: CryptoCurrency = savedStateHandle[TokenDetailsRouter.CRYPTO_CURRENCY_KEY]
         ?: error("This screen can't open without `CryptoCurrency`")
+
+    private val userWallet: UserWallet
 
     lateinit var router: InnerTokenDetailsRouter
 
@@ -174,6 +177,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 BuyCurrencyDeepLink(::onBuyCurrencyDeepLink),
             ),
         )
+        userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
     }
 
     private fun onBuyCurrencyDeepLink() {
@@ -212,8 +216,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private suspend fun updateButtons(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
-        val userWallet = getUserWalletUseCase(userWalletId).getOrElse { return }
+    private fun updateButtons(currencyStatus: CryptoCurrencyStatus) {
         getCryptoCurrencyActionsUseCase(
             userWallet = userWallet,
             cryptoCurrencyStatus = currencyStatus,
@@ -227,12 +230,11 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         viewModelScope.launch(dispatchers.io) {
-            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             getCurrencyWarningsUseCase.invoke(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 derivationPath = cryptoCurrency.network.derivationPath,
-                isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach {
@@ -247,18 +249,17 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         viewModelScope.launch(dispatchers.io) {
-            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             getCurrencyStatusUpdatesUseCase(
                 userWalletId = userWalletId,
                 currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach { maybeCurrencyStatus ->
                     uiState = stateFactory.getCurrencyLoadedBalanceState(maybeCurrencyStatus)
                     maybeCurrencyStatus.onRight { status ->
                         cryptoCurrencyStatus = status
-                        updateButtons(userWalletId = userWalletId, currencyStatus = status)
+                        updateButtons(currencyStatus = status)
                         updateWarnings(status)
                     }
                     currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
@@ -355,10 +356,8 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateTopBarMenu() {
         viewModelScope.launch(dispatchers.main) {
-            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
-
             uiState = stateFactory.getStateWithUpdatedMenu(
-                cardTypesResolver = wallet.scanResponse.cardTypesResolver,
+                cardTypesResolver = userWallet.scanResponse.cardTypesResolver,
                 isBitcoin = isBitcoin(cryptoCurrency.network.id.value),
             )
         }
@@ -391,7 +390,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             viewModelScope.launch(dispatchers.main) {
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.Buy(
-                        userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
+                        userWallet = userWallet,
                         cryptoCurrencyStatus = status,
                         appCurrencyCode = selectedAppCurrencyFlow.value.code,
                     ),
@@ -428,7 +427,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 is CryptoCurrency.Coin -> {
                     reduxStateHolder.dispatch(
                         action = TradeCryptoAction.SendCoin(
-                            userWallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch },
+                            userWallet = userWallet,
                             coinStatus = status,
                             feeCurrencyStatus = maybeFeeCurrencyStatus,
                             transactionInfo = transactionInfo,
@@ -454,12 +453,11 @@ internal class TokenDetailsViewModel @Inject constructor(
         transactionInfo: TransactionInfo?,
     ) {
         viewModelScope.launch(dispatchers.io) {
-            val wallet = getUserWalletUseCase(userWalletId).getOrElse { return@launch }
             val maybeCoinStatus = getNetworkCoinStatusUseCase(
                 userWalletId = userWalletId,
                 networkId = tokenCurrency.network.id,
                 derivationPath = tokenCurrency.network.derivationPath,
-                isSingleWalletWithTokens = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .conflate()
                 .distinctUntilChanged()
@@ -467,7 +465,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
             reduxStateHolder.dispatchWithMain(
                 action = TradeCryptoAction.SendToken(
-                    userWallet = wallet,
+                    userWallet = userWallet,
                     tokenCurrency = tokenCurrency,
                     tokenFiatRate = tokenFiatRate,
                     coinFiatRate = maybeCoinStatus?.fold(
@@ -600,9 +598,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
         viewModelScope.launch(dispatchers.main) {
-            val wallet = getUserWalletUseCase(userWalletId = userWalletId).getOrElse { return@launch }
-
-            if (isDemoCardUseCase(cardId = wallet.cardId)) {
+            if (isDemoCardUseCase(cardId = userWallet.cardId)) {
                 uiState = stateFactory.getStateWithClosedBottomSheet()
                 uiState = stateFactory.getStateAndTriggerEvent(
                     state = uiState,
