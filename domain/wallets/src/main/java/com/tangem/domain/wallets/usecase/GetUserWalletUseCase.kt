@@ -15,7 +15,7 @@ class GetUserWalletUseCase(private val userWalletsListManager: UserWalletsListMa
         val userWallets = userWalletsListManager.userWallets.firstOrNull().orEmpty()
 
         ensureNotNull(userWallets.firstOrNull { it.walletId == userWalletId }) {
-            raise(GetUserWalletError.NotFound)
+            raise(GetUserWalletError.UserWalletNotFound)
         }
     }
 }
