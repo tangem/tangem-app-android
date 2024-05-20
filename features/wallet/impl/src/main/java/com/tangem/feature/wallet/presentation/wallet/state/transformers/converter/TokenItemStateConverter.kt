@@ -108,7 +108,7 @@ internal class TokenItemStateConverter(
 
     private fun BigDecimal.getFormattedCryptoPrice(): String {
         val appCurrency = appCurrencyProvider()
-        return BigDecimalFormatter.formatFiatAmount(
+        return BigDecimalFormatter.formatFiatAmountUncapped(
             fiatAmount = this,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,
