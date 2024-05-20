@@ -152,7 +152,7 @@ internal class TokenDetailsStateFactory(
                 isShow = true,
                 onDismissRequest = clickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmHideConfig(
-                    currencySymbol = currency.symbol,
+                    currencyTitle = currency.name,
                     onConfirmClick = clickIntents::onHideConfirmed,
                     onCancelClick = clickIntents::onDismissDialog,
                 ),
