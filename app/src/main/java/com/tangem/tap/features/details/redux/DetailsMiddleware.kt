@@ -523,7 +523,7 @@ class DetailsMiddleware {
     }
 
     private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
-        val walletNameGenerateUseCase = store.inject(DaggerGraphState::walletNameGenerateUseCase)
+        val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
         val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build()
             ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
 

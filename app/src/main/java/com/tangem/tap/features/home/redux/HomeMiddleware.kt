@@ -103,7 +103,7 @@ private suspend fun readCard() {
 }
 
 private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
-    val walletNameGenerateUseCase = store.inject(DaggerGraphState::walletNameGenerateUseCase)
+    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
     val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build().guard {
         Timber.e("User wallet not created")
         return@launch

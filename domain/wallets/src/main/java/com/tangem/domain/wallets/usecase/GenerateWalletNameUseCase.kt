@@ -6,11 +6,11 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 /**
  * Use case for user wallet name generation
  */
-class WalletNameGenerateUseCase(
+class GenerateWalletNameUseCase(
     private val userWalletsListManager: UserWalletsListManager,
 ) {
 
-    suspend operator fun invoke(
+    operator fun invoke(
         productType: ProductType,
         isBackupNotAllowed: Boolean,
         isStartToCoin: Boolean,

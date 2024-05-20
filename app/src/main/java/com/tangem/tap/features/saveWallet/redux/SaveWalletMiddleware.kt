@@ -64,7 +64,7 @@ internal class SaveWalletMiddleware {
         scope.launch {
             val backupInfo = state.backupInfo ?: error("Backup info is null")
 
-            val walletNameGenerateUseCase = store.inject(DaggerGraphState::walletNameGenerateUseCase)
+            val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
             val userWallet = UserWalletBuilder(backupInfo.scanResponse, walletNameGenerateUseCase)
                 .backupCardsIds(state.backupInfo.backupCardsIds)
                 .hasBackupError(hasBackupError)

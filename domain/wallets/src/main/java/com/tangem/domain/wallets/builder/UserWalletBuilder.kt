@@ -5,11 +5,11 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.WalletNameGenerateUseCase
+import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 
 class UserWalletBuilder(
     private val scanResponse: ScanResponse,
-    private val walletNameGenerateUseCase: WalletNameGenerateUseCase,
+    private val generateWalletNameUseCase: GenerateWalletNameUseCase,
     private val getCardImageUseCase: GetCardImageUseCase = GetCardImageUseCase(),
 ) {
     private var backupCardsIds: Set<String> = emptySet()
@@ -42,7 +42,7 @@ class UserWalletBuilder(
                 ?.let {
                     UserWallet(
                         walletId = it,
-                        name = walletNameGenerateUseCase(
+                        name = generateWalletNameUseCase(
                             productType = productType,
                             isBackupNotAllowed = card.isBackupNotAllowed,
                             isStartToCoin = cardTypesResolver.isStart2Coin(),

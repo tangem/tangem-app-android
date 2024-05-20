@@ -117,7 +117,7 @@ internal class WelcomeMiddleware {
         )
 
         scanCardInternal { scanResponse ->
-            val walletNameGenerateUseCase = store.inject(DaggerGraphState::walletNameGenerateUseCase)
+            val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
             val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build()
                 ?: return@scanCardInternal
 

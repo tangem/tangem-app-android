@@ -548,7 +548,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 }
 
                 if (scanResponse != null) {
-                    val walletNameGenerateUseCase = store.inject(DaggerGraphState::walletNameGenerateUseCase)
+                    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
                     val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
                         .backupCardsIds(backupState.backupCardIds.toSet())
                         .build()
