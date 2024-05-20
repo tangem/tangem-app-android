@@ -11,14 +11,17 @@ class GetNetworkAddressesUseCase(
     internal val networksRepository: NetworksRepository,
 ) {
 
-    operator fun invoke(userWalletId: UserWalletId, network: Network): Flow<String> =
+    operator fun invoke(userWalletId: UserWalletId, network: Network): Flow<List<String>> =
         networksRepository.getNetworkStatusesUpdates(userWalletId, setOf(network))
             .map { networkStatuses ->
-                when (val networkStatus = networkStatuses.singleOrNull { it.network.id == network.id }?.value) {
-                    is NetworkStatus.NoAccount -> networkStatus.address.defaultAddress.value
-                    is NetworkStatus.Unreachable -> networkStatus.address?.defaultAddress?.value.orEmpty()
-                    is NetworkStatus.Verified -> networkStatus.address.defaultAddress.value
-                    else -> ""
-                }
+                networkStatuses.filter { it.network.id == network.id }
+                    .map { networkStatus ->
+                        when (val status = networkStatus.value) {
+                            is NetworkStatus.NoAccount -> status.address.defaultAddress.value
+                            is NetworkStatus.Unreachable -> status.address?.defaultAddress?.value.orEmpty()
+                            is NetworkStatus.Verified -> status.address.defaultAddress.value
+                            else -> ""
+                        }
+                    }
             }
 }
