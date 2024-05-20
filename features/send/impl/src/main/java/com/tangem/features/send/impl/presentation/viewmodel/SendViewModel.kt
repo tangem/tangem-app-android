@@ -822,7 +822,7 @@ internal class SendViewModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
-            reduceAmountBy = uiState.sendState?.reduceAmountBy,
+            reduceAmountBy = uiState.sendState?.reduceAmountBy ?: BigDecimal.ZERO,
         )
 
         viewModelScope.launch(dispatchers.main) {
