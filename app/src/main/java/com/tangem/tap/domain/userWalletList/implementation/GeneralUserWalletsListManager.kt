@@ -54,15 +54,15 @@ internal class GeneralUserWalletsListManager(
             }
         }
 
+    override val userWalletsSync: List<UserWallet>
+        get() = requireImplementation.userWalletsSync
+
     override val selectedUserWallet: Flow<UserWallet>
         get() = implementation.transformLatest { impl ->
             if (impl != null && impl.hasUserWallets) {
                 emitAll(impl.selectedUserWallet)
             }
         }
-
-    override val userWalletsSync: List<UserWallet>
-        get() = requireImplementation.userWalletsSync
 
     override val selectedUserWalletSync: UserWallet?
         get() = requireImplementation.selectedUserWalletSync
