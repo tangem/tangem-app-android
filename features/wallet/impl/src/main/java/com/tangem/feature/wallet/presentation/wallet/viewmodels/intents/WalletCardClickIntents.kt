@@ -1,7 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
+import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
+import com.tangem.core.navigation.AppScreen
+import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.ReduxNavController
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
@@ -43,6 +47,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val reduxStateHolder: ReduxStateHolder,
+    private val reduxNavController: ReduxNavController,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), WalletCardClickIntents {
 
@@ -81,18 +86,26 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             walletScreenContentLoader.cancel(userWalletId)
 
-            val deletedUserWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return@launch
+            val walletToDelete = getUserWalletUseCase(userWalletId).getOrNull() ?: return@launch
+            val hasUserWallets = deleteWalletUseCase(userWalletId).getOrElse {
+                Timber.e("Unable to delete user wallet: $it")
+                return@launch
+            }
 
-            deleteSavedAccessCodesUseCase(cardId = deletedUserWallet.cardId)
-                .onLeft { Timber.e(it.toString()) }
+            deleteSavedAccessCodesUseCase(cardId = walletToDelete.cardId).onLeft {
+                Timber.e("Unable to delete user wallet access code: $it")
+            }
 
-            deleteWalletUseCase(userWalletId)
-                .onRight {
-                    getSelectedWalletSyncUseCase().getOrNull()?.let {
-                        reduxStateHolder.onUserWalletSelected(it)
-                    }
+            if (hasUserWallets) {
+                val selectedWallet = getSelectedWalletSyncUseCase().getOrElse {
+                    error("Unable to find selected wallet: $it")
                 }
-                .onLeft { Timber.e(it.toString()) }
+
+                reduxStateHolder.onUserWalletSelected(selectedWallet)
+            } else {
+                stateHolder.clear()
+                reduxNavController.navigate(NavigationAction.PopBackTo(AppScreen.Home))
+            }
         }
     }
 }
