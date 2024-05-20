@@ -31,9 +31,10 @@ internal class TesterActionsViewModel @Inject constructor(
 
     private val initialState: TesterActionsContentState
         get() = TesterActionsContentState(
-            onBackClick = { /* no-op */ },
             hideAllCurrenciesConfig = HideAllCurrenciesConfig.Clickable(this::hideAllCurrencies),
             toggleAppThemeConfig = ToggleAppThemeConfig(AppThemeMode.DEFAULT, this::toggleAppTheme),
+            onBackClick = { /* no-op */ },
+            onApplyChangesClick = { /* no-op */ },
         )
 
     init {
