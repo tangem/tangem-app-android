@@ -10,11 +10,7 @@ class GenerateWalletNameUseCase(
     private val userWalletsListManager: UserWalletsListManager,
 ) {
 
-    operator fun invoke(
-        productType: ProductType,
-        isBackupNotAllowed: Boolean,
-        isStartToCoin: Boolean,
-    ): String {
+    operator fun invoke(productType: ProductType, isBackupNotAllowed: Boolean, isStartToCoin: Boolean): String {
         val defaultName = getDefaultName(
             productType = productType,
             isBackupNotAllowed = isBackupNotAllowed,
