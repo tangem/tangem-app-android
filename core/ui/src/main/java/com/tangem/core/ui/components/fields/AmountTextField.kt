@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.*
+import java.math.BigDecimal
 import java.text.DecimalFormat
 
 /**
@@ -123,29 +124,46 @@ fun AmountTextField(
 private fun prepareEnter(oldValue: String, newValue: String, decimalFormat: DecimalFormat, decimals: Int): String {
     val decimalSymbol = decimalFormat.decimalFormatSymbols.decimalSeparator
     return if (decimalFormat.isValidSymbols(newValue)) {
-        val parsedValue = newValue.parseBigDecimalOrNull()?.toPlainString()
-            ?: if (newValue.isBlank()) "" else oldValue
-        val replacedWithSymbol = if (parsedValue.findLast { it != decimalSymbol } != null) {
-            when {
-                parsedValue.findLast { it == COMMA_SEPARATOR } != null -> {
-                    parsedValue.replace(COMMA_SEPARATOR, decimalSymbol)
-                }
-                parsedValue.findLast { it == POINT_SEPARATOR } != null -> {
-                    parsedValue.replace(POINT_SEPARATOR, decimalSymbol)
-                }
-                else -> parsedValue
-            }
-        } else {
-            parsedValue
-        }
-        val joinedSymbol = if (newValue.endsWith(COMMA_SEPARATOR) || newValue.endsWith(POINT_SEPARATOR)) {
-            replacedWithSymbol.plus(decimalSymbol)
-        } else {
-            replacedWithSymbol
-        }
-        decimalFormat.getValidatedNumberWithFixedDecimals(joinedSymbol, decimals)
+        val parsedDecimal = newValue.parseBigDecimalOrNull()
+        val parsedValue = parsedDecimal?.toPlainString() ?: if (newValue.isBlank()) "" else oldValue
+
+        val replacedWithSymbol = parsedValue.replaceDecimalSymbol(decimalSymbol)
+        val joinedSymbol = replacedWithSymbol.preserveDecimalSymbol(newValue, decimalSymbol)
+        val withPreservedZeros = joinedSymbol.preserveTrailingZeros(newValue, parsedDecimal, decimalSymbol)
+        decimalFormat.getValidatedNumberWithFixedDecimals(withPreservedZeros, decimals)
     } else {
         oldValue
+    }
+}
+
+private fun String.replaceDecimalSymbol(decimalSymbol: Char) = if (this.findLast { it != decimalSymbol } != null) {
+    when {
+        this.findLast { it == COMMA_SEPARATOR } != null -> {
+            this.replace(COMMA_SEPARATOR, decimalSymbol)
+        }
+        this.findLast { it == POINT_SEPARATOR } != null -> {
+            this.replace(POINT_SEPARATOR, decimalSymbol)
+        }
+        else -> this
+    }
+} else {
+    this
+}
+
+private fun String.preserveDecimalSymbol(newValue: String, decimalSymbol: Char) = if (
+    newValue.endsWith(COMMA_SEPARATOR) || newValue.endsWith(POINT_SEPARATOR)
+) {
+    this.plus(decimalSymbol)
+} else {
+    this
+}
+
+private fun String.preserveTrailingZeros(newValue: String, parsedDecimal: BigDecimal?, decimalSymbol: Char): String {
+    val trailingZeros = newValue.split(decimalSymbol).getOrNull(1)?.takeLastWhile { it == '0' }.orEmpty()
+    return if (parsedDecimal?.scale() == 0 && trailingZeros.isNotEmpty()) {
+        "$this$decimalSymbol$trailingZeros"
+    } else {
+        this.plus(trailingZeros)
     }
 }
 
