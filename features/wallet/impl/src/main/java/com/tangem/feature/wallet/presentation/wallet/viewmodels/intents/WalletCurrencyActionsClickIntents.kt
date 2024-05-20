@@ -7,7 +7,10 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.WrappedList
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
@@ -39,7 +42,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
-import java.lang.IllegalArgumentException
 import javax.inject.Inject
 
 interface WalletCurrencyActionsClickIntents {
@@ -204,11 +206,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 .find { it.type == AddressType.Default }
                 ?.value
                 ?.let {
+                    stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
+
                     walletEventSender.send(
-                        event = WalletEvent.CopyAddress(
-                            address = it,
-                            toast = resourceReference(R.string.wallet_notification_address_copied),
-                        ),
+                        event = WalletEvent.CopyAddress(address = it),
                     )
                 }
         }
@@ -270,7 +271,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 .fold(
                     ifLeft = {
                         walletEventSender.send(
-                            event = WalletEvent.ShowToast(text = resourceReference(R.string.common_error)),
+                            event = WalletEvent.ShowError(text = resourceReference(R.string.common_error)),
                         )
                     },
                     ifRight = {

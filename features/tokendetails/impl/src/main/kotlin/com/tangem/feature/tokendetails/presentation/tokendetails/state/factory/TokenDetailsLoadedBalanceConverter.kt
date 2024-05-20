@@ -133,7 +133,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun formatPrice(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
         val fiatRate = status.fiatRate ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
 
-        return BigDecimalFormatter.formatFiatAmount(
+        return BigDecimalFormatter.formatFiatAmountUncapped(
             fiatAmount = fiatRate,
             fiatCurrencyCode = appCurrency.code,
             fiatCurrencySymbol = appCurrency.symbol,

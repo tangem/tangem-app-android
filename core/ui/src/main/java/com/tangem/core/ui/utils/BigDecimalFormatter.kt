@@ -16,6 +16,10 @@ object BigDecimalFormatter {
 
     private const val TEMP_CURRENCY_CODE = "USD"
 
+    private val FIAT_FORMAT_THRESHOLD = BigDecimal("0.01")
+    private const val FIAT_MARKET_DEFAULT_DIGITS = 2
+    private const val FIAT_MARKET_EXTENDED_DIGITS = 6
+
     fun formatCryptoAmount(
         cryptoAmount: BigDecimal?,
         cryptoCurrency: String,
@@ -82,8 +86,43 @@ object BigDecimalFormatter {
         val formatterCurrency = getCurrency(fiatCurrencyCode)
         val formatter = NumberFormat.getCurrencyInstance(locale).apply {
             currency = formatterCurrency
-            maximumFractionDigits = 2
-            minimumFractionDigits = 2
+            maximumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+            minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+            roundingMode = RoundingMode.HALF_UP
+        }
+
+        return if (fiatAmount.isLessThanThreshold()) {
+            buildString {
+                append(CAN_BE_LOWER_SIGN)
+                append(
+                    formatter.format(FIAT_FORMAT_THRESHOLD)
+                        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol),
+                )
+            }
+        } else {
+            formatter.format(fiatAmount)
+                .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+        }
+    }
+
+    fun formatFiatAmountUncapped(
+        fiatAmount: BigDecimal?,
+        fiatCurrencyCode: String,
+        fiatCurrencySymbol: String,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (fiatAmount == null) return EMPTY_BALANCE_SIGN
+        val formatterCurrency = getCurrency(fiatCurrencyCode)
+
+        val digits = if (fiatAmount.isLessThanThreshold()) {
+            FIAT_MARKET_EXTENDED_DIGITS
+        } else {
+            FIAT_MARKET_DEFAULT_DIGITS
+        }
+        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+            currency = formatterCurrency
+            maximumFractionDigits = digits
+            minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
             roundingMode = RoundingMode.HALF_UP
         }
 
@@ -141,4 +180,6 @@ object BigDecimalFormatter {
                 }
             }
     }
+
+    private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
 }

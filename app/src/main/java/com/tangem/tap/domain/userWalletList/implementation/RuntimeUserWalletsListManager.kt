@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.*
 internal class RuntimeUserWalletsListManager : UserWalletsListManager {
     private val state = MutableStateFlow(State())
 
+    override val isLockable: Boolean = false
+
     override val userWallets: Flow<List<UserWallet>>
         get() = state
             .mapLatest { listOfNotNull(it.userWallet) }
@@ -37,7 +39,7 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
      * only 1 wallet stored in runtime implementation
      */
     override val walletsCount: Int
-        get() = 1
+        get() = if (hasUserWallets) 1 else 0
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
         state.value.userWallet
@@ -86,10 +88,6 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
 
     override suspend fun get(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
         state.value.userWallet ?: walletNotFound()
-    }
-
-    override fun isLockable(): Boolean {
-        return false
     }
 
     private fun saveInternal(userWallet: UserWallet): CompletionResult<Unit> = catching {

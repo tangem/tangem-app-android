@@ -48,19 +48,30 @@ class WalletConnectSdkHelper {
     }
 
     @Suppress("MagicNumber")
-    suspend fun prepareTransactionData(data: EthTransactionData): WcTransactionData? {
+    suspend fun prepareTransactionData(data: EthTransactionData): WcTransactionData {
         val transaction = data.transaction
-        val blockchain = Blockchain.fromNetworkId(data.networkId) ?: return null
-        val walletManager = getWalletManager(blockchain, data.rawDerivationPath) ?: return null
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(data.networkId)) {
+            "Blockchain not found"
+        }
+        val walletManager = requireNotNull(getWalletManager(blockchain, data.rawDerivationPath)) {
+            "WalletManager not found"
+        }
 
         walletManager.safeUpdate(isDemoCard())
         val wallet = walletManager.wallet
-        val balance = wallet.amounts[AmountType.Coin]?.value ?: return null
+        val balance = requireNotNull(wallet.amounts[AmountType.Coin]?.value) {
+            "Coin balance not found"
+        }
 
         val decimals = wallet.blockchain.decimals()
 
-        val value = (transaction.value ?: "0").hexToBigDecimal()
-            .movePointLeft(decimals) ?: return null
+        val value = (transaction.value ?: "0")
+            .hexToBigDecimal()
+            .movePointLeft(decimals)
+
+        requireNotNull(value) {
+            "Transaction amount is null"
+        }
 
         val gasLimit = getGasLimitFromTx(value, walletManager, transaction)
 
@@ -69,20 +80,23 @@ class WalletConnectSdkHelper {
                 is Result.Success -> result.data.toBigDecimal()
                 is Result.Failure -> {
                     (result.error as? Throwable)?.let { Timber.e(it, "getGasPrice failed") }
-                    return null
+
+                    error("Unable to get gas price: ${result.error}")
                 }
-                null -> return null
+                null -> error("Gas price is null")
             }
 
         val fee = (gasLimit * gasPrice).movePointLeft(decimals)
         val total = value + fee
+
+        val destinationAddress = requireNotNull(transaction.to) { "Destination address is null" }
 
         val transactionData = TransactionData(
             amount = Amount(value, wallet.blockchain),
             // TODO refactoring
             fee = Fee.Common(Amount(fee, wallet.blockchain)),
             sourceAddress = transaction.from,
-            destinationAddress = transaction.to!!,
+            destinationAddress = destinationAddress,
             extras = EthereumTransactionExtras(
                 data = transaction.data.removePrefix(HEX_PREFIX).hexToBytes(),
                 gasLimit = gasLimit.toBigInteger(),
@@ -102,6 +116,7 @@ class WalletConnectSdkHelper {
             id = data.id,
             type = data.type,
         )
+
         return WcTransactionData(
             type = data.type,
             transaction = transactionData,
