@@ -9,6 +9,7 @@ import com.tangem.features.send.impl.presentation.state.recipient.utils.emptyLis
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.filter
 
 internal class SendRecipientWalletListConverter :
     Converter<List<AvailableWallet?>, PersistentList<SendRecipientListContent>> {
@@ -21,6 +22,7 @@ internal class SendRecipientWalletListConverter :
     private fun List<AvailableWallet?>.filterWallets(): PersistentList<SendRecipientListContent> {
         var walletsCounter = 0
         return this.filterNotNull()
+            .filter { it.address.isNotBlank() }
             .groupBy { item -> item.name }
             .values.map {
                 it.mapIndexed { index, item ->
