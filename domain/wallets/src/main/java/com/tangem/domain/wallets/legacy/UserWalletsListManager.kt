@@ -18,7 +18,7 @@ interface UserWalletsListManager {
     /** [Flow] with selected [UserWallet] updates */
     val selectedUserWallet: Flow<UserWallet>
 
-    /** All saved [UserWallet]s */
+    /** [List] with all saved [UserWallet]s updates */
     val userWalletsSync: List<UserWallet>
 
     /** Selected [UserWallet] */
