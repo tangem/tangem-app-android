@@ -31,13 +31,13 @@ internal data class TokenDetailsDialogConfig(
         )
 
         data class ConfirmHideConfig(
-            val currencySymbol: String,
+            val currencyTitle: String,
             val onConfirmClick: () -> Unit,
             val onCancelClick: () -> Unit,
         ) : DialogContentConfig() {
             override val title: TextReference = TextReference.Res(
                 id = R.string.token_details_hide_alert_title,
-                formatArgs = wrappedList(currencySymbol),
+                formatArgs = wrappedList(currencyTitle),
             )
 
             override val message: TextReference = TextReference.Res(R.string.token_details_hide_alert_message)
