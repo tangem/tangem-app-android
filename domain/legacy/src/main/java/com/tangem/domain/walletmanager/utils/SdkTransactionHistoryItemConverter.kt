@@ -58,7 +58,9 @@ internal class SdkTransactionHistoryItemConverter(
             } else {
                 mapToInteractionAddressType(sourceType = sourceType)
             }
-            is SdkTransactionHistoryItem.TransactionType.ContractMethod -> mapToInteractionAddressType(destinationType)
+            is SdkTransactionHistoryItem.TransactionType.ContractMethod,
+            is SdkTransactionHistoryItem.TransactionType.ContractMethodName,
+            -> mapToInteractionAddressType(destinationType)
         }
     }
 
