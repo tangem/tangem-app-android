@@ -7,6 +7,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserWalletsListManager {
 
+    /**
+     * Indicates that the [UserWalletsListManager] is [UserWalletsListManager.Lockable]
+     * */
+    val isLockable: Boolean
+
     /** [Flow] with all saved [UserWallet]s updates */
     val userWallets: Flow<List<UserWallet>>
 
@@ -83,11 +88,6 @@ interface UserWalletsListManager {
      * [NoSuchElementException] if [UserWallet] with [userWalletId] not found
      */
     suspend fun get(userWalletId: UserWalletId): CompletionResult<UserWallet>
-
-    /**
-     * Indicates that the [UserWalletsListManager] supports [UserWalletsListManager.Lockable]
-     * */
-    fun isLockable(): Boolean
 
     interface Lockable : UserWalletsListManager {
 
