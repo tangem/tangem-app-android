@@ -35,6 +35,9 @@ internal class BiometricUserWalletsListManager(
             .mapLatest { it.userWallets }
             .distinctUntilChanged()
 
+    override val userWalletsSync: List<UserWallet>
+        get() = state.value.userWallets
+
     override val selectedUserWallet: Flow<UserWallet>
         get() = state
             .mapLatest { state ->
@@ -42,9 +45,6 @@ internal class BiometricUserWalletsListManager(
             }
             .filterNotNull()
             .distinctUntilChanged()
-
-    override val userWalletsSync: List<UserWallet>
-        get() = state.value.userWallets
 
     override val selectedUserWalletSync: UserWallet?
         get() = findSelectedUserWallet()
