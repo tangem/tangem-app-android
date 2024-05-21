@@ -12,8 +12,8 @@ import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletBuilder
-import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.features.demo.DemoHelper
@@ -142,7 +142,8 @@ object OnboardingHelper {
         backupCardsIds: List<String>?,
         hasBackupError: Boolean,
     ) {
-        val userWallet = UserWalletBuilder(scanResponse = scanResponse)
+        val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+        val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
             .hasBackupError(hasBackupError)
             .backupCardsIds(backupCardsIds?.toSet())
             .build()
