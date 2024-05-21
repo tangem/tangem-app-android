@@ -18,7 +18,7 @@ import com.tangem.core.ui.extensions.setStatusBarColor
 import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.Artwork
+import com.tangem.domain.wallets.models.Artwork
 import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
@@ -88,13 +88,13 @@ internal class OnboardingTwinsFragment : BaseOnboardingFragment<TwinCardsState>(
 
         binding.toolbar.title = getText(R.string.twins_recreate_toolbar)
 
-        mainBinding.onboardingTopContainer.imvTwinFrontCard.load(Artwork.TWIN_CARD_1) {
+        mainBinding.onboardingTopContainer.imvTwinFrontCard.load(Artwork.TWIN_CARD_1_URL) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
             fallback(R.drawable.card_placeholder_black)
         }
 
-        mainBinding.onboardingTopContainer.imvTwinBackCard.load(Artwork.TWIN_CARD_2) {
+        mainBinding.onboardingTopContainer.imvTwinBackCard.load(Artwork.TWIN_CARD_2_URL) {
             placeholder(R.drawable.card_placeholder_white)
             error(R.drawable.card_placeholder_white)
             fallback(R.drawable.card_placeholder_white)
