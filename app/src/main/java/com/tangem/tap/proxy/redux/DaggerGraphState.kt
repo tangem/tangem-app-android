@@ -16,6 +16,7 @@ import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -62,6 +63,7 @@ data class DaggerGraphState(
     val generalUserWalletsListManager: UserWalletsListManager? = null,
     val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
+    val generateWalletNameUseCase: GenerateWalletNameUseCase? = null,
     val cardRepository: CardRepository? = null,
     val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles? = null,
     val tangemSdkLogger: TangemSdkLogger? = null,
