@@ -1,9 +1,11 @@
 package com.tangem.data.wallets.di
 
+import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletAddressServiceRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletAddressServiceRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import dagger.Module
@@ -28,5 +30,11 @@ internal object WalletsDataModule {
         walletManagersFacade: WalletManagersFacade,
     ): WalletAddressServiceRepository {
         return DefaultWalletAddressServiceRepository(walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMigrateNamesRepository(appPreferencesStore: AppPreferencesStore): WalletNamesMigrationRepository {
+        return DefaultWalletNamesMigrationRepository(appPreferencesStore)
     }
 }
