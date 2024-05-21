@@ -1,9 +1,6 @@
 package com.tangem.domain.feedback
 
-import com.tangem.domain.feedback.models.BlockchainInfo
-import com.tangem.domain.feedback.models.CardInfo
-import com.tangem.domain.feedback.models.PhoneInfo
-import com.tangem.domain.feedback.models.UserWalletsInfo
+import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.utils.breakLine
 import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainAddresses
 
@@ -66,6 +63,24 @@ internal class FeedbackDataBuilder {
         builder.appendKeyValue("Phone model", phoneInfo.phoneModel)
         builder.appendKeyValue("OS version", phoneInfo.osVersion)
         builder.appendKeyValue("App version", phoneInfo.appVersion)
+    }
+
+    fun addBlockchainError(info: BlockchainInfo, error: BlockchainErrorInfo) {
+        builder.appendKeyValue("Blockchain", info.blockchain)
+        builder.appendKeyValue("Derivation path", info.derivationPath)
+        builder.appendKeyValue("Host", info.host)
+        builder.appendKeyValue("Token", error.tokenSymbol)
+        builder.appendKeyValue("Error", error.errorMessage)
+
+        builder.appendDelimiter()
+
+        builder.appendAddresses(
+            key = "Source address${info.addresses.isMultiple(suffix = "es")}",
+            addresses = info.addresses,
+        )
+        builder.appendKeyValue("Destination address", error.destinationAddress)
+        builder.appendKeyValue("Amount", error.amount)
+        builder.appendKeyValue("Fee", error.fee ?: "Unable to receive")
     }
 
     fun addDelimiter(): StringBuilder = builder.appendDelimiter()
