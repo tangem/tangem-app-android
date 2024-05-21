@@ -375,19 +375,16 @@ internal class SendViewModel @Inject constructor(
         feeCryptoCurrencyStatus = feeCurrencyStatus
         subscribeOnQRScannerResult()
         when {
-            uiState.sendState?.isSuccess == true -> {
-                stateRouter.showSend()
+            uiState.sendState?.isSuccess != true -> {
+                uiState = stateFactory.getReadyState()
+                getWalletsAndRecent()
+                stateRouter.showRecipient()
+                updateNotifications()
             }
             transactionId != null && amount != null && destinationAddress != null -> {
                 loadFee()
                 uiState = stateFactory.getReadyState(amount, destinationAddress, memo)
                 stateRouter.showSend()
-                updateNotifications()
-            }
-            else -> {
-                uiState = stateFactory.getReadyState()
-                getWalletsAndRecent()
-                stateRouter.showRecipient()
                 updateNotifications()
             }
         }
