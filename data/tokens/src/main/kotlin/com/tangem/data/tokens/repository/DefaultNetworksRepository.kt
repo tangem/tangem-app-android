@@ -1,6 +1,7 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
@@ -75,6 +76,21 @@ internal class DefaultNetworksRepository(
     override fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean {
         val blockchain = Blockchain.fromNetworkId(network.id.value)
         return blockchain == Blockchain.Aptos
+    }
+
+    override suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<String> {
+        // Get list of currencies matching [network]
+        val currencies = getCurrencies(userWalletId)
+            .filter { currency -> network.id == currency.network.id }
+
+        // There is no currencies matching given [networks] in [userWalletId]
+        if (currencies.toList().isEmpty()) return emptyList()
+
+        return currencies.toList().map { currency ->
+            walletManagersFacade.getAddresses(userWalletId, currency.network)
+                .firstOrNull { it.type == AddressType.Default }
+                ?.value.orEmpty()
+        }
     }
 
     private suspend fun fetchNetworksStatusesIfCacheExpired(
@@ -174,11 +190,16 @@ internal class DefaultNetworksRepository(
     }
 
     private suspend fun getCurrencies(userWalletId: UserWalletId, networks: Set<Network>): Sequence<CryptoCurrency> {
+        val currencies = getCurrencies(userWalletId)
+        return currencies.filter { networks.contains(it.network) }
+    }
+
+    private suspend fun getCurrencies(userWalletId: UserWalletId): Sequence<CryptoCurrency> {
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find user wallet with provided ID: $userWalletId"
         }
 
-        val currencies = if (userWallet.isMultiCurrency) {
+        return if (userWallet.isMultiCurrency) {
             val response = requireNotNull(userTokensStore.getSyncOrNull(userWalletId)) {
                 "Unable to find tokens response for user wallet with provided ID: $userWalletId"
             }
@@ -194,8 +215,6 @@ internal class DefaultNetworksRepository(
                 sequenceOf(currency)
             }
         }
-
-        return currencies.filter { networks.contains(it.network) }
     }
 
     private suspend fun invalidateCacheKeyIfNeeded(

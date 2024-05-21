@@ -9,7 +9,6 @@ import com.tangem.features.send.impl.presentation.state.recipient.utils.emptyLis
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.filter
 
 internal class SendRecipientWalletListConverter :
     Converter<List<AvailableWallet?>, PersistentList<SendRecipientListContent>> {
@@ -24,19 +23,25 @@ internal class SendRecipientWalletListConverter :
         return this.filterNotNull()
             .filter { it.address.isNotBlank() }
             .groupBy { item -> item.name }
-            .values.map {
-                it.mapIndexed { index, item ->
-                    val name = if (it.size > 1) {
-                        "${item.name} ${index.inc()}"
-                    } else {
-                        item.name
+            .values.map { wallets ->
+                val groupedByWallet = wallets.groupBy { it.userWalletId }
+                var i = 0
+                groupedByWallet
+                    .flatMap { item ->
+                        item.value.map { wallet ->
+                            val name = if (groupedByWallet.size > 1) {
+                                "${wallet.name} ${++i}"
+                            } else {
+                                wallet.name
+                            }
+
+                            SendRecipientListContent(
+                                id = "${WALLET_KEY_TAG}${walletsCounter++}",
+                                title = TextReference.Str(wallet.address),
+                                subtitle = TextReference.Str(name),
+                            )
+                        }
                     }
-                    SendRecipientListContent(
-                        id = "${WALLET_KEY_TAG}${walletsCounter++}",
-                        title = TextReference.Str(item.address),
-                        subtitle = TextReference.Str(name),
-                    )
-                }
             }
             .flatten()
             .toPersistentList()
