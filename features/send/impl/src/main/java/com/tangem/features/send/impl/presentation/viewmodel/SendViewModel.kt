@@ -4,6 +4,7 @@ import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastDistinctBy
 import androidx.lifecycle.*
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -269,7 +270,7 @@ internal class SendViewModel @Inject constructor(
             .launchIn(viewModelScope)
             .saveIn(balanceHidingJobHolder)
     }
-
+// [REDACTED_TODO_COMMENT]
     private fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean, isMultiCurrency: Boolean) {
         if (cryptoCurrency is CryptoCurrency.Coin) {
             getCurrencyStatusUpdates(
@@ -404,43 +405,36 @@ internal class SendViewModel @Inject constructor(
                     ?.toAvailableWallets()
                     .orEmpty()
             }.onSuccess { result ->
-                combine(*result.toTypedArray()) { it }
-                    .onEach { wallets ->
-                        userWallets = wallets.flatMap { it }.toList()
-                        uiState = stateFactory.onLoadedWalletsList(wallets = userWallets)
-                    }
-                    .flowOn(dispatchers.main)
-                    .launchIn(viewModelScope)
+                userWallets = result
+                uiState = stateFactory.onLoadedWalletsList(wallets = userWallets)
             }.onFailure {
                 uiState = stateFactory.onLoadedWalletsList(wallets = emptyList())
             }
         }
     }
 
-    private suspend fun List<UserWallet>.toAvailableWallets(): List<Flow<List<AvailableWallet>>> =
+    private suspend fun List<UserWallet>.toAvailableWallets(): List<AvailableWallet> =
         filterNot { it.walletId == userWalletId || it.isLocked }
             .mapNotNull { wallet ->
-                val status = if (!wallet.isMultiCurrency) {
+                val addresses = if (!wallet.isMultiCurrency) {
                     getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
                         if (it.network.id == cryptoCurrency.network.id) {
-                            getNetworkAddressesUseCase(wallet.walletId, it.network)
+                            getNetworkAddressesUseCase.invokeSync(wallet.walletId, it.network)
                         } else {
                             null
                         }
                     }
                 } else {
-                    getNetworkAddressesUseCase(wallet.walletId, cryptoCurrency.network)
+                    getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrency.network)
                 }
-                status?.map { addresses ->
-                    addresses.map { address ->
-                        AvailableWallet(
-                            name = wallet.name,
-                            address = address,
-                            userWalletId = wallet.walletId,
-                        )
-                    }
-                }
-            }
+                addresses?.map { address ->
+                    AvailableWallet(
+                        name = wallet.name,
+                        address = address,
+                        userWalletId = wallet.walletId,
+                    )
+                }?.fastDistinctBy { it.address }
+            }.flatten()
 
     private suspend fun getTxHistory() {
         val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
