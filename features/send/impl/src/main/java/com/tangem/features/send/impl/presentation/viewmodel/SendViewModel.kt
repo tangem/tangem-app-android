@@ -58,7 +58,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -73,7 +72,6 @@ internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -96,6 +94,8 @@ internal class SendViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
+    private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
+    private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
@@ -865,8 +865,8 @@ internal class SendViewModel @Inject constructor(
             ifRight = {
                 uiState = stateFactory.getSendingStateUpdate(isSending = false)
                 updateTransactionStatus(txData)
-                scheduleBalanceUpdate()
                 addTokenToWalletIfNeeded()
+                scheduleUpdates()
                 sendScreenAnalyticSender.sendTransaction()
             },
         )
@@ -893,12 +893,17 @@ internal class SendViewModel @Inject constructor(
         uiState = stateFactory.getTransactionSendState(txData, txUrl)
     }
 
-    private fun scheduleBalanceUpdate() {
-        viewModelScope.launch(dispatchers.io) {
-            delay(BALANCE_UPDATE_DELAY)
-            fetchCurrencyStatusUseCase.invoke(
-                userWalletId = userWalletId,
-                id = cryptoCurrency.id,
+    private fun scheduleUpdates() {
+        viewModelScope.launch(dispatchers.main) {
+            // we should update network to find pending tx after 1 sec
+            fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
+        }
+        viewModelScope.launch(dispatchers.main) {
+            // we should update network for new balance
+            updateDelayedCurrencyStatusUseCase(
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrency.network,
+                delayMillis = BALANCE_UPDATE_DELAY,
                 refresh = true,
             )
         }
