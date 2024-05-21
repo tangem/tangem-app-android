@@ -26,6 +26,9 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
             .filterNotNull()
             .distinctUntilChanged()
 
+    override val userWalletsSync: List<UserWallet>
+        get() = listOfNotNull(state.value.userWallet)
+
     override val selectedUserWalletSync: UserWallet?
         get() = state.value.userWallet
 
