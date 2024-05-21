@@ -4,7 +4,10 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,6 +38,7 @@ import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.utils.getFiatFormatted
+import com.tangem.features.send.impl.presentation.utils.getFiatString
 
 @Composable
 internal fun SendNavigationButtons(
@@ -180,12 +184,12 @@ private fun SendingText(
                 currencySymbol = feeState.appCurrency.symbol,
                 currencyCode = feeState.appCurrency.code,
             )
-            val feeValue = getFiatFormatted(
+            val feeValue = getFiatString(
                 value = feeState.fee?.amount?.value,
-                currencySymbol = feeState.appCurrency.symbol,
-                currencyCode = feeState.appCurrency.code,
+                rate = feeState.rate,
+                appCurrency = feeState.appCurrency,
             )
-            val textResource = remember(sendingValue, feeValue) {
+            val textResource = remember(uiState) {
                 resourceReference(
                     id = R.string.send_summary_transaction_description,
                     formatArgs = wrappedList(sendingValue, feeValue),
