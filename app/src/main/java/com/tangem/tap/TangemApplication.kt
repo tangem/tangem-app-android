@@ -37,6 +37,7 @@ import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -152,6 +153,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase
         get() = entryPoint.getSaveTwinsOnboardingShownUseCase()
 
+    private val generateWalletNameUseCase: GenerateWalletNameUseCase
+        get() = entryPoint.getWalletNameGenerateUseCase()
+
     private val cardRepository: CardRepository
         get() = entryPoint.getCardRepository()
 
@@ -242,6 +246,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
+                    generateWalletNameUseCase = generateWalletNameUseCase,
                     cardRepository = cardRepository,
                     feedbackManagerFeatureToggles = feedbackManagerFeatureToggles,
                     tangemSdkLogger = tangemSdkLogger,

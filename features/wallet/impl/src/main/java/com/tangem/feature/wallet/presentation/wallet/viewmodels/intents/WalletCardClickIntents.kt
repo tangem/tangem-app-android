@@ -2,6 +2,11 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.wallets.usecase.GetWalletNamesUseCase
+import com.tangem.domain.wallets.usecase.RenameWalletUseCase
+import com.tangem.feature.wallet.impl.R
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -11,7 +16,6 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -39,9 +43,10 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
     private val walletScreenContentLoader: WalletScreenContentLoader,
+    private val renameWalletUseCase: RenameWalletUseCase,
+    private val getWalletNamesUseCase: GetWalletNamesUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val updateWalletUseCase: UpdateWalletUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -53,19 +58,33 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     override fun onRenameBeforeConfirmationClick(userWalletId: UserWalletId) {
         analyticsEventHandler.send(MainScreen.EditWalletTapped)
 
-        walletEventSender.send(
-            event = WalletEvent.ShowAlert(
-                state = WalletAlertState.RenameWalletAlert(
-                    text = stateHolder.getSelectedWallet().walletCardState.title,
-                    onConfirmClick = { onRenameAfterConfirmationClick(userWalletId, it) },
+        viewModelScope.launch(dispatchers.main) {
+            val walletNames = getWalletNamesUseCase()
+            val currentWalletName = stateHolder.getSelectedWallet().walletCardState.title
+            walletEventSender.send(
+                event = WalletEvent.ShowAlert(
+                    state = WalletAlertState.RenameWalletAlert(
+                        text = currentWalletName,
+                        onConfirmClick = { onRenameAfterConfirmationClick(userWalletId, it) },
+                        errorTextProvider = { enteredName ->
+                            if (walletNames.contains(enteredName) && enteredName != currentWalletName) {
+                                resourceReference(
+                                    R.string.user_wallet_list_rename_popup_error_already_exists,
+                                    wrappedList(enteredName),
+                                )
+                            } else {
+                                null
+                            }
+                        },
+                    ),
                 ),
-            ),
-        )
+            )
+        }
     }
 
     override fun onRenameAfterConfirmationClick(userWalletId: UserWalletId, name: String) {
         viewModelScope.launch(dispatchers.main) {
-            updateWalletUseCase(userWalletId = userWalletId, update = { it.copy(name = name) })
+            renameWalletUseCase(userWalletId = userWalletId, name)
         }
     }
 

@@ -4,8 +4,10 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletAddressServiceRepository
+import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -21,6 +23,18 @@ internal object WalletsDomainModule {
     @ViewModelScoped
     fun providesGetWalletsUseCase(userWalletsListManager: UserWalletsListManager): GetWalletsUseCase {
         return GetWalletsUseCase(userWalletsListManager = userWalletsListManager)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesWalletNameMigrationUseCase(
+        userWalletsListManager: UserWalletsListManager,
+        walletNamesMigrationRepository: WalletNamesMigrationRepository,
+    ): WalletNameMigrationUseCase {
+        return WalletNameMigrationUseCase(
+            userWalletsListManager = userWalletsListManager,
+            walletNamesMigrationRepository = walletNamesMigrationRepository,
+        )
     }
 
     @Provides
@@ -74,6 +88,18 @@ internal object WalletsDomainModule {
     @ViewModelScoped
     fun providesUpdateWalletUseCase(userWalletsListManager: UserWalletsListManager): UpdateWalletUseCase {
         return UpdateWalletUseCase(userWalletsListManager = userWalletsListManager)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesRenameWalletUseCase(userWalletsListManager: UserWalletsListManager): RenameWalletUseCase {
+        return RenameWalletUseCase(userWalletsListManager = userWalletsListManager)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun providesGetWalletsSyncUseCase(userWalletsListManager: UserWalletsListManager): GetWalletNamesUseCase {
+        return GetWalletNamesUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
