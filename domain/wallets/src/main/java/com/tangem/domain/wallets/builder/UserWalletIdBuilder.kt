@@ -1,4 +1,4 @@
-package com.tangem.domain.userwallets
+package com.tangem.domain.wallets.builder
 
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.hexToBytes
