@@ -20,6 +20,7 @@ import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -85,6 +86,8 @@ interface ApplicationEntryPoint {
     fun getWasTwinsOnboardingShownUseCase(): WasTwinsOnboardingShownUseCase
 
     fun getSaveTwinsOnboardingShownUseCase(): SaveTwinsOnboardingShownUseCase
+
+    fun getWalletNameGenerateUseCase(): GenerateWalletNameUseCase
 
     fun getCardRepository(): CardRepository
 
