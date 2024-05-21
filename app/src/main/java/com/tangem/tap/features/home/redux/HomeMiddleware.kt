@@ -11,7 +11,7 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
@@ -103,7 +103,8 @@ private suspend fun readCard() {
 }
 
 private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
-    val userWallet = UserWalletBuilder(scanResponse).build().guard {
+    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+    val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build().guard {
         Timber.e("User wallet not created")
         return@launch
     }
