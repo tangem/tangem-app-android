@@ -62,7 +62,7 @@ internal class GeneralUserWalletsListManager(
         }
 
     override val userWalletsSync: List<UserWallet>
-        get() = implementation.value.userWalletsSync
+        get() = requireImplementation.userWalletsSync
 
     override val selectedUserWalletSync: UserWallet?
         get() = requireImplementation.selectedUserWalletSync
