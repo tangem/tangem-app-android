@@ -15,8 +15,8 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletBuilder
-import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -522,7 +522,8 @@ class DetailsMiddleware {
     }
 
     private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
-        val userWallet = UserWalletBuilder(scanResponse).build()
+        val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+        val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build()
             ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
 
         val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
