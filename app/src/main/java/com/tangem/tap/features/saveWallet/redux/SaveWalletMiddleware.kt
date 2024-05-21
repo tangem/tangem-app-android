@@ -6,7 +6,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
-import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -64,7 +64,8 @@ internal class SaveWalletMiddleware {
         scope.launch {
             val backupInfo = state.backupInfo ?: error("Backup info is null")
 
-            val userWallet = UserWalletBuilder(backupInfo.scanResponse)
+            val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+            val userWallet = UserWalletBuilder(backupInfo.scanResponse, walletNameGenerateUseCase)
                 .backupCardsIds(state.backupInfo.backupCardsIds)
                 .hasBackupError(hasBackupError)
                 .build()
