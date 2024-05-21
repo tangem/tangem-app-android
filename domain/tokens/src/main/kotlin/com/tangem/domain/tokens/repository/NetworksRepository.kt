@@ -45,4 +45,6 @@ interface NetworksRepository {
     ): Set<NetworkStatus>
 
     fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean
+
+    suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<String>
 }
