@@ -15,8 +15,8 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.Artwork
-import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.wallets.models.Artwork
+import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.wallet.presentation.wallet.domain.BackupValidator
@@ -548,7 +548,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 }
 
                 if (scanResponse != null) {
-                    val userWallet = UserWalletBuilder(scanResponse)
+                    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+                    val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
                         .backupCardsIds(backupState.backupCardIds.toSet())
                         .build()
                         .guard {
