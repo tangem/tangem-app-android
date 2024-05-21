@@ -11,7 +11,13 @@ interface FeedbackRepository {
 
     suspend fun getBlockchainInfoList(): List<BlockchainInfo>
 
+    suspend fun getBlockchainInfo(blockchainId: String, derivationPath: String?): BlockchainInfo?
+
     fun getPhoneInfo(): PhoneInfo
+
+    fun saveBlockchainErrorInfo(error: BlockchainErrorInfo)
+
+    suspend fun getBlockchainErrorInfo(): BlockchainErrorInfo?
 
     suspend fun getAppLogs(): List<AppLogModel>
 
