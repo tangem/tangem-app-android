@@ -3,6 +3,7 @@ package com.tangem.domain.tokens.repository
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.core.error.DataError
+import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
@@ -34,4 +35,10 @@ internal class MockNetworksRepository(
     }
 
     override fun isNeedToCreateAccountWithoutReserve(network: Network) = false
+    override suspend fun getNetworkAddresses(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): List<CryptoCurrencyAddress> {
+        return emptyList()
+    }
 }
