@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class YieldsResponse(
+data class EnabledYieldsResponse(
     @Json(name = "data")
     val data: List<Yield>,
     @Json(name = "hasNextPage")
