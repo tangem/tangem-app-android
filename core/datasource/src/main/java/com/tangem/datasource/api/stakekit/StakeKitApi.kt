@@ -24,7 +24,7 @@ interface StakeKitApi {
         @Query("limit") limit: Int,
     ): ApiResponse<EnabledYieldsResponse>
 
-    @GET("yields/enabled")
+    @GET("yields/balances")
     fun getMultipleYieldBalances(@Body body: List<MultipleYieldBalancesRequestBody>): ApiResponse<List<YieldBalances>>
 
     @GET("tokens")
