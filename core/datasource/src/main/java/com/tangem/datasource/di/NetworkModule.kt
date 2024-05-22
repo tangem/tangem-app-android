@@ -5,6 +5,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.response.ApiResponseCallAdapterFactory
 import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
 import com.tangem.datasource.api.tangemTech.TangemTechServiceApi
@@ -13,6 +14,7 @@ import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.addLoggers
 import com.tangem.lib.auth.AppVersionProvider
 import com.tangem.lib.auth.ExpressAuthProvider
+import com.tangem.lib.auth.StakeKitAuthProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,6 +56,27 @@ class NetworkModule {
             )
             .build()
             .create(TangemExpressApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideStakeKitApi(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        stakeKitAuthProvider: StakeKitAuthProvider,
+    ): StakeKitApi {
+        return Retrofit.Builder()
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
+            .baseUrl(STAKEKIT_BASE_URL)
+            .client(
+                OkHttpClient.Builder()
+                    .addHeaders(StakeKit(stakeKitAuthProvider))
+                    .addLoggers(context)
+                    .build(),
+            )
+            .build()
+            .create(StakeKitApi::class.java)
     }
 
     @Provides
@@ -137,6 +160,7 @@ class NetworkModule {
     }
 
     private companion object {
+        const val STAKEKIT_BASE_URL = "https://api.stakek.it/v1/"
         const val PROD_EXPRESS_BASE_URL = "https://express.tangem.com/v1/"
         const val DEV_EXPRESS_BASE_URL = "https://express.tangem.org/v1/"
 
@@ -146,8 +170,5 @@ class NetworkModule {
         const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
 
         const val TANGEM_TECH_SERVICE_TIMEOUT_SECONDS = 5L
-
-        const val PAYMENTOLOGY_BASE_URL: String = "https://paymentologygate.oa.r.appspot.com/"
-        const val API_ONE_INCH_TIMEOUT_MS = 5000L
     }
 }
