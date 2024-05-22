@@ -160,10 +160,10 @@ private fun String.preserveDecimalSymbol(newValue: String, decimalSymbol: Char) 
 
 private fun String.preserveTrailingZeros(newValue: String, parsedDecimal: BigDecimal?, decimalSymbol: Char): String {
     val trailingZeros = newValue.split(decimalSymbol).getOrNull(1)?.takeLastWhile { it == '0' }.orEmpty()
-    return if (parsedDecimal?.scale() == 0 && trailingZeros.isNotEmpty()) {
-        "$this$decimalSymbol$trailingZeros"
-    } else {
-        this.plus(trailingZeros)
+    return when {
+        this.endsWith('0') -> this
+        parsedDecimal?.scale() == 0 && trailingZeros.isNotEmpty() -> "$this$decimalSymbol$trailingZeros"
+        else -> this.plus(trailingZeros)
     }
 }
 
