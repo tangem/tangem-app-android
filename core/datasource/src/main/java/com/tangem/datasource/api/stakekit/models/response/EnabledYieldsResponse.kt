@@ -42,22 +42,6 @@ data class Yield(
 )
 
 @JsonClass(generateAdapter = true)
-data class Token(
-    @Json(name = "name")
-    val name: String,
-    @Json(name = "symbol")
-    val symbol: String,
-    @Json(name = "decimals")
-    val decimals: Int,
-    @Json(name = "network")
-    val network: String,
-    @Json(name = "coinGeckoId")
-    val coinGeckoId: String?,
-    @Json(name = "logoURI")
-    val logoUri: String,
-)
-
-@JsonClass(generateAdapter = true)
 data class Args(
     @Json(name = "enter")
     val enter: Enter,
