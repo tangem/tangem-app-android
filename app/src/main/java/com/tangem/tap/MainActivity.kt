@@ -30,6 +30,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
+import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -151,6 +152,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var userWalletsListManager: UserWalletsListManager
 
+    @Inject
+    lateinit var emailSender: EmailSender
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -234,6 +238,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 cardSdkConfigRepository = cardSdkConfigRepository,
                 sendRouter = sendRouter,
                 qrScanningRouter = qrScanningRouter,
+                emailSender = emailSender,
             ),
         )
     }
