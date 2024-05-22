@@ -95,11 +95,13 @@ private fun ListItemWithIcon(
             address = title,
             modifier = Modifier
                 .padding(vertical = TangemTheme.dimens.spacing8)
-                .size(TangemTheme.dimens.size36)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius18)),
+                .size(TangemTheme.dimens.size40)
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius20)),
         )
         Column(
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
+            modifier = Modifier
+                .height(TangemTheme.dimens.size36)
+                .padding(start = TangemTheme.dimens.spacing12),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             EllipsisText(
@@ -118,7 +120,8 @@ private fun ListItemWithIcon(
                         tint = TangemTheme.colors.icon.informative,
                         modifier = Modifier
                             .size(TangemTheme.dimens.size16)
-                            .background(TangemTheme.colors.background.tertiary, CircleShape),
+                            .background(TangemTheme.colors.background.tertiary, CircleShape)
+                            .padding(TangemTheme.dimens.spacing2),
                     )
                 }
                 val (text, offset) = remember(subtitle, info) {
@@ -152,11 +155,11 @@ private fun ListItemLoading(modifier: Modifier = Modifier) {
         CircleShimmer(
             modifier = Modifier
                 .padding(vertical = TangemTheme.dimens.spacing8)
-                .size(TangemTheme.dimens.size36),
+                .size(TangemTheme.dimens.size40),
         )
         Column(
             modifier = Modifier
-                .height(TangemTheme.dimens.size32)
+                .height(TangemTheme.dimens.size36)
                 .padding(start = TangemTheme.dimens.spacing12),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
