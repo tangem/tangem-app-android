@@ -56,9 +56,11 @@ import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.DelayedWork
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -97,6 +99,7 @@ internal class SendViewModel @Inject constructor(
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
+    @DelayedWork private val coroutineScope: CoroutineScope,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     validateWalletMemoUseCase: ValidateWalletMemoUseCase,
@@ -413,8 +416,11 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private suspend fun List<UserWallet>.toAvailableWallets(): List<AvailableWallet> =
-        filterNot { it.walletId == userWalletId || it.isLocked }
+    private suspend fun List<UserWallet>.toAvailableWallets(): List<AvailableWallet> {
+        val currentAddress: String = kotlin.runCatching {
+            cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+        }.getOrNull().orEmpty()
+        return filterNot { it.isLocked }
             .mapNotNull { wallet ->
                 val addresses = if (!wallet.isMultiCurrency) {
                     getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
@@ -427,14 +433,18 @@ internal class SendViewModel @Inject constructor(
                 } else {
                     getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrency.network)
                 }
-                addresses?.map { address ->
-                    AvailableWallet(
-                        name = wallet.name,
-                        address = address,
-                        userWalletId = wallet.walletId,
-                    )
-                }?.fastDistinctBy { it.address }
+                addresses
+                    ?.filter { it.address != currentAddress }
+                    ?.map { (cryptoCurrency, address) ->
+                        AvailableWallet(
+                            name = wallet.name,
+                            address = address,
+                            cryptoCurrency = cryptoCurrency,
+                            userWalletId = wallet.walletId,
+                        )
+                    }?.fastDistinctBy { it.address }
             }.flatten()
+    }
 
     private suspend fun getTxHistory() {
         val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
@@ -888,11 +898,9 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun scheduleUpdates() {
-        viewModelScope.launch(dispatchers.main) {
+        coroutineScope.launch {
             // we should update network to find pending tx after 1 sec
             fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
-        }
-        viewModelScope.launch(dispatchers.main) {
             // we should update network for new balance
             updateDelayedCurrencyStatusUseCase(
                 userWalletId = userWallet.walletId,
@@ -952,7 +960,7 @@ internal class SendViewModel @Inject constructor(
 
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 60_000L
-        const val BALANCE_UPDATE_DELAY = 10_000L
+        const val BALANCE_UPDATE_DELAY = 11_000L
 
         const val RU_LOCALE = "ru"
         const val EN_LOCALE = "en"
