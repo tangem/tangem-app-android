@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
@@ -46,5 +47,5 @@ interface NetworksRepository {
 
     fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean
 
-    suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<String>
+    suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<CryptoCurrencyAddress>
 }
