@@ -2,6 +2,7 @@ package com.tangem.datasource.api.stakekit.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.datasource.api.stakekit.models.response.model.Yield
 
 @JsonClass(generateAdapter = true)
 data class EnabledYieldsResponse(

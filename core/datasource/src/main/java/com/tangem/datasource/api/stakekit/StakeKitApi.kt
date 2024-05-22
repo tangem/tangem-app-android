@@ -5,8 +5,8 @@ import com.tangem.datasource.api.stakekit.models.request.MultipleYieldBalancesRe
 import com.tangem.datasource.api.stakekit.models.request.RevenueOption
 import com.tangem.datasource.api.stakekit.models.request.YieldType
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
-import com.tangem.datasource.api.stakekit.models.response.TokenWithYield
-import com.tangem.datasource.api.stakekit.models.response.YieldBalances
+import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYield
+import com.tangem.datasource.api.stakekit.models.response.model.YieldBalances
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Query
