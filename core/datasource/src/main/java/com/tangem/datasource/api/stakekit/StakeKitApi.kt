@@ -1,7 +1,7 @@
 package com.tangem.datasource.api.stakekit
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.stakekit.models.request.AddressWithIntegrationId
+import com.tangem.datasource.api.stakekit.models.request.MultipleYieldBalancesRequestBody
 import com.tangem.datasource.api.stakekit.models.request.RevenueOption
 import com.tangem.datasource.api.stakekit.models.request.YieldType
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
@@ -25,9 +25,7 @@ interface StakeKitApi {
     ): ApiResponse<EnabledYieldsResponse>
 
     @GET("yields/enabled")
-    fun getMultipleYieldBalances(
-        @Body body: List<AddressWithIntegrationId>,
-    ): ApiResponse<List<YieldBalances>>
+    fun getMultipleYieldBalances(@Body body: List<MultipleYieldBalancesRequestBody>): ApiResponse<List<YieldBalances>>
 
     @GET("tokens")
     fun getTokens(): ApiResponse<List<TokenWithYield>>

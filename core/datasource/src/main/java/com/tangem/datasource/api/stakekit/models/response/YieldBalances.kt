@@ -39,18 +39,25 @@ data class YieldBalances(
         enum class BalanceType {
             @Json(name = "available")
             AVAILABLE,
+
             @Json(name = "staked")
             STAKED,
+
             @Json(name = "unstaking")
             UNSTAKING,
+
             @Json(name = "unstaked")
             UNSTAKED,
+
             @Json(name = "preparing")
             PREPARING,
+
             @Json(name = "rewards")
             REWARDS,
+
             @Json(name = "locked")
             LOCKED,
+
             @Json(name = "unlocking")
             UNLOCKING,
         }
@@ -128,4 +135,3 @@ data class YieldBalances(
         )
     }
 }
-

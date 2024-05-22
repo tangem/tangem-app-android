@@ -14,4 +14,3 @@ data class EnabledYieldsResponse(
     @Json(name = "page")
     val page: Int,
 )
-
