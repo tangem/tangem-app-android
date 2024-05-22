@@ -3,6 +3,8 @@ package com.tangem.tap.common.feedback
 import android.content.Context
 import com.tangem.datasource.config.models.ChatConfig
 import com.tangem.domain.common.TapWorkarounds
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.feedback.GetFeedbackEmailUseCase
 import com.tangem.tap.common.chat.ChatManager
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
@@ -20,6 +22,8 @@ class FeedbackManager(
     val infoHolder: AdditionalFeedbackInfo,
     private val logCollector: TangemLogCollector,
     private val chatManager: ChatManager,
+    @Suppress("UnusedPrivateMember") private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
+    @Suppress("UnusedPrivateMember") private val getFeedbackEmailUseCase: GetFeedbackEmailUseCase,
 ) {
 
     private var sessionFeedbackFile: File? = null
