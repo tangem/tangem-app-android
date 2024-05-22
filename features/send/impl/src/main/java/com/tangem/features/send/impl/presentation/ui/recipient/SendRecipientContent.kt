@@ -17,6 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.Strings.STARS
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.resolveReference
@@ -26,6 +29,8 @@ import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
+import com.tangem.features.send.impl.presentation.state.previewdata.RecipientStatePreviewData
+import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
 import com.tangem.features.send.impl.presentation.ui.common.FooterContainer
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
@@ -150,7 +155,7 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
                 TangemTheme.dimens.spacing0 to TangemTheme.dimens.spacing8
             }
             val topRadius = if (isFirst) {
-                TangemTheme.dimens.radius12
+                TangemTheme.dimens.radius16
             } else {
                 TangemTheme.dimens.radius0
             }
@@ -170,7 +175,7 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
                     .background(TangemTheme.colors.background.action)
                     .padding(
                         top = paddingFromTop,
-                        bottom = TangemTheme.dimens.spacing8,
+                        bottom = TangemTheme.dimens.spacing12,
                         start = TangemTheme.dimens.spacing12,
                         end = TangemTheme.dimens.spacing12,
                     ),
@@ -242,4 +247,25 @@ private fun AnimateRecentAppearance(isVisible: Boolean, content: @Composable () 
             Box(modifier = Modifier.fillMaxWidth())
         }
     }
+}
+
+@Preview(widthDp = 360, heightDp = 800)
+@Composable
+private fun SendRecipientContent_Preview(
+    @PreviewParameter(SendRecipientContentPreviewProvider::class) recipientState: SendStates.RecipientState,
+) {
+    TangemTheme(isDark = false) {
+        SendRecipientContent(
+            uiState = recipientState,
+            clickIntents = SendClickIntentsStub,
+            isBalanceHidden = false,
+        )
+    }
+}
+
+private class SendRecipientContentPreviewProvider : PreviewParameterProvider<SendStates.RecipientState> {
+    override val values: Sequence<SendStates.RecipientState>
+        get() = sequenceOf(
+            RecipientStatePreviewData.recipientState,
+        )
 }
