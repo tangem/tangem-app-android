@@ -15,15 +15,17 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
+import com.tangem.domain.feedback.GetFeedbackEmailUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
@@ -98,4 +100,8 @@ interface ApplicationEntryPoint {
     fun getSettingsRepository(): SettingsRepository
 
     fun getBlockchainSDKFactory(): BlockchainSDKFactory
+
+    fun getGetFeedbackEmailUseCase(): GetFeedbackEmailUseCase
+
+    fun getSaveBlockchainErrorUseCase(): SaveBlockchainErrorUseCase
 }
