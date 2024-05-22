@@ -10,6 +10,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Query
 
+@Suppress("LongParameterList")
 interface StakeKitApi {
 
     @GET("yields/enabled")
@@ -19,12 +20,11 @@ interface StakeKitApi {
         @Query("revenueOption") revenueOption: RevenueOption,
         @Query("page") page: Int,
         @Query("network") network: String,
-        @Query("limit") limit: Int
+        @Query("limit") limit: Int,
     ): ApiResponse<EnabledYieldsResponse>
 
     @GET("yields/enabled")
     fun getMultipleYieldBalances(
-        @Body body: List<AddressWithIntegrationId>,
+        @Body body: List<AddressWithIntegrationId>
     ): ApiResponse<List<YieldBalances>>
-
 }

@@ -5,7 +5,8 @@ enum class YieldType(private val value: String) {
     LIQUID_STAKING("liquid-staking"),
     LENDING("lending"),
     RESTAKING("restaking"),
-    VAULT("vault");
+    VAULT("vault"),
+    ;
 
     override fun toString(): String {
         return value
