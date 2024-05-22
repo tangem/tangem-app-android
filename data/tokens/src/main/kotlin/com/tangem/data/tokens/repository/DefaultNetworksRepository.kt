@@ -13,6 +13,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyAddress
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -78,7 +79,10 @@ internal class DefaultNetworksRepository(
         return blockchain == Blockchain.Aptos
     }
 
-    override suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<String> {
+    override suspend fun getNetworkAddresses(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): List<CryptoCurrencyAddress> {
         // Get list of currencies matching [network]
         val currencies = getCurrencies(userWalletId)
             .filter { currency -> network.id == currency.network.id }
@@ -87,9 +91,12 @@ internal class DefaultNetworksRepository(
         if (currencies.toList().isEmpty()) return emptyList()
 
         return currencies.toList().map { currency ->
-            walletManagersFacade.getAddresses(userWalletId, currency.network)
-                .firstOrNull { it.type == AddressType.Default }
-                ?.value.orEmpty()
+            CryptoCurrencyAddress(
+                cryptoCurrency = currency,
+                address = walletManagersFacade.getAddresses(userWalletId, currency.network)
+                    .firstOrNull { it.type == AddressType.Default }
+                    ?.value.orEmpty(),
+            )
         }
     }
 

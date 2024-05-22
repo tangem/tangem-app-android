@@ -418,8 +418,11 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
-    private suspend fun List<UserWallet>.toAvailableWallets(): List<AvailableWallet> =
-        filterNot { it.walletId == userWalletId || it.isLocked }
+    private suspend fun List<UserWallet>.toAvailableWallets(): List<AvailableWallet> {
+        val currentAddress: String = kotlin.runCatching {
+            cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+        }.getOrNull().orEmpty()
+        return filterNot { it.isLocked }
             .mapNotNull { wallet ->
                 val addresses = if (!wallet.isMultiCurrency) {
                     getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
@@ -432,14 +435,18 @@ internal class SendViewModel @Inject constructor(
                 } else {
                     getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrency.network)
                 }
-                addresses?.map { address ->
-                    AvailableWallet(
-                        name = wallet.name,
-                        address = address,
-                        userWalletId = wallet.walletId,
-                    )
-                }?.fastDistinctBy { it.address }
+                addresses
+                    ?.filter { it.address != currentAddress }
+                    ?.map { (cryptoCurrency, address) ->
+                        AvailableWallet(
+                            name = wallet.name,
+                            address = address,
+                            cryptoCurrency = cryptoCurrency,
+                            userWalletId = wallet.walletId,
+                        )
+                    }?.fastDistinctBy { it.address }
             }.flatten()
+    }
 
     private suspend fun getTxHistory() {
         val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
