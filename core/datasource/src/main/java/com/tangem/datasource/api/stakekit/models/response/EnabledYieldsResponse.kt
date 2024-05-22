@@ -16,57 +16,23 @@ data class EnabledYieldsResponse(
 )
 
 @JsonClass(generateAdapter = true)
-data class Yield(
-    @Json(name = "id")
-    val id: String,
-    @Json(name = "token")
-    val token: Token,
-    @Json(name = "tokens")
-    val tokens: List<Token>,
-    @Json(name = "args")
-    val args: Args,
-    @Json(name = "status")
-    val status: Status,
-    @Json(name = "apy")
-    val apy: Double,
-    @Json(name = "rewardRate")
-    val rewardRate: Double,
-    @Json(name = "rewardType")
-    val rewardType: String,
-    @Json(name = "metadata")
-    val metadata: Metadata,
-    @Json(name = "validators")
-    val validators: List<Validator>,
-    @Json(name = "isAvailable")
-    val isAvailable: Boolean,
-)
-
-@JsonClass(generateAdapter = true)
-data class Args(
-    @Json(name = "enter")
-    val enter: Enter,
-    @Json(name = "exit")
-    val exit: Enter?,
-)
-
-@JsonClass(generateAdapter = true)
 data class Enter(
     @Json(name = "addresses")
     val addresses: Addresses,
     @Json(name = "args")
-    val args: Map<String, Argument>,
+    val args: Map<String, AddressArgument>,
 )
 
 @JsonClass(generateAdapter = true)
 data class Addresses(
     @Json(name = "address")
-    val address: Argument,
+    val address: AddressArgument,
     @Json(name = "additionalAddresses")
-    val additionalAddresses: Map<String, Argument>? = null,
+    val additionalAddresses: Map<String, AddressArgument>? = null,
 )
 
 @JsonClass(generateAdapter = true)
-data class Argument(
+data class AddressArgument(
     @Json(name = "required")
     val required: Boolean,
     @Json(name = "network")
@@ -118,9 +84,9 @@ data class Metadata(
     @Json(name = "supportsMultipleValidators")
     val supportsMultipleValidators: Boolean,
     @Json(name = "revshare")
-    val revshare: Revshare,
+    val revshare: Enabled,
     @Json(name = "fee")
-    val fee: Fee,
+    val fee: Enabled,
 )
 
 @JsonClass(generateAdapter = true)
@@ -130,37 +96,7 @@ data class CooldownPeriod(
 )
 
 @JsonClass(generateAdapter = true)
-data class Revshare(
+data class Enabled(
     @Json(name = "enabled")
     val enabled: Boolean,
-)
-
-@JsonClass(generateAdapter = true)
-data class Fee(
-    @Json(name = "enabled")
-    val enabled: Boolean,
-)
-
-@JsonClass(generateAdapter = true)
-data class Validator(
-    @Json(name = "address")
-    val address: String,
-    @Json(name = "status")
-    val status: String,
-    @Json(name = "name")
-    val name: String,
-    @Json(name = "image")
-    val image: String?,
-    @Json(name = "website")
-    val website: String?,
-    @Json(name = "apr")
-    val apr: Double?,
-    @Json(name = "commission")
-    val commission: Double?,
-    @Json(name = "stakedBalance")
-    val stakedBalance: String?,
-    @Json(name = "votingPower")
-    val votingPower: Double?,
-    @Json(name = "preferred")
-    val preferred: Boolean,
 )

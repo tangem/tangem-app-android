@@ -5,6 +5,7 @@ import com.tangem.datasource.api.stakekit.models.request.AddressWithIntegrationI
 import com.tangem.datasource.api.stakekit.models.request.RevenueOption
 import com.tangem.datasource.api.stakekit.models.request.YieldType
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
+import com.tangem.datasource.api.stakekit.models.response.TokenWithYield
 import com.tangem.datasource.api.stakekit.models.response.YieldBalances
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -25,6 +26,9 @@ interface StakeKitApi {
 
     @GET("yields/enabled")
     fun getMultipleYieldBalances(
-        @Body body: List<AddressWithIntegrationId>
+        @Body body: List<AddressWithIntegrationId>,
     ): ApiResponse<List<YieldBalances>>
+
+    @GET("tokens")
+    fun getTokens(): ApiResponse<List<TokenWithYield>>
 }
