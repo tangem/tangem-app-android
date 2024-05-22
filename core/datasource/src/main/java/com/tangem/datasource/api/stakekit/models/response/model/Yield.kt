@@ -20,7 +20,7 @@ data class Yield(
     @Json(name = "rewardRate")
     val rewardRate: Double,
     @Json(name = "rewardType")
-    val rewardType: String,
+    val rewardType: RewardType,
     @Json(name = "metadata")
     val metadata: Metadata,
     @Json(name = "validators")
@@ -134,5 +134,12 @@ data class Yield(
             @Json(name = "enabled")
             val enabled: Boolean,
         )
+    }
+
+    enum class RewardType {
+        @Json(name = "apy")
+        APY, // auto
+        @Json(name = "apr")
+        APR // manual
     }
 }
