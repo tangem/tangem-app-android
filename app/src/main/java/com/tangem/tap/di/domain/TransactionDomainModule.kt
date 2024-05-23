@@ -4,10 +4,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
-import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
@@ -53,5 +50,11 @@ internal object TransactionDomainModule {
     @ViewModelScoped
     fun provideIsFeeApproximateUseCase(feeRepository: FeeRepository): IsFeeApproximateUseCase {
         return IsFeeApproximateUseCase(feeRepository)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideValidateTransactionUseCase(transactionRepository: TransactionRepository): ValidateTransactionUseCase {
+        return ValidateTransactionUseCase(transactionRepository)
     }
 }
