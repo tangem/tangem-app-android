@@ -23,8 +23,8 @@ import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.inputrow.inner.PasteButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.coroutines.delay
 
 /**
@@ -56,6 +56,7 @@ fun InputRowRecipient(
     isError: Boolean = false,
     showDivider: Boolean = false,
     isLoading: Boolean = false,
+    isValuePasted: Boolean = false,
 ) {
     val (titleText, color) = if (isError && error != null) {
         error to TangemTheme.colors.text.warning
@@ -92,6 +93,7 @@ fun InputRowRecipient(
                         placeholder = placeholder,
                         onValueChange = onValueChange,
                         singleLine = singleLine,
+                        isValuePasted = isValuePasted,
                         modifier = Modifier
                             .padding(start = TangemTheme.dimens.spacing12)
                             .weight(1f)
