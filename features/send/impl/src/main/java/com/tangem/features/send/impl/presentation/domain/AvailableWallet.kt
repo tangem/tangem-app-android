@@ -1,6 +1,7 @@
 package com.tangem.features.send.impl.presentation.domain
 
 import androidx.compose.runtime.Immutable
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
@@ -15,4 +16,5 @@ data class AvailableWallet(
     val name: String,
     val userWalletId: UserWalletId,
     val address: String,
+    val cryptoCurrency: CryptoCurrency,
 )
