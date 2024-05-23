@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.*
 @Suppress("LongParameterList")
 class GetCryptoCurrencyActionsUseCase(
     private val rampManager: RampStateManager,
+    private val walletManagersFacade: WalletManagersFacade,
     private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
@@ -30,7 +32,10 @@ class GetCryptoCurrencyActionsUseCase(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Flow<TokenActionsState> {
+    suspend operator fun invoke(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): Flow<TokenActionsState> {
         val operations = CurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
@@ -38,7 +43,7 @@ class GetCryptoCurrencyActionsUseCase(
             userWalletId = userWallet.walletId,
         )
         val networkId = cryptoCurrencyStatus.currency.network.id
-
+        val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, cryptoCurrencyStatus.currency)
         return flow {
             val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                 operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
@@ -53,6 +58,7 @@ class GetCryptoCurrencyActionsUseCase(
                     userWallet = userWallet,
                     coinStatus = maybeCoinStatus.getOrNull(),
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    needAssociateAsset = requirements != null,
                 )
             }
 
@@ -64,6 +70,7 @@ class GetCryptoCurrencyActionsUseCase(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        needAssociateAsset: Boolean,
     ): TokenActionsState {
         return TokenActionsState(
             walletId = userWallet.walletId,
@@ -72,6 +79,7 @@ class GetCryptoCurrencyActionsUseCase(
                 userWallet = userWallet,
                 coinStatus = coinStatus,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
+                needAssociateAsset = needAssociateAsset,
             ),
         )
     }
@@ -85,13 +93,14 @@ class GetCryptoCurrencyActionsUseCase(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        needAssociateAsset: Boolean,
     ): List<TokenActionsState.ActionState> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
             return listOf(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
         }
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Unreachable) {
-            return getActionsForUnreachableCurrency(cryptoCurrencyStatus)
+            return getActionsForUnreachableCurrency(cryptoCurrencyStatus, needAssociateAsset)
         }
 
         val activeList = mutableListOf<TokenActionsState.ActionState>()
@@ -104,7 +113,12 @@ class GetCryptoCurrencyActionsUseCase(
 
         // receive
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            activeList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None))
+            val scenario = if (needAssociateAsset) {
+                ScenarioUnavailabilityReason.UnassociatedAsset
+            } else {
+                ScenarioUnavailabilityReason.None
+            }
+            activeList.add(TokenActionsState.ActionState.Receive(scenario))
         }
 
         // send
@@ -190,6 +204,7 @@ class GetCryptoCurrencyActionsUseCase(
 
     private fun getActionsForUnreachableCurrency(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        needAssociateAsset: Boolean,
     ): List<TokenActionsState.ActionState> {
         val actionsList = mutableListOf<TokenActionsState.ActionState>()
 
@@ -212,7 +227,12 @@ class GetCryptoCurrencyActionsUseCase(
         actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.Unreachable))
 
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            actionsList.add(TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None))
+            val scenario = if (needAssociateAsset) {
+                ScenarioUnavailabilityReason.UnassociatedAsset
+            } else {
+                ScenarioUnavailabilityReason.None
+            }
+            actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
         return actionsList
