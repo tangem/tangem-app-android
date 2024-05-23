@@ -38,7 +38,6 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
-import com.tangem.features.send.impl.presentation.utils.getFiatFormatted
 import com.tangem.features.send.impl.presentation.utils.getFiatString
 
 @Composable
