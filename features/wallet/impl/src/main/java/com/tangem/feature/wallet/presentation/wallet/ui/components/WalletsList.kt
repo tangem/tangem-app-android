@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.*
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -23,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletCard
@@ -99,21 +101,10 @@ private fun rememberWalletsFlingBehaviour(lazyListState: LazyListState, itemWidt
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_WalletsList_LightTheme() {
-    TangemTheme(isDark = false) {
-        WalletsList(
-            lazyListState = rememberLazyListState(),
-            wallets = WalletPreviewData.wallets.values.toPersistentList(),
-            isBalanceHidden = false,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_WalletsList_DarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_WalletsList() {
+    TangemThemePreview {
         WalletsList(
             lazyListState = rememberLazyListState(),
             wallets = WalletPreviewData.wallets.values.toPersistentList(),

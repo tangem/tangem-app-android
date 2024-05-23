@@ -24,11 +24,41 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 
     repositories {
-        google()
+        google {
+            content {
+                includeGroupAndSubgroups("androidx")
+                includeGroupAndSubgroups("com.android")
+                includeGroupAndSubgroups("com.google")
+            }
+        }
         mavenCentral()
-        mavenLocal()
-        jcenter() // unable to replace with mavenCentral() due to rekotlin
-        maven("https://nexus.tangem-tech.com/repository/maven-releases/")
+        mavenLocal {
+            content {
+                includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
+                includeModule("com.tangem", "blstlib")
+                includeModule("com.tangem", "blockchain")
+                includeModule("com.tangem", "wallet-core-proto")
+                includeModule("com.tangem", "wallet-core")
+            }
+        }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/tangem-sdk-android")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content { includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin") }
+        }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/blst-android")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content { includeModule("com.tangem", "blstlib") }
+        }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
             url = uri("https://maven.pkg.github.com/tangem/blockchain-sdk-kotlin")
@@ -36,6 +66,7 @@ dependencyResolutionManagement {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
             }
+            content { includeModule("com.tangem", "blockchain") }
         }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
@@ -43,6 +74,15 @@ dependencyResolutionManagement {
             credentials {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content {
+                includeModule("com.tangem", "wallet-core-proto")
+                includeModule("com.tangem", "wallet-core")
+            }
+        }
+        jcenter { // unable to replace with mavenCentral() due to rekotlin
+            content {
+                includeModule("org.rekotlin", "rekotlin")
             }
         }
         maven("https://jitpack.io")
@@ -72,11 +112,13 @@ include(":core:ui")
 include(":core:utils")
 include(":core:deep-links")
 include(":core:deep-links:global")
+include(":core:decompose")
 // endregion Core modules
 
 // region Libs modules
-include(":libs:crypto")
 include(":libs:auth")
+include(":libs:blockchain-sdk")
+include(":libs:crypto")
 include(":libs:visa")
 // endregion Libs modules
 
@@ -111,6 +153,9 @@ include(":features:manage-tokens:impl")
 
 include(":features:qr-scanning:api")
 include(":features:qr-scanning:impl")
+
+include(":features:staking:api")
+include(":features:staking:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -150,7 +195,6 @@ include(":data:balance-hiding")
 include(":data:common")
 include(":data:card")
 include(":data:tokens")
-include(":data:source:preferences")
 include(":data:settings")
 include(":data:txhistory")
 include(":data:wallets")
