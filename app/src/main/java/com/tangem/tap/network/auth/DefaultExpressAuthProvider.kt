@@ -15,7 +15,7 @@ internal class DefaultExpressAuthProvider(
     private var uuid = AtomicReference(UUID.randomUUID())
 
     override fun getApiKey(): String {
-        return configManager.config.express?.apiKey ?: error("No api key provided")
+        return configManager.config.express?.apiKey ?: error("No express api key provided")
     }
 
     override fun getUserId(): String {
