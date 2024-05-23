@@ -10,11 +10,13 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.operations.attestation.Attestation
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -51,7 +53,12 @@ class TapWalletManager(
         val attestationFailed = card.attestation.status == Attestation.Status.Failed
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
-        store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(scanResponse)
+
+        val featureToggles = store.inject(DaggerGraphState::feedbackManagerFeatureToggles)
+        if (!featureToggles.isLocalLogsEnabled) {
+            store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(scanResponse)
+        }
+
         updateConfigManager(scanResponse)
         withMainContext {
             // Order is important
