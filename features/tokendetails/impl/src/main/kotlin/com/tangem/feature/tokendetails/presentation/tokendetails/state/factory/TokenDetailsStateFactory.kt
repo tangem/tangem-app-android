@@ -10,7 +10,9 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
@@ -35,7 +37,6 @@ import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.lang.IllegalArgumentException
 
 @Suppress("TooManyFunctions", "LargeClass")
 internal class TokenDetailsStateFactory(
@@ -187,6 +188,19 @@ internal class TokenDetailsStateFactory(
         )
     }
 
+    fun getStateWithErrorDialog(text: TextReference): TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.ErrorDialogConfig(
+                    text = text,
+                    onConfirmClick = clickIntents::onDismissDialog,
+                ),
+            ),
+        )
+    }
+
     fun getRefreshingState(): TokenDetailsState {
         return refreshStateConverter.convert(true)
     }
@@ -254,6 +268,11 @@ internal class TokenDetailsStateFactory(
     fun getStateWithRemovedRentNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.removeRentInfo(state))
+    }
+
+    fun getStateWithRemovedHederaAssociateNotification(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(notifications = notificationConverter.removeHederaAssociateWarning(state))
     }
 
     fun getStateWithExchangeStatusBottomSheet(swapTxState: SwapTransactionsState): TokenDetailsState {
@@ -379,6 +398,9 @@ internal class TokenDetailsStateFactory(
                     id = R.string.token_button_unavailability_generic_description,
                 )
             }
+            ScenarioUnavailabilityReason.UnassociatedAsset -> resourceReference(
+                id = R.string.warning_receive_blocked_hedera_token_association_required_message,
+            )
             ScenarioUnavailabilityReason.None -> {
                 throw IllegalArgumentException("The unavailability reason must be other than None")
             }
