@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.icons.identicon
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -13,6 +14,7 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.LocalIsInDarkTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 private const val GAP_WIDTH = 1f
@@ -62,9 +64,10 @@ fun IdentIcon(address: String, modifier: Modifier = Modifier) {
 
 //region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun IdentIconPreview_Light() {
-    TangemTheme {
+private fun IdentIconPreview() {
+    TangemThemePreview {
         IdentIcon(
             address = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
             modifier = Modifier
@@ -72,17 +75,4 @@ private fun IdentIconPreview_Light() {
         )
     }
 }
-
-@Preview
-@Composable
-private fun IdentIconPreview_Dark() {
-    TangemTheme(isDark = true) {
-        IdentIcon(
-            address = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
-            modifier = Modifier
-                .size(TangemTheme.dimens.size40),
-        )
-    }
-}
-
 //endregion

@@ -4,6 +4,8 @@ import androidx.compose.material.Colors
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.runtime.*
+import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.haptic.MockHapticManager
 
 // TODO: use isSystemInDarkTheme() for automatic color detection
 internal const val IS_SYSTEM_IN_DARK_THEME: Boolean = false
@@ -13,6 +15,7 @@ fun TangemTheme(
     isDark: Boolean = false,
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
+    hapticManager: HapticManager = MockHapticManager,
     content: @Composable () -> Unit,
 ) {
     val themeColors = if (isDark) darkThemeColors() else lightThemeColors()
@@ -29,6 +32,7 @@ fun TangemTheme(
             LocalTangemDimens provides dimens,
             LocalTangemShapes provides shapes,
             LocalIsInDarkTheme provides isDark,
+            LocalHapticManager provides hapticManager,
         ) {
             ProvideTextStyle(
                 value = TangemTheme.typography.body1,
@@ -197,3 +201,7 @@ private val LocalTangemShapes = staticCompositionLocalOf<TangemShapes> {
 }
 
 val LocalIsInDarkTheme = staticCompositionLocalOf { false }
+
+val LocalHapticManager = staticCompositionLocalOf<HapticManager> {
+    error("No HapticManager provided")
+}
