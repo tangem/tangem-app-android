@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.rows
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
@@ -21,6 +22,7 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -132,25 +134,10 @@ private fun RowScope.SelectorValueContent(
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SelectorRowItemPreview_Light() {
-    TangemTheme {
-        SelectorRowItem(
-            titleRes = R.string.common_fee_selector_option_slow,
-            iconRes = R.drawable.ic_tortoise_24,
-            preDot = TextReference.Str("1000 ETH"),
-            postDot = TextReference.Str("1000 $"),
-            ellipsizeOffset = 4,
-            isSelected = true,
-            onSelect = { },
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun SelectorRowItemPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun SelectorRowItemPreview() {
+    TangemThemePreview {
         SelectorRowItem(
             titleRes = R.string.common_fee_selector_option_slow,
             iconRes = R.drawable.ic_tortoise_24,

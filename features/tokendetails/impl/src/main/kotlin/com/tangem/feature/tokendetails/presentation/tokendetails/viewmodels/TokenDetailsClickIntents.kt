@@ -1,20 +1,24 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
 
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 
 @Suppress("TooManyFunctions")
 interface TokenDetailsClickIntents {
 
     fun onBackClick()
 
-    fun onSendClick()
+    fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onReceiveClick()
+    fun onSendClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onSellClick()
+    fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onSwapClick()
+    fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onDismissDialog()
 
@@ -23,8 +27,6 @@ interface TokenDetailsClickIntents {
     fun onHideConfirmed()
 
     fun onRefreshSwipe()
-
-    fun onBuyClick()
 
     fun onBuyCoinClick(cryptoCurrency: CryptoCurrency)
 
@@ -49,4 +51,6 @@ interface TokenDetailsClickIntents {
     fun onSwapPromoClick()
 
     fun onGenerateExtendedKey()
+
+    fun onCopyAddress(): TextReference?
 }
