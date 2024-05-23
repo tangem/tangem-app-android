@@ -85,7 +85,7 @@ class DefaultTxHistoryRepository(
             network = network,
         )
         val lastTxHash = walletManager?.wallet?.recentTransactions?.last()?.hash.orEmpty()
-        return when (val txExploreState = blockchain?.getExploreTxUrl(lastTxHash)) {
+        return when (val txExploreState = blockchain.getExploreTxUrl(lastTxHash)) {
             is TxExploreState.Url -> txExploreState.url
             else -> ""
         }
