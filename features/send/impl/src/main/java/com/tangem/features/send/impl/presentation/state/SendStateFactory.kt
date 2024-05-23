@@ -296,6 +296,7 @@ internal class SendStateFactory(
                 balance = balance,
                 amountValue = amountValue,
                 feeValue = feeValue,
+                reduceAmountBy = state.sendState?.reduceAmountBy,
             ),
         )
     }
@@ -331,6 +332,12 @@ internal class SendStateFactory(
     fun getSendNotificationState(notifications: ImmutableList<SendNotification>): SendUiState {
         val state = currentStateProvider()
         val sendState = state.sendState ?: return state
+        val reducedBy = sendState.reduceAmountBy.takeIf {
+            notifications.none {
+                it is SendNotification.Error.ExistentialDeposit ||
+                    it is SendNotification.Error.TransactionLimitError
+            }
+        }
         return state.copy(
             sendState = sendState.copy(
                 isPrimaryButtonEnabled = isPrimaryButtonEnabled(
@@ -338,6 +345,7 @@ internal class SendStateFactory(
                     isSending = sendState.isSending,
                     notifications = notifications,
                 ),
+                reduceAmountBy = reducedBy,
                 notifications = notifications,
                 showTapHelp = sendState.showTapHelp && notifications.isEmpty(),
             ),
