@@ -6,6 +6,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification.*
@@ -30,6 +31,13 @@ internal class TokenDetailsNotificationConverter(
         return newNotifications.toImmutableList()
     }
 
+    fun removeHederaAssociateWarning(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
+        val newNotifications = currentState.notifications.toMutableList()
+        newNotifications.removeBy { it is HederaAssociateWarning }
+        return newNotifications.toImmutableList()
+    }
+
+    @Suppress("LongMethod")
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> NetworkFeeWithBuyButton(
@@ -85,6 +93,23 @@ internal class TokenDetailsNotificationConverter(
             is CryptoCurrencyWarning.BeaconChainShutdown -> NetworkShutdown(
                 title = resourceReference(R.string.warning_beacon_chain_retirement_title),
                 subtitle = resourceReference(R.string.warning_beacon_chain_retirement_content),
+            )
+
+            is HederaWarnings.AssociateWarning -> HederaAssociateWarning(
+                currency = warning.currency,
+                fee = null,
+                feeCurrencySymbol = null,
+                onAssociateClick = clickIntents::onAssociateClick,
+            )
+            is HederaWarnings.AssociateWarningWithFee -> HederaAssociateWarning(
+                currency = warning.currency,
+                fee = BigDecimalFormatter.formatCryptoAmount(
+                    cryptoAmount = warning.fee,
+                    cryptoCurrency = "",
+                    decimals = warning.feeCurrencyDecimals,
+                ),
+                feeCurrencySymbol = warning.feeCurrencySymbol,
+                onAssociateClick = clickIntents::onAssociateClick,
             )
         }
     }

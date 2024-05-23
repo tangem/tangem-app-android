@@ -53,4 +53,6 @@ interface TokenDetailsClickIntents {
     fun onGenerateExtendedKey()
 
     fun onCopyAddress(): TextReference?
+
+    fun onAssociateClick()
 }
