@@ -4,7 +4,7 @@ import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.features.details.DefaultDetailsFeatureToggles
 import com.tangem.features.details.DetailsEntryPoint
 import com.tangem.features.details.DetailsFeatureToggles
-import com.tangem.features.details.PreviewDetailsEntryPoint
+import com.tangem.features.details.DetailsFragment
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,6 +24,6 @@ internal object FeatureModule {
     @Provides
     @Singleton
     fun provideEntryPoint(): DetailsEntryPoint {
-        return PreviewDetailsEntryPoint()
+        return DetailsFragment.Companion
     }
 }
