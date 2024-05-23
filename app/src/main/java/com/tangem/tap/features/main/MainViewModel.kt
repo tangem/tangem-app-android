@@ -13,11 +13,12 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
+import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
-import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.tap.store
@@ -41,6 +42,7 @@ internal class MainViewModel @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val walletManagersFacade: WalletManagersFacade,
     private val sendFeatureToggles: SendFeatureToggles,
+    private val feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -90,15 +92,17 @@ internal class MainViewModel @Inject constructor(
                 Analytics.setContext(userWallet.scanResponse)
                 Analytics.send(Basic.WalletOpened())
 
-                store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
-                    infoHolder.setCardInfo(userWallet.scanResponse)
+                if (!feedbackManagerFeatureToggles.isLocalLogsEnabled) {
+                    store.state.globalState.feedbackManager?.infoHolder?.let { infoHolder ->
+                        infoHolder.setCardInfo(userWallet.scanResponse)
 
-                    walletManagersFacade
-                        .getAll(userWallet.walletId)
-                        .distinctUntilChanged()
-                        .onEach(infoHolder::setWalletsInfo)
-                        .catch { Timber.e(it) }
-                        .launchIn(viewModelScope)
+                        walletManagersFacade
+                            .getAll(userWallet.walletId)
+                            .distinctUntilChanged()
+                            .onEach(infoHolder::setWalletsInfo)
+                            .catch { Timber.e(it) }
+                            .launchIn(viewModelScope)
+                    }
                 }
             }
             .flowOn(dispatchers.io)
