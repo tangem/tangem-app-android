@@ -38,9 +38,6 @@ internal class SendAmountReduceToConverter(
         val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isNullOrZero() else value.isZero()
         return state.copyWrapped(
             isEditState = isEditState,
-            sendState = state.sendState?.copy(
-                reduceAmountBy = value,
-            ),
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = !isExceedBalance && !isZero,
                 amountTextField = amountTextField.copy(
