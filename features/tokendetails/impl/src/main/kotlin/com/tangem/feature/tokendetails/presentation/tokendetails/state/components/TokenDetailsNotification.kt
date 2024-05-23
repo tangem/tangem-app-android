@@ -117,8 +117,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             ),
         ),
         iconResId = currency.networkIconResId,
-        buttonsState =
-        NotificationConfig.ButtonsState.SecondaryButtonConfig(
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(
                 id = R.string.common_buy_currency,
                 formatArgs = wrappedList(
@@ -175,5 +174,27 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
     data class NetworkShutdown(private val title: TextReference, private val subtitle: TextReference) : Warning(
         title = title,
         subtitle = subtitle,
+    )
+
+    data class HederaAssociateWarning(
+        private val currency: CryptoCurrency,
+        private val fee: String?,
+        private val feeCurrencySymbol: String?,
+        private val onAssociateClick: () -> Unit,
+    ) : Warning(
+        title = resourceReference(R.string.warning_hedera_missing_token_association_title),
+        subtitle = if (fee != null && feeCurrencySymbol != null) {
+            resourceReference(
+                id = R.string.warning_hedera_missing_token_association_message,
+                formatArgs = wrappedList(fee, feeCurrencySymbol),
+            )
+        } else {
+            resourceReference(R.string.warning_hedera_missing_token_association_message_brief)
+        },
+        iconResId = currency.networkIconResId,
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+            text = resourceReference(R.string.warning_hedera_missing_token_association_button_title),
+            onClick = onAssociateClick,
+        ),
     )
 }
