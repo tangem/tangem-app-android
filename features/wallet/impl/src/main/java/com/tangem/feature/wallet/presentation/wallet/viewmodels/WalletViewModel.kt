@@ -5,23 +5,22 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.navigation.AppScreen
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsWalletsScrollPreviewEnabled
 import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
-import com.tangem.domain.walletconnect.WalletConnectActions
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletPullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
@@ -56,25 +55,35 @@ internal class WalletViewModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val reduxStateHolder: ReduxStateHolder,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
+    private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
 
     private lateinit var router: InnerWalletRouter
-    private var walletsUpdateJobHolder: JobHolder = JobHolder()
+    private val walletsUpdateJobHolder = JobHolder()
+    private val refreshWalletJobHolder = JobHolder()
+    private var needToRefreshWallet = false
 
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
         suggestToEnableBiometrics()
 
+        maybeMigrateNames()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
+        subscribeToScreenBackgroundState()
+    }
+
+    private fun maybeMigrateNames() {
+        viewModelScope.launch {
+            walletNameMigrationUseCase()
+        }
     }
 
     fun setWalletRouter(router: InnerWalletRouter) {
@@ -141,16 +150,6 @@ internal class WalletViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
                     if (selectedWallet.isMultiCurrency) {
-                        Timber.d("WalletConnect: initialize and setup networks for ${selectedWallet.walletId}")
-
-                        reduxStateHolder.dispatch(
-                            action = WalletConnectActions.New.Initialize(userWallet = selectedWallet),
-                        )
-
-                        reduxStateHolder.dispatch(
-                            action = WalletConnectActions.New.SetupUserChains(userWallet = selectedWallet),
-                        )
-
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
 
@@ -162,6 +161,36 @@ internal class WalletViewModel @Inject constructor(
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
         }
+    }
+
+    // We need to update the current wallet if the application was in the background for more than 10 seconds
+    // and then returned to the foreground
+    private fun subscribeToScreenBackgroundState() {
+        screenLifecycleProvider.isBackgroundState
+            .onEach { isBackground ->
+                refreshWalletJobHolder.cancel()
+                when {
+                    isBackground -> needToRefreshTimer()
+                    needToRefreshWallet && !isBackground -> triggerRefreshWallet()
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun needToRefreshTimer() {
+        viewModelScope.launch {
+            delay(REFRESH_WALLET_BACKGROUND_TIMER_MILLIS)
+            needToRefreshWallet = true
+        }.saveIn(refreshWalletJobHolder)
+    }
+
+    private fun triggerRefreshWallet() {
+        needToRefreshWallet = false
+        val state = stateHolder.uiState.value
+        val wallet = state.wallets.getOrNull(state.selectedWalletIndex) ?: return
+        wallet.pullToRefreshConfig.onRefresh.invoke(
+            WalletPullToRefreshConfig.ShowRefreshState(false),
+        )
     }
 
     private suspend fun updateWallets(action: WalletsUpdateActionResolver.Action) {
@@ -177,9 +206,9 @@ internal class WalletViewModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
-            is WalletsUpdateActionResolver.Action.NoAccessibleWallets -> closeScreen(screen = AppScreen.Welcome)
-            is WalletsUpdateActionResolver.Action.NoWallets -> closeScreen(screen = AppScreen.Home)
-            is WalletsUpdateActionResolver.Action.Unknown -> Unit
+            is WalletsUpdateActionResolver.Action.Unknown -> {
+                Timber.w("Unable to perfom action: $action")
+            }
         }
     }
 
@@ -293,13 +322,6 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    private fun closeScreen(screen: AppScreen) {
-        if (!screenLifecycleProvider.isBackground) {
-            stateHolder.clear()
-            router.popBackStack(screen = screen)
-        }
-    }
-
     private fun scrollToWallet(index: Int, onConsume: () -> Unit = {}) {
         stateHolder.update(
             ScrollToWalletTransformer(
@@ -309,5 +331,9 @@ internal class WalletViewModel @Inject constructor(
                 onConsume = onConsume,
             ),
         )
+    }
+
+    private companion object {
+        const val REFRESH_WALLET_BACKGROUND_TIMER_MILLIS = 10000L
     }
 }

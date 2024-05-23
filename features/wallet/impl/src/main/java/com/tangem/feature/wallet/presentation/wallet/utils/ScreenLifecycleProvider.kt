@@ -3,19 +3,21 @@ package com.tangem.feature.wallet.presentation.wallet.utils
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import dagger.hilt.android.scopes.ViewModelScoped
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @ViewModelScoped
 internal class ScreenLifecycleProvider @Inject constructor() : DefaultLifecycleObserver {
 
-    var isBackground: Boolean = true
-        private set
+    private val _isBackgroundState = MutableStateFlow(false)
+    val isBackgroundState: StateFlow<Boolean> = _isBackgroundState
 
     override fun onResume(owner: LifecycleOwner) {
-        isBackground = false
+        _isBackgroundState.value = false
     }
 
     override fun onPause(owner: LifecycleOwner) {
-        isBackground = true
+        _isBackgroundState.value = true
     }
 }
