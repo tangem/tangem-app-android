@@ -94,5 +94,22 @@ internal data class TokenDetailsDialogConfig(
                 onClick = onConfirmClick,
             )
         }
+
+        data class ErrorDialogConfig(
+            val text: TextReference,
+            val onConfirmClick: () -> Unit,
+        ) : DialogContentConfig() {
+
+            override val title = null
+
+            override val message: TextReference = text
+
+            override val cancelButtonConfig = null
+
+            override val confirmButtonConfig: ButtonConfig = ButtonConfig(
+                text = TextReference.Res(R.string.common_ok),
+                onClick = onConfirmClick,
+            )
+        }
     }
 }
