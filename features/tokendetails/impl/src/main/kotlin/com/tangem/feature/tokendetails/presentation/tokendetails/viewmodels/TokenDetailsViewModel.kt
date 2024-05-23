@@ -17,6 +17,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.haptic.HapticManager
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -38,6 +39,8 @@ import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.transaction.error.AssociateAssetError
+import com.tangem.domain.transaction.usecase.AssociateAssetUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -99,6 +102,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val quotesRepository: QuotesRepository,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val associateAssetUseCase: AssociateAssetUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val hapticManager: HapticManager,
@@ -216,7 +220,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun updateButtons(currencyStatus: CryptoCurrencyStatus) {
+    private suspend fun updateButtons(currencyStatus: CryptoCurrencyStatus) {
         getCryptoCurrencyActionsUseCase(
             userWallet = userWallet,
             cryptoCurrencyStatus = currencyStatus,
@@ -707,6 +711,36 @@ internal class TokenDetailsViewModel @Inject constructor(
         clipboardManager.setText(text = defaultAddress)
         analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
+    }
+
+    override fun onAssociateClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.Associate(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
+        viewModelScope.launch(dispatchers.io) {
+            associateAssetUseCase(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ).fold(
+                ifLeft = { e ->
+                    when (e) {
+                        is AssociateAssetError.NotEnoughBalance -> {
+                            uiState = stateFactory.getStateWithErrorDialog(
+                                resourceReference(
+                                    id = R.string.warning_hedera_token_association_not_enough_hbar_message,
+                                    formatArgs = wrappedList(e.feeCurrency.symbol),
+                                ),
+                            )
+                        }
+                        is AssociateAssetError.DataError -> Timber.e(e.message)
+                    }
+                },
+                ifRight = { uiState = stateFactory.getStateWithRemovedHederaAssociateNotification() },
+            )
+        }
     }
 
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
