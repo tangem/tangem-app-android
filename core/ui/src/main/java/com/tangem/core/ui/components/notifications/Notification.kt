@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.notifications
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -29,6 +30,7 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState as NotificationButtonsState
 
@@ -282,22 +284,13 @@ private fun CloseableIconButton(onClick: (() -> Unit)?, modifier: Modifier = Mod
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_Notification_Light(
+private fun Preview_Notification(
     @PreviewParameter(NotificationConfigProvider::class)
     config: NotificationConfig,
 ) {
-    TangemTheme(isDark = false) {
-        Notification(config)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_Notification_Dark(
-    @PreviewParameter(NotificationConfigProvider::class) config: NotificationConfig,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         Notification(config)
     }
 }
