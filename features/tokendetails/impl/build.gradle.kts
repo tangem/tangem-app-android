@@ -74,6 +74,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.transaction)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
