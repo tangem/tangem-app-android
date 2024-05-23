@@ -21,6 +21,7 @@ import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.analytics.events.Token
@@ -274,6 +275,7 @@ private fun sendTransaction(
                 }
                 is SimpleResult.Failure -> {
                     updateFeedbackManagerInfo(
+                        sendResult = sendResult.error,
                         walletManager = walletManager,
                         amountToSend = amountToSend,
                         feeAmount = fee.amount,
@@ -364,13 +366,33 @@ private fun updateFeedbackManagerInfo(
     amountToSend: Amount,
     feeAmount: Amount,
     destinationAddress: String,
+    sendResult: BlockchainError,
 ) {
-    store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
-        walletManager = walletManager,
-        amountToSend = amountToSend,
-        feeAmount = feeAmount,
-        destinationAddress = destinationAddress,
-    )
+    val featureToggles = store.inject(DaggerGraphState::feedbackManagerFeatureToggles)
+    if (featureToggles.isLocalLogsEnabled) {
+        store.inject(DaggerGraphState::saveBlockchainErrorUseCase).invoke(
+            error = BlockchainErrorInfo(
+                errorMessage = (sendResult as? BlockchainSdkError)?.customMessage ?: "It isn't BlockchainSdkError",
+                blockchainId = walletManager.wallet.blockchain.id,
+                derivationPath = walletManager.wallet.publicKey.derivationPath?.rawPath ?: "",
+                destinationAddress = destinationAddress,
+                tokenSymbol = if (amountToSend.type is AmountType.Token) {
+                    amountToSend.currencySymbol
+                } else {
+                    ""
+                },
+                amount = amountToSend.value?.stripZeroPlainString() ?: "0",
+                fee = feeAmount.value?.stripZeroPlainString() ?: "0",
+            ),
+        )
+    } else {
+        store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
+            walletManager = walletManager,
+            amountToSend = amountToSend,
+            feeAmount = feeAmount,
+            destinationAddress = destinationAddress,
+        )
+    }
 }
 
 fun createValidateTransactionError(
