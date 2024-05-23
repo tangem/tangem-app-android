@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -179,42 +181,29 @@ private fun WarningCardMaterial3Style(onClick: (() -> Unit)? = null, content: @C
 
 // region Preview
 
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WarningsPreview() {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        WarningCard(
-            title = "Exchange rate has expired",
-            description = "To access all the networks, you need to scan the card.",
-        )
-        SpacerH32()
-        ClickableWarningCard(
-            title = "Exchange rate has expired",
-            description = "To access all the networks, you need to scan the card.",
-            onClick = {},
-        )
-        SpacerH32()
-        RefreshableWarningCard(
-            title = "Exchange rate has expired",
-            description = "To access all the networks, you need to scan the card.",
-            onClick = {},
-        )
+    TangemThemePreview {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            WarningCard(
+                title = "Exchange rate has expired",
+                description = "To access all the networks, you need to scan the card.",
+            )
+            SpacerH32()
+            ClickableWarningCard(
+                title = "Exchange rate has expired",
+                description = "To access all the networks, you need to scan the card.",
+                onClick = {},
+            )
+            SpacerH32()
+            RefreshableWarningCard(
+                title = "Exchange rate has expired",
+                description = "To access all the networks, you need to scan the card.",
+                onClick = {},
+            )
+        }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_Warning_InLightTheme() {
-    TangemTheme(isDark = false) {
-        WarningsPreview()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_Warning_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        WarningsPreview()
-    }
-}
-
 // endregion Preview
