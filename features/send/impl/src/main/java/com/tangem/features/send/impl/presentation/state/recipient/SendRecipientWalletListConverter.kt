@@ -21,20 +21,27 @@ internal class SendRecipientWalletListConverter :
     private fun List<AvailableWallet?>.filterWallets(): PersistentList<SendRecipientListContent> {
         var walletsCounter = 0
         return this.filterNotNull()
+            .filter { it.address.isNotBlank() }
             .groupBy { item -> item.name }
-            .values.map {
-                it.mapIndexed { index, item ->
-                    val name = if (it.size > 1) {
-                        "${item.name} ${index.inc()}"
-                    } else {
-                        item.name
+            .values.map { wallets ->
+                val groupedByWallet = wallets.groupBy { it.userWalletId }
+                var i = 0
+                groupedByWallet
+                    .flatMap { item ->
+                        item.value.map { wallet ->
+                            val name = if (groupedByWallet.size > 1) {
+                                "${wallet.name} ${++i}"
+                            } else {
+                                wallet.name
+                            }
+
+                            SendRecipientListContent(
+                                id = "${WALLET_KEY_TAG}${walletsCounter++}",
+                                title = TextReference.Str(wallet.address),
+                                subtitle = TextReference.Str(name),
+                            )
+                        }
                     }
-                    SendRecipientListContent(
-                        id = "${WALLET_KEY_TAG}${walletsCounter++}",
-                        title = TextReference.Str(item.address),
-                        subtitle = TextReference.Str(name),
-                    )
-                }
             }
             .flatten()
             .toPersistentList()
