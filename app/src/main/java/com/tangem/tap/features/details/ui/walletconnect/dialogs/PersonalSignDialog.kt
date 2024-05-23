@@ -17,7 +17,6 @@ object PersonalSignDialog {
             setTitle(context.getString(R.string.wallet_connect_title))
             setMessage(message)
             setPositiveButton(context.getText(R.string.common_sign)) { _, _ ->
-                store.dispatch(WalletConnectAction.SignMessage(data.topic))
                 store.dispatch(WalletConnectAction.PerformRequestedAction(preparedData))
             }
             setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
