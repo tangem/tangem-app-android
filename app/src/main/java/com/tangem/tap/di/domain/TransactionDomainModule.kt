@@ -2,6 +2,8 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.usecase.*
@@ -37,6 +39,22 @@ internal object TransactionDomainModule {
             cardSdkConfigRepository = cardSdkConfigRepository,
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideAssociateAssetUseCase(
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        walletManagersFacade: WalletManagersFacade,
+        currenciesRepository: CurrenciesRepository,
+        networksRepository: NetworksRepository,
+    ): AssociateAssetUseCase {
+        return AssociateAssetUseCase(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            walletManagersFacade = walletManagersFacade,
+            currenciesRepository = currenciesRepository,
+            networksRepository = networksRepository,
         )
     }
 
