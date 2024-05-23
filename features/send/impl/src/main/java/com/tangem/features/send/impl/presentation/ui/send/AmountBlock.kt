@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.send
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendStates
@@ -84,29 +86,13 @@ internal fun AmountBlock(
 
 // region Preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun AmountBlockPreview_Light(
-    @PreviewParameter(AmountBlockPreviewProvider::class) value: SendStates.AmountState,
-) {
-    TangemTheme {
+private fun AmountBlockPreview(@PreviewParameter(AmountBlockPreviewProvider::class) value: SendStates.AmountState) {
+    TangemThemePreview {
         AmountBlock(
             amountState = value,
             isClickDisabled = false,
-            isEditingDisabled = false,
-            onClick = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun AmountBlockPreview_Dark(
-    @PreviewParameter(AmountBlockPreviewProvider::class) value: SendStates.AmountState,
-) {
-    TangemTheme(isDark = true) {
-        AmountBlock(
-            amountState = value,
-            isClickDisabled = true,
             isEditingDisabled = false,
             onClick = {},
         )

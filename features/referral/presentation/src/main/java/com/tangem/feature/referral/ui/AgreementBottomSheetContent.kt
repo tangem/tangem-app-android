@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import com.tangem.core.ui.components.appbar.AppBarWithAdditionalButtons
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
@@ -58,17 +60,10 @@ private fun AgreementHtmlView(url: String) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_AgreementBottomSheet_InLightTheme() {
-    TangemTheme(isDark = false) {
-        AgreementBottomSheetContent(url = "https://tangem.com/en/")
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_AgreementBottomSheet_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_AgreementBottomSheet() {
+    TangemThemePreview {
         AgreementBottomSheetContent(url = "https://tangem.com/en/")
     }
 }
