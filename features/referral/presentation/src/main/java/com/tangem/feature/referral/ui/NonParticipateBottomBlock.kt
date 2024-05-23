@@ -3,14 +3,15 @@ package com.tangem.feature.referral.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.PrimaryEndIconButton
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.presentation.R
 
 @Composable
@@ -20,11 +21,14 @@ internal fun NonParticipateBottomBlock(onAgreementClick: () -> Unit, onParticipa
             firstPartResId = R.string.referral_tos_not_enroled_prefix,
             onClick = onAgreementClick,
         )
-        PrimaryEndIconButton(
-            modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
+
+        PrimaryButtonIconEnd(
             text = stringResource(id = R.string.referral_button_participate),
             iconResId = R.drawable.ic_tangem_24,
             onClick = onParticipateClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(all = TangemTheme.dimens.spacing16),
         )
     }
 }
