@@ -16,7 +16,7 @@ internal fun checkAndCalculateSubtractedAmount(
     cryptoCurrencyStatus: CryptoCurrencyStatus,
     amountValue: BigDecimal,
     feeValue: BigDecimal,
-    reduceAmountBy: BigDecimal?,
+    reduceAmountBy: BigDecimal,
 ): BigDecimal {
     val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
     val isFeeCoverage = checkFeeCoverage(
@@ -24,17 +24,12 @@ internal fun checkAndCalculateSubtractedAmount(
         balance = balance,
         amountValue = amountValue,
         feeValue = feeValue,
+        reduceAmountBy = reduceAmountBy,
     )
-    val subtractedAmount = calculateSubtractedAmount(
-        isFeeCoverage = isFeeCoverage,
-        cryptoCurrencyStatus = cryptoCurrencyStatus,
-        amountValue = amountValue,
-        feeValue = feeValue,
-    )
-    return if (reduceAmountBy != null) {
-        subtractedAmount.minus(reduceAmountBy)
+    return if (isFeeCoverage) {
+        balance.minus(reduceAmountBy).minus(feeValue)
     } else {
-        subtractedAmount
+        amountValue.minus(reduceAmountBy)
     }
 }
 
@@ -46,26 +41,11 @@ internal fun checkFeeCoverage(
     balance: BigDecimal,
     amountValue: BigDecimal,
     feeValue: BigDecimal,
+    reduceAmountBy: BigDecimal?,
 ): Boolean {
     if (!isSubtractAvailable) return false
-    return balance < amountValue + feeValue && balance > feeValue && balance >= amountValue
-}
-
-/**
- * Calculates subtracted amount
- */
-private fun calculateSubtractedAmount(
-    isFeeCoverage: Boolean,
-    cryptoCurrencyStatus: CryptoCurrencyStatus,
-    amountValue: BigDecimal,
-    feeValue: BigDecimal,
-): BigDecimal {
-    val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
-    return if (isFeeCoverage) {
-        minOf(amountValue, balance.minus(feeValue))
-    } else {
-        amountValue
-    }
+    val amountWithReduced = (reduceAmountBy ?: BigDecimal.ZERO) + amountValue
+    return balance < amountWithReduced + feeValue && balance > feeValue && balance >= amountWithReduced
 }
 
 /**
