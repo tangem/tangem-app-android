@@ -6,8 +6,10 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.*
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -76,6 +78,7 @@ class GetCurrencyWarningsUseCase(
                 getNetworkUnavailableWarning(currencyStatus),
                 getNetworkNoAccountWarning(currencyStatus),
                 getBeaconChainShutdownWarning(currency.network.id),
+                getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
             )
         }.flowOn(dispatchers.io)
     }
@@ -265,6 +268,22 @@ class GetCurrencyWarningsUseCase(
 
     private fun getBeaconChainShutdownWarning(networkId: Network.ID): CryptoCurrencyWarning.BeaconChainShutdown? {
         return if (BlockchainUtils.isBeaconChain(networkId.value)) CryptoCurrencyWarning.BeaconChainShutdown else null
+    }
+
+    private suspend fun getAssetRequirementsWarning(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): CryptoCurrencyWarning? {
+        return when (val requirements = walletManagersFacade.getAssetRequirements(userWalletId, currency)) {
+            is AssetRequirementsCondition.PaidTransaction -> HederaWarnings.AssociateWarning(currency = currency)
+            is AssetRequirementsCondition.PaidTransactionWithFee -> HederaWarnings.AssociateWarningWithFee(
+                currency = currency,
+                fee = requirements.feeAmount,
+                feeCurrencySymbol = requirements.feeCurrencySymbol,
+                feeCurrencyDecimals = requirements.decimals,
+            )
+            null -> null
+        }
     }
 
     private fun BigDecimal?.isZero(): Boolean {
