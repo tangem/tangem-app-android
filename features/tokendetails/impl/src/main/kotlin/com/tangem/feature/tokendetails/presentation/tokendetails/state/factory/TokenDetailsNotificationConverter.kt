@@ -1,8 +1,9 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -67,13 +68,14 @@ internal class TokenDetailsNotificationConverter(
             CryptoCurrencyWarning.SomeNetworksUnreachable -> NetworksUnreachable
             is CryptoCurrencyWarning.SomeNetworksNoAccount -> NetworksNoAccount(
                 network = warning.amountCurrency.name,
-                amount = warning.amountToCreateAccount.toString(),
+                amount = BigDecimalFormatter.formatCryptoAmount(
+                    cryptoAmount = warning.amountToCreateAccount,
+                    cryptoCurrency = "",
+                    decimals = warning.amountCurrency.decimals,
+                ),
                 symbol = warning.amountCurrency.symbol,
             )
             is CryptoCurrencyWarning.TopUpWithoutReserve -> TopUpWithoutReserve
-            is CryptoCurrencyWarning.HasPendingTransactions -> HasPendingTransactions(
-                coinSymbol = warning.blockchainSymbol,
-            )
             is CryptoCurrencyWarning.SwapPromo -> SwapPromo(
                 startDateTime = warning.startDateTime,
                 endDateTime = warning.endDateTime,
