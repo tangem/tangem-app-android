@@ -151,14 +151,14 @@ internal class SendStateFactory(
         )
     }
 
-    fun onRecipientAddressValueChange(value: String, isXAddress: Boolean = false): SendUiState {
+    fun onRecipientAddressValueChange(value: String, isXAddress: Boolean = false, isValuePasted: Boolean): SendUiState {
         val state = currentStateProvider()
         val isEditState = stateRouterProvider().isEditState
         val recipientState = state.getRecipientState(isEditState) ?: return state
         return state.copyWrapped(
             isEditState = isEditState,
             recipientState = recipientState.copy(
-                addressTextField = recipientState.addressTextField.copy(value = value),
+                addressTextField = recipientState.addressTextField.copy(value = value, isValuePasted = isValuePasted),
                 memoTextField = recipientState.memoTextField?.copy(isEnabled = !isXAddress),
             ),
         )
@@ -207,14 +207,17 @@ internal class SendStateFactory(
         )
     }
 
-    fun getOnRecipientMemoValueChange(value: String): SendUiState {
+    fun getOnRecipientMemoValueChange(value: String, isValuePasted: Boolean): SendUiState {
         val state = currentStateProvider()
         val isEditState = stateRouterProvider().isEditState
         val recipientState = state.getRecipientState(isEditState) ?: return state
         return state.copyWrapped(
             isEditState = isEditState,
             recipientState = recipientState.copy(
-                memoTextField = recipientState.memoTextField?.copy(value = value),
+                memoTextField = recipientState.memoTextField?.copy(
+                    value = value,
+                    isValuePasted = isValuePasted,
+                ),
             ),
         )
     }
