@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 sealed class TextEllipsis {
 
@@ -219,7 +220,7 @@ private fun offsetEndEllipsisText(
 @Preview(widthDp = 200)
 @Composable
 private fun EllipsisTexPreview(@PreviewParameter(EllipsisTexPreviewParameterProvider::class) ellipsis: TextEllipsis) {
-    TangemTheme {
+    TangemThemePreview {
         EllipsisText(
             text = "11111111111111111111111111111111111111111111111111 END",
             ellipsis = ellipsis,
