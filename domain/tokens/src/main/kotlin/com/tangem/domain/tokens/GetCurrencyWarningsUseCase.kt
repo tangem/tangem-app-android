@@ -1,6 +1,5 @@
 package com.tangem.domain.tokens
 
-import com.tangem.blockchain.common.trustlines.AssetRequirementsCondition
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -10,6 +9,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.*
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -278,9 +278,9 @@ class GetCurrencyWarningsUseCase(
             is AssetRequirementsCondition.PaidTransaction -> HederaWarnings.AssociateWarning(currency = currency)
             is AssetRequirementsCondition.PaidTransactionWithFee -> HederaWarnings.AssociateWarningWithFee(
                 currency = currency,
-                fee = requireNotNull(requirements.feeAmount.value),
-                feeCurrencySymbol = requirements.feeAmount.currencySymbol,
-                feeCurrencyDecimals = requirements.feeAmount.decimals,
+                fee = requirements.feeAmount,
+                feeCurrencySymbol = requirements.feeCurrencySymbol,
+                feeCurrencyDecimals = requirements.decimals,
             )
             null -> null
         }

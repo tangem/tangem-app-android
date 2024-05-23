@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.settings)
@@ -27,9 +28,6 @@ dependencies {
     /** Project - Other */
     implementation(projects.core.utils)
     implementation(projects.libs.crypto)
-
-    /** Tangem SDKs */
-    implementation(deps.tangem.blockchain)
 
     /** Android - Other */
     implementation(deps.androidx.paging.runtime)

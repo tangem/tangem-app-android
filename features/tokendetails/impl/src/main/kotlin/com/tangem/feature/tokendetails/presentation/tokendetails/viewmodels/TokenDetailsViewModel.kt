@@ -220,7 +220,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun updateButtons(currencyStatus: CryptoCurrencyStatus) {
+    private suspend fun updateButtons(currencyStatus: CryptoCurrencyStatus) {
         getCryptoCurrencyActionsUseCase(
             userWallet = userWallet,
             cryptoCurrencyStatus = currencyStatus,
@@ -726,13 +726,16 @@ internal class TokenDetailsViewModel @Inject constructor(
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
-                    if (e is AssociateAssetError.NotEnoughBalance) {
-                        uiState = stateFactory.getStateWithErrorDialog(
-                            resourceReference(
-                                id = R.string.warning_hedera_token_association_not_enough_hbar_message,
-                                formatArgs = wrappedList(e.feeCurrency.symbol),
-                            ),
-                        )
+                    when (e) {
+                        is AssociateAssetError.NotEnoughBalance -> {
+                            uiState = stateFactory.getStateWithErrorDialog(
+                                resourceReference(
+                                    id = R.string.warning_hedera_token_association_not_enough_hbar_message,
+                                    formatArgs = wrappedList(e.feeCurrency.symbol),
+                                ),
+                            )
+                        }
+                        is AssociateAssetError.DataError -> Timber.e(e.message)
                     }
                 },
                 ifRight = { uiState = stateFactory.getStateWithRemovedHederaAssociateNotification() },
