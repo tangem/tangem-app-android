@@ -38,6 +38,7 @@ import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
+import com.tangem.features.send.impl.presentation.utils.getFiatString
 
 @Composable
 internal fun SendNavigationButtons(
@@ -183,12 +184,12 @@ private fun SendingText(
                 fiatCurrencySymbol = feeState.appCurrency.symbol,
                 fiatCurrencyCode = feeState.appCurrency.code,
             )
-            val feeValue = BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = feeState.fee?.amount?.value,
-                fiatCurrencySymbol = feeState.appCurrency.symbol,
-                fiatCurrencyCode = feeState.appCurrency.code,
+            val feeValue = getFiatString(
+                value = feeState.fee?.amount?.value,
+                rate = feeState.rate,
+                appCurrency = feeState.appCurrency,
             )
-            val textResource = remember(sendingValue, feeValue) {
+            val textResource = remember(uiState) {
                 resourceReference(
                     id = R.string.send_summary_transaction_description,
                     formatArgs = wrappedList(sendingValue, feeValue),
