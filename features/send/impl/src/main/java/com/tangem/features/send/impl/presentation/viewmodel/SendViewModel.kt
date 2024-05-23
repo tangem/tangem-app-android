@@ -4,6 +4,7 @@ import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastDistinctBy
 import androidx.lifecycle.*
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -52,10 +53,11 @@ import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.DelayedWork
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -70,7 +72,6 @@ internal class SendViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -93,6 +94,9 @@ internal class SendViewModel @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
+    private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
+    private val fetchPendingTransactionsUseCase: FetchPendingTransactionsUseCase,
+    @DelayedWork private val coroutineScope: CoroutineScope,
     validateTransactionUseCase: ValidateTransactionUseCase,
     currencyChecksRepository: CurrencyChecksRepository,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
@@ -270,6 +274,7 @@ internal class SendViewModel @Inject constructor(
             .saveIn(balanceHidingJobHolder)
     }
 
+    // TODO [REDACTED_JIRA]
     private fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean, isMultiCurrency: Boolean) {
         if (cryptoCurrency is CryptoCurrency.Coin) {
             getCurrencyStatusUpdates(
@@ -375,19 +380,16 @@ internal class SendViewModel @Inject constructor(
         feeCryptoCurrencyStatus = feeCurrencyStatus
         subscribeOnQRScannerResult()
         when {
-            uiState.sendState?.isSuccess == true -> {
-                stateRouter.showSend()
+            uiState.sendState?.isSuccess != true -> {
+                uiState = stateFactory.getReadyState()
+                getWalletsAndRecent()
+                stateRouter.showRecipient()
+                updateNotifications()
             }
             transactionId != null && amount != null && destinationAddress != null -> {
                 loadFee()
                 uiState = stateFactory.getReadyState(amount, destinationAddress, memo)
                 stateRouter.showSend()
-                updateNotifications()
-            }
-            else -> {
-                uiState = stateFactory.getReadyState()
-                getWalletsAndRecent()
-                stateRouter.showRecipient()
                 updateNotifications()
             }
         }
@@ -407,41 +409,43 @@ internal class SendViewModel @Inject constructor(
                     ?.toAvailableWallets()
                     .orEmpty()
             }.onSuccess { result ->
-                combine(*result.toTypedArray()) { it }
-                    .onEach {
-                        userWallets = it.filterNotNull().toList()
-                        uiState = stateFactory.onLoadedWalletsList(wallets = userWallets)
-                    }
-                    .flowOn(dispatchers.main)
-                    .launchIn(viewModelScope)
+                userWallets = result
+                uiState = stateFactory.onLoadedWalletsList(wallets = userWallets)
             }.onFailure {
                 uiState = stateFactory.onLoadedWalletsList(wallets = emptyList())
             }
         }
     }
 
-    private suspend fun List<UserWallet>.toAvailableWallets(): List<Flow<AvailableWallet?>> =
-        filterNot { it.walletId == userWalletId || it.isLocked }
+    private suspend fun List<UserWallet>.toAvailableWallets(): List<AvailableWallet> {
+        val currentAddress: String = kotlin.runCatching {
+            cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+        }.getOrNull().orEmpty()
+        return filterNot { it.isLocked }
             .mapNotNull { wallet ->
-                val status = if (!wallet.isMultiCurrency) {
+                val addresses = if (!wallet.isMultiCurrency) {
                     getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
                         if (it.network.id == cryptoCurrency.network.id) {
-                            getNetworkAddressesUseCase(wallet.walletId, it.network)
+                            getNetworkAddressesUseCase.invokeSync(wallet.walletId, it.network)
                         } else {
                             null
                         }
                     }
                 } else {
-                    getNetworkAddressesUseCase(wallet.walletId, cryptoCurrency.network)
+                    getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrency.network)
                 }
-                status?.map { address ->
-                    AvailableWallet(
-                        name = wallet.name,
-                        address = address,
-                        userWalletId = wallet.walletId,
-                    )
-                }
-            }
+                addresses
+                    ?.filter { it.address != currentAddress }
+                    ?.map { (cryptoCurrency, address) ->
+                        AvailableWallet(
+                            name = wallet.name,
+                            address = address,
+                            cryptoCurrency = cryptoCurrency,
+                            userWalletId = wallet.walletId,
+                        )
+                    }?.fastDistinctBy { it.address }
+            }.flatten()
+    }
 
     private suspend fun getTxHistory() {
         val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
@@ -802,7 +806,7 @@ internal class SendViewModel @Inject constructor(
         }
 
         uiState = sendNotificationFactory.dismissNotificationState(clazz)
-        feeReload()
+        updateNotifications()
     }
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {
@@ -822,7 +826,7 @@ internal class SendViewModel @Inject constructor(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             amountValue = amountValue,
             feeValue = feeValue,
-            reduceAmountBy = uiState.sendState?.reduceAmountBy,
+            reduceAmountBy = uiState.sendState?.reduceAmountBy ?: BigDecimal.ZERO,
         )
 
         viewModelScope.launch(dispatchers.main) {
@@ -866,8 +870,8 @@ internal class SendViewModel @Inject constructor(
             ifRight = {
                 uiState = stateFactory.getSendingStateUpdate(isSending = false)
                 updateTransactionStatus(txData)
-                scheduleBalanceUpdate()
                 addTokenToWalletIfNeeded()
+                scheduleUpdates()
                 sendScreenAnalyticSender.sendTransaction()
             },
         )
@@ -894,12 +898,15 @@ internal class SendViewModel @Inject constructor(
         uiState = stateFactory.getTransactionSendState(txData, txUrl)
     }
 
-    private fun scheduleBalanceUpdate() {
-        viewModelScope.launch(dispatchers.io) {
-            delay(BALANCE_UPDATE_DELAY)
-            fetchCurrencyStatusUseCase.invoke(
-                userWalletId = userWalletId,
-                id = cryptoCurrency.id,
+    private fun scheduleUpdates() {
+        coroutineScope.launch {
+            // we should update network to find pending tx after 1 sec
+            fetchPendingTransactionsUseCase(userWallet.walletId, setOf(cryptoCurrency.network))
+            // we should update network for new balance
+            updateDelayedCurrencyStatusUseCase(
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrency.network,
+                delayMillis = BALANCE_UPDATE_DELAY,
                 refresh = true,
             )
         }
@@ -954,7 +961,7 @@ internal class SendViewModel @Inject constructor(
 
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 60_000L
-        const val BALANCE_UPDATE_DELAY = 10_000L
+        const val BALANCE_UPDATE_DELAY = 11_000L
 
         const val RU_LOCALE = "ru"
         const val EN_LOCALE = "en"
