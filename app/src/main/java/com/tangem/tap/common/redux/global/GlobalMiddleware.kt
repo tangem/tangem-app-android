@@ -91,10 +91,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
             }
             feedbackManager.openChat(chatConfig, action.feedbackData)
         }
-        is GlobalAction.UpdateFeedbackInfo -> {
-            store.state.globalState.feedbackManager?.infoHolder
-                ?.setWalletsInfo(action.walletManagers)
-        }
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
             val config = appStateSafe.globalState.configManager?.config ?: return
