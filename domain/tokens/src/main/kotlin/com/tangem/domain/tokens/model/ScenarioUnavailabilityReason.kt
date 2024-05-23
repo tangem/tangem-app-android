@@ -21,7 +21,7 @@ sealed class ScenarioUnavailabilityReason {
 
     data object Unreachable : ScenarioUnavailabilityReason()
 
-    data object UnAssociatedAsset : ScenarioUnavailabilityReason()
+    data object UnassociatedAsset : ScenarioUnavailabilityReason()
 
     enum class WithdrawalScenario {
         SELL, SEND

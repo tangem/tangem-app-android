@@ -600,7 +600,9 @@ class DefaultWalletManagersFacade(
         val currencyType = cryptoCurrencyTypeConverter.convert(currency)
 
         if (walletManager !is AssetRequirementsManager) {
-            error("WalletManager is not implemented AssetRequirementsManager")
+            return SimpleResult.Failure(
+                BlockchainSdkError.CustomError("WalletManager is not implemented AssetRequirementsManager"),
+            )
         }
         return walletManager.fulfillRequirements(currencyType, signer)
     }

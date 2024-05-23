@@ -114,7 +114,7 @@ class GetCryptoCurrencyActionsUseCase(
         // receive
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             val scenario = if (needAssociateAsset) {
-                ScenarioUnavailabilityReason.UnAssociatedAsset
+                ScenarioUnavailabilityReason.UnassociatedAsset
             } else {
                 ScenarioUnavailabilityReason.None
             }
@@ -228,7 +228,7 @@ class GetCryptoCurrencyActionsUseCase(
 
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             val scenario = if (needAssociateAsset) {
-                ScenarioUnavailabilityReason.UnAssociatedAsset
+                ScenarioUnavailabilityReason.UnassociatedAsset
             } else {
                 ScenarioUnavailabilityReason.None
             }
