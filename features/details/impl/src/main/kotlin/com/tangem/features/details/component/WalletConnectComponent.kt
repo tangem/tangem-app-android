@@ -1,21 +1,17 @@
 package com.tangem.features.details.component
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.wallets.models.UserWallet
-import kotlinx.coroutines.flow.StateFlow
 
 interface WalletConnectComponent {
 
-    val state: StateFlow<State>
+    val isAvailable: Boolean
 
-    @Immutable
-    sealed class State {
-
-        data object Unavailable : State()
-
-        data class Content(val onClick: () -> Unit) : State()
-    }
+    @Composable
+    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
+    fun View(modifier: Modifier)
 
     interface Factory {
         fun create(context: AppComponentContext, params: Params): WalletConnectComponent

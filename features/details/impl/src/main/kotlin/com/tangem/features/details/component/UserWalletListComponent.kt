@@ -1,31 +1,14 @@
 package com.tangem.features.details.component
 
-import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.flow.StateFlow
 
 interface UserWalletListComponent {
 
-    val state: StateFlow<State>
-
-    data class State(
-        val userWallets: ImmutableList<UserWallet>,
-        val addNewWalletText: TextReference,
-        val onAddNewWalletClick: () -> Unit,
-    ) {
-
-        data class UserWallet(
-            val id: UserWalletId,
-            val name: String,
-            val information: TextReference,
-            @DrawableRes
-            val imageResId: Int,
-            val onClick: () -> Unit,
-        )
-    }
+    @Composable
+    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
+    fun View(modifier: Modifier)
 
     interface Factory {
         fun create(context: AppComponentContext): UserWalletListComponent

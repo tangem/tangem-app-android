@@ -1,10 +1,14 @@
 package com.tangem.features.details.component.preview
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.tangem.features.details.component.UserWalletListComponent
-import kotlinx.coroutines.flow.StateFlow
 
 internal class PreviewUserWalletListComponent : UserWalletListComponent {
 
-    override val state: StateFlow<UserWalletListComponent.State>
-        get() = TODO("Will be implemented in AND-7107")
+    @Composable
+    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
+    override fun View(modifier: Modifier) {
+        TODO("Will be implemented in AND-7107")
+    }
 }

@@ -1,9 +1,9 @@
-package com.tangem.features.details.state
+package com.tangem.features.details.entity
 
 import androidx.annotation.DrawableRes
 import kotlinx.collections.immutable.ImmutableList
 
-data class DetailsFooter(
+internal data class DetailsFooter(
     val appVersion: String,
     val socials: ImmutableList<Social>,
 ) {

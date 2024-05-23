@@ -1,8 +1,8 @@
-package com.tangem.features.details.state
+package com.tangem.features.details.entity
 
 import kotlinx.collections.immutable.ImmutableList
 
-data class DetailsState(
+internal data class DetailsState(
     val blocks: ImmutableList<DetailsBlock>,
     val footer: DetailsFooter,
     val popBack: () -> Unit,

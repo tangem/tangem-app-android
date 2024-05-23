@@ -1,11 +1,14 @@
 package com.tangem.features.details.component.preview
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.tangem.features.details.component.DetailsComponent
-import com.tangem.features.details.state.DetailsState
-import kotlinx.coroutines.flow.StateFlow
 
 internal class PreviewDetailsComponent : DetailsComponent {
 
-    override val state: StateFlow<DetailsState>
-        get() = TODO("Will be implemented in AND-7107")
+    @Composable
+    @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
+    override fun View(modifier: Modifier) {
+        TODO("Will be implemented in AND-7107")
+    }
 }

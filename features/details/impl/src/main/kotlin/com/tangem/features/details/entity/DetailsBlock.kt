@@ -1,4 +1,4 @@
-package com.tangem.features.details.state
+package com.tangem.features.details.entity
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
@@ -8,7 +8,7 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-sealed class DetailsBlock {
+internal sealed class DetailsBlock {
 
     abstract val id: String
 
