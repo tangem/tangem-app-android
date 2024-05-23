@@ -25,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.core.content.ContextCompat.startActivity
-import com.tangem.core.ui.components.PrimaryStartIconButton
+import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.domain.models.ExpectedAward
@@ -281,8 +281,7 @@ private fun AdditionalButtons(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
-        PrimaryStartIconButton(
-            modifier = Modifier.weight(1f),
+        PrimaryButtonIconStart(
             text = stringResource(id = R.string.common_copy),
             iconResId = R.drawable.ic_copy_24,
             onClick = {
@@ -297,11 +296,11 @@ private fun AdditionalButtons(
                     )
                 }
             },
+            modifier = Modifier.weight(1f),
         )
 
         val context = LocalContext.current
-        PrimaryStartIconButton(
-            modifier = Modifier.weight(1f),
+        PrimaryButtonIconStart(
             text = stringResource(id = R.string.common_share),
             iconResId = R.drawable.ic_share_24,
             onClick = {
@@ -309,6 +308,7 @@ private fun AdditionalButtons(
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 context.shareText(context.getString(R.string.referral_share_link, shareLink))
             },
+            modifier = Modifier.weight(1f),
         )
     }
 }
