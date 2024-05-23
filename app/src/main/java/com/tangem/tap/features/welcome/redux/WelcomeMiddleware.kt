@@ -13,16 +13,19 @@ import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.legacy.unlockIfLockable
-import com.tangem.tap.*
+import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -83,6 +86,7 @@ internal class WelcomeMiddleware {
             """.trimIndent(),
         )
 
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
         userWalletsListManager.unlockIfLockable(type = UnlockType.ANY)
             .doOnFailure { error ->
                 Timber.e(error, "Unable to unlock user wallets with biometrics")
@@ -113,8 +117,11 @@ internal class WelcomeMiddleware {
         )
 
         scanCardInternal { scanResponse ->
-            val userWallet = UserWalletBuilder(scanResponse).build() ?: return@scanCardInternal
+            val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+            val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build()
+                ?: return@scanCardInternal
 
+            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
             userWalletsListManager.save(userWallet, canOverride = true)
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to save user wallet")
@@ -140,12 +147,14 @@ internal class WelcomeMiddleware {
         )
         Analytics.addContext(scanResponse)
         if (currency != null) {
+            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
             Analytics.send(
                 event = Basic.SignedIn(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = signInType,
-                    walletsCount = store.state.globalState.userWalletsListManager?.walletsCount.toString(),
+                    walletsCount = userWalletsListManager.walletsCount.toString(),
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
@@ -153,6 +162,7 @@ internal class WelcomeMiddleware {
     }
 
     private suspend fun disableUserWalletsSaving() {
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
         userWalletsListManager.clear()
             .flatMap { tangemSdkManager.clearSavedUserCodes() }
             .doOnFailure { e ->
@@ -165,9 +175,12 @@ internal class WelcomeMiddleware {
     }
 
     private suspend inline fun scanCardInternal(crossinline onCardScanned: suspend (ScanResponse) -> Unit) {
+        val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+
         store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
-            isBiometricsRequestPolicy = preferencesStorage.shouldSaveAccessCodes,
+            isBiometricsRequestPolicy = shouldSaveAccessCodes,
         )
+
         store.inject(DaggerGraphState::scanCardProcessor).scan(
             analyticsSource = AnalyticsParam.ScreensSources.SignIn,
             onSuccess = { scanResponse ->
