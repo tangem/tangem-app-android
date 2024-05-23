@@ -1,6 +1,5 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.navigation.StateDialog
@@ -84,7 +83,6 @@ sealed class GlobalAction : Action {
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val chatConfig: ChatConfig? = null) : GlobalAction()
-    data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
         object Init : GlobalAction() {
