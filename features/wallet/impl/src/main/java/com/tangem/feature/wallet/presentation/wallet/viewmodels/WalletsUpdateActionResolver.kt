@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels
 
+import arrow.core.getOrElse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -23,37 +24,19 @@ internal class WalletsUpdateActionResolver @Inject constructor(
 ) {
 
     fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState): Action {
-        val selectedWallet = wallets.getSelectedWallet()
+        val selectedWallet = getSelectedWalletSyncUseCase().getOrElse {
+            error("Unable to find selected wallet: $it")
+        }
 
-        val action = if (selectedWallet == null) {
-            createNoSelectedWalletAction(wallets)
+        val action = if (isFirstInitialization(currentState)) {
+            createInitializeWalletsAction(wallets, selectedWallet)
         } else {
-            if (isFirstInitialization(currentState)) {
-                createInitializeWalletsAction(wallets, selectedWallet)
-            } else {
-                getUpdateContentAction(currentState, wallets, selectedWallet)
-            }
+            getUpdateContentAction(currentState, wallets, selectedWallet)
         }
 
         Timber.d("Resolved action: $action")
 
         return action
-    }
-
-    private fun List<UserWallet>.getSelectedWallet(): UserWallet? {
-        return when {
-            isEmpty() -> null
-            size == 1 -> if (first().isLocked) null else first()
-            else -> getSelectedWalletSyncUseCase().fold(ifLeft = { null }, ifRight = { it })
-        }
-    }
-
-    private fun createNoSelectedWalletAction(wallets: List<UserWallet>): Action {
-        return when {
-            wallets.isEmpty() -> Action.NoWallets
-            wallets.all(UserWallet::isLocked) -> Action.NoAccessibleWallets
-            else -> Action.Unknown
-        }
     }
 
     private fun isFirstInitialization(state: WalletScreenState): Boolean {
@@ -288,10 +271,6 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                 return "UpdateWalletCardCount(selectedWallet = ${selectedWallet.walletId})"
             }
         }
-
-        data object NoAccessibleWallets : Action()
-
-        data object NoWallets : Action()
 
         data object Unknown : Action()
     }

@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.transactions
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import java.util.UUID
 
@@ -42,19 +44,10 @@ internal fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TransactionsBlockGroupTitle_Light() {
-    TangemTheme(isDark = false) {
-        TxHistoryGroupTitle(
-            config = TxHistoryItemState.GroupTitle(title = "Today", itemKey = UUID.randomUUID().toString()),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_TransactionsBlockGroupTitle_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_TransactionsBlockGroupTitle() {
+    TangemThemePreview {
         TxHistoryGroupTitle(
             config = TxHistoryItemState.GroupTitle(title = "Today", itemKey = UUID.randomUUID().toString()),
         )

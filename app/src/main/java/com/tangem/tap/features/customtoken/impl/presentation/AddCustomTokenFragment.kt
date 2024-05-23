@@ -5,10 +5,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.tap.features.customtoken.impl.presentation.ui.AddCustomTokenScreen
 import com.tangem.tap.features.customtoken.impl.presentation.viewmodels.AddCustomTokenViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,7 +23,7 @@ import javax.inject.Inject
 internal class AddCustomTokenFragment : ComposeFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {

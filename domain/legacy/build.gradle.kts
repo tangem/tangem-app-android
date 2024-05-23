@@ -9,16 +9,16 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:datasource"))
-    implementation(project(":core:utils"))
-    implementation(project(":common"))
-    implementation(project(":libs:auth"))
+    implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+    implementation(projects.common)
+    implementation(projects.libs.auth)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.demo)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
-
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")

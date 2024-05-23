@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.common.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.TangemSwitch
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.common.state.NetworkItemState
@@ -122,17 +124,10 @@ internal fun NetworkIcon(model: NetworkItemState, modifier: Modifier = Modifier)
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_NetworkItem_Light(@PreviewParameter(NetworkItemStateProvider::class) state: NetworkItemState) {
-    TangemTheme(isDark = false) {
-        NetworkItem(state, tokenState = TokenItemStatePreviewData.loadedPriceDown as TokenItemState.Loaded)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_NetworkItem_Dark(@PreviewParameter(NetworkItemStateProvider::class) state: NetworkItemState) {
-    TangemTheme(isDark = true) {
+private fun Preview_NetworkItem(@PreviewParameter(NetworkItemStateProvider::class) state: NetworkItemState) {
+    TangemThemePreview {
         NetworkItem(state, tokenState = TokenItemStatePreviewData.loadedPriceDown as TokenItemState.Loaded)
     }
 }

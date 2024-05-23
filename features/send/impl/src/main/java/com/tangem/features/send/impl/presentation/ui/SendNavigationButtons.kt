@@ -34,6 +34,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
@@ -179,10 +180,10 @@ private fun SendingText(
         }
 
         if (feeFiat != null && sendingFiat != null) {
-            val sendingValue = getFiatFormatted(
-                value = sendingFiat,
-                currencySymbol = feeState.appCurrency.symbol,
-                currencyCode = feeState.appCurrency.code,
+            val sendingValue = BigDecimalFormatter.formatFiatAmount(
+                fiatAmount = sendingFiat,
+                fiatCurrencySymbol = feeState.appCurrency.symbol,
+                fiatCurrencyCode = feeState.appCurrency.code,
             )
             val feeValue = getFiatString(
                 value = feeState.fee?.amount?.value,

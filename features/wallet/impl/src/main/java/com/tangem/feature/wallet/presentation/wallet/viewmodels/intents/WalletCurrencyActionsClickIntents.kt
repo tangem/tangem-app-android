@@ -7,8 +7,10 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
@@ -19,6 +21,7 @@ import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.models.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.models.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -43,7 +46,13 @@ import javax.inject.Inject
 
 interface WalletCurrencyActionsClickIntents {
 
-    fun onSendClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onSendClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
+
+    fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
 
     fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
@@ -52,12 +61,6 @@ interface WalletCurrencyActionsClickIntents {
     fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus)
-
-    fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
-
-    fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
-
-    fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onExploreClick()
 }
@@ -82,12 +85,17 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
-    override fun onSendClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onSendClick(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    ) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
         )
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
         viewModelScope.launch(dispatchers.main) {
@@ -121,7 +129,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun sendToken(
         cryptoCurrency: CryptoCurrency.Token,
-        cryptoCurrencyStatus: CryptoCurrencyStatus.Status,
+        cryptoCurrencyStatus: CryptoCurrencyStatus.Value,
         feeCurrencyStatus: CryptoCurrencyStatus?,
         userWallet: UserWallet,
     ) {
@@ -198,11 +206,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 .find { it.type == AddressType.Default }
                 ?.value
                 ?.let {
+                    stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
+
                     walletEventSender.send(
-                        event = WalletEvent.CopyAddress(
-                            address = it,
-                            toast = resourceReference(R.string.wallet_notification_address_copied),
-                        ),
+                        event = WalletEvent.CopyAddress(address = it),
                     )
                 }
         }
@@ -264,7 +271,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 .fold(
                     ifLeft = {
                         walletEventSender.send(
-                            event = WalletEvent.ShowToast(text = resourceReference(R.string.common_error)),
+                            event = WalletEvent.ShowError(text = resourceReference(R.string.common_error)),
                         )
                     },
                     ifRight = {
@@ -274,10 +281,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onSellClick(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    ) {
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrencyStatus.currency.symbol),
         )
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         showErrorIfDemoModeOrElse {
             viewModelScope.launch(dispatchers.main) {
@@ -291,12 +303,17 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onBuyClick(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    ) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrencyStatus.currency.symbol),
         )
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         showErrorIfDemoModeOrElse {
             viewModelScope.launch(dispatchers.main) {
@@ -311,10 +328,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onSwapClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onSwapClick(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    ) {
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrencyStatus.currency.symbol),
         )
+
+        if (handleUnavailabilityReason(unavailabilityReason)) return
 
         reduxStateHolder.dispatch(TradeCryptoAction.Swap(cryptoCurrencyStatus.currency))
     }
@@ -400,6 +422,79 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             )
         } else {
             action()
+        }
+    }
+
+    private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
+        if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
+
+        val unavailabilityReasonText = getUnavailabilityReasonText(unavailabilityReason)
+
+        viewModelScope.launch(dispatchers.main) {
+            walletEventSender.send(
+                event = WalletEvent.ShowAlert(
+                    state = WalletAlertState.DefaultAlert(
+                        title = null,
+                        message = unavailabilityReasonText,
+                        onConfirmClick = null,
+                    ),
+                ),
+            )
+        }
+
+        return true
+    }
+
+    private fun getUnavailabilityReasonText(unavailabilityReason: ScenarioUnavailabilityReason): TextReference {
+        return when (unavailabilityReason) {
+            is ScenarioUnavailabilityReason.PendingTransaction -> {
+                when (unavailabilityReason.withdrawalScenario) {
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_pending_transaction_send,
+                        formatArgs = wrappedList(unavailabilityReason.networkName),
+                    )
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_pending_transaction_sell,
+                        formatArgs = wrappedList(unavailabilityReason.networkName),
+                    )
+                }
+            }
+            is ScenarioUnavailabilityReason.EmptyBalance -> {
+                when (unavailabilityReason.withdrawalScenario) {
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_empty_balance_send,
+                    )
+                    ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
+                        id = R.string.token_button_unavailability_reason_empty_balance_sell,
+                    )
+                }
+            }
+            is ScenarioUnavailabilityReason.BuyUnavailable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_buy_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            is ScenarioUnavailabilityReason.NotExchangeable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_not_exchangeable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            is ScenarioUnavailabilityReason.NotSupportedBySellService -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_reason_sell_unavailable,
+                    formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+                )
+            }
+            ScenarioUnavailabilityReason.Unreachable -> {
+                resourceReference(
+                    id = R.string.token_button_unavailability_generic_description,
+                )
+            }
+            ScenarioUnavailabilityReason.None -> {
+                throw IllegalArgumentException("The unavailability reason must be other than None")
+            }
         }
     }
 }
