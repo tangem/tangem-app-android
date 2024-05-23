@@ -52,10 +52,7 @@ import com.tangem.features.send.impl.presentation.state.confirm.SendNotification
 import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.DelayedWork
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -586,7 +583,7 @@ internal class SendViewModel @Inject constructor(
         )
     }
 
-    // endregion
+// endregion
 
     // region amount state clicks
     override fun onCurrencyChangeClick(isFiat: Boolean) {
@@ -612,7 +609,7 @@ internal class SendViewModel @Inject constructor(
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {
         viewModelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
-                uiState = stateFactory.onRecipientAddressValueChange(value)
+                uiState = stateFactory.onRecipientAddressValueChange(value, isValuePasted = type != null)
                 uiState = stateFactory.getOnRecipientAddressValidationStarted()
                 val isValidAddress = validateAddress(value)
                 uiState = stateFactory.getOnRecipientAddressValidState(value, isValidAddress)
@@ -622,10 +619,10 @@ internal class SendViewModel @Inject constructor(
         }.saveIn(addressValidationJobHolder)
     }
 
-    override fun onRecipientMemoValueChange(value: String) {
+    override fun onRecipientMemoValueChange(value: String, isValuePasted: Boolean) {
         viewModelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
-                uiState = stateFactory.getOnRecipientMemoValueChange(value)
+                uiState = stateFactory.getOnRecipientMemoValueChange(value, isValuePasted)
                 uiState = stateFactory.getOnRecipientAddressValidationStarted()
                 val isValidAddress = validateAddress(uiState.recipientState?.addressTextField?.value.orEmpty())
                 uiState = stateFactory.getOnRecipientMemoValidState(value, isValidAddress)
@@ -647,7 +644,7 @@ internal class SendViewModel @Inject constructor(
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
         return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
-            uiState = stateFactory.onRecipientAddressValueChange(value, isXAddress = true)
+            uiState = stateFactory.onRecipientAddressValueChange(value, isXAddress = true, isValuePasted = true)
             uiState = stateFactory.getOnXAddressMemoState()
             val isValidAddress = validateAddress(decodedAddress.address)
             uiState = stateFactory.getOnRecipientAddressValidState(decodedAddress.address, isValidAddress)
