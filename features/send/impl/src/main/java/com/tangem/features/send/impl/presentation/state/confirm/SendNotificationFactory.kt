@@ -66,18 +66,20 @@ internal class SendNotificationFactory(
 
             val amountValue = amountState.amountTextField.cryptoAmount.value ?: BigDecimal.ZERO
             val feeValue = feeState.fee?.amount?.value ?: BigDecimal.ZERO
+            val reduceAmountBy = sendState.reduceAmountBy ?: BigDecimal.ZERO
             val isFeeCoverage = checkFeeCoverage(
                 isSubtractAvailable = isSubtractAvailableProvider(),
                 balance = balance,
                 amountValue = amountValue,
                 feeValue = feeValue,
+                reduceAmountBy = reduceAmountBy,
             )
             val sendingAmount = checkAndCalculateSubtractedAmount(
                 isAmountSubtractAvailable = isFeeCoverage,
                 cryptoCurrencyStatus = cryptoCurrencyStatusProvider(),
                 amountValue = amountValue,
                 feeValue = feeValue,
-                reduceAmountBy = sendState.reduceAmountBy,
+                reduceAmountBy = reduceAmountBy,
             )
             buildList {
                 // errors
@@ -221,7 +223,7 @@ internal class SendNotificationFactory(
                     ),
                     onConfirmClick = {
                         clickIntents.onAmountReduceClick(
-                            reduceAmountBy = currencyDeposit,
+                            reduceAmountBy = currencyDeposit.minus(diff),
                             clazz = SendNotification.Error.ExistentialDeposit::class.java,
                         )
                     },
