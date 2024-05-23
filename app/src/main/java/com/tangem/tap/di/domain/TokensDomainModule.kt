@@ -185,6 +185,7 @@ internal object TokensDomainModule {
     @ViewModelScoped
     fun provideGetCryptoCurrencyActionsUseCase(
         rampStateManager: RampStateManager,
+        walletManagersFacade: WalletManagersFacade,
         marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -193,6 +194,7 @@ internal object TokensDomainModule {
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
             rampManager = rampStateManager,
+            walletManagersFacade = walletManagersFacade,
             marketCryptoCurrencyRepository = marketCryptoCurrencyRepository,
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
