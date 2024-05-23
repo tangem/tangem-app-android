@@ -12,7 +12,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletIdBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -32,10 +32,10 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import com.tangem.tap.userWalletsListManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
@@ -60,6 +60,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
     val globalState = store.state.globalState
     val onboardingManager = globalState.onboardingState.onboardingManager
     val twinCardsState = store.state.twinCardsState
+    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
     fun getScanResponse(): ScanResponse {
         return when (twinCardsState.mode) {
@@ -244,8 +245,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             val walletManager = if (twinCardsState.walletManager != null) {
                 twinCardsState.walletManager
             } else {
-                val wmFactory = globalState.tapWalletManager.walletManagerFactory
-                val walletManager = wmFactory.makePrimaryWalletManager(getScanResponse()).guard {
+                val wmFactory = runBlocking {
+                    store.inject(DaggerGraphState::blockchainSDKFactory).getWalletManagerFactorySync()
+                }
+                val walletManager = wmFactory?.makePrimaryWalletManager(getScanResponse()).guard {
                     val message = "Loading cancelled. Cause: wallet manager didn't created"
                     val customError = TapError.CustomError(message)
                     store.dispatchErrorNotification(customError)
@@ -363,6 +366,8 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 }
 
 private fun getPopBackScreen(): AppScreen {
+    val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+
     return if (userWalletsListManager.hasUserWallets) {
         val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }
             .fold(onSuccess = { true }, onFailure = { false })

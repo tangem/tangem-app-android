@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
@@ -49,6 +50,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
@@ -387,20 +389,13 @@ private fun Image(@DrawableRes id: Int?, modifier: Modifier = Modifier) {
 // region Preview
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_WalletCard_LightTheme(
+private fun Preview_WalletCard(
     @PreviewParameter(WalletCardStateProvider::class)
     state: WalletCardState,
 ) {
-    TangemTheme(isDark = false) {
-        WalletCard(state = state, isBalanceHidden = false)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_WalletCard_DarkTheme(@PreviewParameter(WalletCardStateProvider::class) state: WalletCardState) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         WalletCard(state = state, isBalanceHidden = false)
     }
 }
