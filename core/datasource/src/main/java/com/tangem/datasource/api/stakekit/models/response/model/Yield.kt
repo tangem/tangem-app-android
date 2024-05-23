@@ -140,6 +140,6 @@ data class Yield(
         @Json(name = "apy")
         APY, // auto
         @Json(name = "apr")
-        APR // manual
+        APR, // manual
     }
 }
