@@ -12,7 +12,7 @@ internal class CurrencyStatusOperations(
 
     fun createTokenStatus(): CryptoCurrencyStatus = CryptoCurrencyStatus(currency, createStatus())
 
-    private fun createStatus(): CryptoCurrencyStatus.Status {
+    private fun createStatus(): CryptoCurrencyStatus.Value {
         return when (val status = networkStatus?.value) {
             null -> CryptoCurrencyStatus.Loading
             is NetworkStatus.MissedDerivation -> createMissedDerivationStatus()
@@ -42,7 +42,7 @@ internal class CurrencyStatusOperations(
             networkAddress = status.address,
         )
 
-    private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Status {
+    private fun createStatus(status: NetworkStatus.Verified): CryptoCurrencyStatus.Value {
         val amount = when (val amount = status.amounts[currency.id]) {
             null -> {
                 return CryptoCurrencyStatus.Loading
