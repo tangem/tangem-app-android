@@ -42,6 +42,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.RentInfo,
             is TokenDetailsNotification.SwapPromo,
             is TokenDetailsNotification.NetworkShutdown,
+            is TokenDetailsNotification.HederaAssociateWarning,
             -> null
         }
     }

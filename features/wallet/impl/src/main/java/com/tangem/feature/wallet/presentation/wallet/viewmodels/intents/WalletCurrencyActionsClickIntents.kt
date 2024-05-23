@@ -492,6 +492,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     id = R.string.token_button_unavailability_generic_description,
                 )
             }
+            ScenarioUnavailabilityReason.UnassociatedAsset -> resourceReference(
+                id = R.string.warning_receive_blocked_hedera_token_association_required_message,
+            )
             ScenarioUnavailabilityReason.None -> {
                 throw IllegalArgumentException("The unavailability reason must be other than None")
             }
