@@ -50,6 +50,7 @@ import com.tangem.features.send.impl.presentation.state.*
 import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactory
 import com.tangem.features.send.impl.presentation.state.confirm.SendNotificationFactory
 import com.tangem.features.send.impl.presentation.state.fee.*
+import com.tangem.features.send.impl.presentation.state.recipient.RecipientSendFactory
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -131,8 +132,14 @@ internal class SendViewModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         feeCryptoCurrencyStatusProvider = Provider { feeCryptoCurrencyStatus },
-        validateWalletMemoUseCase = validateWalletMemoUseCase,
         isTapHelpPreviewEnabledProvider = Provider { isTapHelpPreviewEnabled },
+    )
+
+    private val recipientStateFactory = RecipientSendFactory(
+        stateRouterProvider = Provider { stateRouter },
+        currentStateProvider = Provider { uiState },
+        cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+        validateWalletMemoUseCase = validateWalletMemoUseCase,
     )
 
     private val amountStateFactory = AmountStateFactory(
@@ -410,9 +417,9 @@ internal class SendViewModel @Inject constructor(
                     .orEmpty()
             }.onSuccess { result ->
                 userWallets = result
-                uiState = stateFactory.onLoadedWalletsList(wallets = userWallets)
+                uiState = recipientStateFactory.onLoadedWalletsList(wallets = userWallets)
             }.onFailure {
-                uiState = stateFactory.onLoadedWalletsList(wallets = emptyList())
+                uiState = recipientStateFactory.onLoadedWalletsList(wallets = emptyList())
             }
         }
     }
@@ -452,7 +459,7 @@ internal class SendViewModel @Inject constructor(
             userWalletId = userWalletId,
             currency = cryptoCurrency,
         ).getOrElse { emptyList() }
-        uiState = stateFactory.onLoadedHistoryList(txHistory = txHistoryList)
+        uiState = recipientStateFactory.onLoadedHistoryList(txHistory = txHistoryList)
     }
 
     private fun onStateActive() {
@@ -586,7 +593,7 @@ internal class SendViewModel @Inject constructor(
         )
     }
 
-    // endregion
+// endregion
 
     // region amount state clicks
     override fun onCurrencyChangeClick(isFiat: Boolean) {
@@ -612,23 +619,24 @@ internal class SendViewModel @Inject constructor(
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {
         viewModelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
-                uiState = stateFactory.onRecipientAddressValueChange(value)
-                uiState = stateFactory.getOnRecipientAddressValidationStarted()
+                uiState = recipientStateFactory.onRecipientAddressValueChange(value, isValuePasted = type != null)
+                uiState = recipientStateFactory.getOnRecipientAddressValidationStarted()
                 val isValidAddress = validateAddress(value)
-                uiState = stateFactory.getOnRecipientAddressValidState(value, isValidAddress)
+                uiState = recipientStateFactory.getOnRecipientAddressValidState(value, isValidAddress)
                 type?.let { analyticsEventHandler.send(SendAnalyticEvents.AddressEntered(it, isValidAddress)) }
                 autoNextFromRecipient(type, isValidAddress)
             }
         }.saveIn(addressValidationJobHolder)
     }
 
-    override fun onRecipientMemoValueChange(value: String) {
+    override fun onRecipientMemoValueChange(value: String, isValuePasted: Boolean) {
         viewModelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
-                uiState = stateFactory.getOnRecipientMemoValueChange(value)
-                uiState = stateFactory.getOnRecipientAddressValidationStarted()
-                val isValidAddress = validateAddress(uiState.recipientState?.addressTextField?.value.orEmpty())
-                uiState = stateFactory.getOnRecipientMemoValidState(value, isValidAddress)
+                uiState = recipientStateFactory.getOnRecipientMemoValueChange(value, isValuePasted)
+                uiState = recipientStateFactory.getOnRecipientAddressValidationStarted()
+                val recipientState = uiState.getRecipientState(stateRouter.isEditState)
+                val isValidAddress = validateAddress(recipientState?.addressTextField?.value.orEmpty())
+                uiState = recipientStateFactory.getOnRecipientMemoValidState(value, isValidAddress)
             }
         }.saveIn(memoValidationJobHolder)
     }
@@ -647,16 +655,17 @@ internal class SendViewModel @Inject constructor(
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {
         return BlockchainUtils.decodeRippleXAddress(value, cryptoCurrency.network.id.value)?.let { decodedAddress ->
-            uiState = stateFactory.onRecipientAddressValueChange(value, isXAddress = true)
-            uiState = stateFactory.getOnXAddressMemoState()
+            uiState =
+                recipientStateFactory.onRecipientAddressValueChange(value, isXAddress = true, isValuePasted = true)
+            uiState = recipientStateFactory.getOnXAddressMemoState()
             val isValidAddress = validateAddress(decodedAddress.address)
-            uiState = stateFactory.getOnRecipientAddressValidState(decodedAddress.address, isValidAddress)
+            uiState = recipientStateFactory.getOnRecipientAddressValidState(decodedAddress.address, isValidAddress)
             true
         } ?: false
     }
 
     private fun onEnteredValidAddress(isValidAddress: Boolean, isAddressInWallet: Boolean) {
-        uiState = stateFactory.getHiddenRecentListState(
+        uiState = recipientStateFactory.getHiddenRecentListState(
             isAddressInWallet = isAddressInWallet,
             isValidAddress = isValidAddress,
         )
