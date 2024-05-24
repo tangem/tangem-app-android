@@ -190,6 +190,7 @@ include(":domain:onboarding")
 include(":domain:feedback")
 include(":domain:qr-scanning")
 include(":domain:qr-scanning:models")
+include(":domain:wallet-connect")
 // endregion Domain modules
 
 // region Data modules
