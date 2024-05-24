@@ -100,6 +100,7 @@ dependencies {
     implementation(projects.data.onboarding)
     implementation(projects.data.feedback)
     implementation(projects.data.qrScanning)
+    implementation(projects.data.walletConnect)
 
     /** Features */
     implementation(projects.features.onboarding)
