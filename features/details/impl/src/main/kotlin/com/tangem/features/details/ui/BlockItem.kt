@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.details.state.DetailsBlock
+import com.tangem.features.details.entity.DetailsItemUM
 
 @Composable
-internal fun BlockItem(model: DetailsBlock.Basic.Item, modifier: Modifier = Modifier) {
+internal fun BlockItem(model: DetailsItemUM.Basic.Item, modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier,
         onClick = model.onClick,

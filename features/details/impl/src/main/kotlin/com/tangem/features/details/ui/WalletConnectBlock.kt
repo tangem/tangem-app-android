@@ -4,32 +4,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.details.component.WalletConnectComponent
 import com.tangem.features.details.impl.R
 
 @Composable
-internal fun WalletConnectBlock(component: WalletConnectComponent, modifier: Modifier = Modifier) {
-    val state by component.state.collectAsStateWithLifecycle()
-
-    Content(
-        modifier = modifier,
-        state = state as? WalletConnectComponent.State.Content ?: return,
-    )
-}
-
-@Composable
-private fun Content(state: WalletConnectComponent.State.Content, modifier: Modifier = Modifier) {
+internal fun WalletConnectBlock(onClick: () -> Unit, modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier,
-        onClick = state.onClick,
+        onClick = onClick,
     ) {
         Row(
             modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),

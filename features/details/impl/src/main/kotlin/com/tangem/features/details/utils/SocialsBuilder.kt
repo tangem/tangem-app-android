@@ -1,8 +1,8 @@
 package com.tangem.features.details.utils
 
 import androidx.compose.ui.text.intl.Locale
+import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.impl.R
-import com.tangem.features.details.state.DetailsFooter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -10,8 +10,8 @@ internal class SocialsBuilder(
     private val urlOpener: (url: String) -> Unit,
 ) {
 
-    fun buildAll(): ImmutableList<DetailsFooter.Social> = Social.all.map { social ->
-        DetailsFooter.Social(
+    fun buildAll(): ImmutableList<DetailsFooterUM.Social> = Social.all.map { social ->
+        DetailsFooterUM.Social(
             id = social.name,
             iconResId = social.iconResId,
             onClick = { openUrl(social) },

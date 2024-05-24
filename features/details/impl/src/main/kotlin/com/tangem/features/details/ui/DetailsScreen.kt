@@ -1,6 +1,7 @@
 package com.tangem.features.details.ui
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -19,29 +20,28 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.component.preview.PreviewDetailsComponent
+import com.tangem.features.details.entity.DetailsFooterUM
+import com.tangem.features.details.entity.DetailsItemUM
+import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.impl.R
-import com.tangem.features.details.state.DetailsBlock
-import com.tangem.features.details.state.DetailsFooter
-import com.tangem.features.details.state.DetailsState
 
 private const val COLLAPSED_APP_BAR_THRESHOLD = 0.4f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DetailsScreen(component: DetailsComponent, modifier: Modifier = Modifier) {
-    val state by component.state.collectAsStateWithLifecycle()
+internal fun DetailsScreen(state: DetailsUM, modifier: Modifier = Modifier) {
     val backgroundColor = TangemTheme.colors.background.secondary
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     SystemBarsEffect {
         setSystemBarsColor(backgroundColor)
     }
+
+    BackHandler(onBack = state.popBack)
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -57,7 +57,7 @@ internal fun DetailsScreen(component: DetailsComponent, modifier: Modifier = Mod
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopBar(state: DetailsState, scrollBehavior: TopAppBarScrollBehavior, modifier: Modifier = Modifier) {
+private fun TopBar(state: DetailsUM, scrollBehavior: TopAppBarScrollBehavior, modifier: Modifier = Modifier) {
     MediumTopAppBar(
         modifier = modifier,
         scrollBehavior = scrollBehavior,
@@ -102,7 +102,7 @@ private fun TopBar(state: DetailsState, scrollBehavior: TopAppBarScrollBehavior,
 }
 
 @Composable
-private fun Content(state: DetailsState, modifier: Modifier = Modifier) {
+private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
@@ -112,7 +112,7 @@ private fun Content(state: DetailsState, modifier: Modifier = Modifier) {
         ),
     ) {
         items(
-            items = state.blocks,
+            items = state.items,
             key = { block -> block.id },
         ) { block ->
             Block(
@@ -131,7 +131,7 @@ private fun Content(state: DetailsState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Block(model: DetailsBlock, modifier: Modifier = Modifier) {
+private fun Block(model: DetailsItemUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -143,7 +143,7 @@ private fun Block(model: DetailsBlock, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Top,
     ) {
         when (model) {
-            is DetailsBlock.Basic -> {
+            is DetailsItemUM.Basic -> {
                 model.items.forEach { item ->
                     BlockItem(
                         modifier = Modifier.fillMaxWidth(),
@@ -151,7 +151,7 @@ private fun Block(model: DetailsBlock, modifier: Modifier = Modifier) {
                     )
                 }
             }
-            is DetailsBlock.Component -> {
+            is DetailsItemUM.Component -> {
                 model.content(
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -161,7 +161,7 @@ private fun Block(model: DetailsBlock, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Footer(model: DetailsFooter, modifier: Modifier = Modifier) {
+private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .padding(
@@ -206,12 +206,12 @@ private fun Footer(model: DetailsFooter, modifier: Modifier = Modifier) {
 }
 
 // region Preview
+@Composable
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
 private fun Preview_DetailsScreen() {
     TangemThemePreview {
-        DetailsScreen(PreviewDetailsComponent(), modifier = Modifier.fillMaxSize())
+        PreviewDetailsComponent().View(modifier = Modifier.fillMaxSize())
     }
 }
 // endregion Preview

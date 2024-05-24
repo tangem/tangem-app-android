@@ -5,22 +5,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.details.component.UserWalletListComponent
+import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.impl.R
 
 @Composable
-internal fun UserWalletListBlock(component: UserWalletListComponent, modifier: Modifier = Modifier) {
-    val state by component.state.collectAsStateWithLifecycle()
-
+internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier,
     ) {
@@ -38,9 +34,10 @@ internal fun UserWalletListBlock(component: UserWalletListComponent, modifier: M
 }
 
 @Composable
-private fun UserWalletItem(model: UserWalletListComponent.State.UserWallet, modifier: Modifier = Modifier) {
+private fun UserWalletItem(model: UserWalletListUM.UserWalletUM, modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier,
+        onClick = model.onClick,
     ) {
         Row(
             modifier = Modifier
