@@ -8,14 +8,14 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal sealed class DetailsBlock {
+internal sealed class DetailsItemUM {
 
     abstract val id: String
 
     data class Basic(
         override val id: String,
         val items: ImmutableList<Item>,
-    ) : DetailsBlock() {
+    ) : DetailsItemUM() {
 
         data class Item(
             val title: TextReference,
@@ -28,7 +28,7 @@ internal sealed class DetailsBlock {
     data class Component(
         override val id: String,
         val content: Content,
-    ) : DetailsBlock() {
+    ) : DetailsItemUM() {
 
         fun interface Content {
 

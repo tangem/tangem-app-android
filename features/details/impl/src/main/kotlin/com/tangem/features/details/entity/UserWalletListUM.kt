@@ -5,13 +5,13 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.collections.immutable.ImmutableList
 
-internal data class UserWalletList(
-    val userWallets: ImmutableList<UserWallet>,
+internal data class UserWalletListUM(
+    val userWallets: ImmutableList<UserWalletUM>,
     val addNewWalletText: TextReference,
     val onAddNewWalletClick: () -> Unit,
 ) {
 
-    data class UserWallet(
+    data class UserWalletUM(
         val id: UserWalletId,
         val name: String,
         val information: TextReference,
