@@ -6,6 +6,6 @@ internal class DefaultDetailsFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : DetailsFeatureToggles {
 
-    override val isRedisignEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled("DETAILS_REDISIGN_ENABLED")
+    override val isRedesignEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled("DETAILS_REDESIGN_ENABLED")
 }
