@@ -65,7 +65,7 @@ data class YieldBalances(
         @JsonClass(generateAdapter = true)
         data class PendingAction(
             @Json(name = "type")
-            val type: ActionType,
+            val type: StakingActionType,
             @Json(name = "passthrough")
             val passthrough: String,
             @Json(name = "args")

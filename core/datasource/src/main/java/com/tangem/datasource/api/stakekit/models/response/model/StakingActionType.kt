@@ -2,7 +2,7 @@ package com.tangem.datasource.api.stakekit.models.response.model
 
 import com.squareup.moshi.Json
 
-enum class ActionType {
+enum class StakingActionType {
     @Json(name = "STAKE")
     STAKE,
 
