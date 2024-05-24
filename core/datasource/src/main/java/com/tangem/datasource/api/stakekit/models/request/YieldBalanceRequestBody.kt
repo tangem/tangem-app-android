@@ -2,10 +2,10 @@ package com.tangem.datasource.api.stakekit.models.request
 
 import com.squareup.moshi.Json
 
-data class MultipleYieldBalancesRequestBody(
+data class YieldBalanceRequestBody(
     @Json(name = "addresses") val addresses: Address,
-    @Json(name = "args") val args: MultipleYieldBalancesRequestArgs,
-    @Json(name = "integrationId") val integrationId: String,
+    @Json(name = "args") val args: YieldBalanceRequestArgs,
+    @Json(name = "integrationId") val integrationId: String? = null,
 ) {
     data class Address(
         @Json(name = "address") val address: String,
@@ -22,7 +22,7 @@ data class MultipleYieldBalancesRequestBody(
             @Json(name = "pAddressBech") val pAddressBech: String? = null,
         )
     }
-    data class MultipleYieldBalancesRequestArgs(
+    data class YieldBalanceRequestArgs(
         @Json(name = "validatorAddresses") val validatorAddresses: List<String>,
     )
 }

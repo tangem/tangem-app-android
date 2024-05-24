@@ -27,6 +27,7 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
@@ -97,6 +98,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
+    private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -182,6 +184,11 @@ internal class TokenDetailsViewModel @Inject constructor(
             ),
         )
         userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
+
+        // TODO staking
+        viewModelScope.launch(dispatchers.io) {
+            getStakingEntryInfoUseCase.invoke()
+        }
     }
 
     private fun onBuyCurrencyDeepLink() {

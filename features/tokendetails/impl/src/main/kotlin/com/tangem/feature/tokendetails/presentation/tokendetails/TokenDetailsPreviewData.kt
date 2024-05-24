@@ -103,6 +103,8 @@ internal object TokenDetailsPreviewData {
 
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencySymbol = "USDT")
 
+    private val stakingLoading = StakingBlockState.Loading
+
     private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
         isRefreshing = false,
         onRefresh = {},
@@ -237,6 +239,7 @@ internal object TokenDetailsPreviewData {
         tokenInfoBlockState = tokenInfoBlockState,
         tokenBalanceBlockState = balanceLoading,
         marketPriceBlockState = marketPriceLoading,
+        stakingBlockState = stakingLoading,
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.Content(
             contentItems = MutableStateFlow(
@@ -266,6 +269,11 @@ internal object TokenDetailsPreviewData {
                 valueInPercent = "5,16%",
                 type = PriceChangeType.UP,
             ),
+        ),
+        stakingBlockState = StakingBlockState.Content(
+            percent = "7.38",
+            periodInDays = 4,
+            tokenSymbol = "XLM",
         ),
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.NotSupported(

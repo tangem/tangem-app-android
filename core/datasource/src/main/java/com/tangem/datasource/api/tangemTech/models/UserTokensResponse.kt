@@ -17,6 +17,7 @@ data class UserTokensResponse(
         @Json(name = "symbol") val symbol: String,
         @Json(name = "decimals") val decimals: Int,
         @Json(name = "contractAddress") val contractAddress: String?,
+        @Json(name = "availableForStaking") val availableForStaking: Boolean? = null,
     )
 
     enum class GroupType {

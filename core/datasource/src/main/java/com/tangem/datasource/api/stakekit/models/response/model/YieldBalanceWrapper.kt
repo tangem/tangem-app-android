@@ -6,11 +6,11 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
-data class YieldBalances(
+data class YieldBalanceWrapper(
     @Json(name = "balances")
     val balances: List<Balance>,
     @Json(name = "integrationId")
-    val integrationId: String,
+    val integrationId: String?,
 ) {
     @JsonClass(generateAdapter = true)
     data class Balance(
