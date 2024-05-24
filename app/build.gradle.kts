@@ -68,6 +68,7 @@ dependencies {
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.staking)
+    implementation(projects.domain.walletConnect)
 
     implementation(projects.common)
     implementation(projects.core.analytics)
