@@ -212,4 +212,5 @@ include(":data:onboarding")
 include(":data:feedback")
 include(":data:qr-scanning")
 include(":data:staking")
+include(":data:wallet-connect")
 // endregion Data modules
