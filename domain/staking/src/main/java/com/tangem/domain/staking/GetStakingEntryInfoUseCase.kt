@@ -9,9 +9,8 @@ import com.tangem.domain.staking.repositories.StakingRepository
  */
 class GetStakingEntryInfoUseCase(private val stakingRepository: StakingRepository) {
 
-    suspend operator fun invoke(): Either<Throwable, StakingEntryInfo> {
-        // TODO staking
-        return Either.catch { stakingRepository.getEntryInfo("avalanche-avax-native-staking") }
+    suspend operator fun invoke(integrationId: String): Either<Throwable, StakingEntryInfo> {
+        return Either.catch { stakingRepository.getEntryInfo(integrationId) }
     }
 
 }

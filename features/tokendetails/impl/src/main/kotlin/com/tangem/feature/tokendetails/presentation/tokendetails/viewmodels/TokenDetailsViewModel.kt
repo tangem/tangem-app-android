@@ -184,11 +184,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             ),
         )
         userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
-
-        // TODO staking
-        viewModelScope.launch(dispatchers.io) {
-            getStakingEntryInfoUseCase.invoke()
-        }
     }
 
     private fun onBuyCurrencyDeepLink() {
@@ -214,6 +209,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExchangeTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
+        updateStakingInfo()
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
@@ -362,6 +358,21 @@ internal class TokenDetailsViewModel @Inject constructor(
 
                 uiState = stateFactory.getLoadedTxHistoryState(maybeTxHistory)
             }
+        }
+    }
+
+    private fun updateStakingInfo() {
+        viewModelScope.launch(dispatchers.io) {
+            // TODO staking
+            val stackingInfo = getStakingEntryInfoUseCase("avalanche-avax-native-staking")
+            stackingInfo.fold(
+                ifLeft = {
+                    Timber.tag("TokenDetails").e(it)
+                },
+                ifRight = {
+                    Timber.tag("TokenDetails").e(it.toString())
+                }
+            )
         }
     }
 
