@@ -8,7 +8,7 @@ import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
-import com.tangem.blockchain.blockchains.hedera.HederaTransactionBuilder
+import com.tangem.blockchain.blockchains.hedera.HederaTransactionExtras
 import com.tangem.blockchain.blockchains.optimism.EthereumOptimisticRollupWalletManager
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
@@ -21,17 +21,17 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.externallinkprovider.TxExploreState
 import com.tangem.blockchain.network.ResultChecker
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.*
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.userWalletsListManager
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -42,6 +42,7 @@ class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val walletManagersFacade: WalletManagersFacade,
+    private val userWalletsListManager: UserWalletsListManager,
 ) : TransactionManager {
 
     override suspend fun sendApproveTransaction(
@@ -140,7 +141,7 @@ class TransactionManagerImpl(
             Blockchain.XRP -> memo.toLongOrNull()?.let { XrpTransactionBuilder.XrpTransactionExtras(it) }
             Blockchain.Cosmos -> CosmosTransactionExtras(memo)
             Blockchain.TON -> TonTransactionExtras(memo)
-            Blockchain.Hedera -> HederaTransactionBuilder.HederaTransactionExtras(memo)
+            Blockchain.Hedera -> HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             else -> null
         }
@@ -223,26 +224,33 @@ class TransactionManagerImpl(
                 when (fee.data) {
                     is TransactionFee.Single -> {
                         val normalFee = (fee.data as TransactionFee.Single).normal
-                        val singleFee = ProxyFee(
-                            gasLimit = BigInteger.ZERO,
-                            fee = convertToProxyAmount(amount = normalFee.amount),
-                        )
-                        ProxyFees.SingleFee(
-                            singleFee = singleFee,
-                        )
+                        val singleFee = if (normalFee as? Fee.CardanoToken != null) {
+                            ProxyFee.CardanoToken(
+                                gasLimit = BigInteger.ZERO,
+                                fee = convertToProxyAmount(amount = normalFee.amount),
+                                minAdaValue = normalFee.minAdaValue,
+                            )
+                        } else {
+                            ProxyFee.Common(
+                                gasLimit = BigInteger.ZERO,
+                                fee = convertToProxyAmount(amount = normalFee.amount),
+                            )
+                        }
+
+                        ProxyFees.SingleFee(singleFee = singleFee)
                     }
                     is TransactionFee.Choosable -> {
                         val choosableFee = fee.data as TransactionFee.Choosable
                         ProxyFees.MultipleFees(
-                            minFee = ProxyFee(
+                            minFee = ProxyFee.Common(
                                 gasLimit = BigInteger.ZERO,
                                 fee = convertToProxyAmount(amount = choosableFee.minimum.amount),
                             ),
-                            normalFee = ProxyFee(
+                            normalFee = ProxyFee.Common(
                                 gasLimit = BigInteger.ZERO,
                                 fee = convertToProxyAmount(amount = choosableFee.normal.amount),
                             ),
-                            priorityFee = ProxyFee(
+                            priorityFee = ProxyFee.Common(
                                 gasLimit = BigInteger.ZERO,
                                 fee = convertToProxyAmount(amount = choosableFee.priority.amount),
                             ),
@@ -299,15 +307,15 @@ class TransactionManagerImpl(
             is Result.Success -> {
                 val choosableFee = fee.data
 
-                val minProxyFee = ProxyFee(
+                val minProxyFee = ProxyFee.Common(
                     gasLimit = (choosableFee.minimum as Fee.Ethereum).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.minimum.amount),
                 )
-                val normalProxyFee = ProxyFee(
+                val normalProxyFee = ProxyFee.Common(
                     gasLimit = (choosableFee.normal as Fee.Ethereum).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.normal.amount),
                 )
-                val priorityProxyFee = ProxyFee(
+                val priorityProxyFee = ProxyFee.Common(
                     gasLimit = (choosableFee.priority as Fee.Ethereum).gasLimit,
                     fee = convertToProxyAmount(amount = choosableFee.priority.amount),
                 )
@@ -462,7 +470,7 @@ class TransactionManagerImpl(
             scale = blockchain.decimals(),
             mathContext = MathContext(blockchain.decimals(), RoundingMode.HALF_EVEN),
         )
-        val minFee = ProxyFee(
+        val minFee = ProxyFee.Common(
             gasLimit = gasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
@@ -470,7 +478,7 @@ class TransactionManagerImpl(
                 decimals = blockchain.decimals(),
             ),
         )
-        val normalFee = ProxyFee(
+        val normalFee = ProxyFee.Common(
             gasLimit = gasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
@@ -478,7 +486,7 @@ class TransactionManagerImpl(
                 decimals = blockchain.decimals(),
             ),
         )
-        val priorityFee = ProxyFee(
+        val priorityFee = ProxyFee.Common(
             gasLimit = gasLimit,
             fee = ProxyAmount(
                 currencySymbol = blockchain.currency,
