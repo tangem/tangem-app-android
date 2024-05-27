@@ -8,6 +8,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.*
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
@@ -15,13 +16,10 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
-import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTradeOrder
-import com.tangem.tap.domain.walletconnect.BnbHelper.toWCBinanceTransferOrder
 import com.tangem.tap.domain.walletconnect2.domain.TransactionType
 import com.tangem.tap.domain.walletconnect2.domain.WcEthereumTransaction
 import com.tangem.tap.domain.walletconnect2.domain.WcSignMessage
@@ -38,7 +36,6 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionReque
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
 import timber.log.Timber
 import java.math.BigDecimal
 import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
@@ -46,20 +43,35 @@ import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
 @Suppress("LargeClass")
 class WalletConnectSdkHelper {
 
+    private val userWalletsListManager by lazy {
+        store.inject(DaggerGraphState::generalUserWalletsListManager)
+    }
+
     @Suppress("MagicNumber")
-    suspend fun prepareTransactionData(data: EthTransactionData): WcTransactionData? {
+    suspend fun prepareTransactionData(data: EthTransactionData): WcTransactionData {
         val transaction = data.transaction
-        val blockchain = Blockchain.fromNetworkId(data.networkId) ?: return null
-        val walletManager = getWalletManager(blockchain, data.rawDerivationPath) ?: return null
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(data.networkId)) {
+            "Blockchain not found"
+        }
+        val walletManager = requireNotNull(getWalletManager(blockchain, data.rawDerivationPath)) {
+            "WalletManager not found"
+        }
 
         walletManager.safeUpdate(isDemoCard())
         val wallet = walletManager.wallet
-        val balance = wallet.amounts[AmountType.Coin]?.value ?: return null
+        val balance = requireNotNull(wallet.amounts[AmountType.Coin]?.value) {
+            "Coin balance not found"
+        }
 
         val decimals = wallet.blockchain.decimals()
 
-        val value = (transaction.value ?: "0").hexToBigDecimal()
-            .movePointLeft(decimals) ?: return null
+        val value = (transaction.value ?: "0")
+            .hexToBigDecimal()
+            .movePointLeft(decimals)
+
+        requireNotNull(value) {
+            "Transaction amount is null"
+        }
 
         val gasLimit = getGasLimitFromTx(value, walletManager, transaction)
 
@@ -68,20 +80,23 @@ class WalletConnectSdkHelper {
                 is Result.Success -> result.data.toBigDecimal()
                 is Result.Failure -> {
                     (result.error as? Throwable)?.let { Timber.e(it, "getGasPrice failed") }
-                    return null
+
+                    error("Unable to get gas price: ${result.error}")
                 }
-                null -> return null
+                null -> error("Gas price is null")
             }
 
         val fee = (gasLimit * gasPrice).movePointLeft(decimals)
         val total = value + fee
+
+        val destinationAddress = requireNotNull(transaction.to) { "Destination address is null" }
 
         val transactionData = TransactionData(
             amount = Amount(value, wallet.blockchain),
             // TODO refactoring
             fee = Fee.Common(Amount(fee, wallet.blockchain)),
             sourceAddress = transaction.from,
-            destinationAddress = transaction.to!!,
+            destinationAddress = destinationAddress,
             extras = EthereumTransactionExtras(
                 data = transaction.data.removePrefix(HEX_PREFIX).hexToBytes(),
                 gasLimit = gasLimit.toBigInteger(),
@@ -101,6 +116,7 @@ class WalletConnectSdkHelper {
             id = data.id,
             type = data.type,
         )
+
         return WcTransactionData(
             type = data.type,
             transaction = transactionData,
@@ -227,11 +243,11 @@ class WalletConnectSdkHelper {
     }
 
     fun prepareBnbTradeOrder(data: WcBinanceTradeOrder): BinanceMessageData.Trade {
-        return BnbHelper.createMessageData(data.toWCBinanceTradeOrder())
+        return BnbHelper.createMessageData(data)
     }
 
     fun prepareBnbTransferOrder(data: WcBinanceTransferOrder): BinanceMessageData.Transfer {
-        return BnbHelper.createMessageData(data.toWCBinanceTransferOrder())
+        return BnbHelper.createMessageData(data)
     }
 
     suspend fun signBnbTransaction(
