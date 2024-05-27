@@ -403,6 +403,7 @@ internal class StateBuilder(
                         warnings.add(
                             SwapWarning.ReduceAmount(
                                 notificationConfig = createReduceAmountNotificationConfig(
+                                    currencyName = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.name,
                                     amount = it.tezosFeeThreshold.toPlainString(),
                                     onConfirmClick = {
                                         val fromAmount = quoteModel.fromTokenInfo.tokenAmount
@@ -1375,13 +1376,14 @@ internal class StateBuilder(
     }
 
     private fun createReduceAmountNotificationConfig(
+        currencyName: String,
         amount: String,
         onConfirmClick: () -> Unit,
         onDismissClick: () -> Unit,
     ): NotificationConfig {
         return NotificationConfig(
             title = resourceReference(R.string.send_notification_high_fee_title),
-            subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(amount)),
+            subtitle = resourceReference(R.string.send_notification_high_fee_text, wrappedList(currencyName, amount)),
             iconResId = R.drawable.img_attention_20,
             buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
                 primaryText = resourceReference(R.string.xtz_withdrawal_message_reduce, wrappedList(amount)),
