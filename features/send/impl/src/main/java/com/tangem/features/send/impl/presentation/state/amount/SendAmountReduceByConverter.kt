@@ -16,8 +16,8 @@ internal class SendAmountReduceByConverter(
     private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-) : Converter<BigDecimal, SendUiState> {
-    override fun convert(value: BigDecimal): SendUiState {
+) : Converter<SendAmountReduceByConverter.ReduceByData, SendUiState> {
+    override fun convert(value: ReduceByData): SendUiState {
         val state = currentStateProvider()
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val isEditState = stateRouterProvider().isEditState
@@ -27,7 +27,7 @@ internal class SendAmountReduceByConverter(
         val fiatDecimals = amountTextField.fiatAmount.decimals
         val amountValue = amountState.amountTextField.cryptoAmount.value ?: return state
 
-        val decimalCryptoValue = amountValue.minus(value)
+        val decimalCryptoValue = amountValue.minus(value.reduceAmountByDiff)
         val cryptoValue = decimalCryptoValue.parseBigDecimal(cryptoDecimals)
         val (fiatValue, decimalFiatValue) = cryptoValue.getFiatValue(
             fiatRate = cryptoCurrencyStatus.value.fiatRate,
@@ -41,7 +41,7 @@ internal class SendAmountReduceByConverter(
         return state.copyWrapped(
             isEditState = isEditState,
             sendState = state.sendState?.copy(
-                reduceAmountBy = value,
+                reduceAmountBy = value.reduceAmountBy,
             ),
             amountState = amountState.copy(
                 isPrimaryButtonEnabled = !isExceedBalance && !isZero,
@@ -59,4 +59,9 @@ internal class SendAmountReduceByConverter(
             ),
         )
     }
+
+    internal data class ReduceByData(
+        val reduceAmountBy: BigDecimal,
+        val reduceAmountByDiff: BigDecimal,
+    )
 }
