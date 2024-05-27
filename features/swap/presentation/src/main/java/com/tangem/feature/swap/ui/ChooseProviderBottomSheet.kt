@@ -18,6 +18,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.models.states.PercentDifference
 import com.tangem.feature.swap.models.states.ProviderState
@@ -128,7 +129,7 @@ private fun ChooseProviderBottomSheet_Preview() {
             alertText = stringReference("Unavailable"),
         ),
     )
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         ChooseProviderBottomSheetContent(
             ChooseProviderBottomSheetConfig(
                 selectedProviderId = "1",
