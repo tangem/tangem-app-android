@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.addcustomtoken.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.impl.R
 import com.tangem.managetokens.presentation.common.ui.components.SimpleSelectionBlock
@@ -98,17 +100,10 @@ private fun DerivationsList(state: ChooseDerivationState) {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_ChooseDerivationScreen_Light() {
-    TangemTheme(isDark = false) {
-        ChooseDerivationScreen(state = ChooseDerivationPreviewData.state)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_ChooseDerivationScreen_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_ChooseDerivationScreen() {
+    TangemThemePreview {
         ChooseDerivationScreen(state = ChooseDerivationPreviewData.state)
     }
 }
