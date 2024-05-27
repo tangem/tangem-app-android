@@ -69,6 +69,7 @@ internal interface SendClickIntents {
 
     fun onAmountReduceClick(
         reduceAmountBy: BigDecimal? = null,
+        reduceAmountByDiff: BigDecimal? = reduceAmountBy,
         reduceAmountTo: BigDecimal? = null,
         clazz: Class<out SendNotification>,
     )
