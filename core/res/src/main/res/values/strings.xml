@@ -379,7 +379,6 @@
   <string name="qr_scanner_camera_denied_settings_button">Settings</string>
   <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
   <string name="qr_scanner_camera_denied_title">Camera access denied</string>
-  <string name="rate_app_sheet_title">Enjoying our app?</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
   <string name="referral_button_participate">Participate</string>
@@ -510,6 +509,9 @@
   <string name="send_validation_invalid_address">Invalid address</string>
   <string name="send_wallet_balance_format">%1$s (%2$s)</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
+  <string name="settings_forget_wallet">Forget wallet</string>
+  <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
+  <string name="settings_wallet_name_title">Name</string>
   <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
   <string name="story_awe_title">Revolutionary Hardware Wallet</string>
   <string name="story_backup_description">Up to 3 physical cards to one wallet</string>
@@ -633,6 +635,7 @@
   <string name="wallet_network_group_title">%s network</string>
   <string name="wallet_notification_address_copied">Address was copied to clipboard</string>
   <string name="wallet_notification_no_internet">No internet connection</string>
+  <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s or scan a card to unlock access to your wallet</string>
   <string name="warning_backup_errors_message">Please withdraw all funds from this wallet, reset it to factory settings, and create a new one. Access to the current wallet will be lost.</string>
