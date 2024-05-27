@@ -24,12 +24,12 @@ internal fun SendAmountContent(
     // Do not put fillMaxSize() in here
     LazyColumn(
         modifier = Modifier
+            .background(TangemTheme.colors.background.tertiary)
             .padding(
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
                 bottom = TangemTheme.dimens.spacing16,
-            )
-            .background(TangemTheme.colors.background.tertiary),
+            ),
     ) {
         amountField(amountState = amountState, isBalanceHiding = isBalanceHiding)
         buttons(
@@ -45,7 +45,7 @@ internal fun SendAmountContent(
 @Preview
 @Composable
 private fun AmountFieldPreview_Light(
-    @PreviewParameter(AmountFieldPreviewProvider::class) amountState: SendStates.AmountState,
+    @PreviewParameter(AmountStatePreviewProvider::class) amountState: SendStates.AmountState,
 ) {
     TangemTheme {
         SendAmountContent(
@@ -59,7 +59,7 @@ private fun AmountFieldPreview_Light(
 @Preview
 @Composable
 private fun AmountFieldPreview_Dark(
-    @PreviewParameter(AmountFieldPreviewProvider::class) amountState: SendStates.AmountState,
+    @PreviewParameter(AmountStatePreviewProvider::class) amountState: SendStates.AmountState,
 ) {
     TangemTheme(isDark = true) {
         SendAmountContent(
@@ -70,7 +70,7 @@ private fun AmountFieldPreview_Dark(
     }
 }
 
-private class AmountFieldPreviewProvider : PreviewParameterProvider<SendStates.AmountState> {
+private class AmountStatePreviewProvider : PreviewParameterProvider<SendStates.AmountState> {
     override val values: Sequence<SendStates.AmountState>
         get() = sequenceOf(
             AmountStatePreviewData.amountState,
