@@ -36,7 +36,7 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {}
 
-    override fun onRecipientMemoValueChange(value: String) {}
+    override fun onRecipientMemoValueChange(value: String, isValuePasted: Boolean) {}
 
     override fun feeReload() {}
 
@@ -64,7 +64,8 @@ internal object SendClickIntentsStub : SendClickIntents {
         reduceAmountBy: BigDecimal?,
         reduceAmountTo: BigDecimal?,
         clazz: Class<out SendNotification>,
-    ) {}
+    ) {
+    }
 
     override fun onNotificationCancel(clazz: Class<out SendNotification>) {}
 }
