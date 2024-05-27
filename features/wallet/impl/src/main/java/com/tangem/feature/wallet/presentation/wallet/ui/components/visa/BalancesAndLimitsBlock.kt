@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.visa
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBlockState
 
@@ -158,21 +160,12 @@ private fun AvailableLimit(availableBalance: String, limitDays: Int, modifier: M
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun BalancesAndLimitsBlockPreview_Light(
+private fun BalancesAndLimitsBlockPreview(
     @PreviewParameter(BalancesAndLimitsBlockParameterProvider::class) state: BalancesAndLimitsBlockState,
 ) {
-    TangemTheme {
-        BalancesAndLimitsBlock(state)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun BalancesAndLimitsBlockPreview_Dark(
-    @PreviewParameter(BalancesAndLimitsBlockParameterProvider::class) state: BalancesAndLimitsBlockState,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         BalancesAndLimitsBlock(state)
     }
 }

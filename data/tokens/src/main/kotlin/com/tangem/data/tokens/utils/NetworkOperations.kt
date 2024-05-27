@@ -1,8 +1,8 @@
 package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.common.DerivationStyleProvider
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.tokens.model.Network
 import timber.log.Timber
 

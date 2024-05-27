@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarConfig
@@ -96,9 +98,10 @@ private fun AppBarDropdownItem(
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokenDetailsAppBarDropdownItem_LightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_TokenDetailsAppBarDropdownItem() {
+    TangemThemePreview {
         AppBarDropdownItem(
             modifier = Modifier.background(TangemTheme.colors.background.primary),
             dismissParent = {},
@@ -112,33 +115,10 @@ private fun Preview_TokenDetailsAppBarDropdownItem_LightTheme() {
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_TokenDetailsAppBarDropdownItem_DarkTheme() {
-    TangemTheme(isDark = true) {
-        AppBarDropdownItem(
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
-            dismissParent = {},
-            item = TokenDetailsAppBarMenuConfig.MenuItem(
-                title = TextReference.Res(id = R.string.token_details_hide_token),
-                textColorProvider = { TangemTheme.colors.text.warning },
-                onClick = { },
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_TokenDetailsTopAppBar_LightTheme() {
-    TangemTheme(isDark = false) {
-        TokenDetailsTopAppBar(config = TokenDetailsPreviewData.tokenDetailsTopAppBarConfig)
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_TokenDetailsTopAppBar_DarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_TokenDetailsTopAppBar() {
+    TangemThemePreview {
         TokenDetailsTopAppBar(config = TokenDetailsPreviewData.tokenDetailsTopAppBarConfig)
     }
 }
