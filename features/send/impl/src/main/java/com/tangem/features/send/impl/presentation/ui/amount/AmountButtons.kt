@@ -1,5 +1,7 @@
 package com.tangem.features.send.impl.presentation.ui.amount
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -7,12 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerWMax
-import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.fiaticon.FiatIcon
 import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
@@ -60,17 +61,23 @@ internal fun LazyListScope.buttons(
             } else {
                 SpacerWMax()
             }
-            SecondaryButton(
+            Text(
                 text = stringResource(R.string.send_max_amount),
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    clickIntents.onMaxValueClick()
-                },
-                size = TangemButtonSize.Text,
-                shape = RoundedCornerShape(TangemTheme.dimens.radius26),
+                style = TangemTheme.typography.button,
+                color = TangemTheme.colors.text.primary1,
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing8)
-                    .height(TangemTheme.dimens.size40),
+                    .height(TangemTheme.dimens.size40)
+                    .clip(shape = RoundedCornerShape(TangemTheme.dimens.radius26))
+                    .background(TangemTheme.colors.button.secondary)
+                    .clickable {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        clickIntents.onMaxValueClick()
+                    }
+                    .padding(
+                        vertical = TangemTheme.dimens.spacing10,
+                        horizontal = TangemTheme.dimens.spacing34,
+                    ),
             )
         }
     }
