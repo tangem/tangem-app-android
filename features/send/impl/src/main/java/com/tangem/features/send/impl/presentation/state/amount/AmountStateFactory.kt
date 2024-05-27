@@ -62,7 +62,14 @@ internal class AmountStateFactory(
 
     fun getOnAmountValueChange(value: String) = amountFieldChangeConverter.convert(value)
 
-    fun getOnAmountReduceByState(reduceAmountBy: BigDecimal) = amountReduceByConverter.convert(reduceAmountBy)
+    fun getOnAmountReduceByState(reduceAmountBy: BigDecimal, reduceAmountByDiff: BigDecimal) =
+        amountReduceByConverter.convert(
+            SendAmountReduceByConverter.ReduceByData(
+                reduceAmountBy = reduceAmountBy,
+                reduceAmountByDiff = reduceAmountByDiff,
+            ),
+        )
+
     fun getOnAmountReduceToState(reduceAmountTo: BigDecimal) = amountReduceToConverter.convert(reduceAmountTo)
 
     fun getOnMaxAmountClick(): SendUiState {
