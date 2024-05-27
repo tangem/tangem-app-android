@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
@@ -37,8 +38,12 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
+import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.TestTags
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
@@ -133,7 +138,9 @@ private fun WalletContent(
             .padding(horizontal = horizontalPadding)
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag(TestTags.WALLET_SCREEN),
             contentPadding = PaddingValues(
                 top = TangemTheme.dimens.spacing8,
                 bottom = TangemTheme.dimens.spacing92,
@@ -284,7 +291,11 @@ private fun BaseScaffoldManageTokenRedesign(
 
     BottomSheetScaffold(
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            WalletSnackbarHost(
+                snackbarHostState = it,
+                event = state.event,
+                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
+            )
         },
         containerColor = TangemTheme.colors.background.secondary,
         sheetContainerColor = TangemTheme.colors.background.primary,
@@ -315,7 +326,9 @@ private fun BaseScaffoldManageTokenRedesign(
         content = { paddingValues ->
             val pullRefreshState = rememberPullRefreshState(
                 refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                onRefresh = selectedWallet.pullToRefreshConfig.onRefresh,
+                onRefresh = {
+                    selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                },
             )
 
             Column(
@@ -486,7 +499,13 @@ private fun BaseScaffold(
 ) {
     Scaffold(
         topBar = { WalletTopBar(config = state.topBarConfig) },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            WalletSnackbarHost(
+                snackbarHostState = snackbarHostState,
+                event = state.event,
+                modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
+            )
+        },
         floatingActionButton = {
             val manageTokensButtonConfig by remember(state.selectedWalletIndex) {
                 mutableStateOf(
@@ -501,7 +520,9 @@ private fun BaseScaffold(
         content = {
             val pullRefreshState = rememberPullRefreshState(
                 refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                onRefresh = selectedWallet.pullToRefreshConfig.onRefresh,
+                onRefresh = {
+                    selectedWallet.pullToRefreshConfig.onRefresh(WalletPullToRefreshConfig.ShowRefreshState(true))
+                },
             )
 
             Box(
@@ -519,6 +540,21 @@ private fun BaseScaffold(
             }
         },
     )
+}
+
+@Composable
+private fun WalletSnackbarHost(
+    snackbarHostState: SnackbarHostState,
+    event: StateEvent<WalletEvent>,
+    modifier: Modifier = Modifier,
+) {
+    SnackbarHost(hostState = snackbarHostState, modifier = modifier) { data ->
+        if (event is StateEvent.Triggered && event.data is WalletEvent.CopyAddress) {
+            CopiedTextSnackbar(data)
+        } else {
+            TangemSnackbar(data)
+        }
+    }
 }
 
 @Composable
