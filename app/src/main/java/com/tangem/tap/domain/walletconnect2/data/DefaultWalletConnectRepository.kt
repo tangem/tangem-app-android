@@ -324,6 +324,7 @@ internal class DefaultWalletConnectRepository(
                 optionalNamespace.key to Wallet.Model.Namespace.Session(
                     accounts = accountsOptional.distinct(),
                     methods = methods,
+                    chains = userChains.keys.toList(),
                     events = optionalNamespace.value.events,
                 )
             }
