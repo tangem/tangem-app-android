@@ -51,7 +51,7 @@ fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifi
     ) {
         Text(
             text = stringResource(R.string.common_paste),
-            style = TangemTheme.typography.button,
+            style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.primary2,
             modifier = Modifier
                 .background(
@@ -59,8 +59,8 @@ fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifi
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
                 .padding(
-                    horizontal = TangemTheme.dimens.spacing10,
-                    vertical = TangemTheme.dimens.spacing2,
+                    horizontal = TangemTheme.dimens.spacing12,
+                    vertical = TangemTheme.dimens.spacing4,
                 )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -87,10 +87,10 @@ fun CrossIcon(onClick: (String) -> Unit, modifier: Modifier = Modifier) {
         tint = TangemTheme.colors.icon.informative,
         contentDescription = stringResource(R.string.common_close),
         modifier = modifier
-            .size(TangemTheme.dimens.size20)
+            .size(TangemTheme.dimens.size24)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(radius = TangemTheme.dimens.radius10),
+                indication = rememberRipple(radius = TangemTheme.dimens.radius12),
                 onClick = { onClick("") },
             ),
     )
