@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.inputrow
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,6 +23,7 @@ import com.tangem.core.ui.components.currency.tokenicon.TokenIcon
 import com.tangem.core.ui.components.currency.tokenicon.TokenIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -120,31 +122,12 @@ fun InputRowImage(
 
 //region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun InputRowInputEnterInfoPreview_Light(
+private fun InputRowInputEnterInfoPreview(
     @PreviewParameter(InputRowImagePreviewDataProvider::class) data: InputRowImagePreviewData,
 ) {
-    TangemTheme {
-        InputRowImage(
-            title = data.title,
-            modifier = Modifier.background(TangemTheme.colors.background.action),
-            subtitle = data.subtitle,
-            caption = data.caption,
-            tokenIconState = data.iconState,
-            iconRes = data.actionIconRes,
-            onIconClick = {},
-            showNetworkIcon = false,
-            showDivider = data.showDivider,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun InputRowImagePreview_Dark(
-    @PreviewParameter(InputRowImagePreviewDataProvider::class) data: InputRowImagePreviewData,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         InputRowImage(
             title = data.title,
             modifier = Modifier.background(TangemTheme.colors.background.action),
