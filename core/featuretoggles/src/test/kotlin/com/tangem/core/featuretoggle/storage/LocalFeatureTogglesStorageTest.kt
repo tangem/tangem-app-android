@@ -3,12 +3,11 @@ package com.tangem.core.featuretoggle.storage
 import android.annotation.SuppressLint
 import com.google.common.truth.Truth
 import com.squareup.moshi.JsonAdapter
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verifyAll
 import io.mockk.verifyOrder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import java.io.IOException
@@ -16,7 +15,6 @@ import java.io.IOException
 /**
 * [REDACTED_AUTHOR]
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 @SuppressLint("CheckResult")
 internal class LocalFeatureTogglesStorageTest {
 

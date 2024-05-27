@@ -62,3 +62,13 @@ internal fun List<UserWallet>.updateWith(
         }
     }
 }
+
+internal fun List<UserWallet>.lockAll(): List<UserWallet> = map(UserWallet::lock)
+
+internal fun UserWallet.lock(): UserWallet = copy(
+    scanResponse = scanResponse.copy(
+        card = scanResponse.card.copy(
+            wallets = emptyList(),
+        ),
+    ),
+)

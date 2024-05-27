@@ -1,9 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.NetworkGroup
@@ -25,8 +27,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-internal typealias MaybeTokenListFlow = Flow<Either<TokenListError, TokenList>>
-
 @Suppress("LongParameterList")
 internal abstract class BasicTokenListSubscriber(
     private val userWallet: UserWallet,
@@ -41,7 +41,7 @@ internal abstract class BasicTokenListSubscriber(
     private val sendAnalyticsJobHolder = JobHolder()
     private val onTokenListReceivedJobHolder = JobHolder()
 
-    protected abstract fun tokenListFlow(): MaybeTokenListFlow
+    protected abstract fun tokenListFlow(): LceFlow<TokenListError, TokenList>
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
         return combine(
@@ -61,11 +61,17 @@ internal abstract class BasicTokenListSubscriber(
                 },
             flow2 = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
             transform = { maybeTokenList, maybeAppCurrency ->
-                val tokenList = maybeTokenList.getOrElse { e ->
-                    Timber.e("Failed to load token list: $e")
-                    SetTokenListErrorTransformer(userWallet.walletId, e)
-                    return@combine
-                }
+                val tokenList = maybeTokenList.getOrElse(
+                    ifLoading = { maybeContent ->
+                        maybeContent ?: return@combine
+                    },
+                    ifError = { e ->
+                        Timber.e("Failed to load token list: $e")
+                        SetTokenListErrorTransformer(userWallet.walletId, e)
+                        return@combine
+                    },
+                )
+
                 val appCurrency = maybeAppCurrency.getOrElse { e ->
                     Timber.e("Failed to load app currency: $e")
                     AppCurrency.Default
@@ -77,7 +83,7 @@ internal abstract class BasicTokenListSubscriber(
         )
     }
 
-    private suspend fun startCheck(maybeTokenList: Either<TokenListError, TokenList>) {
+    private suspend fun startCheck(maybeTokenList: Lce<TokenListError, TokenList>) {
         // Run Polkadot account health check
         maybeTokenList.getOrNull()?.let { tokenList ->
             val cryptoCurrencies = when (tokenList) {
@@ -92,17 +98,17 @@ internal abstract class BasicTokenListSubscriber(
         }
     }
 
-    protected open suspend fun onTokenListReceived(maybeTokenList: Either<TokenListError, TokenList>) {
+    protected open suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
         /* no-op */
     }
 
-    private suspend fun sendTokenListAnalytics(maybeTokenList: Either<TokenListError, TokenList>) {
+    private suspend fun sendTokenListAnalytics(maybeTokenList: Lce<TokenListError, TokenList>) {
         val displayedState = stateHolder.getWalletStateIfSelected(userWallet.walletId)
 
         tokenListAnalyticsSender.send(
             displayedUiState = displayedState,
             userWallet = userWallet,
-            tokenList = maybeTokenList.getOrElse { return },
+            tokenList = maybeTokenList.getOrNull() ?: return,
         )
     }
 
