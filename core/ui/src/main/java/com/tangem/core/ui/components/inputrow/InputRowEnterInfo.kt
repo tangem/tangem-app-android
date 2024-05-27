@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.inputrow
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,6 +17,7 @@ import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -92,28 +94,12 @@ fun InputRowEnterInfo(
 
 //region preview
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun InputRowEnterInfoPreview_Light(
+private fun InputRowEnterInfoPreview(
     @PreviewParameter(InputRowEnterInfoPreviewDataProvider::class) data: InputRowEnterInfoPreviewData,
 ) {
-    TangemTheme {
-        InputRowEnterInfo(
-            title = data.title,
-            text = data.text,
-            info = data.info,
-            showDivider = data.showDivider,
-            onValueChange = {},
-            modifier = Modifier.background(TangemTheme.colors.background.action),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun InputRowEnterInfoPreview_Dark(
-    @PreviewParameter(InputRowEnterInfoPreviewDataProvider::class) data: InputRowEnterInfoPreviewData,
-) {
-    TangemTheme(isDark = true) {
+    TangemThemePreview {
         InputRowEnterInfo(
             title = data.title,
             text = data.text,
