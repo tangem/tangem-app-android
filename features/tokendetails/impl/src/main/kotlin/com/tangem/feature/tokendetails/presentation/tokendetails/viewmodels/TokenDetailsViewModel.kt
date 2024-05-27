@@ -27,7 +27,9 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
@@ -99,6 +101,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
+    private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val swapRepository: SwapRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val quotesRepository: QuotesRepository,
@@ -364,15 +367,23 @@ internal class TokenDetailsViewModel @Inject constructor(
     private fun updateStakingInfo() {
         viewModelScope.launch(dispatchers.io) {
             // TODO staking
-            val stackingInfo = getStakingEntryInfoUseCase("avalanche-avax-native-staking")
-            stackingInfo.fold(
-                ifLeft = {
-                    Timber.tag("TokenDetails").e(it)
-                },
-                ifRight = {
-                    Timber.tag("TokenDetails").e(it.toString())
+            when (val stakingAvailability = getStakingAvailabilityUseCase(cryptoCurrency.network.id.value)) {
+                is StakingAvailability.Available -> {
+                    val stackingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
+                    stackingInfo.fold(
+                        ifLeft = {
+                            Timber.tag("TokenDetails").e(it)
+                        },
+                        ifRight = {
+                            Timber.tag("TokenDetails").e(it.toString())
+                        }
+                    )
                 }
-            )
+                StakingAvailability.Unavailable -> {
+                    Timber.tag("TokenDetails").e("Staking unavailable")
+                }
+            }
+
         }
     }
 

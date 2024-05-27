@@ -114,7 +114,7 @@ data class Yield(
         @Json(name = "defaultValidator")
         val defaultValidator: String?,
         @Json(name = "minimumStake")
-        val minimumStake: Int,
+        val minimumStake: Int?,
         @Json(name = "supportsMultipleValidators")
         val supportsMultipleValidators: Boolean,
         @Json(name = "revshare")

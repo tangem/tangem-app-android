@@ -27,6 +27,10 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
+
+    implementation(deps.tangem.blockchain) {
+        exclude(module = "joda-time")
+    }
     // endregion
 }
 
