@@ -1,12 +1,12 @@
 package com.tangem.feature.referral.di
 
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.data.ReferralRepositoryImpl
 import com.tangem.feature.referral.domain.ReferralRepository
-import com.tangem.lib.auth.AuthProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
