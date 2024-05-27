@@ -10,26 +10,24 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
-import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
-import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchain.common.pagination.Page
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.common.trustlines.AssetRequirementsManager
 import com.tangem.blockchain.common.txhistory.TransactionHistoryRequest
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.datasource.asset.AssetReader
-import com.tangem.datasource.config.ConfigManager
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
-import com.tangem.domain.feedback.FeedbackManagerFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -49,31 +47,21 @@ import java.util.EnumSet
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
-    mnemonic: Mnemonic,
     assetReader: AssetReader,
     moshi: Moshi,
-    configManager: ConfigManager,
-    blockchainDataStorage: BlockchainDataStorage,
-    accountCreator: AccountCreator,
-    blockchainSDKLogger: BlockchainSDKLogger,
-    feedbackManagerFeatureToggles: FeedbackManagerFeatureToggles,
+    blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig() }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
-    private val walletManagerFactory by lazy {
-        WalletManagerFactory(
-            configManager = configManager,
-            accountCreator = accountCreator,
-            blockchainDataStorage = blockchainDataStorage,
-            blockchainSDKLogger = if (feedbackManagerFeatureToggles.isLocalLogsEnabled) blockchainSDKLogger else null,
-        )
-    }
+    private val walletManagerFactory by lazy { WalletManagerFactory(blockchainSDKFactory) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
     private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
     private val sdkPageConverter by lazy { SdkPageConverter() }
-    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory(mnemonic) }
+    private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
+    private val requirementsConditionConverter by lazy { SdkRequirementsConditionConverter() }
+    private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
 
     override suspend fun update(
         userWalletId: UserWalletId,
@@ -192,7 +180,16 @@ class DefaultWalletManagersFacade(
                 address = walletManager.wallet.address,
                 filterType = when (currency) {
                     is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                    is CryptoCurrency.Token -> {
+                        val blockchainToken = Token(
+                            name = currency.name,
+                            symbol = currency.symbol,
+                            contractAddress = currency.contractAddress,
+                            decimals = currency.decimals,
+                            id = currency.id.rawCurrencyId,
+                        )
+                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
+                    }
                 },
             )
             .let(txHistoryStateConverter::convert)
@@ -221,7 +218,16 @@ class DefaultWalletManagersFacade(
                 pageSize = pageSize,
                 filterType = when (currency) {
                     is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> TransactionHistoryRequest.FilterType.Contract(currency.contractAddress)
+                    is CryptoCurrency.Token -> {
+                        val blockchainToken = Token(
+                            name = currency.name,
+                            symbol = currency.symbol,
+                            contractAddress = currency.contractAddress,
+                            decimals = currency.decimals,
+                            id = currency.id.rawCurrencyId,
+                        )
+                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
+                    }
                 },
             ),
         )
@@ -571,6 +577,34 @@ class DefaultWalletManagersFacade(
                 ),
             ),
         )
+    }
+
+    override suspend fun getAssetRequirements(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): AssetRequirementsCondition? {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+        val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+        if (walletManager !is AssetRequirementsManager || !walletManager.hasRequirements(currencyType)) return null
+
+        val condition = walletManager.requirementsCondition(currencyType) ?: return null
+        return requirementsConditionConverter.convert(condition)
+    }
+
+    override suspend fun associateAsset(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        signer: CommonSigner,
+    ): SimpleResult {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+        val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+
+        if (walletManager !is AssetRequirementsManager) {
+            return SimpleResult.Failure(
+                BlockchainSdkError.CustomError("WalletManager is not implemented AssetRequirementsManager"),
+            )
+        }
+        return walletManager.fulfillRequirements(currencyType, signer)
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
