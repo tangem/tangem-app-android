@@ -17,8 +17,9 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.domain.wallets.legacy.asLockable
-import com.tangem.tap.*
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.*
@@ -29,6 +30,9 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.wallet.R
@@ -503,37 +507,70 @@ class DetailsMiddleware {
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             },
             onSuccess = { scanResponse ->
-                saveUserWalletAndPopBackToWalletScreen(scanResponse)
+                createUserWallet(scanResponse)
+                    .doOnSuccess {
+                        saveUserWalletAndPopBackToWalletScreen(
+                            userWallet = it,
+                            prevUseBiometricsForAccessCode = prevUseBiometricsForAccessCode,
+                        )
+                    }
                     .doOnFailure { error ->
-                        // Rollback policy if card saving was failed
-                        cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
-                        Timber.e(error, "Unable to save user wallet")
-
-                        store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Error(error.toTextReference()))
+                        Timber.e(error, "Unable to create user wallet")
+                        handleError(error = error, prevUseBiometricsForAccessCode = prevUseBiometricsForAccessCode)
                     }
             },
             onFailure = { error ->
-                // Rollback policy if card scanning was failed
-                cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
                 Timber.e(error, "Unable to scan card")
-                store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Error(error.toTextReference()))
+                handleError(error = error, prevUseBiometricsForAccessCode = prevUseBiometricsForAccessCode)
             },
         )
     }
 
-    private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
+    private suspend fun createUserWallet(scanResponse: ScanResponse): CompletionResult<UserWallet> {
         val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
         val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build()
-            ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
 
+        return if (userWallet != null) {
+            CompletionResult.Success(userWallet)
+        } else {
+            CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
+        }
+    }
+
+    private suspend fun saveUserWalletAndPopBackToWalletScreen(
+        userWallet: UserWallet,
+        prevUseBiometricsForAccessCode: Boolean,
+    ) {
         val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-        return userWalletsListManager.save(userWallet)
+
+        userWalletsListManager.save(userWallet)
             .doOnSuccess {
                 store.onUserWalletSelected(userWallet)
 
                 store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
                 store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
             }
+            .doOnFailure { error ->
+                if (error is UserWalletsListError.WalletAlreadySaved) {
+                    userWalletsListManager.select(userWallet.walletId)
+                    store.onUserWalletSelected(userWallet)
+
+                    store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Success)
+                    store.dispatchWithMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                } else {
+                    Timber.e(error, "Unable to create user wallet")
+                    handleError(error, prevUseBiometricsForAccessCode)
+                }
+            }
+    }
+
+    private suspend fun handleError(error: TangemError, prevUseBiometricsForAccessCode: Boolean) {
+        val cardSdkConfigRepository = store.inject(DaggerGraphState::cardSdkConfigRepository)
+
+        // Rollback policy if card saving was failed
+        cardSdkConfigRepository.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+
+        store.dispatchWithMain(DetailsAction.ScanAndSaveUserWallet.Error(error.toTextReference()))
     }
 
     private fun TangemError.toTextReference(): TextReference? {
