@@ -162,4 +162,28 @@ internal sealed class SendNotification(val config: NotificationConfig) {
             ),
         )
     }
+
+    sealed interface Cardano {
+
+        data class MinAdaValueCharged(val tokenName: String, val minAdaValue: String) : Warning(
+            title = resourceReference(id = R.string.cardano_coin_will_be_send_with_token_title),
+            subtitle = resourceReference(
+                id = R.string.cardano_coin_will_be_send_with_token_description,
+                formatArgs = wrappedList(minAdaValue, tokenName),
+            ),
+        )
+
+        data object InsufficientBalanceToTransferCoin : Error(
+            title = resourceReference(id = R.string.cardano_max_amount_has_token_title),
+            subtitle = resourceReference(id = R.string.cardano_max_amount_has_token_description),
+        )
+
+        data class InsufficientBalanceToTransferToken(val tokenName: String) : Error(
+            title = resourceReference(id = R.string.cardano_insufficient_balance_to_send_token_title),
+            subtitle = resourceReference(
+                id = R.string.cardano_insufficient_balance_to_send_token_description,
+                formatArgs = wrappedList(tokenName),
+            ),
+        )
+    }
 }
