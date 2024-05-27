@@ -10,7 +10,7 @@ interface ConfigManager {
 
     val config: Config
 
-    fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null)
+    suspend fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null)
 
     fun turnOff(name: String)
 
