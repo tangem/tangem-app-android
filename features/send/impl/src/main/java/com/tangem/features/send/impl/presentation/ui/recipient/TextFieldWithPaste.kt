@@ -30,6 +30,7 @@ internal fun TextFieldWithPaste(
     error: TextReference? = null,
     isError: Boolean = false,
     isReadOnly: Boolean = false,
+    isValuePasted: Boolean = false,
 ) {
     val (title, color) = when {
         isError && error != null -> error to TangemTheme.colors.text.warning
@@ -63,6 +64,7 @@ internal fun TextFieldWithPaste(
                         placeholderColor = placeholderColor,
                         onValueChange = onValueChange,
                         readOnly = isReadOnly,
+                        isValuePasted = isValuePasted,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = TangemTheme.dimens.spacing6),
