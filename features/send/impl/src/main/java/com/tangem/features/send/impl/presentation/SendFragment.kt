@@ -6,10 +6,10 @@ import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
-import com.tangem.core.ui.theme.AppThemeModeHolder
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.state.StateRouter
@@ -26,7 +26,7 @@ import javax.inject.Inject
 internal class SendFragment : ComposeFragment() {
 
     @Inject
-    override lateinit var appThemeModeHolder: AppThemeModeHolder
+    override lateinit var uiDependencies: UiDependencies
 
     @Inject
     lateinit var router: SendRouter
