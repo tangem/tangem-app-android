@@ -4,7 +4,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.algorand.AlgorandTransactionExtras
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
-import com.tangem.blockchain.blockchains.hedera.HederaTransactionBuilder
+import com.tangem.blockchain.blockchains.hedera.HederaTransactionExtras
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
@@ -12,14 +12,16 @@ import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder.XrpTransactio
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.domain.common.extensions.minimalAmount
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.tap.common.analytics.events.Token
@@ -31,7 +33,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
@@ -170,11 +171,7 @@ private fun sendTransaction(
     transactionExtras.xrpDestinationTag?.tag?.let { txData = txData.copy(extras = XrpTransactionExtras(it)) }
     transactionExtras.cosmosMemoState?.memo?.let { txData = txData.copy(extras = CosmosTransactionExtras(it)) }
     transactionExtras.tonMemoState?.memo?.let { txData = txData.copy(extras = TonTransactionExtras(it)) }
-    transactionExtras.hederaMemoState?.memo?.let {
-        txData = txData.copy(
-            extras = HederaTransactionBuilder.HederaTransactionExtras(it),
-        )
-    }
+    transactionExtras.hederaMemoState?.memo?.let { txData = txData.copy(extras = HederaTransactionExtras(it)) }
     transactionExtras.algorandMemoState?.memo?.let { txData = txData.copy(extras = AlgorandTransactionExtras(it)) }
 
     scope.launch {
@@ -278,6 +275,7 @@ private fun sendTransaction(
                 }
                 is SimpleResult.Failure -> {
                     updateFeedbackManagerInfo(
+                        sendResult = sendResult.error,
                         walletManager = walletManager,
                         amountToSend = amountToSend,
                         feeAmount = fee.amount,
@@ -368,13 +366,33 @@ private fun updateFeedbackManagerInfo(
     amountToSend: Amount,
     feeAmount: Amount,
     destinationAddress: String,
+    sendResult: BlockchainError,
 ) {
-    store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
-        walletManager = walletManager,
-        amountToSend = amountToSend,
-        feeAmount = feeAmount,
-        destinationAddress = destinationAddress,
-    )
+    val featureToggles = store.inject(DaggerGraphState::feedbackManagerFeatureToggles)
+    if (featureToggles.isLocalLogsEnabled) {
+        store.inject(DaggerGraphState::saveBlockchainErrorUseCase).invoke(
+            error = BlockchainErrorInfo(
+                errorMessage = (sendResult as? BlockchainSdkError)?.customMessage ?: "It isn't BlockchainSdkError",
+                blockchainId = walletManager.wallet.blockchain.id,
+                derivationPath = walletManager.wallet.publicKey.derivationPath?.rawPath ?: "",
+                destinationAddress = destinationAddress,
+                tokenSymbol = if (amountToSend.type is AmountType.Token) {
+                    amountToSend.currencySymbol
+                } else {
+                    ""
+                },
+                amount = amountToSend.value?.stripZeroPlainString() ?: "0",
+                fee = feeAmount.value?.stripZeroPlainString() ?: "0",
+            ),
+        )
+    } else {
+        store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
+            walletManager = walletManager,
+            amountToSend = amountToSend,
+            feeAmount = feeAmount,
+            destinationAddress = destinationAddress,
+        )
+    }
 }
 
 fun createValidateTransactionError(
