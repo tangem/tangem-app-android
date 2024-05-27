@@ -34,5 +34,9 @@
     {
         "name": "STAKING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "FULL_RESET_ENABLED",
+        "version": "5.12.0"
     }
 ]
