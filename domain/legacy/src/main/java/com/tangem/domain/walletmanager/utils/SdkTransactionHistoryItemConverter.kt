@@ -2,7 +2,7 @@ package com.tangem.domain.walletmanager.utils
 
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem
-import com.tangem.datasource.asset.AssetReader
+import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem as SdkTransactionHistoryItem
@@ -58,7 +58,9 @@ internal class SdkTransactionHistoryItemConverter(
             } else {
                 mapToInteractionAddressType(sourceType = sourceType)
             }
-            is SdkTransactionHistoryItem.TransactionType.ContractMethod -> mapToInteractionAddressType(destinationType)
+            is SdkTransactionHistoryItem.TransactionType.ContractMethod,
+            is SdkTransactionHistoryItem.TransactionType.ContractMethodName,
+            -> mapToInteractionAddressType(destinationType)
         }
     }
 
