@@ -233,6 +233,7 @@
   <string name="express_provider_permission_needed">Требуется разрешение</string>
   <string name="express_terms_of_use">Условиями использования</string>
   <string name="express_token_list_empty_search">Токены не найдены. Пожалуйста, попробуйте другой запрос</string>
+  <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакции скопирован</string>
   <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
   <string name="feedback_preface_rate_negative">Расскажите, каких функций вам не хватает, и мы постараемся вам помочь.</string>
@@ -380,7 +381,9 @@
   <string name="organize_tokens_title">Сортировка токенов</string>
   <string name="organize_tokens_ungroup">Список</string>
   <string name="qr_scanner_camera_denied_gallery_button">Выбрать из галереи</string>
-  <string name="rate_app_sheet_title">Нравится наше приложение?</string>
+  <string name="qr_scanner_camera_denied_settings_button">Настройки</string>
+  <string name="qr_scanner_camera_denied_text">Вы не предоставили доступ к вашей камере</string>
+  <string name="qr_scanner_camera_denied_title">Доступ к камере запрещен</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
   <string name="referral_button_participate">Участвовать</string>
@@ -435,7 +438,7 @@
   <string name="scan_card_settings_button">Сканировать</string>
   <string name="scan_card_settings_message">Отсканируйте карту, чтобы изменить ее настройки. Изменения затронут только ту карту, которую вы отсканировали, и не повлияют на другие карты, привязанные к вашему кошельку.</string>
   <string name="scan_card_settings_title">Приготовьте свою карту</string>
-  <string name="send_additional_field_already_included">Уже содержится в введенном адресе</string>
+  <string name="send_additional_field_already_included">Уже содержится во введенном адресе</string>
   <string name="send_alert_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_alert_fee_too_low_text">Вы указали комиссию ниже рекомендуемой, это может привести к задержке исполнения вашей транзакции. Продолжить?</string>
   <string name="send_alert_transaction_failed_text">Причина: %1$s\nКод: %2$s</string>
@@ -510,6 +513,9 @@
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
   <string name="send_validation_invalid_address">Неверный адрес</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
+  <string name="settings_forget_wallet">Забыть кошелек</string>
+  <string name="settings_forget_wallet_footer">Это приведет к удалению кошелька из приложения. Сам кошелек можно добавить снова.</string>
+  <string name="settings_wallet_name_title">Имя</string>
   <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
   <string name="story_awe_title">Революционный аппаратный кошелек</string>
   <string name="story_backup_description">До трех карт с одним кошельком</string>
@@ -633,6 +639,7 @@
   <string name="wallet_network_group_title">Сеть %s</string>
   <string name="wallet_notification_address_copied">Адрес скопирован в буфер обмена</string>
   <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
+  <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту, чтобы разблокировать доступ к вашему кошельку</string>
   <string name="warning_backup_errors_message">Пожалуйста, выведите все средства из этого кошелька, сбросьте его к заводским настройкам и создайте новый. Доступ к текущему кошельку будет утерян.</string>
