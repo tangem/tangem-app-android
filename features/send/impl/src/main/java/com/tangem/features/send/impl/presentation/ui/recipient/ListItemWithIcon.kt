@@ -119,6 +119,7 @@ private fun ListItemWithIcon(
                         contentDescription = null,
                         tint = TangemTheme.colors.icon.informative,
                         modifier = Modifier
+                            .padding(end = TangemTheme.dimens.spacing2)
                             .size(TangemTheme.dimens.size16)
                             .background(TangemTheme.colors.background.tertiary, CircleShape)
                             .padding(TangemTheme.dimens.spacing2),
@@ -137,7 +138,6 @@ private fun ListItemWithIcon(
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                     ellipsis = TextEllipsis.OffsetEnd(offsetEnd = offset),
-                    modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
                 )
             }
         }
