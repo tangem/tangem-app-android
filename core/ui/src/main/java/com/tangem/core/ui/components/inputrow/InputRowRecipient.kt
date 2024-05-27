@@ -80,7 +80,10 @@ fun InputRowRecipient(
                 modifier = Modifier
                     .padding(top = TangemTheme.dimens.spacing8),
             ) {
-                Row {
+                Row(
+                    verticalAlignment = CenterVertically,
+                    modifier = Modifier.heightIn(TangemTheme.dimens.size40),
+                ) {
                     InputIcon(
                         isLoading = isLoading,
                         value = value,
