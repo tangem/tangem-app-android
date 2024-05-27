@@ -29,7 +29,7 @@ internal fun checkAndCalculateSubtractedAmount(
     return if (isFeeCoverage) {
         balance.minus(reduceAmountBy).minus(feeValue)
     } else {
-        amountValue.minus(reduceAmountBy)
+        amountValue
     }
 }
 
@@ -44,8 +44,8 @@ internal fun checkFeeCoverage(
     reduceAmountBy: BigDecimal?,
 ): Boolean {
     if (!isSubtractAvailable) return false
-    val amountWithReduced = (reduceAmountBy ?: BigDecimal.ZERO) + amountValue
-    return balance < amountWithReduced + feeValue && balance > feeValue && balance >= amountWithReduced
+    val reducedBy = balance - (reduceAmountBy ?: BigDecimal.ZERO)
+    return reducedBy < amountValue + feeValue && reducedBy > feeValue && reducedBy >= amountValue
 }
 
 /**
