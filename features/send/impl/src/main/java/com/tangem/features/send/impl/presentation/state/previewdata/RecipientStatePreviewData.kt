@@ -12,9 +12,7 @@ internal object RecipientStatePreviewData {
 
     private val defaultRecentItem = SendRecipientListContent(
         id = "sanctus",
-        title = stringReference("address"),
-        subtitle = stringReference("0.001 BTC"),
-        timestamp = stringReference("1.01.1970, 00:00"),
+        title = stringReference("0x391316a070212312312378E88CAc8A0C250"),
         subtitleEndOffset = 0,
         subtitleIconRes = R.drawable.ic_arrow_down_24,
         isVisible = true,
@@ -23,25 +21,63 @@ internal object RecipientStatePreviewData {
 
     val recipientState = SendStates.RecipientState(
         addressTextField = SendTextField.RecipientAddress(
-            value = "0x23948239805671983476598176",
+            value = "",
             onValueChange = {},
             keyboardOptions = KeyboardOptions.Default,
-            placeholder = stringReference("Placeholder"),
+            placeholder = stringReference("Enter address"),
             label = stringReference("Recipient"),
             isError = false,
             error = null,
         ),
-        memoTextField = null,
-        recent = persistentListOf(
-            defaultRecentItem.copy(id = "1"),
-            defaultRecentItem.copy(id = "2"),
-            defaultRecentItem.copy(id = "3"),
+        memoTextField = SendTextField.RecipientMemo(
+            value = "",
+            onValueChange = {},
+            keyboardOptions = KeyboardOptions.Default,
+            placeholder = stringReference("Optional"),
+            label = stringReference("Memo"),
+            isError = false,
+            error = null,
+            disabledText = stringReference("Already included in the entered address"),
+            isEnabled = true,
         ),
-        wallets = persistentListOf(
-            defaultRecentItem.copy(id = "4", subtitle = stringReference("Wallet")),
-        ),
+        recent = persistentListOf(),
+        wallets = persistentListOf(),
         network = "Ethereum",
         isValidating = false,
         isPrimaryButtonEnabled = true,
+    )
+
+    val recipientAddressState = recipientState.copy(
+        addressTextField = recipientState.addressTextField.copy(
+            value = "0x391316d97a07027a0702c8A002c8A0C25d8470",
+        ),
+    )
+
+    val recipientWithRecentState = recipientState.copy(
+        recent = persistentListOf(
+            defaultRecentItem.copy(
+                id = "1",
+                subtitle = stringReference("1 000 000 000.0004 USDT"),
+                timestamp = stringReference("today at 14:46"),
+                subtitleIconRes = R.drawable.ic_arrow_up_24,
+            ),
+            defaultRecentItem.copy(
+                id = "2",
+                subtitle = stringReference("20,09 USDT"),
+                timestamp = stringReference("24.05.2004 at 14:46"),
+            ),
+            defaultRecentItem.copy(
+                id = "3",
+                subtitle = stringReference("20,09 USDT"),
+                timestamp = stringReference("24.05.2004 at 14:46"),
+            ),
+        ),
+        wallets = persistentListOf(
+            defaultRecentItem.copy(
+                id = "4",
+                subtitle = stringReference("Main Wallet"),
+                subtitleIconRes = null,
+            ),
+        ),
     )
 }

@@ -64,6 +64,7 @@ internal fun FeeBlock(feeState: SendStates.FeeState, isClickDisabled: Boolean, o
                 ellipsizeOffset = feeAmount?.currencySymbol?.length,
                 isSelected = true,
                 showDivider = false,
+                showSelectedAppearance = false,
                 paddingValues = PaddingValues(),
             )
             FeeLoading(feeSelectorState)
