@@ -53,10 +53,7 @@ import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.state.recipient.RecipientSendFactory
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.DelayedWork
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.coroutines.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -412,9 +409,11 @@ internal class SendViewModel @Inject constructor(
     private fun getUserWallets() {
         viewModelScope.launch(dispatchers.main) {
             runCatching {
-                getWalletsUseCase.invokeSync()
-                    ?.toAvailableWallets()
-                    .orEmpty()
+                waitForDelay(delay = RECENT_LOAD_DELAY) {
+                    getWalletsUseCase.invokeSync()
+                        ?.toAvailableWallets()
+                        .orEmpty()
+                }
             }.onSuccess { result ->
                 userWallets = result
                 uiState = recipientStateFactory.onLoadedWalletsList(wallets = userWallets)
@@ -455,10 +454,12 @@ internal class SendViewModel @Inject constructor(
     }
 
     private suspend fun getTxHistory() {
-        val txHistoryList = getFixedTxHistoryItemsUseCase.getSync(
-            userWalletId = userWalletId,
-            currency = cryptoCurrency,
-        ).getOrElse { emptyList() }
+        val txHistoryList = waitForDelay(delay = RECENT_LOAD_DELAY) {
+            getFixedTxHistoryItemsUseCase.getSync(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ).getOrElse { emptyList() }
+        }
         uiState = recipientStateFactory.onLoadedHistoryList(txHistory = txHistoryList)
     }
 
@@ -971,6 +972,7 @@ internal class SendViewModel @Inject constructor(
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 60_000L
         const val BALANCE_UPDATE_DELAY = 11_000L
+        const val RECENT_LOAD_DELAY = 500L
 
         const val RU_LOCALE = "ru"
         const val EN_LOCALE = "en"
