@@ -11,5 +11,4 @@ class GetStakingAvailabilityUseCase(private val stakingRepository: StakingReposi
     operator fun invoke(blockchainNetworkId: String): StakingAvailability {
         return stakingRepository.getStakingAvailability(blockchainNetworkId)
     }
-
 }

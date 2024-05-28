@@ -5,13 +5,16 @@ import androidx.compose.runtime.Immutable
 @Immutable
 sealed interface StakingBlockState {
 
-    data object Error : StakingBlockState
+    val iconState: IconState
 
-    data object Loading : StakingBlockState
+    data class Error(override val iconState: IconState) : StakingBlockState
+
+    data class Loading(override val iconState: IconState) : StakingBlockState
 
     data class Content(
+        override val iconState: IconState,
         val percent: String,
         val periodInDays: Int,
-        val tokenSymbol: String
+        val tokenSymbol: String,
     ) : StakingBlockState
 }

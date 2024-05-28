@@ -12,5 +12,4 @@ class GetStakingEntryInfoUseCase(private val stakingRepository: StakingRepositor
     suspend operator fun invoke(integrationId: String): Either<Throwable, StakingEntryInfo> {
         return Either.catch { stakingRepository.getEntryInfo(integrationId) }
     }
-
 }

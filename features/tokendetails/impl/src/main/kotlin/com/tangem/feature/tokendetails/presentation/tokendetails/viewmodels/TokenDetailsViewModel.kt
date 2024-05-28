@@ -366,24 +366,15 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateStakingInfo() {
         viewModelScope.launch(dispatchers.io) {
-            // TODO staking
             when (val stakingAvailability = getStakingAvailabilityUseCase(cryptoCurrency.network.id.value)) {
                 is StakingAvailability.Available -> {
                     val stackingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
-                    stackingInfo.fold(
-                        ifLeft = {
-                            Timber.tag("TokenDetails").e(it)
-                        },
-                        ifRight = {
-                            Timber.tag("TokenDetails").e(it.toString())
-                        }
-                    )
+                    uiState = stateFactory.getLoadedStakingState(stackingInfo)
                 }
                 StakingAvailability.Unavailable -> {
-                    Timber.tag("TokenDetails").e("Staking unavailable")
+                    uiState = uiState.copy(isStakingAvailable = false)
                 }
             }
-
         }
     }
 

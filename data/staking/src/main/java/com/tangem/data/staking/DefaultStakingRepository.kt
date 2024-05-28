@@ -11,8 +11,8 @@ internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
 ) : StakingRepository {
 
-    override fun getStakingAvailability(blockchainId: String) : StakingAvailability {
-        return when(Blockchain.fromId(blockchainId)) {
+    override fun getStakingAvailability(blockchainId: String): StakingAvailability {
+        return when (Blockchain.fromId(blockchainId)) {
             Blockchain.Solana -> StakingAvailability.Available("solana-sol-native-multivalidator-staking")
             Blockchain.Cosmos -> StakingAvailability.Available("cosmos-atom-native-staking")
             Blockchain.Polkadot -> StakingAvailability.Available("polkadot-dot-validator-staking")
@@ -31,11 +31,10 @@ internal class DefaultStakingRepository(
     override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
         val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
 
-        // TODO staking add converter
         return StakingEntryInfo(
-            percent = yield.apy.toString(),
+            percent = yield.apy.movePointRight(2).toString(),
             periodInDays = yield.metadata.cooldownPeriod.days,
-            tokenSymbol = yield.token.symbol
+            tokenSymbol = yield.token.symbol,
         )
     }
 }

@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.model
 
-data class StakingEntryInfo (
+data class StakingEntryInfo(
     val percent: String,
     val periodInDays: Int,
-    val tokenSymbol: String
+    val tokenSymbol: String,
 )

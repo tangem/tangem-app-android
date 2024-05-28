@@ -16,21 +16,17 @@ internal object StakingDomainModule {
 
     @Provides
     @ViewModelScoped
-    fun provideGetStakingEntryInfoUseCase(
-        stakingRepository: StakingRepository,
-    ): GetStakingEntryInfoUseCase {
+    fun provideGetStakingEntryInfoUseCase(stakingRepository: StakingRepository): GetStakingEntryInfoUseCase {
         return GetStakingEntryInfoUseCase(
-            stakingRepository = stakingRepository
+            stakingRepository = stakingRepository,
         )
     }
 
     @Provides
     @ViewModelScoped
-    fun provideGetStakingAvailabilityUseCase(
-        stakingRepository: StakingRepository,
-    ): GetStakingAvailabilityUseCase {
+    fun provideGetStakingAvailabilityUseCase(stakingRepository: StakingRepository): GetStakingAvailabilityUseCase {
         return GetStakingAvailabilityUseCase(
-            stakingRepository = stakingRepository
+            stakingRepository = stakingRepository,
         )
     }
 }

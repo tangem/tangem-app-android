@@ -5,7 +5,6 @@ import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.datasource.api.stakekit.models.request.RevenueOption
 import com.tangem.datasource.api.stakekit.models.request.YieldType
 import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
-import com.tangem.datasource.api.stakekit.models.response.model.Token
 import com.tangem.datasource.api.stakekit.models.response.model.TokenWithYield
 import com.tangem.datasource.api.stakekit.models.response.model.Yield
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapper
@@ -34,12 +33,14 @@ interface StakeKitApi {
     ): ApiResponse<Yield>
 
     @GET("yields/balances")
-    suspend fun getMultipleYieldBalances(@Body body: List<YieldBalanceRequestBody>): ApiResponse<List<YieldBalanceWrapper>>
+    suspend fun getMultipleYieldBalances(
+        @Body body: List<YieldBalanceRequestBody>,
+    ): ApiResponse<List<YieldBalanceWrapper>>
 
     @GET("yields/{integrationId}/balances")
     suspend fun getSingleYieldBalance(
         @Path("integrationId") integrationId: String,
-        @Body body: YieldBalanceRequestBody
+        @Body body: YieldBalanceRequestBody,
     ): ApiResponse<YieldBalanceWrapper>
 
     @GET("tokens")

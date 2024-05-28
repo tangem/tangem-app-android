@@ -16,12 +16,14 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -94,6 +96,12 @@ internal class TokenDetailsStateFactory(
 
     private val refreshStateConverter by lazy {
         TokenDetailsRefreshStateConverter(
+            currentStateProvider = currentStateProvider,
+        )
+    }
+
+    private val stakingStateConverter by lazy {
+        TokenStakingStateConverter(
             currentStateProvider = currentStateProvider,
         )
     }
@@ -198,6 +206,19 @@ internal class TokenDetailsStateFactory(
                     onConfirmClick = clickIntents::onDismissDialog,
                 ),
             ),
+        )
+    }
+
+    fun getLoadingStakingState(): TokenDetailsState {
+        val iconState = currentStateProvider().tokenInfoBlockState.iconState
+        return currentStateProvider().copy(
+            stakingBlockState = StakingBlockState.Loading(iconState = iconState),
+        )
+    }
+
+    fun getLoadedStakingState(either: Either<Throwable, StakingEntryInfo>): TokenDetailsState {
+        return currentStateProvider().copy(
+            stakingBlockState = stakingStateConverter.convert(either),
         )
     }
 

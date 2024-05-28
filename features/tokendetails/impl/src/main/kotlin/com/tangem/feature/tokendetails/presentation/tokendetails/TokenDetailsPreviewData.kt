@@ -35,7 +35,7 @@ internal object TokenDetailsPreviewData {
 
     val tokenInfoBlockStateWithLongNameInMainCurrency = TokenInfoBlockState(
         name = "Stellar (XLM) with long name test",
-        iconState = TokenInfoBlockState.IconState.CoinIcon(
+        iconState = IconState.CoinIcon(
             url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
             fallbackResId = R.drawable.img_stellar_22,
             isGrayscale = false,
@@ -44,7 +44,7 @@ internal object TokenDetailsPreviewData {
     )
     val tokenInfoBlockStateWithLongName = TokenInfoBlockState(
         name = "Tether (USDT) with long name test",
-        iconState = TokenInfoBlockState.IconState.TokenIcon(
+        iconState = IconState.TokenIcon(
             url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
             fallbackTint = Color.Cyan,
             fallbackBackground = Color.Blue,
@@ -59,7 +59,7 @@ internal object TokenDetailsPreviewData {
 
     val tokenInfoBlockStateWithLongNameNoStandard = TokenInfoBlockState(
         name = "Tether (USDT) with long name test",
-        iconState = TokenInfoBlockState.IconState.TokenIcon(
+        iconState = IconState.TokenIcon(
             url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
             fallbackTint = Color.Cyan,
             fallbackBackground = Color.Blue,
@@ -74,7 +74,7 @@ internal object TokenDetailsPreviewData {
 
     val tokenInfoBlockState = TokenInfoBlockState(
         name = "Tether USDT",
-        iconState = TokenInfoBlockState.IconState.CustomTokenIcon(
+        iconState = IconState.CustomTokenIcon(
             tint = Color.Green,
             background = Color.Magenta,
             isGrayscale = true,
@@ -84,6 +84,13 @@ internal object TokenDetailsPreviewData {
             networkIcon = R.drawable.img_eth_22,
             networkName = "Ethereum",
         ),
+    )
+
+    val iconState = IconState.TokenIcon(
+        url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
+        fallbackTint = Color.Cyan,
+        fallbackBackground = Color.Blue,
+        isGrayscale = false,
     )
 
     private val actionButtons = persistentListOf(
@@ -103,7 +110,7 @@ internal object TokenDetailsPreviewData {
 
     private val marketPriceLoading = MarketPriceBlockState.Loading(currencySymbol = "USDT")
 
-    private val stakingLoading = StakingBlockState.Loading
+    private val stakingLoading = StakingBlockState.Loading(iconState = iconState)
 
     private val pullToRefreshConfig = TokenDetailsPullToRefreshConfig(
         isRefreshing = false,
@@ -253,6 +260,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
+        isStakingAvailable = false,
         event = consumedEvent(),
     )
 
@@ -274,6 +282,7 @@ internal object TokenDetailsPreviewData {
             percent = "7.38",
             periodInDays = 4,
             tokenSymbol = "XLM",
+            iconState = iconState,
         ),
         notifications = persistentListOf(),
         txHistoryState = TxHistoryState.NotSupported(
@@ -287,6 +296,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
+        isStakingAvailable = true,
         event = consumedEvent(),
     )
 

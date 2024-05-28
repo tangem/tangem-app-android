@@ -30,6 +30,7 @@ internal class TokenDetailsSkeletonStateConverter(
     private val iconStateConverter by lazy { TokenDetailsIconStateConverter() }
 
     override fun convert(value: CryptoCurrency): TokenDetailsState {
+        val iconState = iconStateConverter.convert(value)
         return TokenDetailsState(
             topAppBarConfig = TokenDetailsTopAppBarConfig(
                 onBackClick = clickIntents::onBackClick,
@@ -37,7 +38,7 @@ internal class TokenDetailsSkeletonStateConverter(
             ),
             tokenInfoBlockState = TokenInfoBlockState(
                 name = value.name,
-                iconState = iconStateConverter.convert(value),
+                iconState = iconState,
                 currency = when (value) {
                     is CryptoCurrency.Coin -> TokenInfoBlockState.Currency.Native
                     is CryptoCurrency.Token -> TokenInfoBlockState.Currency.Token(
@@ -49,7 +50,7 @@ internal class TokenDetailsSkeletonStateConverter(
             ),
             tokenBalanceBlockState = TokenDetailsBalanceBlockState.Loading(actionButtons = createButtons()),
             marketPriceBlockState = MarketPriceBlockState.Loading(value.symbol),
-            stakingBlockState = StakingBlockState.Loading,
+            stakingBlockState = StakingBlockState.Loading(iconState = iconState),
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),
@@ -63,6 +64,7 @@ internal class TokenDetailsSkeletonStateConverter(
             bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
+            isStakingAvailable = featureToggles.isStakingEnabled(), // TODO staking
             event = consumedEvent(),
         )
     }
