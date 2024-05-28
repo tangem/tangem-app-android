@@ -38,6 +38,7 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.TransactionCardType
@@ -498,7 +499,7 @@ private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: In
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCard_InLightTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreview()
     }
 }
@@ -506,7 +507,7 @@ private fun Preview_TransactionCard_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCardWithPriceImpact_InLightTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreviewWithPriceImpact()
     }
 }
@@ -514,7 +515,7 @@ private fun Preview_TransactionCardWithPriceImpact_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCardWithoutPriceImpact_InLightTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreviewWithoutPriceImpact()
     }
 }
@@ -522,7 +523,7 @@ private fun Preview_TransactionCardWithoutPriceImpact_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCard_InDarkTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreview()
     }
 }
@@ -530,7 +531,7 @@ private fun Preview_TransactionCard_InDarkTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCardWithPriceImpact_InDarkTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreviewWithPriceImpact()
     }
 }
@@ -538,7 +539,7 @@ private fun Preview_TransactionCardWithPriceImpact_InDarkTheme() {
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
 private fun Preview_TransactionCardWithoutPriceImpact_InDarkTheme() {
-    TangemTheme(isDark = false) {
+    TangemThemePreview(isDark = false) {
         TransactionCardPreviewWithoutPriceImpact()
     }
 }
