@@ -23,6 +23,7 @@ object DaggerGraphReducer {
                 sendRouter = action.sendRouter,
                 qrScanningRouter = action.qrScanningRouter,
                 emailSender = action.emailSender,
+                rootComponentContext = action.rootComponentContext,
             )
         }
     }
