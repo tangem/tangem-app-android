@@ -128,4 +128,8 @@ internal class MockCurrenciesRepository(
     override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency {
         return FeePaidCurrency.Coin
     }
+
+    override fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token {
+        return cryptoCurrency
+    }
 }

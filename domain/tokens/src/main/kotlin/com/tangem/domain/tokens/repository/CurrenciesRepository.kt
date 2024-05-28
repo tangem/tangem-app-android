@@ -194,4 +194,9 @@ interface CurrenciesRepository {
      * Retrieves fee paid currency for specific [currency].
      */
     suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency
+
+    /**
+     * Creates token [cryptoCurrency] based on current token and [network] it`s will be added
+     */
+    fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token
 }
