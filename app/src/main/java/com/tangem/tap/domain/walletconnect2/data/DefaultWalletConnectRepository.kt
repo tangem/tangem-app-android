@@ -375,6 +375,7 @@ internal class DefaultWalletConnectRepository(
 
     override fun rejectRequest(requestData: RequestData, error: WalletConnectError) {
         val session = currentSessions.find { it.topic == requestData.topic }
+
         analyticsHandler.send(
             WalletConnect.RequestHandled(
                 WalletConnect.RequestHandledParams(
@@ -386,17 +387,18 @@ internal class DefaultWalletConnectRepository(
                 ),
             ),
         )
-        cancelRequest(requestData.topic, requestData.requestId)
+
+        cancelRequest(requestData.topic, requestData.requestId, error.error)
     }
 
-    override fun cancelRequest(topic: String, id: Long) {
+    override fun cancelRequest(topic: String, id: Long, message: String) {
         Web3Wallet.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = topic,
                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
                     id = id,
                     code = 0,
-                    message = "",
+                    message = message,
                 ),
             ),
             onSuccess = {},
@@ -407,8 +409,8 @@ internal class DefaultWalletConnectRepository(
     override fun reject() {
         Web3Wallet.rejectSession(
             params = Wallet.Params.SessionReject(
-                sessionProposal?.proposerPublicKey ?: "",
-                "",
+                proposerPublicKey = sessionProposal?.proposerPublicKey ?: "",
+                reason = "",
             ),
             onSuccess = {
                 Timber.d("Rejected successfully: $it")
