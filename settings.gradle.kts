@@ -156,6 +156,9 @@ include(":features:qr-scanning:impl")
 
 include(":features:staking:api")
 include(":features:staking:impl")
+
+include(":features:details:api")
+include(":features:details:impl")
 // endregion Feature modules
 
 // region Domain modules
