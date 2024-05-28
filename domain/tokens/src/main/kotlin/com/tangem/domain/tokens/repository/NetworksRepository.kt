@@ -62,5 +62,8 @@ interface NetworksRepository {
 
     fun isNeedToCreateAccountWithoutReserve(network: Network): Boolean
 
+    /**
+     * Returns list of addresses and crypto currency info of added currencies of [network] in selected wallet [userWalletId]
+     */
     suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<CryptoCurrencyAddress>
 }
