@@ -3,7 +3,6 @@ package com.tangem.data.card.di
 import com.tangem.data.card.DefaultCardRepository
 import com.tangem.data.card.DefaultCardSdkConfigRepository
 import com.tangem.data.card.sdk.CardSdkProvider
-import com.tangem.data.source.preferences.PreferencesDataSource
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -19,14 +18,8 @@ internal object CardDataModule {
 
     @Provides
     @Singleton
-    fun provideCardSdkConfigRepository(
-        cardSdkProvider: CardSdkProvider,
-        preferencesDataSource: PreferencesDataSource,
-    ): CardSdkConfigRepository {
-        return DefaultCardSdkConfigRepository(
-            cardSdkProvider = cardSdkProvider,
-            preferencesDataSource = preferencesDataSource,
-        )
+    fun provideCardSdkConfigRepository(cardSdkProvider: CardSdkProvider): CardSdkConfigRepository {
+        return DefaultCardSdkConfigRepository(cardSdkProvider = cardSdkProvider)
     }
 
     @Provides
