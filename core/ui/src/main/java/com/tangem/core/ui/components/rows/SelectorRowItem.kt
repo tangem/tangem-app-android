@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -36,6 +37,7 @@ fun SelectorRowItem(
     ellipsizeOffset: Int? = null,
     isSelected: Boolean = false,
     showDivider: Boolean = true,
+    showSelectedAppearance: Boolean = true,
     onSelect: (() -> Unit)? = null,
 ) {
     val iconTint by animateColorAsState(
@@ -46,7 +48,11 @@ fun SelectorRowItem(
         },
         label = "Selector icon tint change",
     )
-
+    val textStyle = if (isSelected && showSelectedAppearance) {
+        TangemTheme.typography.subtitle2
+    } else {
+        TangemTheme.typography.body2
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -71,7 +77,7 @@ fun SelectorRowItem(
             )
             Text(
                 text = stringResource(titleRes),
-                style = TangemTheme.typography.body2,
+                style = textStyle,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
             )
@@ -80,6 +86,7 @@ fun SelectorRowItem(
                     preDot = preDot,
                     postDot = postDot,
                     ellipsizeOffset = ellipsizeOffset,
+                    textStyle = textStyle,
                 )
             }
         }
@@ -100,6 +107,7 @@ fun SelectorRowItem(
 private fun RowScope.SelectorValueContent(
     preDot: TextReference,
     postDot: TextReference?,
+    textStyle: TextStyle,
     ellipsizeOffset: Int? = null,
 ) {
     val ellipsis = if (ellipsizeOffset == null) {
@@ -109,7 +117,7 @@ private fun RowScope.SelectorValueContent(
     }
     EllipsisText(
         text = preDot.resolveReference(),
-        style = TangemTheme.typography.body2,
+        style = textStyle,
         color = TangemTheme.colors.text.primary1,
         textAlign = TextAlign.End,
         ellipsis = ellipsis,
