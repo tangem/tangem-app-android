@@ -9,6 +9,7 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.tap.domain.card.DefaultDeleteSavedAccessCodesUseCase
+import com.tangem.tap.domain.card.DefaultResetCardUseCase
 import com.tangem.tap.domain.sdk.TangemSdkManager
 import dagger.Module
 import dagger.Provides
@@ -76,5 +77,11 @@ internal object CardDomainModule {
     @ViewModelScoped
     fun provideDeleteSavedAccessCodesUseCase(tangemSdkManager: TangemSdkManager): DeleteSavedAccessCodesUseCase {
         return DefaultDeleteSavedAccessCodesUseCase(tangemSdkManager)
+    }
+
+    @Provides
+    @ViewModelScoped
+    fun provideResetCardUseCase(tangemSdkManager: TangemSdkManager): ResetCardUseCase {
+        return DefaultResetCardUseCase(tangemSdkManager)
     }
 }
