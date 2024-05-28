@@ -67,6 +67,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "taraxa", "taraxa/test" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         "base" -> R.drawable.img_base_22
+        "joystream" -> R.drawable.img_joystream_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -135,6 +136,7 @@ fun getActiveIconResByNetworkId(networkId: String): Int {
         "taraxa", "taraxa/test" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         "base" -> R.drawable.img_base_22
+        "joystream" -> R.drawable.img_joystream_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -200,6 +202,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "taraxa" -> R.drawable.img_taraxa_22
         "radiant" -> R.drawable.img_radiant_22
         "base" -> R.drawable.img_base_22
+        "joystream" -> R.drawable.img_joystream_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -268,6 +271,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "taraxa", "taraxa/test" -> R.drawable.ic_taraxa_22
         "radiant" -> R.drawable.ic_radiant_22
         "base", "base/test" -> R.drawable.ic_base_22
+        "joystream" -> R.drawable.ic_joystream_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -336,6 +340,7 @@ fun getGreyedOutIconResByNetworkId(networkId: String): Int {
         "taraxa", "taraxa/test" -> R.drawable.ic_taraxa_22
         "radiant" -> R.drawable.ic_radiant_22
         "base", "base/test" -> R.drawable.ic_base_22
+        "joystream" -> R.drawable.ic_joystream_22
         else -> R.drawable.ic_alert_24
     }
 }
