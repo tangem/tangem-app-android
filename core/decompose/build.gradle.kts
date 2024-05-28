@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.core.utils)
+    api(projects.core.utils)
 
     api(deps.decompose)
     implementation(deps.kotlin.coroutines)
