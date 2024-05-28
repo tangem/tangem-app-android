@@ -12,6 +12,7 @@ import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsSensitiveInformationRepository
 import com.tangem.tap.domain.userWalletList.utils.encryptionKey
+import com.tangem.tap.domain.userWalletList.utils.lockAll
 import com.tangem.tap.domain.userWalletList.utils.toUserWallets
 import com.tangem.tap.domain.userWalletList.utils.updateWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,10 +28,15 @@ internal class BiometricUserWalletsListManager(
 ) : UserWalletsListManager.Lockable {
     private val state = MutableStateFlow(State())
 
+    override val isLockable: Boolean = true
+
     override val userWallets: Flow<List<UserWallet>>
         get() = state
             .mapLatest { it.userWallets }
             .distinctUntilChanged()
+
+    override val userWalletsSync: List<UserWallet>
+        get() = state.value.userWallets
 
     override val selectedUserWallet: Flow<UserWallet>
         get() = state
@@ -78,11 +84,13 @@ internal class BiometricUserWalletsListManager(
     }
 
     override fun lock() {
-        state.update { State() }
-    }
-
-    override fun isLockable(): Boolean {
-        return true
+        state.update { prevState ->
+            prevState.copy(
+                encryptionKeys = emptyList(),
+                userWallets = prevState.userWallets.lockAll(),
+                isLocked = true,
+            )
+        }
     }
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
