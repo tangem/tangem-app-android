@@ -154,7 +154,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         val event = when (error) {
             is UnlockWalletsError.DataError,
             is UnlockWalletsError.UnableToUnlockWallets,
-            -> WalletEvent.ShowToast(resourceReference(R.string.user_wallet_list_error_unable_to_unlock))
+            -> WalletEvent.ShowError(resourceReference(R.string.user_wallet_list_error_unable_to_unlock))
             is UnlockWalletsError.NoUserWalletSelected,
             is UnlockWalletsError.NotAllUserWalletsUnlocked,
             -> WalletEvent.ShowAlert(WalletAlertState.RescanWallets)
