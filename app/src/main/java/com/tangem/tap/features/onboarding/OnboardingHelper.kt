@@ -12,14 +12,17 @@ import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.userwallets.UserWalletBuilder
-import com.tangem.domain.userwallets.UserWalletIdBuilder
-import com.tangem.tap.*
+import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
+import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -79,6 +82,8 @@ object OnboardingHelper {
     ) {
         Analytics.setContext(scanResponse)
         scope.launch {
+            val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
+
             when {
                 // When should save user wallets, then save card without navigate to save wallet screen
                 store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
@@ -90,16 +95,11 @@ object OnboardingHelper {
                         ),
                     )
 
-                    val toggles = store.inject(DaggerGraphState::userWalletsListManagerFeatureToggles)
-                    if (toggles.isGeneralManagerEnabled) {
-                        store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
-                    } else {
-                        store.dispatchWithMain(SaveWalletAction.Save)
-                    }
+                    store.dispatchWithMain(SaveWalletAction.SaveWalletAfterBackup(hasBackupError))
                 }
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
-                tangemSdkManager.canUseBiometry && preferencesStorage.shouldShowSaveUserWalletScreen -> {
+                tangemSdkManager.canUseBiometry && settingsRepository.shouldShowSaveUserWalletScreen() -> {
                     proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
 
                     delay(timeMillis = 1_200)
@@ -142,7 +142,8 @@ object OnboardingHelper {
         backupCardsIds: List<String>?,
         hasBackupError: Boolean,
     ) {
-        val userWallet = UserWalletBuilder(scanResponse = scanResponse)
+        val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+        val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
             .hasBackupError(hasBackupError)
             .backupCardsIds(backupCardsIds?.toSet())
             .build()
@@ -151,6 +152,7 @@ object OnboardingHelper {
                 return
             }
 
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
         userWalletsListManager.save(userWallet, canOverride = true)
             .doOnFailure { error ->
                 Timber.e(error, "Unable to save user wallet")
