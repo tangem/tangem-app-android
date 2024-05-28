@@ -32,7 +32,7 @@
   <string name="app_settings_theme_selection_footer">If system is selected, the app will auto-adjust based on your device\'s system settings</string>
   <string name="app_settings_theme_selection_system_short">System</string>
   <string name="app_settings_theme_selector_title">Theme</string>
-  <string name="app_settings_title">App Settings</string>
+  <string name="app_settings_title">App settings</string>
   <string name="balance_hidden_description">To hide or show your balances, simply flip your device screen down, or switch it off in Settings</string>
   <string name="balance_hidden_do_not_show_button">Don\'t show again</string>
   <string name="balance_hidden_got_it_button">Got it</string>
@@ -55,7 +55,7 @@
   <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
   <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
   <string name="card_settings_security_mode">Security Mode</string>
-  <string name="card_settings_title">Card Settings</string>
+  <string name="card_settings_title">Card settings</string>
   <string name="cardano_coin_will_be_send_with_token_description">Due to the peculiarities of the Cardano network, when transacting the %1$s token, in addition to the network commission,  %2$s will be charged</string>
   <string name="cardano_insufficient_balance_to_send_token_description">To make a %1$s transaction, you must deposit some %2$s (%3$s) to cover the network fee and minimum ADA value</string>
   <string name="cardano_insufficient_balance_to_send_token_title">Insufficient ADA to token transfer</string>
@@ -179,7 +179,7 @@
   <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
   <string name="details_row_title_cid">Card ID</string>
-  <string name="details_row_title_contact_to_support">Contact to Support</string>
+  <string name="details_row_title_contact_to_support">Contact support</string>
   <string name="details_row_title_create_backup">Link More Cards</string>
   <string name="details_row_title_currency">App Currency</string>
   <string name="details_row_title_flip_to_hide">Flip-to-Hide Balances</string>
@@ -188,7 +188,7 @@
   <string name="details_security_management_warning">If you forget the code you will lose access to your funds. Code recovery is not possible.</string>
   <string name="details_title">Details</string>
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
-  <string name="disclaimer_title">Terms of Service</string>
+  <string name="disclaimer_title">Terms of service</string>
   <string name="error_wrong_wallet_tapped">You have used a card from another wallet. Tap the card associated with this wallet</string>
   <string name="exchange_tokens_available_tokens_header">My tokens</string>
   <string name="exchange_tokens_empty_tokens">You haven\'t added any tokens yet. Add tokens via Market to swap</string>
