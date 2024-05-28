@@ -38,5 +38,9 @@
     {
         "name": "FULL_RESET_ENABLED",
         "version": "5.12.0"
+    },
+    {
+        "name": "DETAILS_REDESIGN_ENABLED",
+        "version": "undefined"
     }
 ]
