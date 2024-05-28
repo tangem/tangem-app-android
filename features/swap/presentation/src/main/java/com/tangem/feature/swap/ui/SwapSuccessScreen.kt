@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import com.tangem.core.ui.components.inputrow.InputRowImage
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
 import com.tangem.feature.swap.presentation.R
@@ -167,19 +169,11 @@ private val state = SwapSuccessStateHolder(
 )
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_Success_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_Success() {
+    TangemThemePreview {
         SwapSuccessScreen(state) {}
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_Success_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        SwapSuccessScreen(state) {}
-    }
-}
-
 // endregion preview
