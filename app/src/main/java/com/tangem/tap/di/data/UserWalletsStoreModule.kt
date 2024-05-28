@@ -1,7 +1,7 @@
 package com.tangem.tap.di.data
 
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.wallets.legacy.WalletsStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.data.RuntimeUserWalletsStore
 import dagger.Module
 import dagger.Provides
@@ -15,7 +15,7 @@ internal object UserWalletsStoreModule {
 
     @Provides
     @Singleton
-    fun provideUserWalletsStore(walletsStateHolder: WalletsStateHolder): UserWalletsStore {
-        return RuntimeUserWalletsStore(walletsStateHolder)
+    fun provideUserWalletsStore(userWalletsListManager: UserWalletsListManager): UserWalletsStore {
+        return RuntimeUserWalletsStore(userWalletsListManager = userWalletsListManager)
     }
 }
