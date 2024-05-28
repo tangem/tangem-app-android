@@ -26,12 +26,12 @@ internal fun SendAmountContent(
     // Do not put fillMaxSize() in here
     LazyColumn(
         modifier = Modifier
+            .background(TangemTheme.colors.background.tertiary)
             .padding(
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
                 bottom = TangemTheme.dimens.spacing16,
-            )
-            .background(TangemTheme.colors.background.tertiary),
+            ),
     ) {
         amountField(amountState = amountState, isBalanceHiding = isBalanceHiding)
         buttons(
