@@ -6,7 +6,7 @@ import com.tangem.features.details.component.WalletConnectComponent
 
 internal class PreviewWalletConnectComponent : WalletConnectComponent {
 
-    override val isAvailable: Boolean = true
+    override suspend fun checkIsAvailable(): Boolean = true
 
     @Composable
     @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
