@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appsettings.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
@@ -52,17 +54,10 @@ internal fun SettingsButtonItem(item: Item.Button, modifier: Modifier = Modifier
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ButtonItemPreview_Light(@PreviewParameter(ButtonItemProvider::class) item: Item.Button) {
-    TangemTheme {
-        SettingsButtonItem(item = item)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun ButtonItemPreview_Dark(@PreviewParameter(ButtonItemProvider::class) item: Item.Button) {
-    TangemTheme(isDark = true) {
+private fun ButtonItemPreview(@PreviewParameter(ButtonItemProvider::class) item: Item.Button) {
+    TangemThemePreview {
         SettingsButtonItem(item = item)
     }
 }
