@@ -391,6 +391,13 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
+    override fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token {
+        return CryptoCurrencyFactory().createToken(
+            cryptoCurrency = cryptoCurrency,
+            network = network,
+        )
+    }
+
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
         return userTokensStore.get(userWallet.walletId).map { storedTokens ->
             responseCurrenciesFactory.createCurrencies(
