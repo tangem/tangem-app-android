@@ -22,6 +22,8 @@ class CreateTransactionUseCase(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
+        isSwap: Boolean = false,
+        hash: String? = null,
     ) = Either.catch {
         requireNotNull(
             transactionRepository.createTransaction(
@@ -31,6 +33,8 @@ class CreateTransactionUseCase(
                 destination = destination,
                 userWalletId = userWalletId,
                 network = network,
+                isSwap = isSwap,
+                hash = hash,
             ),
         ) { "Failed to create transaction" }
     }
