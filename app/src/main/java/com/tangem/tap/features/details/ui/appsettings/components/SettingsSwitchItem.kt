@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appsettings.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerW32
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
@@ -71,17 +73,10 @@ internal fun SettingsSwitchItem(item: Item.Switch, modifier: Modifier = Modifier
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SwitchItemPreview_Light(@PreviewParameter(SwitchItemProvider::class) item: Item.Switch) {
-    TangemTheme {
-        SettingsSwitchItem(item = item)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun SwitchItemPreview_Dark(@PreviewParameter(SwitchItemProvider::class) item: Item.Switch) {
-    TangemTheme(isDark = true) {
+private fun SwitchItemPreview(@PreviewParameter(SwitchItemProvider::class) item: Item.Switch) {
+    TangemThemePreview {
         SettingsSwitchItem(item = item)
     }
 }
