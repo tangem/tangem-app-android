@@ -1,5 +1,6 @@
 package com.tangem.managetokens.presentation.common.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -54,17 +56,10 @@ fun SimpleSelectionBlock(
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_SimpleSelectionBlock_Light() {
-    TangemTheme(isDark = false) {
-        SimpleSelectionBlock(title = "Wallet", subtitle = "Family Wallet", onClick = { })
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_SimpleSelectionBlock_Dark() {
-    TangemTheme(isDark = true) {
+private fun Preview_SimpleSelectionBlock() {
+    TangemThemePreview {
         SimpleSelectionBlock(title = "Wallet", subtitle = "Family Wallet", onClick = { })
     }
 }
