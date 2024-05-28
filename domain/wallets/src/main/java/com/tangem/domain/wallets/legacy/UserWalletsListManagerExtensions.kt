@@ -49,7 +49,7 @@ suspend fun UserWalletsListManager.unlockIfLockable(type: UnlockType = UnlockTyp
  * [UserWalletsListManager.Lockable] otherwise
  * */
 fun UserWalletsListManager.asLockable(): UserWalletsListManager.Lockable? {
-    if (this.isLockable()) {
+    if (this.isLockable) {
         return this as? UserWalletsListManager.Lockable
     }
     return null
