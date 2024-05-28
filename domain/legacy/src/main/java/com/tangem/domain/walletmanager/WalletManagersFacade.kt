@@ -13,6 +13,7 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -240,4 +241,16 @@ interface WalletManagersFacade {
         decimals: Int,
         id: String? = null,
     ): BigDecimal
+
+    /**
+     * Get requirements for asset(currency)
+     * @return null if there's no requirement, otherwise [AssetRequirementsCondition].
+     */
+    suspend fun getAssetRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): AssetRequirementsCondition?
+
+    suspend fun associateAsset(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        signer: CommonSigner,
+    ): SimpleResult
 }
