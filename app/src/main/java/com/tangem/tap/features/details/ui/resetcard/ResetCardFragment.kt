@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.viewModels
 import com.tangem.core.navigation.NavigationAction
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
@@ -19,7 +20,7 @@ internal class ResetCardFragment : ComposeFragment(), StoreSubscriber<DetailsSta
     @Inject
     override lateinit var uiDependencies: UiDependencies
 
-    private val viewModel = ResetCardViewModel(store)
+    private val viewModel: ResetCardViewModel by viewModels()
 
     private var screenState: MutableState<ResetCardScreenState> =
         mutableStateOf(ResetCardScreenState.InitialState)
