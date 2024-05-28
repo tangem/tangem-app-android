@@ -62,6 +62,7 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onAmountReduceClick(
         reduceAmountBy: BigDecimal?,
+        reduceAmountByDiff: BigDecimal?,
         reduceAmountTo: BigDecimal?,
         clazz: Class<out SendNotification>,
     ) {
