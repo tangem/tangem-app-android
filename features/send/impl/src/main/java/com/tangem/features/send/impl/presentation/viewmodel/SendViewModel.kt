@@ -4,7 +4,6 @@ import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.util.fastDistinctBy
 import androidx.lifecycle.*
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -440,7 +439,7 @@ internal class SendViewModel @Inject constructor(
                     getNetworkAddressesUseCase.invokeSync(wallet.walletId, cryptoCurrency.network)
                 }
                 addresses
-                    ?.filter { it.address != currentAddress }
+                    ?.filter { it.address != currentAddress && it.cryptoCurrency is CryptoCurrency.Coin }
                     ?.map { (cryptoCurrency, address) ->
                         AvailableWallet(
                             name = wallet.name,
@@ -448,7 +447,7 @@ internal class SendViewModel @Inject constructor(
                             cryptoCurrency = cryptoCurrency,
                             userWalletId = wallet.walletId,
                         )
-                    }?.fastDistinctBy { it.address }
+                    }
             }.flatten()
     }
 
@@ -896,10 +895,14 @@ internal class SendViewModel @Inject constructor(
         val recipientState = uiState.getRecipientState(stateRouter.isEditState) ?: return
         val destinationAddress = recipientState.addressTextField.value
 
-        val maybeUserWallet = userWallets.firstOrNull { it.address == destinationAddress } ?: return
+        val receivingUserWallet = userWallets.firstOrNull { it.address == destinationAddress } ?: return
 
         viewModelScope.launch(dispatchers.io) {
-            addCryptoCurrenciesUseCase(userWalletId = maybeUserWallet.userWalletId, currency = cryptoCurrency)
+            addCryptoCurrenciesUseCase(
+                userWalletId = receivingUserWallet.userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                network = receivingUserWallet.cryptoCurrency.network,
+            )
         }
     }
 
