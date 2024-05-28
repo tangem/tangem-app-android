@@ -7,6 +7,7 @@ import arrow.core.raise.either
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.tokens.error.AddCurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.wallets.models.UserWalletId
@@ -35,6 +36,26 @@ class AddCryptoCurrenciesUseCase(
      */
     suspend operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency): Either<AddCurrencyError, Unit> {
         return invoke(userWalletId, listOf(currency))
+    }
+
+    /**
+     * Adds a [cryptoCurrency] token with specific [network] and derivation to the wallet identified by [userWalletId].
+     *
+     * After successfully adding a currency, it also refreshes the networks for tokens
+     * that are being added and have corresponding coins in the existing currencies list.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param cryptoCurrency Token to add.
+     * @param network Network where we add
+     * @return Either an [AddCurrencyError] or [Unit] indicating the success of the operation.
+     */
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency.Token,
+        network: Network,
+    ): Either<AddCurrencyError, Unit> = either {
+        val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency = cryptoCurrency, network = network)
+        invoke(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
     }
 
     /**
