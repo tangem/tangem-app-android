@@ -40,6 +40,7 @@ internal object RecipientStatePreviewData {
             error = null,
             disabledText = stringReference("Already included in the entered address"),
             isEnabled = true,
+            isValuePasted = false,
         ),
         recent = persistentListOf(),
         wallets = persistentListOf(),
