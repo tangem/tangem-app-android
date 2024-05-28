@@ -5,6 +5,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Network
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
@@ -87,6 +88,28 @@ class CryptoCurrencyFactory {
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
             derivationStyleProvider = derivationStyleProvider,
+        )
+    }
+
+    fun createToken(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token {
+        val sdkToken = SdkToken(
+            name = cryptoCurrency.name,
+            symbol = cryptoCurrency.symbol,
+            contractAddress = cryptoCurrency.contractAddress,
+            decimals = cryptoCurrency.decimals,
+            id = cryptoCurrency.id.rawCurrencyId,
+        )
+        val blockchain = Blockchain.fromNetworkId(cryptoCurrency.network.id.value) ?: Blockchain.Unknown
+        val id = getTokenId(network, sdkToken)
+        return CryptoCurrency.Token(
+            id = id,
+            network = network,
+            name = sdkToken.name,
+            symbol = sdkToken.symbol,
+            iconUrl = getTokenIconUrl(blockchain, sdkToken),
+            decimals = sdkToken.decimals,
+            isCustom = isCustomToken(id, network),
+            contractAddress = sdkToken.contractAddress,
         )
     }
 
