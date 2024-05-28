@@ -63,6 +63,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
@@ -73,6 +74,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.transaction)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
