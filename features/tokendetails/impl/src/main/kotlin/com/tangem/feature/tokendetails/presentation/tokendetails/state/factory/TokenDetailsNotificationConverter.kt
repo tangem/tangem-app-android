@@ -16,6 +16,7 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.removeBy
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
 
 internal class TokenDetailsNotificationConverter(
     private val clickIntents: TokenDetailsClickIntents,
@@ -111,7 +112,19 @@ internal class TokenDetailsNotificationConverter(
                 feeCurrencySymbol = warning.feeCurrencySymbol,
                 onAssociateClick = clickIntents::onAssociateClick,
             )
+            is CryptoCurrencyWarning.FeeResourceInfo -> KoinosMana(
+                manaBalanceAmount = formatMana(warning.amount),
+                maxManaBalanceAmount = formatMana(warning.maxAmount),
+            )
         }
+    }
+
+    private fun formatMana(amount: BigDecimal?): String {
+        return BigDecimalFormatter.formatCryptoAmountShorted(
+            cryptoAmount = amount ?: return "-", // maxAmount cannot be null
+            cryptoCurrency = "",
+            decimals = Blockchain.Koinos.decimals(),
+        )
     }
 
     // workaround for networks that users have misunderstanding

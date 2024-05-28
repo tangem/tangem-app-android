@@ -125,6 +125,7 @@ internal sealed class SendStates {
         val feeSelectorState: FeeSelectorState,
         val fee: Fee?,
         val rate: BigDecimal?,
+        val isFeeConvertibleToFiat: Boolean,
         val appCurrency: AppCurrency,
         val isFeeApproximate: Boolean,
         val isCustomSelected: Boolean,

@@ -29,16 +29,15 @@ import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.keyboardAsState
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.shareText
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.domain.tokens.model.Amount
 import com.tangem.features.send.impl.presentation.state.SendUiCurrentScreen
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.utils.getFiatString
+import com.tangem.features.send.impl.presentation.utils.getCryptoReference
 
 @Composable
 internal fun SendNavigationButtons(
@@ -184,14 +183,23 @@ private fun SendingText(
                 fiatCurrencySymbol = feeState.appCurrency.symbol,
                 fiatCurrencyCode = feeState.appCurrency.code,
             )
-            val feeValue = getFiatString(
-                value = feeState.fee?.amount?.value,
-                rate = feeState.rate,
-                appCurrency = feeState.appCurrency,
-            )
+            val feeValue = if (feeState.isFeeConvertibleToFiat) {
+                getFiatString(
+                    value = feeState.fee?.amount?.value,
+                    rate = feeState.rate,
+                    appCurrency = feeState.appCurrency,
+                )
+            } else {
+                getCryptoReference(feeState.fee?.amount, feeState.isFeeApproximate)?.resolveReference().orEmpty()
+            }
+
             val textResource = remember(uiState) {
                 resourceReference(
-                    id = R.string.send_summary_transaction_description,
+                    id = if (feeState.isFeeConvertibleToFiat) {
+                        R.string.send_summary_transaction_description
+                    } else {
+                        R.string.send_summary_transaction_description_no_fiat_fee
+                    },
                     formatArgs = wrappedList(sendingValue, feeValue),
                 )
             }
