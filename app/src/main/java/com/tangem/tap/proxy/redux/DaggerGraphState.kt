@@ -2,6 +2,7 @@ package com.tangem.tap.proxy.redux
 
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -23,6 +24,8 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.features.details.DetailsEntryPoint
+import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.managetokens.navigation.ManageTokensUi
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
@@ -38,6 +41,7 @@ import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
 data class DaggerGraphState(
+    val rootComponentContext: AppComponentContext? = null,
     val testerRouter: TesterRouter? = null,
     val networkConnectionManager: NetworkConnectionManager? = null,
     val customTokenFeatureToggles: CustomTokenFeatureToggles? = null,
@@ -73,4 +77,6 @@ data class DaggerGraphState(
     val blockchainSDKFactory: BlockchainSDKFactory? = null,
     val emailSender: EmailSender? = null,
     val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase? = null,
+    val detailsFeatureToggles: DetailsFeatureToggles? = null,
+    val detailsEntryPoint: DetailsEntryPoint? = null,
 ) : StateType
