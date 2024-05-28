@@ -28,6 +28,7 @@ internal object RecipientStatePreviewData {
             label = stringReference("Recipient"),
             isError = false,
             error = null,
+            isValuePasted = false,
         ),
         memoTextField = SendTextField.RecipientMemo(
             value = "",

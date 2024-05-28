@@ -27,6 +27,7 @@ dependencies {
     /** Project - Utils */
     implementation(projects.core.utils)
     implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
 
     /** Tangem SDKs */
     implementation(deps.tangem.blockchain)
