@@ -12,6 +12,7 @@ data class YieldBalances(
     @Json(name = "integrationId")
     val integrationId: String,
 ) {
+
     @JsonClass(generateAdapter = true)
     data class Balance(
         @Json(name = "groupId")

@@ -7,11 +7,13 @@ data class MultipleYieldBalancesRequestBody(
     @Json(name = "args") val args: MultipleYieldBalancesRequestArgs,
     @Json(name = "integrationId") val integrationId: String,
 ) {
+
     data class Address(
         @Json(name = "address") val address: String,
         @Json(name = "additionalAddresses") val additionalAddresses: AdditionalAddresses? = null,
         @Json(name = "explorerUrl") val explorerUrl: String,
     ) {
+
         data class AdditionalAddresses(
             @Json(name = "cosmosPubKey") val cosmosPubKey: String? = null,
             @Json(name = "binanceBeaconAddress") val binanceBeaconAddress: String? = null,
@@ -22,6 +24,7 @@ data class MultipleYieldBalancesRequestBody(
             @Json(name = "pAddressBech") val pAddressBech: String? = null,
         )
     }
+
     data class MultipleYieldBalancesRequestArgs(
         @Json(name = "validatorAddresses") val validatorAddresses: List<String>,
     )
