@@ -222,7 +222,8 @@ internal class SendNotificationFactory(
                     ),
                     onConfirmClick = {
                         clickIntents.onAmountReduceClick(
-                            reduceAmountBy = currencyDeposit.minus(diff),
+                            reduceAmountByDiff = currencyDeposit.minus(diff),
+                            reduceAmountBy = currencyDeposit,
                             clazz = SendNotification.Error.ExistentialDeposit::class.java,
                         )
                     },
