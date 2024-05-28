@@ -13,20 +13,20 @@ sealed class AnalyticsParam {
     }
 
     sealed class CardBalanceState(val value: String) {
-        object Empty : CardBalanceState("Empty")
-        object Full : CardBalanceState("Full")
+        data object Empty : CardBalanceState("Empty")
+        data object Full : CardBalanceState("Full")
         companion object
     }
 
     sealed class RateApp(val value: String) {
-        object Liked : RateApp("Liked")
-        object Closed : RateApp("Close")
+        data object Liked : RateApp("Liked")
+        data object Closed : RateApp("Close")
     }
 
     sealed class OnOffState(val value: String) {
 
-        object On : OnOffState("On")
-        object Off : OnOffState("Off")
+        data object On : OnOffState("On")
+        data object Off : OnOffState("Off")
 
         companion object {
 
@@ -35,13 +35,13 @@ sealed class AnalyticsParam {
     }
 
     sealed class UserCode(val value: String) {
-        object AccessCode : UserCode("Access Code")
+        data object AccessCode : UserCode("Access Code")
     }
 
     sealed class SecurityMode(val value: String) {
-        object AccessCode : SecurityMode("Access Code")
-        object Passcode : SecurityMode("Passcode")
-        object LongTap : SecurityMode("Long Tap")
+        data object AccessCode : SecurityMode("Access Code")
+        data object Passcode : SecurityMode("Passcode")
+        data object LongTap : SecurityMode("Long Tap")
 
         companion object {
             fun from(option: SecurityOption): SecurityMode = when (option) {
@@ -56,8 +56,8 @@ sealed class AnalyticsParam {
 
         val key: String = "Status"
 
-        object Enabled : AccessCodeRecoveryStatus("Enabled")
-        object Disabled : AccessCodeRecoveryStatus("Disabled")
+        data object Enabled : AccessCodeRecoveryStatus("Enabled")
+        data object Disabled : AccessCodeRecoveryStatus("Disabled")
 
         companion object {
             fun from(enabled: Boolean): AccessCodeRecoveryStatus {
@@ -67,21 +67,21 @@ sealed class AnalyticsParam {
     }
 
     sealed class Error(val value: String) {
-        object App : Error("App Error")
-        object CardSdk : Error("Card Sdk Error")
-        object BlockchainSdk : Error("Blockchain Sdk Error")
+        data object App : Error("App Error")
+        data object CardSdk : Error("Card Sdk Error")
+        data object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
     sealed class WalletCreationType(val value: String) {
-        object PrivateKey : WalletCreationType(value = "Private Key")
-        object NewSeed : WalletCreationType(value = "New Seed")
-        object SeedImport : WalletCreationType(value = "Seed Import")
+        data object PrivateKey : WalletCreationType(value = "Private Key")
+        data object NewSeed : WalletCreationType(value = "New Seed")
+        data object SeedImport : WalletCreationType(value = "Seed Import")
     }
 
     sealed class AppTheme(val value: String) {
-        object System : AppTheme("System")
-        object Dark : AppTheme("Dark")
-        object Light : AppTheme("Light")
+        data object System : AppTheme("System")
+        data object Dark : AppTheme("Dark")
+        data object Light : AppTheme("Light")
 
         companion object {
             fun fromAppThemeMode(mode: AppThemeMode): AppTheme {
@@ -104,6 +104,7 @@ sealed class AnalyticsParam {
         const val PERMISSION_TYPE = "Permission Type"
         const val PRODUCT_TYPE = "Product Type"
         const val FIRMWARE = "Firmware"
+        const val USER_WALLET_ID = "User Wallet ID"
         const val CURRENCY = "Currency"
         const val ERROR_DESCRIPTION = "Error Description"
         const val ERROR_CODE = "Error Code"

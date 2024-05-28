@@ -42,6 +42,7 @@ interface TangemExpressApi {
         @Query("fromContractAddress") fromContractAddress: String,
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
+        @Query("fromAddress") fromAddress: String,
         @Query("toNetwork") toNetwork: String,
         @Query("fromAmount") fromAmount: String,
         @Query("fromDecimals") fromDecimals: Int,
