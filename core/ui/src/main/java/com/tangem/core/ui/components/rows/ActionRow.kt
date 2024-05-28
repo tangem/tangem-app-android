@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH28
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Simple clickable action row, without input and icon
@@ -66,7 +67,7 @@ fun SimpleActionRow(title: String, description: String, modifier: Modifier = Mod
 @Composable
 private fun SimpleActionRowPreview() {
     Column {
-        TangemTheme(isDark = false) {
+        TangemThemePreview(isDark = false) {
             SimpleActionRow(
                 title = "Title",
                 description = "Description",
@@ -75,7 +76,7 @@ private fun SimpleActionRowPreview() {
 
         SpacerH28()
 
-        TangemTheme(isDark = false) {
+        TangemThemePreview(isDark = false) {
             SimpleActionRow(
                 title = "Title",
                 description = "Description",
