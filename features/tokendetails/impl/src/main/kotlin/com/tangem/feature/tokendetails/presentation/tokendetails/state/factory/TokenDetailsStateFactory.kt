@@ -16,6 +16,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.CardTypesResolver
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
@@ -44,6 +45,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val clickIntents: TokenDetailsClickIntents,
     private val featureToggles: TokenDetailsFeatureToggles,
     symbol: String,
@@ -54,6 +56,7 @@ internal class TokenDetailsStateFactory(
         TokenDetailsSkeletonStateConverter(
             clickIntents = clickIntents,
             featureToggles = featureToggles,
+            stakingAvailabilityProvider = stakingAvailabilityProvider,
         )
     }
 
@@ -216,7 +219,7 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getLoadedStakingState(either: Either<Throwable, StakingEntryInfo>): TokenDetailsState {
+    fun getStateWithStaking(either: Either<Throwable, StakingEntryInfo>): TokenDetailsState {
         return currentStateProvider().copy(
             stakingBlockState = stakingStateConverter.convert(either),
         )

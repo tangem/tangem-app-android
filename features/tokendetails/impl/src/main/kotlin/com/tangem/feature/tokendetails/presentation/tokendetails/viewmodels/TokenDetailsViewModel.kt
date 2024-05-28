@@ -112,8 +112,8 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val hapticManager: HapticManager,
     private val clipboardManager: ClipboardManager,
+    tokenDetailsFeatureToggles: TokenDetailsFeatureToggles,
     getUserWalletUseCase: GetUserWalletUseCase,
-    featureToggles: TokenDetailsFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, TokenDetailsClickIntents {
@@ -142,10 +142,11 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        stakingAvailabilityProvider = Provider { getStakingAvailabilityUseCase.invoke(cryptoCurrency.network.id.value) },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
-        featureToggles = featureToggles,
+        featureToggles = tokenDetailsFeatureToggles,
     )
 
     private val exchangeStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -366,14 +367,10 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     private fun updateStakingInfo() {
         viewModelScope.launch(dispatchers.io) {
-            when (val stakingAvailability = getStakingAvailabilityUseCase(cryptoCurrency.network.id.value)) {
-                is StakingAvailability.Available -> {
-                    val stackingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
-                    uiState = stateFactory.getLoadedStakingState(stackingInfo)
-                }
-                StakingAvailability.Unavailable -> {
-                    uiState = uiState.copy(isStakingAvailable = false)
-                }
+            val stakingAvailability = getStakingAvailabilityUseCase(cryptoCurrency.network.id.value)
+            if (stakingAvailability is StakingAvailability.Available) {
+                val stakingInfo = getStakingEntryInfoUseCase(stakingAvailability.integrationId)
+                uiState = stateFactory.getStateWithStaking(stakingInfo)
             }
         }
     }

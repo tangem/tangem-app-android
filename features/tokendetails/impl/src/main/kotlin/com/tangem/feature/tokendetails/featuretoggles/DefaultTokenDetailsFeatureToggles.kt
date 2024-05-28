@@ -8,6 +8,4 @@ internal class DefaultTokenDetailsFeatureToggles(
 ) : TokenDetailsFeatureToggles {
 
     override fun isGenerateXPubEnabled() = featureTogglesManager.isFeatureEnabled(name = "GENERATE_XPUB_ENABLED")
-
-    override fun isStakingEnabled() = featureTogglesManager.isFeatureEnabled("STAKING_ENABLED")
 }

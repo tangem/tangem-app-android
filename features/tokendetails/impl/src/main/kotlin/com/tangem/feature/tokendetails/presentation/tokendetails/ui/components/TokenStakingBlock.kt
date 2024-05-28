@@ -52,7 +52,6 @@ fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
         horizontalAlignment = Alignment.Start,
     ) {
-        // Title(currencyName = state.currencySymbol)
         Content(state = state, iconState = iconState)
     }
 }
@@ -92,7 +91,7 @@ private fun StakingContent(stakingBlockState: StakingBlockState, iconState: Icon
             }
             CurrencyIcon(
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size20)
+                    .size(TangemTheme.dimens.size30)
                     .padding(end = TangemTheme.dimens.spacing8)
                     .clip(TangemTheme.shapes.roundedCorners8)
                     .align(Alignment.CenterVertically),
@@ -132,14 +131,14 @@ private fun StakingContent(stakingBlockState: StakingBlockState, iconState: Icon
                 }
 
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
-            }
 
-            if (state is StakingBlockState.Content) {
-                SecondaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "Stake",
-                    onClick = { /* TODO staking AND-7134 */ },
-                )
+                if (state is StakingBlockState.Content) {
+                    SecondaryButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Stake",
+                        onClick = { /* TODO staking AND-7134 */ },
+                    )
+                }
             }
         }
     }

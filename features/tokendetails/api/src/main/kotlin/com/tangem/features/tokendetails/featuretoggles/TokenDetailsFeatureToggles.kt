@@ -4,5 +4,4 @@ interface TokenDetailsFeatureToggles {
 
     fun isGenerateXPubEnabled(): Boolean
 
-    fun isStakingEnabled(): Boolean
 }

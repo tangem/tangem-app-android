@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.Either
+import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -20,7 +21,10 @@ internal class TokenStakingStateConverter(
             },
             ifRight = {
                 return StakingBlockState.Content(
-                    percent = it.percent,
+                    percent = BigDecimalFormatter.formatPercent(
+                        percent = it.percent,
+                        useAbsoluteValue = true,
+                    ),
                     periodInDays = it.periodInDays,
                     tokenSymbol = it.tokenSymbol,
                     iconState = currentStateProvider().tokenInfoBlockState.iconState,

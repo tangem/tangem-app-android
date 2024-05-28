@@ -1,17 +1,24 @@
 package com.tangem.data.staking
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainFeatureToggles
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
+    private val stakingFeatureToggles: StakingFeatureToggles
 ) : StakingRepository {
 
     override fun getStakingAvailability(blockchainId: String): StakingAvailability {
+        if (!stakingFeatureToggles.isStakingEnabled) {
+            return StakingAvailability.Unavailable
+        }
+
         return when (Blockchain.fromId(blockchainId)) {
             Blockchain.Solana -> StakingAvailability.Available("solana-sol-native-multivalidator-staking")
             Blockchain.Cosmos -> StakingAvailability.Available("cosmos-atom-native-staking")
@@ -32,7 +39,7 @@ internal class DefaultStakingRepository(
         val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
 
         return StakingEntryInfo(
-            percent = yield.apy.movePointRight(2).toString(),
+            percent = yield.apy,
             periodInDays = yield.metadata.cooldownPeriod.days,
             tokenSymbol = yield.token.symbol,
         )

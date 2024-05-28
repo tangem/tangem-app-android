@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.domain.staking)
+    implementation(projects.features.staking.api)
 
 
     // region DI
