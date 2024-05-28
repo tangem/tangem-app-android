@@ -13,15 +13,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.*
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
+import com.tangem.features.tokendetails.impl.R
 
 private const val GRAY_SCALE_SATURATION = 0f
 private const val GRAY_SCALE_ALPHA = 0.4f
@@ -59,7 +61,7 @@ fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Modifier) {
 @Composable
 private fun Content(state: StakingBlockState, iconState: IconState, modifier: Modifier = Modifier) {
     AnimatedContent(
-        modifier = modifier.heightIn(min = TangemTheme.dimens.size20),
+        modifier = modifier.heightIn(min = TangemTheme.dimens.size60),
         targetState = state,
         contentAlignment = Alignment.CenterStart,
         label = "Update the content",
@@ -81,64 +83,75 @@ private fun Content(state: StakingBlockState, iconState: IconState, modifier: Mo
 @Composable
 private fun StakingContent(stakingBlockState: StakingBlockState, iconState: IconState) {
     AnimatedContent(targetState = stakingBlockState, label = "Update staking block") { state ->
-        Row {
-            val (alpha, colorFilter) = remember(iconState.isGrayscale) {
-                if (iconState.isGrayscale) {
-                    GRAY_SCALE_ALPHA to GrayscaleColorFilter
-                } else {
-                    NORMAL_ALPHA to null
+        Column {
+            Row {
+                val (alpha, colorFilter) = remember(iconState.isGrayscale) {
+                    if (iconState.isGrayscale) {
+                        GRAY_SCALE_ALPHA to GrayscaleColorFilter
+                    } else {
+                        NORMAL_ALPHA to null
+                    }
+                }
+                CurrencyIcon(
+                    modifier = Modifier
+                        .size(TangemTheme.dimens.size20)
+                        .clip(TangemTheme.shapes.roundedCorners8)
+                        .align(Alignment.CenterVertically),
+                    icon = iconState,
+                    alpha = alpha,
+                    colorFilter = colorFilter,
+                )
+                SpacerW8()
+                Column {
+                    if (state is StakingBlockState.Content) {
+                        Text(
+                            text = stringResource(
+                                R.string.token_details_staking_block_title, state.percent
+                            ),
+                            color = TangemTheme.colors.text.primary1,
+                            style = TangemTheme.typography.subtitle2,
+                        )
+                    } else {
+                        RectangleShimmer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(TangemTheme.dimens.size20),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
+
+                    if (state is StakingBlockState.Content) {
+                        Text(
+                            text = stringResource(
+                                R.string.token_details_staking_block_subtitle, state.tokenSymbol, state.periodInDays,
+                            ),
+                            color = TangemTheme.colors.text.tertiary,
+                            style = TangemTheme.typography.body2,
+                        )
+                    } else {
+                        RectangleShimmer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(TangemTheme.dimens.size20),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
                 }
             }
-            CurrencyIcon(
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size30)
-                    .padding(end = TangemTheme.dimens.spacing8)
-                    .clip(TangemTheme.shapes.roundedCorners8)
-                    .align(Alignment.CenterVertically),
-                icon = iconState,
-                alpha = alpha,
-                colorFilter = colorFilter,
-            )
-            Column {
-                if (state is StakingBlockState.Content) {
-                    Text(
-                        text = "Earn up to ${state.percent} staking rewards yearly",
-                        color = TangemTheme.colors.text.primary1,
-                        style = TangemTheme.typography.subtitle2,
-                    )
-                } else {
-                    RectangleShimmer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(TangemTheme.dimens.size16),
-                    )
-                }
-
-                Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
-
-                if (state is StakingBlockState.Content) {
-                    Text(
-                        text = "Staking allows you to earn SOL and get rewards every ~${state.periodInDays} days",
-                        color = TangemTheme.colors.text.tertiary,
-                        style = TangemTheme.typography.body2,
-                    )
-                } else {
-                    RectangleShimmer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(TangemTheme.dimens.size16),
-                    )
-                }
-
-                Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
-
-                if (state is StakingBlockState.Content) {
-                    SecondaryButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Stake",
-                        onClick = { /* TODO staking AND-7134 */ },
-                    )
-                }
+            if (state is StakingBlockState.Content) {
+                SecondaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Stake",
+                    onClick = { /* TODO staking AND-7134 */ },
+                )
+            } else {
+                SecondaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Loading", // TODO staking
+                    onClick = { /* TODO staking AND-7134 */ },
+                )
             }
         }
     }
