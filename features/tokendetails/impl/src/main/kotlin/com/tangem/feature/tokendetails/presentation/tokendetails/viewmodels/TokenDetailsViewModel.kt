@@ -142,7 +142,9 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        stakingAvailabilityProvider = Provider { getStakingAvailabilityUseCase.invoke(cryptoCurrency.network.id.value) },
+        stakingAvailabilityProvider = Provider {
+            getStakingAvailabilityUseCase.invoke(cryptoCurrency.network.id.value)
+        },
         clickIntents = this,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
