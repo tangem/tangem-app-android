@@ -6,6 +6,7 @@ import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 /**
@@ -22,7 +23,7 @@ object Analytics : GlobalAnalyticsEventHandler {
     private val analyticsScope: CoroutineScope by lazy { createScope() }
 
     private val handlers = mutableMapOf<String, AnalyticsHandler>()
-    private val paramsInterceptors = mutableMapOf<String, ParamsInterceptor>()
+    private val paramsInterceptors = ConcurrentHashMap<String, ParamsInterceptor>()
     private val analyticsFilters = mutableSetOf<AnalyticsEventFilter>()
     private val analyticsMutex = Mutex()
 
