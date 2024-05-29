@@ -390,7 +390,7 @@ internal class SwapInteractorImpl @Inject constructor(
         manageExistentialDepositWarning(warnings, userWalletId, amount, fromToken)
         manageDustWarning(warnings, feeState, userWalletId, fromTokenStatus, amount)
         manageReduceAmountWarning(warnings, fromTokenStatus, amount)
-        manageCardanoTransactionValidationWarnings(
+        manageTransactionValidationWarnings(
             warnings = warnings,
             fromToken = fromToken,
             amount = amount,
@@ -468,7 +468,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private suspend fun manageCardanoTransactionValidationWarnings(
+    private suspend fun manageTransactionValidationWarnings(
         warnings: MutableList<Warning>,
         fromToken: CryptoCurrency,
         amount: SwapAmount,
@@ -1612,6 +1612,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return amountToSwap.replace(",", ".").toBigDecimalOrNull()
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private suspend fun getFeeState(
         fee: BigDecimal?,
         spendAmount: SwapAmount,
@@ -1680,6 +1681,20 @@ internal class SwapInteractorImpl @Inject constructor(
                         currencyName = feePaidCurrency.name,
                         currencySymbol = feePaidCurrency.symbol,
                     )
+                }
+            }
+            is FeePaidCurrency.FeeResource -> {
+                val network = repository.getNativeTokenForNetwork(networkId).network
+                val isFeeResourceEnough = currencyChecksRepository.checkIfFeeResourceEnough(
+                    amount = spendAmount.value,
+                    userWalletId = userWalletId,
+                    network = network,
+                )
+
+                if (isFeeResourceEnough) {
+                    SwapFeeState.Enough
+                } else {
+                    SwapFeeState.NotEnough()
                 }
             }
         }
