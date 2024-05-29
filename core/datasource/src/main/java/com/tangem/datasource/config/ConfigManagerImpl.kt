@@ -19,7 +19,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
 
     private var defaultConfig = Config()
 
-    override fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)?) {
+    override suspend fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)?) {
         configLoader.load { configModel ->
             setupFeature(configModel.features)
             setupConfigValues(configModel.configValues)
