@@ -6,6 +6,7 @@ import com.arkivanov.decompose.defaultComponentContext
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.DefaultAppComponentContext
 import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageHandler
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -23,6 +24,7 @@ internal object RootAppComponentContextModule {
 
     @Provides
     @ActivityScoped
+    @RootAppComponentContext
     fun provideRootAppComponentContext(
         @ActivityContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
