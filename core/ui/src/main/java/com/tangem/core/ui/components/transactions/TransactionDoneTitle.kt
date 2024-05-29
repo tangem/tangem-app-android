@@ -38,7 +38,6 @@ fun TransactionDoneTitle(@StringRes titleRes: Int, date: Long, modifier: Modifie
             painter = painterResource(id = R.drawable.ic_empty_in_process_64),
             contentDescription = null,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing8)
                 .size(TangemTheme.dimens.size64),
         )
         Text(

@@ -26,6 +26,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
+import com.tangem.features.details.DetailsEntryPoint
+import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
@@ -104,4 +106,8 @@ interface ApplicationEntryPoint {
     fun getGetFeedbackEmailUseCase(): GetFeedbackEmailUseCase
 
     fun getSaveBlockchainErrorUseCase(): SaveBlockchainErrorUseCase
+
+    fun getDetailsFeatureToggles(): DetailsFeatureToggles
+
+    fun getDetailsEntryPoint(): DetailsEntryPoint
 }
