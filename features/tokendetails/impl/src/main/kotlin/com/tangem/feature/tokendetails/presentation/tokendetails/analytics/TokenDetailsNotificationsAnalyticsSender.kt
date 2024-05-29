@@ -43,6 +43,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.SwapPromo,
             is TokenDetailsNotification.NetworkShutdown,
             is TokenDetailsNotification.HederaAssociateWarning,
+            is TokenDetailsNotification.KoinosMana,
             -> null
         }
     }
