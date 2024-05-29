@@ -8,14 +8,15 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object AppCurrencyDomainModule {
 
     @Provides
+    @Singleton
     fun provideGetSelectedAppCurrencyUseCase(
         appCurrencyRepository: AppCurrencyRepository,
     ): GetSelectedAppCurrencyUseCase {
@@ -23,11 +24,13 @@ internal object AppCurrencyDomainModule {
     }
 
     @Provides
+    @Singleton
     fun provideSelectAppCurrencyUseCase(appCurrencyRepository: AppCurrencyRepository): SelectAppCurrencyUseCase {
         return SelectAppCurrencyUseCase(appCurrencyRepository)
     }
 
     @Provides
+    @Singleton
     fun provideGetAvailableCurrenciesUseCase(
         appCurrencyRepository: AppCurrencyRepository,
     ): GetAvailableCurrenciesUseCase {
@@ -35,7 +38,7 @@ internal object AppCurrencyDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideFetchAppCurrenciesUseCase(appCurrencyRepository: AppCurrencyRepository): FetchAppCurrenciesUseCase {
         return FetchAppCurrenciesUseCase(appCurrencyRepository)
     }
