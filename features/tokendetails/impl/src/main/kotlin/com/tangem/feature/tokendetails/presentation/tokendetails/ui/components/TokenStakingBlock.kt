@@ -12,7 +12,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -38,8 +37,6 @@ private val GrayscaleColorFilter: ColorFilter
  */
 @Composable
 fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Modifier) {
-    var rootWidth by remember { mutableIntStateOf(value = 0) }
-
     Column(
         modifier = modifier
             .background(
@@ -48,8 +45,7 @@ fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Modifier) {
             )
             .fillMaxWidth()
             .heightIn(min = TangemTheme.dimens.size72)
-            .padding(all = TangemTheme.dimens.spacing12)
-            .onSizeChanged { rootWidth = it.width },
+            .padding(all = TangemTheme.dimens.spacing12),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
         horizontalAlignment = Alignment.Start,
     ) {
