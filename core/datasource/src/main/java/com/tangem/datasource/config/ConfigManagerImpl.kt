@@ -106,6 +106,7 @@ internal class ConfigManagerImpl @Inject constructor() : ConfigManager {
             walletConnectProjectId = configValues.walletConnectProjectId,
             tangemComAuthorization = configValues.tangemComAuthorization,
             express = if (BuildConfig.ENVIRONMENT == "dev") configValues.devExpress else configValues.express,
+            stakeKitApiKey = configValues.stakeKitApiKey,
         )
     }
 
