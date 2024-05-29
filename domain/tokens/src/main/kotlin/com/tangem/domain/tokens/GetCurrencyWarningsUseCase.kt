@@ -1,10 +1,7 @@
 package com.tangem.domain.tokens
 
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.FeePaidCurrency
-import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
@@ -59,22 +56,19 @@ class GetCurrencyWarningsUseCase(
             ),
             flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
             flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
+            flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
             getSwapPromoNotificationWarning(
                 operations = operations,
                 userWalletId = userWalletId,
                 currencyStatus = currencyStatus,
             ).conflate(),
-        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeSwapPromo ->
+        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource, maybeSwapPromo ->
             setOfNotNull(
                 maybeSwapPromo,
                 maybeRentWarning,
-                maybeEdWarning?.let {
-                    CryptoCurrencyWarning.ExistentialDeposit(
-                        currencyName = currency.name,
-                        edStringValueWithSymbol = "${it.toPlainString()} ${currency.symbol}",
-                    )
-                },
-                *coinRelatedWarnings.toTypedArray(),
+                maybeEdWarning?.let { getExistentialDepositWarning(currency, it) },
+                maybeFeeResource?.let { getFeeResourceWarning(it) },
+                * coinRelatedWarnings.toTypedArray(),
                 getNetworkUnavailableWarning(currencyStatus),
                 getNetworkNoAccountWarning(currencyStatus),
                 getBeaconChainShutdownWarning(currency.network.id),
@@ -268,6 +262,23 @@ class GetCurrencyWarningsUseCase(
 
     private fun getBeaconChainShutdownWarning(networkId: Network.ID): CryptoCurrencyWarning.BeaconChainShutdown? {
         return if (BlockchainUtils.isBeaconChain(networkId.value)) CryptoCurrencyWarning.BeaconChainShutdown else null
+    }
+
+    private fun getExistentialDepositWarning(
+        currency: CryptoCurrency,
+        amount: BigDecimal,
+    ): CryptoCurrencyWarning.ExistentialDeposit {
+        return CryptoCurrencyWarning.ExistentialDeposit(
+            currencyName = currency.name,
+            edStringValueWithSymbol = "${amount.toPlainString()} ${currency.symbol}",
+        )
+    }
+
+    private fun getFeeResourceWarning(feeResource: CurrencyAmount): CryptoCurrencyWarning.FeeResourceInfo {
+        return CryptoCurrencyWarning.FeeResourceInfo(
+            amount = feeResource.value,
+            maxAmount = feeResource.maxValue,
+        )
     }
 
     private suspend fun getAssetRequirementsWarning(
