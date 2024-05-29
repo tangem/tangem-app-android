@@ -1,13 +1,32 @@
 package com.tangem.tap.features.details.ui.resetcard
 
-import com.tangem.tap.common.redux.AppState
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import arrow.core.raise.either
+import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
+import com.tangem.domain.card.ResetCardUseCase
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.tap.features.details.ui.resetcard.featuretoggles.ResetCardFeatureToggles
 import com.tangem.tap.features.details.ui.utils.toResetCardDescriptionText
-import org.rekotlin.Store
+import com.tangem.tap.store
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-internal class ResetCardViewModel(private val store: Store<AppState>) {
+@HiltViewModel
+internal class ResetCardViewModel @Inject constructor(
+    private val resetCardFeatureToggles: ResetCardFeatureToggles,
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val resetCardUseCase: ResetCardUseCase,
+    private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
+    private val deleteWalletUseCase: DeleteWalletUseCase,
+) : ViewModel() {
 
     fun updateState(state: CardSettingsState?): ResetCardScreenState.ResetCardScreenContent {
         val descriptionText = state?.cardInfo
@@ -45,7 +64,31 @@ internal class ResetCardViewModel(private val store: Store<AppState>) {
 
     private fun onLastWarningDialogResetClicked() {
         store.dispatch(DetailsAction.ResetToFactory.LastWarningDialogVisibility(isShown = false))
-        store.dispatch(DetailsAction.ResetToFactory.Proceed)
+
+        if (resetCardFeatureToggles.isFullResetEnabled) {
+            makeFullReset()
+        } else {
+            store.dispatch(DetailsAction.ResetToFactory.Proceed)
+        }
+    }
+
+    private fun makeFullReset() {
+        val currentUserWallet = getSelectedWalletSyncUseCase().getOrNull() ?: return
+
+        viewModelScope.launch {
+            resetCurrentCard(userWallet = currentUserWallet).onRight {
+                val newSelectedWallet = getSelectedWalletSyncUseCase().getOrNull()
+                if (newSelectedWallet != null) {
+                    store.onUserWalletSelected(newSelectedWallet)
+                }
+            }
+        }
+    }
+
+    private suspend fun resetCurrentCard(userWallet: UserWallet) = either {
+        resetCardUseCase(userWallet.scanResponse.card).bind()
+        deleteSavedAccessCodesUseCase(userWallet.cardId).bind()
+        deleteWalletUseCase(userWallet.walletId).bind()
     }
 
     private fun onLastWarningDialogDismiss() {
