@@ -18,6 +18,7 @@ internal sealed class DetailsItemUM {
     ) : DetailsItemUM() {
 
         data class Item(
+            val id: String,
             val title: TextReference,
             @DrawableRes
             val iconRes: Int,
