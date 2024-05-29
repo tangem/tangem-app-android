@@ -43,4 +43,9 @@ dependencies {
     implementation(deps.tangem.blockchain) { exclude(module = "joda-time") }
     implementation(deps.tangem.card.core)
     // endregion
+
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }
