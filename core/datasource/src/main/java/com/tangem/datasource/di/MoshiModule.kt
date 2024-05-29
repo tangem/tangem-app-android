@@ -7,6 +7,8 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.datasource.api.common.BigDecimalAdapter
 import com.tangem.datasource.api.common.DateTimeAdapter
 import com.tangem.datasource.api.common.LocalDateAdapter
+import com.tangem.datasource.api.stakekit.UnknownEnumMoshiAdapter
+import com.tangem.datasource.api.stakekit.models.response.model.Token
 import com.tangem.datasource.config.models.ProviderModel
 import dagger.Module
 import dagger.Provides
@@ -33,6 +35,10 @@ class MoshiModule {
             .add(LocalDateAdapter())
             .add(DateTimeAdapter())
             .add(KotlinJsonAdapterFactory())
+            .add(
+                Token.NetworkType::class.java,
+                UnknownEnumMoshiAdapter.create(Token.NetworkType::class.java, Token.NetworkType.UNKNOWN),
+            )
             .build()
     }
 
