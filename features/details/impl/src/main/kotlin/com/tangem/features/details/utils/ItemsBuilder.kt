@@ -78,11 +78,6 @@ internal class ItemsBuilder(
         id = "support",
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
-                title = resourceReference(R.string.details_chat),
-                iconRes = R.drawable.ic_chat_24,
-                onClick = { /* TODO: Implement in AND-7165 */ },
-            ),
-            DetailsItemUM.Basic.Item(
                 title = stringReference("Send feedback"), // TODO: Move to resources in AND-7165
                 iconRes = R.drawable.ic_comment_24,
                 onClick = { /* TODO: Implement in AND-7165 */ },

@@ -28,6 +28,7 @@ internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = M
         }
         AddWalletButton(
             text = state.addNewWalletText,
+            isInProgress = state.isWalletSavingInProgress,
             onClick = state.onAddNewWalletClick,
         )
     }
@@ -77,10 +78,16 @@ private fun UserWalletItem(model: UserWalletListUM.UserWalletUM, modifier: Modif
 }
 
 @Composable
-private fun AddWalletButton(text: TextReference, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AddWalletButton(
+    text: TextReference,
+    isInProgress: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     BlockCard(
         modifier = modifier,
         onClick = onClick,
+        enabled = !isInProgress,
     ) {
         Row(
             modifier = Modifier
