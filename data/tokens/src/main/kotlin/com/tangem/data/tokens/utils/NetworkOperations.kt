@@ -1,6 +1,7 @@
 package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.tokens.model.Network
@@ -28,6 +29,7 @@ internal fun getNetwork(
         derivationPath = getNetworkDerivationPath(blockchain, extraDerivationPath, derivationStyleProvider),
         currencySymbol = blockchain.currency,
         standardType = getNetworkStandardType(blockchain),
+        hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
     )
 }
 
