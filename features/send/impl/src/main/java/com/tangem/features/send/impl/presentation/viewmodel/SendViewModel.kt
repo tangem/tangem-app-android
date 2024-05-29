@@ -410,7 +410,7 @@ internal class SendViewModel @Inject constructor(
             runCatching {
                 waitForDelay(delay = RECENT_LOAD_DELAY) {
                     getWalletsUseCase.invokeSync()
-                        ?.toAvailableWallets()
+                        .toAvailableWallets()
                         .orEmpty()
                 }
             }.onSuccess { result ->
