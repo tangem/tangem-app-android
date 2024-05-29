@@ -27,7 +27,6 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.AppScreen
 import com.tangem.core.navigation.NavigationAction
@@ -156,9 +155,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var emailSender: EmailSender
 
-    @Inject
-    lateinit var rootComponentContext: AppComponentContext
-
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode?>
@@ -243,7 +239,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 sendRouter = sendRouter,
                 qrScanningRouter = qrScanningRouter,
                 emailSender = emailSender,
-                rootComponentContext = rootComponentContext,
             ),
         )
     }
