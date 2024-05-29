@@ -63,6 +63,17 @@ interface CurrenciesRepository {
     suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 
     /**
+     * Retrieves the list of cryptocurrencies within a user wallet.
+     *
+     * This method returns a list of cryptocurrencies associated with the user wallet regardless of whether
+     * it is a multi-currency or single-currency wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @return A list of [CryptoCurrency].
+     */
+    fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>>
+
+    /**
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
