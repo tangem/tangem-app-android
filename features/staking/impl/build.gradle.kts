@@ -47,6 +47,9 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
 
+    /** Domain */
+    implementation(projects.domain.tokens.models)
+
     /** Common */
     implementation(projects.common)
 
