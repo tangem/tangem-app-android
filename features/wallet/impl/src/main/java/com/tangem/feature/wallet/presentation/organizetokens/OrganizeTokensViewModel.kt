@@ -13,6 +13,7 @@ import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
 import com.tangem.domain.tokens.ToggleTokenListSortingUseCase
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.featuretoggle.WalletFeatureToggles
 import com.tangem.feature.wallet.presentation.organizetokens.analytics.PortfolioOrganizeTokensAnalyticsEvent
@@ -191,7 +192,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
         } else {
             val maybeTokenList = getTokenListUseCase.launch(userWalletId)
                 .first { maybeTokenList ->
-                    maybeTokenList.getOrNull()?.totalFiatBalance !is TokenList.FiatBalance.Loading
+                    maybeTokenList.getOrNull()?.totalFiatBalance !is TotalFiatBalance.Loading
                 }
 
             maybeTokenList.getOrElse { error ->
