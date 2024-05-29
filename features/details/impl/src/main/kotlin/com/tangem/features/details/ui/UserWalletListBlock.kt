@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -66,11 +67,15 @@ private fun UserWalletItem(model: UserWalletListUM.UserWalletUM, modifier: Modif
                     text = model.name,
                     style = TangemTheme.typography.subtitle1,
                     color = TangemTheme.colors.text.primary1,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = model.information.resolveReference(),
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.details.entity.DetailsItemUM
@@ -36,6 +37,8 @@ internal fun BlockItem(model: DetailsItemUM.Basic.Item, modifier: Modifier = Mod
                 text = model.title.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

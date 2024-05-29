@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.res.TangemTheme
@@ -84,6 +85,8 @@ private fun TopBar(state: DetailsUM, scrollBehavior: TopAppBarScrollBehavior, mo
             Text(
                 text = stringResource(id = R.string.details_title),
                 style = style,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         },
         navigationIcon = {
@@ -113,7 +116,7 @@ private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
     ) {
         items(
             items = state.items,
-            key = { block -> block.id },
+            key = DetailsItemUM::id,
         ) { block ->
             Block(
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
