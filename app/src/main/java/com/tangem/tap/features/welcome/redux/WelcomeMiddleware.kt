@@ -70,7 +70,7 @@ internal class WelcomeMiddleware {
             scope = scope,
             hasSavedUserWalletsProvider = { true },
         )
-        val isBackgroundScanHandled = handler.handleIntent(initialIntent)
+        val isBackgroundScanHandled = handler.handleIntent(initialIntent, isFromForeground = false)
         val hasUncompletedBackup = backupService.hasIncompletedBackup
 
         if (!isBackgroundScanHandled && !hasUncompletedBackup) {
@@ -103,7 +103,7 @@ internal class WelcomeMiddleware {
                 store.onUserWalletSelected(userWallet = selectedUserWallet)
 
                 afterUnlockIntent?.let {
-                    WalletConnectLinkIntentHandler().handleIntent(it)
+                    WalletConnectLinkIntentHandler().handleIntent(it, false)
                 }
             }
     }
@@ -135,7 +135,7 @@ internal class WelcomeMiddleware {
                     store.onUserWalletSelected(userWallet = userWallet)
 
                     afterScanIntent?.let {
-                        WalletConnectLinkIntentHandler().handleIntent(it)
+                        WalletConnectLinkIntentHandler().handleIntent(it, false)
                     }
                 }
         }
