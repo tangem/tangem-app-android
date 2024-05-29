@@ -17,4 +17,5 @@ data class Config(
     val walletConnectProjectId: String = "",
     val tangemComAuthorization: String? = null,
     val express: ExpressModel? = null,
+    val stakeKitApiKey: String? = null,
 )
