@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
-import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
@@ -19,7 +18,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.datasource.asset.reader.AssetReader
+import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
@@ -31,6 +30,7 @@ import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.walletmanager.utils.*
 import com.tangem.domain.walletmanager.utils.WalletManagerFactory
@@ -47,8 +47,7 @@ import java.util.EnumSet
 class DefaultWalletManagersFacade(
     private val walletManagersStore: WalletManagersStore,
     private val userWalletsStore: UserWalletsStore,
-    assetReader: AssetReader,
-    moshi: Moshi,
+    private val assetLoader: AssetLoader,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -57,7 +56,6 @@ class DefaultWalletManagersFacade(
     private val walletManagerFactory by lazy { WalletManagerFactory(blockchainSDKFactory) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }
     private val txHistoryStateConverter by lazy { SdkTransactionHistoryStateConverter() }
-    private val txHistoryItemConverter by lazy { SdkTransactionHistoryItemConverter(assetReader, moshi) }
     private val sdkPageConverter by lazy { SdkPageConverter() }
     private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
     private val requirementsConditionConverter by lazy { SdkRequirementsConditionConverter() }
@@ -236,7 +234,8 @@ class DefaultWalletManagersFacade(
             is Result.Success -> PaginationWrapper(
                 currentPage = sdkPageConverter.convert(page),
                 nextPage = sdkPageConverter.convert(itemsResult.data.nextPage),
-                items = txHistoryItemConverter.convertList(itemsResult.data.items),
+                items = SdkTransactionHistoryItemConverter(smartContractMethods = readSmartContractMethods())
+                    .convertList(itemsResult.data.items),
             )
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
         }
@@ -615,5 +614,9 @@ class DefaultWalletManagersFacade(
             .filter { it !in walletManager.cardTokens }
 
         walletManager.addTokens(tokensToAdd)
+    }
+
+    private suspend fun readSmartContractMethods(): Map<String, SmartContractMethod> {
+        return assetLoader.loadMap<SmartContractMethod>(fileName = "contract_methods")
     }
 }
