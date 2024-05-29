@@ -82,7 +82,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                     ),
                 )
             } else {
-                router.openDetailsScreen()
+                router.openDetailsScreen(stateHolder.getSelectedWalletId())
             }
         }
     }
