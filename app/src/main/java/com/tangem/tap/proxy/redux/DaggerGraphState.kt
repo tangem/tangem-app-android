@@ -2,7 +2,6 @@ package com.tangem.tap.proxy.redux
 
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -42,7 +41,6 @@ import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
 data class DaggerGraphState(
-    val rootComponentContext: AppComponentContext? = null,
     val testerRouter: TesterRouter? = null,
     val networkConnectionManager: NetworkConnectionManager? = null,
     val customTokenFeatureToggles: CustomTokenFeatureToggles? = null,
