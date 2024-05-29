@@ -141,9 +141,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
             val featureToggles = store.inject(getDependency = DaggerGraphState::detailsFeatureToggles)
 
             if (featureToggles.isRedesignEnabled) {
-                store.inject(DaggerGraphState::detailsEntryPoint).entryFragment(
-                    parentContext = store.inject(DaggerGraphState::rootComponentContext),
-                )
+                store.inject(DaggerGraphState::detailsEntryPoint).entryFragment()
             } else {
                 DetailsFragment()
             }
