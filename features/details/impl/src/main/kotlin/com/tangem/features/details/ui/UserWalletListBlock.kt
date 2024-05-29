@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -22,10 +23,12 @@ internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = M
         modifier = modifier,
     ) {
         state.userWallets.forEach { model ->
-            UserWalletItem(
-                modifier = Modifier.fillMaxWidth(),
-                model = model,
-            )
+            key(model.id) {
+                UserWalletItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    model = model,
+                )
+            }
         }
         AddWalletButton(
             text = state.addNewWalletText,

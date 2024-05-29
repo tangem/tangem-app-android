@@ -10,10 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -124,7 +121,7 @@ private fun Content(state: DetailsUM, modifier: Modifier = Modifier) {
             )
         }
 
-        item {
+        item(key = "footer") {
             Footer(
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
                 model = state.footer,
@@ -148,10 +145,12 @@ private fun Block(model: DetailsItemUM, modifier: Modifier = Modifier) {
         when (model) {
             is DetailsItemUM.Basic -> {
                 model.items.forEach { item ->
-                    BlockItem(
-                        modifier = Modifier.fillMaxWidth(),
-                        model = item,
-                    )
+                    key(item.id) {
+                        BlockItem(
+                            modifier = Modifier.fillMaxWidth(),
+                            model = item,
+                        )
+                    }
                 }
             }
             is DetailsItemUM.Component -> {
@@ -185,16 +184,18 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
             model.socials.forEach { social ->
-                IconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size32),
-                    onClick = social.onClick,
-                ) {
-                    Icon(
-                        modifier = Modifier.size(TangemTheme.dimens.size24),
-                        painter = painterResource(id = social.iconResId),
-                        tint = TangemTheme.colors.icon.informative,
-                        contentDescription = null,
-                    )
+                key(social.id) {
+                    IconButton(
+                        modifier = Modifier.size(TangemTheme.dimens.size32),
+                        onClick = social.onClick,
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(TangemTheme.dimens.size24),
+                            painter = painterResource(id = social.iconResId),
+                            tint = TangemTheme.colors.icon.informative,
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
         }

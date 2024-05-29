@@ -48,6 +48,7 @@ internal class ItemsBuilder(
         id = "shop",
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
+                id = "buy_tangem_wallet",
                 title = stringReference("Buy Tangem Wallet"), // TODO: Move to resources in AND-7165
                 iconRes = R.drawable.ic_tangem_24,
                 onClick = { /* TODO: Implement in AND-7165 */ },
@@ -59,6 +60,7 @@ internal class ItemsBuilder(
         id = "settings",
         items = buildList {
             DetailsItemUM.Basic.Item(
+                id = "app_settings",
                 title = resourceReference(R.string.app_settings_title),
                 iconRes = R.drawable.ic_settings_24,
                 onClick = { /* TODO: Implement in AND-7165 */ },
@@ -66,6 +68,7 @@ internal class ItemsBuilder(
 
             if (BuildConfig.TESTER_MENU_ENABLED) {
                 DetailsItemUM.Basic.Item(
+                    id = "tester_menu",
                     title = stringReference(value = "Tester menu"),
                     iconRes = R.drawable.ic_alert_24,
                     onClick = { /* TODO: Implement in AND-7165 */ },
@@ -78,11 +81,13 @@ internal class ItemsBuilder(
         id = "support",
         items = persistentListOf(
             DetailsItemUM.Basic.Item(
+                id = "send_feedback",
                 title = stringReference("Send feedback"), // TODO: Move to resources in AND-7165
                 iconRes = R.drawable.ic_comment_24,
                 onClick = { /* TODO: Implement in AND-7165 */ },
             ),
             DetailsItemUM.Basic.Item(
+                id = "disclaimer",
                 title = resourceReference(R.string.disclaimer_title),
                 iconRes = R.drawable.ic_text_24,
                 onClick = { /* TODO: Implement in AND-7165 */ },
