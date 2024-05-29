@@ -10,16 +10,16 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions", "LargeClass")
 internal object TokensDomainModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideAddCryptoCurrenciesUseCase(
         currenciesRepository: CurrenciesRepository,
         networksRepository: NetworksRepository,
@@ -31,7 +31,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideFetchTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -41,7 +41,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideFetchPendingTransactionsUseCase(
         networksRepository: NetworksRepository,
     ): FetchPendingTransactionsUseCase {
@@ -49,7 +49,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -59,7 +59,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetCardTokensListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -69,7 +69,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideRemoveCurrencyUseCase(
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
@@ -78,7 +78,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetCurrencyUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -89,7 +89,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetCurrencyWarningsUseCase(
         walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
@@ -117,7 +117,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetPrimaryCurrencyUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -133,7 +133,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideFetchCurrencyStatusUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -143,7 +143,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideFetchCardTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -153,13 +153,13 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetCryptoCurrencyUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrencyUseCase {
         return GetCryptoCurrencyUseCase(currenciesRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideToggleTokenListGroupingUseCase(
         dispatchers: CoroutineDispatcherProvider,
     ): ToggleTokenListGroupingUseCase {
@@ -167,13 +167,13 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideToggleTokenListSortingUseCase(dispatchers: CoroutineDispatcherProvider): ToggleTokenListSortingUseCase {
         return ToggleTokenListSortingUseCase(dispatchers)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideApplyTokenListSortingUseCase(
         currenciesRepository: CurrenciesRepository,
         dispatchers: CoroutineDispatcherProvider,
@@ -182,7 +182,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetCryptoCurrencyActionsUseCase(
         rampStateManager: RampStateManager,
         walletManagersFacade: WalletManagersFacade,
@@ -204,7 +204,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetCurrencyStatusByNetworkUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -220,7 +220,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetFeePaidCryptoCurrencyStatusSyncUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
@@ -236,13 +236,13 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
         return GetCryptoCurrenciesUseCase(currenciesRepository = currenciesRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideIsCryptoCurrencyCoinCouldHideUseCase(
         currenciesRepository: CurrenciesRepository,
     ): IsCryptoCurrencyCoinCouldHideUseCase {
@@ -252,7 +252,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideUpdateDelayedCurrencyStatusUseCase(
         networksRepository: NetworksRepository,
     ): UpdateDelayedNetworkStatusUseCase {
@@ -262,7 +262,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideHasMissedAddressesCryptoCurrenciesUseCase(
         currenciesRepository: CurrenciesRepository,
     ): GetMissedAddressesCryptoCurrenciesUseCase {
@@ -270,13 +270,13 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetGlobalTokenListUseCase(tokensListRepository: TokensListRepository): GetGlobalTokenListUseCase {
         return GetGlobalTokenListUseCase(repository = tokensListRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideCheckTokenCompatibilityUseCase(
         networksCompatibilityRepository: NetworksCompatibilityRepository,
     ): CheckCurrencyCompatibilityUseCase {
@@ -284,7 +284,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideNeedHardenedDerivationUseCase(
         networksCompatibilityRepository: NetworksCompatibilityRepository,
     ): RequiresHardenedDerivationOnlyUseCase {
@@ -292,7 +292,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideFindTokenByContractAddressUseCase(
         tokensListRepository: TokensListRepository,
     ): FindTokenByContractAddressUseCase {
@@ -300,7 +300,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideValidateContractAddressUseCase(
         tokensListRepository: TokensListRepository,
     ): ValidateContractAddressUseCase {
@@ -308,7 +308,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideAreTokensSupportedByNetworkUseCase(
         repository: NetworksCompatibilityRepository,
     ): AreTokensSupportedByNetworkUseCase {
@@ -316,7 +316,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetNetworksSupportedByWallet(
         repository: NetworksCompatibilityRepository,
     ): GetNetworksSupportedByWallet {
@@ -324,7 +324,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetBalanceNotEnoughForFeeWarningUseCase(
         currenciesRepository: CurrenciesRepository,
         dispatchers: CoroutineDispatcherProvider,
@@ -333,7 +333,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideIsAmountSubtractAvailableUseCase(
         currenciesRepository: CurrenciesRepository,
         dispatchers: CoroutineDispatcherProvider,
@@ -342,7 +342,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideRunPolkadotAccountHealthCheckUseCase(
         repository: PolkadotAccountHealthCheckRepository,
     ): RunPolkadotAccountHealthCheckUseCase {
@@ -350,7 +350,7 @@ internal object TokensDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetNetworkStatusesUseCase(networksRepository: NetworksRepository): GetNetworkAddressesUseCase {
         return GetNetworkAddressesUseCase(
             networksRepository = networksRepository,
