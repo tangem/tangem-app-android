@@ -14,7 +14,7 @@ import java.net.URLDecoder
  */
 class WalletConnectLinkIntentHandler : IntentHandler {
 
-    override fun handleIntent(intent: Intent?): Boolean {
+    override fun handleIntent(intent: Intent?, isFromForeground: Boolean): Boolean {
         val intentData = intent?.data ?: return false
         val scheme = intent.scheme ?: return false
 
