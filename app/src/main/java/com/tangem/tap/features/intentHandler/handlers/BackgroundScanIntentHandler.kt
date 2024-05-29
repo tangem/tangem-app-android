@@ -25,7 +25,8 @@ class BackgroundScanIntentHandler(
         NfcAdapter.ACTION_TAG_DISCOVERED,
     )
 
-    override fun handleIntent(intent: Intent?): Boolean {
+    override fun handleIntent(intent: Intent?, isFromForeground: Boolean): Boolean {
+        if (isFromForeground) return true
         if (intent == null || intent.action !in nfcActions) return false
 
         val tag: Tag? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
