@@ -2,10 +2,13 @@ package com.tangem.tap
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.PendingIntent
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -290,10 +293,29 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onResume() {
         super.onResume()
+        val nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val intentFilters = arrayOf(
+            IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED),
+            IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED),
+            IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED),
+        )
+        nfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFilters, null)
         // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
         notificationsHandler = NotificationsHandler(binding.fragmentContainer)
 
         navigateToInitialScreenIfNeeded(intent)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        nfcAdapter.disableForegroundDispatch(this)
     }
 
     override fun onStop() {
@@ -348,7 +370,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         cardSdkLifecycleObserver.onCreate(context = this)
 
         lifecycleScope.launch {
-            intentProcessor.handleIntent(intent)
+            intentProcessor.handleIntent(intent, true)
         }
 
         if (intent != null) {
@@ -456,7 +478,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         } else {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
             lifecycleScope.launch {
-                intentProcessor.handleIntent(intentWhichStartedActivity)
+                intentProcessor.handleIntent(intentWhichStartedActivity, false)
             }
         }
 
