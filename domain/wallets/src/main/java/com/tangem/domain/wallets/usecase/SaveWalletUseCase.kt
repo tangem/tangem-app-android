@@ -29,7 +29,7 @@ class SaveWalletUseCase(private val userWalletsListManager: UserWalletsListManag
                         is UserWalletsListError.WalletAlreadySaved -> SaveWalletError.WalletAlreadySaved(
                             it.messageResId,
                         )
-                        else -> SaveWalletError.DataError
+                        else -> SaveWalletError.DataError(it.messageResId)
                     }.left()
                 }
 
