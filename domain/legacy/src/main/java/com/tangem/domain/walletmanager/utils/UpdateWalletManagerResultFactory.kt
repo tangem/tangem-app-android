@@ -114,7 +114,9 @@ internal class UpdateWalletManagerResultFactory {
             is AmountType.Coin -> CryptoCurrencyAmount.Coin(
                 value = getCurrencyAmountValue(amount) ?: return null,
             )
-            is AmountType.Reserve -> null
+            is AmountType.FeeResource,
+            AmountType.Reserve,
+            -> null
         }
     }
 
@@ -135,7 +137,9 @@ internal class UpdateWalletManagerResultFactory {
                     txHistoryItem = txHistoryItem,
                 )
             }
-            is AmountType.Reserve -> null
+            is AmountType.FeeResource,
+            AmountType.Reserve,
+            -> null
         }
     }
 
