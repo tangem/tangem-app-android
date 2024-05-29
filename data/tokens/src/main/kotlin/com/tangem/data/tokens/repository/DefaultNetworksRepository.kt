@@ -14,7 +14,6 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
-import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
@@ -78,7 +77,7 @@ internal class DefaultNetworksRepository(
 
         withContext(dispatchers.io) {
             catch({ fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false) }) {
-                raise(it.lceError())
+                raise(it)
             }
         }
     }
