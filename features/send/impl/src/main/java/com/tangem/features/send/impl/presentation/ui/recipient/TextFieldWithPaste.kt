@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.components.inputrow.inner.CrossIcon
 import com.tangem.core.ui.components.inputrow.inner.PasteButton
@@ -27,9 +28,11 @@ internal fun TextFieldWithPaste(
     onPasteClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     footer: String? = null,
+    labelStyle: TextStyle = TangemTheme.typography.body2,
     error: TextReference? = null,
     isError: Boolean = false,
     isReadOnly: Boolean = false,
+    isValuePasted: Boolean = false,
 ) {
     val (title, color) = when {
         isError && error != null -> error to TangemTheme.colors.text.warning
@@ -44,7 +47,7 @@ internal fun TextFieldWithPaste(
                     color = TangemTheme.colors.background.action,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
-                .padding(end = TangemTheme.dimens.spacing16),
+                .padding(end = TangemTheme.dimens.spacing12),
         ) {
             Row {
                 Column(
@@ -54,7 +57,7 @@ internal fun TextFieldWithPaste(
                 ) {
                     Text(
                         text = title.resolveReference(),
-                        style = TangemTheme.typography.body2,
+                        style = labelStyle,
                         color = color,
                     )
                     SimpleTextField(
@@ -63,9 +66,10 @@ internal fun TextFieldWithPaste(
                         placeholderColor = placeholderColor,
                         onValueChange = onValueChange,
                         readOnly = isReadOnly,
+                        isValuePasted = isValuePasted,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = TangemTheme.dimens.spacing6),
+                            .padding(top = TangemTheme.dimens.spacing8),
                     )
                 }
                 AnimatedVisibility(

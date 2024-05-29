@@ -70,7 +70,7 @@ internal fun AmountBlock(
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing16),
+                .padding(top = TangemTheme.dimens.spacing24),
         )
         Text(
             text = secondAmount,
@@ -79,7 +79,10 @@ internal fun AmountBlock(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = TangemTheme.dimens.spacing4),
+                .padding(
+                    top = TangemTheme.dimens.spacing8,
+                    bottom = TangemTheme.dimens.spacing2,
+                ),
         )
     }
 }

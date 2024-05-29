@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.recipient
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -69,7 +70,7 @@ internal fun SendRecipientContent(
         )
         memoField(
             memoField = memoField,
-            onMemoChange = clickIntents::onRecipientMemoValueChange,
+            onMemoChange = { clickIntents.onRecipientMemoValueChange(it, true) },
         )
         listHeaderItem(
             titleRes = R.string.send_recipient_wallets_title,
@@ -116,6 +117,7 @@ private fun LazyListScope.addressItem(
                 isError = isError,
                 isLoading = isValidating,
                 error = address.error,
+                isValuePasted = address.isValuePasted,
                 modifier = Modifier
                     .background(
                         color = TangemTheme.colors.background.action,
@@ -138,9 +140,11 @@ private fun LazyListScope.memoField(memoField: SendTextField.RecipientMemo?, onM
                 onValueChange = memoField.onValueChange,
                 onPasteClick = onMemoChange,
                 modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
+                labelStyle = TangemTheme.typography.caption2,
                 isError = memoField.isError,
                 error = memoField.error,
                 isReadOnly = !memoField.isEnabled,
+                isValuePasted = memoField.isValuePasted,
             )
         }
     }
@@ -249,7 +253,9 @@ private fun AnimateRecentAppearance(isVisible: Boolean, content: @Composable () 
     }
 }
 
-@Preview(widthDp = 360, heightDp = 800)
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SendRecipientContent_Preview(
     @PreviewParameter(SendRecipientContentPreviewProvider::class) recipientState: SendStates.RecipientState,
@@ -266,6 +272,9 @@ private fun SendRecipientContent_Preview(
 private class SendRecipientContentPreviewProvider : PreviewParameterProvider<SendStates.RecipientState> {
     override val values: Sequence<SendStates.RecipientState>
         get() = sequenceOf(
+            RecipientStatePreviewData.recipientWithRecentState,
             RecipientStatePreviewData.recipientState,
+            RecipientStatePreviewData.recipientAddressState,
         )
 }
+// endregion

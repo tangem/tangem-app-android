@@ -78,6 +78,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.decompose)
     implementation(projects.core.deepLinks)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
@@ -125,6 +126,8 @@ dependencies {
     implementation(projects.features.qrScanning.impl)
     implementation(projects.features.staking.api)
     implementation(projects.features.staking.impl)
+    implementation(projects.features.details.api)
+    implementation(projects.features.details.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

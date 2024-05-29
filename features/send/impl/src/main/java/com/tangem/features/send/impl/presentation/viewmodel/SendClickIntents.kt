@@ -39,7 +39,7 @@ internal interface SendClickIntents {
     // region Recipient
     fun onRecipientAddressValueChange(value: String, type: EnterAddressSource? = null)
 
-    fun onRecipientMemoValueChange(value: String)
+    fun onRecipientMemoValueChange(value: String, isValuePasted: Boolean = false)
     // endregion
 
     // region Fee
@@ -69,6 +69,7 @@ internal interface SendClickIntents {
 
     fun onAmountReduceClick(
         reduceAmountBy: BigDecimal? = null,
+        reduceAmountByDiff: BigDecimal? = reduceAmountBy,
         reduceAmountTo: BigDecimal? = null,
         clazz: Class<out SendNotification>,
     )

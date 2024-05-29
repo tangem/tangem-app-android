@@ -212,5 +212,7 @@ data class Token(
 
         @Json(name = "tron")
         TRON,
+
+        UNKNOWN,
     }
 }

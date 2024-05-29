@@ -12,6 +12,7 @@ data class YieldBalanceWrapper(
     @Json(name = "integrationId")
     val integrationId: String?,
 ) {
+
     @JsonClass(generateAdapter = true)
     data class Balance(
         @Json(name = "groupId")
@@ -65,7 +66,7 @@ data class YieldBalanceWrapper(
         @JsonClass(generateAdapter = true)
         data class PendingAction(
             @Json(name = "type")
-            val type: ActionType,
+            val type: StakingActionType,
             @Json(name = "passthrough")
             val passthrough: String,
             @Json(name = "args")

@@ -7,11 +7,13 @@ data class YieldBalanceRequestBody(
     @Json(name = "args") val args: YieldBalanceRequestArgs,
     @Json(name = "integrationId") val integrationId: String? = null,
 ) {
+
     data class Address(
         @Json(name = "address") val address: String,
         @Json(name = "additionalAddresses") val additionalAddresses: AdditionalAddresses? = null,
         @Json(name = "explorerUrl") val explorerUrl: String,
     ) {
+
         data class AdditionalAddresses(
             @Json(name = "cosmosPubKey") val cosmosPubKey: String? = null,
             @Json(name = "binanceBeaconAddress") val binanceBeaconAddress: String? = null,
@@ -22,6 +24,7 @@ data class YieldBalanceRequestBody(
             @Json(name = "pAddressBech") val pAddressBech: String? = null,
         )
     }
+
     data class YieldBalanceRequestArgs(
         @Json(name = "validatorAddresses") val validatorAddresses: List<String>,
     )

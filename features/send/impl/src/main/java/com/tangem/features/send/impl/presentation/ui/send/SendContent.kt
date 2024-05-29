@@ -58,7 +58,7 @@ private fun LazyListScope.blocks(uiState: SendUiState) {
         Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12)) {
             AnimatedVisibility(
                 visible = isSuccess,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
             ) {
                 TransactionDoneTitle(
                     titleRes = R.string.sent_transaction_sent_title,
@@ -120,7 +120,7 @@ private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modif
                 )
                 Text(
                     text = stringResource(id = R.string.send_summary_tap_hint),
-                    style = TangemTheme.typography.caption1,
+                    style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
                     modifier = Modifier
                         .clip(TangemTheme.shapes.roundedCornersXMedium)

@@ -43,6 +43,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
+import com.tangem.features.details.DetailsEntryPoint
+import com.tangem.features.details.DetailsFeatureToggles
 import com.tangem.features.managetokens.featuretoggles.ManageTokensFeatureToggles
 import com.tangem.features.send.api.featuretoggles.SendFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
@@ -181,6 +183,12 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         get() = entryPoint.getSaveBlockchainErrorUseCase()
     // endregion
 
+    private val detailsFeatureToggles: DetailsFeatureToggles
+        get() = entryPoint.getDetailsFeatureToggles()
+
+    private val detailsEntryPoint: DetailsEntryPoint
+        get() = entryPoint.getDetailsEntryPoint()
+
     override fun onCreate() {
         super.onCreate()
 
@@ -264,6 +272,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
                     saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
+                    detailsFeatureToggles = detailsFeatureToggles,
+                    detailsEntryPoint = detailsEntryPoint,
                 ),
             ),
         )
