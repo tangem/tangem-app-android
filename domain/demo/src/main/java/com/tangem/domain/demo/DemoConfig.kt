@@ -1,6 +1,5 @@
 package com.tangem.domain.demo
 
-import com.tangem.blockchain.BuildConfig
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import java.math.BigDecimal
