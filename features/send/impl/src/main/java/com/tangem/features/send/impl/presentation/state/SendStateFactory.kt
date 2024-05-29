@@ -60,6 +60,7 @@ internal class SendStateFactory(
         SendFeeStateConverter(
             appCurrencyProvider = appCurrencyProvider,
             feeCryptoCurrencyStatusProvider = feeCryptoCurrencyStatusProvider,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
         )
     }
     private val confirmStateConverter by lazy(LazyThreadSafetyMode.NONE) {
