@@ -4,6 +4,7 @@ import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.navigation.email.EmailSender
+import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -77,6 +78,7 @@ data class DaggerGraphState(
     val blockchainSDKFactory: BlockchainSDKFactory? = null,
     val emailSender: EmailSender? = null,
     val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase? = null,
+    val assetLoader: AssetLoader? = null,
     val detailsFeatureToggles: DetailsFeatureToggles? = null,
     val detailsEntryPoint: DetailsEntryPoint? = null,
 ) : StateType
