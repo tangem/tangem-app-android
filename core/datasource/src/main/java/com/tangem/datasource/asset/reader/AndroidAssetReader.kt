@@ -1,27 +1,23 @@
 package com.tangem.datasource.asset.reader
 
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.res.AssetManager
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
-import java.io.InputStream
-import javax.inject.Inject
 
 /**
  * Implementation of asset file reader
  *
- * @property context application context
+ * @property assetManager asset manager
+ * @property dispatchers  dispatchers
  */
-internal class AndroidAssetReader @Inject constructor(
-    @ApplicationContext private val context: Context,
+internal class AndroidAssetReader(
+    private val assetManager: AssetManager,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : AssetReader {
 
-    override fun readJson(fileName: String): String {
-        return openFile("$fileName.json")
-            .bufferedReader()
+    override suspend fun read(fullFileName: String): String = withContext(dispatchers.io) {
+        assetManager.open(fullFileName).bufferedReader()
             .use(BufferedReader::readText)
-    }
-
-    override fun openFile(file: String): InputStream {
-        return context.assets.open(file)
     }
 }

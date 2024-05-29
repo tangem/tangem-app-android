@@ -69,4 +69,9 @@ dependencies {
     implementation(deps.room.runtime)
     implementation(deps.room.ktx)
     kapt(deps.room.compiler)
+
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }
