@@ -101,7 +101,11 @@ internal class SendNotificationFactory(
                 addTooLowNotification(feeState)
 
                 // blockchain specific
-                addCardanoNotifications(sendingAmount, feeState.fee, state)
+                addValidateTransactionNotifications(
+                    sendingAmount = sendingAmount,
+                    fee = feeState.fee,
+                    state = state,
+                )
             }.toImmutableList()
         }
 
@@ -420,13 +424,12 @@ internal class SendNotificationFactory(
         return Blockchain.fromNetworkId(this.currency.network.backendId) == Blockchain.Arbitrum
     }
 
-    private suspend fun MutableList<SendNotification>.addCardanoNotifications(
+    private suspend fun MutableList<SendNotification>.addValidateTransactionNotifications(
         sendingAmount: BigDecimal,
         fee: Fee?,
         state: SendUiState,
     ) {
         val sendingCurrency = cryptoCurrencyStatusProvider().currency
-        if (!BlockchainUtils.isCardano(sendingCurrency.network.id.value)) return
 
         validateTransactionUseCase(
             amount = sendingAmount.convertToAmount(sendingCurrency),
@@ -437,10 +440,14 @@ internal class SendNotificationFactory(
             network = sendingCurrency.network,
         ).fold(
             ifLeft = {
-                addCardanoTransactionValidationError(
-                    error = it as? BlockchainSdkError.Cardano ?: return@fold,
-                    sendingCurrency = sendingCurrency,
-                )
+                when (it) {
+                    is BlockchainSdkError.Cardano -> addCardanoTransactionValidationError(
+                        error = it,
+                        sendingCurrency = sendingCurrency,
+                    )
+                    is BlockchainSdkError.Koinos -> addKoinosTransactionValidationError(error = it)
+                    else -> return
+                }
             },
             ifRight = {
                 (fee as? Fee.CardanoToken)?.let {
@@ -485,6 +492,36 @@ internal class SendNotificationFactory(
                     ),
                 )
             }
+        }
+    }
+
+    private fun MutableList<SendNotification>.addKoinosTransactionValidationError(error: BlockchainSdkError.Koinos) {
+        when (error) {
+            is BlockchainSdkError.Koinos.InsufficientBalance -> {
+                add(SendNotification.Koinos.InsufficientBalance)
+            }
+            is BlockchainSdkError.Koinos.InsufficientMana -> {
+                add(
+                    SendNotification.Koinos.InsufficientRecoverableMana(
+                        mana = error.manaBalance ?: BigDecimal.ZERO,
+                        maxMana = error.maxMana ?: BigDecimal.ZERO,
+                    ),
+                )
+            }
+            is BlockchainSdkError.Koinos.ManaFeeExceedsBalance -> {
+                add(
+                    SendNotification.Koinos.ManaExceedsBalance(
+                        availableKoinForTransfer = error.availableKoinForTransfer,
+                        onReduceClick = {
+                            clickIntents.onAmountReduceClick(
+                                reduceAmountTo = error.availableKoinForTransfer,
+                                clazz = SendNotification.Koinos.InsufficientRecoverableMana::class.java,
+                            )
+                        },
+                    ),
+                )
+            }
+            else -> {}
         }
     }
 
