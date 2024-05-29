@@ -2,10 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.componen
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.networkIconResId
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
@@ -195,6 +192,17 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(R.string.warning_hedera_missing_token_association_button_title),
             onClick = onAssociateClick,
+        ),
+    )
+
+    data class KoinosMana(
+        val manaBalanceAmount: String,
+        val maxManaBalanceAmount: String,
+    ) : Informational(
+        title = resourceReference(id = R.string.koinos_mana_level_title),
+        subtitle = resourceReference(
+            id = R.string.koinos_mana_level_description,
+            formatArgs = wrappedList(manaBalanceAmount, maxManaBalanceAmount),
         ),
     )
 }
