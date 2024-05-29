@@ -5,9 +5,11 @@ import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.lib.auth.AppVersionProvider
 import com.tangem.lib.auth.ExpressAuthProvider
+import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.tap.network.auth.DefaultAppVersionProvider
 import com.tangem.tap.network.auth.DefaultAuthProvider
 import com.tangem.tap.network.auth.DefaultExpressAuthProvider
+import com.tangem.tap.network.auth.DefaultStakeKitAuthProvider
 import com.tangem.tap.proxy.AppStateHolder
 import dagger.Module
 import dagger.Provides
@@ -35,6 +37,12 @@ class AuthModule {
             userWalletsStore = userWalletsStore,
             configManager = configManager,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideStakeKitAuthProvider(configManager: ConfigManager): StakeKitAuthProvider {
+        return DefaultStakeKitAuthProvider(configManager)
     }
 
     @Provides
