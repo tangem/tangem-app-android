@@ -357,7 +357,8 @@ class ReceiptReducer : SendInternalReducer {
             FeePaidCurrency.Coin -> when (amountType) {
                 AmountType.Coin -> ReceiptLayoutType.FIAT
                 is AmountType.Token -> ReceiptLayoutType.TOKEN_FIAT
-                else -> ReceiptLayoutType.UNKNOWN
+                is AmountType.FeeResource -> ReceiptLayoutType.UNKNOWN
+                AmountType.Reserve -> ReceiptLayoutType.UNKNOWN
             }
             FeePaidCurrency.SameCurrency -> ReceiptLayoutType.SAME_CURRENCY_FIAT
             is FeePaidCurrency.FeeResource -> ReceiptLayoutType.SAME_CURRENCY

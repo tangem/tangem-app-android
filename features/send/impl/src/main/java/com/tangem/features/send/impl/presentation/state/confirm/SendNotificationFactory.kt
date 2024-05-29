@@ -102,7 +102,6 @@ internal class SendNotificationFactory(
 
                 // blockchain specific
                 addValidateTransactionNotifications(
-                    amountValue = amountValue,
                     sendingAmount = sendingAmount,
                     fee = feeState.fee,
                     state = state,
@@ -426,7 +425,6 @@ internal class SendNotificationFactory(
     }
 
     private suspend fun MutableList<SendNotification>.addValidateTransactionNotifications(
-        amountValue: BigDecimal,
         sendingAmount: BigDecimal,
         fee: Fee?,
         state: SendUiState,
@@ -434,11 +432,7 @@ internal class SendNotificationFactory(
         val sendingCurrency = cryptoCurrencyStatusProvider().currency
 
         validateTransactionUseCase(
-            amount = if (BlockchainUtils.isKoinos(sendingCurrency.network.id.value)) {
-                amountValue.convertToAmount(sendingCurrency)
-            } else {
-                sendingAmount.convertToAmount(sendingCurrency)
-            },
+            amount = sendingAmount.convertToAmount(sendingCurrency),
             fee = fee ?: return,
             memo = state.recipientState?.memoTextField?.value,
             destination = requireNotNull(state.recipientState?.addressTextField?.value),

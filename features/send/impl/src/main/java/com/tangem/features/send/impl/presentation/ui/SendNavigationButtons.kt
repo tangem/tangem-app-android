@@ -174,7 +174,11 @@ private fun SendingText(
         val sendingFiat = if (uiState.isSubtracted) {
             fiatAmount?.value
         } else {
-            feeFiat?.let { fiatAmount?.value?.plus(it) }
+            if (feeState?.isFeeConvertibleToFiat == true) {
+                feeFiat?.let { fiatAmount?.value?.plus(it) }
+            } else {
+                fiatAmount?.value
+            }
         }
 
         if (feeFiat != null && sendingFiat != null) {

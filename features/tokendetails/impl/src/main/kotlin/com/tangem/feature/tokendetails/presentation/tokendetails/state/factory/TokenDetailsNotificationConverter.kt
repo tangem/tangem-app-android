@@ -114,14 +114,14 @@ internal class TokenDetailsNotificationConverter(
             )
             is CryptoCurrencyWarning.FeeResourceInfo -> KoinosMana(
                 manaBalanceAmount = formatMana(warning.amount),
-                maxManaBalanceAmount = formatMana(warning.maxAmount),
+                maxManaBalanceAmount = formatMana(warning.maxAmount!!), // maxAmount cannot be null in Koinos
             )
         }
     }
 
-    private fun formatMana(amount: BigDecimal?): String {
+    private fun formatMana(amount: BigDecimal): String {
         return BigDecimalFormatter.formatCryptoAmountShorted(
-            cryptoAmount = amount ?: return "-", // maxAmount cannot be null
+            cryptoAmount = amount,
             cryptoCurrency = "",
             decimals = Blockchain.Koinos.decimals(),
         )
