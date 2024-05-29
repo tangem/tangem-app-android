@@ -6,6 +6,7 @@ import arrow.core.raise.either
 import arrow.core.raise.withError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.*
@@ -71,7 +72,7 @@ internal class TokenListOperations(
 
     private fun Raise<Error>.createTokenList(
         currencies: NonEmptyList<CryptoCurrencyStatus>,
-        fiatBalance: TokenList.FiatBalance,
+        fiatBalance: TotalFiatBalance,
         isAnyTokenLoading: Boolean,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
@@ -87,7 +88,7 @@ internal class TokenListOperations(
 
     private fun Raise<Error>.createTokenList(
         sortingOperations: TokenListSortingOperations,
-        fiatBalance: TokenList.FiatBalance,
+        fiatBalance: TotalFiatBalance,
         isGrouped: Boolean,
     ): TokenList {
         return if (isGrouped) {
@@ -99,7 +100,7 @@ internal class TokenListOperations(
 
     private fun Raise<Error>.createUngroupedTokenList(
         sortingOperations: TokenListSortingOperations,
-        fiatBalance: TokenList.FiatBalance,
+        fiatBalance: TotalFiatBalance,
     ): TokenList.Ungrouped = TokenList.Ungrouped(
         sortedBy = sortingOperations.getSortType(),
         totalFiatBalance = fiatBalance,
@@ -113,7 +114,7 @@ internal class TokenListOperations(
 
     private fun Raise<Error>.createGroupedTokenList(
         sortingOperations: TokenListSortingOperations,
-        fiatBalance: TokenList.FiatBalance,
+        fiatBalance: TotalFiatBalance,
     ): TokenList.GroupedByNetwork = TokenList.GroupedByNetwork(
         sortedBy = sortingOperations.getSortType(),
         totalFiatBalance = fiatBalance,
@@ -127,7 +128,7 @@ internal class TokenListOperations(
 
     private fun createUnsortedUngroupedTokenList(
         tokens: List<CryptoCurrencyStatus>,
-        fiatBalance: TokenList.FiatBalance,
+        fiatBalance: TotalFiatBalance,
     ): TokenList.Ungrouped {
         return TokenList.Ungrouped(
             sortedBy = TokenList.SortType.NONE,
