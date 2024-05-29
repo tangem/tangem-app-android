@@ -66,6 +66,7 @@ internal class TransactionDataToTxHistoryItemConverter(
                     value
                 }
             }
+            is FeePaidCurrency.FeeResource -> value
         }
     }
 

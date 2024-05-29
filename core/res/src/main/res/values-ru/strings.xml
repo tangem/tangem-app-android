@@ -94,6 +94,7 @@
   <string name="common_generate_addresses">Получить адреса</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_import">Импортировать</string>
+  <string name="common_later">Позже</string>
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
   <string name="common_network_fee_title">Сетевая комиссия</string>
@@ -254,6 +255,14 @@
   <string name="initial_message_sign_header">Приложите, чтобы подписать</string>
   <string name="initial_message_tap_header">Приложите карту</string>
   <string name="key_invalidated_warning_description">Вы обновили данные биометрии, отсканируйте свою карту для входа</string>
+  <string name="koinos_insufficient_balance_to_send_koin_description">Ваш баланс должен быть выше суммы комиссии для осуществления перевода</string>
+  <string name="koinos_insufficient_balance_to_send_koin_title">Недостаточно средств</string>
+  <string name="koinos_insufficient_mana_to_send_koin_description">У вас недостаточно Маны для этой транзакции. Пожалуйста, подождите, пока Мана восполнится. Ваш баланс маны равен %1$s/%2$s</string>
+  <string name="koinos_insufficient_mana_to_send_koin_title">Недостаточно Маны</string>
+  <string name="koinos_mana_exceeds_koin_balance_description">Вы можете перевести только %s из-за ограничения Mana, установленного сетью Koinos</string>
+  <string name="koinos_mana_exceeds_koin_balance_title">Лимит маны</string>
+  <string name="koinos_mana_level_description">Сеть Koinos использует Ману для оплаты комиссии сети. У вас есть %1$s/%2$s Mana</string>
+  <string name="koinos_mana_level_title">Уровень маны</string>
   <string name="main_empty_tokens_list_message">Чтобы начать отслеживать свои криптоактивы и транзакции, добавьте токены</string>
   <string name="main_manage_tokens">Управление токенами</string>
   <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
@@ -298,6 +307,7 @@
   <string name="onboarding_access_codes_doesnt_match">Введенные коды доступа не совпадают</string>
   <string name="onboarding_activation_error_message">Необходимо повторить операцию, при этом карта будет сброшена к заводским настройкам</string>
   <string name="onboarding_activation_error_title">Ошибка активации</string>
+  <string name="onboarding_add_tokens">Добавление токенов</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">Вы добавили одну резервную карту. После того, как процесс будет завершен, Вы больше не сможете добавить карт. Если у Вас есть еще одна карта, добавьте ее в резервную копию. Хотите продолжить?</string>
   <string name="onboarding_backup_exit_warning">Процесс резервного копирования почти завершен. Вы не можете выйти из него сейчас.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Парольная фраза — это расширенная функция безопасности, которую используют криптокошельки. Она добавляет дополнительное слово или фразу по вашему выбору к уже существующей seed - фразе, чтобы разблокировать совершенно новый набор адресов.</string>
@@ -445,6 +455,9 @@
   <string name="send_alert_transaction_failed_title">Транзакция не выполнена</string>
   <string name="send_amount_label">Сумма</string>
   <string name="send_bitcoin_custom_fee_footer">Вы можете установить комиссию за транзакцию, изменив значение в поле Satoshi per vByte.</string>
+  <string name="send_custom_evm_max_fee_footer">Это стоимость, которую вы готовы заплатить за каждую единицу газа. Чем выше цена газа, тем быстрее ваша транзакция будет обработана. (Приоритетная комиссия включена)</string>
+  <string name="send_custom_evm_priority_fee">Приоритетная комиссия</string>
+  <string name="send_custom_evm_priority_fee_footer">Комиссия, которую пользователь может заплатить майнерам или валидаторам за ускорение включения его транзакции в блок.</string>
   <string name="send_date_format">%1$s, %2$s</string>
   <string name="send_destination_hint_address">Адрес</string>
   <string name="send_destination_tag_field">Код назначения</string>
@@ -468,8 +481,8 @@
   <string name="send_gas_price_footer">Это стоимость, которую вы готовы заплатить за каждую единицу газа. Чем выше цена газа, тем быстрее ваша транзакция будет обработана.</string>
   <string name="send_max_amount">Всё</string>
   <string name="send_max_amount_label">Максимальная сумма</string>
-  <string name="send_max_fee">Комиссия не превысит </string>
-  <string name="send_memo_destination_tag_error">Допустим ввод только цифр</string>
+  <string name="send_max_fee">Комиссия не превысит</string>
+  <string name="send_memo_destination_tag_error">Недопустимый Memo</string>
   <string name="send_network_fee_warning_title">Покрытие сетевой комиссии</string>
   <string name="send_notification_exceed_balance_text">Недостаточно средств для перевода, так как сумма комиссии и сумма перевода в совокупности больше имеющегося баланса</string>
   <string name="send_notification_exceed_balance_title">Недостаточно средств</string>
@@ -486,6 +499,7 @@
   <string name="send_notification_invalid_reserve_amount_title">Сумма отправки не может быть менее %s</string>
   <string name="send_notification_leave_button">Оставить %s</string>
   <string name="send_notification_reduce_by">Уменьшить на %s</string>
+  <string name="send_notification_reduce_to">Уменьшить до %s</string>
   <string name="send_notification_transaction_delay_text">Обратите внимание, что при определенных параметрах комиссии возможны задержки по вашей транзакции</string>
   <string name="send_notification_transaction_delay_title">Возможны задержки по транзакции</string>
   <string name="send_notification_transaction_limit_text">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$s UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
@@ -505,6 +519,7 @@
   <string name="send_summary_tap_hint">Нажмите на любое поле, чтобы изменить его</string>
   <string name="send_summary_title">Отправка %s</string>
   <string name="send_summary_transaction_description">Вы отправляете **%1$s**, включая комиссию сети %2$s</string>
+  <string name="send_summary_transaction_description_no_fiat_fee">Вы отправляете **%1$s** и %2$s</string>
   <string name="send_title_currency_format">Отправка %s</string>
   <string name="send_total_label">Всего</string>
   <string name="send_total_subtitle_asset_format">%1$s и %2$s будет отправлено</string>
