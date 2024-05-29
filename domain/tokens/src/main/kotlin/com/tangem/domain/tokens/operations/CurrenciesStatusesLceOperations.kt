@@ -21,8 +21,25 @@ internal class CurrenciesStatusesLceOperations(
     private val networksRepository: NetworksRepository,
 ) {
 
-    fun getCurrenciesStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
-        return getMultiCurrencyWalletCurrencies(userWalletId).transform transform@{ maybeCurrencies ->
+    fun getCurrenciesStatuses(
+        userWalletId: UserWalletId,
+        isSingleCurrencyWalletsAllowed: Boolean = false,
+    ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
+        return transformToCurrenciesStatuses(
+            userWalletId = userWalletId,
+            flow = if (isSingleCurrencyWalletsAllowed) {
+                getWalletCurrenies(userWalletId)
+            } else {
+                getMultiCurrencyWalletCurrencies(userWalletId)
+            },
+        )
+    }
+
+    private fun transformToCurrenciesStatuses(
+        userWalletId: UserWalletId,
+        flow: LceFlow<TokenListError, List<CryptoCurrency>>,
+    ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
+        return flow.transform transform@{ maybeCurrencies ->
             val nonEmptyCurrencies = maybeCurrencies.fold(
                 ifLoading = { maybeContent ->
                     emit(createLoadingCurrenciesStatuses(maybeContent))
@@ -72,6 +89,13 @@ internal class CurrenciesStatusesLceOperations(
         }
 
         return statuses
+    }
+
+    private fun getWalletCurrenies(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrency>> {
+        return currenciesRepository.getWalletCurrenciesUpdates(userWalletId)
+            .map { maybeCurrencies ->
+                maybeCurrencies.mapError { TokenListError.DataError(it) }
+            }
     }
 
     private fun getMultiCurrencyWalletCurrencies(
