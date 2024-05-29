@@ -16,6 +16,7 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.removeBy
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import timber.log.Timber
 import java.math.BigDecimal
 
 internal class TokenDetailsNotificationConverter(
@@ -38,7 +39,7 @@ internal class TokenDetailsNotificationConverter(
         return newNotifications.toImmutableList()
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun mapToNotification(warning: CryptoCurrencyWarning): TokenDetailsNotification {
         return when (warning) {
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> NetworkFeeWithBuyButton(
@@ -114,7 +115,12 @@ internal class TokenDetailsNotificationConverter(
             )
             is CryptoCurrencyWarning.FeeResourceInfo -> KoinosMana(
                 manaBalanceAmount = formatMana(warning.amount),
-                maxManaBalanceAmount = formatMana(warning.maxAmount!!), // maxAmount cannot be null in Koinos
+                maxManaBalanceAmount = warning.maxAmount?.let {
+                    formatMana(it)
+                } ?: run {
+                    Timber.e("FeeResource maxAmount cannot be null in Koinos. Check KoinosWalletManager")
+                    ""
+                },
             )
         }
     }
