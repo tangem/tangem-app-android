@@ -18,7 +18,7 @@ import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
-import com.tangem.datasource.asset.reader.AssetReader
+import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.config.FeaturesLocalLoader
 import com.tangem.datasource.config.models.Config
@@ -92,8 +92,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val configManager: ConfigManager
         get() = entryPoint.getConfigManager()
 
-    private val assetReader: AssetReader
-        get() = entryPoint.getAssetReader()
+    private val assetLoader: AssetLoader
+        get() = entryPoint.getAssetLoader()
 
     private val featureTogglesManager: FeatureTogglesManager
         get() = entryPoint.getFeatureTogglesManager()
@@ -216,10 +216,12 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 // [REDACTED_JIRA]
         runBlocking {
             featureTogglesManager.init()
+            initConfigManager(
+                loader = FeaturesLocalLoader(assetLoader, BuildConfig.ENVIRONMENT),
+                onComplete = ::initWithConfigDependency,
+            )
         }
 
-        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.sdkMoshi, BuildConfig.ENVIRONMENT)
-        initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
         loadNativeLibraries()
@@ -289,7 +291,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         System.loadLibrary("TrustWalletCore")
     }
 
-    private fun initConfigManager(loader: FeaturesLocalLoader, onComplete: (Config) -> Unit) {
+    private suspend fun initConfigManager(loader: FeaturesLocalLoader, onComplete: (Config) -> Unit) {
         configManager.load(loader) { config ->
             store.dispatch(GlobalAction.SetConfigManager(configManager))
             onComplete(config)

@@ -1,17 +1,18 @@
 package com.tangem.datasource.asset.reader
 
-import java.io.InputStream
-
 /**
  * Asset file reader
+ *
+ * @see <a href = "https://www.notion.so/tangem/Assets-e045dd890413413faf34ce07ae47ff56">Documentation</a>
  *
 * [REDACTED_AUTHOR]
  */
 interface AssetReader {
 
-    /** Read content of json file [fileName] from asset */
-    fun readJson(fileName: String): String
-
-    /** Open a file [file] from asset as InputStream */
-    fun openFile(file: String): InputStream
+    /**
+     * Read content of file from assets
+     *
+     * @param fullFileName name of file with extension. Example: file.json
+     */
+    suspend fun read(fullFileName: String): String
 }
