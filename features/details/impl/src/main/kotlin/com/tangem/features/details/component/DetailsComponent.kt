@@ -1,11 +1,15 @@
 package com.tangem.features.details.component
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.wallets.models.UserWalletId
 
 interface DetailsComponent {
+
+    // TODO: Remove after https://tangem.atlassian.net/browse/AND-7170
+    val snackbarHostState: SnackbarHostState
 
     @Composable
     @Suppress("TopLevelComposableFunctions") // TODO: Remove this check

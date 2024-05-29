@@ -31,7 +31,7 @@ private const val COLLAPSED_APP_BAR_THRESHOLD = 0.4f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DetailsScreen(state: DetailsUM, modifier: Modifier = Modifier) {
+internal fun DetailsScreen(state: DetailsUM, snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
     val backgroundColor = TangemTheme.colors.background.secondary
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -44,6 +44,7 @@ internal fun DetailsScreen(state: DetailsUM, modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = backgroundColor,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { TopBar(state, scrollBehavior) },
     ) { paddingValues ->
         Content(
