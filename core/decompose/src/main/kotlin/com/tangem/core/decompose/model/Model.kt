@@ -4,9 +4,8 @@ import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 /**
  * Abstract class for a component's model.
@@ -33,4 +32,47 @@ abstract class Model : InstanceKeeper.Instance {
     override fun onDestroy() {
         runCatching { modelScope.cancel() }
     }
+
+    /**
+     * Launches a coroutine in the model's scope and updates the [progressFlow] with the progress state.
+     *
+     * @param progressFlow The [SharedFlow] to emit the progress state.
+     * @param dispatcher The [CoroutineDispatcher] to launch the coroutine. Default is [Dispatchers.Main.immediate].
+     * @param block The block of code to execute.
+     *
+     * @return The [Job] of the launched coroutine.
+     * */
+    protected inline fun withProgress(
+        progressFlow: MutableSharedFlow<Boolean>,
+        dispatcher: CoroutineDispatcher = dispatchers.mainImmediate,
+        crossinline block: suspend () -> Unit,
+    ): Job = modelScope.launch(dispatcher) {
+        progressFlow.emit(value = true)
+
+        try {
+            block()
+        } finally {
+            withContext(NonCancellable) {
+                progressFlow.emit(value = false)
+            }
+        }
+    }
+
+    /**
+     * Converts a cold [Flow] to a hot [SharedFlow] that will be shared in the model's scope.
+     *
+     * @param started The [SharingStarted] strategy to start sharing the flow. Default is [SharingStarted.WhileSubscribed].
+     * @param replay The number of values to replay. Default is `1`.
+     *
+     * @return The [SharedFlow] that will be shared in the model's scope.
+     * @see [Flow.shareIn]
+     * */
+    protected fun <T> Flow<T>.share(
+        started: SharingStarted = SharingStarted.WhileSubscribed(),
+        replay: Int = 1,
+    ): SharedFlow<T> = shareIn(
+        scope = modelScope,
+        started = started,
+        replay = replay,
+    )
 }
