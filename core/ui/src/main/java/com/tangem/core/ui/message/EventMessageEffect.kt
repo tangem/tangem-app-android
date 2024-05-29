@@ -1,8 +1,8 @@
 package com.tangem.core.ui.message
 
 import android.content.Context
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.SnackbarResult
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import com.tangem.core.ui.event.EventEffect
