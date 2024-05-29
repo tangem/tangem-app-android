@@ -279,7 +279,7 @@ internal object TokenDetailsPreviewData {
             ),
         ),
         stakingBlockState = StakingBlockState.Content(
-            percent = "7.38",
+            interestRate = "7.38",
             periodInDays = 4,
             tokenSymbol = "XLM",
             iconState = iconState,

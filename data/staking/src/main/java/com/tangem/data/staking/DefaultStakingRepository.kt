@@ -18,29 +18,46 @@ internal class DefaultStakingRepository(
             return StakingAvailability.Unavailable
         }
 
-        return when (Blockchain.fromId(blockchainId)) {
-            Blockchain.Solana -> StakingAvailability.Available("solana-sol-native-multivalidator-staking")
-            Blockchain.Cosmos -> StakingAvailability.Available("cosmos-atom-native-staking")
-            Blockchain.Polkadot -> StakingAvailability.Available("polkadot-dot-validator-staking")
-            Blockchain.Polygon -> StakingAvailability.Available("ethereum-matic-native-staking")
-            Blockchain.Avalanche -> StakingAvailability.Available("avalanche-avax-native-staking")
-            Blockchain.Tron -> StakingAvailability.Available("tron-trx-native-staking")
-            Blockchain.Cronos -> StakingAvailability.Available("cronos-cro-native-staking")
-            Blockchain.Binance -> StakingAvailability.Available("binance-bnb-native-staking")
-            Blockchain.Kava -> StakingAvailability.Available("kava-kava-native-staking")
-            Blockchain.Near -> StakingAvailability.Available("near-near-native-staking")
-            Blockchain.Tezos -> StakingAvailability.Available("tezos-xtz-native-staking")
-            else -> StakingAvailability.Unavailable
-        }
+        return integrationIdMap[Blockchain.fromId(blockchainId)]?.let {
+            StakingAvailability.Available(it)
+        } ?: StakingAvailability.Unavailable
     }
 
     override suspend fun getEntryInfo(integrationId: String): StakingEntryInfo {
         val yield = stakeKitApi.getSingleYield(integrationId).getOrThrow()
 
         return StakingEntryInfo(
-            percent = yield.apy,
+            interestRate = yield.apy,
             periodInDays = yield.metadata.cooldownPeriod.days,
             tokenSymbol = yield.token.symbol,
+        )
+    }
+
+    companion object {
+        private const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
+        private const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
+        private const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
+        private const val ETHEREUM_INTEGRATION_ID = "ethereum-matic-native-staking"
+        private const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
+        private const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
+        private const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
+        private const val BINANCE_INTEGRATION_ID = "binance-bnb-native-staking"
+        private const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
+        private const val NEAR_INTEGRATION_ID = "near-near-native-staking"
+        private const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
+
+        private val integrationIdMap = mapOf(
+            Blockchain.Solana to SOLANA_INTEGRATION_ID,
+            Blockchain.Cosmos to COSMOS_INTEGRATION_ID,
+            Blockchain.Polkadot to POLKADOT_INTEGRATION_ID,
+            Blockchain.Polygon to ETHEREUM_INTEGRATION_ID,
+            Blockchain.Avalanche to AVALANCHE_INTEGRATION_ID,
+            Blockchain.Tron to TRON_INTEGRATION_ID,
+            Blockchain.Cronos to CRONOS_INTEGRATION_ID,
+            Blockchain.Binance to BINANCE_INTEGRATION_ID,
+            Blockchain.Kava to KAVA_INTEGRATION_ID,
+            Blockchain.Near to NEAR_INTEGRATION_ID,
+            Blockchain.Tezos to TEZOS_INTEGRATION_ID,
         )
     }
 }

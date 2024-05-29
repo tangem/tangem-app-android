@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
@@ -106,7 +105,8 @@ private fun StakingContent(stakingBlockState: StakingBlockState, iconState: Icon
                     if (state is StakingBlockState.Content) {
                         Text(
                             text = stringResource(
-                                R.string.token_details_staking_block_title, state.percent
+                                R.string.token_details_staking_block_title,
+                                state.interestRate,
                             ),
                             color = TangemTheme.colors.text.primary1,
                             style = TangemTheme.typography.subtitle2,
@@ -124,7 +124,9 @@ private fun StakingContent(stakingBlockState: StakingBlockState, iconState: Icon
                     if (state is StakingBlockState.Content) {
                         Text(
                             text = stringResource(
-                                R.string.token_details_staking_block_subtitle, state.tokenSymbol, state.periodInDays,
+                                R.string.token_details_staking_block_subtitle,
+                                state.tokenSymbol,
+                                state.periodInDays,
                             ),
                             color = TangemTheme.colors.text.tertiary,
                             style = TangemTheme.typography.body2,
@@ -174,7 +176,7 @@ private class StakingBlockStateProvider : CollectionPreviewParameterProvider<Sta
     collection = listOf(
         StakingBlockState.Content(
             iconState = iconState,
-            percent = "10",
+            interestRate = "10",
             periodInDays = 4,
             tokenSymbol = "SOL",
         ),

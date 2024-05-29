@@ -13,7 +13,7 @@ sealed interface StakingBlockState {
 
     data class Content(
         override val iconState: IconState,
-        val percent: String,
+        val interestRate: String,
         val periodInDays: Int,
         val tokenSymbol: String,
     ) : StakingBlockState

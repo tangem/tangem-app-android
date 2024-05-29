@@ -10,5 +10,4 @@ object UnknownEnumMoshiAdapter {
 
     fun <T : Enum<T>> create(enumType: Class<T>, defaultValue: T): JsonAdapter<T> =
         EnumJsonAdapter.create(enumType).withUnknownFallback(defaultValue)
-
 }

@@ -21,8 +21,8 @@ internal class TokenStakingStateConverter(
             },
             ifRight = {
                 return StakingBlockState.Content(
-                    percent = BigDecimalFormatter.formatPercent(
-                        percent = it.percent,
+                    interestRate = BigDecimalFormatter.formatPercent(
+                        percent = it.interestRate,
                         useAbsoluteValue = true,
                     ),
                     periodInDays = it.periodInDays,

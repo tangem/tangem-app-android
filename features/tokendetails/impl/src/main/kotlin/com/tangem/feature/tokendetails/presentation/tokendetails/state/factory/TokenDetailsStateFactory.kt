@@ -24,7 +24,6 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -212,16 +211,9 @@ internal class TokenDetailsStateFactory(
         )
     }
 
-    fun getLoadingStakingState(): TokenDetailsState {
-        val iconState = currentStateProvider().tokenInfoBlockState.iconState
+    fun getStateWithStaking(stakingEither: Either<Throwable, StakingEntryInfo>): TokenDetailsState {
         return currentStateProvider().copy(
-            stakingBlockState = StakingBlockState.Loading(iconState = iconState),
-        )
-    }
-
-    fun getStateWithStaking(either: Either<Throwable, StakingEntryInfo>): TokenDetailsState {
-        return currentStateProvider().copy(
-            stakingBlockState = stakingStateConverter.convert(either),
+            stakingBlockState = stakingStateConverter.convert(stakingEither),
         )
     }
 
