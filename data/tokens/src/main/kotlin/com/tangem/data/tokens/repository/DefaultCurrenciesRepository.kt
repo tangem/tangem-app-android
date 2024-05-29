@@ -173,6 +173,23 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
+    override fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): LceFlow<Throwable, List<CryptoCurrency>> {
+        return lceFlow {
+            val userWallet = catch({ getUserWallet(userWalletId) }) {
+                raise(it)
+            }
+
+            if (userWallet.isMultiCurrency) {
+                getMultiCurrencyWalletCurrenciesUpdatesLce(userWalletId).collect(::send)
+            } else {
+                val currency = catch({ getSingleCurrencyWalletPrimaryCurrency(userWalletId) }) {
+                    raise(it)
+                }
+                send(listOf(currency))
+            }
+        }
+    }
+
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
         return withContext(dispatchers.io) {
             val userWallet = getUserWallet(userWalletId)
