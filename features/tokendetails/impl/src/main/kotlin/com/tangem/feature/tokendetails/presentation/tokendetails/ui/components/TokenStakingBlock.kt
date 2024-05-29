@@ -53,12 +53,12 @@ fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
         horizontalAlignment = Alignment.Start,
     ) {
-        Content(state = state, iconState = iconState)
+        Content(state = state)
     }
 }
 
 @Composable
-private fun Content(state: StakingBlockState, iconState: IconState, modifier: Modifier = Modifier) {
+private fun Content(state: StakingBlockState, modifier: Modifier = Modifier) {
     AnimatedContent(
         modifier = modifier.heightIn(min = TangemTheme.dimens.size60),
         targetState = state,
@@ -66,12 +66,15 @@ private fun Content(state: StakingBlockState, iconState: IconState, modifier: Mo
         label = "Update the content",
     ) { stakingBlockState ->
         when (stakingBlockState) {
-            is StakingBlockState.Content,
-            is StakingBlockState.Loading,
-            -> {
+            is StakingBlockState.Content -> {
                 StakingContent(
                     stakingBlockState = stakingBlockState,
-                    iconState = iconState,
+                    iconState = stakingBlockState.iconState,
+                )
+            }
+            is StakingBlockState.Loading -> {
+                StakingLoading(
+                    iconState = stakingBlockState.iconState,
                 )
             }
             is StakingBlockState.Error -> Row {} // TODO staking
@@ -80,82 +83,100 @@ private fun Content(state: StakingBlockState, iconState: IconState, modifier: Mo
 }
 
 @Composable
-private fun StakingContent(stakingBlockState: StakingBlockState, iconState: IconState) {
-    AnimatedContent(targetState = stakingBlockState, label = "Update staking block") { state ->
-        Column {
-            Row {
-                val (alpha, colorFilter) = remember(iconState.isGrayscale) {
-                    if (iconState.isGrayscale) {
-                        GRAY_SCALE_ALPHA to GrayscaleColorFilter
-                    } else {
-                        NORMAL_ALPHA to null
-                    }
-                }
-                CurrencyIcon(
-                    modifier = Modifier
-                        .size(TangemTheme.dimens.size20)
-                        .clip(TangemTheme.shapes.roundedCorners8)
-                        .align(Alignment.CenterVertically),
-                    icon = iconState,
-                    alpha = alpha,
-                    colorFilter = colorFilter,
-                )
-                SpacerW8()
-                Column {
-                    if (state is StakingBlockState.Content) {
-                        Text(
-                            text = stringResource(
-                                R.string.token_details_staking_block_title,
-                                state.interestRate,
-                            ),
-                            color = TangemTheme.colors.text.primary1,
-                            style = TangemTheme.typography.subtitle2,
-                        )
-                    } else {
-                        RectangleShimmer(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(TangemTheme.dimens.size20),
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
-
-                    if (state is StakingBlockState.Content) {
-                        Text(
-                            text = stringResource(
-                                R.string.token_details_staking_block_subtitle,
-                                state.tokenSymbol,
-                                state.periodInDays,
-                            ),
-                            color = TangemTheme.colors.text.tertiary,
-                            style = TangemTheme.typography.body2,
-                        )
-                    } else {
-                        RectangleShimmer(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(TangemTheme.dimens.size20),
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
+private fun StakingContent(stakingBlockState: StakingBlockState.Content, iconState: IconState) {
+    Column {
+        Row {
+            val (alpha, colorFilter) = remember(iconState.isGrayscale) {
+                if (iconState.isGrayscale) {
+                    GRAY_SCALE_ALPHA to GrayscaleColorFilter
+                } else {
+                    NORMAL_ALPHA to null
                 }
             }
-            if (state is StakingBlockState.Content) {
-                SecondaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "Stake",
-                    onClick = { /* TODO staking AND-7134 */ },
+            CurrencyIcon(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size20)
+                    .clip(TangemTheme.shapes.roundedCorners8)
+                    .align(Alignment.CenterVertically),
+                icon = iconState,
+                alpha = alpha,
+                colorFilter = colorFilter,
+            )
+            SpacerW8()
+            Column {
+                Text(
+                    text = stringResource(
+                        R.string.token_details_staking_block_title,
+                        stakingBlockState.interestRate,
+                    ),
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.subtitle2,
                 )
-            } else {
-                SecondaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "Loading", // TODO staking
-                    onClick = { /* TODO staking AND-7134 */ },
+
+                Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
+
+                Text(
+                    text = stringResource(
+                        R.string.token_details_staking_block_subtitle,
+                        stakingBlockState.tokenSymbol,
+                        stakingBlockState.periodInDays,
+                    ),
+                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography.body2,
                 )
+
+                Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
             }
         }
+        SecondaryButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Stake",
+            onClick = { /* TODO staking AND-7134 */ },
+        )
+    }
+}
+
+@Composable
+private fun StakingLoading(iconState: IconState) {
+    Column {
+        Row {
+            val (alpha, colorFilter) = remember(iconState.isGrayscale) {
+                if (iconState.isGrayscale) {
+                    GRAY_SCALE_ALPHA to GrayscaleColorFilter
+                } else {
+                    NORMAL_ALPHA to null
+                }
+            }
+            CurrencyIcon(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size20)
+                    .clip(TangemTheme.shapes.roundedCorners8)
+                    .align(Alignment.CenterVertically),
+                icon = iconState,
+                alpha = alpha,
+                colorFilter = colorFilter,
+            )
+            SpacerW8()
+            Column {
+                RectangleShimmer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(TangemTheme.dimens.size20),
+                )
+                Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
+                RectangleShimmer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(TangemTheme.dimens.size20),
+                )
+                Spacer(modifier = Modifier.size(TangemTheme.dimens.size8))
+            }
+        }
+        SecondaryButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Loading", // TODO staking
+            onClick = { /* TODO staking AND-7134 */ },
+        )
     }
 }
 
