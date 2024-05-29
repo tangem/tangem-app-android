@@ -1,20 +1,16 @@
 package com.tangem.domain.walletmanager.utils
 
-import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem
-import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.domain.txhistory.models.TxHistoryItem
+import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.common.txhistory.TransactionHistoryItem as SdkTransactionHistoryItem
 
 internal class SdkTransactionHistoryItemConverter(
-    assetReader: AssetReader,
-    moshi: Moshi,
+    smartContractMethods: Map<String, SmartContractMethod>,
 ) : Converter<SdkTransactionHistoryItem, TxHistoryItem> {
 
-    private val typeConverter by lazy {
-        SdkTransactionTypeConverter(assetReader, moshi)
-    }
+    private val typeConverter by lazy { SdkTransactionTypeConverter(smartContractMethods) }
 
     override fun convert(value: SdkTransactionHistoryItem): TxHistoryItem = TxHistoryItem(
         txHash = value.txHash,
