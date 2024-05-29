@@ -388,6 +388,7 @@ internal class DefaultCurrenciesRepository(
                     balance = balance,
                 )
             }
+            is FeePaidSdkCurrency.FeeResource -> FeePaidCurrency.FeeResource(currency = feePaidCurrency.currency)
         }
     }
 
