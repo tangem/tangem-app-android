@@ -1,5 +1,6 @@
 package com.tangem.features.send.impl.presentation.ui.recipient
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -139,6 +140,7 @@ private fun LazyListScope.memoField(memoField: SendTextField.RecipientMemo?, onM
                 onValueChange = memoField.onValueChange,
                 onPasteClick = onMemoChange,
                 modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
+                labelStyle = TangemTheme.typography.caption2,
                 isError = memoField.isError,
                 error = memoField.error,
                 isReadOnly = !memoField.isEnabled,
@@ -251,7 +253,9 @@ private fun AnimateRecentAppearance(isVisible: Boolean, content: @Composable () 
     }
 }
 
-@Preview(widthDp = 360, heightDp = 800)
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SendRecipientContent_Preview(
     @PreviewParameter(SendRecipientContentPreviewProvider::class) recipientState: SendStates.RecipientState,
@@ -268,6 +272,9 @@ private fun SendRecipientContent_Preview(
 private class SendRecipientContentPreviewProvider : PreviewParameterProvider<SendStates.RecipientState> {
     override val values: Sequence<SendStates.RecipientState>
         get() = sequenceOf(
+            RecipientStatePreviewData.recipientWithRecentState,
             RecipientStatePreviewData.recipientState,
+            RecipientStatePreviewData.recipientAddressState,
         )
 }
+// endregion

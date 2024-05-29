@@ -807,11 +807,15 @@ internal class SendViewModel @Inject constructor(
 
     override fun onAmountReduceClick(
         reduceAmountBy: BigDecimal?,
+        reduceAmountByDiff: BigDecimal?,
         reduceAmountTo: BigDecimal?,
         clazz: Class<out SendNotification>,
     ) {
         uiState = when {
-            reduceAmountBy != null -> amountStateFactory.getOnAmountReduceByState(reduceAmountBy)
+            reduceAmountBy != null && reduceAmountByDiff != null -> amountStateFactory.getOnAmountReduceByState(
+                reduceAmountBy = reduceAmountBy,
+                reduceAmountByDiff = reduceAmountByDiff,
+            )
             reduceAmountTo != null -> amountStateFactory.getOnAmountReduceToState(reduceAmountTo)
             else -> return
         }
