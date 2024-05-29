@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal data class UserWalletListUM(
     val userWallets: ImmutableList<UserWalletUM>,
+    val isWalletSavingInProgress: Boolean,
     val addNewWalletText: TextReference,
     val onAddNewWalletClick: () -> Unit,
 ) {
