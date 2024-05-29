@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.featuretoggle.WalletFeatureToggles
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -65,7 +66,7 @@ internal class MultiWalletTokenListSubscriber(
     }
 
     private fun checkNeedSorting(tokenList: TokenList): Boolean {
-        return tokenList.totalFiatBalance !is TokenList.FiatBalance.Loading &&
+        return tokenList.totalFiatBalance !is TotalFiatBalance.Loading &&
             tokenList.sortedBy == TokenList.SortType.BALANCE
     }
 
