@@ -13,6 +13,7 @@ object BigDecimalFormatter {
 
     const val EMPTY_BALANCE_SIGN = "—"
     const val CAN_BE_LOWER_SIGN = "<"
+    private val FORMAT_THRESHOLD = BigDecimal("0.01")
 
     private const val TEMP_CURRENCY_CODE = "USD"
 
@@ -33,6 +34,39 @@ object BigDecimalFormatter {
             minimumFractionDigits = 2
             isGroupingUsed = true
             roundingMode = RoundingMode.DOWN
+        }
+
+        return formatter.format(cryptoAmount).let {
+            if (cryptoCurrency.isEmpty()) {
+                it
+            } else {
+                it + "\u2009$cryptoCurrency"
+            }
+        }
+    }
+
+    fun formatCryptoAmountShorted(
+        cryptoAmount: BigDecimal?,
+        cryptoCurrency: String,
+        decimals: Int,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (cryptoAmount == null) return EMPTY_BALANCE_SIGN
+
+        val formatter = if (cryptoAmount.isMoreThanThreshold()) {
+            NumberFormat.getNumberInstance(locale).apply {
+                maximumFractionDigits = 2
+                minimumFractionDigits = 2
+                isGroupingUsed = true
+                roundingMode = RoundingMode.HALF_UP
+            }
+        } else {
+            NumberFormat.getNumberInstance(locale).apply {
+                maximumFractionDigits = decimals.coerceAtMost(maximumValue = 6)
+                minimumFractionDigits = 2
+                isGroupingUsed = true
+                roundingMode = RoundingMode.DOWN
+            }
         }
 
         return formatter.format(cryptoAmount).let {
@@ -168,6 +202,8 @@ object BigDecimalFormatter {
     }
 
     fun formatWithSymbol(amount: String, symbol: String) = "$amount\u2009$symbol"
+
+    private fun BigDecimal.isMoreThanThreshold() = this > FORMAT_THRESHOLD
 
     private fun getCurrency(code: String): Currency {
         return runCatching { Currency.getInstance(code) }
