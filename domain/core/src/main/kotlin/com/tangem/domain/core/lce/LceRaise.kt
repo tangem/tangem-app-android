@@ -30,11 +30,11 @@ class LceRaise<E : Any> @PublishedApi internal constructor(
      * By default, it raises a new [Lce.Loading] state.
      * @return The content of this [Lce] instance.
      */
-    fun <C : Any> Lce<E, C>.bind(ifLoading: (partialContent: C?) -> C = { raise(lceLoading()) }): C = when (this) {
+    fun <C : Any> Lce<E, C>.bind(): C = when (this) {
         is Lce.Loading -> {
             isLoading.set(true)
 
-            ifLoading(partialContent)
+            raise(lceLoading())
         }
         is Lce.Content -> content
         is Lce.Error -> raise(r = this)
