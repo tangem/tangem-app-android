@@ -23,6 +23,7 @@ class IsAmountSubtractAvailableUseCase(
                     is FeePaidCurrency.Coin -> currency is CryptoCurrency.Coin
                     is FeePaidCurrency.SameCurrency -> true
                     is FeePaidCurrency.Token -> currency.id == feeCurrency.tokenId
+                    is FeePaidCurrency.FeeResource -> false
                 }
             }
         }
