@@ -47,4 +47,12 @@ sealed class CryptoCurrencyWarning {
     ) : CryptoCurrencyWarning()
 
     data object BeaconChainShutdown : CryptoCurrencyWarning()
+
+    /**
+     * Shows a warning about an available fee resource for a transaction in several blockchains (ex. Koinos)
+     */
+    data class FeeResourceInfo(
+        val amount: BigDecimal,
+        val maxAmount: BigDecimal?,
+    ) : CryptoCurrencyWarning()
 }
