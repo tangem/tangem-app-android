@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.getCardsCount
@@ -10,16 +10,16 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.utils.converter.Converter
 
 internal class MultiWalletCardStateConverter(
-    private val fiatBalance: TokenList.FiatBalance,
+    private val fiatBalance: TotalFiatBalance,
     private val selectedWallet: UserWallet,
     private val appCurrency: AppCurrency,
 ) : Converter<WalletCardState, WalletCardState> {
 
     override fun convert(value: WalletCardState): WalletCardState {
         return when (fiatBalance) {
-            is TokenList.FiatBalance.Loading -> value.toLoadingState()
-            is TokenList.FiatBalance.Failed -> value.toErrorState()
-            is TokenList.FiatBalance.Loaded -> value.toWalletCardState(fiatBalance)
+            is TotalFiatBalance.Loading -> value.toLoadingState()
+            is TotalFiatBalance.Failed -> value.toErrorState()
+            is TotalFiatBalance.Loaded -> value.toWalletCardState(fiatBalance)
         }
     }
 
@@ -45,7 +45,7 @@ internal class MultiWalletCardStateConverter(
         )
     }
 
-    private fun WalletCardState.toWalletCardState(fiatBalance: TokenList.FiatBalance.Loaded): WalletCardState {
+    private fun WalletCardState.toWalletCardState(fiatBalance: TotalFiatBalance.Loaded): WalletCardState {
         return WalletCardState.Content(
             id = id,
             title = title,
