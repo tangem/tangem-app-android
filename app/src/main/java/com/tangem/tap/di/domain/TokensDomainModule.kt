@@ -356,4 +356,18 @@ internal object TokensDomainModule {
             networksRepository = networksRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideGetWalletTotalBalanceUseCase(
+        currenciesRepository: CurrenciesRepository,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+    ): GetWalletTotalBalanceUseCase {
+        return GetWalletTotalBalanceUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+        )
+    }
 }
