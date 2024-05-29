@@ -5,27 +5,31 @@ import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
 import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.di.NetworkMoshi
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runCatching
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Asset file loader
  *
+ * @property assetReader asset reader
+ * @property moshi       moshi
+ *
+ * @see <a href = "https://www.notion.so/tangem/Assets-e045dd890413413faf34ce07ae47ff56">Documentation</a>
+ *
 [REDACTED_AUTHOR]
  */
+@Singleton
 class AssetLoader @Inject constructor(
     val assetReader: AssetReader,
     @NetworkMoshi val moshi: Moshi,
-    val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     /** Load content [Content] of asset file [fileName] */
     @OptIn(ExperimentalStdlibApi::class)
     suspend inline fun <reified Content> load(fileName: String): Content? {
-        return runCatching(dispatchers.io) {
-            val json = assetReader.readJson(fileName = fileName)
+        return runCatching {
+            val json = assetReader.read(fullFileName = "$fileName.json")
 
             moshi.adapter<Content>().fromJson(json)
         }
@@ -43,8 +47,8 @@ class AssetLoader @Inject constructor(
 
     /** Load list [V] values of asset file [fileName] */
     suspend inline fun <reified V> loadList(fileName: String): List<V> {
-        return runCatching(dispatchers.io) {
-            val json = assetReader.readJson(fileName = fileName)
+        return runCatching {
+            val json = assetReader.read(fullFileName = "$fileName.json")
 
             val type = Types.newParameterizedType(List::class.java, V::class.java)
             val adapter = moshi.adapter<List<V>>(type)
@@ -65,8 +69,8 @@ class AssetLoader @Inject constructor(
 
     /** Load map [String] keys and [V] values of asset file [fileName] */
     suspend inline fun <reified V> loadMap(fileName: String): Map<String, V> {
-        return runCatching(dispatchers.io) {
-            val json = assetReader.readJson(fileName = fileName)
+        return runCatching {
+            val json = assetReader.read(fullFileName = "$fileName.json")
 
             val type = Types.newParameterizedType(Map::class.java, String::class.java, V::class.java)
             val adapter = moshi.adapter<Map<String, V>>(type)
