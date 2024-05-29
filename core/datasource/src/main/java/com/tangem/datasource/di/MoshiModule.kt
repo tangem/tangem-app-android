@@ -37,7 +37,7 @@ class MoshiModule {
             .add(KotlinJsonAdapterFactory())
             .add(
                 Token.NetworkType::class.java,
-                UnknownEnumMoshiAdapter.create(Token.NetworkType::class.java, Token.NetworkType.UNKNOWN)
+                UnknownEnumMoshiAdapter.create(Token.NetworkType::class.java, Token.NetworkType.UNKNOWN),
             )
             .build()
     }
