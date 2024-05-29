@@ -42,6 +42,7 @@ class ConfigValueModel(
     val devExpress: ExpressModel?,
     val express: ExpressModel?,
     val polygonScanApiKey: String?,
+    val stakeKitApiKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
