@@ -12,21 +12,21 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object WalletsDomainModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesGetWalletsUseCase(userWalletsListManager: UserWalletsListManager): GetWalletsUseCase {
         return GetWalletsUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesWalletNameMigrationUseCase(
         userWalletsListManager: UserWalletsListManager,
         walletNamesMigrationRepository: WalletNamesMigrationRepository,
@@ -38,13 +38,13 @@ internal object WalletsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesGetUserWalletUseCase(userWalletsListManager: UserWalletsListManager): GetUserWalletUseCase {
         return GetUserWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesGetSelectedWalletSyncUseCase(
         userWalletsListManager: UserWalletsListManager,
     ): GetSelectedWalletSyncUseCase {
@@ -52,31 +52,31 @@ internal object WalletsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesGetSelectedWalletUseCase(userWalletsListManager: UserWalletsListManager): GetSelectedWalletUseCase {
         return GetSelectedWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesSaveWalletUseCase(userWalletsListManager: UserWalletsListManager): SaveWalletUseCase {
         return SaveWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesGetExploreUrlUseCase(walletsManagersFacade: WalletManagersFacade): GetExploreUrlUseCase {
         return GetExploreUrlUseCase(walletsManagersFacade = walletsManagersFacade)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesUnlockWalletUseCase(userWalletsListManager: UserWalletsListManager): UnlockWalletsUseCase {
         return UnlockWalletsUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesSelectWalletUseCase(
         userWalletsListManager: UserWalletsListManager,
         reduxStateHolder: ReduxStateHolder,
@@ -85,31 +85,31 @@ internal object WalletsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesUpdateWalletUseCase(userWalletsListManager: UserWalletsListManager): UpdateWalletUseCase {
         return UpdateWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesRenameWalletUseCase(userWalletsListManager: UserWalletsListManager): RenameWalletUseCase {
         return RenameWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesGetWalletsSyncUseCase(userWalletsListManager: UserWalletsListManager): GetWalletNamesUseCase {
         return GetWalletNamesUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesDeleteWalletUseCase(userWalletsListManager: UserWalletsListManager): DeleteWalletUseCase {
         return DeleteWalletUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesShouldSaveUserWalletsSyncUseCase(
         walletsRepository: WalletsRepository,
     ): ShouldSaveUserWalletsSyncUseCase {
@@ -117,13 +117,13 @@ internal object WalletsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesShouldSaveUserWalletsUseCase(walletsRepository: WalletsRepository): ShouldSaveUserWalletsUseCase {
         return ShouldSaveUserWalletsUseCase(walletsRepository = walletsRepository)
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesValidateWalletAddressUseCase(
         walletAddressServiceRepository: WalletAddressServiceRepository,
         dispatchers: CoroutineDispatcherProvider,
@@ -135,7 +135,7 @@ internal object WalletsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesValidateWalletMemoUseCase(
         walletAddressServiceRepository: WalletAddressServiceRepository,
     ): ValidateWalletMemoUseCase {
@@ -143,7 +143,7 @@ internal object WalletsDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesParseSharedAddressUseCase(
         walletAddressServiceRepository: WalletAddressServiceRepository,
         dispatchers: CoroutineDispatcherProvider,
