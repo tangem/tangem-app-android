@@ -4,7 +4,7 @@ import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
-import com.tangem.datasource.asset.reader.AssetReader
+import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.config.ConfigManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.token.UserTokensStore
@@ -47,7 +47,7 @@ interface ApplicationEntryPoint {
 
     fun getAppStateHolder(): AppStateHolder
 
-    fun getAssetReader(): AssetReader
+    fun getAssetLoader(): AssetLoader
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
 
