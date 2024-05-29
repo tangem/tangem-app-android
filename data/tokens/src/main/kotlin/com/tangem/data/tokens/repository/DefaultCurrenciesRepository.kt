@@ -23,7 +23,6 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lceFlow
-import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -228,7 +227,7 @@ internal class DefaultCurrenciesRepository(
     ): LceFlow<Throwable, List<CryptoCurrency>> = lceFlow {
         val userWallet = getUserWallet(userWalletId)
         catch({ ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true) }) {
-            raise(it.lceError())
+            raise(it)
         }
 
         launch(dispatchers.io) {
@@ -242,7 +241,7 @@ internal class DefaultCurrenciesRepository(
 
         withContext(dispatchers.io) {
             catch({ fetchTokensIfCacheExpired(userWallet, refresh = false) }) {
-                raise(it.lceError())
+                raise(it)
             }
         }
     }
