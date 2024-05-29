@@ -3,6 +3,7 @@ package com.tangem.features.details.component.preview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.features.details.component.WalletConnectComponent
+import com.tangem.features.details.ui.WalletConnectBlock
 
 internal class PreviewWalletConnectComponent : WalletConnectComponent {
 
@@ -11,6 +12,6 @@ internal class PreviewWalletConnectComponent : WalletConnectComponent {
     @Composable
     @Suppress("TopLevelComposableFunctions") // TODO: Remove this check
     override fun View(modifier: Modifier) {
-        TODO("Will be implemented in [REDACTED_TASK_KEY]")
+        WalletConnectBlock(onClick = { /* no-op */ }, modifier = modifier)
     }
 }
