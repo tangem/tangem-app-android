@@ -252,4 +252,7 @@ interface WalletManagersFacade {
         currency: CryptoCurrency,
         signer: CommonSigner,
     ): SimpleResult
+
+    /** Indicates UTXO consolidation availability */
+    suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean
 }
