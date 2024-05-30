@@ -35,7 +35,6 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -89,6 +88,8 @@ internal class WalletViewModel @Inject constructor(
     private fun fetchStakingTokens() {
         viewModelScope.launch {
             fetchStakingTokensUseCase()
+                .onLeft { Timber.e("Unable to fetch the staking tokens list") }
+                .onRight { Timber.d("Staking token list was fetched successfully") }
         }
     }
 
