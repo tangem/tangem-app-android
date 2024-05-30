@@ -71,6 +71,7 @@ internal data class SendUiState(
             editAmountState = amountState,
             editFeeState = feeState,
             editRecipientState = recipientState,
+            sendState = sendState,
         )
     } else {
         copy(
