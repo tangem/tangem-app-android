@@ -29,7 +29,6 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
-import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction

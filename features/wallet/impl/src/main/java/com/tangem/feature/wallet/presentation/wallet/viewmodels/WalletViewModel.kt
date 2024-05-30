@@ -84,7 +84,6 @@ internal class WalletViewModel @Inject constructor(
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
-
     }
 
     private fun fetchStakingTokens() {

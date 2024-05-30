@@ -1,9 +1,7 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.token.DefaultExpressAssetsStore
 import com.tangem.datasource.local.token.DefaultStakingTokensStore
-import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.token.StakingTokensStore
 import dagger.Module
 import dagger.Provides

@@ -16,7 +16,7 @@ class StakingTokenConverter : Converter<TokenWithYield, StakingTokenWithYield> {
                 contractAddress = value.token.address,
                 coinGeckoId = value.token.coinGeckoId,
             ),
-            availableYieldIds = value.availableYieldIds
+            availableYieldIds = value.availableYieldIds,
         )
     }
 }
