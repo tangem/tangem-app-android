@@ -55,6 +55,8 @@ internal object BlockchainProviderTypesConverter :
             "solana" -> ProviderType.Solana.Official
             "ton" -> ProviderType.Ton.TonCentral
             "tron" -> ProviderType.Tron.TronGrid
+            "dwellirBittensor" -> ProviderType.Bittensor.Dwellir
+            "onfinalityBittensor" -> ProviderType.Bittensor.Onfinality
             else -> {
                 Timber.e("$blockchain private provider ($name) is not supported")
                 null
