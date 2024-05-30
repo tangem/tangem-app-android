@@ -1,8 +1,10 @@
 package com.tangem.data.staking
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.data.staking.converters.StakingTokenConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
+import com.tangem.datasource.local.token.StakingTokensStore
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -11,7 +13,10 @@ import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingFeatureToggles: StakingFeatureToggles,
+    private val stakingTokenStore: StakingTokensStore,
 ) : StakingRepository {
+
+    private val tokenWithYieldConverter = StakingTokenConverter()
 
     override fun getStakingAvailability(blockchainId: String): StakingAvailability {
         if (!stakingFeatureToggles.isStakingEnabled) {
@@ -33,8 +38,10 @@ internal class DefaultStakingRepository(
         )
     }
 
-    override suspend fun getEnabledTokens() {
-        stakeKitApi.getTokens().getOrThrow()
+    override suspend fun fetchEnabledTokens() {
+        val stakingTokensWithYields = stakeKitApi.getTokens().getOrThrow()
+
+        stakingTokenStore.store(stakingTokensWithYields.map { tokenWithYieldConverter.convert(it) })
     }
 
     companion object {

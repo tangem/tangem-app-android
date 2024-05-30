@@ -9,6 +9,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.IsWalletsScrollPreviewEnabled
 import com.tangem.domain.settings.ShouldShowSaveWalletScreenUseCase
+import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -34,6 +35,7 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -55,12 +57,13 @@ internal class WalletViewModel @Inject constructor(
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
+    private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
+    analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
@@ -74,12 +77,20 @@ internal class WalletViewModel @Inject constructor(
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
         suggestToEnableBiometrics()
+        fetchStakingTokens()
 
         maybeMigrateNames()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
+
+    }
+
+    private fun fetchStakingTokens() {
+        viewModelScope.launch {
+            fetchStakingTokensUseCase()
+        }
     }
 
     private fun maybeMigrateNames() {

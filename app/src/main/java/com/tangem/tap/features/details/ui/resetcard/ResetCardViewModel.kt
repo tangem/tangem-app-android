@@ -75,6 +75,7 @@ internal class ResetCardViewModel @Inject constructor(
     private fun makeFullReset() {
         val currentUserWallet = getSelectedWalletSyncUseCase().getOrNull() ?: return
 
+        // TODO change scope?
         viewModelScope.launch {
             resetCurrentCard(userWallet = currentUserWallet).onRight {
                 val newSelectedWallet = getSelectedWalletSyncUseCase().getOrNull()

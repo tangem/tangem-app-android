@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.staking) // TODO staking create staking models module
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain)

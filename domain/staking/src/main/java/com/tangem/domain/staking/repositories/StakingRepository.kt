@@ -9,5 +9,5 @@ interface StakingRepository {
 
     suspend fun getEntryInfo(integrationId: String): StakingEntryInfo
 
-    suspend fun getEnabledTokens()
+    suspend fun fetchEnabledTokens()
 }

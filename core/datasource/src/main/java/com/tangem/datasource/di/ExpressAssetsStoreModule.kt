@@ -11,11 +11,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object AssetsStoreModule {
+internal object ExpressAssetsStoreModule {
 
     @Provides
     @Singleton
-    fun provideAssetsStore(): ExpressAssetsStore {
+    fun provideExpressAssetsStore(): ExpressAssetsStore {
         return DefaultExpressAssetsStore(dataStore = RuntimeDataStore())
     }
 }
