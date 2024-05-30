@@ -611,6 +611,17 @@ class DefaultWalletManagersFacade(
         return walletManager.fulfillRequirements(currencyType, signer)
     }
 
+    override suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: return false
+
+        return walletManager.allowUtxoConsolidation
+    }
+
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
         if (tokens.isEmpty()) return
 
