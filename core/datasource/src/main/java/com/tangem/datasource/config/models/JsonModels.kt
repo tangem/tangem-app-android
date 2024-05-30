@@ -43,6 +43,8 @@ class ConfigValueModel(
     val express: ExpressModel?,
     val polygonScanApiKey: String?,
     val stakeKitApiKey: String?,
+    @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
+    @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
