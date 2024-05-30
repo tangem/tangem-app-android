@@ -1,8 +1,8 @@
-package com.tangem.domain.wallets.usecase
+package com.tangem.domain.transaction.usecase
 
 import arrow.core.Either
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.wallets.repository.WalletAddressServiceRepository
+import com.tangem.domain.transaction.WalletAddressServiceRepository
 
 /**
  * Use case for validating wallet memo.
