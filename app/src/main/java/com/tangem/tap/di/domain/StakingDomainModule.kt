@@ -8,15 +8,15 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object StakingDomainModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetStakingAvailabilityUseCase(stakingRepository: StakingRepository): GetStakingAvailabilityUseCase {
         return GetStakingAvailabilityUseCase(
             stakingRepository = stakingRepository,
@@ -24,7 +24,7 @@ internal object StakingDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetStakingEntryInfoUseCase(stakingRepository: StakingRepository): GetStakingEntryInfoUseCase {
         return GetStakingEntryInfoUseCase(
             stakingRepository = stakingRepository,
@@ -32,7 +32,7 @@ internal object StakingDomainModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideGetStakingTokensUseCase(stakingRepository: StakingRepository): FetchStakingTokensUseCase {
         return FetchStakingTokensUseCase(
             stakingRepository = stakingRepository,

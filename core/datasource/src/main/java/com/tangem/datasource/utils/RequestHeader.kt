@@ -1,9 +1,9 @@
 package com.tangem.datasource.utils
 
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.lib.auth.AppVersionProvider
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
+import com.tangem.utils.version.AppVersionProvider
 
 /**
  * Presentation of request header
@@ -29,7 +29,7 @@ sealed class RequestHeader(vararg pairs: Pair<String, () -> String>) {
     )
 
     class AppVersionPlatformHeaders(appVersionProvider: AppVersionProvider) : RequestHeader(
-        "version" to { appVersionProvider.getAppVersion() },
+        "version" to { appVersionProvider.versionName },
         "platform" to { "android" },
     )
 

@@ -10,8 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -19,15 +17,12 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
+import com.tangem.core.ui.utils.GrayscaleColorFilter
+import com.tangem.core.ui.utils.NORMAL_ALPHA
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockState
 import com.tangem.features.tokendetails.impl.R
-
-private const val GRAY_SCALE_SATURATION = 0f
-private const val GRAY_SCALE_ALPHA = 0.4f
-private const val NORMAL_ALPHA = 1f
-private val GrayscaleColorFilter: ColorFilter
-    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
 
 /**
  * Token staking block
@@ -36,7 +31,7 @@ private val GrayscaleColorFilter: ColorFilter
  * @param modifier modifier
  */
 @Composable
-fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Modifier) {
+internal fun TokenStakingBlock(state: StakingBlockState, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(

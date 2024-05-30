@@ -11,8 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,13 +18,12 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
+import com.tangem.core.ui.utils.GrayscaleColorFilter
+import com.tangem.core.ui.utils.NORMAL_ALPHA
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenInfoBlockState
 import com.tangem.features.tokendetails.impl.R
-
-private const val GRAY_SCALE_SATURATION = 0f
-private const val GRAY_SCALE_ALPHA = 0.4f
-private const val NORMAL_ALPHA = 1f
 
 @Composable
 internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Modifier) {
@@ -132,10 +129,10 @@ private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): E
     }
 }
 
-private data class ExtractedTokenNetworkText(val normalText: String, val boldText: String)
-
-private val GrayscaleColorFilter: ColorFilter
-    get() = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(GRAY_SCALE_SATURATION) })
+private data class ExtractedTokenNetworkText(
+    val normalText: String,
+    val boldText: String,
+)
 
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)

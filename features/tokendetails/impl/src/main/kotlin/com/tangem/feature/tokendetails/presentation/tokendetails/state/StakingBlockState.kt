@@ -3,7 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state
 import androidx.compose.runtime.Immutable
 
 @Immutable
-sealed interface StakingBlockState {
+internal sealed interface StakingBlockState {
 
     val iconState: IconState
 

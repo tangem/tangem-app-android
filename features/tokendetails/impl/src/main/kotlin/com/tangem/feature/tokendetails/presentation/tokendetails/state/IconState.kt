@@ -5,7 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 @Immutable
-sealed class IconState {
+internal sealed class IconState {
 
     abstract val isGrayscale: Boolean
 
