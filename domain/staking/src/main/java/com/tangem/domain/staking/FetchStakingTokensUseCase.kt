@@ -9,7 +9,7 @@ import com.tangem.domain.staking.repositories.StakingRepository
 class FetchStakingTokensUseCase(
     private val stakingRepository: StakingRepository,
 ) {
-    suspend operator fun invoke() : Either<Throwable, Unit> {
+    suspend operator fun invoke(): Either<Throwable, Unit> {
         return Either.catch { stakingRepository.fetchEnabledTokens() }
     }
 }
