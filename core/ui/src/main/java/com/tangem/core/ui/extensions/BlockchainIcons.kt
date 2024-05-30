@@ -207,6 +207,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "radiant" -> R.drawable.img_radiant_22
         "base" -> R.drawable.img_base_22
         "joystream" -> R.drawable.img_joystream_22
+        "koinos", "koinos/test" -> R.drawable.img_koinos_22
         "bittensor" -> R.drawable.img_bittensor_22
         else -> R.drawable.ic_alert_24
     }
