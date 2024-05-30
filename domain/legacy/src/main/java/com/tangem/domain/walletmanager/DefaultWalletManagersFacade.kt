@@ -37,6 +37,8 @@ import com.tangem.domain.walletmanager.utils.WalletManagerFactory
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
@@ -60,6 +62,8 @@ class DefaultWalletManagersFacade(
     private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
     private val requirementsConditionConverter by lazy { SdkRequirementsConditionConverter() }
     private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
+
+    private val initMutex = Mutex()
 
     override suspend fun update(
         userWalletId: UserWalletId,
@@ -329,24 +333,25 @@ class DefaultWalletManagersFacade(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        val userWallet = getUserWallet(userWalletId)
-        var walletManager = walletManagersStore.getSyncOrNull(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = derivationPath,
-        )
-
-        if (walletManager == null) {
-            walletManager = walletManagerFactory.createWalletManager(
-                scanResponse = userWallet.scanResponse,
+        initMutex.withLock {
+            val userWallet = getUserWallet(userWalletId)
+            var walletManager = walletManagersStore.getSyncOrNull(
+                userWalletId = userWalletId,
                 blockchain = blockchain,
-                derivationPath = derivationPath?.let { DerivationPath(rawPath = it) },
-            ) ?: return null
+                derivationPath = derivationPath,
+            )
+            if (walletManager == null) {
+                walletManager = walletManagerFactory.createWalletManager(
+                    scanResponse = userWallet.scanResponse,
+                    blockchain = blockchain,
+                    derivationPath = derivationPath?.let { DerivationPath(rawPath = it) },
+                )
+                walletManager ?: return null
 
-            walletManagersStore.store(userWalletId, walletManager)
+                walletManagersStore.store(userWalletId, walletManager)
+            }
+            return walletManager
         }
-
-        return walletManager
     }
 
     @Deprecated("Will be removed in future")
