@@ -38,6 +38,8 @@ internal object BlockchainSDKConfigConverter : Converter<ConfigValueModel, Block
             chiaFireAcademyApiKey = value.chiaFireAcademyApiKey,
             chiaTangemApiKey = value.chiaTangemApiKey,
             polygonScanApiKey = value.polygonScanApiKey,
+            bittensorDwellirApiKey = value.bittensorDwellirApiKey,
+            bittensorOnfinalityApiKey = value.bittensorOnfinalityKey,
         )
     }
 
