@@ -42,9 +42,9 @@ internal class DefaultBlockchainSDKFactory(
     dispatchers: CoroutineDispatcherProvider,
 ) : BlockchainSDKFactory {
 
-    private val walletManagerFactory: Flow<WalletManagerFactory?> by lazy(::createWalletManagerFactory)
-
     private val mainScope = CoroutineScope(dispatchers.main)
+
+    private val walletManagerFactory: Flow<WalletManagerFactory?> = createWalletManagerFactory()
 
     override suspend fun init() {
         coroutineScope {
