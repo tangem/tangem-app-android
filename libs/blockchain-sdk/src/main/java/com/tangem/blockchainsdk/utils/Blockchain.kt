@@ -117,6 +117,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "koinos" -> Blockchain.Koinos
         "koinos/test" -> Blockchain.KoinosTestnet
         "joystream" -> Blockchain.Joystream
+        "bittensor" -> Blockchain.Bittensor
         else -> null
     }
 }
@@ -235,6 +236,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Koinos -> "koinos"
         Blockchain.KoinosTestnet -> "koinos/test"
         Blockchain.Joystream -> "joystream"
+        Blockchain.Bittensor -> "bittensor"
     }
 }
 
@@ -310,6 +312,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Base, Blockchain.BaseTestnet -> "base-ethereum"
         Blockchain.Koinos, Blockchain.KoinosTestnet -> "koinos"
         Blockchain.Joystream -> "joystream"
+        Blockchain.Bittensor -> "bittensor"
     }
 }
 

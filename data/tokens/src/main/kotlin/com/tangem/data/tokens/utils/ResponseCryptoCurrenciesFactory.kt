@@ -87,7 +87,7 @@ class ResponseCryptoCurrenciesFactory {
 
     private fun Blockchain.getNameForCoin(responseToken: UserTokensResponse.Token): String {
         return when (this) {
-            // workaround: Dischain was renamed but backend still returns the old name,
+            // workaround: for Blockchains full name different than backend name,
             // get name and symbol from enum Blockchain until backend renamed
             // https://tangem.atlassian.net/browse/AND-6158
             Blockchain.Dischain,
@@ -103,6 +103,8 @@ class ResponseCryptoCurrenciesFactory {
             Blockchain.PolygonZkEVMTestnet,
             Blockchain.Base,
             Blockchain.BaseTestnet,
+            Blockchain.Telos,
+            Blockchain.Cronos,
             -> this.fullName
             else -> responseToken.name
         }
